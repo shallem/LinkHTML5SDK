@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+	<tag>outputStylesheet</tag>
+        <tagClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheetTag</tagClass>
+	<componentClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheet</componentClass>
+	<componentType>org.primefaces.mobile.OutputStylesheet</componentType>
+	<componentFamily>org.primefaces.mobile.component</componentFamily>
+	<rendererType>org.primefaces.mobile.component.OutputStylesheetRenderer</rendererType>
+	<rendererClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheetRenderer</rendererClass>
+	<parent>javax.faces.component.UIOutput</parent>
+	<attributes>
+        <attribute>
+            <name>name</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of the stylesheet.</description>
+        </attribute>
+        <attribute>
+            <name>library</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Stylesheet library.</description>
+        </attribute>
+        <attribute>
+            <name>version</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Version number.</description>
+            <defaultValue>0</defaultValue>
+        </attribute>
+        <attribute>
+            <name>media</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Media type. One or more of phone, phablet, or tablet.</description>
+            <defaultValue></defaultValue>
+	</attribute>
+        <attribute>
+            <name>minwidth</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <description>Min width at which this stylesheet is applicable.</description>
+            <defaultValue>0</defaultValue>
+        </attribute>
+        <attribute>
+            <name>maxwidth</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <description>Max width at which this stylesheet is applicable.</description>
+            <defaultValue>0</defaultValue>
+	</attribute>
+        </attributes>
+</component>

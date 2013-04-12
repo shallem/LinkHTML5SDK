@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+	<tag>outputScript</tag>
+        <tagClass>org.primefaces.mobile.component.outputscript.OutputScriptTag</tagClass>
+	<componentClass>org.primefaces.mobile.component.outputscript.OutputScript</componentClass>
+	<componentType>org.primefaces.mobile.OutputScript</componentType>
+	<componentFamily>org.primefaces.mobile.component</componentFamily>
+	<rendererType>org.primefaces.mobile.component.OutputScriptRenderer</rendererType>
+	<rendererClass>org.primefaces.mobile.component.outputscript.OutputScriptRenderer</rendererClass>
+	<parent>javax.faces.component.UIOutput</parent>
+	<attributes>
+        <attribute>
+            <name>name</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of the stylesheet.</description>
+        </attribute>
+        <attribute>
+            <name>library</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Stylesheet library.</description>
+        </attribute>
+        <attribute>
+            <name>version</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Version number.</description>
+            <defaultValue>0</defaultValue>
+        </attribute>
+	</attributes>
+</component>

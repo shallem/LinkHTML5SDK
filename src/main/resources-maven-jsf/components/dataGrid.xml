@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>dataGrid</tag>
+    <tagClass>org.primefaces.mobile.component.datagrid.DataGridTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.datagrid.DataGrid</componentClass>
+    <componentType>org.primefaces.mobile.DataGrid</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.DataGridRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.datagrid.DataGridRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    <attributes>
+		&standard_uicomponent_attributes;
+                &widget_var_attribute;
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>100%</defaultValue>
+            <description>Width of the div.</description>
+        </attribute>
+        <attribute>
+            <name>height</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>100%</defaultValue>
+            <description>Height of the pane.</description>
+        </attribute>
+        <attribute>
+            <name>rows</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Number of rows. To specify by device type, specify a comma-separated list of phone/phablet/tablet.</description>
+        </attribute>
+        <attribute>
+            <name>cols</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Number of columns. To specify by device type, specify a comma-separated list of phone/phablet/tablet.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Style class attached to the parent div.</description>
+        </attribute>
+        <attribute>
+            <name>paginatorTemplate</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>paginator template. Supported template elements are CurrentPage, PreviousPageLink, and NextPageLink.</description>
+        </attribute>
+        <attribute>
+            <name>itemList</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Javascript expression containing referencing either a singleton object in the group or a list of objects.</description>
+        </attribute>
+        <attribute>
+            <name>condition</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript expression whose value (true/false) determines if this panel group is rendered.</description>
+        </attribute>
+        <attribute>
+            <name>renderer</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Javascript function used to render each item in the group. Accepts the parent DOM element, the grid element, and the optional strings array as arguments.</description>
+        </attribute>
+        <attribute>
+            <name>strings</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>List of strings to supply to the renderer. Useful for internationalizing boilerplate text via JSF.</description>
+        </attribute>
+        <attribute>
+            <name>emptyMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display when there are no items to show in the data grid.</description>
+        </attribute>
+        <attribute>
+            <name>dataWidget</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of the data object required to render this panel group. Useful when the data is loaded dynamically on page load.</description>
+        </attribute>
+    </attributes>
+</component>

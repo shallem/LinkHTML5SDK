@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+    <tag>splitRight</tag>
+    <tagClass>org.primefaces.mobile.component.splitview.SplitRightTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.splitview.SplitRight</componentClass>
+    <componentType>org.primefaces.mobile.SplitRight</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.SplitRightRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.splitview.SplitRightRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <attributes>
+		&standard_uicomponent_attributes;
+    </attributes>
+</component>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+    <tag>submitCommand</tag>
+    <tagClass>org.primefaces.mobile.component.submitcommand.SubmitCommandTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.submitcommand.SubmitCommand</componentClass>
+    <componentType>org.primefaces.mobile.SubmitCommand</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.SubmitCommandRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.submitcommand.SubmitCommandRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <description>SubmitCommand provides a way to easily submit a form via Ajax and process its result.</description>
+    <attributes>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Name of the javascript function generated from this markup.</description>
+        </attribute>
+        <attribute>
+            <name>url</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Destination URL for POST'ing the submitted form.</description>
+        </attribute>
+        <attribute>
+            <name>form</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>ID of the form to submit.</description>
+        </attribute>
+        <attribute>
+            <name>statusTitle</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>The title used for displaying the return status of this command.</description>
+        </attribute>
+        <attribute>
+            <name>successMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display if the submit is successful (status 200).</description>
+        </attribute>
+        <attribute>
+            <name>successAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript action to execute when the submit is successful.</description>
+        </attribute>
+        <attribute>
+            <name>errorAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript action to execute when the submit is unsuccessful.</description>
+        </attribute>
+        <attribute>
+            <name>pendingMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display if the container is offline and the submit is queued (status 999).</description>
+        </attribute>
+        <attribute>
+            <name>errorMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display if the request fails.</description>
+        </attribute>
+    </attributes>
+    <resources>
+        <resource>
+            <name>jquery/jquery.js</name>
+        </resource>
+    </resources>
+</component>

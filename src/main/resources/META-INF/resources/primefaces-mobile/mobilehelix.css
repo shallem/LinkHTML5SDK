@@ -1,0 +1,207 @@
+/* 
+    Document   : sh
+    Created on : Aug 24, 2012, 6:00:54 AM
+    Author     : shallem
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* Split pane styles for left/right panes. */
+
+/*    overflow-y: auto;
+    overflow-x: hidden; */
+
+.splitMaster {
+    padding-top: 2px;
+/*    position: absolute; */
+    height: 100%;
+    width: 100%;
+}
+
+.fullPageVertical {
+    padding-top: 2px;
+    height: 100%;
+    width: 100%;
+}
+
+.leftContentArea {
+    float: left;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 15px 15px 0px 0px;
+    height: 100%;
+}
+
+    /*overflow-y: auto;
+    overflow-x: hidden; 
+     */
+.rightContentArea {
+    float: right;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 15px 15px 0px 0px;
+    height: 100%;
+}   
+
+.leftContentArea > form {
+    height : 100%;
+}
+
+.rightContentArea > form {
+    height : 100%;
+}
+
+.pm-scroller {
+    height: 100%;
+}
+
+.pm-scroller-horizontal {
+    display: inline-block;
+    height: auto;
+}
+
+.pm-scroller-horizontal div div {
+    display: inline;
+    float: left;
+}
+
+.buttonbar {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.sh-hbutton { 
+    text-decoration: none;
+    color: black;
+    display: inline;
+    background-repeat: no-repeat;
+    -moz-background-size:80% 80%; /* Firefox 3.6 */
+    background-size:80% 80%;
+    padding: 4px 4px 4px 4px;
+    background-position: center top; 
+    /* Eventually customized based on iPhone/iPad. */
+    width: 64px;
+    height: 64px;
+}
+
+.sh-hbutton-left {
+    float: left;
+}
+
+.sh-hbutton-right {
+    float: right;
+}
+
+.sh-hbutton span {
+    padding: 0 0 0 0;
+    background: none;
+    display:block; 
+    height:100%;
+    margin-top:80%;
+}
+
+.sh-uiborder-left {
+    border-left-color: #4F4F4F;
+    border-left-style: solid;
+    border-left-width: 1px;
+}
+
+.sh-uiborder-bottom {
+    border-bottom-color: #4F4F4F;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}
+
+.iconbutton {
+    width: 64px;
+    height: 64px;    
+}
+
+.iconbutton .ui-btn-inner {
+    text-overflow: none;
+    padding: 0.6em 0 45px;
+}
+
+.iconbutton .ui-btn-inner .ui-btn-text {
+    font-size: x-small;
+}
+
+.iconbutton .ui-btn-inner .ui-icon {
+    left: 25%;
+    margin-left: 0px;
+    width: 32px;
+    height: 32px;
+    border-radius: 0 0 0 0;
+    background-color: transparent;
+}
+
+.pm-full-height {
+    height: 100%;
+}
+
+.ui-controlgroup-controls {
+    width: 100%;
+}
+
+.ui-layout-unit .ui-layout-unit-content {
+    padding: 0 0;
+}
+
+/* Override of jquery to set the icon URL properly. */
+.ui-state-default .ui-icon {
+    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
+}
+
+.ui-widget-content .ui-icon {
+    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
+}
+
+.ui-icon, .ui-icon-searchfield:after {
+    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
+}
+
+.ui-widget-header .ui-icon {
+    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
+}
+
+/* These icons do not exist in jqmobile. */
+.ui-icon-circle-triangle-w {
+    background-position: 	-396px 50%;
+}
+
+.ui-icon-circle-triangle-e {
+    background-position: 	-360px 50%;
+}
+
+/* Override transparent backgrounds on dialog boxes in JQM. Make the background
+ * solid white instead.
+ */
+.ui-dialog {
+    background: none repeat scroll 0 0 #FFFFFF !important;
+}
+
+/* Override the seek prev/seek next buttons */
+.ui-icon-seek-prev {
+    background-position: 	-396px 50%;
+}
+
+.ui-icon-seek-next {
+    background-position: 	-360px 50%;
+}
+
+/* The heavy grey background doesn't look right in mobile. */
+.ui-widget-header {
+    background: none;
+}
+
+/* loading icon */
+.ui-icon-loading {
+	background: url("#{resource['primefaces-mobile:images/ajax-loader.gif']}");
+	background-size: 46px 46px;
+}
+
+/* No padding on page content. If there is padding, it often causes scrolling given the
+   way our tools layout pages. */
+.ui-content {
+    padding: 0px;
+}

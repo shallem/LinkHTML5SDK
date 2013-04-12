@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY output_component_attributes		SYSTEM "../entities/output_component_attributes.xml">
+<!ENTITY html_output_text_attributes		SYSTEM "../entities/html_output_text_attributes.xml">
+]>
+<component>
+    <tag>outputField</tag>
+    <tagClass>org.primefaces.mobile.component.outputfield.OutputFieldTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.outputfield.OutputField</componentClass>
+    <componentType>org.primefaces.mobile.OutputField</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.OutputFieldRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.outputfield.OutputFieldRenderer</rendererClass>
+    <parent>javax.faces.component.html.HtmlOutputText</parent>
+    
+    <attributes>
+                &output_component_attributes;
+		&html_output_text_attributes;
+        <attribute>
+            <name>name</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Field name for this text field.</description>
+        </attribute>
+    </attributes>
+        
+    <resources>
+        <resource>
+            <name>primefaces.css</name>
+        </resource>
+        <resource>
+            <name>jquery/jquery.js</name>
+        </resource>
+        <resource>
+            <name>primefaces.js</name>
+        </resource>
+    </resources>
+
+</component>

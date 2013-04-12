@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>loadCommand</tag>
+    <tagClass>org.primefaces.mobile.component.loadcommand.LoadCommandTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.loadcommand.LoadCommand</componentClass>
+    <componentType>org.primefaces.mobile.LoadCommand</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.LoadCommandRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.loadcommand.LoadCommandRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <description>LoadCommand provides a way to easily load all of the data required to render an application page.</description>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    <attributes>
+            &widget_var_attribute;
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Name of the javascript function generated from this markup.</description>
+        </attribute>
+        <attribute>
+            <name>offlineSave</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <defaultValue>false</defaultValue>
+            <description>Should the data loaded by saved offline in a database.</description>
+        </attribute>
+        <attribute>
+            <name>key</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Key used as a load parameter.</description>
+        </attribute>
+        <attribute>
+            <name>oncomplete</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript to execute when the load is complete.</description>
+        </attribute>
+        <attribute>
+            <name>url</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>URL to query with a GET request to get the JSON data.</description>
+        </attribute>
+    </attributes>
+    <resources>
+        <resource>
+            <name>jquery/jquery.js</name>
+        </resource>
+    </resources>
+</component>

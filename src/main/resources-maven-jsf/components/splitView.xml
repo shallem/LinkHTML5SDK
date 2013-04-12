@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+    <tag>splitView</tag>
+    <tagClass>org.primefaces.mobile.component.splitview.SplitViewTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.splitview.SplitView</componentClass>
+    <componentType>org.primefaces.mobile.SplitView</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.SplitViewRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.splitview.SplitViewRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <attributes>
+		&standard_uicomponent_attributes;
+        <attribute>
+            <name>verticalSeparator</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>When true, a vertical separator is displayed in between the left and right panels.</description>
+        </attribute>
+    </attributes>
+</component>

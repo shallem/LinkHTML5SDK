@@ -1,0 +1,26 @@
+<!-- Components having these attributes must extend from HtmlOutputText so all the 
+    attributes are defined as ignoreInComponent which will ignore code generation in 
+    component class since they are already defined in parent HtmlInputText
+-->
+<attribute>
+	<name>escape</name>
+	<required>false</required>
+	<type>java.lang.Boolean</type>
+	<ignoreInComponent>true</ignoreInComponent>
+        <defaultValue>true</defaultValue>
+        <description>Should the value be escaped with HTML escapes.</description>
+</attribute>
+<attribute>
+	<name>style</name>
+	<required>false</required>
+	<type>java.lang.String</type>
+	<ignoreInComponent>true</ignoreInComponent>
+        <description>Inline style for this component.</description>
+</attribute>
+<attribute>
+	<name>styleClass</name>
+	<required>false</required>
+	<type>java.lang.String</type>
+	<ignoreInComponent>true</ignoreInComponent>
+        <description>Style class for this component.</description>
+</attribute>

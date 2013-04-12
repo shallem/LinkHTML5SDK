@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+
+    <tag>scrollingDiv</tag>
+    <tagClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDivTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDiv</componentClass>
+    <componentType>org.primefaces.mobile.ScrollingDiv</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.ScrollingDivRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDivRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+
+    <attributes>
+		&standard_uicomponent_attributes;
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>100%</defaultValue>
+            <description>Width of the div.</description>
+        </attribute>
+        <attribute>
+            <name>height</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>100%</defaultValue>
+            <description>Height of the pane.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Style class attached to the parent div.</description>
+        </attribute>
+        <attribute>
+            <name>orientation</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>vertical</defaultValue>
+            <description>Vertical or horizontal orientation for the div.</description>
+        </attribute>
+    </attributes>
+</component>

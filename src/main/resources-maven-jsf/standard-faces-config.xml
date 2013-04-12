@@ -1,0 +1,19 @@
+    
+    <name>primefaces-mobile</name>
+    
+    <ordering>
+        <after>
+            <name>primefaces</name>
+            <name>primefaces-extensions</name>
+        </after>
+    </ordering>
+  
+    <application>
+        <navigation-handler>org.primefaces.mobile.navigation.MobileNavigationHandler</navigation-handler>
+        <resource-handler>org.primefaces.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
+        <system-event-listener>
+            <system-event-listener-class>org.primefaces.mobile.application.PostConstructApplicationEventListener</system-event-listener-class>
+            <system-event-class>javax.faces.event.PostConstructApplicationEvent</system-event-class>
+            <source-class>javax.faces.application.Application</source-class>
+        </system-event-listener>
+    </application>
