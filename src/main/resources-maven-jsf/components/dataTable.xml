@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>dataTable</tag>
+    <tagClass>org.primefaces.mobile.component.datatable.DataTableTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.datatable.DataTable</componentClass>
+    <componentHandlerClass>org.primefaces.mobile.component.datatable.DataTableHandler</componentHandlerClass>
+    <componentType>org.primefaces.mobile.component.DataTable</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.DataTableRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.datatable.DataTableRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <description>DataTable is an enhanced version of the standard Datatable that provides built-in solutions to many commons use cases like paging, sorting, selection, lazy loading, filtering and more.</description>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    <attributes>
+		&data_component_attributes;
+		&widget_var_attribute;
+        <attribute>
+            <name>paginatorTemplate</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Template of the paginator.</description>
+        </attribute>
+        <attribute>
+            <name>selectable</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Can data in this table be selected? If so, display a form showing the results of the selection.</description>
+        </attribute>
+        <attribute>
+            <name>selectionForm</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>ID of the form used to display the selection.</description>
+        </attribute>
+        <attribute>
+            <name>selectAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript function that downloads a JSON object representing the selection detail. Input is a row object from the data table.</description>
+        </attribute>
+        <attribute>
+            <name>condition</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript expression that, if true, means the table should be rendered and, if false, means the table should be hidden.</description>
+        </attribute>
+        <attribute>
+            <name>dataList</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript expression that evaluates to a list of objects, each of which corresponds to one row in the table.</description>
+        </attribute>
+        <attribute>
+            <name>deltaList</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript object that, as an alternative to dataList, has three component lists: adds, updates, and deletes. These lists are used to update the database accordingly.</description>
+        </attribute>        
+        <attribute>
+            <name>cols</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <required>false</required>
+            <description>If the table should have more than 1 column, a comma-seperated list of column names.</description>
+        </attribute>
+        <attribute>
+            <name>columnRenderer</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Java script expression that renders a single column of data. Parameters are row (the row data), rowidx (the row index), and colName (the column name).</description>
+        </attribute>
+        <attribute>
+            <name>emptyMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>No records found.</defaultValue>
+            <description>Text to display when there is no data to display. Default is "No records found."</description>
+        </attribute>
+        <attribute>
+            <name>style</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Inline style of the main container.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the main container.</description>
+        </attribute>
+        <attribute>
+            <name>tableStyle</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Inline style of the table element.</description>
+        </attribute>
+        <attribute>
+            <name>tableStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the table element.</description>
+        </attribute>
+        <attribute>
+            <name>rowStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class for each row.</description>
+        </attribute>
+        <attribute>
+            <name>sortFields</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <required>false</required>
+            <description>Object fields available for sorting. These fields must match to field names in the individual objects in the datalist property.</description>
+        </attribute>
+        <attribute>
+            <name>sortBy</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <description>Object field to be used for default sorting.</description>
+        </attribute>
+        <attribute>
+            <name>sortOrder</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>ascending</defaultValue>
+            <description>Sets sorting order. Default is "ascending"</description>
+        </attribute>
+        <attribute>
+            <name>rowKey</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of the field to be used as the primary key of each object in the dataList. The default is the 'key' field.</description>
+        </attribute>
+    </attributes>
+    <resources>
+        <resource>
+            <name>primefaces.css</name>
+        </resource>
+        <resource>
+            <name>jquery/jquery.js</name>
+        </resource>
+        <resource>
+            <name>primefaces.js</name>
+        </resource>
+    </resources>
+</component>
