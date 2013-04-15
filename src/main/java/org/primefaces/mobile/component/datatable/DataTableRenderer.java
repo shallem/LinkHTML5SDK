@@ -51,6 +51,8 @@ public class DataTableRenderer extends CoreRenderer {
         writer.write("PrimeFaces.cw('DataTable','" + table.resolveWidgetVar() + "',{");
         writer.write("id:'" + clientId + "'");
 
+        writer.write(",grouped: " + Boolean.toString(table.isGrouped()));
+        
         // The row style class.
         if (table.getRowStyleClass() != null) {
             writer.write(",rowStyleClass: '" + table.getRowStyleClass() + "'");
@@ -100,6 +102,7 @@ public class DataTableRenderer extends CoreRenderer {
         for (Column column : getColumns(table)) {
             colsString.append("{");
             colsString.append("id: '").append(column.getClientId()).append("'");
+            colsString.append(",name: '").append(column.getName()).append("'");
             if (column.getSortBy() != null) {
                 colsString.append(",sortby: '").append(column.getSortBy()).append("'");
             }

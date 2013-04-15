@@ -29,17 +29,17 @@
             <description>Name of the javascript function generated from this markup.</description>
         </attribute>
         <attribute>
+            <name>key</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>JavaScript function used to evaluate the primary key of the data object we are loading.</description>
+        </attribute>
+        <attribute>
             <name>offlineSave</name>
             <required>true</required>
             <type>java.lang.String</type>
             <defaultValue>true</defaultValue>
             <description>Should the data loaded by saved for offline access.</description>
-        </attribute>
-        <attribute>
-            <name>key</name>
-            <required>true</required>
-            <type>java.lang.String</type>
-            <description>Key used as a load parameter.</description>
         </attribute>
         <attribute>
             <name>oncomplete</name>

@@ -13,6 +13,12 @@
     <attributes>
 		&standard_uicomponent_attributes;
         <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Name used to identify this column on the client side.</description>
+        </attribute>
+        <attribute>
             <name>sortBy</name>
             <required>false</required>
             <type>java.lang.String</type>

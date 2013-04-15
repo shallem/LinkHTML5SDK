@@ -7,7 +7,6 @@
     <tag>dataTable</tag>
     <tagClass>org.primefaces.mobile.component.datatable.DataTableTag</tagClass>
     <componentClass>org.primefaces.mobile.component.datatable.DataTable</componentClass>
-    <componentHandlerClass>org.primefaces.mobile.component.datatable.DataTableHandler</componentHandlerClass>
     <componentType>org.primefaces.mobile.component.DataTable</componentType>
     <componentFamily>org.primefaces.mobile.component</componentFamily>
     <rendererType>org.primefaces.mobile.component.DataTableRenderer</rendererType>
@@ -55,16 +54,9 @@
         </attribute>
         <attribute>
             <name>itemsPerPage</name>
-            <required>true</required>
+            <required>false</required>
             <type>java.lang.String</type>
             <description>Number of items to display on each page. If this argument is omitted, then no pagination is used.</description>
-        </attribute>
-        <attribute>
-            <name>cols</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <required>false</required>
-            <description>If the table should have more than 1 column, a comma-seperated list of column names.</description>
         </attribute>
         <attribute>
             <name>columnRenderer</name>
@@ -121,6 +113,13 @@
             <type>java.lang.String</type>
             <defaultValue>ascending</defaultValue>
             <description>Sets sorting order. Default is "ascending"</description>
+        </attribute>
+        <attribute>
+            <name>grouped</name>
+            <required>true</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Is this a grouped list? Default is false.</description>
         </attribute>
     </attributes>
     <resources>

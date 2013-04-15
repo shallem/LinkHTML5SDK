@@ -9,10 +9,13 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.codehaus.jackson.JsonFactory;
@@ -123,16 +126,38 @@ public class JSONSerializer {
                             }
                         }
                         jg.writeEndArray();
+                    } else if (Map.class.isAssignableFrom(returnType)) {
+                        Map map = (Map)m.invoke(obj, new Object[]{});
+                        jg.writeArrayFieldStart(fieldName);
+                        for (Object k : map.keySet()) {
+                            jg.writeStartObject();
+                            jg.writeFieldName("name");
+                            String keyString = (String) k;
+                            jg.writeString(keyString);
+                         
+                            // Handle the target.
+                            jg.writeArrayFieldStart("members");
+                            Object[] members = (Object[])map.get(k);
+                            for (Object member : members) {
+                                jg.writeStartObject();
+                                this.serializeObjectFields(jg, member, visitedClasses);
+                                jg.writeEndObject();
+                            }
+                            jg.writeEndArray();
+
+                            jg.writeEndObject();
+                        }
+                        jg.writeEndArray();
                     } else {
                         /* Finally, handle arbitrary object types. Either these objects
                          * encapsulate other objects (as evidenced by having ClientData-
                          * annotated methods or they have a toString
                          */
+                        Object subObj = (Object)m.invoke(obj, new Object[]{});
+                        jg.writeFieldName(fieldName);
                         if (this.hasClientDataMethods(returnType)) {
-                            this.serializeObjectFields(jg, returnType, visitedClasses);
+                            this.serializeObjectFields(jg, subObj, visitedClasses);
                         } else {
-                            jg.writeFieldName(fieldName);
-                            Object subObj = (Object)m.invoke(obj, new Object[]{});
                             Method toStringM = subObj.getClass().getMethod("toString", new Class[]{});
                             jg.writeString((String)toStringM.invoke(subObj, new Object[]{}));
                         }
@@ -171,7 +196,7 @@ public class JSONSerializer {
          * name format.
          */
         List<String> sortFields = new LinkedList<>();
-        List<String> keyFields = new LinkedList<>();
+        String keyField = null;
         for (Method m : c.getMethods()) {
             Annotation clientDataAnnot = m.getAnnotation(clientDataPrototype.getClass());
             if (clientDataAnnot != null) {
@@ -180,11 +205,17 @@ public class JSONSerializer {
 
                 /* Check the format of the method name. */
                 String methodName = m.getName();
-                if (!methodName.startsWith("get")) {
+                if (!methodName.startsWith("get") &&
+                        !methodName.startsWith("is")) {
                     throw new IOException("All methods annotated with the ClientData annotation should have the form get<field name>.");
                 }
-                if (methodName.length() < 4) {
-                    throw new IOException("All methods annotated with the ClientData annotation should have the form get<field name>.");
+                if (methodName.startsWith("get") &&
+                        methodName.length() < 4) {
+                    throw new IOException("All getters annotated with the ClientData annotation should have the form get<field name>.");
+                }
+                if (methodName.startsWith("is") &&
+                        methodName.length() < 3) {
+                    throw new IOException("All getters annotated with the ClientData annotation should have the form is<field name>.");
                 }
 
                 /* Extract the field name. */
@@ -201,7 +232,10 @@ public class JSONSerializer {
                 Annotation keyAnnot = 
                         m.getAnnotation(org.primefaces.mobile.model.ClientDataKey.class);
                 if (keyAnnot != null) {
-                    keyFields.add(fieldName);
+                    if (keyField != null) {
+                        throw new IOException("Client data can only have one field annotated as a ClientDataKey.");
+                    }
+                    keyField = fieldName;
                 }
                 
                 /* Based on the type of the method, add to the JSON schema/object 
@@ -230,15 +264,58 @@ public class JSONSerializer {
                             throw new IOException("Array types returned by ClientData methods must be simple types or object types with at least one ClientData field.");
                         }
                         jg.writeEndArray();
+                    } else if (Map.class.isAssignableFrom(returnType)) {
+                        // Handle maps, which are just serialized as arrays of arrays.
+                        // Only handle them if we can get the types properly. Otherwise
+                        // throw an exception.
+                        Type genericType = m.getGenericReturnType();
+                        if (genericType instanceof ParameterizedType) {
+                            ParameterizedType pType = (ParameterizedType)genericType;
+                            // The from type must be a simple type for now.
+                            if (!isSimpleType(pType.getActualTypeArguments()[0].getClass())) {
+                                throw new IOException("Only maps from simple types are allowed. Simple types are primitive types or their class equivalents.");
+                            } 
+                            Class<?> targetType = pType.getActualTypeArguments()[1].getClass();
+                            if (!targetType.isArray()) {
+                                throw new IOException("Only maps from simple types to arrays (i.e., grouped lists) are allowed.");
+                            }
+                            
+                            jg.writeArrayFieldStart(fieldName);
+                            jg.writeStartObject();
+                            
+                            // Handle the group name.
+                            jg.writeFieldName("name");
+                            jg.writeString("name");
+                            
+                            // Handle the group members
+                            jg.writeArrayFieldStart("members");
+                            if (this.hasClientDataMethods(targetType)) {
+                                jg.writeStartObject();
+                                this.serializeObjectForSchema(jg, targetType.getClass(), visitedClasses);
+                                jg.writeEndObject();
+                            } else if (this.hasToString(targetType)) {
+                                jg.writeString("");
+                            } else {
+                                /* The object neither has any fields marked as ClientData nor
+                                * does it have a toString method - this is not legal.
+                                */
+                                throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
+                            }
+                            jg.writeEndArray();
+                            
+                            jg.writeEndArray();
+                        } else {
+                            throw new IOException("Only generic maps with defined key/value types are allowed.");
+                        }
                     } else {
                         /* Finally, handle arbitrary object types. Either these objects
                          * encapsulate other objects (as evidenced by having ClientData-
                          * annotated methods or they have a toString
                          */
+                        jg.writeFieldName(fieldName);
                         if (this.hasClientDataMethods(returnType)) {
                             this.serializeObjectForSchema(jg, returnType, visitedClasses);
                         } else if (this.hasToString(returnType)) {
-                            jg.writeFieldName(fieldName);
                             jg.writeString("");
                         } else {
                             /* The object neither has any fields marked as ClientData nor
@@ -250,11 +327,12 @@ public class JSONSerializer {
                 }
             }
         }
-        jg.writeArrayFieldStart("__pm_keys");
-        for (String k : keyFields) {
-            jg.writeString(k);
+        if (keyField == null) {
+            throw new IOException("Client data must have at least one field annotated as a ClientDataKey.");
         }
-        jg.writeEndArray();
+        
+        jg.writeFieldName("__pm_key");
+        jg.writeString(keyField);
         
         jg.writeArrayFieldStart("__pm_sorts");
         for (String s : sortFields) {
@@ -410,7 +488,11 @@ public class JSONSerializer {
     }
     
     private String extractFieldName(String methodName) {
-        String fieldName = methodName.substring(3);
+        int startIdx = 2;
+        if (methodName.startsWith("get")) {
+            startIdx = 3;
+        }
+        String fieldName = methodName.substring(startIdx);
         fieldName = Character.toLowerCase(fieldName.charAt(0))
                         + (fieldName.length() > 1 ? fieldName.substring(1) : "");
         return fieldName;

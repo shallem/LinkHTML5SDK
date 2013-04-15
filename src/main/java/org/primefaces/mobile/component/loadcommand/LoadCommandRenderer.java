@@ -70,6 +70,10 @@ public class LoadCommandRenderer extends CoreRenderer {
             schema = s.serializeObjectSchema(cmd.getValue());
         }
         
+        // Global variables populated by this load.
+        String widgetName = "window." + cmd.resolveWidgetVar();
+        String widgetSchemaName = "window." + cmd.resolveWidgetVar() + "_schema";
+        
         // Output empty form to POST for this command.
         String formId = clientId + "_form";
         writer.startElement("form", null);
@@ -81,20 +85,13 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.startElement("script", null);
         writer.writeAttribute("id", scriptId, null);
         writer.endElement("script");
-
-        // Request parameters to send in post backs.
-        StringBuilder paramsBuilder = new StringBuilder();
-        paramsBuilder.append("[")
-                .append("{ name: '").append(clientId).append("_reload'").append(", value: true },")
-                .append("{ name: 'key', value: ").append(cmd.getKey()).append("}")
-                .append("]");
         
         startScript(writer, clientId);
 
-        writer.write("window." + cmd.resolveWidgetVar() + " = null;");
+        writer.write(widgetName + " = null;");
    
         // Create DB schema
-        writer.write("window." + cmd.resolveWidgetVar() + "_schema = generatePersistenceSchema(");
+        writer.write(widgetSchemaName + " = generatePersistenceSchema(");
         writer.write(schema);
         writer.write(", '");
         writer.write(cmd.resolveWidgetVar());
@@ -103,12 +100,11 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("function " + cmd.getName() + "(){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', {2}, {3}, ''{5}'', {6});",
+        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', {1}, {2}, ''{3}'', {4});",
                 new Object[] {
-                    formId,
-                    scriptId,
-                    paramsBuilder.toString(),
-                    "window." + cmd.resolveWidgetVar() + "_schema",
+                    clientId,
+                    widgetSchemaName,
+                    cmd.getKey(),
                     cmd.resolveWidgetVar(),
                     onComplete.toString()
                 }));
