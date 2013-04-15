@@ -16,23 +16,23 @@
 package org.primefaces.mobile.component.datatable;
 
 import java.io.IOException;
-import javax.el.MethodExpression;
-import javax.el.ValueExpression;
+import java.util.ArrayList;
+import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.primefaces.component.api.UIColumn;
-import org.primefaces.component.summaryrow.SummaryRow;
-import org.primefaces.renderkit.DataRenderer;
-import org.primefaces.util.HTML;
+import org.primefaces.mobile.component.column.Column;
+import org.primefaces.renderkit.CoreRenderer;
 
-public class DataTableRenderer extends DataRenderer {
+public class DataTableRenderer extends CoreRenderer {
 
     public static final String CONTAINER_CLASS = "ui-datatable ui-widget";
     public static final String COLUMN_HEADER_CLASS = "ui-state-default";
     public static final String COLUMN_CONTENT_WRAPPER = "ui-dt-c";
     public static final String COLUMN_FOOTER_CLASS = "ui-state-default";
     public static final String DATA_CLASS = "ui-datatable-data ui-widget-content";
+    public static final String SORTABLE_COLUMN_ICON_CLASS = "ui-sortable-column-icon ui-icon ui-icon-carat-2-n-s";
+    public static final String HEADER_CLASS = "ui-datatable-header ui-widget-header";
     
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
@@ -41,7 +41,8 @@ public class DataTableRenderer extends DataRenderer {
         encodeScript(context, table);
     }
 
-    protected void encodeScript(FacesContext context, DataTable table) throws IOException {
+    protected void encodeScript(FacesContext context, 
+            DataTable table) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = table.getClientId(context);
 
@@ -50,51 +51,75 @@ public class DataTableRenderer extends DataRenderer {
         writer.write("PrimeFaces.cw('DataTable','" + table.resolveWidgetVar() + "',{");
         writer.write("id:'" + clientId + "'");
 
+        // The row style class.
+        if (table.getRowStyleClass() != null) {
+            writer.write(",rowStyleClass: '" + table.getRowStyleClass() + "'");
+        }
+        
         // Rendered condition.
         if (table.getCondition() != null) {
             writer.write(",condition: function() {" + table.getCondition() + "}");
         }
         
-        //Pagination
-        if (table.getPaginatorTemplate() != null) {
-            writer.write(",paginatorTemplate: '" + table.getPaginatorTemplate() + "'");
+        // Pagination
+        if (table.getItemsPerPage() != null) {
+            writer.write(",itemsPerPage: " + table.getItemsPerPage());
+            if (table.getPaginatorTemplate() != null) {
+                writer.write(",paginatorTemplate: '" + table.getPaginatorTemplate() + "'");
+            }
         }
 
-        //Selection
+        // Selection
         if (table.getSelectable().equals("true")) {
             writer.write(",selectable: true");
             
-            if (table.getSelectionForm() != null) {
-                writer.write(",formId : '" + table.getSelectionForm() + "'");
-            }
             if (table.getSelectAction() != null) {
-                writer.append(",selectAction: function(row) {" + table.getSelectAction() + "}");
+                writer.append(",selectAction: function(row,col) {" + table.getSelectAction() + "}");
             }
         }
 
-        //Filtering
-        if (table.getSortFields() != null) {
-            writer.write(",sortFields: '" + table.getSortFields() + "'");
+        // Default field to sort by.
+        if (table.getSortBy() != null) {
+            writer.write(",sortBy:'" + table.getSortBy() + "'");
+        }
 
-            if (table.getSortBy() != null) {
-                writer.write(",sortBy:'" + table.getSortBy() + "'");
-            }
-
-            if (table.getSortOrder() != null) {
-                writer.write(",sortOrder:'" + table.getSortOrder() + "'");
-            }
+        // Sort order for the default sort.
+        if (table.getSortOrder() != null) {
+            writer.write(",sortOrder:'" + table.getSortOrder() + "'");
         }
         
         // The data list.
-        if (table.getDataList() != null) {
-            writer.write(",dataList: function() {" + table.getDataList() + "}");
-        } else if (table.getDeltaList() != null) {
-            writer.write(",deltaList: function() {" + table.getDeltaList() + "}");
-        }
+        writer.write(",itemList: " + table.getItemList());
         
-        if (table.getRowKey() != null) {
-            writer.write(",keyField: '" + table.getRowKey() + "'");
+        // The column renderer
+        writer.write(",columnRenderer: " + table.getColumnRenderer());
+        
+        // The columns.
+        StringBuilder colsString = new StringBuilder();
+        colsString.append("[");
+        for (Column column : getColumns(table)) {
+            colsString.append("{");
+            colsString.append("id: '").append(column.getClientId()).append("'");
+            if (column.getSortBy() != null) {
+                colsString.append(",sortby: '").append(column.getSortBy()).append("'");
+            }
+            if (column.getSortOrder() != null) {
+                colsString.append(",sortorder: '").append(column.getSortOrder()).append("'");
+            }
+            if (column.getStyle() != null) {
+                colsString.append(",style: '").append(column.getStyle()).append("'");
+            }
+            if (column.getStyleClass() != null) {
+                colsString.append(",styleClass: '").append(column.getStyleClass()).append("'");
+            }
+            if (column.getWidth() != null) {
+                colsString.append(",width: '").append(column.getWidth()).append("'");
+            }
+            
+            colsString.append("}");
         }
+        colsString.append("]");
+        writer.write(",cols: " + colsString.toString());
         
         writer.write("});");
 
@@ -105,7 +130,7 @@ public class DataTableRenderer extends DataRenderer {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = table.getClientId(context);
         String style = table.getStyle();
-
+        
         //style class
         String containerClass = DataTableRenderer.CONTAINER_CLASS;
         containerClass = table.getStyleClass() != null ? containerClass + " " + table.getStyleClass() : containerClass;
@@ -119,15 +144,11 @@ public class DataTableRenderer extends DataRenderer {
 
         encodeRegularTable(context, table);
 
-        if (table.getSelectable() != null) {
-            // TODO
-            //encodeStateHolder(context, table, table.getClientId(context) + "_selection");
-        }
-
         writer.endElement("div");
     }
 
-    protected void encodeRegularTable(FacesContext context, DataTable table) throws IOException {
+    protected void encodeRegularTable(FacesContext context, 
+            DataTable table) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
 
         writer.startElement("table", null);
@@ -140,22 +161,23 @@ public class DataTableRenderer extends DataRenderer {
         }
 
         encodeThead(context, table);
-        //encodeTFoot(context, table); TODO
+        // encodeTFoot(context, table);
         encodeTbody(context, table, false);
         writer.endElement("table");
     }
 
-    protected void encodeColumnHeader(FacesContext context, DataTable table, UIColumn column) throws IOException {
+    protected void encodeColumnHeader(FacesContext context, 
+            DataTable table, 
+            Column column) throws IOException {
         if (!column.isRendered()) {
             return;
         }
 
         ResponseWriter writer = context.getResponseWriter();
-        String clientId = column.getContainerClientId(context);
-        ValueExpression tableSortByVe = table.getValueExpression("sortBy");
-        ValueExpression columnSortByVe = column.getValueExpression("sortBy");
-        String selectionMode = column.getSelectionMode();
-
+        String clientId = column.getClientId();
+        boolean isSortable = column.getSortBy() != null;
+        String sortIcon = isSortable ? DataTableRenderer.SORTABLE_COLUMN_ICON_CLASS : null;
+        
         String columnClass = DataTableRenderer.COLUMN_HEADER_CLASS;
         columnClass = column.getStyleClass() != null ? columnClass + " " + column.getStyleClass() : columnClass;
 
@@ -167,91 +189,34 @@ public class DataTableRenderer extends DataRenderer {
         if (column.getStyle() != null) {
             writer.writeAttribute("style", column.getStyle(), null);
         }
-        if (column.getRowspan() != 1) {
-            writer.writeAttribute("rowspan", column.getRowspan(), null);
-        }
-        if (column.getColspan() != 1) {
-            writer.writeAttribute("colspan", column.getColspan(), null);
-        }
 
         //column content wrapper
         writer.startElement("div", null);
         writer.writeAttribute("class", DataTableRenderer.COLUMN_CONTENT_WRAPPER, null);
-        if (column.getWidth() != -1) {
-            writer.writeAttribute("style", "width:" + column.getWidth() + "px", null);
+        if (column.getWidth() != null) {
+            writer.writeAttribute("style", "width:" + column.getWidth(), null);
         }
-        //encodeColumnHeaderContent(context, column, sortIcon); TODO
+        encodeColumnHeaderContent(context, column, sortIcon);
 
         writer.endElement("div");
 
         writer.endElement("th");
     }
 
-    protected void encodeColumnHeaderContent(FacesContext context, UIColumn column, String sortIcon) throws IOException {
+    protected void encodeColumnHeaderContent(FacesContext context, 
+            Column column, 
+            String sortIcon) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-
+        
         if (sortIcon != null) {
             writer.startElement("span", null);
             writer.writeAttribute("class", sortIcon, null);
             writer.endElement("span");
         }
 
-        UIComponent header = column.getFacet("header");
-        String headerText = column.getHeaderText();
-
         writer.startElement("span", null);
-
-        if (header != null) {
-            header.encodeAll(context);
-        } else if (headerText != null) {
-            writer.write(headerText);
-        }
-
+        renderChildren(context, column);
         writer.endElement("span");
-    }
-
-    protected void encodeColumnFooter(FacesContext context, DataTable table, UIColumn column) throws IOException {
-        if (!column.isRendered()) {
-            return;
-        }
-
-        ResponseWriter writer = context.getResponseWriter();
-
-        String style = column.getStyle();
-        String styleClass = column.getStyleClass();
-        styleClass = styleClass == null ? DataTableRenderer.COLUMN_FOOTER_CLASS : DataTableRenderer.COLUMN_FOOTER_CLASS + " " + styleClass;
-
-        writer.startElement("td", null);
-        writer.writeAttribute("class", styleClass, null);
-
-        if (style != null) {
-            writer.writeAttribute("style", style, null);
-        }
-        if (column.getRowspan() != 1) {
-            writer.writeAttribute("rowspan", column.getRowspan(), null);
-        }
-        if (column.getColspan() != 1) {
-            writer.writeAttribute("colspan", column.getColspan(), null);
-        }
-
-        writer.startElement("div", null);
-        writer.writeAttribute("class", DataTableRenderer.COLUMN_CONTENT_WRAPPER, null);
-        if (column.getWidth() != -1) {
-            writer.writeAttribute("style", "width:" + column.getWidth() + "px", null);
-        }
-
-        //Footer content
-        UIComponent facet = column.getFacet("footer");
-        String text = column.getFooterText();
-        if (facet != null) {
-            facet.encodeAll(context);
-        } else if (text != null) {
-            writer.write(text);
-        }
-
-        writer.endElement("div");
-
-        writer.endElement("td");
     }
 
     /**
@@ -259,87 +224,59 @@ public class DataTableRenderer extends DataRenderer {
      * defined
      */
     protected void encodeThead(FacesContext context, DataTable table) throws IOException {
-        /* TO DO */
-        /*ResponseWriter writer = context.getResponseWriter();
-        ColumnGroup group = table.getColumnGroup("header");
-
+        ResponseWriter writer = context.getResponseWriter();
+        
         writer.startElement("thead", null);
 
-        encodeFacet(context, table, table.getHeader(), DataTable.HEADER_CLASS, "th");
+        UIComponent tableHeader = getHeader(table);
+        if (tableHeader != null) {
+            writer.startElement("th", null);
+            writer.startElement("div", null);
+            writer.writeAttribute("class", DataTableRenderer.HEADER_CLASS, null);
+            tableHeader.encodeAll(context);
+            writer.endElement("div");
+            writer.endElement("th");
+        }
+        
+        writer.startElement("tr", null);
+        writer.writeAttribute("role", "row", null);
 
-        if (group != null && group.isRendered()) {
-
-            for (UIComponent child : group.getChildren()) {
-                if (child.isRendered() && child instanceof Row) {
-                    Row headerRow = (Row) child;
-
-                    writer.startElement("tr", null);
-
-                    for (UIComponent headerRowChild : headerRow.getChildren()) {
-                        if (headerRowChild.isRendered() && headerRowChild instanceof Column) {
-                            encodeColumnHeader(context, table, (Column) headerRowChild);
-                        }
-                    }
-
-                    writer.endElement("tr");
-                }
-            }
-
-        } else {
-            writer.startElement("tr", null);
-            writer.writeAttribute("role", "row", null);
-
-            for (UIColumn column : table.getColumns()) {
-                if (column instanceof Column) {
-                    encodeColumnHeader(context, table, column);
-                } else if (column instanceof DynamicColumn) {
-                    DynamicColumn dynamicColumn = (DynamicColumn) column;
-                    dynamicColumn.applyModel();
-
-                    encodeColumnHeader(context, table, dynamicColumn);
-                }
-            }
-
-            writer.endElement("tr");
+        for (Column column : getColumns(table)) {
+            encodeColumnHeader(context, table, column);
         }
 
-        writer.endElement("thead");*/
-    }
+        writer.endElement("tr");
 
+        writer.endElement("thead");
+    }
+    
     public void encodeTbody(FacesContext context, DataTable table, boolean dataOnly) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = table.getClientId(context);
 
         writer.startElement("tbody", null);
         writer.writeAttribute("id", clientId + "_data", null);
-        writer.writeAttribute("class", DataTableRenderer.DATA_CLASS, null);
+        writer.writeAttribute("class", DataTableRenderer.DATA_CLASS + " pm-scroller", null);
         
         writer.endElement("tbody");
     }
 
-    private void encodeSummaryRow(FacesContext context, DataTable table, SummaryRow summaryRow) throws IOException {
-        MethodExpression me = summaryRow.getListener();
-        if (me != null) {
-            me.invoke(context.getELContext(), new Object[]{table.getSortBy()});
-        }
-
-        summaryRow.encodeAll(context);
+    private UIComponent getHeader(DataTable table) {
+        return table.getFacet("header");
     }
+    
+    public List<Column> getColumns(DataTable table) {
+        List<Column> columns = new ArrayList<>();
 
-    protected void encodeStateHolder(FacesContext context, DataTable table, String id, String value) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-
-        writer.startElement("input", null);
-        writer.writeAttribute("type", "hidden", null);
-        writer.writeAttribute("id", id, null);
-        writer.writeAttribute("name", id, null);
-        writer.writeAttribute("autocomplete", "off", null);
-        if (value != null) {
-            writer.writeAttribute("value", value, null);
+        for(UIComponent child : table.getChildren()) {
+            if(child instanceof Column) {
+                columns.add((Column) child);
+            }
         }
-        writer.endElement("input");
+        
+        return columns;
     }
-
+    
     @Override
     public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
         //Rendering happens on encodeEnd

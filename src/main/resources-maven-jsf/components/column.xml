@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+    <tag>column</tag>
+    <tagClass>org.primefaces.mobile.component.column.ColumnTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.column.Column</componentClass>
+    <componentType>org.primefaces.mobile.component.Column</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <parent>javax.faces.component.UIColumn</parent>
+    <description>Column is an extended version of the standard column used by various PrimeFaces Mobile components like datatable, treetable and more.</description>
+    <attributes>
+		&standard_uicomponent_attributes;
+        <attribute>
+            <name>sortBy</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Property list to be used for sorting this column.</description>
+        </attribute>
+        <attribute>
+            <name>sortOrder</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>ascending</defaultValue>
+            <description>Sets sorting order. Default is "ascending"</description>
+        </attribute>
+        <attribute>
+            <name>style</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Inline style of the column.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the column.</description>
+        </attribute>
+        <attribute>
+            <name>filterBy</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <defaultValue>false</defaultValue>
+            <description>Property to be used for filtering.</description>
+        </attribute>
+        <attribute>
+            <name>filterStyle</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Inline style of the filter element.</description>
+        </attribute>
+        <attribute>
+            <name>filterStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the filter element.</description>
+        </attribute>
+        <attribute>
+            <name>filterOptions</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <description>A collection of selectitems for filter dropdown.</description>
+        </attribute>
+        <attribute>
+            <name>disabledSelection</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Disables row selection when true.</description>
+        </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Width of the column in pixels.</description>
+        </attribute>
+    </attributes>
+</component>

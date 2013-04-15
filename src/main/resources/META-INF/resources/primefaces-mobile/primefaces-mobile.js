@@ -757,7 +757,7 @@ PrimeFaces.Utils =  {
             dataType: "json",
             success: function(data,status,jqXHR) {
                 if (data.__mh_error) {
-                    PrimeFaces.Utils.statusMessage("AJAX Error", data.__mh_error, "Severe");
+                    PrimeFaces.Utils.statusMessage("AJAX Error", data.__mh_error, "severe");
                     jqXHR.__mh_failed = true;
                     return;
                 }

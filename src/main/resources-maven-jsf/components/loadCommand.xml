@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
 <!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY output_component_attributes				SYSTEM "../entities/output_component_attributes.xml">
 <!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
@@ -19,6 +20,7 @@
         </interface>
     </interfaces>
     <attributes>
+            &output_component_attributes;
             &widget_var_attribute;
         <attribute>
             <name>name</name>
@@ -30,8 +32,8 @@
             <name>offlineSave</name>
             <required>true</required>
             <type>java.lang.String</type>
-            <defaultValue>false</defaultValue>
-            <description>Should the data loaded by saved offline in a database.</description>
+            <defaultValue>true</defaultValue>
+            <description>Should the data loaded by saved for offline access.</description>
         </attribute>
         <attribute>
             <name>key</name>
@@ -46,10 +48,10 @@
             <description>Javascript to execute when the load is complete.</description>
         </attribute>
         <attribute>
-            <name>url</name>
-            <required>true</required>
-            <type>java.lang.String</type>
-            <description>URL to query with a GET request to get the JSON data.</description>
+            <name>delta</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <description>Delta datasource of the load command.</description>
         </attribute>
     </attributes>
     <resources>
