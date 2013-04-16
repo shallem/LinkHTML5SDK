@@ -121,6 +121,20 @@
             <defaultValue>false</defaultValue>
             <description>Is this a grouped list? Default is false.</description>
         </attribute>
+        <attribute>
+            <name>groupName</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>false</defaultValue>
+            <description>Function to invoke on a row to get the group name in a grouped list.</description>
+        </attribute>
+        <attribute>
+            <name>groupMembers</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>false</defaultValue>
+            <description>Function to invoke on a row to get the group members in a grouped list.</description>
+        </attribute>
     </attributes>
     <resources>
         <resource>

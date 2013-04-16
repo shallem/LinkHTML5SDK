@@ -53,6 +53,15 @@ public class DataTableRenderer extends CoreRenderer {
 
         writer.write(",grouped: " + Boolean.toString(table.isGrouped()));
         
+        // Getter for group name.
+        if (table.getGroupName() != null) {
+            writer.write(",groupName: " + table.getGroupName());
+        }
+        // Getter for group members.
+        if (table.getGroupMembers() != null) {
+            writer.write(",groupMembers: " + table.getGroupMembers());
+        }
+        
         // The row style class.
         if (table.getRowStyleClass() != null) {
             writer.write(",rowStyleClass: '" + table.getRowStyleClass() + "'");
