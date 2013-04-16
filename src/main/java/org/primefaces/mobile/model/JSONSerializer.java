@@ -58,120 +58,94 @@ public class JSONSerializer {
         TreeSet<String> visitedClasses = new TreeSet<>();
         StringWriter outputString = new StringWriter();
         JsonFactory jsonF = new JsonFactory();
+        
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
-
-        serializeObjectFields(jg, obj, visitedClasses);
-
-        return jg.toString();
+        serializeObjectFields(jg, obj, visitedClasses, null);
+        jg.close();
+        
+        outputString.flush();
+        
+        return outputString.toString();
     }
 
-    private void serializeObjectFields(JsonGenerator jg,
+    private boolean serializeObjectFields(JsonGenerator jg,
             Object obj,
-            Set<String> visitedClasses) throws IOException,
-            IllegalAccessException,
-            IllegalArgumentException,
-            InvocationTargetException,
-            NoSuchMethodException {
+            Set<String> visitedClasses,
+            String fieldName) throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException {
         Class<?> c = obj.getClass();
 
-        /* Prevent infinite loops. If we have already visited this object back out. */
-        if (visitedClasses.contains(c.getCanonicalName())) {
-            return;
-        }
-        visitedClasses.add(c.getCanonicalName());
-
-        /* Determine if this is a DeltaObject and mark it privately so the client
-         * will know to handle it accordingly.
-         */
-        for (Class<?> ifaces : c.getInterfaces()) {
-            if (ifaces.equals(org.primefaces.mobile.model.DeltaObject.class)) {
-                jg.writeFieldName("__pm_type");
-                jg.writeNumber(1001);
+        if (this.isSimpleType(c)) {
+            if (fieldName != null) {
+                jg.writeFieldName(fieldName);
             }
-        }
-
-        /* Next, iterate over all methods looking for property getters, of the form
-         * get<prop name>. Find those annotated with the ClientData annotation. Presuming
-         * the name format is right, convert the method name to a field name and add
-         * to the schema. Throw an IO exception is an annotated method has the wrong
-         * name format.
-         */
-        for (Method m : c.getMethods()) {
-            Annotation clientDataAnnot = m.getAnnotation(org.primefaces.mobile.model.ClientData.class);
-            if (clientDataAnnot != null) {
-                /* Extract the field name. */
-                String fieldName = this.extractFieldName(m.getName());
-
-                /* Based on the type of the method, add to the JSON schema/object 
-                 * appropriately.
+            this.addSimpleData(jg, obj);
+            return true;
+        } else if (c.isArray()) {
+            if (fieldName != null) {
+                jg.writeArrayFieldStart(fieldName);
+            } else {
+                jg.writeStartArray();
+            }
+            for (Object elem : (Object[]) obj) {
+                this.serializeObjectFields(jg, elem, visitedClasses, null);
+            }
+            jg.writeEndArray();
+            return true;
+        } else {
+            /* Next, iterate over all methods looking for property getters, of the form
+             * get<prop name>. Find those annotated with the ClientData annotation. Presuming
+             * the name format is right, convert the method name to a field name and add
+             * to the schema. Throw an IO exception is an annotated method has the wrong
+             * name format.
+             */
+            if (fieldName != null) {
+                jg.writeFieldName(fieldName);
+            }
+            if (this.hasClientDataMethods(c)) {
+                jg.writeStartObject();
+                /* Determine if this is a DeltaObject and mark it privately so the client
+                 * will know to handle it accordingly.
                  */
-                Class<?> returnType = m.getReturnType();
+                for (Class<?> ifaces : c.getInterfaces()) {
+                    if (ifaces.equals(org.primefaces.mobile.model.DeltaObject.class)) {
+                        jg.writeFieldName("__pm_type");
+                        jg.writeNumber(1001);
+                    }
+                }
+                
+                for (Method m : c.getMethods()) {
+                    Annotation clientDataAnnot = m.getAnnotation(org.primefaces.mobile.model.ClientData.class);
+                    if (clientDataAnnot != null) {
+                        /* Extract the field name. */
+                        String nxtFieldName = this.extractFieldName(m.getName());
 
-                /* Serialize the genericized version of this return type. */
-                if (this.isSimpleType(returnType)) {
-                    jg.writeFieldName(fieldName);
-                    this.addSimpleData(jg, obj, m);
-                } else {
-                    /* Handle arrays by recursing over the elements. */
-                    if (returnType.isArray()) {
-                        Class<?> componentType = returnType.getComponentType();
-                        jg.writeArrayFieldStart(fieldName);
-                        for (Object elem : (Object[]) m.invoke(obj, new Object[]{})) {
-                            if (isSimpleType(componentType)) {
-                                this.addSimpleData(jg, elem, m);
-                            } else {
-                                this.serializeObjectFields(jg, elem, visitedClasses);
-                            }
-                        }
-                        jg.writeEndArray();
-                    } else if (Map.class.isAssignableFrom(returnType)) {
-                        Map map = (Map) m.invoke(obj, new Object[]{});
-                        jg.writeArrayFieldStart(fieldName);
-                        for (Object k : map.keySet()) {
-                            jg.writeStartObject();
-                            jg.writeFieldName("name");
-                            String keyString = (String) k;
-                            jg.writeString(keyString);
-
-                            // Handle the target.
-                            jg.writeArrayFieldStart("members");
-                            Object[] members = (Object[]) map.get(k);
-                            for (Object member : members) {
-                                jg.writeStartObject();
-                                this.serializeObjectFields(jg, member, visitedClasses);
-                                jg.writeEndObject();
-                            }
-                            jg.writeEndArray();
-
-                            jg.writeEndObject();
-                        }
-                        jg.writeEndArray();
-                    } else {
                         /* Finally, handle arbitrary object types. Either these objects
                          * encapsulate other objects (as evidenced by having ClientData-
                          * annotated methods or they have a toString
                          */
                         Object subObj = (Object) m.invoke(obj, new Object[]{});
-                        jg.writeFieldName(fieldName);
-                        if (this.hasClientDataMethods(returnType)) {
-                            this.serializeObjectFields(jg, subObj, visitedClasses);
-                        } else {
+                        if (!this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
                             Method toStringM = subObj.getClass().getMethod("toString", new Class[]{});
+                            jg.writeFieldName(nxtFieldName);
                             jg.writeString((String) toStringM.invoke(subObj, new Object[]{}));
                         }
                     }
                 }
+                jg.writeEndObject();
+                return true;
             }
         }
+        
+        return false;
     }
 
-    public String serializeObjectSchema(Object obj) throws IOException {
+    public String serializeObjectSchema(Class<?> cls) throws IOException {
         TreeSet<String> visitedClasses = new TreeSet<>();
         StringWriter outputString = new StringWriter();
         JsonFactory jsonF = new JsonFactory();
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
         
-        if (!serializeObjectForSchema(jg, obj.getClass(), visitedClasses, null)) {
+        if (!serializeObjectForSchema(jg, cls, visitedClasses, null)) {
             throw new IOException("Attempting to generate schema for an object with no client data.");
         }
 
@@ -268,6 +242,7 @@ public class JSONSerializer {
                              * fields. See if we can serialize to a string.
                              */
                             if (this.hasToString(returnType)) {
+                                jg.writeFieldName(nxtFieldName);
                                 jg.writeString("s");
                             } else {
                                 /* The object neither has any fields marked as ClientData nor
@@ -344,49 +319,49 @@ public class JSONSerializer {
                 || isBoolean(objType);
     }
 
-    private void addSimpleData(JsonGenerator jg, Object obj, Method m)
+    private void addSimpleData(JsonGenerator jg, Object obj)
             throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         switch (obj.getClass().getName()) {
             case "boolean":
             case "java.lang.Boolean":
-                jg.writeBoolean((Boolean) m.invoke(obj, new Object[]{}));
+                jg.writeBoolean((boolean) obj);
                 break;
             case "byte":
             case "java.lang.Byte":
-                jg.writeNumber((Byte) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((byte) obj);
                 break;
             case "java.lang.Short":
             case "short":
-                jg.writeNumber((Short) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((short) obj);
                 break;
             case "java.lang.Integer":
             case "java.lang.AtomicInteger":
             case "int":
-                jg.writeNumber((Integer) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((int) obj);
                 break;
             case "java.lang.Long":
             case "java.lang.AtomicLong":
             case "long":
-                jg.writeNumber((Long) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((long) obj);
                 break;
             case "char":
                 jg.writeRaw('a');
                 break;
             case "float":
             case "java.lang.Float":
-                jg.writeNumber((Float) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((float) obj);
             case "double":
             case "java.lang.Double":
-                jg.writeNumber((Double) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((double) obj);
                 break;
             case "java.lang.String":
-                jg.writeString((String) m.invoke(obj, new Object[]{}));
+                jg.writeString((String) obj);
                 break;
             case "java.lang.BigInteger":
-                jg.writeNumber((BigInteger) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((BigInteger) obj);
                 break;
             case "java.lang.BigDecmial":
-                jg.writeNumber((BigDecimal) m.invoke(obj, new Object[]{}));
+                jg.writeNumber((BigDecimal) obj);
                 break;
         }
     }

@@ -20,14 +20,32 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import javax.faces.event.ActionEvent;
+import javax.faces.event.PhaseId;
 import org.primefaces.mobile.model.JSONSerializer;
 import org.primefaces.renderkit.CoreRenderer;
+import org.primefaces.util.ComponentUtils;
 
 public class LoadCommandRenderer extends CoreRenderer {
 
+    @Override
+    public void decode(FacesContext context, UIComponent component) {
+        LoadCommand cmd = (LoadCommand) component;
+
+        if(context.getExternalContext().getRequestParameterMap().containsKey(cmd.getClientId(context) + "_reload")) {
+            ActionEvent event = new ActionEvent(cmd);
+            /* Skip the JSF lifecycle so that we don't waste time trying to validate the contents
+             * of an empty form ...
+             */
+            event.setPhaseId(PhaseId.APPLY_REQUEST_VALUES);
+            cmd.queueEvent(event);
+        }
+    }
+    
     
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
@@ -39,7 +57,11 @@ public class LoadCommandRenderer extends CoreRenderer {
             ResponseWriter writer = context.getResponseWriter();
             JSONSerializer s = new JSONSerializer();
             try {
-                writer.write(s.serializeObject(cmd.getValue()));
+                if (cmd.getError() != null) {
+                    writer.write("{ 'error' : '" + cmd.getError() + "'}");
+                } else {
+                    writer.write(s.serializeObject(cmd.getValue()));
+                }
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -56,10 +78,14 @@ public class LoadCommandRenderer extends CoreRenderer {
     protected void encodeScript(FacesContext context, LoadCommand cmd) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = cmd.getClientId();
-
+        UIComponent form = (UIComponent) ComponentUtils.findParentForm(context, cmd);
+        if(form == null) {
+            throw new FacesException("LoadCommand '" + cmd.getName() + "'must be inside a form.");
+        }
+        
         StringBuilder onComplete = new StringBuilder();
         if (cmd.getOncomplete() != null) {
-            onComplete.append("function () {").append(cmd.getOncomplete()).append("}");
+            onComplete.append("function (statusText) {").append(cmd.getOncomplete()).append("}");
         } else {
             onComplete.append("null");
         }
@@ -67,7 +93,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         String schema = "null";
         if (cmd.getOfflineSave().equals("true")) {
             JSONSerializer s = new JSONSerializer();
-            schema = s.serializeObjectSchema(cmd.getValue());
+            schema = s.serializeObjectSchema(cmd.getValue().getClass());
         }
         
         // Global variables populated by this load.
@@ -75,19 +101,9 @@ public class LoadCommandRenderer extends CoreRenderer {
         String widgetSchemaName = "window." + cmd.resolveWidgetVar() + "_schema";
         
         // Output empty form to POST for this command.
-        String formId = clientId + "_form";
-        writer.startElement("form", null);
-        writer.writeAttribute("id", formId, null);
-        writer.endElement("form");
-        
-        // Output script tag to update whenever we run a load command.
-        String scriptId = clientId + "_script";
-        writer.startElement("script", null);
-        writer.writeAttribute("id", scriptId, null);
-        writer.endElement("script");
+        String formId = form.getClientId(context);
         
         startScript(writer, clientId);
-
         writer.write(widgetName + " = null;");
    
         // Create DB schema
@@ -97,14 +113,15 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(cmd.resolveWidgetVar());
         writer.write("');");
         
-        writer.write("function " + cmd.getName() + "(){ ");
+        writer.write("function " + cmd.getName() + "(key){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', {1}, {2}, ''{3}'', {4});",
+        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', {2}, {3}, ''{4}'', {5}, key);",
                 new Object[] {
                     clientId,
+                    formId,
                     widgetSchemaName,
-                    cmd.getKey(),
+                    (cmd.getKey() != null) ? cmd.getKey() : "''",
                     cmd.resolveWidgetVar(),
                     onComplete.toString()
                 }));
