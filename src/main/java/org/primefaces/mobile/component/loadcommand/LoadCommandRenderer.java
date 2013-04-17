@@ -113,15 +113,14 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(cmd.resolveWidgetVar());
         writer.write("');");
         
-        writer.write("function " + cmd.getName() + "(key){ ");
+        writer.write("function " + cmd.getName() + "(params){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', {2}, {3}, ''{4}'', {5}, key);",
+        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', {2}, ''{3}'', {4}, params);",
                 new Object[] {
                     clientId,
                     formId,
                     widgetSchemaName,
-                    (cmd.getKey() != null) ? cmd.getKey() : "''",
                     cmd.resolveWidgetVar(),
                     onComplete.toString()
                 }));

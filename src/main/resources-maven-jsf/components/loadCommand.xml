@@ -28,12 +28,6 @@
             <description>Name of the javascript function generated from this markup.</description>
         </attribute>
         <attribute>
-            <name>key</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>JavaScript function used to evaluate the primary key of the data object we are loading.</description>
-        </attribute>
-        <attribute>
             <name>error</name>
             <required>false</required>
             <type>java.lang.String</type>

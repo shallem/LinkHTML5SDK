@@ -85,7 +85,7 @@ public class DataTableRenderer extends CoreRenderer {
             writer.write(",selectable: true");
             
             if (table.getSelectAction() != null) {
-                writer.append(",selectAction: function(row,col) {" + table.getSelectAction() + "}");
+                writer.append(",selectAction: function(row,col,strings) {" + table.getSelectAction() + "}");
             }
         }
 
