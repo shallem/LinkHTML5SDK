@@ -442,7 +442,14 @@ PrimeFaces.resizePages = function() {
  */
 PrimeFaces.scrollerSel = '.pm-scroller,.pm-scroller-nozoom,.pm-scroller-zoomonly';
 
-var myScroll = {};
+PrimeFaces.isScroller = function(elem) {
+    if (elem && $(elem).is(PrimeFaces.scrollerSel)) {
+        return true;
+    }
+    return false;
+}
+
+PrimeFaces.allScrollers = {};
 PrimeFaces.addScrollers = function(elem) {
     var toAdd;
     if (elem === undefined) {
@@ -452,9 +459,9 @@ PrimeFaces.addScrollers = function(elem) {
     }
     
     toAdd.each(function(index, value) {            
-        if (this.id in myScroll) {
+        if (this.id in PrimeFaces.allScrollers) {
             //alert("REFRESH: " + this.id);
-            myScroll[this.id].refresh();
+            PrimeFaces.allScrollers[this.id].refresh();
         } else {
             // Make sure we have at least one child, otherwise there is nothing to scroll
             // and iScroll fails.
@@ -478,7 +485,7 @@ PrimeFaces.addScrollers = function(elem) {
                 doVScroll = false;
             }
 
-            myScroll[this.id] = new iScroll(this.id, {
+            PrimeFaces.allScrollers[this.id] = new iScroll(this.id, {
                 hScroll        : doHScroll,
                 vScroll        : doVScroll,
                 hScrollbar     : false,
@@ -599,7 +606,7 @@ $(document).bind('prerequest', function(ev, cfg) {
             $(updateSel).find(PrimeFaces.scrollerSel).each(function(index, element) {
                 /* Save off the height of the item we are going to update. */
                 var scrollerID = $(this).attr('id'); 
-                delete myScroll[scrollerID];
+                delete PrimeFaces.allScrollers[scrollerID];
             });
         }
     }
@@ -624,7 +631,7 @@ $(document).bind('postrequest', function(ev, responseXML) {
         $(updateSel).find(PrimeFaces.scrollerSel).each(function(index, element) {
             /* Save off the height of the item we are going to update. */
             var scrollerID = $(this).attr('id'); 
-            delete myScroll[scrollerID];
+            delete PrimeFaces.allScrollers[scrollerID];
         });
         
         /*

@@ -47,17 +47,12 @@ public class ButtonBarRenderer extends CoreRenderer {
         for(UIComponent child : childButtons) {
             
             if(child.isRendered()) {
-//                writer.startElement("li", navBar);
-//                if (isHorizontal) {
-//                    writer.writeAttribute("style", "display: inline-block;", null);
-//                }
                 if (idx == childButtons.size()) {
                     IconButton ib = (IconButton)child;
                     ib.setCorner(isLeft ? "right" : "left");
                 }
                 
                 child.encodeAll(context);
-//                writer.endElement("li");
             }
             ++idx;
         }
