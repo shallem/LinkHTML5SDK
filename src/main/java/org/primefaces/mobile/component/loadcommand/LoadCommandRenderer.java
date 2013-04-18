@@ -98,33 +98,40 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         // Global variables populated by this load.
         String widgetName = "window." + cmd.resolveWidgetVar();
-        String widgetSchemaName = "window." + cmd.resolveWidgetVar() + "_schema";
         
         // Output empty form to POST for this command.
         String formId = form.getClientId(context);
         
+        writer.write("\n");
         startScript(writer, clientId);
         writer.write(widgetName + " = null;");
    
-        // Create DB schema
-        writer.write(widgetSchemaName + " = generatePersistenceSchema(");
-        writer.write(schema);
-        writer.write(", '");
-        writer.write(cmd.resolveWidgetVar());
-        writer.write("');");
-        
-        writer.write("function " + cmd.getName() + "(params){ ");
+        writer.write("function " + cmd.getName() + "_load(schemaObj, params){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', {2}, ''{3}'', {4}, params);",
+        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', ''{2}'', {3}, schemaObj, params);",
                 new Object[] {
                     clientId,
                     formId,
-                    widgetSchemaName,
                     cmd.resolveWidgetVar(),
                     onComplete.toString()
                 }));
 
+        writer.write("}");
+        
+        // When the load command runs, first generate the schema if we have not done so yet. 
+        // Then, oncomplete, call the load function.
+        writer.write("function " + cmd.getName() + "(params){ ");
+        
+        writer.write("PrimeFaces.DB.generatePersistenceSchema(");
+        writer.write(schema);
+        writer.write(", '");
+        writer.write(cmd.resolveWidgetVar());
+        writer.write("',");
+        writer.write(cmd.getName());
+        writer.write("_load,");
+        writer.write("params);");
+        
         writer.write("}");
         
         endScript(writer);

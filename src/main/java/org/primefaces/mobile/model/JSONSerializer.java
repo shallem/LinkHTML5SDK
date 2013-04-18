@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 
@@ -103,14 +105,22 @@ public class JSONSerializer {
             }
             if (this.hasClientDataMethods(c)) {
                 jg.writeStartObject();
+                
                 /* Determine if this is a DeltaObject and mark it privately so the client
                  * will know to handle it accordingly.
                  */
-                for (Class<?> ifaces : c.getInterfaces()) {
-                    if (ifaces.equals(org.primefaces.mobile.model.DeltaObject.class)) {
-                        jg.writeFieldName("__pm_type");
-                        jg.writeNumber(1001);
-                    }
+                if (!this.isDeltaObject(c)) {
+                    /* Write the object type so that we can get the Schema back. */
+                    jg.writeFieldName("__pm_schema_type");
+                    jg.writeString(c.getName());
+                } else {
+                    jg.writeFieldName("__pm_type");
+                    jg.writeNumber(1001);
+                    
+                    Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
+                    Class<?> returnType = m.getReturnType();
+                    jg.writeFieldName("__pm_schema_type");
+                    jg.writeString(returnType.getName());
                 }
                 
                 for (Method m : c.getMethods()) {
@@ -125,14 +135,17 @@ public class JSONSerializer {
                          */
                         Object subObj = (Object) m.invoke(obj, new Object[]{});
                         if (!this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
-                            Method toStringM = subObj.getClass().getMethod("toString", new Class[]{});
-                            jg.writeFieldName(nxtFieldName);
-                            jg.writeString((String) toStringM.invoke(subObj, new Object[]{}));
+                            /* Should never happen. */
+                            throw new IOException("Serialization unexpectedly encountered a class with no ClientData: " + subObj.getClass().getName());
                         }
                     }
                 }
                 jg.writeEndObject();
                 return true;
+            } else if (this.hasToString(c)) {
+                /* This is just a simple type. */
+                Method toStringM = obj.getClass().getMethod("toString", new Class[]{});
+                jg.writeString((String) toStringM.invoke(obj, new Object[]{}));
             }
         }
         
@@ -177,25 +190,33 @@ public class JSONSerializer {
                     componentType,
                     visitedClasses,
                     null)) {
-                throw new IOException("Array types returned by ClientData methods must be simple types or object types with at least one ClientData field.");
+                throw new IOException("Array types returned by ClientData methods must be simple types or object types with at least one ClientData field. Class " + componentType.getName() + " does not comply.");
             }
             jg.writeEndArray();
             return true;
         } else {
-            /* Prevent infinite loops. If we have already visited this object throw an
-             * exception. We cannot send recursively defined objects to the client. */
-            if (visitedClasses.contains(c.getCanonicalName())) {
-                throw new IOException("Cannot send a recursively defined object to the client. Error when revisiting: " + c.getCanonicalName());
+            /* Check is this is a delta object. If so, just iterate over the object type of the
+             * getAdds method.
+             */
+            if (this.isDeltaObject(c)) {
+                try {
+                    Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
+                    Class<?> returnType = m.getReturnType();
+                    if (!this.serializeObjectForSchema(jg, returnType, visitedClasses, fieldName)) {
+                        /* The object neither has any fields marked as ClientData nor
+                         * does it have a toString method - this is not legal.
+                        */
+                        throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
+                    }
+                } catch (NoSuchMethodException | SecurityException ex) {
+                    throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
+                }
             }
-            visitedClasses.add(c.getCanonicalName());
             
             /* Finally, handle arbitrary object types. Either these objects
              * encapsulate other objects (as evidenced by having ClientData-
              * annotated methods or they have a toString
              */
-            if (fieldName != null) {
-                jg.writeFieldName(fieldName);
-            }
             
             /* Next, iterate over all methods looking for property getters, of the form
              * get<prop name>. Find those annotated with the ClientData annotation. Presuming
@@ -204,10 +225,35 @@ public class JSONSerializer {
              * name format.
              */
             if (this.hasClientDataMethods(c)) {
+                if (fieldName != null) {
+                    /* This is an object that will exist in its own table on the client side. */
+                    jg.writeFieldName(fieldName);
+                }
+                
                 List<String> sortFields = new LinkedList<>();
                 String keyField = null;
                 
                 jg.writeStartObject();
+                
+                jg.writeFieldName("__pm_schema_name");
+                jg.writeString(c.getName());
+                
+                
+                /* Prevent infinite loops. If we have already visited this object then
+                 * we have already defined its schema. Just return true. However, we do 
+                 * need to put in a reference to the master schema so that the client
+                 * knows that there is a schema relationship here.
+                 */
+                if (visitedClasses.contains(c.getCanonicalName())) {
+                    // Indicate that this is, essentially, a forward ref.
+                    jg.writeFieldName("__pm_schema_type");
+                    jg.writeNumber(1002);
+                    
+                    jg.writeEndObject();
+                    return true;
+                }
+                visitedClasses.add(c.getCanonicalName());
+                
                 for (Method m : c.getMethods()) {
                     Annotation clientDataAnnot = m.getAnnotation(org.primefaces.mobile.model.ClientData.class);
                     if (clientDataAnnot != null) {
@@ -238,18 +284,10 @@ public class JSONSerializer {
                         /* Recurse over the method. */
                         Class<?> returnType = m.getReturnType();
                         if (!this.serializeObjectForSchema(jg, returnType, visitedClasses, nxtFieldName)) {
-                            /* Returned object is not a simple type, array, or another object with ClientData
-                             * fields. See if we can serialize to a string.
-                             */
-                            if (this.hasToString(returnType)) {
-                                jg.writeFieldName(nxtFieldName);
-                                jg.writeString("s");
-                            } else {
-                                /* The object neither has any fields marked as ClientData nor
-                                 * does it have a toString method - this is not legal.
-                                */
-                                throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
-                            }
+                            /* The object neither has any fields marked as ClientData nor
+                             * does it have a toString method - this is not legal.
+                            */
+                            throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
                         }
                     }
                 }
@@ -269,7 +307,18 @@ public class JSONSerializer {
 
                 jg.writeEndObject();
                 return true;
+            }  else if (this.hasToString(c)) {
+                /* The object has a toString method and no ClientData objects. Hence,
+                 * it is no different than a simple string field.
+                 */
+                if (fieldName != null) {
+                    jg.writeFieldName(fieldName);
+                }
+                jg.writeString("toString");
+                
+                return true;
             }
+            
             /* No client data fields in this object. */
             return false;
         }
@@ -438,6 +487,17 @@ public class JSONSerializer {
         return false;
     }
 
+    private boolean isDeltaObject(Class<?> c) {
+        boolean isDelta = false;
+        for (Class<?> ifaces : c.getInterfaces()) {
+            if (ifaces.equals(org.primefaces.mobile.model.DeltaObject.class)) {
+                isDelta = true;
+                break;
+            }
+        }
+        return isDelta;
+    }
+    
     private String extractFieldName(String methodName) {
         int startIdx = 2;
         if (methodName.startsWith("get")) {
