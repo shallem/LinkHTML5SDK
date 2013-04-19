@@ -241,202 +241,6 @@ PrimeFaces.widget.MobilePanelGroup = PrimeFaces.widget.BaseWidget.extend({
     }
 });
 
-/***
- * Widget overrides from the base primefaces package.
- ***/
-
-/**
- * Override the function that installs datatable selection events to use tap, 
- * not click ...
- */
-PrimeFaces.widget.DataTable = PrimeFaces.widget.DataTable.extend({
-    bindSelectionEvents: function() {
-        var _self = this;
-        this.rowSelector = this.jqId + ' tbody.ui-datatable-data > tr.ui-widget-content:not(.ui-datatable-empty-message)';
-
-        if(this.cfg.selectionMode) {
-            //alert("HELLO: " + _self.rowSelector);
-            $(_self.rowSelector).die('tap.datatable').live('tap.datatable',function(e) {
-                _self.onRowClick(e, this);
-            });
-        }
-        //Radio-Checkbox based rowselection
-        else if(this.cfg.columnSelectionMode) {
-
-            if(this.cfg.columnSelectionMode == 'single') {
-                _self.bindRadioEvents();
-            }
-            else {
-                _self.bindCheckboxEvents();
-            }
-        }
-    },
-    bindCheckboxEvents: function() {
-        var checkAllTogglerSelector = this.jqId + ' table thead th.ui-selection-column .ui-chkbox.ui-chkbox-all .ui-chkbox-box',
-        _self = this;
-        
-        this.checkAllToggler = $(checkAllTogglerSelector);
-        
-        //check-uncheck all; no mouseover/mouseout events because that makes no sense
-        // on a touch device. For the original see datatable.js in the primefaces project.
-        this.checkAllToggler.live('tap', function() {
-            _self.toggleCheckAll();
-        });
-
-        //row checkboxes
-        var checkboxSelector = this.jqId + ' tbody.ui-datatable-data > tr.ui-widget-content:not(.ui-datatable-empty-message) > td.ui-selection-column .ui-chkbox .ui-chkbox-box',
-        checkboxInputSelector = this.jqId + ' tbody.ui-datatable-data > tr.ui-widget-content:not(.ui-datatable-empty-message) > td.ui-selection-column .ui-chkbox input';
-
-        $(checkboxSelector).die('tap.ui-chkbox')
-        .live('tap.ui-chkbox', function() {
-            var checkbox = $(this);
-
-            if(!checkbox.hasClass('ui-state-disabled')) {
-                var checked = checkbox.hasClass('ui-state-active');
-
-                if(checked) {
-                    _self.unselectRowWithCheckbox(checkbox);
-                } 
-                else {                        
-                    _self.selectRowWithCheckbox(checkbox);
-                }
-            }
-        });
-
-    // No keyboard support on a mobile device ... see datable.js in the primefaces code
-    // for the original version with keyboard support.
-    }
-});
-
-/**
- * Open context menus on tap hold.
- */
-PrimeFaces.attachContextMenus = function(elem) {
-    if (elem === undefined) {
-        elem = document;
-    }
-    $(elem).find('.pm-context-target').each(function() {
-        var id = $(this).attr('id');
-        var menu_id = id + "_menu";
-        $(this).on('taphold', function(event) {
-            // This allows parent objects to have taphold context menus that are not
-            // triggered when this event is triggered.
-            event.stopImmediatePropagation();
-            $(PrimeFaces.escapeClientId(menu_id)).popup( "open" );
-        });
-    });
-}
-
-/* Mapping that we will use from action IDs (generated uniquely) to action functions. */
-PrimeFaces.contextActions = {
-    
-};
-
-PrimeFaces.executeContextAction = function(actionID, domObj) {
-    PrimeFaces.contextActions[actionID].call(domObj);
-}
-
-$('[data-role="page"]').live('pageinit', function() {
-    PrimeFaces.attachContextMenus();
-});
-
-$(document).bind('pmcreate', function(ev, updateID) {
-    PrimeFaces.attachContextMenus(updateID);
-});
-
-/**
- * Set the width and height of the container pages. We also update when the orientation
- * changes.
- */
-PrimeFaces.resizeDynamic = function() {
-    // Now find the splitViewMaster, if any, and set explicit content heights for it
-    // and its elements.
-    var spMasterHeight = $('.splitMaster').height();
-    if (spMasterHeight !== undefined) {
-        $('.splitMaster').children().map(function() {
-            $(this).height(spMasterHeight);
-            var nKids = this.children.length;
-            if (nKids > 1) {
-                // Dynamic content inside of a split view.
-                var childTwo = this.children[1];
-                var twoHeight = window.innerHeight - childTwo.offsetTop;
-                $(childTwo).height(twoHeight);
-            } else {
-                var childOne = this.children[0];
-                childOne.height(window.innerHeight);
-            }
-        });
-    }
-    
-    /* No split view - just a single page with a button bar (or other) header and content
-     * below it.
-     */
-    $('.fullPageVertical').each(function() {
-        var fullPageVertHeight = $(this).height();
-        if (fullPageVertHeight !== undefined) {
-            var visibleKids = $(this).children(":visible");
-            var nKids = visibleKids.length;
-            if (nKids > 1) {
-                var childTwo = visibleKids.get(1);
-                // Arbitrary 5px pad so that content does not scrape the bottom of the
-                // screen.
-                var twoHeight = window.innerHeight - childTwo.offsetTop - 5;
-                $(childTwo).height(twoHeight);
-            }
-        }
-    });
-    
-    /**
-     * Update the size of controls marked to be a percent of their parent.
-     */
-    $('.setChildWidths').each(function() {
-        var parentWidth = 0;
-        var parentElem = this;
-        while (parentWidth == 0) {
-            parentWidth = $(parentElem).width();
-            parentElem = $(parentElem).parent();
-        }
-        $(this).children().each(function() {
-            $(this).width(parentWidth);
-        });
-    });
-
-    /**
-     * Same as above, but recursively to 1 level of depth.
-     */
-    $('.setChildWidthsRecurse1').each(function() {
-        var parentWidth = $(this).width();
-        $(this).children().each(function() {
-            $(this).width(parentWidth);
-            $(this).children().each(function() {
-                $(this).width(parentWidth);                
-            });
-        });
-    });
-}
-
-PrimeFaces.resizePages = function() {
-    var height = $(window).height();
-    var width = $(window).width();
-    
-    /* In our mobile framework we never let pages scroll. Elements inside can scroll
-    * using the scrollingDiv. Here we just take the min-height that jQuery has assigned
-    * to a particular page and turn it into the page height. 
-    */
-    $.mobile.activePage.height(height);
-   
-    var headerHeight = $('[data-role="header"]', $.mobile.activePage).height();
-    var footerHeight = $('[data-role="footer"]', $.mobile.activePage).height();
-    var contentHeight = (.99 * height) - headerHeight - footerHeight;
-    $('[data-role="content"]', $.mobile.activePage).css('height', contentHeight);
-    $('[data-role="content"]', $.mobile.activePage).css('width', width);
-    // The content view is like an app screen. Elements within it can scroll, but the
-    // view itself should not scroll.
-    $('[data-role="content"]', $.mobile.activePage).css('overflow', 'hidden');
-    
-    PrimeFaces.resizeDynamic();
-}
-
 /**
  * Initialize and update the iScroll scrollers
  */
@@ -560,24 +364,6 @@ PrimeFaces.UpdateScrollers = function() {
     }
 }
 
-$('[data-role="page"]').live('pageshow', function(event, ui) {
-    PrimeFaces.resizePages();
-    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-    // in the "Mastering the Refresh() method" section
-    setTimeout(function() {
-        PrimeFaces.addScrollers();
-    }, 0);
-});
-
-$('[data-role="page"]').live('orientationchange', function(event) {
-    PrimeFaces.resizePages();
-    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-    // in the "Mastering the Refresh() method" section
-    setTimeout(function() {
-        PrimeFaces.addScrollers();
-    }, 0);
-});
-
 /**
  * Override the ajax request handler to track the height of the items we are updating.
  * When the response is received, we set a timeout handler that we try 3 times at 200ms intervals 
@@ -651,18 +437,6 @@ $(document).bind('postrequest', function(ev, responseXML) {
         PrimeFaces.UpdateScrollers();
     }, 200);
 });
-
-/**
- * Add the icon style class as an override to all icon button icons.
- */
-$(document).bind('pageinit', function() {
-    $('.iconbutton').each(function(index, value) {
-        var btn = $(this).find('.ui-icon');
-        var iconData = $(this).jqmData('icon');
-        btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
-    });
-});
-
 
 var origRequest = PrimeFaces.ajax.AjaxRequest;
 PrimeFaces.ajax.AjaxRequest = function(cfg, ext) {
@@ -858,8 +632,65 @@ PrimeFaces.Utils =  {
                 PrimeFaces.Utils.paginator.renderers[renderer](obj, params);
             }
         }
+    },
+    layoutFullHeightComponent: function(maxHeight, componentID) {
+        var pageSelector = PrimeFaces.escapeClientId(componentID);
+        var children = $(pageSelector).children();
+        var totHeight = 0;
+        for (var i = 0; i < children.length - 1; ++i) {
+            if ($(children[i]).is("style,script")) {
+                // Skip style and script tags - see note at http://api.jquery.com/height/
+                continue;
+            }
+
+            var child_i_height = $(children[i]).height();
+            totHeight += child_i_height;
+        }
+        $(children[children.length - 1]).height(maxHeight - totHeight);
+        $(children).find('.pm-layout-full-height').each(function() {
+            PrimeFaces.Utils.layoutFullHeightComponent($(this).parent().height(), $(this).attr('id'));
+        });
+    },
+    resizePages: function() {
+        var height = $(window).height();
+        var width = $(window).width();
+
+        /* In our mobile framework we never let pages scroll. Elements inside can scroll
+        * using the scrollingDiv. Here we just take the min-height that jQuery has assigned
+        * to a particular page and turn it into the page height. 
+        */
+        $.mobile.activePage.height(height);
+
+        var headerHeight = $('[data-role="header"]', $.mobile.activePage).height();
+        var footerHeight = $('[data-role="footer"]', $.mobile.activePage).height();
+        var contentHeight = (.99 * height) - headerHeight - footerHeight;
+        $('[data-role="content"]', $.mobile.activePage).css('height', contentHeight);
+        $('[data-role="content"]', $.mobile.activePage).css('width', width);
+        // The content view is like an app screen. Elements within it can scroll, but the
+        // view itself should not scroll.
+        $('[data-role="content"]', $.mobile.activePage).css('overflow', 'hidden');
+    },
+    layoutPageFullScreen: function(pageID) {
+        PrimeFaces.Utils.resizePages();
+        PrimeFaces.Utils.layoutFullHeightComponent(window.innerHeight, pageID);
+        // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
+        // in the "Mastering the Refresh() method" section
+        setTimeout(function() {
+            PrimeFaces.addScrollers();
+        }, 0);        
     }
 }
+
+/**
+ * Add the icon style class as an override to all icon button icons.
+ */
+$(document).bind('pageinit', function() {
+    $('.iconbutton').each(function(index, value) {
+        var btn = $(this).find('.ui-icon');
+        var iconData = $(this).jqmData('icon');
+        btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
+    });
+});
 
 PrimeFaces.deviceType = (function() {
     if (window.screen.width <= 480) {

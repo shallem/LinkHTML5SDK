@@ -35,11 +35,13 @@ public class ViewRenderer extends CoreRenderer {
         writer.writeAttribute("data-role", "page", null);
         writer.writeAttribute("class", "ui-page", null);
 
-        if(swatch != null)
+        if (swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);
-        
-        if(title != null)
+        }
+
+        if (title != null) {
             writer.writeAttribute("data-title", title, null);
+        }
     }
 
     @Override
@@ -47,5 +49,19 @@ public class ViewRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
 
         writer.endElement("div");
+
+        startScript(writer, component.getClientId());
+
+        writer.write("\n");
+        writer.write("$(PrimeFaces.escapeClientId('" + component.getClientId() + "'))");
+        writer.write(".on('pageshow', function(event, ui) {\n");
+        writer.write("PrimeFaces.Utils.layoutPageFullScreen(event.target.id); });");
+
+        writer.write("\n");
+        writer.write("$(PrimeFaces.escapeClientId('" + component.getClientId() + "'))");
+        writer.write(".on('orientationchange', function(event, ui) {\n");
+        writer.write("PrimeFaces.Utils.layoutPageFullScreen(event.target.id); });");
+
+        endScript(writer);
     }
 }

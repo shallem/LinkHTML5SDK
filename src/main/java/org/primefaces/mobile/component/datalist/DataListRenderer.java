@@ -87,6 +87,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",rowStyleClass: '" + dlist.getRowStyleClass() + "'");
         }
         
+        // The divider style class.
+        if (dlist.getDividerStyleClass() != null) {
+            writer.write(",dividerStyleClass: '" + dlist.getDividerStyleClass() + "'");
+        }
+        
         // Rendered condition.
         if (dlist.getCondition() != null) {
             writer.write(",condition: function() {" + dlist.getCondition() + "; }");

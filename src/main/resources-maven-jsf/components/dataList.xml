@@ -102,6 +102,12 @@
             <description>Style class for each row.</description>
         </attribute>
         <attribute>
+            <name>dividerStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class for each divider row in a grouped list.</description>
+        </attribute>
+        <attribute>
             <name>sortBy</name>
             <required>false</required>
             <type>java.lang.Object</type>
