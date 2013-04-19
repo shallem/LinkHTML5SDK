@@ -89,7 +89,7 @@ public class DataListRenderer extends CoreRenderer {
         
         // Rendered condition.
         if (dlist.getCondition() != null) {
-            writer.write(",condition: function() {" + dlist.getCondition() + "}");
+            writer.write(",condition: function() {" + dlist.getCondition() + "; }");
         }
         
         // Pagination
