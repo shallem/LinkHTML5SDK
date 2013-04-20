@@ -278,7 +278,7 @@ public class DataTableRenderer extends CoreRenderer {
     }
     
     public List<Column> getColumns(DataTable table) {
-        List<Column> columns = new ArrayList<>();
+        List<Column> columns = new ArrayList<Column>();
 
         for(UIComponent child : table.getChildren()) {
             if(child instanceof Column) {

@@ -23,6 +23,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.primefaces.mobile.util.EnumDataTypes;
+import static org.primefaces.mobile.util.EnumDataTypes.BOOLEAN;
+import static org.primefaces.mobile.util.EnumDataTypes.BYTE;
+import static org.primefaces.mobile.util.EnumDataTypes.CHAR;
+import static org.primefaces.mobile.util.EnumDataTypes.DOUBLE;
+import static org.primefaces.mobile.util.EnumDataTypes.FLOAT;
+import static org.primefaces.mobile.util.EnumDataTypes.INT;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_ATOMICLONG;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_AUTOMICINTEGER;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_BIGDECMIAL;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_BIGINTEGER;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_BOOLEAN;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_BYTE;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_DOUBLE;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_FLOAT;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_INTEGER;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_LONG;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_SHORT;
+import static org.primefaces.mobile.util.EnumDataTypes.JAVA_LANG_STRING;
+import static org.primefaces.mobile.util.EnumDataTypes.LONG;
+import static org.primefaces.mobile.util.EnumDataTypes.SHORT;
 
 /**
  * Accept as input a class that represents a JSON schema to be transmitted to
@@ -57,7 +78,7 @@ public class JSONSerializer {
             IllegalArgumentException,
             InvocationTargetException,
             NoSuchMethodException {
-        TreeSet<String> visitedClasses = new TreeSet<>();
+        TreeSet<String> visitedClasses = new TreeSet<String>();
         StringWriter outputString = new StringWriter();
         JsonFactory jsonF = new JsonFactory();
         
@@ -153,7 +174,7 @@ public class JSONSerializer {
     }
 
     public String serializeObjectSchema(Class<?> cls) throws IOException {
-        TreeSet<String> visitedClasses = new TreeSet<>();
+        TreeSet<String> visitedClasses = new TreeSet<String>();
         StringWriter outputString = new StringWriter();
         JsonFactory jsonF = new JsonFactory();
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
@@ -208,7 +229,9 @@ public class JSONSerializer {
                         */
                         throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
                     }
-                } catch (NoSuchMethodException | SecurityException ex) {
+                } catch (NoSuchMethodException ex) {
+                    throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
+                } catch (SecurityException  ex) {
                     throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
                 }
             }
@@ -230,7 +253,7 @@ public class JSONSerializer {
                     jg.writeFieldName(fieldName);
                 }
                 
-                List<String> sortFields = new LinkedList<>();
+                List<String> sortFields = new LinkedList<String>();
                 String keyField = null;
                 
                 jg.writeStartObject();
@@ -370,92 +393,105 @@ public class JSONSerializer {
 
     private void addSimpleData(JsonGenerator jg, Object obj)
             throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        switch (obj.getClass().getName()) {
-            case "boolean":
-            case "java.lang.Boolean":
-                jg.writeBoolean((boolean) obj);
+        EnumDataTypes dtc;
+        try {
+            dtc = EnumDataTypes.getEnumFromString(obj.getClass().getName());
+        } catch (IllegalArgumentException iae) {
+            // Data type unknown
+            dtc = EnumDataTypes.UNKNOWN;
+        }
+        switch (dtc) {
+            case BOOLEAN:
+            case JAVA_LANG_BOOLEAN:
+                jg.writeBoolean((Boolean) obj);
                 break;
-            case "byte":
-            case "java.lang.Byte":
-                jg.writeNumber((byte) obj);
+            case BYTE:
+            case JAVA_LANG_BYTE:
+                jg.writeNumber((Byte) obj);
                 break;
-            case "java.lang.Short":
-            case "short":
-                jg.writeNumber((short) obj);
+            case JAVA_LANG_SHORT:
+            case SHORT:
+                jg.writeNumber((Short) obj);
                 break;
-            case "java.lang.Integer":
-            case "java.lang.AtomicInteger":
-            case "int":
-                jg.writeNumber((int) obj);
+            case JAVA_LANG_INTEGER:
+            case JAVA_LANG_AUTOMICINTEGER:
+            case INT:
+                jg.writeNumber((Integer) obj);
                 break;
-            case "java.lang.Long":
-            case "java.lang.AtomicLong":
-            case "long":
-                jg.writeNumber((long) obj);
+            case LONG:
+            case JAVA_LANG_LONG:
+            case JAVA_LANG_ATOMICLONG:
+                jg.writeNumber((Long) obj);
                 break;
-            case "char":
+            case CHAR:
                 jg.writeRaw('a');
                 break;
-            case "float":
-            case "java.lang.Float":
-                jg.writeNumber((float) obj);
-            case "double":
-            case "java.lang.Double":
-                jg.writeNumber((double) obj);
+            case FLOAT :
+            case JAVA_LANG_FLOAT:
+                jg.writeNumber((Float) obj);
+            case DOUBLE:
+            case JAVA_LANG_DOUBLE:
+                jg.writeNumber((Double) obj);
                 break;
-            case "java.lang.String":
+            case JAVA_LANG_STRING:
                 jg.writeString((String) obj);
                 break;
-            case "java.lang.BigInteger":
+            case JAVA_LANG_BIGINTEGER:
                 jg.writeNumber((BigInteger) obj);
                 break;
-            case "java.lang.BigDecmial":
+            case JAVA_LANG_BIGDECMIAL:
                 jg.writeNumber((BigDecimal) obj);
                 break;
         }
     }
 
     private void addSimpleType(JsonGenerator jg, Class<?> objType) throws IOException {
-        switch (objType.getName()) {
-            case "boolean":
-            case "java.lang.Boolean":
+        EnumDataTypes dtc;
+        try {
+            dtc = EnumDataTypes.getEnumFromString(objType.getName());
+        } catch (IllegalArgumentException iae) {
+            dtc = EnumDataTypes.UNKNOWN; // TODO: write error message ?
+        }
+        switch (dtc) {
+            case BOOLEAN:
+            case JAVA_LANG_BOOLEAN:
                 jg.writeBoolean(true);
                 break;
-            case "byte":
-            case "java.lang.Byte":
+            case BYTE:
+            case JAVA_LANG_BYTE:
                 jg.writeNumber((int) 1);
                 break;
-            case "java.lang.Short":
-            case "short":
+            case SHORT:
+            case JAVA_LANG_SHORT:
                 jg.writeNumber((int) 1);
                 break;
-            case "java.lang.Integer":
-            case "java.lang.AtomicInteger":
-            case "int":
+            case JAVA_LANG_INTEGER:
+            case JAVA_LANG_AUTOMICINTEGER:
+            case INT:
                 jg.writeNumber((int) 1);
                 break;
-            case "java.lang.Long":
-            case "java.lang.AtomicLong":
-            case "long":
+            case JAVA_LANG_LONG:
+            case JAVA_LANG_ATOMICLONG:
+            case LONG:
                 jg.writeNumber((long) 1);
                 break;
-            case "char":
+            case CHAR:
                 jg.writeRaw('a');
                 break;
-            case "float":
-            case "java.lang.Float":
+            case FLOAT:
+            case JAVA_LANG_FLOAT:
                 jg.writeNumber((float) 1.0);
-            case "double":
-            case "java.lang.Double":
+            case DOUBLE:
+            case JAVA_LANG_DOUBLE:
                 jg.writeNumber((double) 1.0);
                 break;
-            case "java.lang.String":
+            case JAVA_LANG_STRING:
                 jg.writeString("empty");
                 break;
-            case "java.lang.BigInteger":
+            case JAVA_LANG_BIGINTEGER:
                 jg.writeNumber(BigInteger.ONE);
                 break;
-            case "java.lang.BigDecmial":
+            case JAVA_LANG_BIGDECMIAL:
                 jg.writeNumber(BigDecimal.ONE);
                 break;
 
