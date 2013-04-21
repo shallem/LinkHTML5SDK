@@ -32,7 +32,7 @@ public class SplitViewRenderer extends CoreRenderer {
         // NOTE: instead of this just float left and float right the two sub-pieces.
         // If we use inline-block display, then iScroll WILL NOT work.
         //writer.writeAttribute("style", "display: inline-block;", null);
-        writer.writeAttribute("class", "splitMaster", null);
+        writer.writeAttribute("class", "splitMaster pm-layout-full-height", null);
         writer.writeAttribute("id", sview.getId(), null);
         for (UIComponent c : sview.getChildren()) {
             c.encodeAll(context);

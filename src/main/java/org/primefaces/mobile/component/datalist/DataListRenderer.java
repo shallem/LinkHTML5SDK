@@ -31,6 +31,11 @@ public class DataListRenderer extends CoreRenderer {
         String type = dataList.getType();
         Object filterValue = dataList.getAttributes().get("filter");
 
+        // Enclose the entire ul in a div so that we can scroll it.
+        writer.startElement("div", dataList);
+        writer.writeAttribute("class", "pm-scroller", null);
+        writer.writeAttribute("id", dataList.getClientId(context) + "_wrapper", "id");
+        
         writer.startElement("ul", dataList);
         writer.writeAttribute("id", dataList.getClientId(context), "id");
         writer.writeAttribute("data-role", "listview", null);
@@ -44,6 +49,7 @@ public class DataListRenderer extends CoreRenderer {
         if(dataList.getStyle() != null) {
             writer.writeAttribute("style", dataList.getStyle(), null);
         }
+        
         if(dataList.getStyleClass() != null) {
             writer.writeAttribute("class", dataList.getStyleClass(), null);
         }
@@ -58,6 +64,8 @@ public class DataListRenderer extends CoreRenderer {
         // Leave the list empty because we fill it in on the client side.
         
         writer.endElement("ul");
+        writer.endElement("div");
+        
         encodeScript(context, dataList);
     }
     

@@ -31,6 +31,7 @@ public class ContentRenderer extends CoreRenderer {
         writer.startElement("div", content);
         writer.writeAttribute("id", content.getClientId(context), "id");
         writer.writeAttribute("data-role", "content", null);
+        writer.writeAttribute("style", "overflow: hidden;", null);
         
         if(content.getStyle() != null) writer.writeAttribute("style", content.getStyle(), null);
         if(content.getStyleClass() != null) writer.writeAttribute("class", content.getStyleClass(), null);

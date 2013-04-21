@@ -184,6 +184,7 @@ public class PageRenderer extends CoreRenderer {
         writer.endElement("head");
 
         writer.startElement("body", page);
+        writer.writeAttribute("style", "overflow: hidden;", null);
     }
 
     @Override

@@ -41,7 +41,7 @@ public class LoadCommandRenderer extends CoreRenderer {
             /* Skip the JSF lifecycle so that we don't waste time trying to validate the contents
              * of an empty form ...
              */
-            event.setPhaseId(PhaseId.APPLY_REQUEST_VALUES);
+            event.setPhaseId(PhaseId.INVOKE_APPLICATION);
             cmd.queueEvent(event);
         }
     }

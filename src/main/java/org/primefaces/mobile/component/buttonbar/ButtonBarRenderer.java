@@ -36,13 +36,13 @@ public class ButtonBarRenderer extends CoreRenderer {
             widthStr = hasBoth ? " width: 50%;" : " width: 100%;";
         }
         
-        writer.startElement("div", buttonBar);
+        /*writer.startElement("div", buttonBar);
         writer.writeAttribute("style", "float: " + (isLeft ? "left" : "right") + ";" + widthStr, null);
         if (buttonBar.isFixed()) {
             writer.writeAttribute("class", "buttonbar fixedposition", null);
         } else {
             writer.writeAttribute("class", "buttonbar", null);
-        }
+        }*/
         int idx = 1;
         for(UIComponent child : childButtons) {
             
@@ -56,7 +56,7 @@ public class ButtonBarRenderer extends CoreRenderer {
             }
             ++idx;
         }
-        writer.endElement("div");
+        /*writer.endElement("div");*/
     }
     
     @Override

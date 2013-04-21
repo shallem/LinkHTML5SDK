@@ -134,7 +134,7 @@ public class JSONSerializer {
                          * annotated methods or they have a toString
                          */
                         Object subObj = (Object) m.invoke(obj, new Object[]{});
-                        if (!this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
+                        if (subObj != null && !this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
                             /* Should never happen. */
                             throw new IOException("Serialization unexpectedly encountered a class with no ClientData: " + subObj.getClass().getName());
                         }

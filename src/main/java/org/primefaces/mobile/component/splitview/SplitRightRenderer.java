@@ -33,7 +33,7 @@ public class SplitRightRenderer extends CoreRenderer {
         
         // Output the left div.
         writer.startElement("div", sright);
-        writer.writeAttribute("class", "rightContentArea", null);
+        writer.writeAttribute("class", "pm-split-right-area pm-layout-full-height", null);
         writer.writeAttribute("style",
                 "width: " + this.getRightWidth(sright) + ";", null);
         for (UIComponent c : sright.getChildren()) {

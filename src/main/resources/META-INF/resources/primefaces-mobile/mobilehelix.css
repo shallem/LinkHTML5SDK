@@ -13,9 +13,6 @@
 
 .splitMaster {
     padding-top: 2px;
-/*    position: absolute; */
-    height: 100%;
-    width: 100%;
 }
 
 .fullPageVertical {
@@ -24,31 +21,34 @@
     width: 100%;
 }
 
-.leftContentArea {
+.pm-split-left-area {
     float: left;
     background-color: white;
     border: 1px solid black;
-    border-radius: 15px 15px 0px 0px;
-    height: 100%;
+    border-radius: 10px 10px 0px 0px;
 }
 
-    /*overflow-y: auto;
-    overflow-x: hidden; 
-     */
-.rightContentArea {
+.pm-split-right-area {
     float: right;
     background-color: white;
     border: 1px solid black;
-    border-radius: 15px 15px 0px 0px;
-    height: 100%;
+    border-radius: 10px 10px 0px 0px;
 }   
 
-.leftContentArea > form {
-    height : 100%;
+/**
+ * List views will leak out of the split view if we don't 
+ * override JQM's default -15px margin.
+ */
+.pm-split-left-area ul[data-role="listview"] {
+    margin: 0px;
 }
 
-.rightContentArea > form {
-    height : 100%;
+/**
+ * List views will leak out of the split view if we don't 
+ * override JQM's default -15px margin.
+ */
+.pm-split-right-area ul[data-role="listview"] {
+    margin: 0px;
 }
 
 .pm-scroller {
@@ -147,7 +147,8 @@
     padding: 0 0;
 }
 
-/* Override of jquery to set the icon URL properly. */
+/* Moved these to the jQM CSS directly because the selectors change across versions.
+
 .ui-state-default .ui-icon {
     background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
 }
@@ -162,7 +163,7 @@
 
 .ui-widget-header .ui-icon {
     background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
-}
+}*/
 
 /* These icons do not exist in jqmobile. */
 .ui-icon-circle-triangle-w {
@@ -194,14 +195,19 @@
     background: none;
 }
 
-/* loading icon */
+/* loading icon
 .ui-icon-loading {
 	background: url("#{resource['primefaces-mobile:images/ajax-loader.gif']}");
 	background-size: 46px 46px;
-}
+}*/
 
 /* No padding on page content. If there is padding, it often causes scrolling given the
    way our tools layout pages. */
 .ui-content {
     padding: 0px;
 }
+
+/* Override the default for list views, which puts the selector indicator 10px off the
+ * right of the screen. This is too close for my taste.
+ */
+.ui-btn-icon-right .ui-icon { right: 15px; }

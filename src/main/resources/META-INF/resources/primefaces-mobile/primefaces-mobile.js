@@ -633,9 +633,8 @@ PrimeFaces.Utils =  {
             }
         }
     },
-    layoutFullHeightComponent: function(maxHeight, componentID) {
-        var pageSelector = PrimeFaces.escapeClientId(componentID);
-        var children = $(pageSelector).children();
+    layoutFullHeightComponent: function(maxHeight, component) {
+        var children = $(component).children();
         var totHeight = 0;
         for (var i = 0; i < children.length - 1; ++i) {
             if ($(children[i]).is("style,script")) {
@@ -666,13 +665,13 @@ PrimeFaces.Utils =  {
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
         $('[data-role="content"]', $.mobile.activePage).css('height', contentHeight);
         $('[data-role="content"]', $.mobile.activePage).css('width', width);
-        // The content view is like an app screen. Elements within it can scroll, but the
-        // view itself should not scroll.
-        $('[data-role="content"]', $.mobile.activePage).css('overflow', 'hidden');
+        
+        return contentHeight;
     },
     layoutPageFullScreen: function(pageID) {
-        PrimeFaces.Utils.resizePages();
-        PrimeFaces.Utils.layoutFullHeightComponent(window.innerHeight, pageID);
+        var contentHeight = PrimeFaces.Utils.resizePages();
+        PrimeFaces.Utils.layoutFullHeightComponent(contentHeight, 
+                $('[data-role="content"]', $.mobile.activePage));
         // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
         // in the "Mastering the Refresh() method" section
         setTimeout(function() {
