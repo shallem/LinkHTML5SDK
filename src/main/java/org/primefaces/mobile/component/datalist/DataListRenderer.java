@@ -105,6 +105,14 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",condition: function() {" + dlist.getCondition() + "; }");
         }
         
+        // Messages to display when the list or list groups are empty.
+        if (dlist.getEmptyMessage() != null) {
+            writer.write(",emptyMessage: '" + dlist.getEmptyMessage() + "'");
+        }
+        if (dlist.getEmptyGroupMessage() != null) {
+            writer.write(",emptyGroupMessage: '" + dlist.getEmptyGroupMessage() + "'");
+        }
+        
         // Pagination
         if (dlist.getItemsPerPage() != null) {
             writer.write(",itemsPerPage: " + dlist.getItemsPerPage());
