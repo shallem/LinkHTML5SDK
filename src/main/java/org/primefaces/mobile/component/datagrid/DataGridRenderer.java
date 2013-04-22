@@ -38,7 +38,7 @@ public class DataGridRenderer extends DataRenderer {
     public DataGridRenderer() {
         this.contextMenuID = null;
         this.itemMenuID = null;
-        this.contextActionMap = new TreeMap<>();
+        this.contextActionMap = new TreeMap<String, String>();
     }
     
     @Override

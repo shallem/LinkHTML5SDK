@@ -82,8 +82,8 @@ public class ButtonBarRenderer extends CoreRenderer {
         writer.writeAttribute("class", styleClass, null);
         
         // Separate children into right/left buttons.
-        List<UIComponent> leftButtons = new LinkedList<>();
-        List<UIComponent> rightButtons = new LinkedList<>();
+        List<UIComponent> leftButtons = new LinkedList<UIComponent>();
+        List<UIComponent> rightButtons = new LinkedList<UIComponent>();
         
         for(UIComponent child : buttonBar.getChildren()) {
             if (child instanceof IconButton) {
