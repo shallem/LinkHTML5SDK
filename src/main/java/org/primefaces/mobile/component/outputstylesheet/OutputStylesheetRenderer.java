@@ -20,6 +20,12 @@ import java.text.MessageFormat;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import org.primefaces.mobile.util.EnumMedia;
+import static org.primefaces.mobile.util.EnumMedia.PHABLET;
+import static org.primefaces.mobile.util.EnumMedia.PHABLET_AND_TABLET;
+import static org.primefaces.mobile.util.EnumMedia.PHONE;
+import static org.primefaces.mobile.util.EnumMedia.PHONE_AND_PHABLET;
+import static org.primefaces.mobile.util.EnumMedia.TABLET;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class OutputStylesheetRenderer extends CoreRenderer {
@@ -61,18 +67,23 @@ public class OutputStylesheetRenderer extends CoreRenderer {
         }
         
         if (mediaValue.length() == 0 && os.getMedia() != null) {
-            switch (os.getMedia()) {
-                case "phone":
+            EnumMedia em = EnumMedia.getEnumFromString(os.getMedia());
+            
+            if (em == null) { // if unknown defaults to tablet
+                em = EnumMedia.TABLET;  // TODO: log as warnning if necessary
+            }
+            switch (em) {
+                case PHONE:
                     mediaValue.append("and (max-device-width: 480px)");
                     break;
-                case "phone,phablet":
+                case PHONE_AND_PHABLET:
                     mediaValue.append("and (max-device-width: 767px)");
                     break;
-                case "phablet,tablet":
-                case "tablet":    
+                case PHABLET_AND_TABLET:
+                case TABLET:    
                     mediaValue.append("and (min-device-width: 481px)");
                     break;
-                case "phablet":
+                case PHABLET:
                     mediaValue.append("and (min-device-width: 481px)");
                     mediaValue.append("and (max-device-width: 767px)");
                     break;

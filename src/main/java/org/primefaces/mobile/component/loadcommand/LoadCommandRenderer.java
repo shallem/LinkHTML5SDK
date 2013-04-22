@@ -62,7 +62,13 @@ public class LoadCommandRenderer extends CoreRenderer {
                 } else {
                     writer.write(s.serializeObject(cmd.getValue()));
                 }
-            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalArgumentException ex) {
+                Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InvocationTargetException ex) {
+                Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NoSuchMethodException ex) {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
