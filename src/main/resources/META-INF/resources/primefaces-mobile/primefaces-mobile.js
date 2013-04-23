@@ -647,7 +647,7 @@ PrimeFaces.Utils =  {
         }
         $(children[children.length - 1]).height(maxHeight - totHeight);
         $(children).find('.pm-layout-full-height').each(function() {
-            PrimeFaces.Utils.layoutFullHeightComponent($(this).parent().height(), $(this).attr('id'));
+            PrimeFaces.Utils.layoutFullHeightComponent($(this).parent().height(), this);
         });
     },
     resizePages: function() {
