@@ -57,6 +57,7 @@ public class DataListRenderer extends CoreRenderer {
         if(header != null) {
             writer.startElement("li", null);
             writer.writeAttribute("data-role", "list-divider", null);
+            writer.writeAttribute("data-fixed-header", "yes", null);
             header.encodeAll(context);
             writer.endElement("li");
         }

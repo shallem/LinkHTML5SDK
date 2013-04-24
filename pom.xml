@@ -201,6 +201,7 @@
 		  <includes>
 		    <include>jquery.mobile-1.3.1.css</include>
 		    <include>editor/editor.css</include>
+		    <include>datebox/jqm-datebox.css</include>
 		    <include>mobilehelix.css</include>
 		  </includes>
 		  <aggregations>
@@ -223,6 +224,8 @@
 		    <include>jquery.mobile-1.3.1.js</include>
 		    <include>datagrid/datagrid.js</include>
 		    <include>editor/editor.js</include>
+		    <include>datebox/jqm-datebox.core.js</include>
+		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 		    <include>primefaces-mobile.js</include>
 		  </includes>
 		  <aggregations>
