@@ -45,6 +45,8 @@ public class ScrollingDivRenderer extends CoreRenderer {
         // Also enclose the child in a div because we don't know what is in that child ...
         // we need everything in capsulated in 1 DOM element.
         writer.startElement("div", sdiv);
+        writer.writeAttribute("id", id + "_inner", "id");
+        writer.writeAttribute("style", "padding-bottom: 7px", null);
         for (UIComponent c : sdiv.getChildren()) {
             c.encodeAll(context);
         }

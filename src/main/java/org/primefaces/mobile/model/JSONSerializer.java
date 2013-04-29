@@ -9,18 +9,12 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.primefaces.mobile.util.EnumDataTypes;
@@ -163,14 +157,10 @@ public class JSONSerializer {
                 }
                 jg.writeEndObject();
                 return true;
-            } else if (this.hasToString(c)) {
-                /* This is just a simple type. */
-                Method toStringM = obj.getClass().getMethod("toString", new Class[]{});
-                jg.writeString((String) toStringM.invoke(obj, new Object[]{}));
+            } else {
+                throw new IOException("Cannot serialize an object with no ClientData fields " + obj.getClass().getName());
             }
         }
-        
-        return false;
     }
 
     public String serializeObjectSchema(Class<?> cls) throws IOException {
@@ -330,20 +320,9 @@ public class JSONSerializer {
 
                 jg.writeEndObject();
                 return true;
-            }  else if (this.hasToString(c)) {
-                /* The object has a toString method and no ClientData objects. Hence,
-                 * it is no different than a simple string field.
-                 */
-                if (fieldName != null) {
-                    jg.writeFieldName(fieldName);
-                }
-                jg.writeString("toString");
-                
-                return true;
+            }  else {
+                throw new IOException("Client data must have at least one field annotated as a ClientData field: " + c.getName());
             }
-            
-            /* No client data fields in this object. */
-            return false;
         }
     }
 

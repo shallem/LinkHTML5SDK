@@ -253,6 +253,13 @@ PrimeFaces.isScroller = function(elem) {
     return false;
 }
 
+PrimeFaces.isInScroller = function(elem) {
+    if (elem && ($(elem).closest(PrimeFaces.scrollerSel).length !== 0)) {
+        return true;
+    }
+    return false;
+}
+
 PrimeFaces.allScrollers = {};
 PrimeFaces.addScrollers = function(elem) {
     var toAdd;
@@ -315,6 +322,22 @@ PrimeFaces.addScrollers = function(elem) {
 }
 
 var idsToUpdate = {};
+PrimeFaces.refreshScroller = function(sel) {
+    /* Save off the current height of the element we are updating so that we can
+     * tell post update when the rendering of the updated element is likely done.
+     */
+    idsToUpdate[PrimeFaces.escapeClientId($(sel).attr('id'))] = { 
+       height: $(sel).children().height(), 
+       nretries: 0 
+    };
+    
+    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
+    // in the "Mastering the Refresh() method" section
+    setTimeout(function() {
+        PrimeFaces.UpdateScrollers();
+    }, 200);
+}
+
 PrimeFaces.UpdateScrollersForID = function(updateID, oldHeight, nRetries) {
     var obj = $(updateID);
     if (obj.length > 0 ) {
@@ -642,12 +665,14 @@ PrimeFaces.Utils =  {
                 continue;
             }
 
-            var child_i_height = $(children[i]).height();
+            var child_i_height = $(children[i]).outerHeight(true);
             totHeight += child_i_height;
         }
         $(children[children.length - 1]).height(maxHeight - totHeight);
         $(children).find('.pm-layout-full-height').each(function() {
-            PrimeFaces.Utils.layoutFullHeightComponent($(this).parent().height(), this);
+            var thisHeight = $(this).parent().height();
+            $(this).height(thisHeight);
+            PrimeFaces.Utils.layoutFullHeightComponent(thisHeight, this);
         });
     },
     resizePages: function() {
