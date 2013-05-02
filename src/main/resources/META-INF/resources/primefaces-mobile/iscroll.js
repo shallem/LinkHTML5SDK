@@ -579,8 +579,12 @@ iScroll.prototype = {
 						// Find the last touched element
 						target = point.target;
 						while (target.nodeType != 1) target = target.parentNode;
-
-						if (target.tagName != 'SELECT' && target.tagName != 'INPUT' && target.tagName != 'TEXTAREA') {
+                                                
+                                                // Add iframe to allow 'edit mode'
+						if (target.tagName != 'SELECT' && 
+                                                    target.tagName != 'INPUT' && 
+                                                    target.tagName != 'TEXTAREA' &&
+                                                    target.tagName != 'IFRAME') {
 							ev = doc.createEvent('MouseEvents');
 							ev.initMouseEvent('click', true, true, e.view, 1,
 								point.screenX, point.screenY, point.clientX, point.clientY,

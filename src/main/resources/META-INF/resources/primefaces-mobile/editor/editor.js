@@ -142,6 +142,7 @@
   DIV_TAG          = "<div>",
   H2_TAG           = "<h2 />",
   A_TAG            = "<a />",
+  SPAN_TAG            = "<span />",
   LI_TAG           = "<li />",
   UL_TAG           = "<ul />",
   TRANSPARENT      = "transparent",
@@ -275,7 +276,7 @@
        .appendTo($toolbar)
 
     // Now add in the actual popups
-    var $fontMenu = editor.$fontMenu = $(DIV_TAG).attr({
+    /*var $fontMenu = editor.$fontMenu = $(DIV_TAG).attr({
         'data-role' : 'collapsible-set',
         'data-inset' : 'true',
         'style' : 'margin: 0; min-width:210px;',
@@ -283,6 +284,12 @@
         'data-content-theme' : 'c',
         'data-collapsed-icon' : 'arrow-r',
         'data-expanded-icon' : 'arrow-d'
+    });*/
+    var $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
+        'data-role' : 'listview',
+        'data-inset' : 'true',
+        'style' : 'min-width:210px;',
+        'data-theme' : 'b'
     });
     $.each(options.controls.font.split(" "), function(idx, buttonName) {
         addButtonToMenu(editor, $fontMenu, buttonName, "font");
@@ -291,7 +298,7 @@
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
-            'data-theme' : 'none',
+            'data-theme' : 'b',
             'id' : 'fontsPopup'
         }).append($fontMenu).appendTo($main);
     
@@ -546,11 +553,11 @@
   }
 
   // createPopup - creates a popup and adds it to the body
-  function createPopup(editor, button, popupDiv) {
+  function createPopup(editor, button, selectName, popupDiv) {
 
     // Create the popup
-    var $popup = $(UL_TAG)
-      .attr('data-role', 'listview')
+    var $popup = $('<select />')
+      .attr('name', selectName)
       .appendTo(popupDiv);
 
     // Custom popup
@@ -561,11 +568,7 @@
     else if (button.popupName == "color") {
       var colors = editor.options.colors.split(" ");
       $.each(colors, function(idx, color) {
-        var colorItem = $(LI_TAG).append($(A_TAG).
-            attr({
-                'href' : 'javascript:void(0);'
-            }).append($(DIV_TAG).css(BACKGROUND_COLOR, "#" + color).append("&nbsp;"))
-            )
+        var colorItem = $('<option />').append($(DIV_TAG).css(BACKGROUND_COLOR, "#" + color).append("&nbsp;"))
          .appendTo($popup);
         colorItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
       });
@@ -574,10 +577,7 @@
     // Font
     else if (button.popupName == "font") {
       $.each(editor.options.fonts.split(","), function(idx, font) {
-        var fontItem = $(LI_TAG).append($(A_TAG)
-            .attr({
-                'href' : 'javascript:void(0);'
-             })
+        var fontItem = $('<option />').append($(SPAN_TAG)
             .css("fontFamily", font)
             .html(font)
         ).appendTo($popup);
@@ -587,10 +587,7 @@
     // Size
     else if (button.popupName == "size") {
       $.each(editor.options.sizes.split(","), function(idx, size) {
-        var sizeItem = $(LI_TAG).append($(A_TAG)
-            .attr({
-                'href' : 'javascript:void(0);'
-             })
+        var sizeItem = $('<option />').append($(SPAN_TAG)
             .html("<font size=" + size + ">" + size + "</font>")
         ).appendTo($popup);
         sizeItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
@@ -599,10 +596,7 @@
     // Style
     else if (button.popupName == "style") {
       $.each(editor.options.styles, function(idx, style) {
-        var styleItem = $(LI_TAG).append($(A_TAG)
-            .attr({
-                'href' : 'javascript:void(0);'
-             })
+        var styleItem = $('<option />').append($(SPAN_TAG)
             .html(style[1] + style[0] + style[1].replace("<", "</"))
         ).appendTo($popup);
         styleItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
@@ -962,15 +956,24 @@
         button.type = buttonType;
 
         if (button.popupName) {
-            var $popupDiv = $(DIV_TAG).attr({
+            /*var $popupDiv = $(DIV_TAG).attr({
                 'data-role' : 'collapsible',
                 'data-inset' : 'false'
             })
                 .append($(H2_TAG).append(button.title)
-            ).appendTo(popupMenu);
+            ).appendTo(popupMenu);*/
+            var $popupDiv = $(DIV_TAG).attr({
+                'data-role' : 'fieldcontain'
+            })
+                .append($('<label />').attr({
+                    'for' : buttonName + "-select",
+                    'class' : 'select'
+                }).append(button.title))
+            .appendTo(popupMenu);
             $popupDiv.data(BUTTON_NAME, buttonName);
             createPopup(editor,
                 button,
+                buttonName + "-select",
                 $popupDiv);
         } else {
         

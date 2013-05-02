@@ -323,10 +323,15 @@ PrimeFaces.addScrollers = function(elem) {
 
 var idsToUpdate = {};
 PrimeFaces.refreshScroller = function(sel) {
+    var scrollerId = $(sel).attr('id');
+    if (!scrollerId) {
+        return;
+    }
+    
     /* Save off the current height of the element we are updating so that we can
      * tell post update when the rendering of the updated element is likely done.
      */
-    idsToUpdate[PrimeFaces.escapeClientId($(sel).attr('id'))] = { 
+    idsToUpdate[PrimeFaces.escapeClientId(scrollerId)] = { 
        height: $(sel).children().height(), 
        nretries: 0 
     };
