@@ -10,13 +10,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to identify a field as a sort field. On the client side this
- * will force creation of an index on this field.
+ * Currently a 0 argument annotation that indicates that a particular class member
+ * should be indexed on the client for free text search.
  * 
  * @author shallem
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
-public @interface ClientSort {
-    String displayName() default "[none]";
+public @interface ClientIndexed {
+    
 }

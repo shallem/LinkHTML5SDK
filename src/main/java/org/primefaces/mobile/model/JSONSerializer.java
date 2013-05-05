@@ -13,7 +13,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -85,6 +88,24 @@ public class JSONSerializer {
         return outputString.toString();
     }
 
+    private void iterateOverObjectField(JsonGenerator jg,
+            Object obj,
+            Set<String> visitedClasses,
+            Method getter) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, NoSuchMethodException {
+        /* Extract the field name. */
+        String nxtFieldName = this.extractFieldName(getter.getName());
+
+        /* Finally, handle arbitrary object types. Either these objects
+         * encapsulate other objects (as evidenced by having ClientData-
+         * annotated methods or they have a toString
+         */
+        Object subObj = (Object) getter.invoke(obj, new Object[]{});
+        if (subObj != null && !this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
+            /* Should never happen. */
+            throw new IOException("Serialization unexpectedly encountered a class with no ClientData: " + subObj.getClass().getName());
+        }
+    }
+    
     private boolean serializeObjectFields(JsonGenerator jg,
             Object obj,
             Set<String> visitedClasses,
@@ -118,41 +139,38 @@ public class JSONSerializer {
             if (fieldName != null) {
                 jg.writeFieldName(fieldName);
             }
-            if (this.hasClientDataMethods(c)) {
+            if (this.isDeltaObject(c)) {
                 jg.writeStartObject();
                 
-                /* Determine if this is a DeltaObject and mark it privately so the client
-                 * will know to handle it accordingly.
-                 */
-                if (!this.isDeltaObject(c)) {
-                    /* Write the object type so that we can get the Schema back. */
-                    jg.writeFieldName("__pm_schema_type");
-                    jg.writeString(c.getName());
-                } else {
-                    jg.writeFieldName("__pm_type");
-                    jg.writeNumber(1001);
-                    
-                    Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
-                    Class<?> returnType = m.getReturnType();
-                    jg.writeFieldName("__pm_schema_type");
-                    jg.writeString(returnType.getName());
-                }
+                /* Mark as a delta object for the client code. */
+                jg.writeFieldName("__pm_type");
+                jg.writeNumber(1001);
+
+                Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
+                Class<?> returnType = m.getReturnType();
+                jg.writeFieldName("__pm_schema_type");
+                jg.writeString(returnType.getComponentType().getName());
+                this.iterateOverObjectField(jg, obj, visitedClasses, m);
+                
+                m = c.getDeclaredMethod("getDeletes", new Class<?>[]{});
+                this.iterateOverObjectField(jg, obj, visitedClasses, m);
+                
+                m = c.getDeclaredMethod("getUpdates", new Class<?>[]{});
+                this.iterateOverObjectField(jg, obj, visitedClasses, m);
+                
+                jg.writeEndObject();
+                return true;
+            } else if (this.hasClientDataMethods(c)) {
+                jg.writeStartObject();
+                
+                /* Write the object type so that we can get the Schema back. */
+                jg.writeFieldName("__pm_schema_type");
+                jg.writeString(c.getName());
                 
                 for (Method m : c.getMethods()) {
                     Annotation clientDataAnnot = m.getAnnotation(org.primefaces.mobile.model.ClientData.class);
                     if (clientDataAnnot != null) {
-                        /* Extract the field name. */
-                        String nxtFieldName = this.extractFieldName(m.getName());
-
-                        /* Finally, handle arbitrary object types. Either these objects
-                         * encapsulate other objects (as evidenced by having ClientData-
-                         * annotated methods or they have a toString
-                         */
-                        Object subObj = (Object) m.invoke(obj, new Object[]{});
-                        if (subObj != null && !this.serializeObjectFields(jg, subObj, visitedClasses, nxtFieldName)) {
-                            /* Should never happen. */
-                            throw new IOException("Serialization unexpectedly encountered a class with no ClientData: " + subObj.getClass().getName());
-                        }
+                        this.iterateOverObjectField(jg, obj, visitedClasses, m);
                     }
                 }
                 jg.writeEndObject();
@@ -213,12 +231,14 @@ public class JSONSerializer {
                 try {
                     Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
                     Class<?> returnType = m.getReturnType();
-                    if (!this.serializeObjectForSchema(jg, returnType, visitedClasses, fieldName)) {
+                    if (!this.serializeObjectForSchema(jg, returnType, 
+                            visitedClasses, fieldName)) {
                         /* The object neither has any fields marked as ClientData nor
                          * does it have a toString method - this is not legal.
                         */
                         throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
                     }
+                    return true;
                 } catch (NoSuchMethodException ex) {
                     throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
                 } catch (SecurityException  ex) {
@@ -243,7 +263,9 @@ public class JSONSerializer {
                     jg.writeFieldName(fieldName);
                 }
                 
-                List<String> sortFields = new LinkedList<String>();
+                Map<String, String> sortFields = new TreeMap<String, String>();
+                Map<String, String> filterFields = new TreeMap<String, String>();
+                List<String> indexFields = new LinkedList<String>();
                 String keyField = null;
                 
                 jg.writeStartObject();
@@ -281,7 +303,16 @@ public class JSONSerializer {
                         Annotation sortAnnot =
                                 m.getAnnotation(org.primefaces.mobile.model.ClientSort.class);
                         if (sortAnnot != null) {
-                            sortFields.add(nxtFieldName);
+                            ClientSort cSortAnnot = (ClientSort)sortAnnot;
+                            sortFields.put(nxtFieldName, cSortAnnot.displayName());
+                        }
+                        
+                        /* Determine if this field is a filter field. */
+                        Annotation filterAnnot =
+                                m.getAnnotation(org.primefaces.mobile.model.ClientFilter.class);
+                        if (filterAnnot != null) {
+                            ClientFilter cFilterAnnot = (ClientFilter)filterAnnot;
+                            filterFields.put(nxtFieldName, cFilterAnnot.displayName());
                         }
 
                         /* Determine if this field is a key field. */
@@ -293,6 +324,14 @@ public class JSONSerializer {
                             }
                             keyField = nxtFieldName;
                         }
+                        
+                        /* Determine if this field is an indexed field. */
+                        Annotation indexedAnnot =
+                                m.getAnnotation(org.primefaces.mobile.model.ClientIndexed.class);
+                        if (indexedAnnot != null) {
+                            indexFields.add(nxtFieldName);
+                        }
+                        
 
                         /* Recurse over the method. */
                         Class<?> returnType = m.getReturnType();
@@ -312,11 +351,19 @@ public class JSONSerializer {
                 jg.writeFieldName("__pm_key");
                 jg.writeString(keyField);
 
-                jg.writeArrayFieldStart("__pm_sorts");
-                for (String s : sortFields) {
-                    jg.writeString(s);
+                jg.writeObjectFieldStart("__pm_sorts");
+                for (Entry<String, String> e : sortFields.entrySet()) {
+                    jg.writeFieldName(e.getKey());
+                    jg.writeString(e.getValue());
                 }
-                jg.writeEndArray();
+                jg.writeEndObject();
+                
+                jg.writeObjectFieldStart("__pm_filters");
+                for(Entry<String, String> e: filterFields.entrySet()) {
+                    jg.writeFieldName(e.getKey());
+                    jg.writeString(e.getValue());
+                }
+                jg.writeEndObject();
 
                 jg.writeEndObject();
                 return true;

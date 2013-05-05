@@ -10,13 +10,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to identify a field as a sort field. On the client side this
- * will force creation of an index on this field.
+ * Annotation used to identify a field as a filter field. On the client side this
+ * will force creation of an index on this field and it integrates with the dataList/
+ * table objects to automatically create filters.
  * 
  * @author shallem
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
-public @interface ClientSort {
-    String displayName() default "[none]";
+public @interface ClientFilter {
+    String displayName();
 }
