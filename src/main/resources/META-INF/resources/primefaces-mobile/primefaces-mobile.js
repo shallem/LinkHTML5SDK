@@ -662,6 +662,7 @@ PrimeFaces.Utils =  {
         }
     },
     layoutFullHeightComponent: function(maxHeight, component) {
+        $(component).height(maxHeight);
         var children = $(component).children();
         var totHeight = 0;
         for (var i = 0; i < children.length - 1; ++i) {
@@ -676,7 +677,6 @@ PrimeFaces.Utils =  {
         $(children[children.length - 1]).height(maxHeight - totHeight);
         $(children).find('.pm-layout-full-height').each(function() {
             var thisHeight = $(this).parent().height();
-            $(this).height(thisHeight);
             PrimeFaces.Utils.layoutFullHeightComponent(thisHeight, this);
         });
     },
@@ -700,8 +700,12 @@ PrimeFaces.Utils =  {
     },
     layoutPageFullScreen: function(pageID) {
         var contentHeight = PrimeFaces.Utils.resizePages();
-        PrimeFaces.Utils.layoutFullHeightComponent(contentHeight, 
-                $('[data-role="content"]', $.mobile.activePage));
+        $('[data-role="content"]', $.mobile.activePage).find('.pm-layout-full-height').each(function() {
+            PrimeFaces.Utils.layoutFullHeightComponent(contentHeight, this);
+        });
+        
+        //PrimeFaces.Utils.layoutFullHeightComponent(contentHeight, 
+        //        $('[data-role="content"]', $.mobile.activePage));
         // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
         // in the "Mastering the Refresh() method" section
         setTimeout(function() {
