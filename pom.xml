@@ -226,6 +226,10 @@
 <!--		    <include>editor/editor.js</include> -->
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
+		    <include>persistence/persistence.js</include>
+		    <include>persistence/persistence.migrations.js</include>
+		    <include>persistence/persistence.store.sql.js</include>
+		    <include>persistence/persistence.store.websql.js</include>
 		    <include>primefaces-mobile.js</include>
 		  </includes>
 		  <aggregations>
