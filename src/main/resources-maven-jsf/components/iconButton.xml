@@ -100,6 +100,13 @@
             <type>java.lang.String</type>
             <description>Adds a corner to a button. Can be left, right, top, or bottom.</description>
         </attribute>
+        <attribute>
+            <name>local</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this button should not generate an ajax bean request to the JSF backing bean.</description> 
+        </attribute>
     </attributes>
         
     <resources>

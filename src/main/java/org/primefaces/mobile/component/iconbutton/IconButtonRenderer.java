@@ -50,8 +50,8 @@ public class IconButtonRenderer extends CoreRenderer {
         writer.writeAttribute("href", button.getHref(), null);
         
         String onclick = button.getOnclick();
-        String request = buildAjaxRequest(context, button, null);
-        onclick = onclick != null ? onclick + ";" + request : request;
+        String request = button.isLocal() ? "" : buildAjaxRequest(context, button, null);
+        onclick = onclick != null ? (onclick + ";" + request) : request;
         
         //String aStyle = " ";
         //if (button.getImage() != null) {
