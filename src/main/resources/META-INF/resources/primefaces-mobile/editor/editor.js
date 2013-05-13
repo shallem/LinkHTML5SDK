@@ -298,7 +298,7 @@
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
-            'data-theme' : 'b',
+            'data-theme' : 'a',
             'id' : 'fontsPopup'
         }).append($fontMenu).appendTo($main);
     
@@ -524,11 +524,15 @@
     if (button.popupClick && button.popupClick(e, data) === false)
       return false;
 
+    /* Set the focus on the iFrame. If we don't do this the forecolor and backgroundcolor methods
+     * don't work.
+     */
+    editor.$frame[0].contentWindow.focus();
+    
     // Execute the command
     if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, button))
       return false;
 
-    focus(editor);
     return true;
   }
 
@@ -556,9 +560,14 @@
   function createPopup(editor, button, selectName, popupDiv) {
 
     // Create the popup
-    var $popup = $('<select />')
-      .attr('name', selectName)
-      .appendTo(popupDiv);
+    var $popup = null;
+    if (button.popupName == "color") {
+        $popup = $(DIV_TAG).appendTo(popupDiv);
+    } else {
+        $popup = $('<select />')
+            .attr('name', selectName)
+            .appendTo(popupDiv);
+    }
 
     // Custom popup
     if (button.popupContent) {
@@ -566,12 +575,37 @@
     }
     // Color
     else if (button.popupName == "color") {
-      var colors = editor.options.colors.split(" ");
-      $.each(colors, function(idx, color) {
-        var colorItem = $('<option />').append($(DIV_TAG).css(BACKGROUND_COLOR, "#" + color).append("&nbsp;"))
-         .appendTo($popup);
-        colorItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
+      //var colors = editor.options.colors.split(" ");
+      //$.each(colors, function(idx, color) {
+        var colorPicker = $popup;
+        var colorDiv = $(DIV_TAG).attr({
+              'style' : 'background-color: #ffffff; color: #000000'
+        }).append("Select a Color").appendTo(colorPicker);
+        $(colorPicker).ColorPicker({
+          color: '#ffffff',
+          eventName: 'tap',
+          onShow: function (colpkr) {
+              $(colpkr).fadeIn(500);
+              /* Bring in front of the popup. */
+              $(colpkr).css('zIndex', 9999);
+              return false;
+          },
+          onHide: function (colpkr) {
+              $(colpkr).fadeOut(500);
+              return false;
+          },
+          onChange: function (hsb, hex, rgb) {
+              var updateDiv = $(colorPicker).find('div');
+              updateDiv.css('backgroundColor', '#' + hex);
+              popupClick.call(editor, {
+                  target: updateDiv[0], 
+                  data : { 
+                      popup: popupDiv 
+                  } 
+              });
+          }
       });
+//      });
     }
 
     // Font

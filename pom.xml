@@ -200,6 +200,7 @@
 		<resourcesSet>
 		  <includes>
 		    <include>jquery.mobile-1.3.1.css</include>
+		    <include>colorpicker/colorpicker.css</include>
 		    <include>editor/editor.css</include>
 		    <include>datebox/jqm-datebox.css</include>
 		    <include>mobilehelix.css</include>
@@ -219,17 +220,29 @@
 		<resourcesSet>
 		  <includes>
 		    <include>iscroll.js</include>
+
 		    <include>cordova.js</include>
 		    <include>cordova-plugins.js</include>
+
 		    <include>jquery.mobile-1.3.1.js</include>
+
 		    <include>datagrid/datagrid.js</include>
-<!--		    <include>editor/editor.js</include> -->
+
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
+
+		    <include>colorpicker/colorpicker.js</include>
+		    <include>colorpicker/eye.js</include>
+		    <include>colorpicker/utils.js</include>
+
+		    <!-- Depends on colorpicker. -->
+		    <include>editor/editor.js</include>
+
 		    <include>persistence/persistence.js</include>
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
+
 		    <include>primefaces-mobile.js</include>
 		  </includes>
 		  <aggregations>
