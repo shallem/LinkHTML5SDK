@@ -137,7 +137,7 @@
   BUTTON_NAME      = "buttonName",
   CHANGE           = "change",
   CLEDITOR         = "cleditor",
-  CLICK            = "tap",
+  CLICK            = "tap click",
   DISABLED         = "disabled",
   DIV_TAG          = "<div>",
   H2_TAG           = "<h2 />",
@@ -491,13 +491,12 @@
         useCSS = editor.options.useCSS;
 
     // Get the command value
-    if (buttonName == "font")
+    if (buttonName == "font") {
+      value = $(target).find("font").html();
       // Opera returns the fontfamily wrapped in quotes
-      value = target.style.fontFamily.replace(/"/g, "");
-    else if (buttonName == "size") {
-      if (target.tagName == "A")
-        target = target.children[0];
-      value = target.innerHTML;
+      // value = target.style.fontFamily.replace(/"/g, "");
+    } else if (buttonName == "size") {
+      value = $(target).find("font").html();
     }
     else if (buttonName == "style")
       value = "<" + target.tagName + ">";
@@ -612,10 +611,21 @@
     else if (button.popupName == "font") {
       $.each(editor.options.fonts.split(","), function(idx, font) {
         var fontItem = $('<option />').append($(SPAN_TAG)
-            .css("fontFamily", font)
-            .html(font)
+            .append($('<font />').attr({
+                'face' : font
+            })
+            .append(font))
         ).appendTo($popup);
-        fontItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
+      });
+      $popup.change(function() {
+          $(this).find("option:selected").each(function() {
+               popupClick.call(editor, {
+                  target: this, 
+                  data : { 
+                      popup: popupDiv 
+                  } 
+              });
+          });
       });
     }
     // Size
@@ -624,7 +634,16 @@
         var sizeItem = $('<option />').append($(SPAN_TAG)
             .html("<font size=" + size + ">" + size + "</font>")
         ).appendTo($popup);
-        sizeItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
+      });
+      $popup.change(function() {
+          $(this).find("option:selected").each(function() {
+               popupClick.call(editor, {
+                  target: this, 
+                  data : { 
+                      popup: popupDiv 
+                  } 
+              });
+          });
       });
     }
     // Style
