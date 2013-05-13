@@ -236,7 +236,7 @@
 		    <include>colorpicker/utils.js</include>
 
 		    <!-- Depends on colorpicker. -->
-<!-- 		    <include>editor/editor.js</include> -->
+ 		    <include>editor/editor.js</include>
 
 		    <include>persistence/persistence.js</include>
 		    <include>persistence/persistence.migrations.js</include>
