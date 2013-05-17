@@ -166,12 +166,16 @@ if(!window.persistence) { // persistence.js not loaded!
       var version = (customVersion!==undefined) ? customVersion : this.version;
       
       persistence.transaction(function(tx){
+        function actionFailure(err) {
+            alert(err.message);
+        }
+        
         function nextAction() {
           if (actionsToRun.length == 0)
             Migrator.setVersion(version, callback);
           else {
             var action = actionsToRun.pop();
-            action(tx, nextAction);
+            action(tx, nextAction, actionFailure);
           }
         }
         
@@ -180,12 +184,16 @@ if(!window.persistence) { // persistence.js not loaded!
     }
     
     Migration.prototype.up = function(callback) {
-      if (this.body.up) this.body.up.apply(this);
+      if (this.body.up) {
+        this.body.up.apply(this);
+      }
       this.executeActions(callback);
     }
     
     Migration.prototype.down = function(callback) {
-      if (this.body.down) this.body.down.apply(this);
+      if (this.body.down) {
+        this.body.down.apply(this);
+      }
       this.executeActions(callback, this.version-1);
     }
     
@@ -195,33 +203,35 @@ if(!window.persistence) { // persistence.js not loaded!
       if (callback) callback(table);
       
       var column;
-      var sql = 'CREATE TABLE ' + tableName + ' (id VARCHAR(32) PRIMARY KEY';
-      while (column = table.columns.pop())
+      var sql = 'CREATE TABLE `' + tableName + '` (id VARCHAR(32) PRIMARY KEY';
+      while (column = table.columns.pop()) {
         sql += ', ' + column;
+      }
       
       this.executeSql(sql + ')');
     }
     
     Migration.prototype.dropTable = function(tableName) {
-      var sql = 'DROP TABLE ' + tableName;
+      var sql = 'DROP TABLE `' + tableName + '`';
       this.executeSql(sql);
     }
     
     Migration.prototype.addColumn = function(tableName, columnName, columnType) {
-      var sql = 'ALTER TABLE ' + tableName + ' ADD ' + columnName + ' ' + columnType;
+      var sql = 'ALTER TABLE `' + tableName + '` ADD ' + columnName + ' ' + columnType;
       this.executeSql(sql);
     }
     
     Migration.prototype.removeColumn = function(tableName, columnName) {
-      this.action(function(tx, nextCommand){
+      this.action(function(tx, nextCommand, errorFn){
         var sql = 'select sql from sqlite_master where type = "table" and name == "'+tableName+'"';
         tx.executeSql(sql, null, function(result){
-          var columns = new RegExp("CREATE TABLE `\\w+` |\\w+ \\((.+)\\)").exec(result[0].sql)[1].split(', ');
+          var matchArr = new RegExp("CREATE TABLE `?[A-Za-z0-9_.]+`? \\((.+)\\)").exec(result[0].sql);
+          var columns = matchArr[1].split(', ');
           var selectColumns = [];
           var columnsSql = [];
           
           for (var i = 0; i < columns.length; i++) {
-            var colName = new RegExp("((`\\w+`)|(\\w+)) .+").exec(columns[i])[1];
+            var colName = new RegExp("`?(\\w+)`? .+").exec(columns[i])[1];
             if (colName == columnName) continue;
             
             columnsSql.push(columns[i]);
@@ -231,29 +241,29 @@ if(!window.persistence) { // persistence.js not loaded!
           selectColumns = selectColumns.join(', ');
           
           var queries = [];
-          queries.unshift(["ALTER TABLE " + tableName + " RENAME TO " + tableName + "_bkp;", null]);
-          queries.unshift(["CREATE TABLE " + tableName + " (" + columnsSql + ");", null]);
-          queries.unshift(["INSERT INTO " + tableName + " SELECT " + selectColumns + " FROM " + tableName + "_bkp;", null]);
-          queries.unshift(["DROP TABLE " + tableName + "_bkp;", null]);
+          queries.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
+          queries.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
+          queries.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
+          queries.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
           
           persistence.executeQueriesSeq(tx, queries, nextCommand);
-        });
+        }, errorFn);
       });
     }
     
     Migration.prototype.addIndex = function(tableName, columnName, unique) {
-      var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX ' + tableName + '_' + columnName + ' ON ' + tableName + ' (' + columnName + ')';
+      var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON ' + tableName + ' (' + columnName + ')';
       this.executeSql(sql);
     }
     
     Migration.prototype.removeIndex = function(tableName, columnName) {
-      var sql = 'DROP INDEX ' + tableName + '_' + columnName;
+      var sql = 'DROP INDEX `' + tableName + '_' + columnName + '`';
       this.executeSql(sql);
     }
     
     Migration.prototype.executeSql = function(sql, args) {
-      this.action(function(tx, nextCommand){
-        tx.executeSql(sql, args, nextCommand);
+      this.action(function(tx, nextCommand, errorFn){
+        tx.executeSql(sql, args, nextCommand, errorFn);
       });
     }
     

@@ -220,11 +220,14 @@ persistence.get = function(arg1, arg2) {
      * @param fields
      *            an object with property names as keys and SQLite types as
      *            values, e.g. {name: "TEXT", age: "INT"}
+     * @param doForce
+     *            forces the schema to be over-written rather than using a cached
+     *            copy if the schema has been previously defined.
      * @return the entity's constructor
      */
-    persistence.define = function (entityName, fields) {
-      if (entityMeta[entityName]) { // Already defined, ignore
-        return getEntity(entityName);
+    persistence.define = function (entityName, fields, doForce) {
+      if (!doForce && entityMeta[entityName]) { // Already defined, ignore
+        return getEntity(entityName, false);
       }
       var meta = {
         name: entityName,
@@ -235,7 +238,7 @@ persistence.get = function(arg1, arg2) {
         hasOne: {}
       };
       entityMeta[entityName] = meta;
-      return getEntity(entityName);
+      return getEntity(entityName, true);
     };
 
     /**
@@ -375,8 +378,8 @@ persistence.get = function(arg1, arg2) {
      * entity name
      * @return the entity constructor function to be invoked with `new fn()`
      */
-    function getEntity(entityName) {
-      if (entityClassCache[entityName]) {
+    function getEntity(entityName, doForce) {
+      if (!doForce && entityClassCache[entityName]) {
         return entityClassCache[entityName];
       }
       var meta = entityMeta[entityName];
