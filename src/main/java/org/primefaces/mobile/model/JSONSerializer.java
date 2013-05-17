@@ -75,17 +75,26 @@ public class JSONSerializer {
             IllegalArgumentException,
             InvocationTargetException,
             NoSuchMethodException {
-        TreeSet<String> visitedClasses = new TreeSet<String>();
         StringWriter outputString = new StringWriter();
         JsonFactory jsonF = new JsonFactory();
         
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
-        serializeObjectFields(jg, obj, visitedClasses, null);
+        this.serializeObject(obj, jg);
         jg.close();
         
         outputString.flush();
         
         return outputString.toString();
+    }
+    
+    public void serializeObject(Object obj,
+            JsonGenerator jg) throws IOException,
+            IllegalAccessException,
+            IllegalArgumentException,
+            InvocationTargetException,
+            NoSuchMethodException {
+        TreeSet<String> visitedClasses = new TreeSet<String>();
+        serializeObjectFields(jg, obj, visitedClasses, null);
     }
 
     private void iterateOverObjectField(JsonGenerator jg,
