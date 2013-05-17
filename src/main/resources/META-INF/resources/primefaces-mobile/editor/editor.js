@@ -1196,6 +1196,7 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         
         this.jqInput = $(this.jqId + '_input');
         var _self = this;
+        $(this.jqInput).data("EDITOR", this);
 
         /* SAH: always render, even when an object is INVISIBLE. */
         if(1 /*this.jq.is(':visible')*/) {

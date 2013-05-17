@@ -485,6 +485,8 @@ PrimeFaces.ajax.AjaxResponse = function (responseXML) {
  * Utility functions.
  */
 PrimeFaces.Utils =  {
+    currentUniqueID : 0,
+    
     getPosition : function (element) {
         var xPosition = 0;
         var yPosition = 0;
@@ -711,6 +713,10 @@ PrimeFaces.Utils =  {
         setTimeout(function() {
             PrimeFaces.addScrollers();
         }, 0);        
+    },
+    getUniqueID : function() {
+        ++PrimeFaces.Utils.currentUniqueID;
+        return "pm_idt" + PrimeFaces.Utils.currentUniqueID;
     }
 }
 
