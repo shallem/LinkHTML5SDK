@@ -288,7 +288,7 @@ $(document).bind('prerequest', function(ev, cfg) {
             /* Save off the current height of the element we are updating so that we can
              * tell post update when the rendering of the updated element is likely done.
              */
-            idsToUpdate[updateSel] = { 
+            PrimeFaces.Layout.idsToUpdate[updateSel] = { 
                 height: $(updateSel).height(), 
                 nretries: 0 
             };

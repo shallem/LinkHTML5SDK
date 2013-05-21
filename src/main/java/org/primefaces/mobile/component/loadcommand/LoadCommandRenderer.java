@@ -56,12 +56,10 @@ public class LoadCommandRenderer extends CoreRenderer {
              */
             ResponseWriter writer = context.getResponseWriter();
             JSONSerializer s = new JSONSerializer();
+            boolean noError = false;
             try {
-                if (cmd.getError() != null) {
-                    writer.write("{ 'error' : '" + cmd.getError() + "'}");
-                } else {
-                    writer.write(s.serializeObject(cmd.getValue()));
-                }
+                writer.write(s.serializeObject(cmd.getValue()));
+                noError = true;
             } catch (IllegalAccessException ex) {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IllegalArgumentException ex) {
@@ -70,6 +68,12 @@ public class LoadCommandRenderer extends CoreRenderer {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NoSuchMethodException ex) {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (!noError) {
+                /* An exception occurred during serialization or while getting the value. */
+                if (cmd.getError() != null) {
+                    writer.write("{ 'error' : '" + cmd.getError() + "'}");
+                }
             }
         } else {
             this.encodeMarkup(context, cmd);
@@ -96,11 +100,8 @@ public class LoadCommandRenderer extends CoreRenderer {
             onComplete.append("null");
         }
        
-        String schema = "null";
-        if (cmd.getOfflineSave().equals("true")) {
-            JSONSerializer s = new JSONSerializer();
-            schema = s.serializeObjectSchema(cmd.getValue().getClass());
-        }
+        JSONSerializer s = new JSONSerializer();
+        String schema = s.serializeObjectSchema(cmd.getValue().getClass());
         
         // Global variables populated by this load.
         String widgetName = "window." + cmd.resolveWidgetVar();

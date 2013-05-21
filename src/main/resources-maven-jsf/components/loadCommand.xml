@@ -34,23 +34,10 @@
             <description>String property containing an error message, if one occurs. Return null if no error.</description>
         </attribute>
         <attribute>
-            <name>offlineSave</name>
-            <required>true</required>
-            <type>java.lang.String</type>
-            <defaultValue>true</defaultValue>
-            <description>Should the data loaded by saved for offline access.</description>
-        </attribute>
-        <attribute>
             <name>oncomplete</name>
             <required>false</required>
             <type>java.lang.String</type>
             <description>Javascript to execute when the load is complete.</description>
-        </attribute>
-        <attribute>
-            <name>delta</name>
-            <required>false</required>
-            <type>java.lang.Object</type>
-            <description>Delta datasource of the load command.</description>
         </attribute>
         <attribute>
             <name>loadingMessage</name>
