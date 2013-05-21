@@ -202,7 +202,12 @@
 		    <include>jquery.mobile-1.3.1.css</include>
 		    <include>colorpicker/colorpicker.css</include>
 		    <include>editor/editor.css</include>
+
+		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.css</include>
+		    <!-- Overrides to set image URLs based on PrimeFaces Mobile's resource handler. -->
+		    <include>datebox/pm-jqm-datebox-overrides.css</include>
+
 		    <include>mobilehelix.css</include>
 		  </includes>
 		  <aggregations>
@@ -228,6 +233,7 @@
 
 		    <include>datagrid/datagrid.js</include>
 
+		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 

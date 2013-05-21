@@ -226,7 +226,8 @@
 			});
 		},
 		_event: function(e, p) {
-			var w = $(this).data('datebox');
+                        console.log($(this).data());
+			var w = $(this).jqmData('mobileDatebox');
 			if ( ! e.isPropagationStopped() ) {
 				switch (p.method) {
 					case 'close':
@@ -803,7 +804,8 @@
 				.on('datebox', w._event);
 			
 			if ( o.useNewStyle === true ) {
-				w.d.input.addClass('ui-shadow-inset ui-corner-all '+((o.useAltIcon===true)?'ui-icon-datebox-alt':'ui-icon-datebox'));
+                                /* SAH: took out ui-shadow-inset from front of style list. */
+				w.d.input.addClass('ui-corner-all '+((o.useAltIcon===true)?'ui-icon-datebox-alt':'ui-icon-datebox'));
 				if ( o.overrideStyleClass !== false ) { w.d.input.addClass(o.overrideStyleClass); }
 			}
 			
@@ -1205,7 +1207,7 @@
 	$( document ).on( "pagecreate create", function( e ){
 		$( document ).trigger( "dateboxbeforecreate" );
 		$( ":jqmData(role='datebox')", e.target ).each(function() {
-			if ( typeof($(this).data('datebox')) === "undefined" ) {
+			if ( typeof($(this).jqmData('datebox')) === "undefined" ) {
 				$(this).datebox();
 			}
 		});

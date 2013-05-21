@@ -276,15 +276,6 @@
        .appendTo($toolbar)
 
     // Now add in the actual popups
-    /*var $fontMenu = editor.$fontMenu = $(DIV_TAG).attr({
-        'data-role' : 'collapsible-set',
-        'data-inset' : 'true',
-        'style' : 'margin: 0; min-width:210px;',
-        'data-theme' : 'b',
-        'data-content-theme' : 'c',
-        'data-collapsed-icon' : 'arrow-r',
-        'data-expanded-icon' : 'arrow-d'
-    });*/
     var $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',

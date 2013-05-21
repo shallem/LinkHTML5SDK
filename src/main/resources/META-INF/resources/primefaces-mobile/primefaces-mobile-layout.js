@@ -305,7 +305,7 @@ $(document).bind('prerequest', function(ev, cfg) {
     }
 });
 
-$(document).bind('postrequest', function(xhr, status, args) {
+$(document).bind('postrequest', function(ev, xhr) {
     var responseXML = xhr.responseXML;
     var xmlDoc = $(responseXML.documentElement),
     updates = xmlDoc.find('update');
