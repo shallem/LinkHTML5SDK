@@ -32,19 +32,24 @@ PrimeFaces.ajax.loadOptions = {};
 PrimeFaces.ajax.origRequest = PrimeFaces.ajax.AjaxRequest;
 PrimeFaces.ajax.AjaxRequest = function(cfg, ext) {
     $(document).trigger('prerequest', cfg);
+    
+    /**
+     * Override the existing AJAX oncomplete handler to add a new post-request trigger.
+     * This allows us to trigger the event after ALL updates and callbacks are done.
+     */
+    var origComplete;
+    if (ext) {
+        origComplete = ext.oncomplete;        
+    } else {
+        ext = {};
+    }
+    ext.oncomplete = function(xhr, status, args) {
+        if (origComplete) {
+            origComplete.call(this, xhr, status, args);
+        }
+        $(document).trigger('postrequest', xhr);
+    };
     PrimeFaces.ajax.origRequest.call(this, cfg, ext);
-}
-
-/**
- * Override the existing AJAX request handler to add a new post-request trigger.
- * This allows us to trigger the event after ALL updates and callbacks are done.
- * The standard ajaxComplete event in PrimeFaces fires to early for us to properly
- * refresh scrollers, for example, using that event.
- */
-PrimeFaces.ajax.origResponse = PrimeFaces.ajax.AjaxResponse;
-PrimeFaces.ajax.AjaxResponse = function (responseXML) {
-    PrimeFaces.ajax.origResponse.call(this, responseXML);
-    $(document).trigger('postrequest', responseXML);
 }
 
 /**
