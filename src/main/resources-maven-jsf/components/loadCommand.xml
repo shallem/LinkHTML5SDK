@@ -52,6 +52,18 @@
             <type>java.lang.Object</type>
             <description>Delta datasource of the load command.</description>
         </attribute>
+        <attribute>
+            <name>loadingMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display when executing this load command.</description>
+        </attribute>
+        <attribute>
+            <name>loadingTheme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>jQuery Mobile theme for the loader. Default is 'a'.</description>
+        </attribute>
     </attributes>
     <resources>
         <resource>
