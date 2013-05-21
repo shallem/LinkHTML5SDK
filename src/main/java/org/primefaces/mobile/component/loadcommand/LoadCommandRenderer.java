@@ -115,7 +115,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("function " + cmd.getName() + "_load(schemaObj, params){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxBeanLoad(''{0}'', ''{1}'', ''{2}'', {3}, schemaObj, params, ''{4}'', ''{5}'');",
+        writer.write(MessageFormat.format("PrimeFaces.DB.ajaxBeanLoad(''{0}'', ''{1}'', ''{2}'', {3}, schemaObj, params, ''{4}'', ''{5}'');",
                 new Object[] {
                     clientId,
                     formId,

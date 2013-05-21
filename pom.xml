@@ -244,6 +244,9 @@
 		    <include>persistence/persistence.store.websql.js</include>
 
 		    <include>primefaces-mobile.js</include>
+		    <include>primefaces-mobile-utils.js</include>
+		    <include>primefaces-mobile-ajax.js</include>
+		    <include>primefaces-mobile-layout.js</include>
 		  </includes>
 		  <aggregations>
 		    <aggregation>

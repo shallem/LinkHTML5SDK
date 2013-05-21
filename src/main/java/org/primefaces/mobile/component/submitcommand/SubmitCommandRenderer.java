@@ -52,7 +52,7 @@ public class SubmitCommandRenderer extends CoreRenderer {
         writer.write("function " + cmd.getName() + "(){ ");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.Utils.ajaxFormSubmit(''{0}'', ''{1}'', ''{2}'', ''{3}'', ''{4}'', ''{5}'', {6});",
+        writer.write(MessageFormat.format("PrimeFaces.DB.ajaxFormSubmit(''{0}'', ''{1}'', ''{2}'', ''{3}'', ''{4}'', ''{5}'', {6});",
                 new Object[] {
                     cmd.getUrl(),
                     cmd.getForm(),
