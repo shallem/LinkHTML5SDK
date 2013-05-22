@@ -64,6 +64,15 @@ persistence.isImmutable = function(fieldName) {
 };
 
 /**
+ * Mobile Helix
+ * Default global error handler.
+ */
+persistence.errorHandler = function(errMsg) {
+    alert(errMsg);
+    return false;
+};
+
+/**
  * Default implementation for entity-property
  */
 persistence.defineProp = function(scope, field, setterCallback, getterCallback) {
@@ -1944,7 +1953,7 @@ persistence.get = function(arg1, arg2) {
       var that = this;
 
       this.limit(1).list(tx, function(results) {
-          if(results.length === 0) {
+          if(!results || results.length === 0) {
             oneFn(null);
           } else {
             oneFn(results[0]);

@@ -705,30 +705,35 @@ function config(persistence, dialect) {
       sql += " OFFSET " + this._skip;
     }
     session.flush(tx, function () {
-        tx.executeSql(sql, args, function (rows) {
-            var results = [];
-            if(that._reverse) {
-              rows.reverse();
+        tx.executeSql(sql, args, 
+            function (rows) {
+                var results = [];
+                if(that._reverse) {
+                  rows.reverse();
+                }
+                for ( var i = 0; i < rows.length; i++) {
+                  var r = rows[i];
+                  var e = rowToEntity(session, entityName, r, mainPrefix);
+                  for ( var j = 0; j < that._prefetchFields.length; j++) {
+                    var prefetchField = that._prefetchFields[j];
+                    var thisMeta = meta.hasOne[prefetchField].type.meta;
+                    e._data_obj[prefetchField] = rowToEntity(session, thisMeta.name, r, prefetchField + '_');
+                    session.add(e._data_obj[prefetchField]);
+                  }
+                  results.push(e);
+                  session.add(e);
+                }
+                callback(results);
+                that.triggerEvent('list', that, results);
+            }, function(tx, error) {
+                if (persistence.errorHandler(error.message)) {
+                    return;
+                }
+                callback(null, error);
             }
-            for ( var i = 0; i < rows.length; i++) {
-              var r = rows[i];
-              var e = rowToEntity(session, entityName, r, mainPrefix);
-              for ( var j = 0; j < that._prefetchFields.length; j++) {
-                var prefetchField = that._prefetchFields[j];
-                var thisMeta = meta.hasOne[prefetchField].type.meta;
-                e._data_obj[prefetchField] = rowToEntity(session, thisMeta.name, r, prefetchField + '_');
-                session.add(e._data_obj[prefetchField]);
-              }
-              results.push(e);
-              session.add(e);
-            }
-            callback(results);
-            that.triggerEvent('list', that, results);
-          });
-      }, function(tx, error) {
-          callback(null, error);
-      });
-  };
+        );
+    });
+  }
 
   /**
    * Asynchronous call to remove all the items in the collection.
