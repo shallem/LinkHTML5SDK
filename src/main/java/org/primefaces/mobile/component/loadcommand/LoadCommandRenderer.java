@@ -95,13 +95,19 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         StringBuilder onComplete = new StringBuilder();
         if (cmd.getOncomplete() != null) {
-            onComplete.append("function (statusText) {").append(cmd.getOncomplete()).append("}");
+            onComplete.append("function (itemKey, statusText) {").append(cmd.getOncomplete()).append("}");
         } else {
             onComplete.append("null");
         }
        
         JSONSerializer s = new JSONSerializer();
-        String schema = s.serializeObjectSchema(cmd.getValue().getClass());
+        Object v = cmd.getValue();
+        if (v == null) {
+            throw new FacesException("LoadCommand '" + 
+                    cmd.getName() + 
+                    "': The value getter cannot ever return null. Return an empty object of the proper return type if no data is available.");
+        }
+        String schema = s.serializeObjectSchema(v.getClass());
         
         // Global variables populated by this load.
         String widgetName = "window." + cmd.resolveWidgetVar();
@@ -113,24 +119,31 @@ public class LoadCommandRenderer extends CoreRenderer {
         startScript(writer, clientId);
         writer.write(widgetName + " = null;");
    
-        writer.write("function " + cmd.getName() + "_load(schemaObj, params){ ");
+        writer.write("function " + cmd.getName() + "_load(schemaObj, params, itemKey){ ");
+        
+        writer.write("var loadingOptions = {");
+        writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
+        writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
+        writer.write("};\n");
+        
+        writer.write("var requestOptions = {");
+        writer.write(" 'id' : '" + clientId + "', ");
+        writer.write(" 'formId' : '" + formId + "', ");
+        writer.write(" 'params' : params ");
+        writer.write("};\n");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.DB.ajaxBeanLoad(''{0}'', ''{1}'', ''{2}'', {3}, schemaObj, params, ''{4}'', ''{5}'');",
+        writer.write(MessageFormat.format("PrimeFaces.DB.ajaxBeanLoad(requestOptions, loadingOptions, ''{0}'', schemaObj, {1}, itemKey);",
                 new Object[] {
-                    clientId,
-                    formId,
                     cmd.resolveWidgetVar(),
-                    onComplete.toString(),
-                    cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "",
-                    cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : ""
+                    onComplete.toString()
                 }));
 
         writer.write("}");
         
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
-        writer.write("function " + cmd.getName() + "(params){ ");
+        writer.write("function " + cmd.getName() + "(params, itemKey){ ");
         
         writer.write("PrimeFaces.DB.generatePersistenceSchema(");
         writer.write(schema);
@@ -139,7 +152,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("',");
         writer.write(cmd.getName());
         writer.write("_load,");
-        writer.write("params);");
+        writer.write("[params, itemKey]);");
         
         writer.write("}");
         
