@@ -127,7 +127,7 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",selectable: true");
             
             if (dlist.getSelectAction() != null) {
-                writer.append(",selectAction: function(row,rowIndex,strings) {" + dlist.getSelectAction() + "}");
+                writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
             }
         }
 

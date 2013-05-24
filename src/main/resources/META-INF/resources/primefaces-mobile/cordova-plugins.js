@@ -32,3 +32,17 @@
         }
     };
 })();
+
+(function() {
+    window.CordovaStatus = {
+        available: function() {
+            return cordova.exec(function() { window.CordovaInstalled = true; }, 
+                function() { window.CordovaInstalled = false; },
+                "CordovaStatus",
+                "available",
+                []
+            );
+        }
+    };
+})
+document.addEventListener("deviceready", window.CordovaStatus.available, false);

@@ -73,6 +73,14 @@ public class ClientWSResponse {
 
        return outputString.toString();
    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
    
    public static String SerializationFailureObject() {
        return "{ \"status\" : -4 }";
