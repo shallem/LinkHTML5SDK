@@ -244,10 +244,14 @@
 		    <!-- Depends on colorpicker. -->
  		    <include>editor/editor.js</include>
 
+		    <!-- Persistence. -->
 		    <include>persistence/persistence.js</include>
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
+
+		    <!-- Pretty dates. -->
+		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <include>primefaces-mobile.js</include>
 		    <include>primefaces-mobile-utils.js</include>

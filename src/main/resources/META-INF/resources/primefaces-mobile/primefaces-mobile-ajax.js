@@ -24,7 +24,9 @@
  * Options specifying the appearance of the loading message, which is displayed
  * automatically during all AJAX loads.
  */
-PrimeFaces.ajax.loadOptions = {};
+PrimeFaces.ajax.loadOptions = {
+    pin : false
+};
 
 /**
  * Override the existing AJAX request handler to add a new pre-request trigger.
@@ -63,8 +65,10 @@ $(document).bind('prerequest', function() {
  * Hide the loader post-request.
  */
 $(document).bind('postrequest', function() {
-    /* Hide the loader. */
-    $.mobile.loading( "hide" );
+    if (!PrimeFaces.ajax.loadOptions.pin) {
+        /* Hide the loader. */
+        $.mobile.loading( "hide" );
+    }
     
     /* Clear out the load options - this is meant as a per-load set of options. */
     PrimeFaces.ajax.loadOptions = {};

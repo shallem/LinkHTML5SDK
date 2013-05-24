@@ -414,9 +414,12 @@ function config(persistence, dialect) {
                       obj._dirtyProperties[p] = true;
                     }
                   }
+                  /* We actually need to update the ID. Because this object is dirty, all one-to-many
+                   * children become dirty and get updated with the ID of this object. If we don't
+                   * update the ID in the DB, all children get orphaned.
+                   */
+                  propertyPairs.push("id=" + tm.outIdVar('?'));
                   var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + obj.__pm_schema.__pm_key + " = ?";
-                  // Remove the ID, since we only need the ID when we are doing an insert ...
-                  values.pop();
                   // Add the unique key, which we are using to find the item to update.
                   values.push(obj.__pm_key);
                   tx.executeSql(sql, values, callback, callback);

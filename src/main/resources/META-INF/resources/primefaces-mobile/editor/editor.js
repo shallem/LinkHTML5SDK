@@ -293,7 +293,7 @@
             'id' : 'fontsPopup'
         }).append($fontMenu).appendTo($main);
     
-    var $styleMenu = $(UL_TAG).attr({
+    var $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',
         'style' : 'min-width:210px;',
@@ -310,7 +310,7 @@
         addButtonToMenu(editor, $styleMenu, buttonName, "style");
     });
 
-    var $formatMenu = $(UL_TAG).attr({
+    var $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',
         'style' : 'min-width:210px;',
@@ -327,7 +327,7 @@
         addButtonToMenu(editor, $formatMenu, buttonName, "format");
     });
 
-    var $actionMenu = $(UL_TAG).attr({
+    var $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',
         'style' : 'min-width:210px;',
@@ -552,7 +552,7 @@
     // Create the popup
     var $popup = null;
     if (button.popupName == "color") {
-        $popup = $(DIV_TAG).appendTo(popupDiv);
+        $popup = $(DIV_TAG).attr({ 'class' : 'ui-color-picker' }).appendTo(popupDiv);
     } else {
         $popup = $('<select />')
             .attr('name', selectName)
@@ -1187,7 +1187,6 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         
         this.jqInput = $(this.jqId + '_input');
         var _self = this;
-        $(this.jqInput).data("EDITOR", this);
 
         /* SAH: always render, even when an object is INVISIBLE. */
         if(1 /*this.jq.is(':visible')*/) {
@@ -1212,6 +1211,12 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         /* SAH: Always render ... */
         if(1 /*this.jq.is(':visible')*/) {
             this.editor = this.jqInput.cleditor(this.cfg)[0];
+            $(this.editor.$main).data("EDITOR", this);
+            
+            var _self = this;
+            $(this.editor.$main).on("remove", function() {
+                _self.destroy();
+            });
 
             if(this.cfg.disabled) {
                 this.disable();
@@ -1300,6 +1305,25 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         if (doRefresh) {
             this.editor.refresh();
         }
+    },
+    
+    destroy: function() {
+        /* Remove the popup menus from the DOM. */
+        $(this.editor.$fontMenu).closest(".ui-popup-container").next().remove();
+        $(this.editor.$fontMenu).closest(".ui-popup-container").remove();
+        $(this.editor.$styleMenu).closest(".ui-popup-container").next().remove();
+        $(this.editor.$styleMenu).closest(".ui-popup-container").remove();
+        $(this.editor.$formatMenu).closest(".ui-popup-container").next().remove();
+        $(this.editor.$formatMenu).closest(".ui-popup-container").remove();
+        $(this.editor.$actionMenu).closest(".ui-popup-container").next().remove();
+        $(this.editor.$actionMenu).closest(".ui-popup-container").remove();
+        
+        $(this.editor.$fontMenu).find(".ui-color-picker").each(function() {
+            var colorPickerId = $(this).data("colorpickerId");
+            if (colorPickerId) {
+                $('#' + colorPickerId).remove();
+            }
+        })
     }
     
 });

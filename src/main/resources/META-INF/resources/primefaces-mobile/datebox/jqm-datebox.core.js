@@ -380,7 +380,8 @@
 				
 				if ( exp_input === null || exp_input.length !== exp_format.length ) {
 					if ( typeof o.defaultValue === "number" && o.defaultValue > 0 ) {
-						return new w._date((w.initDate.getEpoch() + parseInt(o.defaultValue,10))*1000);
+						return new w._date(o.defaultValue);
+                                                //return new w._date((w.initDate.getEpoch() + parseInt(o.defaultValue,10))*1000);
 					} 
 					return new w._date(w.initDate.getTime());
 				} 
@@ -437,7 +438,7 @@
 								date =  w._pa(o.defaultValue,((o.mode === 'timebox' || o.mode === 'timeflipbox') ? date : false));
 							} break;
 						case 'number':
-							date =  new w._date(o.defaultValue * 1000); break;
+							date =  new w._date(o.defaultValue); break;
 						case 'string':
 							if ( o.mode === 'timebox' || o.mode === 'timeflipbox' ) {
 								exp_temp = o.defaultValue.split(':');
