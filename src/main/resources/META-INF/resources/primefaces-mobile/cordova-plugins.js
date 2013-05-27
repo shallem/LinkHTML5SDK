@@ -34,6 +34,7 @@
 })();
 
 (function() {
+    window.CordovaInstalled = false;
     window.CordovaStatus = {
         available: function() {
             return cordova.exec(function() { window.CordovaInstalled = true; }, 
@@ -44,5 +45,5 @@
             );
         }
     };
-})
-document.addEventListener("deviceready", window.CordovaStatus.available, false);
+    document.addEventListener("deviceready", window.CordovaStatus.available, false);
+})();
