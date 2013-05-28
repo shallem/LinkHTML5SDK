@@ -213,3 +213,8 @@
  * right of the screen. This is too close for my taste.
  */
 .ui-btn-icon-right .ui-icon { right: 15px; }
+
+/* Prevent jQuery enhancement from displaying a div above a file input image. */
+.ui-upload-icon div.ui-input-text {
+    margin: 0px !important;
+}

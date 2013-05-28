@@ -1191,7 +1191,10 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         /* SAH: always render, even when an object is INVISIBLE. */
         if(1 /*this.jq.is(':visible')*/) {
             this.render();
-            $(document).on('pageshow', function() {
+            if (!cfg.page) {
+                cfg.page = $.mobile.activePage;
+            }
+            $(cfg.page).on('pageshow', function() {
                 _self.pageShow();
             });
         } 
