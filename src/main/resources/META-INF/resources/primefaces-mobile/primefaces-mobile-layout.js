@@ -357,3 +357,13 @@ $(document).bind('pageinit', function() {
         btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
     });
 });
+
+PrimeFaces.deviceType = (function() {
+    if (window.screen.width <= 480) {
+        return "phone";
+    } else if (window.screen.width <= 767) {
+        return "phablet";
+    } else {
+        return "tablet";
+    }
+})();

@@ -209,6 +209,10 @@
 		    <include>datebox/pm-jqm-datebox-overrides.css</include>
 
 		    <include>mobilehelix.css</include>
+
+		    <!-- Overrides for use in a JSF context to reset the location
+			 of JSF icons. -->
+		    <include>mobilehelix-overrides.css</include>
 		  </includes>
 		  <aggregations>
 		    <aggregation>

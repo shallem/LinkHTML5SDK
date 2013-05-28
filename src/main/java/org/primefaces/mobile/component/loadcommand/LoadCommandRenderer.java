@@ -68,6 +68,9 @@ public class LoadCommandRenderer extends CoreRenderer {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NoSuchMethodException ex) {
                 Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                /* Application-specific error. */
+                Logger.getLogger(LoadCommandRenderer.class.getName()).log(Level.SEVERE, null, ex);
             }
             if (!noError) {
                 /* An exception occurred during serialization or while getting the value. */
