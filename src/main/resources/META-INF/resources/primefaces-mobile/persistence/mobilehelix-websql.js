@@ -252,14 +252,15 @@ var MobileHelixDatabase = function() {
  */
 MobileHelixDatabase.prototype.transaction = function(process, errorCallback, successCallback) {
     var tx = new MobileHelix_Tx();
+    tx.db = this.name;
     tx.successCallback = successCallback;
     tx.errorCallback = errorCallback;
     try {
-        exec(null, null, "MobileHelixStorage", "beginTX", [ tx.id ]);
+        exec(null, null, "MobileHelixStorage", "beginTX", [ tx.db ]);
         process(tx);
-        exec(null, null, "MobileHelixStorage", "commitTX", [ tx.id ]);
+        exec(tx.successCallback, tx.errorCallback, "MobileHelixStorage", "commitTX", [ tx.db ]);
     } catch (e) {
-        exec(null, null, "MobileHelixStorage", "rollbackTX", [ tx.id ]);
+        exec(null, null, "MobileHelixStorage", "rollbackTX", [ tx.db ]);
         console.log("Transaction error: "+e);
         if (tx.errorCallback) {
             try {
@@ -271,17 +272,24 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
     }
 };
 
-/**
- * Open database
- *
- * @param name              Database name
- * @param version           Database version
- * @param display_name      Database display name
- * @param size              Database size in bytes
- * @return                  Database object
- */
-window.openDatabase = function(name, version, display_name, size) {
-    exec(null, null, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
-    var db = new MobileHelixDatabase();
-    return db;
+MobileHelixDatabase.install = function() {
+    alert("Installing open DB.");
+
+    /**
+     * Open database
+     *
+     * @param name              Database name
+     * @param version           Database version
+     * @param display_name      Database display name
+     * @param size              Database size in bytes
+     * @return                  Database object
+     */
+    window.openDatabase = function(name, version, display_name, size) {
+        exec(null, null, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
+        var db = new MobileHelixDatabase();
+        db.name = name;
+        return db;
+    };
 };
+
+//document.addEventListener("deviceready", MobileHelixDatabase.install, false);

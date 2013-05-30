@@ -249,6 +249,7 @@
  		    <include>editor/editor.js</include>
 
 		    <!-- Persistence. -->
+		    <include>persistence/mobilehelix-websql.js</include>
 		    <include>persistence/persistence.js</include>
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
