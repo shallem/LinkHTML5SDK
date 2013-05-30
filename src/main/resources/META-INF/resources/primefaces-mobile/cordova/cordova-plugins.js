@@ -37,12 +37,7 @@
     window.CordovaInstalled = false;
     window.CordovaStatus = {
         available: function() {
-            return cordova.exec(function() { window.CordovaInstalled = true; }, 
-                function() { window.CordovaInstalled = false; },
-                "CordovaStatus",
-                "available",
-                []
-            );
+            window.CordovaInstalled = true;
         }
     };
     document.addEventListener("deviceready", window.CordovaStatus.available, false);

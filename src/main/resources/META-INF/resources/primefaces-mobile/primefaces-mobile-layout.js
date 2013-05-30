@@ -31,7 +31,7 @@ PrimeFaces.Layout = {
     /**
      * Selectors used to identify scrollers.
      */
-    scrollerSel : '.pm-scroller,.pm-scroller-nozoom,.pm-scroller-zoomonly',
+    scrollerSel : '.pm-scroller,.pm-scroller-nozoom,.pm-scroller-zoomonly,.pm-scroller-horizontal',
 
     /**
      * List of all scrollers in the application.

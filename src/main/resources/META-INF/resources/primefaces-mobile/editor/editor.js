@@ -826,8 +826,13 @@
       .focus(function() {
           focus(editor);
       });
-    var formatWindow = $formatFrame[0].contentWindow,
-      formatDoc = editor.formatDoc = formatWindow.document,
+    var formatWindow = $formatFrame[0].contentWindow;
+    if (!formatWindow) {
+        /* This editor is not yet attached to the main DOM. We can't do the rest of the refresh. */
+        return;
+    }
+    
+    var formatDoc = editor.formatDoc = formatWindow.document,
       $formatDoc = $(formatDoc);
     formatDoc.open();
     formatDoc.write(
@@ -1185,15 +1190,16 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
     init: function(cfg) {
         this._super(cfg);
         
-        this.jqInput = $(this.jqId + '_input');
+        if (!cfg.page) {
+            cfg.page = $.mobile.activePage;
+        }
+        
+        this.jqInput = $(cfg.page).find(this.jqId + '_input');
         var _self = this;
 
         /* SAH: always render, even when an object is INVISIBLE. */
         if(1 /*this.jq.is(':visible')*/) {
-            this.render();
-            if (!cfg.page) {
-                cfg.page = $.mobile.activePage;
-            }
+            this.render();    
             $(cfg.page).on('pageshow', function() {
                 _self.pageShow();
             });
@@ -1288,26 +1294,19 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
             return;
         }
         
-        /* resize the editor. */
-        var doRefresh = false;
-
         if (this.cfg.isFullWidth) {
             // Figure out the width available to the enclosing page tag.
             var fullWidth = $(this.editor.$main).closest(".ui-content").width();
             this.editor.options.width = (fullWidth * .95);
-            doRefresh = true;
         }
         if (this.cfg.isFullHeight) {
             var fullHeight = $(this.editor.$main).closest(".ui-content").height()- 
                 ($(this.editor.$main).offset().top - 
                     $(this.editor.$main).closest(".ui-content").offset().top);
             this.editor.options.height = fullHeight;
-            doRefresh = true;
         }
         
-        if (doRefresh) {
-            this.editor.refresh();
-        }
+        this.editor.refresh();
     },
     
     destroy: function() {
