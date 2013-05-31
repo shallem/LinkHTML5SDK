@@ -167,7 +167,8 @@
   ie6 = /msie\s6/i.test(navigator.userAgent),
 
   // Test for iPhone/iTouch/iPad
-  iOS = /(?!.*5).*(iphone|ipad|ipod)/i.test(navigator.userAgent),
+  //iOS = /(?!.*5).*(iphone|ipad|ipod)/i.test(navigator.userAgent),
+  iOS = 0,
 
   // Popups are created once as needed and shared by all editor instances
   popups = {},
@@ -1191,17 +1192,22 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
         this._super(cfg);
         
         if (!cfg.page) {
-            cfg.page = $.mobile.activePage;
+            cfg.page = $(this.jqId).closest('div[data-role="page"]');
+            if (cfg.page.length == 0) {
+                cfg.page = $.mobile.activePage;
+            }
         }
         this.page = cfg.page;
         
         this.jqInput = $(cfg.page).find(this.jqId + '_input');
         var _self = this;
 
+        _self.render();
+        
         /* SAH: always render, even when an object is INVISIBLE. */
-        if(1 /*this.jq.is(':visible')*/) {
-            this.render();    
+        if(1 /*this.jq.is(':visible')*/) {    
             $(cfg.page).on('pageshow', function() {
+                _self.render();
                 _self.pageShow();
             });
         } 
@@ -1219,8 +1225,11 @@ PrimeFaces.widget.Editor = PrimeFaces.widget.BaseWidget.extend({
     
     render: function() {
         /* SAH: Always render ... */
-        if(1 /*this.jq.is(':visible')*/) {
+        if(!this.editor) {
             this.editor = this.jqInput.cleditor(this.cfg)[0];
+            if (!this.editor) {
+                return false;
+            }
             $(this.editor.$main).data("EDITOR", this);
             
             var _self = this;

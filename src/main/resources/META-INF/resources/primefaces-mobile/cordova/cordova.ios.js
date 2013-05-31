@@ -3343,7 +3343,7 @@ module.exports = function(strUrl, strWindowName, strWindowFeatures) {
     };
 
     // Don't catch calls that write to existing frames (e.g. named iframes).
-    if (window.frames && window.frames[strWindowName]) {
+    if (1 /* SAH: window.frames && window.frames[strWindowName]*/) {
         var origOpenFunc = modulemapper.getOriginalSymbol(window, 'open');
         return origOpenFunc.apply(window, arguments);
     }
