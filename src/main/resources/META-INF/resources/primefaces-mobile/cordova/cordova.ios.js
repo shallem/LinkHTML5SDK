@@ -23,7 +23,7 @@
  under the License.
 */
 
-;(function() {
+(function() {
 
 // file: lib/scripts/require.js
 
@@ -69,7 +69,6 @@ var require,
         if (modules[id]) {
             throw "module " + id + " already defined";
         }
-
         modules[id] = {
             id: id,
             factory: factory
@@ -784,7 +783,7 @@ module.exports = {
 
 // file: lib/ios/exec.js
 define("cordova/exec", function(require, exports, module) {
-
+alert("FACTORY");
 /**
  * Creates a gap bridge iframe used to notify the native code about queued
  * commands.
@@ -6418,6 +6417,6 @@ require('cordova/channel').onNativeReady.fire();
     }
 }(window));
 
-
+window.cordova.exec = require('cordova/exec');
 
 })();
