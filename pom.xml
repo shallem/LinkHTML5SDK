@@ -262,6 +262,10 @@
 		    <include>primefaces-mobile-utils.js</include>
 		    <include>primefaces-mobile-ajax.js</include>
 		    <include>primefaces-mobile-layout.js</include>
+
+		    <!-- Crypto or similar functions. -->
+		    <include>primefaces-mobile-crypto.js</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>

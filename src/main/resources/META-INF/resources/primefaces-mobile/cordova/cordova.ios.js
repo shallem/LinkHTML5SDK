@@ -783,7 +783,7 @@ module.exports = {
 
 // file: lib/ios/exec.js
 define("cordova/exec", function(require, exports, module) {
-alert("FACTORY");
+
 /**
  * Creates a gap bridge iframe used to notify the native code about queued
  * commands.
