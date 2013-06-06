@@ -75,7 +75,7 @@ public class LoadCommandRenderer extends CoreRenderer {
             if (!noError) {
                 /* An exception occurred during serialization or while getting the value. */
                 if (cmd.getError() != null) {
-                    writer.write("{ 'error' : '" + cmd.getError() + "'}");
+                    writer.write("{ \"error\" : \"" + cmd.getError() + "\" }");
                 }
             }
         } else {

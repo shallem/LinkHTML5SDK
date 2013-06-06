@@ -120,7 +120,7 @@ public class JSONSerializer {
             Set<String> visitedClasses,
             String fieldName) throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException {
         Class<?> c = obj.getClass();
-
+        
         if (this.isSimpleType(c)) {
             if (fieldName != null) {
                 jg.writeFieldName(fieldName);
@@ -209,6 +209,11 @@ public class JSONSerializer {
             Class<?> c,
             Set<String> visitedClasses,
             String fieldName) throws IOException {
+        if (fieldName != null &&
+                fieldName.equals("id")) {
+            throw new IOException("Object " + c.getName() + " uses the field name 'id', which is reserved for use by PersistenceJS.");
+        }
+        
         /* Serialize the genericized version of this return type. */
         if (this.isSimpleType(c)) {
             if (fieldName != null) {

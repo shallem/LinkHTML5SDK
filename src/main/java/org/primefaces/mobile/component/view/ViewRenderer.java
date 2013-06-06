@@ -19,6 +19,7 @@ import java.io.IOException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import org.primefaces.mobile.component.tabbar.TabBar;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class ViewRenderer extends CoreRenderer {
@@ -48,7 +49,20 @@ public class ViewRenderer extends CoreRenderer {
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-
+        View view = (View) component;
+        
+        /* Check to see if we are in a tab bar. If so, render a footer with the tab bar. */
+        if (component.getParent() instanceof TabBar) {
+            TabBar parentBar = (TabBar)component;
+            parentBar.getAttributes().put("view", view);
+            
+            writer.startElement("div", component);
+            writer.writeAttribute("data-role", "footer", null);
+            writer.writeAttribute("data-position", "fixed", null);
+            super.renderChildren(context, component);
+            writer.endElement("div");
+        }
+        
         writer.endElement("div");
 
         startScript(writer, component.getClientId());

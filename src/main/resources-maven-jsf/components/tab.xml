@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>tab</tag>
+    <tagClass>org.primefaces.mobile.component.tab.TabTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.tab.Tab</componentClass>
+    <componentType>org.primefaces.mobile.Tab</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.TabRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.tab.TabRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+	<attribute>
+            <name>page</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Page to navigate to when the tab bar is clicked. Use the page ID (no hashmark).</description>
+        </attribute>
+        <attribute>
+            <name>icon</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Value for the data-icon attribute. Either a built-in jQM icon or 'custom'.</description>
+        </attribute>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Text to display underneath the icon for the tab.</description>
+        </attribute>
+    </attributes>
+</component>

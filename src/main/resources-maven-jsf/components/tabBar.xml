@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>tabBar</tag>
+    <tagClass>org.primefaces.mobile.component.tabbar.TabBarTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.tabbar.TabBar</componentClass>
+    <componentType>org.primefaces.mobile.TabBar</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.TabBarRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.tabbar.TabBarRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+	
+    </attributes>
+</component>
