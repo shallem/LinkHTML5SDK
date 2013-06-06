@@ -10,17 +10,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to identify a field as a filter field. On the client side this
- * will force creation of an index on this field and it integrates with the dataList/
- * table objects to automatically create filters.
+ * Currently a 0 argument annotation that indicates that a particular class member
+ * should be used for grouping an enclosing list on the client.
  * 
  * @author shallem
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
-public @interface ClientFilter {
+public @interface ClientGroup {
     String displayName();
-    String[] values() default {};
-    int[] intValues() default {};
-    String[] valueNames() default {};
 }
