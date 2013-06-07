@@ -1,7 +1,31 @@
+/*
+ * Copyright 2013 Mobile Helix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Implementation of WebSQL that uses Apache Cordova to access native database
+ * operations that are integrated with the Mobile Helix encryption infrastructure.
+ */
+
+var MobileHelixDatabase = function() {
+};
+
 MobileHelixDatabase.queryQueue = {};
 
 MobileHelixDatabase.createUUID = function() {
-    exec(null, null, "MobileHelixStorage", "createUUID", []);
+    return Math.uuid(16);
 };
 
 /**
@@ -37,14 +61,13 @@ var MobileHelixDatabase_Result = function() {
  * Callback from native code when query is complete.
  * PRIVATE METHOD
  *
- * @param id   Query id
+ * @param query   Query object that is completing.
  * @param data Rows returned by the query
  */
-function completeQuery(id, data) {
-    var query = MobileHelixDatabase.queryQueue[id];
+function completeQuery(query, data) {
     if (query) {
         try {
-            delete MobileHelixDatabase.queryQueue[id];
+            delete MobileHelixDatabase.queryQueue[query.id];
 
             // Get transaction
             var tx = query.tx;
@@ -52,11 +75,11 @@ function completeQuery(id, data) {
             // If transaction hasn't failed
             // Note: We ignore all query results if previous query
             //       in the same transaction failed.
-            if (tx && tx.queryList[id]) {
+            if (tx && tx.queryList[query.id]) {
 
                 // Save query results
                 var r = new MobileHelixDatabase_Result();
-                r.rows.resultSet = data;
+                r.rows.resultSet = data.items;
                 r.rows.length = data.length;
                 try {
                     if (typeof query.successCallback === 'function') {
@@ -66,7 +89,7 @@ function completeQuery(id, data) {
                     console.log("executeSql error calling user success callback: "+ex);
                 }
 
-                tx.queryComplete(id);
+                tx.queryComplete(query.id);
             }
         } catch (e) {
             console.log("executeSql error: "+e);
@@ -79,13 +102,12 @@ function completeQuery(id, data) {
  * PRIVATE METHOD
  *
  * @param reason            Error message
- * @param id                Query id
+ * @param query                Query object
  */
-function failQuery(reason, id) {
-    var query = MobileHelixDatabase.queryQueue[id];
+function failQuery(reason, query) {
     if (query) {
         try {
-            delete MobileHelixDatabase.queryQueue[id];
+            delete MobileHelixDatabase.queryQueue[query.id];
 
             // Get transaction
             var tx = query.tx;
@@ -93,18 +115,21 @@ function failQuery(reason, id) {
             // If transaction hasn't failed
             // Note: We ignore all query results if previous query
             //       in the same transaction failed.
-            if (tx && tx.queryList[id]) {
+            if (tx && tx.queryList[query.id]) {
                 tx.queryList = {};
 
                 try {
                     if (typeof query.errorCallback === 'function') {
-                        query.errorCallback(query.tx, reason);
+                        if (!query.errorCallback(query.tx, reason)) {
+                            /* If the callback returns false, per the standard, move on. */
+                            return;
+                        }
                     }
                 } catch (ex) {
                     console.log("executeSql error calling user error callback: "+ex);
                 }
 
-                tx.queryFailed(id, reason);
+                tx.queryFailed(query.id, reason);
             }
 
         } catch (e) {
@@ -197,10 +222,10 @@ MobileHelix_Tx.prototype.queryComplete = function(id) {
  */
 MobileHelix_Tx.prototype.queryFailed = function(id, reason) {
 
-    // The sql queries in this transaction have already been run, since
-    // we really don't have a real transaction implemented in native code.
-    // However, the user callbacks for the remaining sql queries in transaction
-    // will not be called.
+    // Rollback the transaction.
+    cordova.exec(null, null, "MobileHelixStorage", "rollbackTX", [ this.db ]);
+    
+    // Prevent any more sql queries from being run
     this.queryList = {};
 
     if (this.errorCallback) {
@@ -221,7 +246,6 @@ MobileHelix_Tx.prototype.queryFailed = function(id, reason) {
  * @param errorCallback         Error callback
  */
 MobileHelix_Tx.prototype.executeSql = function(sql, params, successCallback, errorCallback) {
-
     // Init params array
     if (typeof params === 'undefined') {
         params = [];
@@ -236,10 +260,16 @@ MobileHelix_Tx.prototype.executeSql = function(sql, params, successCallback, err
     query.errorCallback = errorCallback;
 
     // Call native code
-    exec(null, null, "MobileHelixStorage", "executeSql", [sql, params, query.id]);
-};
-
-var MobileHelixDatabase = function() {
+    cordova.exec(function(successObj) {
+        completeQuery(query, successObj.rows);
+    }, 
+    function(errMsg) {
+        if (!errorCallback) {
+            persistence.errorHandler(errMsg);
+        }
+        failQuery(errMsg, query);
+    }, 
+    "MobileHelixStorage", "executeSql", [this.db, sql, params, query.id]);
 };
 
 /**
@@ -256,11 +286,11 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
     tx.successCallback = successCallback;
     tx.errorCallback = errorCallback;
     try {
-        exec(null, null, "MobileHelixStorage", "beginTX", [ tx.db ]);
+        cordova.exec(null, null, "MobileHelixStorage", "beginTX", [ tx.db ]);
         process(tx);
-        exec(tx.successCallback, tx.errorCallback, "MobileHelixStorage", "commitTX", [ tx.db ]);
+        cordova.exec(tx.successCallback, tx.errorCallback, "MobileHelixStorage", "commitTX", [ tx.db ]);
     } catch (e) {
-        exec(null, null, "MobileHelixStorage", "rollbackTX", [ tx.db ]);
+        cordova.exec(null, null, "MobileHelixStorage", "rollbackTX", [ tx.db ]);
         console.log("Transaction error: "+e);
         if (tx.errorCallback) {
             try {
@@ -273,8 +303,6 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
 };
 
 MobileHelixDatabase.install = function() {
-    alert("Installing open DB.");
-
     /**
      * Open database
      *
@@ -285,11 +313,17 @@ MobileHelixDatabase.install = function() {
      * @return                  Database object
      */
     window.openDatabase = function(name, version, display_name, size) {
-        exec(null, null, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
+        cordova.exec(null, function(err) {
+            persistence.errorHandler(err);
+        }, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
         var db = new MobileHelixDatabase();
         db.name = name;
         return db;
     };
 };
 
-//document.addEventListener("deviceready", MobileHelixDatabase.install, false);
+(function() {
+    if (window.CordovaInstalled) {
+        MobileHelixDatabase.install();
+    }
+})();

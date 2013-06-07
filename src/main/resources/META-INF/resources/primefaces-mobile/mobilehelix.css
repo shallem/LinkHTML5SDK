@@ -223,3 +223,4 @@
    with context menus we create in the SDK with the taphold event. */
 body { -webkit-touch-callout: none !important; }
 a { -webkit-user-select: none !important; }
+img { -webkit-user-select: none !important; }

@@ -34,11 +34,5 @@
 })();
 
 (function() {
-    window.CordovaInstalled = false;
-    window.CordovaStatus = {
-        available: function() {
-            window.CordovaInstalled = true;
-        }
-    };
-    document.addEventListener("deviceready", window.CordovaStatus.available, false);
+    window.CordovaInstalled = navigator.userAgent.match(/\[CORDOVA\]/);
 })();
