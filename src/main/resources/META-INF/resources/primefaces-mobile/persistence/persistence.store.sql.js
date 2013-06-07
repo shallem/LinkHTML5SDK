@@ -424,9 +424,10 @@ function config(persistence, dialect) {
                   values.push(obj.__pm_key);
                   tx.executeSql(sql, values, callback, callback);
               } else {
-                alert(e.message);
+                persistence.errorHandler(e.message, e.code);
                 callback(t,e);                  
               }
+              return false;
           });
         } else {
           sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);

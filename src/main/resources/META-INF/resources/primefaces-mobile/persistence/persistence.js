@@ -67,8 +67,8 @@ persistence.isImmutable = function(fieldName) {
  * Mobile Helix
  * Default global error handler.
  */
-persistence.errorHandler = function(errMsg) {
-    alert(errMsg);
+persistence.errorHandler = function(errMsg, code) {
+    alert((code ? (code + ": ") : "") + errMsg);
     return false;
 };
 
