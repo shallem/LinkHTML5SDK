@@ -27,39 +27,44 @@ public class OutputFieldRenderer extends CoreRenderer {
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         OutputField field = (OutputField) component;
-
-        if (field.isEscape()) {
-            writer.startElement("span", field);
-        } else {
-            writer.startElement("div", field);
-        }
-        writer.writeAttribute("id", field.getClientId(context), "id");
-        writer.writeAttribute("data-name", field.getName(), null);
         
-        String styleClass = "viewMode";
-        if (field.getStyleClass() != null) {
-            styleClass = styleClass + " " + field.getStyleClass();
-        }
-        writer.writeAttribute("class", styleClass, null);
-        if (field.getStyle() != null) {
-            writer.writeAttribute("style", field.getStyle(), null);
-        }
-        if (!field.isEscape()) {
-            writer.write((String)field.getValue());
+        writer.startElement("div", field);
+        writer.writeAttribute("id", field.getClientId(context), "id");
+        writer.writeAttribute("data-role", "fieldcontain", null);
+        
+        writer.startElement("label", field);
+        writer.writeAttribute("for", field.getName(), null);
+        writer.write(field.getLabel());
+        writer.endElement("label");
+        
+        if (field.getType() != null && field.getType().equals("textarea")) {
+            writer.startElement("textarea", field);
         } else {
-            writer.writeText(field.getValue(), component, null);
+            writer.startElement("input", field);
+            if (field.getType() != null) {
+                writer.writeAttribute("type", field.getType(), null);
+            } else {
+                writer.writeAttribute("type", "text", null);
+            }
         }
+        writer.writeAttribute("name", field.getName(), null);
+        writer.writeAttribute("id", field.getName(), null);
+        writer.writeAttribute("value", field.getValue(), null);
+        if (field.getType() != null && field.getType().equals("textarea")) {
+            writer.endElement("textarea");
+        } else {
+            writer.endElement("input");
+        }
+        
+        writer.endElement("div");
     }
 
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        OutputField field = (OutputField) component;
-        
-        if (field.isEscape()) {
-            writer.endElement("span");
-        } else {
-            writer.endElement("div");
-        }
+    }
+    
+    @Override
+    public boolean getRendersChildren() {
+        return false;
     }
 }

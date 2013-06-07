@@ -22,6 +22,18 @@
             <type>java.lang.String</type>
             <description>Field name for this text field.</description>
         </attribute>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Type for this text field. Default is text. See the jQM documentation for a full list of types.</description>
+        </attribute>
+        <attribute>
+            <name>label</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Text of the label for this field.</description>
+        </attribute>
     </attributes>
         
     <resources>

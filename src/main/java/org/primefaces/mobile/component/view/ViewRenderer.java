@@ -53,13 +53,13 @@ public class ViewRenderer extends CoreRenderer {
         
         /* Check to see if we are in a tab bar. If so, render a footer with the tab bar. */
         if (component.getParent() instanceof TabBar) {
-            TabBar parentBar = (TabBar)component;
+            TabBar parentBar = (TabBar)component.getParent();
             parentBar.getAttributes().put("view", view);
             
             writer.startElement("div", component);
             writer.writeAttribute("data-role", "footer", null);
             writer.writeAttribute("data-position", "fixed", null);
-            super.renderChildren(context, component);
+            super.renderChild(context, parentBar);
             writer.endElement("div");
         }
         

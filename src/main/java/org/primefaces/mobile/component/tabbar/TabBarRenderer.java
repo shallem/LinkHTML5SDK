@@ -29,7 +29,7 @@ public class TabBarRenderer extends CoreRenderer {
     @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         TabBar bar = (TabBar) component;
-        if (bar.getFacet("tabs") != null) {
+        if (bar.getFacet("tabs") != null && this.tabs.isEmpty()) {
             collectTabs(context, bar.getFacet("tabs"));
         }
     }
@@ -57,6 +57,7 @@ public class TabBarRenderer extends CoreRenderer {
         
         if (page == null) {
             /* We get there the first time through the component tree. */
+            this.renderChildren(context, component);
             return;
         }
         
@@ -70,7 +71,7 @@ public class TabBarRenderer extends CoreRenderer {
             } else {
                 t.getAttributes().put("active", Boolean.FALSE);
             }
-            this.renderChildren(context, t);
+            this.renderChild(context, t);
         }
         writer.endElement("ul");
         writer.endElement("div");

@@ -26,8 +26,9 @@ public class TabRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         writer.startElement("li", component);
         writer.startElement("a", component);
-        writer.writeAttribute("href", tab.getPage(), null);
-        writer.writeAttribute("data-icon", "custom", null);
+        writer.writeAttribute("href", "#" + tab.getPage(), null);
+        writer.writeAttribute("style", "height: 48px", null);
+        //writer.writeAttribute("data-icon", "custom", null);
         String styleClass = "ui-icon-" + tab.getIcon();
         if (isActive) {
             writer.writeAttribute("class", styleClass + " ui-btn-active", null);
@@ -35,7 +36,7 @@ public class TabRenderer extends CoreRenderer {
             writer.writeAttribute("class", styleClass, null);
         }
         if (tab.getName() != null) {
-            writer.write(tab.getName());
+            //writer.write(tab.getName());
         }
     }
     
