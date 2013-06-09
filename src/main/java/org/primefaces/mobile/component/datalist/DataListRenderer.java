@@ -31,9 +31,14 @@ public class DataListRenderer extends CoreRenderer {
         String type = dataList.getType();
         Object filterValue = dataList.getAttributes().get("filter");
 
+        String wrapperStyleClass = "";
+        if(dataList.getStyleClass() != null) {
+            wrapperStyleClass = dataList.getStyleClass();
+        }
+        
         // Enclose the entire ul in a div so that we can scroll it.
         writer.startElement("div", dataList);
-        writer.writeAttribute("class", "pm-scroller", null);
+        writer.writeAttribute("class", "pm-scroller-nozoom " + wrapperStyleClass, null);
         writer.writeAttribute("id", dataList.getClientId(context) + "_wrapper", "id");
         
         writer.startElement("ul", dataList);
@@ -48,10 +53,6 @@ public class DataListRenderer extends CoreRenderer {
         }
         if(dataList.getStyle() != null) {
             writer.writeAttribute("style", dataList.getStyle(), null);
-        }
-        
-        if(dataList.getStyleClass() != null) {
-            writer.writeAttribute("class", dataList.getStyleClass(), null);
         }
 
         if(header != null) {
@@ -129,6 +130,11 @@ public class DataListRenderer extends CoreRenderer {
             if (dlist.getSelectAction() != null) {
                 writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
             }
+        }
+        
+        // Search
+        if (dlist.isIndexedSearch()) {
+            writer.write(",indexedSearch: true");
         }
 
         // Default field to sort by.

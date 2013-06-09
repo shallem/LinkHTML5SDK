@@ -160,6 +160,13 @@
             <type>java.lang.String</type>
             <description>Set to inset to get the jQuery mobile inset appearance.</description>
         </attribute>
+        <attribute>
+            <name>indexedSearch</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Enables free text search. Requires that the table contents are indexed using Persistence JS.</description>
+        </attribute>
     </attributes>
     <resources>
         <resource>

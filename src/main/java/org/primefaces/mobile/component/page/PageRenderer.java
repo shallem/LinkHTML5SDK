@@ -62,7 +62,7 @@ public class PageRenderer extends CoreRenderer {
         //viewport meta
         writer.startElement("meta", null);
         writer.writeAttribute("name", "viewport", null);
-        writer.writeAttribute("content", "width=device-width", null);
+        writer.writeAttribute("content", "initial-scale=1.0", null);
         writer.endElement("meta");
         
         /*

@@ -22,13 +22,6 @@
 
 PrimeFaces.Layout = {
     /**
-     * Set of component IDs we are updating in the current AJAX request. Populated
-     * with the pre-request handler below.
-     */
-    idsToUpdate : {},
-    
-    
-    /**
      * Selectors used to identify scrollers.
      */
     scrollerSel : '.pm-scroller,.pm-scroller-nozoom,.pm-scroller-zoomonly,.pm-scroller-horizontal',
@@ -56,7 +49,7 @@ PrimeFaces.Layout = {
 
         toAdd.each(function() {            
             if (this.id in PrimeFaces.Layout.allScrollers) {
-                PrimeFaces.Layout.allScrollers[this.id].refresh();
+                return;
             } else {
                 // Make sure we have at least one child, otherwise there is nothing to scroll
                 // and iScroll fails.
@@ -80,7 +73,7 @@ PrimeFaces.Layout = {
                     doVScroll = false;
                 }
 
-                PrimeFaces.Layout.allScrollers[this.id] = new iScroll(this.id, {
+                var newScroller = new iScroll(this.id, {
                     hScroll        : doHScroll,
                     vScroll        : doVScroll,
                     hScrollbar     : false,
@@ -101,7 +94,33 @@ PrimeFaces.Layout = {
                         }
                     }
                 });
+                PrimeFaces.Layout.allScrollers[this.id] = {
+                    scroller: newScroller,
+                    height: $(this).children().height()
+                };
             }
+        });
+    },
+
+    /**
+     * Delete a single scroller.
+     */
+    deleteScroller: function(id) {
+        if (id in PrimeFaces.Layout.allScrollers) {
+            var toDelete = PrimeFaces.Layout.allScrollers[id].scroller;
+            toDelete.destroy();
+            toDelete = null;
+            delete PrimeFaces.Layout.allScrollers[id];
+        }
+    },
+
+    /**
+     * Cleanup all scrollers. Called when a page is hidden to free up memory for the 
+     * browser.
+     */
+    cleanupScrollers: function(page) {
+        $(page).find(PrimeFaces.Layout.scrollerSel).each(function() {
+            PrimeFaces.Layout.deleteScroller(this.id);
         });
     },
 
@@ -128,81 +147,56 @@ PrimeFaces.Layout = {
     /**
      * Update a single scroller, identified by an ID or JQM object.
      */
-    updateScrollersForID : function(updateID, oldHeight, nRetries) {
-        var obj = $(updateID);
-        if (obj.length > 0 ) {
-            var newHeight = obj.height();
-            var heightUpdated = (newHeight != oldHeight);
+    updateScrollersForID : function(obj, objID, oldHeight, nRetries) {
+        var newHeight = $(obj).children().height();
+        var heightUpdated = (newHeight != oldHeight);
 
-            if (nRetries > 3 ||
-                heightUpdated) {
-                // If this or a parent object matches the scrollerSel then update it.
-                PrimeFaces.Layout.addScrollers($(obj).closest(PrimeFaces.Layout.scrollerSel));
-
-                // Update scrollers in child objects.
-                PrimeFaces.Layout.addScrollers($(obj).find(PrimeFaces.Layout.scrollerSel));
-
-                return true;
-            }
-        }
-        return false;
-    },
-    
-    /**
-     * Update all scrollers related to components after an AJAX request.
-     */
-    updateScrollers : function() {
-        var nupdates = 0;
-        var toDelete = [];
-        for (var update in PrimeFaces.Layout.idsToUpdate) {
-            if (PrimeFaces.Layout.idsToUpdate.hasOwnProperty(update)) {
-                var updateObj = PrimeFaces.Layout.idsToUpdate[update];
-                updateObj.nretries = updateObj.nretries + 1;
-
-                if (PrimeFaces.Layout.updateScrollersForID(update, 
-                        updateObj.height, 
-                        updateObj.nretries)) {
-                    toDelete.push(update);
-                } else {
-                    ++nupdates;
+        if (nRetries >= 3 ||
+            heightUpdated) {
+            PrimeFaces.Layout.allScrollers[objID].scroller.refresh(); 
+            PrimeFaces.Layout.allScrollers[objID].height = newHeight;
+            
+            // If this or a parent object matches the scrollerSel then update it.
+            /*$(obj).closest(PrimeFaces.Layout.scrollerSel).each(function() {
+                if (this.id in PrimeFaces.Layout.allScrollers) {
+                    PrimeFaces.Layout.allScrollers[this.id].scroller.refresh(); 
+                    PrimeFaces.Layout.allScrollers[this.id].height = newHeight;
                 }
-            }
-        }
+            });*/
 
-        for (var key in toDelete) {
-            delete PrimeFaces.Layout.idsToUpdate[key];
-        }
-
-        if (nupdates > 0) {
+            // Update scrollers in child objects.
+            /*$(obj).find(PrimeFaces.Layout.scrollerSel).each(function() {
+                if (this.id in PrimeFaces.Layout.allScrollers) {
+                    PrimeFaces.Layout.allScrollers[this.id].scroller.refresh(); 
+                    PrimeFaces.Layout.allScrollers[this.id].height = newHeight;
+                }
+            });*/
+        } else {
             setTimeout(function() {
-                PrimeFaces.Layout.updateScrollers();
+                PrimeFaces.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
             }, 200);
         }
     },
     
     /**
-     * Refresh a scrolling area (identified with the selector). Called after an
-     * AJAX request has been completed or the DOM has been updated locally.
+     * Update all scrollers related to components after an AJAX request.
      */
-    refreshScroller : function(sel) {
-        var scrollerId = $(sel).attr('id');
-        if (!scrollerId) {
-            return;
+    updateScrollers : function(elem) {
+        var toUpdate;
+        if (elem === undefined) {
+            toUpdate = $.mobile.activePage.find(PrimeFaces.Layout.scrollerSel);
+        } else {
+            toUpdate = $(elem);
         }
 
-        /* Save off the current height of the element we are updating so that we can
-         * tell post update when the rendering of the updated element is likely done.
-         */
-        PrimeFaces.Layout.idsToUpdate[PrimeFaces.escapeClientId(scrollerId)] = { 
-           height: $(sel).children().height(), 
-           nretries: 0 
-        };
-
-        // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-        // in the "Mastering the Refresh() method" section
-        setTimeout(function() {
-            PrimeFaces.Layout.updateScrollers();
-        }, 200);
+        toUpdate.each(function() {            
+            if (this.id in PrimeFaces.Layout.allScrollers) {
+                PrimeFaces.Layout.updateScrollersForID(this,
+                        this.id,
+                        PrimeFaces.Layout.allScrollers[this.id].height, 
+                        1);
+            }
+        });
     },
     
     /**
@@ -220,6 +214,13 @@ PrimeFaces.Layout = {
      */
     layoutFullHeightComponent: function(maxHeight, component) {
         $(component).height(maxHeight);
+        if ($(component).is(".mh-layout-parent-height")) {
+            /* This selector means to set the layout to the parent height and
+             * not recurse any further.
+             */
+            return;
+        }
+        
         var children = $(component).children();
         var totHeight = 0;
         for (var i = 0; i < children.length - 1; ++i) {
@@ -232,7 +233,7 @@ PrimeFaces.Layout = {
             totHeight += child_i_height;
         }
         $(children[children.length - 1]).height(maxHeight - totHeight);
-        $(children).find('.pm-layout-full-height').each(function() {
+        $(children).find('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
             var thisHeight = $(this).parent().height();
             PrimeFaces.Layout.layoutFullHeightComponent(thisHeight, this);
         });
@@ -255,17 +256,12 @@ PrimeFaces.Layout = {
         
         return contentHeight;
     },
+    
     layoutPageFullScreen: function() {
         var contentHeight = PrimeFaces.Layout.resizePages();
-        $('[data-role="content"]', $.mobile.activePage).find('.pm-layout-full-height').each(function() {
+        $('[data-role="content"]', $.mobile.activePage).find('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
             PrimeFaces.Layout.layoutFullHeightComponent(contentHeight, this);
-        });
-        
-        // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-        // in the "Mastering the Refresh() method" section
-        setTimeout(function() {
-            PrimeFaces.Layout.addScrollers();
-        }, 0);        
+        });        
     }
 };
 
@@ -285,21 +281,13 @@ $(document).bind('prerequest', function(ev, cfg) {
             /* Escape colons because primefaces use the colon character in its naming scheme ... */
             var updateSel = PrimeFaces.escapeClientId(updatedIDs[i]);
             
-            /* Save off the current height of the element we are updating so that we can
-             * tell post update when the rendering of the updated element is likely done.
-             */
-            PrimeFaces.Layout.idsToUpdate[updateSel] = { 
-                height: $(updateSel).height(), 
-                nretries: 0 
-            };
-            
             /* 
              * Clean up all scrollers that may be deleted when this item is updated.
              */
             $(updateSel).find(PrimeFaces.Layout.scrollerSel).each(function(index, element) {
                 /* Save off the height of the item we are going to update. */
-                var scrollerID = $(this).attr('id'); 
-                delete PrimeFaces.Layout.allScrollers[scrollerID];
+                var scrollerID = $(this).attr('id');
+                PrimeFaces.Layout.deleteScroller(scrollerID);
             });
         }
     }
@@ -308,22 +296,29 @@ $(document).bind('prerequest', function(ev, cfg) {
 $(document).bind('postrequest', function(ev, xhr) {
     var responseXML = xhr.responseXML;
     var xmlDoc = $(responseXML.documentElement),
-    updates = xmlDoc.find('update');
+    updates = xmlDoc.find('update'),
+    nUpdated = 0;
     for(var i=0; i < updates.length; i++) {
         var updateID = updates.eq(i).attr('id');
         
         /* Escape colons because primefaces use the colon character in its naming scheme ... */
         var updateSel = PrimeFaces.escapeClientId(updateID);
 
+        if ($(updateSel).length == 0) {
+            /* This update selector is not in the DOM ...*/
+            continue;
+        }
+        ++nUpdated;
+
         /* Determine if the item we have updated has children that are scrollers. If
          * so, make sure we create those scrollers from scratch. Otherwise we may end
          * up with bogus scrollers added by the pageshow event that are then overwritten
          * by an AJAX update that happens when the page is first loading.
          */
-        $(updateSel).find(PrimeFaces.Layout.scrollerSel).each(function(index, element) {
+        $(updateSel).find(PrimeFaces.Layout.scrollerSel).each(function() {
             /* Save off the height of the item we are going to update. */
-            var scrollerID = $(this).attr('id'); 
-            delete PrimeFaces.Layout.allScrollers[scrollerID];
+            var scrollerID = $(this).attr('id');
+            PrimeFaces.Layout.deleteScroller(scrollerID);
         });
         
         /*
@@ -337,14 +332,10 @@ $(document).bind('postrequest', function(ev, xhr) {
         $(document).trigger('pmcreate', updateSel);
     }
     
-    /* Reset the full screen layout of the page. */
-    PrimeFaces.Layout.layoutPageFullScreen();
-    
-    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-    // in the "Mastering the Refresh() method" section
-    setTimeout(function() {
-        PrimeFaces.Layout.updateScrollers();
-    }, 200);
+    if (nUpdated > 0) {
+        /* Reset the full screen layout of the page. */
+        PrimeFaces.Layout.layoutPage();
+    }
 });
 
 /**
@@ -356,6 +347,41 @@ $(document).bind('pageinit', function() {
         var iconData = $(this).jqmData('icon');
         btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
     });
+});
+
+/**
+ * In general, apps should use the pagebeforeshow event to layout the DOM. When
+ * the page load is done, they should call this function.
+ */
+PrimeFaces.Layout.layoutPage = function() {
+    /* Reset the full screen layout of the page. */
+    PrimeFaces.Layout.layoutPageFullScreen();
+    
+    /* Add all scrollers. NOTE, that these scrollers will also be updated in the call
+     * below. This is essential because the DOM may not be finished when we reach
+     * this point.
+     */
+    PrimeFaces.Layout.addScrollers();
+    
+    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
+    // in the "Mastering the Refresh() method" section. Updates all scrollers
+    // currently on the page.
+    
+    /* NOTE: each time we update scrollers we make sure that the height has changed. Hence,
+     * we call this function a few times at intervals of 200 MS. When there is no
+     * updating to be done, nothing happens.
+     */
+    var existingScrollers = $.mobile.activePage.find(PrimeFaces.Layout.scrollerSel);
+    setTimeout(function() {
+        PrimeFaces.Layout.updateScrollers(existingScrollers);
+    }, 0);
+};
+
+/**
+ * When a page is hidden, we kill all of its scrollers to save memory. 
+ */
+$(document).on('pagebeforehide', function() {
+    PrimeFaces.Layout.cleanupScrollers(this);
 });
 
 PrimeFaces.deviceType = (function() {
