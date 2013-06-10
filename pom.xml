@@ -245,7 +245,7 @@
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 
-		    <!-- <include>colorpicker/colorpicker.js</include> -->
+		    <include>colorpicker/colorpicker.js</include>
 		    <include>colorpicker/eye.js</include>
 		    <include>colorpicker/utils.js</include>
 
@@ -270,6 +270,7 @@
 		    <include>primefaces-mobile-utils.js</include>
 		    <include>primefaces-mobile-ajax.js</include>
 		    <include>primefaces-mobile-layout.js</include>
+		    <include>mobilehelix.formlayout.js</include>
 
 		  </includes>
 		  <aggregations>
