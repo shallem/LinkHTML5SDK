@@ -245,12 +245,12 @@
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 
-		    <include>colorpicker/colorpicker.js</include>
+		    <!-- <include>colorpicker/colorpicker.js</include> -->
 		    <include>colorpicker/eye.js</include>
 		    <include>colorpicker/utils.js</include>
 
 		    <!-- Depends on colorpicker. -->
- 		    <!-- <include>editor/editor.js</include> -->
+ 		    <include>editor/editor.js</include>
 
 		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
 		    <include>primefaces-mobile-crypto.js</include>

@@ -173,7 +173,14 @@ PrimeFaces.Layout = {
                     PrimeFaces.Layout.allScrollers[this.id].height = newHeight;
                 }
             });*/
-        } else {
+        }
+        
+        if (nRetries < 3) {
+            /* WE set the timeout even when the height has already changed. This is because not
+             * all content loads at the same time, so over time more content may appear and, hence
+             * the scroller will need to update. A perfect example is images that are loaded into
+             * the page.
+             */
             setTimeout(function() {
                 PrimeFaces.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
             }, 400);

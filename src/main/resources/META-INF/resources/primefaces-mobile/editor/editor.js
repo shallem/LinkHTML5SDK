@@ -151,7 +151,7 @@
   // Class name constants
   MAIN_CLASS       = "ui-editor ui-widget-content",    // main containing div
   FORMATBAR_CLASS  = "ui-editor-toolbar", // toolbar above main div showing current format commands
-  TOOLBAR_CLASS    = "ui-bar",            // JQM button bar.
+  TOOLBAR_CLASS    = "ui-editor-toolbar",            // Editor toolbar
   GROUP_CLASS      = "ui-editor-group",   // group divs inside the toolbar div
   BUTTON_CLASS     = "ui-editor-button",  // button divs inside group div
   DISABLED_CLASS   = "ui-editor-disabled",// disabled button divs
@@ -219,24 +219,26 @@
       });
 
     // Create the main container and append the textarea
+    var $parent = editor.$parent = $(DIV_TAG);
     var $main = editor.$main = $(DIV_TAG)
       .addClass(MAIN_CLASS)
-      .width(options.width);
+      .width(options.width)
+      .appendTo($parent);
     if (!iOS) {
       $main.height(options.height);
     }
 
     // Add the main div to the DOM and append the textarea
-    $main.insertBefore($area)
-      .append($area);
+    $parent.insertBefore($area)
+    $parent.append($area);
 
     // Add the first group to the toolbar
     var $toolbar = editor.$toolbar = $(DIV_TAG)
-        .attr('class', 'ui-body-a')
+        .attr('class', 'ui-body-a ' + TOOLBAR_CLASS)
         .attr('data-role','controlgroup')
-        .attr('data-type','horizontal')
-        //.attr('style', 'position: fixed')
-        .insertBefore($main);
+        .attr('data-type','vertical')
+        .attr('style', 'float: right;');
+        //.insertAfter($main);
 
     // Add the styling commands popup to the button bar
     var $styleCommands = $(A_TAG)
@@ -285,67 +287,69 @@
         'style' : 'min-width:210px;',
         'data-theme' : 'b'
     });
-    $.each(options.controls.font.split(" "), function(idx, buttonName) {
-        addButtonToMenu(editor, $fontMenu, buttonName, "font");
-    });
-    $(DIV_TAG)
+    var $fontMenuPopup = $(DIV_TAG)
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
             'data-theme' : 'a',
             'id' : 'fontsPopup'
-        }).append($fontMenu).appendTo($main);
+        }).append($fontMenu).appendTo($parent);
+    $.each(options.controls.font.split(" "), function(idx, buttonName) {
+        addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
+    });
     
-    var $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
-        'data-role' : 'listview',
-        'data-inset' : 'true',
-        'style' : 'min-width:210px;',
-        'data-theme' : 'b'
-    }).appendTo($(DIV_TAG)
+    var $styleMenuPopup = $(DIV_TAG)
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
             'data-theme' : 'a',
             'id' : 'stylesPopup'
-        }).appendTo($main)
-    );
-    $.each(options.controls.styles.split(" "), function(idx, buttonName) {
-        addButtonToMenu(editor, $styleMenu, buttonName, "style");
-    });
-
-    var $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
+        }).appendTo($parent);
+    var $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',
         'style' : 'min-width:210px;',
         'data-theme' : 'b'
-    }).appendTo($(DIV_TAG)
+    }).appendTo($styleMenuPopup);
+    $.each(options.controls.styles.split(" "), function(idx, buttonName) {
+        addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
+    });
+
+    var $formatMenuPopup = $(DIV_TAG)
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
             'data-theme' : 'a',
             'id' : 'formatsPopup'
-        }).appendTo($main)
-    );
-    $.each(options.controls.formats.split(" "), function(idx, buttonName) {
-        addButtonToMenu(editor, $formatMenu, buttonName, "format");
-    });
-
-    var $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
+        }).appendTo($parent);
+    var $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
         'data-role' : 'listview',
         'data-inset' : 'true',
         'style' : 'min-width:210px;',
         'data-theme' : 'b'
-    }).appendTo($(DIV_TAG)
+    }).appendTo($formatMenuPopup);
+    $.each(options.controls.formats.split(" "), function(idx, buttonName) {
+        addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
+    });
+
+    var $actionMenuPopup = $(DIV_TAG)
         .attr({
             'data-role' : 'popup',
             'data-history': 'false',
             'data-theme' : 'a',
             'id' : 'actionPopup'
-        }).appendTo($main)
-    );
+        }).appendTo($parent);
+    var $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
+        'data-role' : 'listview',
+        'data-inset' : 'true',
+        'style' : 'min-width:210px;',
+        'data-theme' : 'b'
+    }).appendTo($actionMenuPopup);
     $.each(options.controls.actions.split(" "), function(idx, buttonName) {
-        addButtonToMenu(editor, $actionMenu, buttonName, "action");
+        addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
     });
+    
+    $toolbar.appendTo($parent);
 
     // Fix issue where JQM causes a page refresh on dialog close. This causes us to
     // go back to the previous page in the history in some cases.
@@ -358,7 +362,7 @@
           })
       })
     });*/
-
+    
     // Bind the window resize event when the width or height is auto or %
     if (/auto|%/.test("" + options.width + options.height))
       $(window).resize(function() {refresh(editor);});
@@ -425,7 +429,8 @@
         buttonName = buttonDiv.data(BUTTON_NAME),
         button = buttons[buttonName],
         popupName = button.popupName,
-        popup = popups[popupName];
+        popup = popups[popupName],
+        menu = button.menu;
 
     // Check if disabled
     if (editor.disabled || $(buttonDiv).attr(DISABLED) == DISABLED)
@@ -455,14 +460,13 @@
 
     if (button.buttonClick && button.buttonClick(e, data) === false)
       return false;
-
+  
     // All other buttons
     if (!execCommand(editor, data.command, data.value, data.useCSS, button)) {
         return false;
     }
 
-    // Focus the editor
-    focus(editor);
+    menu.popup("close");
     return true;
   }
 
@@ -516,11 +520,6 @@
 
     if (button.popupClick && button.popupClick(e, data) === false)
       return false;
-
-    /* Set the focus on the iFrame. If we don't do this the forecolor and backgroundcolor methods
-     * don't work.
-     */
-    //editor.$frame[0].contentWindow.focus();
     
     // Execute the command
     if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, button))
@@ -550,7 +549,7 @@
   }
 
   // createPopup - creates a popup and adds it to the body
-  function createPopup(editor, button, selectName, popupDiv) {
+  function createPopup(editor, button, selectName, popupDiv, menu) {
 
     // Create the popup
     var $popup = null;
@@ -568,8 +567,6 @@
     }
     // Color
     else if (button.popupName == "color") {
-      //var colors = editor.options.colors.split(" ");
-      //$.each(colors, function(idx, color) {
         var colorPicker = $popup;
         var colorDiv = $(DIV_TAG).attr({
               'style' : 'background-color: #ffffff; color: #000000'
@@ -598,7 +595,6 @@
               });
           }
       });
-//      });
     }
 
     // Font
@@ -620,6 +616,7 @@
                   } 
               });
           });
+          $(menu).popup("close");
       });
     }
     // Size
@@ -638,6 +635,7 @@
                   } 
               });
           });
+          $(menu).popup("close");
       });
     }
     // Style
@@ -646,7 +644,10 @@
         var styleItem = $('<option />').append($(SPAN_TAG)
             .html(style[1] + style[0] + style[1].replace("<", "</"))
         ).appendTo($popup);
-        styleItem.bind(CLICK, {popup: popupDiv}, $.proxy(popupClick, editor));
+        styleItem.bind(CLICK, {popup: popupDiv}, function() {
+            $.proxy(popupClick, editor);
+            $(menu).popup("close"); 
+        });
       });
     }
 
@@ -713,6 +714,7 @@
       getRange(editor).pasteHTML(value);
     else {
       try {
+          editor.$frame[0].contentWindow.focus();
           success = editor.doc.execCommand(command, 0, value || null);
           if (success && (button.type == "font" || button.type == "style")) {
               selectText(editor.$formatFrame[0].contentWindow.window, editor.formatDoc, editor.formatDoc.body.childNodes[0]);
@@ -814,6 +816,7 @@
   function refresh(editor) {
 
     var $main = editor.$main,
+        $parent = editor.$parent,
       options = editor.options;
 
     // Remove the old iframe
@@ -825,7 +828,7 @@
     // Create an iFrame that we will use to show the current format
     var $formatFrame = editor.$formatFrame = $('<iframe frameborder="0" src="javascript:true;" style="overflow-x:hidden; overflow-y: hidden; height:20px;">')
       .hide()
-      .insertBefore($main)
+      .appendTo($main)
       .focus(function() {
           focus(editor);
       });
@@ -912,17 +915,23 @@
     }
 
     // Update the textarea when the iframe loses focus
-    ($.browser.mozilla ? $doc : $(contentWindow)).blur(function() {
+    ($.browser.mozilla ? $doc : $(contentWindow)).blur(function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       updateTextArea(editor, true);
     });
-
+    ($.browser.mozilla ? $doc : $(contentWindow)).focus(function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    });
+    
     // NOTE: we require that the browser supports iFrame design mode. Otherwise
     // this plugin will fail.
     $frame.show();
     $formatFrame.show();
 
     var $toolbar = editor.$toolbar,
-        wid = options.width,
+        wid = options.width - ($toolbar.width() * 1.03),
         hgt;
         
     /* On iOS we cannot have independent scrollers inside a single page. The better
@@ -941,7 +950,7 @@
     }
 
     // Resize the toolbar.
-    $toolbar.width(wid);
+    //$toolbar.width(wid);
 
     // Resize the format frame.
     $formatFrame.width(wid);
@@ -961,6 +970,9 @@
 
     // Switch the iframe into design mode if enabled
     disable(editor, editor.disabled);
+    
+    // Put the focus on the editor. Otherwise when we try to top it does not work.
+    //focus(editor);
   }
 
   // restoreRange - restores the current ie selection
@@ -998,7 +1010,7 @@
   }
 
   // Add a button to a popup menu.
-  function addButtonToMenu(editor, popupMenu, buttonName, buttonType) {
+  function addButtonToMenu(editor, popupMenu, menu, buttonName, buttonType) {
       if (buttonName === "") return;
 
       // Divider
@@ -1019,14 +1031,9 @@
         // Get the button definition
         var button = buttons[buttonName];
         button.type = buttonType;
+        button.menu = menu;
 
         if (button.popupName) {
-            /*var $popupDiv = $(DIV_TAG).attr({
-                'data-role' : 'collapsible',
-                'data-inset' : 'false'
-            })
-                .append($(H2_TAG).append(button.title)
-            ).appendTo(popupMenu);*/
             var $popupDiv = $(DIV_TAG).attr({
                 'data-role' : 'fieldcontain'
             })
@@ -1039,7 +1046,8 @@
             createPopup(editor,
                 button,
                 buttonName + "-select",
-                $popupDiv);
+                $popupDiv,
+                menu);
         } else {
         
             // Add a new button to the group

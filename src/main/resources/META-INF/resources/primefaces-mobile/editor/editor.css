@@ -1,4 +1,5 @@
-.ui-editor {background: none #FFFFFF;}
+/* SAH: added float left b/c we let the toolbar float to the right. */
+.ui-editor {background: none #FFFFFF; float: left; }
 .ui-editor  iframe {border:none; margin:0; padding:0}
 .ui-editor  textarea {border:none; margin:0; padding:0; overflow-y:scroll; font:10pt Arial,Verdana; resize:none; outline:none; /* webkit grip focus */}
 .ui-editor-toolbar {background: url("#{resource['primefaces:editor/images/toolbar.gif']}") repeat}
@@ -22,6 +23,9 @@
 .ui-editor-prompt input,
 .ui-editor-prompt textarea {font:8.5pt Arial,Verdana;}
 .ui-editor-message {background-color:#FDFCEE; width:150px; padding:4px; font-size:8.5pt}
+/* SAH: override JQM style that sets the width of controls to 78%. */
+.ui-editor-toolbar .ui-controlgroup-controls { width: 100%; }
+
 
 /** IE fix within overlays **/
 .ui-overlay-hidden .ui-editor iframe{display: none !important;} 
