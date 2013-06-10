@@ -43,5 +43,12 @@
             <defaultValue>vertical</defaultValue>
             <description>Vertical or horizontal orientation for the div.</description>
         </attribute>
+        <attribute>
+            <name>zoom</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Enable double-tap zoom. Default is false.</description>
+        </attribute>
     </attributes>
 </component>

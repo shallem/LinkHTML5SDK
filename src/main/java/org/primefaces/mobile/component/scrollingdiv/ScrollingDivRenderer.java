@@ -35,6 +35,9 @@ public class ScrollingDivRenderer extends CoreRenderer {
         if (sdiv.getOrientation().equals("horizontal")) {
             customStyleClass = customStyleClass + " pm-scroller-horizontal";
         }
+        if (!sdiv.isZoom()) {
+            customStyleClass = customStyleClass + " pm-scroller-nozoom";
+        }
         
         // Output a full-width div enclosing the child. This is the wrapper.
         writer.startElement("div", sdiv);

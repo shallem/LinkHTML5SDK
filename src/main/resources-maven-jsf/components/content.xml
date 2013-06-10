@@ -26,5 +26,13 @@
             <type>java.lang.String</type>
             <description>Style class of the component.</description>
         </attribute>
+        <attribute>
+            <name>fullScreen</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <description>Indicates that this content view is a full page layout (no scrolling). Default is true.</description>
+            <defaultValue>true</defaultValue>
+        </attribute>
+        
 	</attributes>
 </component>

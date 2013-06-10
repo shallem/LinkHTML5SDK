@@ -466,6 +466,7 @@
                             });
                         } else {
                             $(this).bind(options.eventName, toggle);
+                            //$(document).bind(options.eventName, toggle);
                         }
                     }
                 });

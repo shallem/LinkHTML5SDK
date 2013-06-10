@@ -23,7 +23,7 @@
     // Define the defaults used for all new cleditor instances
     defaultOptions: {
       width:        500, // width not including margins, borders or padding
-      height:       250, // height not including margins, borders or padding
+      height:       300, // height not including margins, borders or padding
       controls:     // controls to add to the toolbar
                     {
                         styles: "bold italic underline strikethrough subscript superscript",
@@ -167,9 +167,8 @@
   ie6 = /msie\s6/i.test(navigator.userAgent),
 
   // Test for iPhone/iTouch/iPad
-  //iOS = /(?!.*5).*(iphone|ipad|ipod)/i.test(navigator.userAgent),
-  iOS = 0,
-
+  iOS = /(iphone|ipad|ipod)/i.test(navigator.userAgent),
+  
   // Popups are created once as needed and shared by all editor instances
   popups = {},
 
@@ -222,8 +221,10 @@
     // Create the main container and append the textarea
     var $main = editor.$main = $(DIV_TAG)
       .addClass(MAIN_CLASS)
-      .width(options.width)
-      .height(options.height);
+      .width(options.width);
+    if (!iOS) {
+      $main.height(options.height);
+    }
 
     // Add the main div to the DOM and append the textarea
     $main.insertBefore($area)
@@ -234,7 +235,8 @@
         .attr('class', 'ui-body-a')
         .attr('data-role','controlgroup')
         .attr('data-type','horizontal')
-        .insertAfter($main);
+        //.attr('style', 'position: fixed')
+        .insertBefore($main);
 
     // Add the styling commands popup to the button bar
     var $styleCommands = $(A_TAG)
@@ -518,7 +520,7 @@
     /* Set the focus on the iFrame. If we don't do this the forecolor and backgroundcolor methods
      * don't work.
      */
-    editor.$frame[0].contentWindow.focus();
+    //editor.$frame[0].contentWindow.focus();
     
     // Execute the command
     if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, button))
@@ -821,7 +823,7 @@
       editor.$formatFrame.remove();
 
     // Create an iFrame that we will use to show the current format
-    var $formatFrame = editor.$formatFrame = $('<iframe frameborder="0" src="javascript:true;" style="overflow-x:hidden;">')
+    var $formatFrame = editor.$formatFrame = $('<iframe frameborder="0" src="javascript:true;" style="overflow-x:hidden; overflow-y: hidden; height:20px;">')
       .hide()
       .insertBefore($main)
       .focus(function() {
@@ -914,35 +916,48 @@
       updateTextArea(editor, true);
     });
 
-    // Show the textarea for iPhone/iTouch/iPad or
-    // the iframe when design mode is supported.
-    if (iOS) { 
-        editor.$area.show();
-    }
-    else {
-        $frame.show();
-        $formatFrame.show();
-    } 
+    // NOTE: we require that the browser supports iFrame design mode. Otherwise
+    // this plugin will fail.
+    $frame.show();
+    $formatFrame.show();
 
     var $toolbar = editor.$toolbar,
         wid = options.width,
+        hgt;
+        
+    /* On iOS we cannot have independent scrollers inside a single page. The better
+     * option is to let the iFrame expand to the full height of the content, which
+     * is what this code is doing.
+     */
+    if (!iOS) {
         hgt = (options.height - $toolbar.outerHeight(true) - 20);
+    }
+        
     
     // Resize the main div.
-    $main.width(wid).height(hgt);
+    $main.width(wid);
+    if (hgt) {
+        $main.height(hgt);
+    }
 
     // Resize the toolbar.
     $toolbar.width(wid);
 
     // Resize the format frame.
-    $formatFrame.width(wid).height("20px");
+    $formatFrame.width(wid);
 
     // Resize the iframe
-    $frame.width(wid).height(hgt);
+    $frame.width(wid);
+    if (hgt) {
+        $frame.height(hgt);
+    }
 
     // Resize the textarea. IE6 textareas have a 1px top
     // & bottom margin that cannot be removed using css.
-    editor.$area.width(wid).height(ie6 ? hgt - 2 : hgt);
+    editor.$area.width(wid);
+    if (hgt) {
+        editor.$area.height(ie6 ? hgt - 2 : hgt);
+    }
 
     // Switch the iframe into design mode if enabled
     disable(editor, editor.disabled);
@@ -1084,7 +1099,7 @@
 
     // Focus the first input element if any
     setTimeout(function() {
-      $popup.find(":text,textarea").eq(0).focus().select();
+      //$popup.find(":text,textarea").eq(0).focus().select();
     }, 100);
 
   }

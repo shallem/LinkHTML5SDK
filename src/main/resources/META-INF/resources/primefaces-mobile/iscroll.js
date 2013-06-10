@@ -173,12 +173,7 @@ var m = Math,
                     that.refresh();
                 }
 
-		that._bind(RESIZE_EV, window);
-		that._bind(START_EV);
-		if (!hasTouch) {
-			if (that.options.wheelAction != 'none')
-				that._bind(WHEEL_EV);
-		}
+		that._bindEvents();
 
 		if (that.options.checkDOMChanges) that.checkDOMTime = setInterval(function () {
 			that._checkDOMChanges();
@@ -213,6 +208,39 @@ iScroll.prototype = {
 		}
 	},
 	
+        /* SAH encapsulation of all event bindings so that we can bind/unbind events
+         * on refresh. Otherwise scrollers with dynamic content will interfer with
+         * all click events that happen inside the scroller.
+         */
+        _bindEvents: function() {
+            var that = this;
+            that._bind(RESIZE_EV, window);
+            that._bind(START_EV);
+            $.mobile.activePage.on(START_EV+".iscroll", function(e) {
+                e.preventDefault();
+            });
+            if (!hasTouch) {
+                    if (that.options.wheelAction != 'none')
+                            that._bind(WHEEL_EV);
+            }
+        },
+        
+        /* SAH unbind all events when we do a refresh ... */
+        _unbindEvents: function() {
+            var that = this;
+            that._unbind(RESIZE_EV, window);
+            that._unbind(START_EV);
+            that._unbind(MOVE_EV, window);
+            that._unbind(END_EV, window);
+            that._unbind(CANCEL_EV, window);
+
+            $.mobile.activePage.off(START_EV+".iscroll");
+
+            if (!that.options.hasTouch) {
+                    that._unbind(WHEEL_EV);
+            }
+        },
+        
         /* SAH encapsulation of code originally in the constructor to initialize the
          * wrapper and the scroller.
          */
@@ -944,6 +972,10 @@ iScroll.prototype = {
                     // Initialize the wrapper.
                     that._initWrapper(elem);
                 }
+
+                /* SAH Clear out all events and rebind them. */
+                that._unbindEvents();
+                that._bindEvents();
 
 		if (that.scale < that.options.zoomMin) that.scale = that.options.zoomMin;
 		that.wrapperW = that.wrapper.clientWidth || 1;

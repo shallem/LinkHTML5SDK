@@ -85,7 +85,9 @@ PrimeFaces.Layout = {
                     momentum       : true,
                     lockDirection  : true,
                     zoom           : doZoom,
+                    handleClick    : doZoom,
                     onBeforeScrollStart: function (e) {
+                        return;
                         var target = e.target;
                         while (target.nodeType != 1) target = target.parentNode;
 
@@ -174,7 +176,7 @@ PrimeFaces.Layout = {
         } else {
             setTimeout(function() {
                 PrimeFaces.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
-            }, 200);
+            }, 400);
         }
     },
     
