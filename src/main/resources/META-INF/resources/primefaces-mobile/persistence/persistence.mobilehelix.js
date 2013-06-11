@@ -440,8 +440,8 @@ PrimeFaces.DB = {
         queryCollection.forEach(function(elem) {
             PrimeFaces.DB.cascadingRemove(elem, function() {
                 ++nProcessed;
+                queryCollection.remove(elem);
                 if (nProcessed >= toProcess) {
-                    queryCollection.remove(elem);
                     oncomplete(fld);                        
                 }
             });
@@ -790,7 +790,9 @@ PrimeFaces.DB = {
         schema.__pm_sorts = masterRow.sortFields;
         schema.__pm_filters = masterRow.filterFields;
         schema.__pm_subSchemas = {};
-        window.__pmAllSchemas[masterRow.tableName] = schema;
+        if (window.__pmLocalSchemas) {
+            window.__pmLocalSchemas[masterRow.tableName] = schema;
+        }
         
         var toSync = {};
         var done = function(field) {
@@ -885,9 +887,13 @@ PrimeFaces.DB = {
             throw "You must call initPersistence prior to calling this routine!";
         }
         /* First, check to see if the schema is already available. */
-        if (window.__pmAllSchemas[schemaName]) {
-            oncomplete(window.__pmAllSchemas[schemaName]);
-            return;
+        if (window.__pmLocalSchemas) {
+            if (window.__pmLocalSchemas[schemaName]) {
+                oncomplete(window.__pmLocalSchemas[schemaName]);
+                return;
+            }
+        } else {
+            window.__pmLocalSchemas = {};
         }
         
         /* If we have a template, just generate the schema from that template. Otherwise
@@ -914,16 +920,28 @@ PrimeFaces.DB = {
     },
 
     getSortsForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
         var schema = window.__pmAllSchemas[tableName];
         return schema.__pm_sorts;
     },
     
     getFiltersForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
         var schema = window.__pmAllSchemas[tableName];
         return schema.__pm_filters;
     },
 
     getSchemaForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
         var schema = window.__pmAllSchemas[tableName];
         return schema;
     },
