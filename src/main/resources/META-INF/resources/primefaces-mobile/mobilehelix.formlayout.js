@@ -27,6 +27,9 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
         if (formElem.styleClass) {
             $fieldContainer.attr('class', formElem.styleClass);
         }
+        if (formElem.id) {
+            $fieldContainer.attr('id', formElem.id);
+        }
         if (formElem.fieldTitle) {
             if (formElem.titleStyleClass) {
                 $fieldContainer.append($('<span />').attr({
@@ -103,7 +106,8 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
                 'page' : page
             });
         } else {
-            $fieldContainer.append($('<div />').append(formElem.value));
+            var htmlDiv = $('<div />').append(formElem.value);
+            $fieldContainer.append(htmlDiv);
         }
     } else if (formElem.type === 'buttonGroup') {
         var formButton;

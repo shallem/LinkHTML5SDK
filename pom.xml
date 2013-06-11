@@ -235,12 +235,6 @@
 
 		    <include>jquery.mobile-1.3.1.js</include>
 
-		    <!-- Datagrid component. -->
-		    <include>datagrid/mobilehelix-datagrid.js</include>
-
-		    <!-- Panelgroup component. -->
-		    <include>panelgroup/mobilehelix-panelgroup.js</include>
-
 		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
@@ -265,6 +259,15 @@
 
 		    <!-- Pretty dates. -->
 		    <include>prettydate/jquery.prettydate.js</include>
+
+		    <!-- Datagrid component. -->
+		    <include>datagrid/mobilehelix-datagrid.js</include>
+
+		    <!-- Panelgroup component. -->
+		    <include>panelgroup/mobilehelix-panelgroup.js</include>
+
+		    <!-- Data list. -->
+		    <include>datalist/datalist.js</include>
 
 		    <include>primefaces-mobile.js</include>
 		    <include>primefaces-mobile-utils.js</include>
