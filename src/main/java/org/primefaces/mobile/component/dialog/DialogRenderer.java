@@ -57,6 +57,7 @@ public class DialogRenderer extends CoreRenderer {
 
         writer.write("window." + dialog.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDialog({");
         writer.write("id:'" + clientId + "',");
+        writer.write("title:'" + dialog.getTitle() + "',");
         writer.write("hasForm:" + dialog.isHasForm() + ",");
         writer.write("onConfirm:" + dialog.getOnConfirm() + ",");
         writer.write("styleClass:'" + (dialog.getStyleClass() != null ? dialog.getStyleClass() : "") + "',");
