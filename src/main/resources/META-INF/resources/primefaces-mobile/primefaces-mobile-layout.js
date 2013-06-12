@@ -150,6 +150,10 @@ PrimeFaces.Layout = {
      * Update a single scroller, identified by an ID or JQM object.
      */
     updateScrollersForID : function(obj, objID, oldHeight, nRetries) {
+        if (!PrimeFaces.Layout.allScrollers[objID]) {
+            return;
+        }
+        
         var newHeight = $(obj).children().height();
         var heightUpdated = (newHeight != oldHeight);
 
@@ -257,11 +261,11 @@ PrimeFaces.Layout = {
         */
         $.mobile.activePage.height(height);
 
-        var headerHeight = $('[data-role="header"]', $.mobile.activePage).height();
-        var footerHeight = $('[data-role="footer"]', $.mobile.activePage).height();
+        var headerHeight = $.mobile.activePage.children('[data-role="header"]').height();
+        var footerHeight = $.mobile.activePage.children('[data-role="footer"]').height();
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
-        $('[data-role="content"]', $.mobile.activePage).css('height', contentHeight);
-        $('[data-role="content"]', $.mobile.activePage).css('width', width);
+        $.mobile.activePage.children('[data-role="content"]').css('height', contentHeight);
+        $.mobile.activePage.children('[data-role="content"]').css('width', width);
         
         return contentHeight;
     },

@@ -41,3 +41,8 @@
 
 /* Without this override our datalist component is cut off inside of overlay panels. */
 .ui-content .ui-listview, .ui-panel-inner > .ui-listview { margin: 0px; }
+
+/* Get rid of blue coloring on visited iconButton links. */
+.iconbutton.ui-btn-up-c:visited {
+	color: #222 /*{c-bup-color}*/ !important;
+}

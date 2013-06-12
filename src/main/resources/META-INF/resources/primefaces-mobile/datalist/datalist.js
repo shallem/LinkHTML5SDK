@@ -205,8 +205,10 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         }
 
         if (_self.isIndexedSearch) {
+            $(this.jqID + "_wrapper").prev(PrimeFaces.escapeClientId(this.cfg.id + "_searchwrapper")).remove();
             $('<div />').attr({
-                'data-role' : 'fieldcontain'
+                'data-role' : 'fieldcontain',
+                'id' : this.cfg.id + "_searchwrapper"
             }).append($('<label />').attr({
                 'for' : this.cfg.id + '_search'
             })).append($('<input/>').attr({
@@ -214,7 +216,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
                 'name' : this.cfg.id + '_search',
                 'id' : this.cfg.id + '_search',
                 'value' : ''
-            })).appendTo(_self.$parent);
+            })).insertBefore($(this.jqID + "_wrapper"));
             $( PrimeFaces.escapeClientId(this.cfg.id + '_search') ).textinput();
         }
 
@@ -457,9 +459,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         if (!this.selected) {
             this.setSelectedByIndex(0, 0);
         }
-        if (this.selected) {
-            this.selectAction(this.selected, this.selectedGroup, this.strings);          
-        }
+        this.selectAction(this.selected, this.selectedGroup, this.strings);          
     },
     
     /**

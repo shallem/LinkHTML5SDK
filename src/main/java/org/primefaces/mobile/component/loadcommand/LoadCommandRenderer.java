@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Mobile Helix, Inc.
+ * Copyright 2013 Mobile Helix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,8 +135,14 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'params' : params ");
         writer.write("};\n");
         
+        writer.write("var syncOverrides = {");
+        if (cmd.getSyncFieldsOverride() != null) {
+            writer.append(" 'syncFields' : " + cmd.getSyncFieldsOverride());
+        }
+        writer.write("};\n");
+        
         // Setup the widget.
-        writer.write(MessageFormat.format("PrimeFaces.DB.ajaxBeanLoad(requestOptions, loadingOptions, ''{0}'', schemaObj, {1}, itemKey);",
+        writer.write(MessageFormat.format("Helix.Ajax.ajaxBeanLoad(requestOptions, loadingOptions, syncOverrides, ''{0}'', schemaObj, {1}, itemKey);",
                 new Object[] {
                     cmd.resolveWidgetVar(),
                     onComplete.toString()

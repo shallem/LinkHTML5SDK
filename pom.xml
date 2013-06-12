@@ -208,11 +208,11 @@
 		    <!-- Overrides to set image URLs based on PrimeFaces Mobile's resource handler. -->
 		    <include>datebox/pm-jqm-datebox-overrides.css</include>
 
-		    <include>mobilehelix.css</include>
+		    <include>helix.css</include>
 
 		    <!-- Overrides for use in a JSF context to reset the location
 			 of JSF icons. -->
-		    <include>mobilehelix-overrides.css</include>
+		    <include>helix.overrides.css</include>
 		  </includes>
 		  <aggregations>
 		    <aggregation>
@@ -228,6 +228,9 @@
 		</resourcesSet>
 		<resourcesSet>
 		  <includes>
+		    <!-- Creates the helix namespace. -->
+		    <include>helix.js</include>
+
 		    <include>iscroll.js</include>
 
 		    <include>cordova/cordova.ios.js</include>
@@ -243,19 +246,23 @@
 		    <include>colorpicker/eye.js</include>
 		    <include>colorpicker/utils.js</include>
 
+		    <!-- Dialog box component using jQM popups. -->
+		    <!-- <include>dialog/helix.dialog.js</include> -->
+
 		    <!-- Depends on colorpicker. -->
  		    <include>editor/editor.js</include>
 
 		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
-		    <include>primefaces-mobile-crypto.js</include>
+		    <include>helix.crypto.js</include>
 
 		    <!-- Persistence. -->
-		    <include>persistence/mobilehelix-websql.js</include>
+		    <include>persistence/helix.websql.js</include>
 		    <include>persistence/persistence.js</include>
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
-		    <include>persistence/persistence.mobilehelix.js</include>
+		    <include>persistence/persistence.helix.js</include>
+		    <include>persistence/persistence.helix.helpers.js</include>
 
 		    <!-- Pretty dates. -->
 		    <include>prettydate/jquery.prettydate.js</include>
@@ -271,9 +278,9 @@
 
 		    <include>primefaces-mobile.js</include>
 		    <include>primefaces-mobile-utils.js</include>
-		    <include>primefaces-mobile-ajax.js</include>
+		    <include>helix.ajax.js</include>
 		    <include>primefaces-mobile-layout.js</include>
-		    <include>mobilehelix.formlayout.js</include>
+		    <include>helix.formlayout.js</include>
 
 		  </includes>
 		  <aggregations>

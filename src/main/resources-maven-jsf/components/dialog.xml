@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY widget_var_attribute			SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>dialog</tag>
+    <tagClass>org.primefaces.mobile.component.dialog.DialogTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.dialog.Dialog</componentClass>
+    <componentType>org.primefaces.mobile.Dialog</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.DialogRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.dialog.DialogRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    
+    <attributes>
+            &widget_var_attribute;
+	<attribute>
+            <name>title</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Title text for the dialog box.</description>
+        </attribute>
+        <attribute>
+            <name>bodyHeader</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Header text for the body of the dialog. Does not apply if hasForm is true.</description>
+        </attribute>
+        <attribute>
+            <name>bodyContent</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Content text for the body of the dialog. Does not apply if hasForm is true.</description>
+        </attribute>
+        <attribute>
+            <name>dismissTitle</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Text for the dismiss button (or its equivalent) which closes the dialog without taking any other action.</description>
+        </attribute>
+        <attribute>
+            <name>confirmTitle</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Text for the confirm button (or its equivalent) which closes the dialog after invoking the action function.</description>
+        </attribute>
+        <attribute>
+            <name>onConfirm</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript functon to invoke when the user confirms the action described by the dialog. Takes either no arguments or a serialized form if hasForm is true.</description>
+        </attribute>
+        <attribute>
+            <name>hasForm</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Set to true if the dialog contains a form. If so, supply a form layout object to the show method.</description>
+        </attribute>
+        <attribute>
+            <name>style</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Inline style of the main container.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the main container.</description>
+        </attribute>
+        <attribute>
+            <name>titleStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the dialog title.</description>
+        </attribute>
+        <attribute>
+            <name>contentStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class of the dialog contents.</description>
+        </attribute>
+    </attributes>
+</component>

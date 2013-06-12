@@ -51,6 +51,12 @@
             <type>java.lang.String</type>
             <description>jQuery Mobile theme for the loader. Default is 'a'.</description>
         </attribute>
+        <attribute>
+            <name>syncFieldsOverride</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of an override function for the field synchronization. See Helix.DB.Utils.defaultFieldSync for method signature.</description>
+        </attribute>
     </attributes>
     <resources>
         <resource>

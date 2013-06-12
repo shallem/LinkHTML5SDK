@@ -369,7 +369,9 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
  */
 PrimeFaces.Utils.nSubPanels = 0;
 PrimeFaces.Utils.dynamicDialogs = {};
-PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, separateElements, mode, page) {
+PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
+    var mode = formLayout.mode;
+    var separateElements = formLayout.separateElements;
     if (!page) {
         page = $.mobile.activePage;
     }
