@@ -236,20 +236,36 @@ PrimeFaces.Layout = {
         
         var children = $(component).children();
         var totHeight = 0;
-        for (var i = 0; i < children.length - 1; ++i) {
+        var remainingHeight = 0;
+        for (var i = 0; i < children.length; ++i) {
             if ($(children[i]).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/
+                continue;
+            }
+            if ($(children[i]).is(".pm-layout-full-height,.mh-layout-parent-height")) {
+                // These items must be side-by-side, otherwise the proposed layout is fully overlapping ...
                 continue;
             }
 
             var child_i_height = $(children[i]).outerHeight(true);
             totHeight += child_i_height;
+            if (i < (children.length - 1)) {
+                remainingHeight += child_i_height;
+            }
         }
-        $(children[children.length - 1]).height(maxHeight - totHeight);
-        $(children).find('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
-            var thisHeight = $(this).parent().height();
-            PrimeFaces.Layout.layoutFullHeightComponent(thisHeight, this);
-        });
+        
+        var childrenToRecurse = $(component).children('.pm-layout-full-height,.mh-layout-parent-height');
+        
+        /* If there are no elements to recurse over, set the last child of this element to full the 
+         * rest of the screen.
+         */
+        if (childrenToRecurse.length == 0) {
+            $(children[children.length - 1]).height(maxHeight - remainingHeight);
+        } else {
+            childrenToRecurse.each(function() {
+                PrimeFaces.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
+            });
+        }
     },
     resizePages: function() {
         var height = $(window).height();
@@ -272,7 +288,7 @@ PrimeFaces.Layout = {
     
     layoutPageFullScreen: function() {
         var contentHeight = PrimeFaces.Layout.resizePages();
-        $('[data-role="content"]', $.mobile.activePage).find('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
+        $('[data-role="content"]', $.mobile.activePage).children('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
             PrimeFaces.Layout.layoutFullHeightComponent(contentHeight, this);
         });        
     }
