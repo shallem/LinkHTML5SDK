@@ -45,8 +45,10 @@ public class IconButtonRenderer extends CoreRenderer {
         writer.writeAttribute("data-role", "button", null);
         writer.writeAttribute("data-iconpos", "bottom", null);
         writer.writeAttribute("data-icon", button.getImage(), null);
-        writer.writeAttribute("data-iconshadow", "true", null);
+        writer.writeAttribute("data-inline", "true", null);
         writer.writeAttribute("data-corners", "", null);
+        writer.writeAttribute("data-mini", "true", null);
+        writer.writeAttribute("style", "min-width: " + Integer.toString(button.getWidth()), null);
         writer.writeAttribute("href", button.getHref(), null);
         
         String onclick = button.getOnclick();

@@ -58,6 +58,9 @@ public class HeaderRenderer extends CoreRenderer {
              writer.startElement("h1", header);
              writer.writeText(title, null);
              writer.endElement("h1");
+        } else {
+            /* If there is no title, render any children. */
+            this.renderChildren(context, component);
         }
         
         if(right != null) {

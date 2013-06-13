@@ -846,8 +846,8 @@ PrimeFaces.DB = {
             PrimeFaces.DB.synchronizeObjectFields(obj,dbObj,objSchema,function(newObj) {
                 setter(newObj);
                 oncomplete(objLocalField);
-            });
-        }, overrides);
+            }, overrides);
+        });
     },
 
     /**

@@ -107,6 +107,13 @@
             <defaultValue>false</defaultValue>
             <description>Indicates that this button should not generate an ajax bean request to the JSF backing bean.</description> 
         </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <defaultValue>60</defaultValue>
+            <description>Minimum width in pixels of this button.</description>
+        </attribute>
     </attributes>
         
     <resources>

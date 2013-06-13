@@ -32,10 +32,20 @@ public class OutputFieldRenderer extends CoreRenderer {
         writer.writeAttribute("id", field.getClientId(context), "id");
         writer.writeAttribute("data-role", "fieldcontain", null);
         
-        writer.startElement("label", field);
-        writer.writeAttribute("for", field.getName(), null);
-        writer.write(field.getLabel());
-        writer.endElement("label");
+        if (field.getStyleClass() != null) {
+            writer.writeAttribute("class", writer.getClass(), null);
+        }
+        
+        if (field.getStyle() != null) {
+            writer.writeAttribute("style", field.getStyle(), null);
+        }
+        
+        if (field.getLabel() != null) {
+            writer.startElement("label", field);
+            writer.writeAttribute("for", field.getName(), null);
+            writer.write(field.getLabel());
+            writer.endElement("label");
+        }
         
         if (field.getType() != null && field.getType().equals("textarea")) {
             writer.startElement("textarea", field);
