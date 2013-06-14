@@ -17,12 +17,6 @@
     padding-top: 2px;
 }
 
-.fullPageVertical {
-    padding-top: 2px;
-    height: 100%;
-    width: 100%;
-}
-
 .pm-split-left-area {
     float: left;
     background-color: white;
@@ -130,15 +124,12 @@
 
 .iconbutton .ui-btn-inner .ui-icon {
     left: 25%;
+    top: 35%;
     margin-left: 0px;
     width: 32px;
     height: 32px;
     border-radius: 0 0 0 0;
     background-color: transparent;
-}
-
-.pm-full-height {
-    height: 100%;
 }
 
 .ui-controlgroup-controls {
