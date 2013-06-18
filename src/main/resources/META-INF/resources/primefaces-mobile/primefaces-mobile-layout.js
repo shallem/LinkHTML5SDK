@@ -371,11 +371,11 @@ $(document).bind('postrequest', function(ev, xhr) {
  * Add the icon style class as an override to all icon button icons.
  */
 $(document).bind('pageinit', function() {
-    $('.iconbutton').each(function(index, value) {
+    /*$('.iconbutton').each(function(index, value) {
         var btn = $(this).find('.ui-icon');
         var iconData = $(this).jqmData('icon');
         btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
-    });
+    });*/
 });
 
 /**

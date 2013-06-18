@@ -42,10 +42,10 @@
 /* Without this override our datalist component is cut off inside of overlay panels. */
 .ui-content .ui-listview, .ui-panel-inner > .ui-listview { margin: 0px; }
 
-/* Get rid of blue coloring on visited iconButton links. */
+/* Get rid of blue coloring on visited iconButton links.
 .iconbutton.ui-btn-up-c:visited {
-	color: #222 /*{c-bup-color}*/ !important;
-}
+	color: #222 !important;
+}*//*{c-bup-color}*/ 
 
 /* We nest buttons, which is not particularly supported by jQM. To make sure we
  * don't get inappropriate padding we need to override the padding that shows
