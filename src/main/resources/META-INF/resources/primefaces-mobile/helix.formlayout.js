@@ -17,7 +17,7 @@
 /**
  * Layout a single form element.
  */
-PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page) {
+Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page) {
     var $fieldContainer;
     if (!mode) {
         /* View mode. */
@@ -84,7 +84,7 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
                 return;
             }
             
-            var editorID = PrimeFaces.Utils.getUniqueID();
+            var editorID = Helix.Utils.getUniqueID();
             var editorInput = $('<textarea />').attr({
                 'value' : formElem.value,
                 'name' : formElem.name,
@@ -108,6 +108,24 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
         } else {
             var htmlDiv = $('<div />').append(formElem.value);
             $fieldContainer.append(htmlDiv);
+        }
+    } else if (formElem.type === 'htmlframe') {
+        if (!mode) {
+            var frameParams = formElem.frameParams;
+            var frameSrc = formElem.frameSrc;
+            if (frameParams && frameParams.length > 0) {
+                frameSrc = frameSrc + "?" + $.param(frameParams);
+            }
+            var frameStyle = "";
+            if (formElem.frameStyle) {
+                frameStyle = formElem.frameStyle;
+            }
+            
+            /* This is a layout-only component - it does not make sense when editing. */
+            $fieldContainer.append($('<iframe />').attr({
+                'src' : frameSrc,
+                'style' : frameStyle
+            }));
         }
     } else if (formElem.type === 'buttonGroup') {
         var formButton;
@@ -194,7 +212,7 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.items.length; ++elemIdx) {
             var subElem = formElem.items[elemIdx];
-            PrimeFaces.Utils.layoutFormElement(subElem, parentDiv, true, false, page);
+            Helix.Utils.layoutFormElement(subElem, parentDiv, true, false, page);
         }
 
         /* Add a button to submit the dialog. */
@@ -251,7 +269,7 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
         }).append(formElem.fieldTitle)
             .appendTo($fieldContainer);   
         
-        var uploadId = PrimeFaces.Utils.getUniqueID();
+        var uploadId = Helix.Utils.getUniqueID();
         var uploadDiv= $('<div/>').attr({
             'id' : uploadId,
             'class' : "mh-uploads"
@@ -273,19 +291,19 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
                 },
 
                 uploadFinished:function(i,file,response){
-                    PrimeFaces.Utils.statusMessage("Upload Complete", response.msg, "info");
+                    Helix.Utils.statusMessage("Upload Complete", response.msg, "info");
                 },
 
                 error: function(err, file) {
                     switch(err) {
                         case 'BrowserNotSupported':
-                            PrimeFaces.Utils.statusMessage('Unsupported Operation', 'Your browser does not support HTML5 file uploads!', 'severe');
+                            Helix.Utils.statusMessage('Unsupported Operation', 'Your browser does not support HTML5 file uploads!', 'severe');
                             break;
                         case 'TooManyFiles':
-                            PrimeFaces.Utils.statusMessage('Error', 'Too many files! Please select 1 at most!', 'severe');
+                            Helix.Utils.statusMessage('Error', 'Too many files! Please select 1 at most!', 'severe');
                             break;
                         case 'FileTooLarge':
-                            PrimeFaces.Utils.statusMessage(file.name+' is too large! Please upload files up to 2mb.');
+                            Helix.Utils.statusMessage(file.name+' is too large! Please upload files up to 2mb.');
                             break;
                         default:
                             break;
@@ -367,9 +385,9 @@ PrimeFaces.Utils.layoutFormElement = function(formElem, parentDiv, mode, separat
 /**
  * 0 for view mode; 1 for edit mode.
  */
-PrimeFaces.Utils.nSubPanels = 0;
-PrimeFaces.Utils.dynamicDialogs = {};
-PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
+Helix.Utils.nSubPanels = 0;
+Helix.Utils.dynamicDialogs = {};
+Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
     var mode = formLayout.mode;
     var separateElements = formLayout.separateElements;
     if (!page) {
@@ -384,15 +402,15 @@ PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
     var formElements = formLayout.items;
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        PrimeFaces.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page);
+        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page);
     }
     
     if (formLayout.subPanels) {
         for (var subPanelTitle in formLayout.subPanels) {
             var subPanelObj = formLayout.subPanels[subPanelTitle];
             var formSubPanelItems = subPanelObj.items;
-            ++PrimeFaces.Utils.nSubPanels;
-            var subPanelID = 'subpanel' + PrimeFaces.Utils.nSubPanels;
+            ++Helix.Utils.nSubPanels;
+            var subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
             var subPanelDiv = $('<div />').attr({
                 'data-role' : 'collapsible',
                 'data-content-theme' : 'c',
@@ -404,7 +422,7 @@ PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
             // but not between items in each element.
             for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
                 formElem = formSubPanelItems[elemIdx];
-                PrimeFaces.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page);
+                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page);
             }
             
             // Make sure we have a dynamic page used to create new items in this 
@@ -413,7 +431,7 @@ PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
             if (subPanelObj.dialog &&
                 (subPanelObj.dialog.activeMode == -1 ||
                     mode == subPanelObj.dialog.activeMode )) {
-                var dialogObj = PrimeFaces.Utils.createDialog(subPanelObj.dialog, subPanelObj.dialog.uniqueID, subPanelTitle, page);
+                var dialogObj = Helix.Utils.createDialog(subPanelObj.dialog, subPanelObj.dialog.uniqueID, subPanelTitle, page);
                 
                 // Add a button to open the dialog.
                 $('<a />').attr({
@@ -437,26 +455,26 @@ PrimeFaces.Utils.layoutForm = function(parentDiv, formLayout, page) {
             subPanelDiv.collapsible();
             $(document).on("expand", PrimeFaces.escapeClientId(subPanelID), function (event, ui) {
                 if (formLayout.scroller) {
-                    PrimeFaces.Layout.updateScrollers(formLayout.scroller);
+                    Helix.Layout.updateScrollers(formLayout.scroller);
                 }
             });
             $(document).on("collapse", PrimeFaces.escapeClientId(subPanelID), function(event,ui) {
                 if (formLayout.scroller) {
-                    PrimeFaces.Layout.updateScrollers(formLayout.scroller);
+                    Helix.Layout.updateScrollers(formLayout.scroller);
                 }
             });
         }
     }    
     
-    PrimeFaces.Layout.updateScrollers(formLayout.scroller);
+    Helix.Layout.updateScrollers(formLayout.scroller);
 }
 
-PrimeFaces.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page) {
-    var dialogId = PrimeFaces.Utils.getUniqueID();
-    var dialogObj = PrimeFaces.Utils.dynamicDialogs[dialogName];
+Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page) {
+    var dialogId = Helix.Utils.getUniqueID();
+    var dialogObj = Helix.Utils.dynamicDialogs[dialogName];
     var isCreated = false;
     if (!dialogObj) {
-        dialogObj = PrimeFaces.Utils.dynamicDialogs[dialogName] = {
+        dialogObj = Helix.Utils.dynamicDialogs[dialogName] = {
             'id' : dialogId,
             'page' : $('<div />').attr({
                 'data-role' : 'page',
@@ -490,7 +508,7 @@ PrimeFaces.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, 
     $(dialogForm).data("DIALOG", dialogFields);
     $(dialogForm).width($.mobile.activePage.width());
     dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
-    PrimeFaces.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
+    Helix.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
 
     setTimeout(function() {
         $(dialogObj.page).appendTo($.mobile.pageContainer);
@@ -503,14 +521,14 @@ PrimeFaces.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, 
     return dialogObj;
 }
 
-PrimeFaces.Utils.refreshDialog = function(dialogFields, dialogObj, refreshDone) {
+Helix.Utils.refreshDialog = function(dialogFields, dialogObj, refreshDone) {
     $(dialogObj.page).remove();
     var dialogForm = $(dialogObj.page).find('form');
     $(dialogForm).empty();
     $(dialogForm).data("DIALOG", dialogFields);
     $(dialogForm).width($.mobile.activePage.width());
     dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
-    PrimeFaces.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
+    Helix.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
     setTimeout(function() {
         $(dialogObj.page).on('pagecreate', function() {
             refreshDone();
@@ -520,12 +538,12 @@ PrimeFaces.Utils.refreshDialog = function(dialogFields, dialogObj, refreshDone) 
     }, 0);
 }
 
-PrimeFaces.Layout.createConfirmDialog = function(options) {
+Helix.Layout.createConfirmDialog = function(options) {
     if (options.onclick && !options.onclick()) {
         return;
     }
     
-    var popupId = PrimeFaces.Utils.getUniqueID();
+    var popupId = Helix.Utils.getUniqueID();
     var popup = $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,

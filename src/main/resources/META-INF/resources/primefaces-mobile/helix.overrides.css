@@ -51,7 +51,7 @@
  * don't get inappropriate padding we need to override the padding that shows
  * up due to nesting.
  */
- .ui-btn-icon-bottom .ui-btn-inner {
+ .ui-btn-text .ui-btn-icon-bottom .ui-btn-inner {
      padding: .55em 11px .5em;
  }
  

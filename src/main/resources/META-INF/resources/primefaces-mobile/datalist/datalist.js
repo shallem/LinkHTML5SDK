@@ -1,5 +1,5 @@
 /**
- * PrimeFaces DataList Widget customized and re-written for mobile.
+ * jQuery Mobile datalist wrapper.
  */
 PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
     
@@ -90,7 +90,6 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
                 _self.$parent.append($('<li />').append(_self.emptyMessage));
             }
             $(_self.jqID).listview( "refresh" );
-            //PrimeFaces.Layout.refreshScroller(_self.jqID);
             if (oncomplete) {
                 oncomplete(_self);            
             }
@@ -163,7 +162,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         if (paginatorContainer.length == 0) {
             paginatorContainer = $('<div />').attr({
                 'id' : this.paginatorId,
-                'class': PrimeFaces.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS
+                'class': Helix.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS
             }).insertBefore(this.$parent);
         } else {
             // Clear out all children of the paginator so that we can refresh it.
@@ -171,7 +170,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         }
         var parent = this;
         $.each(this.paginatorTemplate.split(" "), function(idx, obj) {
-            PrimeFaces.Utils.paginator.render(obj, paginatorContainer, {
+            Helix.Utils.paginator.render(obj, paginatorContainer, {
                 'page' : parent.currentPage,
                 'totalItems' : parent.list.length,
                 'itemsPerPage' : parent.itemsPerPage,

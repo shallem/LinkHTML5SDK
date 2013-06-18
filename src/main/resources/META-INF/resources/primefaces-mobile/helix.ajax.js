@@ -110,19 +110,19 @@ Helix.Ajax = {
             requestOptions.params = [];
         }
         requestOptions.params.push({
-            name: requestOptions.id + "_reload",  
-            value: true
+            name: "__hxLoadKey",  
+            value: requestOptions.loadKey
         });
 
         if (!navigator.onLine) {
             // Use the key to sync from the local DB.
             if (itemKey) {
-                PrimeFaces.DB.synchronizeObjectByKey(itemKey,widgetSchema,function(widget) {
+                Helix.DB.synchronizeObjectByKey(itemKey,widgetSchema,function(widget) {
                     window[widgetName] = widget;
                     onComplete(itemKey, "success");
                 },syncOverrides);
             } else {
-                PrimeFaces.DB.loadAllObjects(widgetSchema, function(widgetList) {
+                Helix.DB.loadAllObjects(widgetSchema, function(widgetList) {
                     window[widgetName] = widgetList;
                     onComplete(itemKey, "success");
                 });
@@ -130,70 +130,38 @@ Helix.Ajax = {
             return;
         }
 
-        var options = {
-            source: requestOptions.formId,
-            update: requestOptions.id,
-            formId: requestOptions.formId,
-            process: requestOptions.formId,
-            params: requestOptions.params,
-            async: true
-        };
-
-        var _self = this;
-        options.onsuccess = function(responseXML) {
-            var responseObj;
-            var xmlDoc = $(responseXML.documentElement),
-            updates = xmlDoc.find("update");
-
-            for(var i=0; i < updates.length; i++) {
-                var update = updates.eq(i),
-                updateid = update.attr('id'),
-                content = update.text();
-
-                if(updateid == requestOptions.id){
-                    // Strip the script tag.
-                    try {
-                        responseObj = $.parseJSON(content);
-                        if (responseObj.error) {
-                            PrimeFaces.Utils.statusMessage("AJAX Load Error", responseObj.error, "severe");
-                            return true;
-                        }
-
-                        if (widgetSchema) {
-                            PrimeFaces.DB.synchronizeObject(responseObj, widgetSchema, function(finalObj, finalKey) {
-                                window[widgetName] = finalObj;
-                                Helix.Ajax.loadOptions.pin = false;
-                                $.mobile.loading( "hide" );
-                                onComplete(finalKey, "success");
-                            }, itemKey, syncOverrides);
-                        } else {
-                            onComplete(itemKey, "success");
-                        }
-                        return true;
-                    } catch(e) {
-                        PrimeFaces.Utils.statusMessage("AJAX Load Error", e.message, "severe");
-                        onComplete(itemKey, "error");
-                        return true;
-                    }
-                }
-                else {
-                    PrimeFaces.ajax.AjaxUtils.updateElement.call(this, requestOptions.id, content);
-                }
-            }
-
-            // Call the user's oncomplete function
-            onComplete(itemKey, "success");
-            return true;
-        };
-
-        options.onerror = function(xhr, status, errorThrown) {
-            PrimeFaces.Utils.statusMessage("AJAX Load Error", status, "severe");
-        };
-
         // Setup loader options.
         Helix.Ajax.loadOptions.pin = true;
         Helix.Ajax.setLoaderOptions(loadingOptions);
 
-        PrimeFaces.ajax.AjaxRequest(options); 
+        $(document).trigger('prerequest');
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            success: function(data, status, xhr) {
+                var responseObj = data;
+                if (responseObj.error) {
+                    Helix.Utils.statusMessage("AJAX Load Error", responseObj.error, "severe");
+                    return;
+                }
+
+                if (widgetSchema) {
+                    Helix.DB.synchronizeObject(responseObj, widgetSchema, function(finalObj, finalKey) {
+                        window[widgetName] = finalObj;
+                        Helix.Ajax.loadOptions.pin = false;
+                        $.mobile.loading( "hide" );
+                        onComplete(finalKey, "success");
+                    }, itemKey, syncOverrides);
+                } else {
+                    onComplete(itemKey, "success");
+                }
+            },
+            error: function(xhr, status, errorThrown) {
+                Helix.Utils.statusMessage("AJAX Load Error", status, "severe");
+            },
+            complete: function() {
+                $(document).trigger('postrequest');
+            }
+        });
     }
 };

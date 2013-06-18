@@ -25,3 +25,11 @@ Helix.DB = {
 Helix.Ajax = {
     
 };
+
+Helix.Utils = {
+    
+};
+
+Helix.Layout = {
+    
+};

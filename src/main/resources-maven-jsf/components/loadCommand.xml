@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
-<!ENTITY command_component_attributes			SYSTEM "../entities/command_component_attributes.xml">
 <!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
     <tag>loadCommand</tag>
     <tagClass>org.primefaces.mobile.component.loadcommand.LoadCommandTag</tagClass>
     <componentClass>org.primefaces.mobile.component.loadcommand.LoadCommand</componentClass>
+    <componentHandlerClass>org.primefaces.mobile.component.loadcommand.LoadCommandHandler</componentHandlerClass>
     <componentType>org.primefaces.mobile.LoadCommand</componentType>
     <componentFamily>org.primefaces.mobile.component</componentFamily>
     <rendererType>org.primefaces.mobile.component.LoadCommandRenderer</rendererType>
     <rendererClass>org.primefaces.mobile.component.loadcommand.LoadCommandRenderer</rendererClass>
-    <parent>javax.faces.component.UICommand</parent>
+    <parent>javax.faces.component.UIOutput</parent>
     <description>LoadCommand provides a way to easily load all of the data required to render an application page.</description>
     <interfaces>
         <interface>
@@ -19,7 +19,6 @@
         </interface>
     </interfaces>
     <attributes>
-            &command_component_attributes;
             &widget_var_attribute;
         <attribute>
             <name>name</name>
@@ -56,6 +55,19 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Name of an override function for the field synchronization. See Helix.DB.Utils.defaultFieldSync for method signature.</description>
+        </attribute>
+        <attribute>
+            <name>cmd</name>
+            <required>true</required>
+            <type>javax.el.MethodExpression</type>
+            <method-signature>java.lang.Object cmd()</method-signature>
+            <description>A 0 argument command used to execute the load phase of the load command.</description>
+        </attribute>
+        <attribute>
+            <name>value</name>
+            <required>true</required>
+            <type>java.lang.Object</type>
+            <description>Retrieve a serializeable object post load. Prior to load this should return an empty object that can be used to generate a template schema.</description>
         </attribute>
     </attributes>
     <resources>

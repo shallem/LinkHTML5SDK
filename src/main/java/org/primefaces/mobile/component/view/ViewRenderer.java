@@ -71,12 +71,12 @@ public class ViewRenderer extends CoreRenderer {
         writer.write("\n");
         writer.write("$(PrimeFaces.escapeClientId('" + component.getClientId() + "'))");
         writer.write(".on('pageshow', function(event, ui) {\n");
-        writer.write("PrimeFaces.Layout.layoutPageFullScreen(); });");
+        writer.write("Helix.Layout.layoutPage(); });");
 
         writer.write("\n");
         writer.write("$(PrimeFaces.escapeClientId('" + component.getClientId() + "'))");
         writer.write(".on('orientationchange', function(event, ui) {\n");
-        writer.write("PrimeFaces.Layout.layoutPageFullScreen(); });");
+        writer.write("Helix.Layout.layoutPage(); });");
 
         endScript(writer);
     }

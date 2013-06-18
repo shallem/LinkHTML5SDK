@@ -277,9 +277,9 @@
 		    <include>datalist/datalist.js</include>
 
 		    <include>primefaces-mobile.js</include>
-		    <include>primefaces-mobile-utils.js</include>
+		    <include>helix.utils.js</include>
 		    <include>helix.ajax.js</include>
-		    <include>primefaces-mobile-layout.js</include>
+		    <include>helix.layout.js</include>
 		    <include>helix.formlayout.js</include>
 
 		  </includes>

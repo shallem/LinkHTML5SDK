@@ -19,7 +19,7 @@
  * 
  * @author Seth Hallem
  */
-PrimeFaces.Utils =  {
+Helix.Utils =  {
     currentUniqueID : 0,
     
     getPosition : function (element) {
@@ -49,13 +49,13 @@ PrimeFaces.Utils =  {
     },
     
     statusMessage : function(summary, msg, severity) {
-        if (PrimeFaces.Utils.errorGrowl) {
-            PrimeFaces.Utils.errorGrowl.show([
+        if (Helix.Utils.errorGrowl) {
+            Helix.Utils.errorGrowl.show([
                 { summary : summary, detail: msg, severity: severity }
                 ]);
             return;
         }
-        PrimeFaces.Utils.errorGrowl = PrimeFaces.Utils.growl("PrimeFacesStatus", summary, msg, severity);
+        Helix.Utils.errorGrowl = Helix.Utils.growl("PrimeFacesStatus", summary, msg, severity);
     },
     
     ajaxFormSubmit : function(url, formID, msgTitle, successMsg, pendingMsg, failMsg, actions) {
@@ -68,7 +68,7 @@ PrimeFaces.Utils =  {
                     200: function(data, textStatus, jqXHR) {
                         // Show success message.
                         if (successMsg) {
-                            PrimeFaces.Utils.statusMessage(msgTitle, successMsg, "info");
+                            Helix.Utils.statusMessage(msgTitle, successMsg, "info");
                         }
                         if (actions && actions.success) {
                             actions.success(data, textStatus, jqXHR);
@@ -77,7 +77,7 @@ PrimeFaces.Utils =  {
                     999: function() {
                         // Container has told us we are offline.
                         if (pendingMsg) {
-                            PrimeFaces.Utils.statusMessage(msgTitle, pendingMsg, "info");
+                            Helix.Utils.statusMessage(msgTitle, pendingMsg, "info");
                         }
                     }
                 },
@@ -85,7 +85,7 @@ PrimeFaces.Utils =  {
                     if (jqXHR.status != 999) {
                         // Display failMsg
                         if (failMsg) {
-                            PrimeFaces.Utils.statusMessage(msgTitle, failMsg, "error");
+                            Helix.Utils.statusMessage(msgTitle, failMsg, "error");
                         }
                     }
                     if (actions && actions.error) {
@@ -103,7 +103,7 @@ PrimeFaces.Utils =  {
             dataType: "json",
             success: function(data,status,jqXHR) {
                 if (data.__mh_error) {
-                    PrimeFaces.Utils.statusMessage("AJAX Error", data.__mh_error, "severe");
+                    Helix.Utils.statusMessage("AJAX Error", data.__mh_error, "severe");
                     jqXHR.__mh_failed = true;
                     return;
                 }
@@ -138,7 +138,7 @@ PrimeFaces.Utils =  {
         renderers: {
             '{CurrentPageReport}' : function(obj, params) {
                 if (!params.template) {
-                    params.template = PrimeFaces.Utils.paginator.currentPageDefaultTemplate;
+                    params.template = Helix.Utils.paginator.currentPageDefaultTemplate;
                 }
                 
                 var startItem = 1;
@@ -158,17 +158,17 @@ PrimeFaces.Utils =  {
                     .replace("{endRecord}", endItem);
 
                 obj.append($('<span />').attr({ 
-                        'class' : PrimeFaces.Utils.paginator.PAGINATOR_CURRENT_CLASS 
+                        'class' : Helix.Utils.paginator.PAGINATOR_CURRENT_CLASS 
                     }).append(output)
                 );
             },
             '{PreviousPageLink}' : function(obj, params) {
                 var output = $('<span />')
                     .attr({
-                        'class' : PrimeFaces.Utils.paginator.PAGINATOR_PREV_PAGE_LINK_CLASS
+                        'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_LINK_CLASS
                     }).append($('<span />')
                         .attr({
-                            'class' : PrimeFaces.Utils.paginator.PAGINATOR_PREV_PAGE_ICON_CLASS
+                            'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_ICON_CLASS
                         }).append("p")
                     );
                 $(output).on('tap', function() {
@@ -180,10 +180,10 @@ PrimeFaces.Utils =  {
                 var totalPages = Math.floor(params.totalItems / params.itemsPerPage) + 1;
                 var output = $('<span />')
                     .attr({
-                        'class' : PrimeFaces.Utils.paginator.PAGINATOR_NEXT_PAGE_LINK_CLASS
+                        'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_LINK_CLASS
                     }).append($('<span />')
                         .attr({
-                            'class' : PrimeFaces.Utils.paginator.PAGINATOR_NEXT_PAGE_ICON_CLASS
+                            'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_ICON_CLASS
                         }).append("p")
                     );
                 $(output).on('tap', function() {
@@ -193,13 +193,13 @@ PrimeFaces.Utils =  {
             }
         },
         render: function(renderer, obj, params) {
-            if (PrimeFaces.Utils.paginator.renderers[renderer]) {
-                PrimeFaces.Utils.paginator.renderers[renderer](obj, params);
+            if (Helix.Utils.paginator.renderers[renderer]) {
+                Helix.Utils.paginator.renderers[renderer](obj, params);
             }
         }
     },
     getUniqueID : function() {
-        ++PrimeFaces.Utils.currentUniqueID;
-        return "pm_idt" + PrimeFaces.Utils.currentUniqueID;
+        ++Helix.Utils.currentUniqueID;
+        return "pm_idt" + Helix.Utils.currentUniqueID;
     }
 }

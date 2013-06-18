@@ -20,7 +20,7 @@
  * @author Seth Hallem
  */
 
-PrimeFaces.Layout = {
+Helix.Layout = {
     /**
      * Selectors used to identify scrollers.
      */
@@ -42,13 +42,13 @@ PrimeFaces.Layout = {
     addScrollers : function(elem) {
         var toAdd;
         if (elem === undefined) {
-            toAdd = $.mobile.activePage.find(PrimeFaces.Layout.scrollerSel);
+            toAdd = $.mobile.activePage.find(Helix.Layout.scrollerSel);
         } else {
             toAdd = $(elem);
         }
 
         toAdd.each(function() {            
-            if (this.id in PrimeFaces.Layout.allScrollers) {
+            if (this.id in Helix.Layout.allScrollers) {
                 return;
             } else {
                 // Make sure we have at least one child, otherwise there is nothing to scroll
@@ -96,7 +96,7 @@ PrimeFaces.Layout = {
                         }
                     }
                 });
-                PrimeFaces.Layout.allScrollers[this.id] = {
+                Helix.Layout.allScrollers[this.id] = {
                     scroller: newScroller,
                     height: $(this).children().height()
                 };
@@ -108,11 +108,11 @@ PrimeFaces.Layout = {
      * Delete a single scroller.
      */
     deleteScroller: function(id) {
-        if (id in PrimeFaces.Layout.allScrollers) {
-            var toDelete = PrimeFaces.Layout.allScrollers[id].scroller;
+        if (id in Helix.Layout.allScrollers) {
+            var toDelete = Helix.Layout.allScrollers[id].scroller;
             toDelete.destroy();
             toDelete = null;
-            delete PrimeFaces.Layout.allScrollers[id];
+            delete Helix.Layout.allScrollers[id];
         }
     },
 
@@ -121,8 +121,8 @@ PrimeFaces.Layout = {
      * browser.
      */
     cleanupScrollers: function(page) {
-        $(page).find(PrimeFaces.Layout.scrollerSel).each(function() {
-            PrimeFaces.Layout.deleteScroller(this.id);
+        $(page).find(Helix.Layout.scrollerSel).each(function() {
+            Helix.Layout.deleteScroller(this.id);
         });
     },
 
@@ -130,7 +130,7 @@ PrimeFaces.Layout = {
      * Determine if an element is a scrolling element.
      */
     isScroller : function(elem) {
-        if (elem && $(elem).is(PrimeFaces.Layout.scrollerSel)) {
+        if (elem && $(elem).is(Helix.Layout.scrollerSel)) {
             return true;
         }
         return false;
@@ -140,7 +140,7 @@ PrimeFaces.Layout = {
      * Determine if an element is contained within a scrolling element.
      */
     isInScroller : function(elem) {
-        if (elem && ($(elem).closest(PrimeFaces.Layout.scrollerSel).length !== 0)) {
+        if (elem && ($(elem).closest(Helix.Layout.scrollerSel).length !== 0)) {
             return true;
         }
         return false;
@@ -150,7 +150,7 @@ PrimeFaces.Layout = {
      * Update a single scroller, identified by an ID or JQM object.
      */
     updateScrollersForID : function(obj, objID, oldHeight, nRetries) {
-        if (!PrimeFaces.Layout.allScrollers[objID]) {
+        if (!Helix.Layout.allScrollers[objID]) {
             return;
         }
         
@@ -159,22 +159,22 @@ PrimeFaces.Layout = {
 
         if (nRetries >= 3 ||
             heightUpdated) {
-            PrimeFaces.Layout.allScrollers[objID].scroller.refresh(); 
-            PrimeFaces.Layout.allScrollers[objID].height = newHeight;
+            Helix.Layout.allScrollers[objID].scroller.refresh(); 
+            Helix.Layout.allScrollers[objID].height = newHeight;
             
             // If this or a parent object matches the scrollerSel then update it.
-            /*$(obj).closest(PrimeFaces.Layout.scrollerSel).each(function() {
-                if (this.id in PrimeFaces.Layout.allScrollers) {
-                    PrimeFaces.Layout.allScrollers[this.id].scroller.refresh(); 
-                    PrimeFaces.Layout.allScrollers[this.id].height = newHeight;
+            /*$(obj).closest(Helix.Layout.scrollerSel).each(function() {
+                if (this.id in Helix.Layout.allScrollers) {
+                    Helix.Layout.allScrollers[this.id].scroller.refresh(); 
+                    Helix.Layout.allScrollers[this.id].height = newHeight;
                 }
             });*/
 
             // Update scrollers in child objects.
-            /*$(obj).find(PrimeFaces.Layout.scrollerSel).each(function() {
-                if (this.id in PrimeFaces.Layout.allScrollers) {
-                    PrimeFaces.Layout.allScrollers[this.id].scroller.refresh(); 
-                    PrimeFaces.Layout.allScrollers[this.id].height = newHeight;
+            /*$(obj).find(Helix.Layout.scrollerSel).each(function() {
+                if (this.id in Helix.Layout.allScrollers) {
+                    Helix.Layout.allScrollers[this.id].scroller.refresh(); 
+                    Helix.Layout.allScrollers[this.id].height = newHeight;
                 }
             });*/
         }
@@ -186,7 +186,7 @@ PrimeFaces.Layout = {
              * the page.
              */
             setTimeout(function() {
-                PrimeFaces.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
+                Helix.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
             }, 400);
         }
     },
@@ -197,16 +197,16 @@ PrimeFaces.Layout = {
     updateScrollers : function(elem) {
         var toUpdate;
         if (elem === undefined) {
-            toUpdate = $.mobile.activePage.find(PrimeFaces.Layout.scrollerSel);
+            toUpdate = $.mobile.activePage.find(Helix.Layout.scrollerSel);
         } else {
             toUpdate = $(elem);
         }
 
         toUpdate.each(function() {            
-            if (this.id in PrimeFaces.Layout.allScrollers) {
-                PrimeFaces.Layout.updateScrollersForID(this,
+            if (this.id in Helix.Layout.allScrollers) {
+                Helix.Layout.updateScrollersForID(this,
                         this.id,
-                        PrimeFaces.Layout.allScrollers[this.id].height, 
+                        Helix.Layout.allScrollers[this.id].height, 
                         1);
             }
         });
@@ -263,7 +263,7 @@ PrimeFaces.Layout = {
             $(children[children.length - 1]).height(maxHeight - remainingHeight);
         } else {
             childrenToRecurse.each(function() {
-                PrimeFaces.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
+                Helix.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
             });
         }
     },
@@ -287,9 +287,9 @@ PrimeFaces.Layout = {
     },
     
     layoutPageFullScreen: function() {
-        var contentHeight = PrimeFaces.Layout.resizePages();
+        var contentHeight = Helix.Layout.resizePages();
         $('[data-role="content"]', $.mobile.activePage).children('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
-            PrimeFaces.Layout.layoutFullHeightComponent(contentHeight, this);
+            Helix.Layout.layoutFullHeightComponent(contentHeight, this);
         });        
     }
 };
@@ -313,10 +313,10 @@ $(document).bind('prerequest', function(ev, cfg) {
             /* 
              * Clean up all scrollers that may be deleted when this item is updated.
              */
-            $(updateSel).find(PrimeFaces.Layout.scrollerSel).each(function(index, element) {
+            $(updateSel).find(Helix.Layout.scrollerSel).each(function(index, element) {
                 /* Save off the height of the item we are going to update. */
                 var scrollerID = $(this).attr('id');
-                PrimeFaces.Layout.deleteScroller(scrollerID);
+                Helix.Layout.deleteScroller(scrollerID);
             });
         }
     }
@@ -344,10 +344,10 @@ $(document).bind('postrequest', function(ev, xhr) {
          * up with bogus scrollers added by the pageshow event that are then overwritten
          * by an AJAX update that happens when the page is first loading.
          */
-        $(updateSel).find(PrimeFaces.Layout.scrollerSel).each(function() {
+        $(updateSel).find(Helix.Layout.scrollerSel).each(function() {
             /* Save off the height of the item we are going to update. */
             var scrollerID = $(this).attr('id');
-            PrimeFaces.Layout.deleteScroller(scrollerID);
+            Helix.Layout.deleteScroller(scrollerID);
         });
         
         /*
@@ -363,7 +363,7 @@ $(document).bind('postrequest', function(ev, xhr) {
     
     if (nUpdated > 0) {
         /* Reset the full screen layout of the page. */
-        PrimeFaces.Layout.layoutPage();
+        Helix.Layout.layoutPage();
     }
 });
 
@@ -382,15 +382,15 @@ $(document).bind('pageinit', function() {
  * In general, apps should use the pagebeforeshow event to layout the DOM. When
  * the page load is done, they should call this function.
  */
-PrimeFaces.Layout.layoutPage = function() {
+Helix.Layout.layoutPage = function() {
     /* Reset the full screen layout of the page. */
-    PrimeFaces.Layout.layoutPageFullScreen();
+    Helix.Layout.layoutPageFullScreen();
     
     /* Add all scrollers. NOTE, that these scrollers will also be updated in the call
      * below. This is essential because the DOM may not be finished when we reach
      * this point.
      */
-    PrimeFaces.Layout.addScrollers();
+    Helix.Layout.addScrollers();
     
     // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
     // in the "Mastering the Refresh() method" section. Updates all scrollers
@@ -400,9 +400,9 @@ PrimeFaces.Layout.layoutPage = function() {
      * we call this function a few times at intervals of 200 MS. When there is no
      * updating to be done, nothing happens.
      */
-    var existingScrollers = $.mobile.activePage.find(PrimeFaces.Layout.scrollerSel);
+    var existingScrollers = $.mobile.activePage.find(Helix.Layout.scrollerSel);
     setTimeout(function() {
-        PrimeFaces.Layout.updateScrollers(existingScrollers);
+        Helix.Layout.updateScrollers(existingScrollers);
     }, 0);
 };
 
@@ -410,10 +410,10 @@ PrimeFaces.Layout.layoutPage = function() {
  * When a page is hidden, we kill all of its scrollers to save memory. 
  */
 $(document).on('pagebeforehide', function() {
-    PrimeFaces.Layout.cleanupScrollers(this);
+    Helix.Layout.cleanupScrollers(this);
 });
 
-PrimeFaces.deviceType = (function() {
+Helix.deviceType = (function() {
     if (window.screen.width <= 480) {
         return "phone";
     } else if (window.screen.width <= 767) {

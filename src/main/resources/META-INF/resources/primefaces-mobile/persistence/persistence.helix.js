@@ -18,7 +18,7 @@
  * Integrates Persistence JS ORM with the PrimeFaces Mobile SDK.
  */
 
-PrimeFaces.DB = {
+Helix.DB = {
 
     generatePersistenceFields: function(schemaTemplate,name,allVisited,recursiveFields,allSchemas) {
         var schemaFields = {};
@@ -216,7 +216,7 @@ PrimeFaces.DB = {
         var migrateVer = 0;
         for (allSchemasIdx = 0; allSchemasIdx < allSchemas.length; ++allSchemasIdx) {
             var schema = allSchemas[allSchemasIdx];
-            PrimeFaces.DB.migrateTable(schema, metaName, function(curVer) {
+            Helix.DB.migrateTable(schema, metaName, function(curVer) {
                 ++nSchemasUpdated;
                 
                 if (curVer > 0) {
@@ -243,7 +243,7 @@ PrimeFaces.DB = {
     },
 
     generateSubSchemaFromDBRow: function(tableName,parentField,parentSchema,inverseField,isOneToMany,oncomplete) {
-        PrimeFaces.DB.generatePersistenceSchemaFromDB(tableName, null, function(subSchema) {
+        Helix.DB.generatePersistenceSchemaFromDB(tableName, null, function(subSchema) {
             if (isOneToMany) {
                 parentSchema.hasMany(parentField, subSchema, inverseField);
             } else {
@@ -320,7 +320,7 @@ PrimeFaces.DB = {
         
         if (manyToOnes) {
             for (field in manyToOnes) {
-                PrimeFaces.DB.generateSubSchemaFromDBRow(manyToOnes[field].table,
+                Helix.DB.generateSubSchemaFromDBRow(manyToOnes[field].table,
                     field,
                     schema,
                     manyToOnes[field].inverse,
@@ -331,7 +331,7 @@ PrimeFaces.DB = {
         
         if (oneToManys) {
             for (field in oneToManys) {
-                PrimeFaces.DB.generateSubSchemaFromDBRow(oneToManys[field].table,
+                Helix.DB.generateSubSchemaFromDBRow(oneToManys[field].table,
                     field,
                     schema,
                     oneToManys[field].inverse,
@@ -373,14 +373,14 @@ PrimeFaces.DB = {
          * does not exist.
          */
         if (schemaTemplate) {
-            PrimeFaces.DB.generatePersistenceSchema(schemaTemplate,schemaName,oncomplete);
+            Helix.DB.generatePersistenceSchema(schemaTemplate,schemaName,oncomplete);
         } else {
             /* Next, lookup this schema in the master DB and generate the schema
              * from the DB. 
              */
             window.__pmAllTables.filter("tableName", "=", schemaName).one(function(masterRow) {
                 if (masterRow) {
-                    PrimeFaces.DB.generatePersistenceSchemaFromDBRow(masterRow,function(schema) {
+                    Helix.DB.generatePersistenceSchemaFromDBRow(masterRow,function(schema) {
                         persistence.schemaSync();
                         oncomplete(schema);
                     });
@@ -443,8 +443,8 @@ PrimeFaces.DB = {
                 newSchema.filterFields = JSON.stringify(schema.filterFields);
 
                 // Convert relationships to JSON.
-                newSchema.tableOneToMany = PrimeFaces.DB.convertRelationshipToString(schema.schema.meta.hasMany);
-                newSchema.tableManyToOne = PrimeFaces.DB.convertRelationshipToString(schema.schema.meta.hasOne);
+                newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
+                newSchema.tableManyToOne = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
 
                 persistence.add(newSchema);
                 oncomplete(0);
@@ -463,12 +463,12 @@ PrimeFaces.DB = {
                     newFields = schema.fields;
                     schemaRec.tableFields = fieldsString;
                 }
-                var oneToManyStr = PrimeFaces.DB.convertRelationshipToString(schema.schema.meta.hasMany);
+                var oneToManyStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
                 if (oneToManyStr !== schemaRec.tableOneToMany) {
                     dirty = 1;
                     schemaRec.tableOneToMany = oneToManyStr;
                 }
-                var manyToOneStr = PrimeFaces.DB.convertRelationshipToString(schema.schema.meta.hasOne);
+                var manyToOneStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
                 if (manyToOneStr !== schemaRec.tableManyToOne) {
                     dirty = 1;
                     oldRefs = $.parseJSON(schemaRec.tableManyToOne);
@@ -498,7 +498,7 @@ PrimeFaces.DB = {
                 }
                 if (dirty) {
                     schemaRec.tableVersion = schemaRec.tableVersion + 1;
-                    currentDBVer = PrimeFaces.DB.defineTableMigration(schemaRec, 
+                    currentDBVer = Helix.DB.defineTableMigration(schemaRec, 
                         oldFields, newFields,
                         oldSorts, newSorts,
                         oldKey, newKey,
@@ -590,7 +590,7 @@ PrimeFaces.DB = {
         oncomplete, 
         oncompleteArg) {
             
-        PrimeFaces.DB.synchronizeObjectFields(obj, null, elemSchema, function(finalObj) {
+        Helix.DB.synchronizeObjectFields(obj, null, elemSchema, function(finalObj) {
             queryCollection.add(finalObj);
             oncomplete(oncompleteArg);
         }, overrides);
@@ -621,7 +621,7 @@ PrimeFaces.DB = {
         
         for (k in fieldsToSync) {
             var obj = newObjectMap[k];
-            PrimeFaces.DB.addObjectToQueryCollection(obj,
+            Helix.DB.addObjectToQueryCollection(obj,
                     elemSchema, queryCollection, 
                     overrides,
                     function(objKey) {
@@ -638,7 +638,7 @@ PrimeFaces.DB = {
         var nProcessed = 0;
         
         queryCollection.forEach(function(elem) {
-            PrimeFaces.DB.cascadingRemove(elem, function() {
+            Helix.DB.cascadingRemove(elem, function() {
                 ++nProcessed;
                 queryCollection.remove(elem);
                 if (nProcessed >= toProcess) {
@@ -674,7 +674,7 @@ PrimeFaces.DB = {
                 var subObj = getter();
                 if (subObj && subObj.forEach) {
                     cascadeFlds[fld] = 1;
-                    PrimeFaces.DB.cascadingRemoveQueryCollection(subObj, fld, cascadeDone, overrides);
+                    Helix.DB.cascadingRemoveQueryCollection(subObj, fld, cascadeDone, overrides);
                 }
             }
         }
@@ -699,7 +699,7 @@ PrimeFaces.DB = {
 
             if (nElements >= elementCount) {
                 /* Add all objects remaining in newObjectMap to the query collection. */
-                PrimeFaces.DB.addObjectMapToQueryCollection(newObjectMap, elemSchema, keyFieldName, 
+                Helix.DB.addObjectMapToQueryCollection(newObjectMap, elemSchema, keyFieldName, 
                     queryCollection, oncomplete, oncompleteArg, overrides);
             }
         };
@@ -713,13 +713,13 @@ PrimeFaces.DB = {
                 var newObj = newObjectMap[qryElemKeyValue];
                 delete newObjectMap[qryElemKeyValue];
 
-                PrimeFaces.DB.synchronizeObjectFields(newObj, qryElem, elemSchema, elemSyncDone, overrides);
+                Helix.DB.synchronizeObjectFields(newObj, qryElem, elemSchema, elemSyncDone, overrides);
             } else {
                 /* The query collection has an object that is not in the newObjectMap. Remove it.
                  * We don't proceed until this is done, because otherwise other points in the
                  * sync may pick up stale objects.
                  */
-                PrimeFaces.DB.cascadingRemove(qryElem,elemSyncDone, overrides);
+                Helix.DB.cascadingRemove(qryElem,elemSyncDone, overrides);
             }
         },
         function(tot) {
@@ -734,7 +734,7 @@ PrimeFaces.DB = {
         /* Synchronize the query collection. First, we create a map from keys to objects
          * from the new objects in obj[arrLocalField].
          */
-        var elemKeyField = PrimeFaces.DB.getKeyField(elemSchema);
+        var elemKeyField = Helix.DB.getKeyField(elemSchema);
         var elemMap = {};
             
         for (var i = 0; i < objArray.length; ++i) {
@@ -745,12 +745,12 @@ PrimeFaces.DB = {
         /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
          * efficient way to do this!
          */
-        PrimeFaces.DB.synchronizeQueryCollection(elemMap, parentCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
+        Helix.DB.synchronizeQueryCollection(elemMap, parentCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
     },
     
     updateOneObject: function(updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
         elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) { 
-            PrimeFaces.DB.synchronizeObjectFields(updatedObj,toUpdateObj,elemSchema,function(newObj) {
+            Helix.DB.synchronizeObjectFields(updatedObj,toUpdateObj,elemSchema,function(newObj) {
                 oncomplete(newObj);
             }, overrides);
         });
@@ -779,7 +779,7 @@ PrimeFaces.DB = {
                 var toDeleteKey = deltaObj.deletes[i];
                 toDeleteCollection = parentCollection.filter(keyField, "=", toDeleteKey);
                 toDeleteCollection.each(function(elem) { 
-                    PrimeFaces.DB.cascadingRemove(elem, function() {
+                    Helix.DB.cascadingRemove(elem, function() {
                         parentCollection.remove(elem);
                         persistence.remove(elem);
                         ++nDeletes;
@@ -800,7 +800,7 @@ PrimeFaces.DB = {
             for (i = 0; i < totUpdates; ++i) {
                 var toUpdateKey = deltaObj.updates[i][keyField];
                 var updatedObj = deltaObj.updates[i];
-                PrimeFaces.DB.updateOneObject(updatedObj, keyField, toUpdateKey, elemSchema, function(newObj) {
+                Helix.DB.updateOneObject(updatedObj, keyField, toUpdateKey, elemSchema, function(newObj) {
                     ++nUpdates;
                     if (nUpdates == totUpdates) {
                         // Done sync'ing updates.
@@ -817,7 +817,7 @@ PrimeFaces.DB = {
             syncDone("adds");
         } else {
             for (i = 0; i < deltaObj.adds.length; ++i) {
-                PrimeFaces.DB.addObjectToQueryCollection(deltaObj.adds[i],
+                Helix.DB.addObjectToQueryCollection(deltaObj.adds[i],
                     elemSchema, 
                     parentCollection, 
                     overrides,
@@ -833,7 +833,7 @@ PrimeFaces.DB = {
     },
     
     synchronizeDeltaObject: function(deltaObj, parentCollection, elemSchema, oncomplete, overrides) {
-        PrimeFaces.DB.synchronizeDeltaField(deltaObj, parentCollection, elemSchema, null, function() {
+        Helix.DB.synchronizeDeltaField(deltaObj, parentCollection, elemSchema, null, function() {
             oncomplete(parentCollection);
         }, overrides);
     },
@@ -843,7 +843,7 @@ PrimeFaces.DB = {
         var objLocalField = field;
         var setter = Object.getOwnPropertyDescriptor(persistentObj, objLocalField).set;
         objSchema.findBy(keyField, obj[keyField], function(dbObj) {
-            PrimeFaces.DB.synchronizeObjectFields(obj,dbObj,objSchema,function(newObj) {
+            Helix.DB.synchronizeObjectFields(obj,dbObj,objSchema,function(newObj) {
                 setter(newObj);
                 oncomplete(objLocalField);
             }, overrides);
@@ -897,16 +897,16 @@ PrimeFaces.DB = {
                  */
                 var objArray = obj[field];
                 var elemSchema = objSchema.__pm_subSchemas[field];
-                PrimeFaces.DB.synchronizeArrayField(objArray, persistentObj[field], elemSchema, field, syncDone, overrides);
+                Helix.DB.synchronizeArrayField(objArray, persistentObj[field], elemSchema, field, syncDone, overrides);
             } else if (Object.prototype.toString.call(obj[field]) === '[object Object]') {
                 var fieldSchema = objSchema.__pm_subSchemas[field];
                 var keyField = this.getKeyField(fieldSchema);
                 if (obj[field].__pm_type == 1001) {
                     var deltaObj = obj[field];
-                    PrimeFaces.DB.synchronizeDeltaField(deltaObj, persistentObj[field], 
+                    Helix.DB.synchronizeDeltaField(deltaObj, persistentObj[field], 
                             fieldSchema, field, syncDone, overrides);                 
                 } else {
-                    PrimeFaces.DB.synchronizeObjectField(obj[field], persistentObj, fieldSchema, field, keyField, syncDone, overrides); 
+                    Helix.DB.synchronizeObjectField(obj[field], persistentObj, fieldSchema, field, keyField, syncDone, overrides); 
                 }      
             } else {
                 // Otherwise this is a built-in javascript type and we just update 
@@ -921,7 +921,7 @@ PrimeFaces.DB = {
     },
 
     synchronizeArray: function(obj,objSchema,persistentObj,callback,overrides) {
-        PrimeFaces.DB.synchronizeArrayField(obj, persistentObj, objSchema, null, function() {
+        Helix.DB.synchronizeArrayField(obj, persistentObj, objSchema, null, function() {
             callback(persistentObj);
         }, overrides);
     },
@@ -957,16 +957,16 @@ PrimeFaces.DB = {
         }
 
         if (Object.prototype.toString.call(obj) === '[object Array]') {
-            PrimeFaces.DB.synchronizeArray(obj,objSchema,objSchema.all(),function(finalObj) {
+            Helix.DB.synchronizeArray(obj,objSchema,objSchema.all(),function(finalObj) {
                 syncDone(finalObj, opaque);
             },overrides);
         } else if (obj.__pm_type == 1001) {
-            PrimeFaces.DB.synchronizeDeltaObject(obj,objSchema.all(),objSchema,function(finalObj) {
+            Helix.DB.synchronizeDeltaObject(obj,objSchema.all(),objSchema,function(finalObj) {
                 syncDone(finalObj, opaque);
             },overrides);
         } else {
             objSchema.findBy(keyField, obj[keyField], function(persistentObj) {
-                PrimeFaces.DB.synchronizeObjectFields(obj, persistentObj, objSchema, function(finalObj) {
+                Helix.DB.synchronizeObjectFields(obj, persistentObj, objSchema, function(finalObj) {
                     syncDone(finalObj, opaque);
                 }, overrides);
             });
@@ -1036,5 +1036,5 @@ PrimeFaces.DB = {
 };
 
 (function() {
-    PrimeFaces.DB.initPersistence();
+    Helix.DB.initPersistence();
 })();
