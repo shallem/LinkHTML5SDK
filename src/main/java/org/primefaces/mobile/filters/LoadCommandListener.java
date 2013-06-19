@@ -38,12 +38,12 @@ public class LoadCommandListener implements PhaseListener {
     }
 
     @Override
-    public void beforePhase(PhaseEvent event) {
+    public void afterPhase(PhaseEvent event) {
         
     }
 
     @Override
-    public void afterPhase(PhaseEvent event) {
+    public void beforePhase(PhaseEvent event) {
         FacesContext fc = event.getFacesContext();
         ExternalContext ectx = fc.getExternalContext();
         if (ectx.isResponseCommitted()) {
