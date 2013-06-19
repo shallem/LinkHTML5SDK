@@ -161,8 +161,8 @@ Helix.Ajax = {
             error: function(xhr, status, errorThrown) {
                 Helix.Utils.statusMessage("AJAX Load Error", status, "severe");
             },
-            complete: function() {
-                $(document).trigger('postrequest');
+            complete: function(xhr) {
+                $(document).trigger('postrequest', xhr);
             }
         });
     }
