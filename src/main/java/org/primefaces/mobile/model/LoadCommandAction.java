@@ -29,9 +29,14 @@ public class LoadCommandAction {
     private Constructor ctor;
     private Method loader;
     private Method getter;
+    private Method postConstruct;
+    private String beanName;
     private String key;
+    private Class beanClass;
     
     public LoadCommandAction(String key,
+            String beanName,
+            Class c,
             Constructor ctor,
             Method loader,
             Method getter) {
@@ -39,18 +44,30 @@ public class LoadCommandAction {
         this.ctor = ctor;
         this.loader = loader;
         this.getter = getter;
+        this.beanName = beanName;
+        this.beanClass = c;
+        
+        for (Method m : c.getMethods()) {
+            if (m.getAnnotation(javax.annotation.PostConstruct.class) != null) {
+                this.postConstruct = m;
+                break;
+            }
+        }
     }
     
-    public Object doLoad() throws FacesException {
-        Object thisObject = null;
+    public Object doLoad(Object thisObject) throws FacesException {
+        /*Object thisObject = null;
         try {
             thisObject = ctor.newInstance(new Object[]{});
+            if (this.postConstruct != null) {
+                this.postConstruct.invoke(thisObject, new Object[]{});
+            } 
         } catch(Exception e) {
 
         }
         if (thisObject == null) {
             throw new FacesException("Failed to construct object with constructor " + ctor.toString());
-        }
+        }*/
         try {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
@@ -99,5 +116,13 @@ public class LoadCommandAction {
         } else {
             return "{ 'error' : 'Failed to serialize object.' }";
         }
+    }
+
+    public String getBeanName() {
+        return beanName;
+    }
+
+    public Class getBeanClass() {
+        return beanClass;
     }
 }

@@ -137,7 +137,9 @@ Helix.Ajax = {
         $(document).trigger('prerequest');
         $.ajax({
             type: "POST",
+            url: requestOptions.postBack,
             dataType: "json",
+            data: $.param(requestOptions.params),
             success: function(data, status, xhr) {
                 var responseObj = data;
                 if (responseObj.error) {

@@ -304,7 +304,7 @@ Helix.Layout = {
  * current html.
  */
 $(document).bind('prerequest', function(ev, cfg) {
-    if (cfg.update !== undefined) {
+    if (cfg && cfg.update) {
         var updatedIDs = cfg.update.split(" ");
         for (var i = 0; i < updatedIDs.length; ++i) {
             /* Escape colons because primefaces use the colon character in its naming scheme ... */
@@ -323,10 +323,18 @@ $(document).bind('prerequest', function(ev, cfg) {
 });
 
 $(document).bind('postrequest', function(ev, xhr) {
+    if (!xhr.responseXML) {
+        return;
+    }
+    
     var responseXML = xhr.responseXML;
     var xmlDoc = $(responseXML.documentElement),
     updates = xmlDoc.find('update'),
     nUpdated = 0;
+    
+    if (!updates) {
+        return;
+    }
     for(var i=0; i < updates.length; i++) {
         var updateID = updates.eq(i).attr('id');
         

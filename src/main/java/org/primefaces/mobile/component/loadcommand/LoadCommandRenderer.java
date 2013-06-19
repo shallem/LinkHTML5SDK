@@ -46,7 +46,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         this.encodeScript(context, cmd);
     }
     
-    protected String saveLoadCommand(FacesContext context, 
+    protected String saveLoadCommand(FacesContext context,
+            String beanName,
             Class c, 
             Constructor ctor, 
             Method loadMethod, 
@@ -58,12 +59,16 @@ public class LoadCommandRenderer extends CoreRenderer {
             md.update(loadMethod.getName().getBytes());
             md.update(getMethod.getName().getBytes());
             byte[] b = md.digest();
-            key = new String(b);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < b.length; i++) {
+                sb.append(Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            key = sb.toString();
         } catch(Exception e) {
             throw new IOException("Could not generate key for load command.");
         }
         
-        context.getExternalContext().getApplicationMap().put(key, new LoadCommandAction(key, ctor, loadMethod, getMethod));
+        context.getExternalContext().getApplicationMap().put(key, new LoadCommandAction(key, beanName, c, ctor, loadMethod, getMethod));
         return key;
     }
     
@@ -95,6 +100,11 @@ public class LoadCommandRenderer extends CoreRenderer {
                 Matcher getM = commandPattern.matcher(valE.getExpressionString());
                 if (getM.matches()) {
                     String getMethodName = getM.group(2);
+                    
+                    /* Convert getMethodName to a getter by capitalizing the first letter and prefixing
+                     * with "get".
+                     */
+                    getMethodName = "get" + getMethodName.substring(0, 1).toUpperCase() + getMethodName.substring(1);
                     try {
                         getMethod = c.getMethod(getMethodName, new Class[]{});
                     } catch(Exception e) {
@@ -120,7 +130,7 @@ public class LoadCommandRenderer extends CoreRenderer {
                     throw new IOException(c.getName() + " must have a 0 argument constructor.");
                 }
                 
-                return this.saveLoadCommand(context, c, constr, loadMethod, getMethod);
+                return this.saveLoadCommand(context, beanName, c, constr, loadMethod, getMethod);
             } else {
                 throw new IOException(beanName + " must refer to a JSF request-scoped bean.");
             }
@@ -132,10 +142,10 @@ public class LoadCommandRenderer extends CoreRenderer {
     protected void encodeScript(FacesContext context, LoadCommand cmd) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = cmd.getClientId();
-        UIComponent form = (UIComponent) ComponentUtils.findParentForm(context, cmd);
-        if(form == null) {
-            throw new FacesException("LoadCommand '" + cmd.getName() + "'must be inside a form.");
-        }
+        
+        String url = context.getExternalContext().getRequestContextPath() + 
+                context.getExternalContext().getRequestServletPath() +
+                "/index.xhtml";
         
         StringBuilder onComplete = new StringBuilder();
         if (cmd.getOncomplete() != null) {
@@ -173,6 +183,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         writer.write("var requestOptions = {");
         writer.write(" 'loadKey' : '" + keyVal + "',");
+        writer.write(" 'postBack' : '" + url + "',");
         writer.write(" 'params' : params ");
         writer.write("};\n");
         

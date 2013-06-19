@@ -40,11 +40,11 @@ public class LoadCommandFilter implements Filter {
         
         String loadKey = req.getParameter("__hxLoadKey");
         if (loadKey != null) {
-            ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
-            LoadCommandAction lca = (LoadCommandAction)context.getApplicationMap().get(loadKey);
+            LoadCommandAction lca = (LoadCommandAction)req.getServletContext().getAttribute(loadKey);
             
             /* Run the load command, then get the result. */
-            Object thisObj = lca.doLoad();
+            Object thisObj = req.getAttribute("folderView"); 
+                    //lca.doLoad();
             String jsonToReturn = lca.getAndSerialize(thisObj);
             
             response.setContentType("application/json");
