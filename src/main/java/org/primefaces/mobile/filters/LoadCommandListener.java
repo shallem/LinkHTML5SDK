@@ -65,6 +65,8 @@ public class LoadCommandListener implements PhaseListener {
             try {
                 lca.doLoad(thisObj);
                 String jsonToReturn = lca.getAndSerialize(thisObj);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
                 response.getWriter().write(jsonToReturn);
                 response.flushBuffer();
             } catch(IOException ioe) {
@@ -75,8 +77,6 @@ public class LoadCommandListener implements PhaseListener {
                     Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            
-            response.setContentType("application/json");
             fc.responseComplete();
         }
     }
