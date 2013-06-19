@@ -18,13 +18,11 @@ package org.primefaces.mobile.component.editor;
 import java.io.IOException;
 import java.util.Map;
 import javax.el.ValueExpression;
-
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 import javax.faces.convert.Converter;
 import javax.faces.convert.ConverterException;
-
 import org.primefaces.renderkit.CoreRenderer;
 import org.primefaces.util.ComponentUtils;
 
@@ -47,17 +45,19 @@ public class EditorRenderer extends CoreRenderer {
     @Override
     public void encodeEnd(FacesContext facesContext, UIComponent component) throws IOException {
         Editor editor = (Editor) component;
-
-        encodeMarkup(facesContext, editor);
-        encodeScript(facesContext, editor);
+        String clientId = editor.getClientId(facesContext);
+        String inputId = clientId + "_input";
+        
+        encodeMarkup(facesContext, editor, clientId, inputId);
+        encodeScript(facesContext, editor, clientId, inputId);
     }
 
-    protected void encodeMarkup(FacesContext context, Editor editor) throws IOException {
+    protected void encodeMarkup(FacesContext context, Editor editor,
+            String clientId, String inputId) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-        String clientId = editor.getClientId(context);
+        
         String valueToRender = ComponentUtils.getValueToRender(context, editor);
-        String inputId = clientId + "_input";
-
+        
         String style = editor.getStyle();
         style = style == null ? "visibility:hidden" : "visibility:hidden;" + style;
 
@@ -85,16 +85,17 @@ public class EditorRenderer extends CoreRenderer {
         writer.endElement("div");
     }
 
-    private void encodeScript(FacesContext facesContext, Editor editor) throws IOException {
+    private void encodeScript(FacesContext facesContext, Editor editor,
+            String clientId, String inputId) throws IOException {
         ResponseWriter writer = facesContext.getResponseWriter();
-        String clientId = editor.getClientId(facesContext);
         String widgetVar = editor.resolveWidgetVar();
 
         startScript(writer, clientId);
 
         writer.write("$(function() {");
-        writer.write("PrimeFaces.cw('Editor','" + widgetVar + "',{");
+        writer.write("$(PrimeFaces.escapeClientId('" + inputId +"')).cleditor({");
         writer.write("id:'" + clientId + "'");
+        writer.write(",widget:'" + widgetVar + "'");
 
         if (editor.isDisabled()) {
             writer.write(",disabled:true");
@@ -123,7 +124,7 @@ public class EditorRenderer extends CoreRenderer {
             writer.write(",isFullWidth: true");
         }
         
-        writer.write("},'editor');});");
+        writer.write("});});");
 
         endScript(writer);
     }

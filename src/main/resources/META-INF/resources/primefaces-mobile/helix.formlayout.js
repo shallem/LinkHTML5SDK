@@ -100,9 +100,11 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 .append(formElem.fieldTitle)
             )
             .append(editorInput));
-            PrimeFaces.cw('Editor', editorID + "_widget", {
+            $(editorInput).cleditor({
                 'id' : editorID,
-                'width' : $(parentDiv).width(),
+                'widget' : editorID + "_widget",
+                'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
+                'height' : (formElem.height ? formElem.height : 250),
                 'page' : page
             });
         } else {
@@ -127,6 +129,37 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'style' : frameStyle
             }));
         }
+    } else if (formElem.type === 'button') {
+        var $buttonLink;
+        if (!formElem.title) {
+            formElem.title = "";
+        }
+        if (formElem.iconClass) {
+            $buttonLink = $('<a />').attr({
+                'data-role' : 'button',
+                'data-iconpos' : 'bottom',
+                'data-icon' : formElem.iconClass,
+                'data-iconshadow' : true,
+                'class' : 'iconbutton'
+            }).append(formElem.title).button();            
+        } else {
+            $buttonLink = $('<a />').attr({
+                'data-role' : 'button',
+                'data-inline' : true,
+                'data-theme' : 'b'
+            }).append(formElem.title).button();
+        }
+        if (formElem.href) {
+            $buttonLink.attr('href', formElem.href);
+        } else {
+            $buttonLink.attr('href', 'javascript:void(0);');
+        }
+        if (formElem.onclick) {
+            $buttonLink.on('tap', function() {
+                formElem.onclick($fieldContainer);
+            });
+        }
+        $buttonLink.appendTo($fieldContainer);
     } else if (formElem.type === 'buttonGroup') {
         var formButton;
         var formButtonIdx;
@@ -135,7 +168,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             'data-role' : 'controlgroup',
             'data-type' : 'horizontal',
             'class' : 'buttonBarMaster buttonbar'
-        });
+        }).appendTo($fieldContainer);
         for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
             formButton = formElem.buttons[formButtonIdx];
             var $buttonLink = $('<a />').attr({
@@ -466,7 +499,9 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
         }
     }    
     
-    Helix.Layout.updateScrollers(formLayout.scroller);
+    if (formLayout.scroller) {
+        Helix.Layout.updateScrollers(formLayout.scroller);
+    }
 }
 
 Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page) {
@@ -508,7 +543,9 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
     $(dialogForm).data("DIALOG", dialogFields);
     $(dialogForm).width($.mobile.activePage.width());
     dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
-    Helix.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
+    dialogFields.mode = true; /* Edit mode. */
+    dialogFields.separateElements = false; /* Do not separate elements. */
+    Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page);
 
     setTimeout(function() {
         $(dialogObj.page).appendTo($.mobile.pageContainer);

@@ -247,7 +247,7 @@
 		    <include>colorpicker/utils.js</include>
 
 		    <!-- Dialog box component using jQM popups. -->
-		    <!-- <include>dialog/helix.dialog.js</include> -->
+		    <include>dialog/helix.dialog.js</include>
 
 		    <!-- Depends on colorpicker. -->
  		    <include>editor/editor.js</include>
