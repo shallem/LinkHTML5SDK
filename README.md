@@ -9,7 +9,7 @@ Safari for iOS or Chrome), laptops/desktops (using either Chrome or
 Safari), or within the Link Container, integrated into the Link
 product from Mobile Helix. Integration with the Link Container
 provides transparent data security, authentication, and key
-management, all of which must be implmentedd by the particular
+management, all of which must be implemented by the particular
 application if it runs in a standard browser without Link.
 
 The best place to start with the SDK is in the doc/ directory. The
@@ -29,7 +29,11 @@ contexts, and we intend to keep it that way. Individual components are
 governed under separate license when applicable (e.g., jQuery Mobile
 and jQuery are governed by the MIT License), but we have taken care to
 ensure that each component is fully open and free software, with no
-"copy-left" provisions,
+"copy-left" provisions used in any GPL, LGPL, or AGPL license. Most
+components are licensed under an MIT, BSD, or Apache-style license
+with a few variations on that theme. As we complete our documentation
+we will take care to clearly explain any licensing implications of the
+various 3rd party components.
 
 jQuery Mobile
 =============
