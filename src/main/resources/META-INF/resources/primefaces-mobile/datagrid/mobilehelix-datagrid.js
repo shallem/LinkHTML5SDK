@@ -8,8 +8,8 @@ PrimeFaces.widget.MobileDataGrid = PrimeFaces.widget.BaseWidget.extend({
 
         // Private variables.
         this.currentPage = 0;
-        this.CONTENT_CLASS_MOBILE = "ui-datagrid-content ui-widget-content pm-scroller";
-        this.EMPTY_CONTENT_CLASS = "ui-datagrid-content  ui-datagrid-content-empty ui-widget-content";
+        this.CONTENT_CLASS_MOBILE = "ui-datagrid-content ui-widget-content pm-scroller pm-scroller-nozoom pm-layout-full-height";
+        this.EMPTY_CONTENT_CLASS = "ui-datagrid-content ui-datagrid-content-empty ui-widget-content pm-layout-full-height";
 	this.TABLE_CLASS = "ui-datagrid-data";
 	this.TABLE_ROW_CLASS = "ui-datagrid-row";
 	this.TABLE_COLUMN_CLASS = "ui-datagrid-column pm-full-height";
@@ -89,7 +89,7 @@ PrimeFaces.widget.MobileDataGrid = PrimeFaces.widget.BaseWidget.extend({
         if (paginatorContainer.length == 0) {
             paginatorContainer = $('<div />').attr({
                     'id' : this.paginatorId,
-                    'class': PrimeFaces.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS
+                    'class': Helix.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS
                 }).appendTo($(this.parent));
         } else {
             // Clear out all children of the paginator so that we can refresh it.
@@ -97,7 +97,7 @@ PrimeFaces.widget.MobileDataGrid = PrimeFaces.widget.BaseWidget.extend({
         }
         var parent = this;
         $.each(this.paginatorTemplate.split(" "), function(idx, obj) {
-            PrimeFaces.Utils.paginator.render(obj, paginatorContainer, {
+            Helix.Utils.paginator.render(obj, paginatorContainer, {
                 'page' : parent.currentPage,
                 'totalItems' : nElems,
                 'itemsPerPage' : parent.itemsPerPage,
@@ -236,9 +236,9 @@ PrimeFaces.widget.MobileDataGrid = PrimeFaces.widget.BaseWidget.extend({
     },
     getDimensionForDeviceType: function(dimensionString) {
         var rowsOptions = dimensionString.split(",");
-        if (PrimeFaces.deviceType == 'phone') {
+        if (Helix.deviceType == 'phone') {
             return rowsOptions[0];
-        } else if (PrimeFaces.deviceType == 'phablet') {
+        } else if (Helix.deviceType == 'phablet') {
             return rowsOptions[1];
         } else {
             return rowsOptions[rowsOptions.length - 1];
