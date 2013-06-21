@@ -154,7 +154,7 @@ public class PageRenderer extends CoreRenderer {
         writer.write("}");*/
 
         // Set a global variable with the context root.
-        writer.write("PrimeFaces.contextRoot = '" + context.getExternalContext().getRequestContextPath() + "';");
+        writer.write("Helix.contextRoot = '" + context.getExternalContext().getRequestContextPath() + "';");
         
         // Initialize jQuery Mobile
         writer.write("$(document).bind('mobileinit', function(){");

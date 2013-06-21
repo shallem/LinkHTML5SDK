@@ -35,5 +35,18 @@ Helix.DB.Utils = {
      */
     defaultFieldSync: function(persistentObjSetter, newObj, fieldName) {
         return false;
+    },
+    
+    /**
+     * Default array refinement function that just returns the identity (i.e., returns
+     * the query collection it is given). This override is used when only a subset
+     * of a table is synchronized during a load command.
+     * 
+     * @param field The name of the field we are synchronizing against the query collection.
+     * @param queryCollection Collection in the DB that should match the array pointed to by field.
+     * @return Returns a query collection that represents the proper set of objects to compare.
+     */
+    identityRefineEntityArray: function(field, queryCollection) {
+        return queryCollection;
     }
 };

@@ -742,6 +742,13 @@ Helix.DB = {
             elemMap[curElem[elemKeyField]] = curElem;
         }
         
+        /* Refine the query collection using a user-configured call. By default this is
+         * an identity call (i.e, it just returns parentCollection). However, in some
+         * cases the user knows that a load only loaded a subset of a data list from
+         * the server. This call is used to refine the list for comparison.
+         */
+        persistentObj = overrides.refineEntityArray(field, parentCollection);
+        
         /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
          * efficient way to do this!
          */
@@ -954,6 +961,9 @@ Helix.DB = {
         }
         if (!overrides.syncFields) {
             overrides.syncFields = Helix.DB.Utils.defaultFieldSync;
+        }
+        if (!overrides.refineEntityArray) {
+            overrides.refineEntityArray = Helix.DB.Utils.identityRefineEntityArray;
         }
 
         if (Object.prototype.toString.call(obj) === '[object Array]') {

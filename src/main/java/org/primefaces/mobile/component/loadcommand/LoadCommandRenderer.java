@@ -30,7 +30,6 @@ import javax.faces.context.ResponseWriter;
 import org.primefaces.mobile.model.JSONSerializer;
 import org.primefaces.mobile.model.LoadCommandAction;
 import org.primefaces.renderkit.CoreRenderer;
-import org.primefaces.util.ComponentUtils;
 
 public class LoadCommandRenderer extends CoreRenderer {
 
@@ -188,8 +187,16 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("};\n");
         
         writer.write("var syncOverrides = {");
+        boolean needsComma = false;
         if (cmd.getSyncFieldsOverride() != null) {
             writer.append(" 'syncFields' : " + cmd.getSyncFieldsOverride());
+            needsComma = true;
+        }
+        if (cmd.getRefineOverride() != null) {
+            if (needsComma) {
+                writer.append(",");
+            }
+            writer.append(" 'refineEntityArray' : " + cmd.getRefineOverride());
         }
         writer.write("};\n");
         
