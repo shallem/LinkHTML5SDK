@@ -212,12 +212,18 @@
 
 /* Eliminate the default context menus on Links and the main body on an iPad. These conflict
    with context menus we create in the SDK with the taphold event. */
-body { -webkit-touch-callout: none !important; }
+* { 
+    -webkit-touch-callout: none !important; 
+}
+/*
 img { 
+    -webkit-touch-callout: none !important;
+}
+div {
     -webkit-touch-callout: none !important;
 }
 a {
     -webkit-touch-callout: none !important;
-}
+}*/
 
 /*a { -webkit-user-select: none !important; }*/

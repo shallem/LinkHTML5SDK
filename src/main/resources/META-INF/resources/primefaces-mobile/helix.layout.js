@@ -288,8 +288,21 @@ Helix.Layout = {
     
     layoutPageFullScreen: function() {
         var contentHeight = Helix.Layout.resizePages();
-        $('[data-role="content"]', $.mobile.activePage).children('.pm-layout-full-height,.mh-layout-parent-height').each(function() {
-            Helix.Layout.layoutFullHeightComponent(contentHeight, this);
+        $('[data-role="content"]', $.mobile.activePage).children().each(function() {
+            if ($(this).is("style,script")) {
+                // Skip style and script tags - see note at http://api.jquery.com/height/
+                return;
+            }
+            if (!$(this).is(":visible")) {
+                // Skip hidden components.
+                return;
+            }
+            
+            if ($(this).is('.pm-layout-full-height,.mh-layout-parent-height')) {
+                Helix.Layout.layoutFullHeightComponent(contentHeight, this);
+            } else {
+                contentHeight = contentHeight - $(this).outerHeight(true);
+            }
         });        
     }
 };
@@ -429,4 +442,9 @@ Helix.deviceType = (function() {
     } else {
         return "tablet";
     }
+})();
+
+Helix.hasTouch = (function() {
+    return !!('ontouchstart' in window) // works on most browsers 
+        || !!('onmsgesturechange' in window); // works on ie10
 })();

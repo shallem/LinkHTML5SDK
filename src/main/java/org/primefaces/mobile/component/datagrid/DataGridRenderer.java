@@ -103,7 +103,7 @@ public class DataGridRenderer extends DataRenderer {
 
         startScript(writer, clientId);
 
-        writer.write("\n(function() {");
+        writer.write("\n(function($) {");
         
         // Define the data list and condition, handling the case where a data widget
         // is specified and that widget may be undefined.
@@ -126,8 +126,7 @@ public class DataGridRenderer extends DataRenderer {
         }
         
         // Setup the widget.
-        writer.write("\nPrimeFaces.cw('MobileDataGrid','" + grid.resolveWidgetVar() + "',{");
-        writer.write("id:'" + clientId + "',");
+        writer.write("\n" + grid.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDatagrid({");
         if (grid.getPaginatorTemplate() != null) {
             writer.write("paginatorTemplate: '" + grid.getPaginatorTemplate() + "',");
         }
@@ -150,9 +149,9 @@ public class DataGridRenderer extends DataRenderer {
         writer.write("renderer: " + grid.getRenderer() + ",");
         writer.write("rows: '" + grid.getRows() + "',");
         writer.write("cols: '" + grid.getCols() + "'");
-        writer.write("});");
+        writer.write("}).data('helix-helixDatagrid');");
 
-        writer.write("})();\n");
+        writer.write("})(jQuery);\n");
         
         endScript(writer);
     }
