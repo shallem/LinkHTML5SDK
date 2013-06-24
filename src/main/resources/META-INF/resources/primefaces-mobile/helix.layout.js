@@ -280,8 +280,8 @@ Helix.Layout = {
         var headerHeight = $.mobile.activePage.children('[data-role="header"]').height();
         var footerHeight = $.mobile.activePage.children('[data-role="footer"]').height();
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
-        $.mobile.activePage.children('[data-role="content"]').css('height', contentHeight);
-        $.mobile.activePage.children('[data-role="content"]').css('width', width);
+        $.mobile.activePage.find('.hx-main-content').css('height', contentHeight);
+        $.mobile.activePage.find('.hx-main-content').css('width', width);
         
         return contentHeight;
     },

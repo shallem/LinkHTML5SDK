@@ -32,6 +32,14 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         this.rowStyleClass = this.cfg.rowStyleClass;
         this.dividerStyleClass = this.cfg.dividerStyleClass;
         this.selectAction = this.cfg.selectAction;
+        this.holdAction = this.cfg.holdAction;
+        
+        // Set context menu event to taphold for touch devices, dblclick for none-touch.
+        if (Helix.hasTouch) {
+            this.contextEvent = 'taphold';
+        } else {
+            this.contextEvent = 'dblclick';
+        }
         
         // Search
         this.isIndexedSearch = this.cfg.indexedSearch;
@@ -349,7 +357,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         if (_self.grouped) {
             curRowParent.attr('data-group-index', groupIndex);
         }
-        if (_self.selectAction) {
+        if (_self.selectAction || _self.holdAction) {
             curRowParent = $('<a />').attr({
                 'href' : "javascript:void(0);"
             }).appendTo(curRowParent);
@@ -364,7 +372,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         }
             
         if (_self.itemContextMenu) {
-            $(curRowParent).on('taphold', function(event) {
+            $(curRowParent).on(this.contextEvent, function(event) {
                 // This allows the container to have taphold context menus that are not
                 // triggered when this event is triggered.
                 event.stopImmediatePropagation();
@@ -380,6 +388,13 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
                 _self.selectItem();
                 event.stopPropagation();
             });
+        }
+        if (_self.holdAction) {
+           $(curRowParent).on(this.contextEvent, function(event) {
+                _self.setSelected(event.target);
+                _self.holdItem();
+                event.stopPropagation();
+            }); 
         }
         
         return topRowParent;
@@ -461,6 +476,13 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
         this.selectAction(this.selected, this.selectedGroup, this.strings);          
     },
     
+    holdItem: function() {
+        if (!this.selected) {
+            this.setSelectedByIndex(0, 0);
+        }
+        this.holdAction(this.selected, this.selectedGroup, this.strings);          
+    },
+    
     /**
      * Applies events related to sorting in a non-obstrusive way
      */
@@ -491,5 +513,12 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
     clearFilters: function() {
         this.itemList = this.allItems;
         this.refreshData();
+    },
+    
+    /**
+     * Refresh the scroller surrounding the datalist contents.
+     */
+    refreshScroller: function() {
+        Helix.Layout.updateScrollers($(this.jqID + "_wrapper"));
     }
 });

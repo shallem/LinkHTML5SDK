@@ -5,11 +5,9 @@
 package org.primefaces.mobile.component.iconbutton;
 
 import java.io.IOException;
-import java.util.Map;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import javax.faces.event.ActionEvent;
 import org.primefaces.renderkit.CoreRenderer;
 
 /**
@@ -17,22 +15,6 @@ import org.primefaces.renderkit.CoreRenderer;
  * @author shallem
  */
 public class IconButtonRenderer extends CoreRenderer {
-    @Override
-    public void decode(FacesContext context, UIComponent component) {
-        IconButton button = (IconButton) component;
-        if (button.isDisabled()) {
-            return;
-        }
-
-        Map<String, String> params = context.getExternalContext().getRequestParameterMap();
-        String clientId = component.getClientId(context);
-        String value = params.get(clientId);
-
-        if (!isValueBlank(value)) {
-            component.queueEvent(new ActionEvent(component));
-        }
-    }
-
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
@@ -51,18 +33,6 @@ public class IconButtonRenderer extends CoreRenderer {
         writer.writeAttribute("style", "min-width: " + Integer.toString(button.getWidth()), null);
         writer.writeAttribute("href", button.getHref(), null);
         
-        String onclick = button.getOnclick();
-        String request = button.isLocal() ? "" : buildAjaxRequest(context, button, null);
-        onclick = onclick != null ? (onclick + ";" + request) : request;
-        
-        //String aStyle = " ";
-        //if (button.getImage() != null) {
-        //    aStyle = "background-image: url('" + button.getImage() + "'); background-repeat: no-repeat; ";
-        //}
-        if (button.getStyle() != null) {
-            writer.writeAttribute("style", button.getStyle(), null);
-        }
-        
         String aClass = "iconbutton";
         if (button.getStyleClass() != null) {
             aClass = aClass + " " + button.getStyleClass();
@@ -72,6 +42,7 @@ public class IconButtonRenderer extends CoreRenderer {
         }
         writer.writeAttribute("class", aClass, null);
         
+        String onclick = button.getOnclick();
         if (!isValueBlank(onclick)) {
             writer.writeAttribute("onclick", onclick, "onclick");
         }

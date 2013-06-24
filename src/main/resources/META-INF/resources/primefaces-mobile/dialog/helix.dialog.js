@@ -20,9 +20,8 @@
         defaultOptions: {
             hasForm: false,
             onConfirm: null,
-            confirmId: null,
-            dismissId: null,
-            formId: null,
+            confirmTitle: "Confirm",
+            dismissTitle: "Dismiss",
             positionTo: 'origin'
         }
     };
@@ -57,10 +56,7 @@
     helixDialog = function(parent, options) {
         this.options = options = $.extend({}, $.helixDialog.defaultOptions, options);        
 
-        helixDialog.refresh();
-        
-        /* Create all jQuery components inside of the container. */
-        $(parent).trigger("create");
+        this.refresh();
     }
     
     //===============
@@ -92,28 +88,24 @@
     /**
      * Call this function to show the dialog.
      */
-    function show(formElems) {
-        if (this.options.hasForm && this.options.formId && formElems) {
+    function show(dialog,formElems) {
+        if (dialog.options.hasForm && formElems) {
             /* Layout the form dynamically. */
-            PrimeFaces.Utils.layoutForm($(this.options.formId), formElems);
+            Helix.Utils.layoutForm($(dialog.form), formElems);
         }
-        this.popup.popup( "open", { 
-            positionTo : this.options.positionTo
+        $(dialog.$mainDiv).popup( "open", { 
+            positionTo : dialog.options.positionTo
         });
     }
     
     function hide() {
-        this.popup.popup( "close" );
+        $(this.$mainDiv).popup( "close" );
     }
     
     function refresh() {
-        $(PrimeFaces.escapeClientId(this.options.id)).empty();
-        var $mainDiv = this.popup = $('<div/>').attr({
-            'id' : PrimeFaces.Utils.getUniqueID(),
-            'data-role' : 'popup',
-            'class' : this.options.styleClass + " ui-corner-all",
-            'style' : this.options.style
-        });
+        var $mainDiv = this.$mainDiv = $(PrimeFaces.escapeClientId(this.options.id));
+        $mainDiv.empty();
+        
         if (this.options.hasForm) {
             $mainDiv.attr('data-theme', 'a');
             $mainDiv.append($('<div/>').attr({
@@ -123,27 +115,27 @@
             $mainDiv.attr('data-theme', 'c');
             $mainDiv.attr('data-overlay-theme', 'a');
         }
-                
+    
         encodeHeader(this, $mainDiv);
         encodeContent(this, $mainDiv);
     }
 
     function encodeHeader(dialog,$mainDiv) {
         
-        if (dialog.hasForm) {
-            $mainDiv.append($('<h3/>').append(dialog.title));
+        if (dialog.options.hasForm) {
+            $mainDiv.append($('<h3/>').append(dialog.options.title));
         } else {
             $mainDiv.append($('<div/>').attr({
                 'data-role' : 'header',
                 'data-theme' : 'a',
                 'class' : dialog.titleStyleClass + ' ui-corner-top'
-            }).append($('<h1/>').append(dialog.title)));            
+            }).append($('<h1/>').append(dialog.options.title)));            
         }
     }
     
     function encodeContent(dialog,$mainDiv) {
-        var dialogContentClass = dialog.contentStyleClass;
-        if (dialog.hasForm) {
+        var dialogContentClass = dialog.options.contentStyleClass;
+        if (dialog.options.hasForm) {
             dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content";
         }
         var $contentDiv = $('<div/>').attr({
@@ -151,16 +143,17 @@
             'id' : dialog.options.id + "_content"
         });
         
-        if (!dialog.hasForm) {
+        if (!dialog.options.hasForm) {
             $contentDiv.attr('data-role', 'content');
             $contentDiv.attr('data-theme', 'd');
         
-            $contentDiv.append($('<h3/>').append(dialog.bodyHeader));
-            $contentDiv.append($('<p/>').append(dialog.bodyContent));
+            $contentDiv.append($('<h3/>').append(dialog.options.bodyHeader));
+            $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
         } else {
-            $contentDiv.append($('<form/>').attr({
+            dialog.form = $('<form/>').attr({
                 'id' : dialog.options.id + "_form"
-            }));
+            });
+            $contentDiv.append(dialog.form);
         }
         
         /* Cancel button. */
@@ -169,10 +162,11 @@
             'data-role' : 'button',
             'data-inline' : 'true',
             'data-theme' : 'c'
-        }).append(dialog.dismissTitle)
+        }).append(dialog.options.dismissTitle)
             .on('tap', function(ev) {
-                ev.preventDefault();
-                dialog.popup.popup( "close" );
+                ev.stopImmediatePropagation();
+                $(dialog.$mainDiv).popup( "close" );
+                return false;
             }
         ));
         
@@ -181,18 +175,18 @@
             'href' : 'javascript:void(0)',
             'data-role' : 'button',
             'data-inline' : 'true',
-            'data-them' : 'b',
+            'data-theme' : 'b',
             'data-transition' : 'flow'
-        }).append(dialog.confirmTitle)
+        }).append(dialog.options.confirmTitle)
             .on('tap', function(ev) {
-                ev.stopPropagation();
                 ev.preventDefault();
-                if (dialog.options.hasForm && dialog.options.formId) {
-                    dialog.options.onConfirm.call(dialog, $.serialize(dialog.options.formId));
+                if (dialog.options.hasForm && dialog.form) {
+                    dialog.options.onConfirm.call(dialog, $(dialog.form).serialize());
                 } else {
                     dialog.options.onConfirm.call(dialog);
                 }
-                dialog.popup.popup( "close" );
+                $(dialog.$mainDiv).popup( "close" );
+                return false;
             })
         );
 

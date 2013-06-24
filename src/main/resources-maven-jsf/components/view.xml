@@ -26,5 +26,12 @@
             <type>java.lang.String</type>
             <description>Swatch of the view.</description>
         </attribute>
+        <attribute>
+            <name>layoutFullPage</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>true</defaultValue>
+            <description>Indicate if this view is a fixed size, full page view (value of true), or if it should have a vertical scroll.</description>
+        </attribute>
 	</attributes>
 </component>

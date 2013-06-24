@@ -38,7 +38,13 @@
             <name>selectAction</name>
             <required>false</required>
             <type>java.lang.Object</type>
-            <description>JSF EL expression that will return detail for a table row based on the URL parameter key.</description>
+            <description>JavaScript expression to invoke when the user taps a list item.</description>
+        </attribute>
+        <attribute>
+            <name>holdAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript expresssion to invoke when the user tap-holds a list item.</description>
         </attribute>
         <attribute>
             <name>condition</name>

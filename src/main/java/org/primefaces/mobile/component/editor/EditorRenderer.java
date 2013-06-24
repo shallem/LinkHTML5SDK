@@ -59,7 +59,7 @@ public class EditorRenderer extends CoreRenderer {
         String valueToRender = ComponentUtils.getValueToRender(context, editor);
         
         String style = editor.getStyle();
-        style = style == null ? "visibility:hidden" : "visibility:hidden;" + style;
+        style = (style == null ? "" : style);
 
         writer.startElement("div", editor);
         writer.writeAttribute("id", clientId, null);

@@ -233,6 +233,7 @@
 
 		    <include>iscroll.js</include>
 
+		    <include>cordova/cordova-init.js</include>
 		    <include>cordova/cordova.ios.js</include>
 		    <include>cordova/cordova-plugins.js</include>
 

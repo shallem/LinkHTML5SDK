@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Mobile Helix, Inc.
+ * Copyright 2013 Mobile Helix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,4 @@
             return cordova.exec(success, fail, "OfflineSave", "openWith", [name, thumbURL, viewURL, editURL]);
         }
     };
-})();
-
-(function() {
-    window.CordovaInstalled = navigator.userAgent.match(/\[CORDOVA\]/);
 })();

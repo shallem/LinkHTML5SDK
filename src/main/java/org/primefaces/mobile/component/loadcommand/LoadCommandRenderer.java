@@ -173,7 +173,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         startScript(writer, clientId);
         writer.write(widgetName + " = null;");
    
-        writer.write("function " + cmd.getName() + "_load(schemaObj, params, itemKey){ ");
+        writer.write("function " + cmd.getName() + "_load(schemaObj, params, itemKey, oncomplete){ ");
         
         writer.write("var loadingOptions = {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
@@ -201,18 +201,18 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("};\n");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("Helix.Ajax.ajaxBeanLoad(requestOptions, loadingOptions, syncOverrides, ''{0}'', schemaObj, {1}, itemKey);",
+        writer.write(MessageFormat.format("Helix.Ajax.ajaxBeanLoad(requestOptions, loadingOptions, syncOverrides, ''{0}'', schemaObj, oncomplete, itemKey);",
                 new Object[] {
-                    cmd.resolveWidgetVar(),
-                    onComplete.toString()
+                    cmd.resolveWidgetVar()
                 }));
 
         writer.write("}");
         
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
-        writer.write("function " + cmd.getName() + "(params, itemKey){ ");
+        writer.write("function " + cmd.getName() + "(params, oncomplete, itemKey){ ");
         
+        writer.write("if (!oncomplete) {\n oncomplete = " + onComplete.toString() + "; }\n");
         writer.write("Helix.DB.generatePersistenceSchema(");
         writer.write(schema);
         writer.write(", '");
@@ -220,7 +220,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("',");
         writer.write(cmd.getName());
         writer.write("_load,");
-        writer.write("[params, itemKey]);");
+        writer.write("[params, itemKey, oncomplete]);");
         
         writer.write("}");
         

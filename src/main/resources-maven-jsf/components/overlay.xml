@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+]>
+<component>
+
+    <tag>overlay</tag>
+    <tagClass>org.primefaces.mobile.component.overlay.OverlayTag</tagClass>
+    <componentClass>org.primefaces.mobile.component.overlay.Overlay</componentClass>
+    <componentType>org.primefaces.mobile.Overlay</componentType>
+    <componentFamily>org.primefaces.mobile.component</componentFamily>
+    <rendererType>org.primefaces.mobile.component.OverlayRenderer</rendererType>
+    <rendererClass>org.primefaces.mobile.component.overlay.OverlayRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+
+    <attributes>
+		&standard_uicomponent_attributes;
+        <attribute>
+            <name>position</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>right</defaultValue>
+            <description>Indicate if the overlay should appear to the left or the right of the screen.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Style class attached to the parent div.</description>
+        </attribute>
+        <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>b</defaultValue>
+            <description>jQuery Mobile theme to apply to the overlay.</description>
+        </attribute>
+    </attributes>
+</component>

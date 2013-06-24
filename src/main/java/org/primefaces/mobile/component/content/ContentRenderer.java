@@ -34,12 +34,16 @@ public class ContentRenderer extends CoreRenderer {
         
         String contentStyle = "position:fixed;";
         if (content.isFullScreen()) {
-            contentStyle = contentStyle + " overflow: hidden;";
+            //contentStyle = contentStyle + " overflow: hidden;";
         }
         writer.writeAttribute("style", contentStyle, null);
         
         if(content.getStyle() != null) writer.writeAttribute("style", content.getStyle(), null);
-        if(content.getStyleClass() != null) writer.writeAttribute("class", content.getStyleClass(), null);
+        if(content.getStyleClass() != null) {
+            writer.writeAttribute("class", "hx-main-content " + content.getStyleClass(), null);
+        } else {
+            writer.writeAttribute("class", "hx-main-content", null);
+        }
     }
 
     @Override

@@ -130,6 +130,9 @@ public class DataListRenderer extends CoreRenderer {
             if (dlist.getSelectAction() != null) {
                 writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
             }
+            if (dlist.getHoldAction() != null) {
+                writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
+            }
         }
         
         // Search

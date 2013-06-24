@@ -841,8 +841,8 @@
     function refresh(editor) {
         if (editor.options.isFullWidth) {
             // Figure out the width available to the enclosing page tag.
-            var fullWidth = $(editor.$main).closest(".ui-content").width();
-            editor.options.width = (fullWidth * .95);
+            var fullWidth = $(editor.$main).closest(".ui-content").innerWidth();
+            editor.options.width = fullWidth;
         }
         if (editor.options.isFullHeight) {
             var fullHeight = $(editor.$main).closest(".ui-content").height()- 

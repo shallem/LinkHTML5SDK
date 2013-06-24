@@ -35,8 +35,12 @@ public class ViewRenderer extends CoreRenderer {
         writer.writeAttribute("id", view.getId(), "id");
         writer.writeAttribute("data-role", "page", null);
         writer.writeAttribute("class", "ui-page", null);
-        writer.writeAttribute("style", "overflow: hidden;", null);
-
+        if (view.isLayoutFullPage()) {
+            writer.writeAttribute("style", "overflow: hidden;", null);
+        } else {
+            writer.writeAttribute("style", "overflow-y: auto;", null);
+        }
+        
         if (swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);
         }
