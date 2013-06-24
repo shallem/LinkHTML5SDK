@@ -281,7 +281,10 @@ Helix.Layout = {
         var footerHeight = $.mobile.activePage.children('[data-role="footer"]').height();
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
         $.mobile.activePage.find('.hx-main-content').css('height', contentHeight);
-        $.mobile.activePage.find('.hx-main-content').css('width', width);
+        $.mobile.activePage.find('.hx-main-content').each(function() {
+            //var innerWidth = width - (this.offsetWidth - this.clientWidth);
+            $(this).css('width', width);
+        });
         
         return contentHeight;
     },

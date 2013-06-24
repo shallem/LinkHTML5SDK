@@ -34,7 +34,7 @@ public class ContentRenderer extends CoreRenderer {
         
         String contentStyle = "position:fixed;";
         if (content.isFullScreen()) {
-            //contentStyle = contentStyle + " overflow: hidden;";
+            contentStyle = contentStyle + " overflow: hidden;";
         }
         writer.writeAttribute("style", contentStyle, null);
         
