@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>formField</tag>
+    <tagClass>org.helix.mobile.component.formfield.FormFieldTag</tagClass>
+    <componentClass>org.helix.mobile.component.formfield.FormField</componentClass>
+    <componentType>org.helix.mobile.FormField</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.FormFieldRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.formfield.FormFieldRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Name of the form field.</description>
+        </attribute>
+        <attribute>
+            <name>title</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Title of the form field. This may be omitted and a title may be specified with a fieldLabel element.</description>
+        </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Width of this field. Default to full screen width. Otherwise specify as a percentage.</description>
+            <defaultValue>full</defaultValue>
+        </attribute>
+        <attribute>
+            <name>type</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Type of this field.</description>
+        </attribute>
+        <attribute>
+            <name>onblur</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript function to execute when focus leaves this input element. Currently only implemented for type text.</description>
+        </attribute>
+    </attributes>
+</component>

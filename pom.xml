@@ -178,6 +178,9 @@
 		<resource>
 		  <directory>${project.basedir}/src/main/resources/META-INF/resources/primefaces-mobile</directory>
 		</resource>
+		<resource>
+		  <directory>${project.basedir}/src/main/resources/META-INF/resources/helix</directory>
+		</resource>
 	      </resources>
 	    </configuration>
 	  </execution>
@@ -277,11 +280,16 @@
 		    <!-- Data list. -->
 		    <include>datalist/datalist.js</include>
 
-		    <include>primefaces-mobile.js</include>
+		    <!-- Form Layout -->
+		    <!-- <include>form/formLayout.js</include> -->
+
 		    <include>helix.utils.js</include>
 		    <include>helix.ajax.js</include>
 		    <include>helix.layout.js</include>
 		    <include>helix.formlayout.js</include>
+
+		    <!-- PrimeFaces Mobile - XXX: remove. -->
+		    <include>primefaces-mobile.js</include>
 
 		  </includes>
 		  <aggregations>

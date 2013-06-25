@@ -169,9 +169,16 @@ Helix.DB = {
         /* Next, check to see if this specific schema is already available from a previous call to
          * generatePersistenceSchema. 
          */
-        if (window.__pmAllSchemas[schemaTemplate.__pm_schema_name]) {
+        var schemaNameToCheck;
+        if (Object.prototype.toString.call(schemaTemplate) === '[object Array]') {
+            schemaNameToCheck = schemaTemplate[0].__pm_schema_name;
+        } else {
+            schemaNameToCheck = schemaTemplate.__pm_schema_name;
+        }
+        
+        if (window.__pmAllSchemas[schemaNameToCheck]) {
             // We have already created all schemas associated with this widget.
-            oncompleteArgs = [ window.__pmAllSchemas[schemaTemplate.__pm_schema_name] ];
+            oncompleteArgs = [ window.__pmAllSchemas[schemaNameToCheck] ];
             oncompleteArgs = oncompleteArgs.concat(opaque);
             oncomplete.apply(this, oncompleteArgs);
             return;

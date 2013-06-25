@@ -70,8 +70,16 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             )
             .append(inputMarkup));
             $(inputMarkup).textinput();
+            if (formElem.fieldTitleType === 'button') {
+                $(formElem.fieldTitle).button();
+            }
+            if (formElem.onblur) {
+                $(inputMarkup).blur(function() {
+                    formElem.onblur(this);
+                });
+            }
         } else {
-            if (formElem.fieldTitle) {
+            if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
                 $fieldContainer.append(" " + formElem.value);
             } else {
                 $fieldContainer.append($('<p />').append(formElem.value));
@@ -79,6 +87,11 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         }
     } else if (formElem.type === 'htmlarea') {
         if (mode) {
+            var editorWidth = formElem.width;
+            var isFullWidth = false;
+            if (formElem.width === "full") {
+                isFullWidth = true;
+            }
             if (!formElem.name) {
                 /* No field name. We cannot edit this field. */
                 return;
@@ -104,6 +117,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'id' : editorID,
                 'widget' : editorID + "_widget",
                 'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
+                'isFullWidth' : isFullWidth,
                 'height' : (formElem.height ? formElem.height : 250),
                 'page' : page
             });
@@ -171,23 +185,30 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         }).appendTo($fieldContainer);
         for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
             formButton = formElem.buttons[formButtonIdx];
-            var $buttonLink = $('<a />').attr({
+            var $buttonBarLink = $('<a />').attr({
                 'data-role' : 'button',
                 'data-iconpos' : 'bottom',
                 'data-icon' : formButton.iconClass,
-                'data-iconshadow' : true,
+                'data-iconshadow' : false,
                 'class' : 'iconbutton'
             });
+            if (formButton.title) {
+                $buttonBarLink.append(formButton.title);
+            } 
             if (formButton.href) {
-                $buttonLink.attr('href', formButton.href);
+                $buttonBarLink.attr('href', formButton.href);
             } else {
-                $buttonLink.attr('href', 'javascript:void(0);');
+                $buttonBarLink.attr('href', 'javascript:void(0);');
             }
             if (formButton.onclick) {
-                $buttonLink.attr('onclick', formButton.onclick);
+                $buttonBarLink.on('tap', function() {
+                    formButton.onclick(this);
+                });
             }
-            $buttonLink.appendTo($buttonBar);
-        }                
+            $buttonBarLink.appendTo($buttonBar);
+            $buttonBarLink.button();
+        }
+        $buttonBar.controlgroup({ type: "horizontal" });
     } else if (formElem.type == 'date') {
         if (mode) {
             if (!formElem.name) {
@@ -405,6 +426,11 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                $(txtElem).hide();
            });
        }
+    } else if (formElem.type == 'horizontalScroll') {
+        $('<div />').attr({
+            'class' : 'pm-scroller-horizontal pm-scroller-nozoom',
+            'id' : formElem.name
+        }).append(formElem.fieldTitle).appendTo($fieldContainer);
     } else if (formElem.type == 'separator') {
         $('<hr />').appendTo($fieldContainer);
     } else {

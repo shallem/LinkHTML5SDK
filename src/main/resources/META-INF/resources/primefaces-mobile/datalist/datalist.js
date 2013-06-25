@@ -253,7 +253,7 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
                 ++rowIndex;
             }
         } else if (list && list.forEach) {
-            var displayList;
+            var displayList = list;
             if (startElem > 0) {
                 displayList = displayList.skip(_self.startElem);
             }
@@ -261,13 +261,18 @@ PrimeFaces.widget.DataList = PrimeFaces.widget.BaseWidget.extend({
                 displayList = displayList.limit(limitCt);                
             }
             if (orderby) {
-                if (direction == "DESCENDING") {
-                    displayList = list.order(orderby, false);
-                } else {
-                    displayList = list.order(orderby, true);
+                var orderbyFields = orderby.split(",");
+                var directionVals = direction.split(",");
+                
+                var oidx = 0;
+                for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
+                    var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
+                    if (latestDirection == "DESCENDING") {
+                        displayList = displayList.order(orderbyFields[oidx], false);
+                    } else {
+                        displayList = displayList.order(orderbyFields[oidx], true);
+                    }
                 }
-            } else {
-                displayList = list;
             }
 
             displayList.count(function(count) {

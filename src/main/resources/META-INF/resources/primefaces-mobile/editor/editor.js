@@ -219,6 +219,8 @@
             // Update the iframe when the textarea loses focus
             updateFrame(editor, true);
         });
+        
+        editor.name = $(area).attr('name');
 
         // Create the main container and append the textarea
         var $parent = editor.$parent = $(DIV_TAG);
@@ -280,7 +282,7 @@
             'data-role' : "button",
             'data-theme' : "a"
         }).append("Actions")
-        .appendTo($toolbar)
+        .appendTo($toolbar);
 
         // Now add in the actual popups
         var $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
@@ -295,10 +297,12 @@
             'data-history': 'false',
             'data-theme' : 'a',
             'id' : 'fontsPopup'
-        }).append($fontMenu).appendTo($parent);
+        }).append($fontMenu)
+        .appendTo($parent);
         $.each(options.controls.font.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
         });
+        $fontMenu.listview()
     
         var $styleMenuPopup = $(DIV_TAG)
         .attr({
@@ -316,6 +320,7 @@
         $.each(options.controls.styles.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
         });
+        $styleMenu.listview();
 
         var $formatMenuPopup = $(DIV_TAG)
         .attr({
@@ -333,6 +338,7 @@
         $.each(options.controls.formats.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
         });
+        $formatMenu.listview();
 
         var $actionMenuPopup = $(DIV_TAG)
         .attr({
@@ -350,8 +356,20 @@
         $.each(options.controls.actions.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
         });
-    
+        $actionMenu.listview();
         $toolbar.appendTo($parent);
+        
+        $styleCommands.button();
+        $fontCommands.button();
+        $actionCommands.button();
+        $formatCommands.button();
+        
+        $fontMenuPopup.popup();
+        $styleMenuPopup.popup();
+        $formatMenuPopup.popup();
+        $actionMenuPopup.popup();
+    
+        $toolbar.controlgroup();
     
         // Bind the window resize event when the width or height is auto or %
         if (/auto|%/.test("" + options.width + options.height))
@@ -375,11 +393,13 @@
             refresh(editor);
         }
 
-        $(editor.page).on('pageshow', function() {
+        var eventName = 'pageshow.' + editor.name;
+        $(editor.page).off(eventName).on(eventName, function() {
             refresh(editor);
         });
         
         $(editor.$main).on("remove", function() {
+            $(editor.page).off(eventName);
             editor.destroy();
         });
         

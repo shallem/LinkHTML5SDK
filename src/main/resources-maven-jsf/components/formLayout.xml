@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>formLayout</tag>
+    <tagClass>org.helix.mobile.component.formlayout.FormLayoutTag</tagClass>
+    <componentClass>org.helix.mobile.component.formlayout.FormLayout</componentClass>
+    <componentType>org.helix.mobile.FormLayout</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.FormLayoutRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.formlayout.FormLayoutRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    <attributes>
+            &widget_var_attribute;
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Client ID of this form layout.</description>
+        </attribute>
+        <attribute>
+            <name>editMode</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates if the form should be displayed in view or edit mode.</description>
+        </attribute>
+        <attribute>
+            <name>separateElements</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates if a horizontal separator should be placed in between form fields.</description>
+        </attribute>
+    </attributes>
+</component>
