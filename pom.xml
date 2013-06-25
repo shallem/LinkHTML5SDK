@@ -281,7 +281,7 @@
 		    <include>datalist/datalist.js</include>
 
 		    <!-- Form Layout -->
-		    <!-- <include>form/formLayout.js</include> -->
+		    <include>form/formLayout.js</include>
 
 		    <include>helix.utils.js</include>
 		    <include>helix.ajax.js</include>

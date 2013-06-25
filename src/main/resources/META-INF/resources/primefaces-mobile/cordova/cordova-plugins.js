@@ -19,7 +19,7 @@
             if (component === undefined) {
                 return cordova.exec(success, fail, "ExternalFileUtil", "openWith", [name, editURL, 0, 0]);
             }
-            var position = PrimeFaces.Utils.getPosition(component);
+            var position = Helix.Utils.getPosition(component);
             return cordova.exec(success, fail, "ExternalFileUtil", "openWith", [name, editURL, position.x, position.y ]);
         }
     };
