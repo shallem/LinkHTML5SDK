@@ -199,8 +199,8 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 $buttonBarLink.attr('href', 'javascript:void(0);');
             }
             if (formButton.onclick) {
-                $buttonBarLink.on('tap', function() {
-                    formButton.onclick(this);
+                $buttonBarLink.on('tap', function(ev) {
+                    formButton.onclick(this, ev);
                 });
             }
             $buttonBarLink.appendTo($buttonBar);

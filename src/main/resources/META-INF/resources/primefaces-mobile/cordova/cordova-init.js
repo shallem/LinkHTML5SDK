@@ -15,4 +15,5 @@
  */
 (function() {
     window.CordovaInstalled = navigator.userAgent.match(/\[CORDOVA\]/);
+    //window.CordovaInstalled = true;
 })();
