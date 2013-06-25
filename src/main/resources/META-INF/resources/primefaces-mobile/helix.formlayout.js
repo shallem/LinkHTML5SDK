@@ -55,7 +55,6 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             
             var inputMarkup = $('<input />').attr({
                 'name': formElem.name,
-                'id': formElem.name,
                 'type': 'text',
                 'value': formElem.value
             });
@@ -99,10 +98,9 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             
             var editorID = Helix.Utils.getUniqueID();
             var editorInput = $('<textarea />').attr({
-                'value' : formElem.value,
                 'name' : formElem.name,
                 'id' : editorID + "_input"
-            });
+            }).append(formElem.value);
             $fieldContainer.append($('<div />').attr({
                 'data-role' : 'fieldcontain',
                 'id' : editorID
@@ -168,12 +166,12 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         } else {
             $buttonLink.attr('href', 'javascript:void(0);');
         }
+        $buttonLink.appendTo($fieldContainer);
         if (formElem.onclick) {
             $buttonLink.on('tap', function() {
                 formElem.onclick($fieldContainer);
             });
         }
-        $buttonLink.appendTo($fieldContainer);
     } else if (formElem.type === 'buttonGroup') {
         var formButton;
         var formButtonIdx;
@@ -238,11 +236,12 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'id': formElem.name,
                 'type': 'text',
                 'data-role' : 'datebox',
-                'value' : defaultValueText,
+                'style' : 'width: 50%; font-size: 16px',
+                'class' : 'ui-input-text',
                 'data-options' : '{"mode" : "flipbox", "useNewStyle":true, "defaultValue":' + defaultValue + '}'
-            }));
+            }).datebox());
+            // 'value' : defaultValueText,
             $fieldContainer.append(dateDiv);
-            dateDiv.width("50%");
         } else {
             var dateMarkup;
             if (formElem.value) {
@@ -278,9 +277,10 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         $('<div />').attr({
             'class' : 'ui-block-b'
         }).append($('<button />').attr({
-            'data-theme' : 'c',
+            'data-theme' : 'b',
             'type' : 'submit'
             }).append(buttonTitle)
+              .button()
               .on('tap', function(e) {
                     e.stopPropagation();
                     e.preventDefault();
@@ -539,7 +539,8 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
             'id' : dialogId,
             'page' : $('<div />').attr({
                 'data-role' : 'page',
-                'id' : dialogId
+                'id' : dialogId,
+                'data-history' : false
             }).append($('<div />').attr({
                 'data-role' : 'header',
                 'data-position' : 'fixed'
@@ -553,7 +554,9 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
                     }).append('Back')
                 )
             ).append($('<div />').attr({
-                'data-role' : 'content'
+                'data-role' : 'content',
+                'style' : 'overflow-y: auto;',
+                'class' : 'hx-main-content'
                 }).append($('<form />'))
             ),
             'fields' : dialogFields
@@ -571,34 +574,40 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
     dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
     dialogFields.mode = true; /* Edit mode. */
     dialogFields.separateElements = false; /* Do not separate elements. */
+    $(dialogObj.page).appendTo($.mobile.pageContainer);
+    
+    //initialize the new page 
+    //$.mobile.initializePage();
+    
+    $(dialogObj.page).page();
+    //$(dialogObj.page).trigger("pagecreate");
+    
     Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page);
-
-    setTimeout(function() {
-        $(dialogObj.page).appendTo($.mobile.pageContainer);
-    }, 0);
-
-/*    $(dialogObj.page).on('pageshow', function() {
-        
-    });
-*/
+    
     return dialogObj;
 }
 
-Helix.Utils.refreshDialog = function(dialogFields, dialogObj, refreshDone) {
-    $(dialogObj.page).remove();
+Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone) {
     var dialogForm = $(dialogObj.page).find('form');
-    $(dialogForm).empty();
-    $(dialogForm).data("DIALOG", dialogFields);
-    $(dialogForm).width($.mobile.activePage.width());
-    dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
-    Helix.Utils.layoutFormElement(dialogFields, dialogForm, true, false, dialogObj.page);
-    setTimeout(function() {
-        $(dialogObj.page).on('pagecreate', function() {
-            refreshDone();
-        });
-        $(dialogObj.page).appendTo($.mobile.pageContainer);
-        $(dialogObj.page).page();
-    }, 0);
+    
+    var idx = 0;
+    for (idx = 0; idx < dialogFields.items.length; ++idx) {
+        var formElem = dialogFields.items[idx];
+        var inputElem = $(dialogForm).find("[name='" + formElem.name + "']");
+        if (inputElem) {
+            if (formElem.type === "htmlarea") {
+                $(inputElem).text(formElem.value);
+                $(inputElem).data("cleditor").refresh();
+            } else if (formElem.type === "date") {
+                //$(inputElem).datebox('setDate', new Date(parseInt(formElem.value)));
+                $(inputElem).trigger('datebox', {'method':'set', 'value':parseInt(formElem.value)}).trigger('datebox', {'method':'doset'});
+            } else if (formElem.type === "text" ||
+                       formElem.type === "hidden") {
+                $(inputElem).attr('value', formElem.value);
+            }
+        }
+    }
+    refreshDone();
 }
 
 Helix.Layout.createConfirmDialog = function(options) {

@@ -302,7 +302,6 @@
         $.each(options.controls.font.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
         });
-        $fontMenu.listview()
     
         var $styleMenuPopup = $(DIV_TAG)
         .attr({
@@ -320,7 +319,6 @@
         $.each(options.controls.styles.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
         });
-        $styleMenu.listview();
 
         var $formatMenuPopup = $(DIV_TAG)
         .attr({
@@ -338,7 +336,6 @@
         $.each(options.controls.formats.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
         });
-        $formatMenu.listview();
 
         var $actionMenuPopup = $(DIV_TAG)
         .attr({
@@ -355,9 +352,13 @@
         }).appendTo($actionMenuPopup);
         $.each(options.controls.actions.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
-        });
-        $actionMenu.listview();
+        });        
         $toolbar.appendTo($parent);
+        
+        $styleMenu.listview();
+        $formatMenu.listview();
+        $fontMenu.listview()
+        $actionMenu.listview();
         
         $styleCommands.button();
         $fontCommands.button();

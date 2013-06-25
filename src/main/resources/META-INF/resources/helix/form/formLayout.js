@@ -57,17 +57,45 @@
          * 
          * @param valuesMap Map form field names to values.
          */
-        refresh: function(valuesMap) {
-            if (valuesMap) {
-                var idx = 0;
-                for (idx = 0; idx < this.options.items.length; ++idx) {
-                    var fldName = this.options.items[idx].name;
-                    if (fldName in valuesMap) {
-                        this.options.items[idx].value = valuesMap[fldName];
+        refresh: function(valuesMap) {            
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var fldName = this.options.items[idx].name;
+                if (valuesMap && (fldName in valuesMap)) {
+                    this.options.items[idx].value = valuesMap[fldName];
+                } else {
+                    this.options.items[idx].value = "";
+                }
+            }    
+           Helix.Utils.layoutForm(this.element, this.options, this.page);
+        },
+        
+        serialize: function() {
+            var idx = 0;
+            var toSerialize = [];
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                var fieldType = this.options.items[idx].type;
+                $('[name="' + fieldID + '"]').each(function() {
+                    if (fieldType !== "htmlarea" &&
+                        fieldType !== "text") {
+                        /* All other types are unserializable. */
+                        return;
                     }
-                }    
+                    
+                    if (fieldType === "htmlarea") {
+                        var $editor = $(this).data('cleditor');
+                        if ($editor) {
+                            $editor.updateTextArea();
+                        }
+                    }
+                    toSerialize.push({
+                        name : fieldID,
+                        value: $(this).attr('value')
+                    });
+                });
             }
-            Helix.Utils.layoutForm(this.element, this.options, this.page);
+            return $.param(toSerialize);
         }
     });
 }( jQuery ));
