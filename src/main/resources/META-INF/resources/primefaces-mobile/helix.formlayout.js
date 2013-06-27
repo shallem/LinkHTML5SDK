@@ -563,26 +563,27 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
         };
         isCreated = true;
     }
+    
     if (!isCreated) {
-         $(dialogObj.page).remove();
-    }
+        Helix.Utils.refreshDialogValues(dialogFields, dialogObj, null);
+    } else {
+        var dialogForm = $(dialogObj.page).find('form'); 
+        $(dialogForm).empty();
+        $(dialogForm).data("DIALOG", dialogFields);
+        $(dialogForm).width($.mobile.activePage.width());
+        dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
+        dialogFields.mode = true; /* Edit mode. */
+        dialogFields.separateElements = false; /* Do not separate elements. */
+        $(dialogObj.page).appendTo($.mobile.pageContainer);
 
-    var dialogForm = $(dialogObj.page).find('form'); 
-    $(dialogForm).empty();
-    $(dialogForm).data("DIALOG", dialogFields);
-    $(dialogForm).width($.mobile.activePage.width());
-    dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
-    dialogFields.mode = true; /* Edit mode. */
-    dialogFields.separateElements = false; /* Do not separate elements. */
-    $(dialogObj.page).appendTo($.mobile.pageContainer);
-    
-    //initialize the new page 
-    //$.mobile.initializePage();
-    
-    $(dialogObj.page).page();
-    //$(dialogObj.page).trigger("pagecreate");
-    
-    Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page);
+        //initialize the new page 
+        //$.mobile.initializePage();
+
+        $(dialogObj.page).page();
+        //$(dialogObj.page).trigger("pagecreate");
+
+        Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page);
+    }
     
     return dialogObj;
 }
@@ -600,14 +601,22 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                 $(inputElem).data("cleditor").refresh();
             } else if (formElem.type === "date") {
                 //$(inputElem).datebox('setDate', new Date(parseInt(formElem.value)));
-                $(inputElem).trigger('datebox', {'method':'set', 'value':parseInt(formElem.value)}).trigger('datebox', {'method':'doset'});
+                var dateValue;
+                if (!formElem.value) {
+                    dateValue = Date.now();
+                } else {
+                    dateValue = parseInt(formElem.value);
+                }
+                $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue}).trigger('datebox', {'method':'doset'});
             } else if (formElem.type === "text" ||
                        formElem.type === "hidden") {
                 $(inputElem).attr('value', formElem.value);
             }
         }
     }
-    refreshDone();
+    if (refreshDone) {
+        refreshDone();
+    }
 }
 
 Helix.Layout.createConfirmDialog = function(options) {

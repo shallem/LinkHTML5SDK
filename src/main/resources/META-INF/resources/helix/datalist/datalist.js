@@ -247,7 +247,6 @@
              * of the currently displayed items.
              */
             _self.unfilteredList = _self.itemList = list;
-            _self.displayList = [];
         
             if ((condition !== undefined) &&
                 !condition) {
@@ -437,6 +436,7 @@
             var displayCollection = _self.itemList;
         
             this._clearListRows();
+            _self.displayList = [];
         
             /* Generate the actual data for the current page. */
             if (_self.options.indexedSearch) {
@@ -446,7 +446,7 @@
             if (_self.options.headerText) {
                 $('<li />').attr({
                     'data-role' : 'list-divider'
-                }).append(_self.headerText)
+                }).append(_self.options.headerText)
                 .appendTo(_self.$parent);
             }
         
