@@ -283,6 +283,9 @@
 		    <!-- Form Layout -->
 		    <include>form/formLayout.js</include>
 
+		    <!-- Scrolling Div -->
+		    <include>scrollingdiv/scrollingdiv.js</include>
+
 		    <include>helix.utils.js</include>
 		    <include>helix.ajax.js</include>
 		    <include>helix.layout.js</include>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helix.mobile.component.formlayout;
+package org.helix.mobile.component.scrollingdiv;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;
@@ -21,42 +21,48 @@ import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 import org.primefaces.renderkit.CoreRenderer;
 
-public class FormLayoutRenderer extends CoreRenderer {
-
+/**
+ *
+ * @author shallem
+ */
+public class ScrollingDivRenderer extends CoreRenderer {
+    
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-        FormLayout layout = (FormLayout) component;
-        writer.startElement("div", layout);
-        writer.writeAttribute("id", layout.getClientId(context), "id");        
-        writer.endElement("div");
+        ScrollingDiv sdiv = (ScrollingDiv) component;
+        String id = sdiv.getClientId(context);
         
-        startScript(writer, layout.getClientId(context));
-        writer.write("\n(function($) {");
-        writer.write("\n" + layout.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + layout.getClientId(context) + "')).helixFormLayout({");
-        writer.write("items: [");
-        boolean isFirst = true;
-        for (UIComponent c : layout.getChildren()) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                writer.write(",\n");
-            }
+        // Output a full-width div enclosing the child. This is the wrapper.
+        writer.startElement("div", sdiv);
+        writer.writeAttribute("id", id, "id");
+        String customStyleClass = sdiv.getStyleClass();
+        if (customStyleClass != null) {
+            writer.writeAttribute("class", customStyleClass, null);
+        }
+        for (UIComponent c : sdiv.getChildren()) {
             c.encodeAll(context);
         }
-        writer.write("]");
-        writer.write(",mode: " + Boolean.toString(layout.isEditMode()));
-        writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
-        writer.write("}).data('helix-helixFormLayout');");
+        writer.endElement("div");
+        
+        
+        startScript(writer, sdiv.getClientId(context));
+        writer.write("\n(function($) {");
+        writer.write("\n" + sdiv.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + sdiv.getClientId(context) + "')).helixScrollingDiv({");
+        writer.write("orientation: " + sdiv.getOrientation());
+        writer.write(",zoom: " + Boolean.toString(sdiv.isZoom()));
+        writer.write(",width: " + sdiv.getWidth());
+        writer.write(",height: " + sdiv.getHeight());
+        writer.write("}).data('helix-helixScrollingDiv');");
         writer.write("})(jQuery);\n");
         endScript(writer);
     }
-    
+
     @Override
     public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
         //Rendering happens on encodeEnd
     }
-    
+
     @Override
     public boolean getRendersChildren() {
         return true;

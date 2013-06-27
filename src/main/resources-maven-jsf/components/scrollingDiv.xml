@@ -1,32 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
-<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
 
     <tag>scrollingDiv</tag>
-    <tagClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDivTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDiv</componentClass>
-    <componentType>org.primefaces.mobile.ScrollingDiv</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.ScrollingDivRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.scrollingdiv.ScrollingDivRenderer</rendererClass>
-    <parent>javax.faces.component.UIPanel</parent>
-
+    <tagClass>org.helix.mobile.component.scrollingdiv.ScrollingDivTag</tagClass>
+    <componentClass>org.helix.mobile.component.scrollingdiv.ScrollingDiv</componentClass>
+    <componentType>org.helix.mobile.ScrollingDiv</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ScrollingDivRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.scrollingdiv.ScrollingDivRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
     <attributes>
-		&standard_uicomponent_attributes;
+		&widget_var_attribute;
         <attribute>
             <name>width</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>100%</defaultValue>
+            <defaultValue>full</defaultValue>
             <description>Width of the div.</description>
         </attribute>
         <attribute>
             <name>height</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>100%</defaultValue>
+            <defaultValue>full</defaultValue>
             <description>Height of the pane.</description>
         </attribute>
         <attribute>

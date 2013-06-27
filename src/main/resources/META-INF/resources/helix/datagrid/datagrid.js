@@ -255,6 +255,7 @@
             var _self = this;
             var gridBody, tableBody, curState;        
 
+            // XXX: Make sure we are not blowing away the scroller.
             var contentContainer = $(PrimeFaces.escapeClientId(this.contentId));
             if (contentContainer.length == 0) {
                 contentContainer = $('<div />').attr({
