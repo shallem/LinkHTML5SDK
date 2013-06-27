@@ -139,7 +139,6 @@
     BUTTON_NAME      = "buttonName",
     CHANGE           = "change",
     CLEDITOR         = "cleditor",
-    CLICK            = "tap click",
     DISABLED         = "disabled",
     DIV_TAG          = "<div>",
     H2_TAG           = "<h2 />",
@@ -179,6 +178,11 @@
 
     // Local copy of the buttons object
     buttons = $.cleditor.buttons;
+
+    var CLICK            = "click";
+    if (Helix.hasTouch) {
+        CLICK = "tap";
+    }
 
     //===============
     // Initialization
@@ -365,10 +369,15 @@
         $actionCommands.button();
         $formatCommands.button();
         
-        $fontMenuPopup.popup();
-        $styleMenuPopup.popup();
-        $formatMenuPopup.popup();
-        $actionMenuPopup.popup();
+        var popupOptions = {
+            afterclose: function() {
+                focus(editor);
+            }
+        };
+        $fontMenuPopup.popup(popupOptions);
+        $styleMenuPopup.popup(popupOptions);
+        $formatMenuPopup.popup(popupOptions);
+        $actionMenuPopup.popup(popupOptions);
     
         $toolbar.controlgroup();
     
@@ -461,6 +470,7 @@
 
     // buttonClick - click event handler for toolbar buttons
     function buttonClick(e) {
+        e.preventDefault();
         e.stopImmediatePropagation();
 
         // note that data is attached to the enclosing li in the context menu, not
@@ -731,9 +741,6 @@
             if (ie) editor.doc.body.contentEditable = !disabled;
             else {
                 editor.doc.designMode = !disabled ? "on" : "off";
-                editor.formatDoc.designMode = !disabled ? "on" : "off";
-                // Make the format document read only.
-                editor.formatDoc.execCommand("contentReadOnly", 0, null);
             } 
         }
         // Firefox 1.5 throws an exception that can be ignored
@@ -763,9 +770,18 @@
                 editor.$frame[0].contentWindow.focus();
                 success = editor.doc.execCommand(command, 0, value || null);
                 if (success && (button.type == "font" || button.type == "style")) {
-                    selectText(editor.$formatFrame[0].contentWindow.window, editor.formatDoc, editor.formatDoc.body.childNodes[0]);
-                    editor.formatDoc.execCommand(command, 0, value);
-                    editor.$formatFrame[0].contentWindow.window.getSelection().removeAllRanges();
+                    if (button.type === "style") {
+                        var styleToToggle = 'ui-editor-' + command;
+                        editor.$formatFrame.toggleClass(styleToToggle);
+                    } else {
+                        if (command === "fontname") {
+                            editor.$formatFrame.css('font-family', value);
+                        } else if (command === "forecolor") {
+                            editor.$formatFrame.css('color', value);
+                        } else if (command === "hilitecolor") {
+                            editor.$formatFrame.css('background-color', value);
+                        }
+                    }
                 }
             } catch (err) {
                 description = err.description;
@@ -804,7 +820,9 @@
             if (sourceMode(editor)) {
                 editor.$area.focus();
             } else {
-                editor.$frame[0].contentWindow.focus();
+                if (editor.$frame) {
+                    editor.$frame[0].contentWindow.focus();
+                }
             }
         }, 0);
     }
@@ -884,25 +902,9 @@
             editor.$formatFrame.remove();
 
         // Create an iFrame that we will use to show the current format
-        var $formatFrame = editor.$formatFrame = $('<iframe frameborder="1" src="javascript:true;" style="overflow:hidden; height:25px;">')
-        .hide()
-        .appendTo($main);
-        var formatWindow = $formatFrame[0].contentWindow;
-        if (!formatWindow) {
-            /* This editor is not yet attached to the main DOM. We can't do the rest of the refresh. */
-            return;
-        }
-    
-        var formatDoc = editor.formatDoc = formatWindow.document,
-        $formatDoc = $(formatDoc);
-        formatDoc.open();
-        formatDoc.write(
-            options.docType +
-            '<html>' +
-            '<body style="overflow: hidden; border: 1px solid black;' + options.bodyStyle + '">Current Format</body></html>'
-            );
-        formatDoc.close();
-    
+        var $formatFrame = editor.$formatFrame = 
+            $('<div/>').append("Current Format").addClass("ui-editor-format").hide().appendTo($main);
+            
         // Create a new iframe
         var $frame = editor.$frame = $('<iframe frameborder="1" src="javascript:true;" style="overflow-x:hidden;">')
         .hide()
@@ -918,7 +920,7 @@
             options.docType +
             '<html>' +
             ((options.docCSSFile === '') ? '' : '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
-            '<body style="' + options.bodyStyle + '"></body></html>'
+            '<body style="' + options.bodyStyle + '" onload="window.focus()"></body></html>'
             );
         doc.close();
 
@@ -981,12 +983,7 @@
             //e.preventDefault();
             //e.stopImmediatePropagation();
         });
-    
-        // NOTE: we require that the browser supports iFrame design mode. Otherwise
-        // this plugin will fail.
-        $frame.show();
-        $formatFrame.show();
-
+   
         var $toolbar = editor.$toolbar,
         wid = options.width - ($toolbar.width() * 1.05),
         hgt;
@@ -1006,11 +1003,9 @@
             $main.height(hgt);
         }
 
-        // Resize the toolbar.
-        //$toolbar.width(wid);
-
         // Resize the format frame.
         $formatFrame.width(wid);
+        $formatFrame.height("25px");
 
         // Resize the iframe
         $frame.width(wid);
@@ -1025,6 +1020,11 @@
         if (hgt) {
             editor.$area.height(ie6 ? hgt - 2 : hgt);
         }
+        
+        // NOTE: we require that the browser supports iFrame design mode. Otherwise
+        // this plugin will fail.
+        $frame.show();
+        $formatFrame.show();
 
         // Switch the iframe into design mode if enabled
         disable(editor, editor.disabled);
