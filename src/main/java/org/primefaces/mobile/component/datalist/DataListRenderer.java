@@ -27,45 +27,31 @@ public class DataListRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         DataList dataList = (DataList) component;
+        
+        /* If the list has a header encode it before the list. */
         UIComponent header = dataList.getFacet("header");
-        String type = dataList.getType();
-        Object filterValue = dataList.getAttributes().get("filter");
-
-        String wrapperStyleClass = "";
-        if(dataList.getStyleClass() != null) {
-            wrapperStyleClass = dataList.getStyleClass();
-        }
-        
-        // Enclose the entire ul in a div so that we can scroll it.
-        writer.startElement("div", dataList);
-        writer.writeAttribute("class", "pm-scroller-nozoom " + wrapperStyleClass, null);
-        writer.writeAttribute("id", dataList.getClientId(context) + "_wrapper", "id");
-        
-        writer.startElement("ul", dataList);
         writer.writeAttribute("id", dataList.getClientId(context), "id");
-        writer.writeAttribute("data-role", "listview", null);
         
-        if(filterValue != null && Boolean.valueOf(filterValue.toString())) {
-            writer.writeAttribute("data-filter", "true", null);
+        writer.startElement("div", dataList);
+        if(dataList.getStyleClass() != null) {
+            writer.writeAttribute("class", dataList.getStyleClass(), null);
         }
-        if(type != null && type.equals("inset")) {
-            writer.writeAttribute("data-inset", true, null);
+        if(header != null) {
+            header.encodeAll(context);
         }
+        
+        // Enclose the entire ul in a div so that we can scroll it. Attach the jQM plugin
+        // to this element.
+        writer.startElement("div", dataList);
         if(dataList.getStyle() != null) {
             writer.writeAttribute("style", dataList.getStyle(), null);
         }
-
-        if(header != null) {
-            writer.startElement("li", null);
-            writer.writeAttribute("data-role", "list-divider", null);
-            writer.writeAttribute("data-fixed-header", "yes", null);
-            header.encodeAll(context);
-            writer.endElement("li");
+        if(dataList.getListStyleClass() != null) {
+            writer.writeAttribute("class", dataList.getListStyleClass(), null);
         }
-
-        // Leave the list empty because we fill it in on the client side.
+        writer.writeAttribute("id", dataList.getClientId(context) + "_wrapper", "id");
+        writer.endElement("div");
         
-        writer.endElement("ul");
         writer.endElement("div");
         
         encodeScript(context, dataList);
@@ -77,11 +63,28 @@ public class DataListRenderer extends CoreRenderer {
         String clientId = dlist.getClientId(context);
 
         startScript(writer, clientId);
-
-        writer.write("PrimeFaces.cw('DataList','" + dlist.resolveWidgetVar() + "',{");
-        writer.write("id:'" + clientId + "'");
-
-        writer.write(",grouped: " + Boolean.toString(dlist.isGrouped()));
+        writer.write("\n(function($) {");
+        
+        writer.write("\n" + dlist.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "_wrapper')).helixDatalist({");
+        
+        /**
+         * Display options
+         */
+        if(dlist.getType() != null && dlist.getType().equals("inset")) {
+            writer.write("inset: true,");
+        } else {
+            writer.write("inset: false,");
+        }
+        if (dlist.isScrollContents()) {
+            writer.write("scroll: true,");
+        } else {
+            writer.write("scroll: false,");
+        }
+        
+        /**
+         * Settings for grouping.
+         */
+        writer.write("grouped: " + Boolean.toString(dlist.isGrouped()));
         
         // Getter for group name.
         if (dlist.getGroupName() != null) {
@@ -124,20 +127,16 @@ public class DataListRenderer extends CoreRenderer {
         }
 
         // Selection
-        if (dlist.getSelectable().equals("true")) {
-            writer.write(",selectable: true");
-            
-            if (dlist.getSelectAction() != null) {
-                writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
-            }
-            if (dlist.getHoldAction() != null) {
-                writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
-            }
+        if (dlist.getSelectAction() != null) {
+            writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
+        }
+        if (dlist.getHoldAction() != null) {
+            writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
         }
         
         // Search
-        if (dlist.isIndexedSearch()) {
-            writer.write(",indexedSearch: true");
+        if (dlist.getIndexedSearch() != null) {
+            writer.write(",indexedSearch: " + dlist.getIndexedSearch());
         }
 
         // Default field to sort by.
@@ -150,13 +149,30 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",sortOrder:'" + dlist.getSortOrder() + "'");
         }
         
+        // Sort callback.
+        if (dlist.getOnSort() != null) {
+            writer.write(",onSortChange: " + dlist.getOnSort());
+        }
+        
+        // Filter callback.
+        if (dlist.getDoFilter() != null) {
+            writer.write(",doFilter: " + dlist.getDoFilter());
+        }
+        
+        // Localizable strings.
+        if (dlist.getStrings() != null) {
+            writer.write(",strings: '" + dlist.getStrings() + "'");
+        }
+        
         // The data list.
         writer.write(",itemList: " + dlist.getItemList());
         
         // The row renderer
         writer.write(",rowRenderer: " + dlist.getRowRenderer());
         
-        writer.write("});");
+        writer.write("}).data('helix-helixDatalist');");
+        
+        writer.write("})(jQuery);\n");
 
         endScript(writer);
     } 

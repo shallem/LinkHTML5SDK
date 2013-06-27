@@ -272,13 +272,13 @@
 		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <!-- Datagrid component. -->
-		    <include>datagrid/mobilehelix-datagrid.js</include>
+		    <include>datagrid/datagrid.js</include>
 
 		    <!-- Panelgroup component. -->
 		    <include>panelgroup/mobilehelix-panelgroup.js</include>
 
 		    <!-- Data list. -->
-		    <include>datalist/datalist.js</include>
+		    <!-- <include>datalist/datalist.js</include> -->
 
 		    <!-- Form Layout -->
 		    <include>form/formLayout.js</include>

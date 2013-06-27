@@ -162,6 +162,9 @@ Helix.Layout = {
             Helix.Layout.allScrollers[objID].scroller.refresh(); 
             Helix.Layout.allScrollers[objID].height = newHeight;
             
+            // Update the starting height for future recursive calls.
+            oldHeight = newHeight;
+            
             // If this or a parent object matches the scrollerSel then update it.
             /*$(obj).closest(Helix.Layout.scrollerSel).each(function() {
                 if (this.id in Helix.Layout.allScrollers) {
@@ -267,7 +270,7 @@ Helix.Layout = {
             });
         }
     },
-    resizePages: function() {
+    resizePages: function(page) {
         var height = $(window).height();
         var width = $(window).width();
 
@@ -275,13 +278,13 @@ Helix.Layout = {
         * using the scrollingDiv. Here we just take the min-height that jQuery has assigned
         * to a particular page and turn it into the page height. 
         */
-        $.mobile.activePage.height(height);
+        page.height(height);
 
-        var headerHeight = $.mobile.activePage.children('[data-role="header"]').height();
-        var footerHeight = $.mobile.activePage.children('[data-role="footer"]').height();
+        var headerHeight = page.children('[data-role="header"]').height();
+        var footerHeight = page.children('[data-role="footer"]').height();
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
-        $.mobile.activePage.find('.hx-main-content').css('height', contentHeight);
-        $.mobile.activePage.find('.hx-main-content').each(function() {
+        page.find('.hx-main-content').css('height', contentHeight);
+        page.find('.hx-main-content').each(function() {
             //var innerWidth = width - (this.offsetWidth - this.clientWidth);
             $(this).css('width', width);
         });
@@ -289,15 +292,11 @@ Helix.Layout = {
         return contentHeight;
     },
     
-    layoutPageFullScreen: function() {
-        var contentHeight = Helix.Layout.resizePages();
-        $('[data-role="content"]', $.mobile.activePage).children().each(function() {
+    layoutPageFullScreen: function(page) {
+        var contentHeight = Helix.Layout.resizePages(page);
+        $('[data-role="content"]', page).children().each(function() {
             if ($(this).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/
-                return;
-            }
-            if (!$(this).is(":visible")) {
-                // Skip hidden components.
                 return;
             }
             
@@ -392,29 +391,50 @@ $(document).bind('postrequest', function(ev, xhr) {
 });
 
 /**
- * Add the icon style class as an override to all icon button icons.
- */
-$(document).bind('pageinit', function() {
-    /*$('.iconbutton').each(function(index, value) {
-        var btn = $(this).find('.ui-icon');
-        var iconData = $(this).jqmData('icon');
-        btn.removeClass('ui-icon').addClass(iconData + ' ui-icon');
-    });*/
-});
-
-/**
  * In general, apps should use the pagebeforeshow event to layout the DOM. When
  * the page load is done, they should call this function.
  */
-Helix.Layout.layoutPage = function() {
-    /* Reset the full screen layout of the page. */
-    Helix.Layout.layoutPageFullScreen();
+Helix.Layout.layoutPage = function(page) {
+    if (!page) {
+        page = $.mobile.activePage;
+        if (!page) {
+            /* Nothing to do. */
+            return;
+        }
+    } else {
+        page = $(page);
+    }
     
-    /* Add all scrollers. NOTE, that these scrollers will also be updated in the call
-     * below. This is essential because the DOM may not be finished when we reach
-     * this point.
+    /* Reset the full screen layout of the page. */
+    Helix.Layout.layoutPageFullScreen(page);
+}
+
+/**
+ * Do an initial layout on before show. This mostly gets rid of the snapping
+ * effect. However, the heights of the different elements are not quite right. 
+ * So we do it again on show.
+ */
+$(document).on('pagebeforeshow', function(ev) {
+    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
+    
+    /**
+     * Layout the page based on the Mobile Helix styles.
      */
-    Helix.Layout.addScrollers();
+    Helix.Layout.layoutPage(ev.target);
+    
+    /* Add all scrollers. NOTE, that components with dynamic data must update
+     * the scroller with the updateScrollers call after any data transformations.
+     */
+    Helix.Layout.addScrollers(pageScrollers);
+});
+
+$(document).on('pageshow', function(ev) {
+    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
+    
+    /**
+     * Recompute the component heights.
+     */
+    Helix.Layout.layoutPage(ev.target);
     
     // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
     // in the "Mastering the Refresh() method" section. Updates all scrollers
@@ -424,17 +444,16 @@ Helix.Layout.layoutPage = function() {
      * we call this function a few times at intervals of 200 MS. When there is no
      * updating to be done, nothing happens.
      */
-    var existingScrollers = $.mobile.activePage.find(Helix.Layout.scrollerSel);
     setTimeout(function() {
-        Helix.Layout.updateScrollers(existingScrollers);
+        Helix.Layout.updateScrollers(pageScrollers);
     }, 0);
-};
+});
 
 /**
  * When a page is hidden, we kill all of its scrollers to save memory. 
  */
-$(document).on('pagebeforehide', function() {
-    Helix.Layout.cleanupScrollers(this);
+$(document).on('pagebeforehide', function(ev) {
+    Helix.Layout.cleanupScrollers(ev.target);
 });
 
 Helix.deviceType = (function() {

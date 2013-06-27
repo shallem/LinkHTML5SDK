@@ -69,7 +69,8 @@ public class LoadCommandListener implements PhaseListener {
                 response.setCharacterEncoding("UTF-8");
                 response.getWriter().write(jsonToReturn);
                 response.flushBuffer();
-            } catch(IOException ioe) {
+            } catch(Exception ioe) {
+                Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ioe);
                 try {
                     response.getWriter().write("{ 'error' : '" + ioe.getMessage() + "' }");
                     response.flushBuffer();

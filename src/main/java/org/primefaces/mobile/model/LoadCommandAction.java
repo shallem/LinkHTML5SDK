@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.faces.FacesException;
 
 /**
@@ -26,6 +28,8 @@ import javax.faces.FacesException;
  * @author shallem
  */
 public class LoadCommandAction {
+    private static final Logger LOG = Logger.getLogger(LoadCommandAction.class.getName());
+    
     private Constructor ctor;
     private Method loader;
     private Method getter;
@@ -74,10 +78,13 @@ public class LoadCommandAction {
              */
             loader.invoke(thisObject, new Object[] {});
         } catch (IllegalAccessException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         }
         return thisObject;
@@ -91,10 +98,13 @@ public class LoadCommandAction {
              */
             gotten = getter.invoke(thisObject, new Object[] {});
         } catch (IllegalAccessException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         }
         if (gotten != null) {
@@ -105,12 +115,16 @@ public class LoadCommandAction {
                  */
                 return s.serializeObject(gotten);
             } catch (IllegalAccessException ex) {
+                LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             } catch (IllegalArgumentException ex) {
+                LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             } catch (InvocationTargetException ex) {
+                LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             } catch (NoSuchMethodException ex) {
+                LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             }
         } else {

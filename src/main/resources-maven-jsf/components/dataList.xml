@@ -19,7 +19,6 @@
         </interface>
     </interfaces>
     <attributes>
-		&data_component_attributes;
 		&widget_var_attribute;
         <attribute>
             <name>paginatorTemplate</name>
@@ -29,22 +28,22 @@
             <description>Template of the paginator.</description>
         </attribute>
         <attribute>
-            <name>selectable</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Can data in this table be selected? If so, display a form showing the results of the selection.</description>
-        </attribute>
-        <attribute>
             <name>selectAction</name>
             <required>false</required>
             <type>java.lang.Object</type>
             <description>JavaScript expression to invoke when the user taps a list item.</description>
         </attribute>
         <attribute>
+            <name>itemContextMenu</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>ID of a popup to display when the user executes the context action on a list item.</description>
+        </attribute>
+        <attribute>
             <name>holdAction</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>JavaScript expresssion to invoke when the user tap-holds a list item.</description>
+            <description>JavaScript expresssion to invoke when the user executes the context action on a list item.</description>
         </attribute>
         <attribute>
             <name>condition</name>
@@ -97,16 +96,10 @@
             <description>Style class of the main container.</description>
         </attribute>
         <attribute>
-            <name>tableStyle</name>
+            <name>listStyleClass</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Inline style of the table element.</description>
-        </attribute>
-        <attribute>
-            <name>tableStyleClass</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Style class of the table element.</description>
+            <description>Style class of the list.</description>
         </attribute>
         <attribute>
             <name>rowStyleClass</name>
@@ -132,6 +125,18 @@
             <type>java.lang.String</type>
             <defaultValue>ascending</defaultValue>
             <description>Sets sorting order. Default is "ascending"</description>
+        </attribute>
+        <attribute>
+            <name>onSort</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback to invoke on sort. Accepts the field and sort order as arguments.</description>
+        </attribute>
+        <attribute>
+            <name>doFilter</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback to invoke to filter the list. Accepts the current query collection, the sort field, and the selected row as arguments. Returns the filtered query collection.</description>
         </attribute>
         <attribute>
             <name>grouped</name>
@@ -169,20 +174,20 @@
         <attribute>
             <name>indexedSearch</name>
             <required>false</required>
+            <type>java.lang.String</type>
+            <description>Enables free text search. Supply a function that accepts two arguments, the search query and a query collection, and returns a filtered query collection.</description>
+        </attribute>
+        <attribute>
+            <name>scrollContents</name>
+            <required>false</required>
             <type>java.lang.Boolean</type>
-            <defaultValue>false</defaultValue>
-            <description>Enables free text search. Requires that the table contents are indexed using Persistence JS.</description>
+            <defaultValue>true</defaultValue>
+            <description>Indicate if the contents of the list should be scrollable.</description>
         </attribute>
     </attributes>
     <resources>
         <resource>
-            <name>primefaces.css</name>
-        </resource>
-        <resource>
             <name>jquery/jquery.js</name>
-        </resource>
-        <resource>
-            <name>primefaces.js</name>
         </resource>
     </resources>
 </component>
