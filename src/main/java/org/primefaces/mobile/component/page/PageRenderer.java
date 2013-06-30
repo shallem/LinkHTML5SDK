@@ -80,7 +80,7 @@ public class PageRenderer extends CoreRenderer {
         }
         
         // Output PF theme
-        if(theme != null) {
+        /*if(theme != null) {
             ELContext elContext = context.getELContext();
             ExpressionFactory expressionFactory = context.getApplication().getExpressionFactory();
             ValueExpression ve = expressionFactory.createValueExpression(elContext, theme, String.class);
@@ -89,22 +89,18 @@ public class PageRenderer extends CoreRenderer {
         } 
         else {
             theme = "aristo";   //default
-        }
+        }*/
 
-        if(theme != null && !theme.equals("none")) {
-            renderResource(context, "theme.css", "javax.faces.resource.Stylesheet", "primefaces-" + theme, null);
-        }
+        // SAH: Removed primefaces CSS - retained only the pieces we really need.
+        //if(theme != null && !theme.equals("none")) {
+        //    renderResource(context, "theme.css", "javax.faces.resource.Stylesheet", "primefaces-" + theme, null);
+        //}
         
         // jQuery
         renderResource(context, "jquery/jquery.js", "javax.faces.resource.Script", "primefaces", null);
         
         // Output primefaces content first.
-        renderResource(context, "primefaces.js", "javax.faces.resource.Script", "primefaces", null);
-        
-        // Then JQM content
-        // Now in the POM
-        //renderResource(context, "jquery.mobile-1.2.0.js", "javax.faces.resource.Script", LibraryName, null);
-        //renderResource(context, "jquery.mobile-1.2.0.css", "javax.faces.resource.Stylesheet", LibraryName, null);        
+        renderResource(context, "primefaces.js", "javax.faces.resource.Script", "primefaces", null);     
 
         // Then override with pf-mobile content.
         renderResource(context, "primefaces-mobile-full.css", "javax.faces.resource.Stylesheet", LibraryName, null);
@@ -118,20 +114,6 @@ public class PageRenderer extends CoreRenderer {
             UIComponent resource = (UIComponent) iter.next();
             resource.encodeAll(context);
         }
-        
-        // Moved specification to POM so that we can use the PrimeFaces extensions
-        // resource optimizer to compress the JS/CSS.
-        // iScroll with jQuery mobile fix: https://github.com/meckdahl/iscroll/tree/master/src
-        //renderResource(context, "iscroll.js", "javax.faces.resource.Script", LibraryName, null);
-        //renderResource(context, "primefaces-mobile.js", "javax.faces.resource.Script", LibraryName, null);
-        //renderResource(context, "mobile.css", "javax.faces.resources.Stylesheet", LibraryName, null);
-        
-        // Cordova JS files.
-        //renderResource(context, "cordova.js", "javax.faces.resource.Script", LibraryName, null);
-        //renderResource(context, "ExternalFileUtil.js", "javax.faces.resource.Script", LibraryName, null);
-        
-        // Then override with my own CSS/scripts.
-        //renderResource(context, "mobilehelix.css", "javax.faces.resource.Stylesheet", LibraryName, null);
 
         // Then handle the user's postinit facet.
         if(postinit != null) {
@@ -146,12 +128,6 @@ public class PageRenderer extends CoreRenderer {
         //config options
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
-        
-        // Cordova JS files.
-        /*writer.write("if ($.browser.webkit) {");
-        writer.write("$.getScript('http://__mh_local/cordova');");
-        writer.write("$.getScript('http://__mh_local/ExternalFileUtil');");
-        writer.write("}");*/
 
         // Set a global variable with the context root.
         writer.write("Helix.contextRoot = '" + context.getExternalContext().getRequestContextPath() + "';");

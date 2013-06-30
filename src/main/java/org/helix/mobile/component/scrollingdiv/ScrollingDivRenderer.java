@@ -48,11 +48,11 @@ public class ScrollingDivRenderer extends CoreRenderer {
         
         startScript(writer, sdiv.getClientId(context));
         writer.write("\n(function($) {");
-        writer.write("\n" + sdiv.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + sdiv.getClientId(context) + "')).helixScrollingDiv({");
-        writer.write("orientation: " + sdiv.getOrientation());
+        writer.write("\n" + sdiv.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + id + "')).helixScrollingDiv({");
+        writer.write("orientation: '" + sdiv.getOrientation() + "'");
         writer.write(",zoom: " + Boolean.toString(sdiv.isZoom()));
-        writer.write(",width: " + sdiv.getWidth());
-        writer.write(",height: " + sdiv.getHeight());
+        writer.write(",width: '" + sdiv.getWidth() + "'");
+        writer.write(",height: '" + sdiv.getHeight() + "'");
         writer.write("}).data('helix-helixScrollingDiv');");
         writer.write("})(jQuery);\n");
         endScript(writer);

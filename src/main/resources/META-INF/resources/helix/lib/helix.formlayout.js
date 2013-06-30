@@ -30,6 +30,9 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         if (formElem.id) {
             $fieldContainer.attr('id', formElem.id);
         }
+        if (formElem.style) {
+            $fieldContainer.attr('style', formElem.style);
+        }
         if (formElem.fieldTitle) {
             if (formElem.titleStyleClass) {
                 $fieldContainer.append($('<span />').attr({
@@ -55,19 +58,26 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             
             var inputMarkup = $('<input />').attr({
                 'name': formElem.name,
+                'id' : formElem.name,
                 'type': 'text',
                 'value': formElem.value
             });
 
-            $fieldContainer.append($('<div />').attr({
-                'data-role' : 'fieldcontain'
+            if (!formElem.style) {
+                formElem.style = 'width: 90%';
+            }
+            var textContainer = $('<div />').attr({
+                'data-role' : 'fieldcontain',
+                'style' : formElem.style
             })
             .append($('<label />').attr({
                 'for' : formElem.name
                 })
                 .append(formElem.fieldTitle)
             )
-            .append(inputMarkup));
+            .append(inputMarkup);
+            $fieldContainer.append(textContainer);
+            textContainer.fieldcontain();
             $(inputMarkup).textinput();
             if (formElem.fieldTitleType === 'button') {
                 $(formElem.fieldTitle).button();
@@ -514,19 +524,19 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
             subPanelDiv.collapsible();
             $(document).on("expand", PrimeFaces.escapeClientId(subPanelID), function (event, ui) {
                 if (formLayout.scroller) {
-                    Helix.Layout.updateScrollers(formLayout.scroller);
+                    formLayout.scroller.refreshScroller();
                 }
             });
             $(document).on("collapse", PrimeFaces.escapeClientId(subPanelID), function(event,ui) {
                 if (formLayout.scroller) {
-                    Helix.Layout.updateScrollers(formLayout.scroller);
+                    formLayout.scroller.refreshScroller();
                 }
             });
         }
     }    
     
     if (formLayout.scroller) {
-        Helix.Layout.updateScrollers(formLayout.scroller);
+        formLayout.scroller.refresh();
     }
 }
 

@@ -30,7 +30,7 @@
             <name>height</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>full</defaultValue>
+            <defaultValue>inherit</defaultValue>
             <description>Height of the pane.</description>
         </attribute>
         <attribute>

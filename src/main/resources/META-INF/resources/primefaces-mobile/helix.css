@@ -174,25 +174,10 @@
     background: none repeat scroll 0 0 #FFFFFF !important;
 }
 
-/* Override the seek prev/seek next buttons */
-.ui-icon-seek-prev {
-    background-position: 	-396px 50%;
-}
-
-.ui-icon-seek-next {
-    background-position: 	-360px 50%;
-}
-
 /* The heavy grey background doesn't look right in mobile. */
 .ui-widget-header {
     background: none;
 }
-
-/* loading icon
-.ui-icon-loading {
-	background: url("#{resource['primefaces-mobile:images/ajax-loader.gif']}");
-	background-size: 46px 46px;
-}*/
 
 /* No padding on page content. If there is padding, it often causes scrolling given the
    way our tools layout pages. */
@@ -208,6 +193,10 @@
 /* Prevent jQuery enhancement from displaying a div above a file input image. */
 .ui-upload-icon div.ui-input-text {
     margin: 0px !important;
+}
+
+.hx-listview li:not(.ui-btn-active) {
+    background-color: white;
 }
 
 /*

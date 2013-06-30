@@ -1,0 +1,14 @@
+/**
+ * Mobile Helix note:
+ *
+ * These styles are extracted from the PrimeFaces project. All credit should go
+ * where credit is due. We only include those styles from PrimeFaces that are
+ * required for components that are included in the Link SDK. This code is licensed
+ * under the same terms as the primefaces - the Apache 2.0 license. For more information
+ * go to primefaces.org/license.html.
+ */
+.ui-shadow {
+    -moz-box-shadow: 0px 5px 10px rgba(0,0,0,0.8);
+    -webkit-box-shadow: 0px 5px 10px rgba(0,0,0,0.8);
+    box-shadow: 0px 5px 10px rgba(0,0,0,0.8);
+}

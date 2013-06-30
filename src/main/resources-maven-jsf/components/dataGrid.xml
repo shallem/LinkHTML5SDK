@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
-<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
 <!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
     <tag>dataGrid</tag>
-    <tagClass>org.primefaces.mobile.component.datagrid.DataGridTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.datagrid.DataGrid</componentClass>
-    <componentType>org.primefaces.mobile.DataGrid</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.DataGridRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.datagrid.DataGridRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.datagrid.DataGridTag</tagClass>
+    <componentClass>org.helix.mobile.component.datagrid.DataGrid</componentClass>
+    <componentType>org.helix.mobile.DataGrid</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.DataGridRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.datagrid.DataGridRenderer</rendererClass>
     <parent>javax.faces.component.UIPanel</parent>
     <interfaces>
         <interface>
@@ -18,8 +17,7 @@
         </interface>
     </interfaces>
     <attributes>
-		&standard_uicomponent_attributes;
-                &widget_var_attribute;
+		&widget_var_attribute;
         <attribute>
             <name>width</name>
             <required>false</required>

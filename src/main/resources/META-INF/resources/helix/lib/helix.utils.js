@@ -34,103 +34,40 @@ Helix.Utils =  {
         return { x: xPosition, y: yPosition };
     },
     
-    growl : function(id, summary, msg, severity) {
-        var growl = new PrimeFaces.widget.Growl({
-            id: id,
+    growl : function(summary, msg, severity, lifetime) {
+        if (!lifetime) {
+            lifetime = 15000;
+        }
+        
+        var growlContainer = $('<div/>');
+        var growl = growlContainer.helixGrowl({
             msgs: [
                 { summary : summary, detail: msg, severity: severity }
             ],
-            life : 30000
-        });
-        $(growl.jqId + '_container').on('tap', function() {
+            life : lifetime
+        }).data('helix-helixGrowl');
+        $(growlContainer).on('tap', function() {
             growl.removeAll(); 
         });
         return growl;
     },
     
-    statusMessage : function(summary, msg, severity) {
+    statusMessage : function(summary, msg, severity, lifetime) {
         if (Helix.Utils.errorGrowl) {
             Helix.Utils.errorGrowl.show([
                 { summary : summary, detail: msg, severity: severity }
                 ]);
             return;
         }
-        Helix.Utils.errorGrowl = Helix.Utils.growl("PrimeFacesStatus", summary, msg, severity);
-    },
-    
-    ajaxFormSubmit : function(url, formID, msgTitle, successMsg, pendingMsg, failMsg, actions) {
-        $.ajax({
-                url: url,
-                type: "POST",
-                contentType: "application/x-www-form-urlencoded",
-                data: $(PrimeFaces.escapeClientId(formID)).serialize(),
-                statusCode: {
-                    200: function(data, textStatus, jqXHR) {
-                        // Show success message.
-                        if (successMsg) {
-                            Helix.Utils.statusMessage(msgTitle, successMsg, "info");
-                        }
-                        if (actions && actions.success) {
-                            actions.success(data, textStatus, jqXHR);
-                        }
-                    },
-                    999: function() {
-                        // Container has told us we are offline.
-                        if (pendingMsg) {
-                            Helix.Utils.statusMessage(msgTitle, pendingMsg, "info");
-                        }
-                    }
-                },
-                error: function(jqXHR,textStatus,errorThrown) {
-                    if (jqXHR.status != 999) {
-                        // Display failMsg
-                        if (failMsg) {
-                            Helix.Utils.statusMessage(msgTitle, failMsg, "error");
-                        }
-                    }
-                    if (actions && actions.error) {
-                        actions.error(jqXHR,textStatus,errorThrown);
-                    }
-                }  
-        });
-    },
-    ajaxJSONLoad: function(url,key,widgetVar,oncomplete,offlineSave) {
-        url = url.replace("{key}", key);
-        $.mobile.showPageLoadingMsg();
-        $.ajax({
-            url: url,
-            type: "GET",
-            dataType: "json",
-            success: function(data,status,jqXHR) {
-                if (data.__mh_error) {
-                    Helix.Utils.statusMessage("AJAX Error", data.__mh_error, "severe");
-                    jqXHR.__mh_failed = true;
-                    return;
-                }
-                
-                window[widgetVar] = data;
-                if (offlineSave) {
-                    // Save non-array types in the key-value store.
-                    // Save array types in their own tables.
-                    // Let all values remain encrypted. In the future we can add
-                    // a parameter that specifies which fields are decrypted.
-                }
-            },
-            complete: function(jqXHR,textStatus) {
-                $.mobile.hidePageLoadingMsg();
-                if (oncomplete && !jqXHR.__mh_failed) {
-                    oncomplete(jqXHR, textStatus);
-                }
-            }
-        });
+        Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
     },
     paginator: {
         
         PAGINATOR_PREV_PAGE_LINK_CLASS : "ui-paginator-prev ui-state-default ui-corner-all",
-        PAGINATOR_PREV_PAGE_ICON_CLASS : "ui-icon ui-icon-seek-prev",
+        PAGINATOR_PREV_PAGE_ICON_CLASS : "ui-icon ui-icon-back",
         PAGINATOR_NEXT_PAGE_LINK_CLASS : "ui-paginator-next ui-state-default ui-corner-all",
-        PAGINATOR_NEXT_PAGE_ICON_CLASS : "ui-icon ui-icon-seek-next",
-        PAGINATOR_TOP_CONTAINER_CLASS : "ui-paginator ui-paginator-top ui-widget-header ui-corner-top",
+        PAGINATOR_NEXT_PAGE_ICON_CLASS : "ui-icon ui-icon-forward",
+        PAGINATOR_TOP_CONTAINER_CLASS : "ui-paginator ui-paginator-top ui-widget-header",
         PAGINATOR_CURRENT_CLASS : "ui-paginator-current",
         
         currentPageDefaultTemplate : "({currentPage} of {totalPages})",
@@ -166,10 +103,10 @@ Helix.Utils =  {
                 var output = $('<span />')
                     .attr({
                         'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_LINK_CLASS
-                    }).append($('<span />')
+                    }).append($('<div />')
                         .attr({
                             'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_ICON_CLASS
-                        }).append("p")
+                        }).append("&nbsp;")
                     );
                 $(output).on('tap', function() {
                     params.prevPage.apply(params.owner);
@@ -181,10 +118,10 @@ Helix.Utils =  {
                 var output = $('<span />')
                     .attr({
                         'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_LINK_CLASS
-                    }).append($('<span />')
+                    }).append($('<div />')
                         .attr({
                             'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_ICON_CLASS
-                        }).append("p")
+                        }).append("&nbsp;")
                     );
                 $(output).on('tap', function() {
                     params.nextPage.apply(params.owner, [ totalPages ]);

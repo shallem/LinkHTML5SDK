@@ -51,16 +51,11 @@
         },
 
         _create: function() {
-            this._parentView = $(this.element).closest(".hx-main-content");
-            if (this._parentView.length == 0) {
-                this._parentView = $(this.element).closest('[data-role="page"]');
-            }
-            
             /* Insert the wrapper around this.element. The wrapper has fixed size, and
              * the transform styles are applied to this.element. 
              */
-            this._$wrapper = $('<div/>');
-            this.element.wrap(this._$wrapper);
+            this.element.wrap('<div/>');
+            this._$wrapper = this.element.parent();
             
             /* Attach a unique ID to the wrapper. Our scroller framework requires that
              * elements have an ID.
@@ -84,17 +79,31 @@
          * Attach an iScroll scroller to the div, or refresh the scroller if 
          * it already exists.
          */
-        refresh: function() {            
-            /* Set the height/width of the scroller wrapper. */
-            if (this.options.height === "inherit") {
-                this._$wrapper.height(this.element.height());
-            } else {
-                this._$wrapper.height(this.options.height);
+        refresh: function() {    
+            this._$parentView = $(this.element).closest(".hx-main-content");
+            this._$page = $(this.element).closest('[data-role="page"]');
+            if (this._$parentView.length == 0) {
+                this._$parentView = this._$page;
             }
+            
+            /* Set the height/width of the scroller wrapper. */
             if (this.options.width === "full") {
                 this._$wrapper.width(this._$parentView.width());
             } else {
                 this._$wrapper.width(this.options.width);
+            }
+            if (this.options.height === "inherit") {
+                /* The height of this component is fixed and should be inherited
+                 * according to the form layout scheme. If the wrapper has not
+                 * yet had its height specified then we invoke layoutPage to
+                 * do so.
+                 */
+                if (!this._$wrapper.hasClass('mh-layout-parent-height')) {
+                    this._$wrapper.addClass('mh-layout-parent-height');
+                    Helix.Layout.layoutPage(this._$page);
+                }
+            } else {
+                this._$wrapper.height(this.options.height);
             }
             
             
@@ -114,16 +123,26 @@
                 zoomClass = "pm-scroller-nozoom";
             }
             
-            if (this._$wrapper.hasClass(scrollingClass)) {
-                /* Refresh the scroller. */
-                Helix.Layout.updateScrollers(this._$wrapper);
-            } else {
-                this._$wrapper.addClass(scrollingClass);
-                if (zoomClass) {
-                    this._$wrapper.addClass(zoomClass);
+            if (this._$page.is(":visible")) {
+                if (this._$wrapper.hasClass(scrollingClass)) {
+                    /* Refresh the scroller. */
+                    Helix.Layout.updateScrollers(this._$wrapper);
+                } else {
+                    this._$wrapper.addClass(scrollingClass);
+                    if (zoomClass) {
+                        this._$wrapper.addClass(zoomClass);
+                    }
+                    Helix.Layout.addScrollers(this._$wrapper);
                 }
-                Helix.Layout.addScrollers(this._$wrapper);
             }
+        },
+        
+        /**
+         * Call this function when the scroller contents have changed to just
+         * refresh the iScroll scroller.
+         */
+        refreshScroller: function() {
+            Helix.Layout.updateScrollers(this._$wrapper);
         }
     });
 }( jQuery ));

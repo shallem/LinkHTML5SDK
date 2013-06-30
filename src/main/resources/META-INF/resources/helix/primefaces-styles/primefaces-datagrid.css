@@ -1,0 +1,47 @@
+/**
+ * Mobile Helix note:
+ *
+ * These styles are extracted from the PrimeFaces project. All credit should go
+ * where credit is due. We only include those styles from PrimeFaces that are
+ * required for components that are included in the Link SDK. This code is licensed
+ * under the same terms as the primefaces - the Apache 2.0 license. For more information
+ * go to primefaces.org/license.html.
+ */
+ 
+.ui-datagrid-data {
+	width: 100%;
+}
+
+.ui-datagrid .ui-paginator {
+	text-align: center;
+}
+
+.ui-datagrid-column {
+	padding: 3px;
+}
+
+.ui-datagrid-content-empty {
+    padding: 4px 10px;
+}
+
+.ui-datagrid .ui-datagrid-header,
+.ui-datagrid .ui-datagrid-footer {
+    text-align:center;
+    padding:4px 10px;
+}
+
+.ui-datagrid .ui-datagrid-header {
+    border-bottom: 0px none;
+}
+
+.ui-datagrid .ui-datagrid-footer {
+    border-top: 0px none;
+}
+
+.ui-datagrid .ui-paginator-top {
+    border-bottom: 0px none;
+}
+
+.ui-datagrid .ui-paginator-bottom {
+    border-top: 0px none;
+}

@@ -213,9 +213,17 @@
 
 		    <include>helix.css</include>
 
+		    <!-- Styles from the PrimeFaces project. -->
+		    <include>primefaces-styles/primefaces-aristo.css</include>
+		    <include>primefaces-styles/primefaces-datagrid.css</include>
+		    <include>primefaces-styles/primefaces-paginator.css</include>
+		    <include>primefaces-styles/primefaces-growl.css</include>
+		    <include>primefaces-styles/primefaces-core.css</include>
+
 		    <!-- Overrides for use in a JSF context to reset the location
 			 of JSF icons. -->
 		    <include>helix.overrides.css</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>
@@ -232,7 +240,7 @@
 		<resourcesSet>
 		  <includes>
 		    <!-- Creates the helix namespace. -->
-		    <include>helix.js</include>
+		    <include>lib/helix.js</include>
 
 		    <include>iscroll.js</include>
 
@@ -257,7 +265,7 @@
  		    <include>editor/editor.js</include>
 
 		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
-		    <include>helix.crypto.js</include>
+		    <include>lib/helix.crypto.js</include>
 
 		    <!-- Persistence. -->
 		    <include>persistence/helix.websql.js</include>
@@ -272,10 +280,10 @@
 		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <!-- Datagrid component. -->
-		    <include>datagrid/datagrid.js</include>
+		    <!-- <include>datagrid/datagrid.js</include> -->
 
 		    <!-- Panelgroup component. -->
-		    <include>panelgroup/mobilehelix-panelgroup.js</include>
+		    <include>panelgroup/panelgroup.js</include>
 
 		    <!-- Data list. -->
 		    <include>datalist/datalist.js</include>
@@ -286,10 +294,13 @@
 		    <!-- Scrolling Div -->
 		    <include>scrollingdiv/scrollingdiv.js</include>
 
-		    <include>helix.utils.js</include>
-		    <include>helix.ajax.js</include>
-		    <include>helix.layout.js</include>
-		    <include>helix.formlayout.js</include>
+		    <include>lib/helix.utils.js</include>
+		    <include>lib/helix.ajax.js</include>
+		    <include>lib/helix.layout.js</include>
+		    <include>lib/helix.formlayout.js</include>
+
+		    <!-- Adapted primefaces components. -->
+		    <include>primefaces-js/growl.js</include>
 
 		    <!-- PrimeFaces Mobile - XXX: remove. -->
 		    <include>primefaces-mobile.js</include>

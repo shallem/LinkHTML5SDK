@@ -203,7 +203,8 @@
              * Append the data list.
              */
             this.$parent = $('<ul/>').attr({
-                'data-role' : 'listview'
+                'data-role' : 'listview',
+                'class' : 'hx-listview'
             }).appendTo(this.$wrapper)
                 .listview();
             if (this.options.inset) {

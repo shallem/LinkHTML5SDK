@@ -23,28 +23,33 @@
 /**
  * Override the existing AJAX request handler to add a new pre-request trigger.
  */
-PrimeFaces.ajax.origRequest = PrimeFaces.ajax.AjaxRequest;
-PrimeFaces.ajax.AjaxRequest = function(cfg, ext) {
-    $(document).trigger('prerequest', cfg);
-    
-    /**
-     * Override the existing AJAX oncomplete handler to add a new post-request trigger.
-     * This allows us to trigger the event after ALL updates and callbacks are done.
-     */
-    var origComplete;
-    if (ext) {
-        origComplete = ext.oncomplete;        
-    } else {
-        ext = {};
+(function() {
+    if (!PrimeFaces || !PrimeFaces.ajax) {
+        return;
     }
-    ext.oncomplete = function(xhr, status, args) {
-        if (origComplete) {
-            origComplete.call(this, xhr, status, args);
+    PrimeFaces.ajax.origRequest = PrimeFaces.ajax.AjaxRequest;
+    PrimeFaces.ajax.AjaxRequest = function(cfg, ext) {
+        $(document).trigger('prerequest', cfg);
+
+        /**
+         * Override the existing AJAX oncomplete handler to add a new post-request trigger.
+         * This allows us to trigger the event after ALL updates and callbacks are done.
+         */
+        var origComplete;
+        if (ext) {
+            origComplete = ext.oncomplete;        
+        } else {
+            ext = {};
         }
-        $(document).trigger('postrequest', xhr);
-    };
-    PrimeFaces.ajax.origRequest.call(this, cfg, ext);
-}
+        ext.oncomplete = function(xhr, status, args) {
+            if (origComplete) {
+                origComplete.call(this, xhr, status, args);
+            }
+            $(document).trigger('postrequest', xhr);
+        };
+        PrimeFaces.ajax.origRequest.call(this, cfg, ext);
+    }
+})();
 
 /**
  * Show a loader pre-request.
@@ -61,11 +66,10 @@ $(document).bind('postrequest', function() {
         /* Hide the loader. */
         $.mobile.loading( "hide" );
     }
-    
+
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadOptions = {};
 });
-
 
 /**
 * Execute an AJAX load from a backing bean. This command is specifically used to
@@ -80,7 +84,7 @@ Helix.Ajax = {
      * automatically during all AJAX loads.
      */
     loadOptions: {
-       pin : false
+        pin : false
     },
     
     /*
@@ -163,6 +167,78 @@ Helix.Ajax = {
             },
             complete: function(xhr) {
                 $(document).trigger('postrequest', xhr);
+            }
+        });
+    },
+    
+    ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
+        $(document).trigger('prerequest');
+        $.ajax({
+            type: "POST",
+            url: url,
+            dataType: "json",
+            contentType: "application/x-www-form-urlencoded",
+            data: $(PrimeFaces.escapeClientId(formSelector)).serialize(),
+            statusCode: {
+                200: function(data, textStatus, jqXHR) {
+                    // Show success message.
+                    if (successMsg) {
+                        Helix.Utils.statusMessage(statusTitle, successMsg, "info");
+                    }
+                    if (actions && actions.success) {
+                        actions.success(data, textStatus, jqXHR);
+                    }
+                },
+                999: function() {
+                    // Container has told us we are offline.
+                    if (pendingMsg) {
+                        Helix.Utils.statusMessage(statusTitle, pendingMsg, "info");
+                    }
+                }
+            },
+            error: function(jqXHR,textStatus,errorThrown) {
+                if (jqXHR.status != 999) {
+                    // Display failMsg
+                    if (errorMsg) {
+                        Helix.Utils.statusMessage(statusTitle, errorMsg, "error");
+                    }
+                }
+                if (actions && actions.error) {
+                    actions.error(jqXHR,textStatus,errorThrown);
+                }
+            },
+            complete: function(xhr) {
+                $(document).trigger('postrequest', xhr);
+            }
+        });
+    },
+    ajaxJSONLoad: function(url,key,widgetVar,oncomplete,offlineSave) {
+        url = url.replace("{key}", key);
+        $.mobile.showPageLoadingMsg();
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "json",
+            success: function(data,status,jqXHR) {
+                if (data.__mh_error) {
+                    Helix.Utils.statusMessage("AJAX Error", data.__mh_error, "severe");
+                    jqXHR.__mh_failed = true;
+                    return;
+                }
+                
+                window[widgetVar] = data;
+                if (offlineSave) {
+                // Save non-array types in the key-value store.
+                // Save array types in their own tables.
+                // Let all values remain encrypted. In the future we can add
+                // a parameter that specifies which fields are decrypted.
+                }
+            },
+            complete: function(jqXHR,textStatus) {
+                $.mobile.hidePageLoadingMsg();
+                if (oncomplete && !jqXHR.__mh_failed) {
+                    oncomplete(jqXHR, textStatus);
+                }
             }
         });
     }

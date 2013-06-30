@@ -46,7 +46,7 @@
             
             /**
              * The itemList is either an array of items to display in the grid or a 
-             * query collection. This is often null on initial load, and may be
+             * QueryCollection. This is often null on initial load, and may be
              * specified on a subsequent refresh call.
              */
             itemList : null,
@@ -127,9 +127,7 @@
             }
         
             this.parent = this.element;
-            if (this.list) {
-                this.refresh(this.list, this.options.condition);
-            }
+            this.refresh(this.list, this.options.condition);
             this._setupEvents();
         },
     
@@ -158,6 +156,10 @@
         
             var _self = this;
             var refreshDone = function() {
+                /* Create the scroller on the content container. */
+                Helix.Layout.addScrollers(_self.contentContainer);
+                
+                /* Attach the context menu to the grid header. */
                 if (_self.defaultContextMenu) {
                     var cMenu = _self.defaultContextMenu;
                     var evName;
@@ -173,15 +175,20 @@
                 }
             };
             if ($.isArray(_self.list)) {
+                /* Array. */
                 _self.itemCount = _self.list.length;
                 _self._refreshPaginatorContainer(_self.list.length);
                 _self._refreshData(_self.list.length, refreshDone);
-            } else {
+            } else if (_self.list && _self.list.forEach) {
+                /* Query collection. */
                 _self.list.count(function(ct) {
                     _self.itemCount = ct;
                     _self._refreshPaginatorContainer(ct);
                     _self._refreshData(ct, refreshDone);
                 })
+            } else {
+                _self._refreshPaginatorContainer(0);
+                _self._refreshData(0, refreshDone);
             }
         },
     
@@ -255,8 +262,7 @@
             var _self = this;
             var gridBody, tableBody, curState;        
 
-            // XXX: Make sure we are not blowing away the scroller.
-            var contentContainer = $(PrimeFaces.escapeClientId(this.contentId));
+            var contentContainer = _self.contentContainer = $(PrimeFaces.escapeClientId(this.contentId));
             if (contentContainer.length == 0) {
                 contentContainer = $('<div />').attr({
                     'id' : this.contentId
@@ -349,6 +355,19 @@
             } else {
                 return rowsOptions[rowsOptions.length - 1];
             }
+        },
+        refreshScroller: function() {
+            if (this.contentContainer) {
+                Helix.Layout.updateScrollers(this.contentContainer);
+            }
+        },
+        destroy: function() {
+            if (this.contentContainer) {
+                Helix.Layout.cleanupScrollers(this.parent);
+            }
+        },
+        closeItemPopup: function() {
+            $(PrimeFaces.escapeClientId(this.options.itemContextMenu)).popup( "close" );
         }
     });
 }( jQuery ));

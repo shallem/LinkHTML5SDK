@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>button</tag>
+    <tagClass>org.helix.mobile.component.button.ButtonTag</tagClass>
+    <componentClass>org.helix.mobile.component.button.Button</componentClass>
+    <componentType>org.helix.mobile.Button</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ButtonRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.button.ButtonRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+
+    <attributes>
+        <attribute>
+            <name>onclick</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Action to execute on click.</description>
+        </attribute>
+        <attribute>
+            <name>href</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Link to browse to if this button is clicked.</description>
+            <defaultValue>javascript:void(0);</defaultValue>
+        </attribute>
+        <attribute>
+            <name>value</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Text for this button.</description>
+        </attribute>
+        <attribute>
+            <name>icon</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Standard jQuery Mobile icon to be used for this button.</description>
+        </attribute>
+        <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Theme to use for the button. If this button is in a header, it will inherit the theme from its parent.</description>
+        </attribute>
+    </attributes>
+        
+    <resources>
+        <resource>
+            <name>jquery/jquery.js</name>
+        </resource>
+    </resources>
+
+</component>

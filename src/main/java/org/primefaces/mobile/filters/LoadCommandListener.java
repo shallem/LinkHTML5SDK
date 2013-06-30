@@ -72,7 +72,7 @@ public class LoadCommandListener implements PhaseListener {
             } catch(Exception ioe) {
                 Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ioe);
                 try {
-                    response.getWriter().write("{ 'error' : '" + ioe.getMessage() + "' }");
+                    response.getWriter().write("{ \"error\" : \"" + ioe.getMessage() + "\" }");
                     response.flushBuffer();
                 } catch (IOException ex) {
                     Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ex);
