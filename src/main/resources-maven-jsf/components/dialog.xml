@@ -4,12 +4,12 @@
 ]>
 <component>
     <tag>dialog</tag>
-    <tagClass>org.primefaces.mobile.component.dialog.DialogTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.dialog.Dialog</componentClass>
-    <componentType>org.primefaces.mobile.Dialog</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.DialogRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.dialog.DialogRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.dialog.DialogTag</tagClass>
+    <componentClass>org.helix.mobile.component.dialog.Dialog</componentClass>
+    <componentType>org.helix.mobile.Dialog</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.DialogRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.dialog.DialogRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <interfaces>
         <interface>
@@ -48,6 +48,12 @@
             <required>true</required>
             <type>java.lang.String</type>
             <description>Text for the confirm button (or its equivalent) which closes the dialog after invoking the action function.</description>
+        </attribute>
+        <attribute>
+            <name>positionTo</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Indicates where to position the dialog. The default is 'origin'.</description>
         </attribute>
         <attribute>
             <name>onConfirm</name>

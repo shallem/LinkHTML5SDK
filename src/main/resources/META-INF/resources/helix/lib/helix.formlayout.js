@@ -17,7 +17,7 @@
 /**
  * Layout a single form element.
  */
-Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page) {
+Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers) {
     var $fieldContainer;
     if (!mode) {
         /* View mode. */
@@ -132,6 +132,10 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         } else {
             var htmlDiv = $('<div />').append(formElem.value);
             $fieldContainer.append(htmlDiv);
+            if (formElem.isScroller) {
+                var scroller = $fieldContainer.helixScrollingDiv().data('helix-helixScrollingDiv');
+                newScrollers.push(scroller);
+            }
         }
     } else if (formElem.type === 'htmlframe') {
         if (!mode) {
@@ -458,6 +462,7 @@ Helix.Utils.nSubPanels = 0;
 Helix.Utils.dynamicDialogs = {};
 Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
     var mode = formLayout.mode;
+    var newScrollers = [];
     var separateElements = formLayout.separateElements;
     if (!page) {
         page = $.mobile.activePage;
@@ -471,7 +476,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
     var formElements = formLayout.items;
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page);
+        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page, newScrollers);
     }
     
     if (formLayout.subPanels) {
@@ -491,7 +496,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
             // but not between items in each element.
             for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
                 formElem = formSubPanelItems[elemIdx];
-                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page);
+                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page, newScrollers);
             }
             
             // Make sure we have a dynamic page used to create new items in this 
@@ -535,8 +540,17 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
         }
     }    
     
+    // Re-layout the page because we have substantially changed the DOM. Also form
+    // elements may have layout directives.
+    Helix.Layout.layoutPage();
     if (formLayout.scroller) {
         formLayout.scroller.refresh();
+    }
+    // Refresh all component scrollers in the new layout.
+    var sidx = 0;
+    for (sidx = 0; sidx < newScrollers.length; ++sidx) {
+        var sdiv = newScrollers[sidx];
+        sdiv.refresh();
     }
 }
 

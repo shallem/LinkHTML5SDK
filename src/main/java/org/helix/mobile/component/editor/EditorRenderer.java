@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.primefaces.mobile.component.editor;
+package org.helix.mobile.component.editor;
 
 import java.io.IOException;
 import java.util.Map;
@@ -93,6 +93,8 @@ public class EditorRenderer extends CoreRenderer {
         startScript(writer, clientId);
 
         writer.write("$(function() {");
+        
+        writer.write("$(document).on('helixinit', function() {");
         writer.write("$(PrimeFaces.escapeClientId('" + inputId +"')).cleditor({");
         writer.write("id:'" + clientId + "'");
         writer.write(",widget:'" + widgetVar + "'");
@@ -123,9 +125,10 @@ public class EditorRenderer extends CoreRenderer {
                 Boolean.parseBoolean(editor.getFullWidth())) {
             writer.write(",isFullWidth: true");
         }
+        writer.write("});");
+        writer.write("});");
         
-        writer.write("});});");
-
+        writer.write("});");
         endScript(writer);
     }
 

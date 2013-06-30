@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.primefaces.mobile.component.dialog;
+package org.helix.mobile.component.dialog;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;
@@ -53,9 +53,10 @@ public class DialogRenderer extends CoreRenderer {
 
         startScript(writer, clientId);
 
-        writer.write("(function() {\n");
-
-        writer.write("window." + dialog.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDialog({");
+        writer.write("(function($) {\n");
+        
+        writer.write("$(document).on('helixinit', function() {");
+        writer.write("\nwindow." + dialog.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDialog({");
         writer.write("id:'" + clientId + "',");
         writer.write("title:'" + dialog.getTitle() + "',");
         writer.write("hasForm:" + dialog.isHasForm() + ",");
@@ -66,7 +67,9 @@ public class DialogRenderer extends CoreRenderer {
         writer.write("bodyHeader:'" + dialog.getBodyHeader() + "',");
         writer.write("bodyContent:'" + dialog.getBodyContent() + "'");
         writer.write("});\n");
-        writer.write("})();\n");
+        writer.write("});");
+        
+        writer.write("})(jQuery);\n");
 
         endScript(writer);
     }

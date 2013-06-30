@@ -34,6 +34,7 @@ public class PageRenderer extends CoreRenderer {
 
     /* SAH */
     public static final String LibraryName = "primefaces-mobile";
+    public static final String HelixLibraryName = "helix";
     
     @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {        
@@ -102,28 +103,11 @@ public class PageRenderer extends CoreRenderer {
         // Output primefaces content first.
         renderResource(context, "primefaces.js", "javax.faces.resource.Script", "primefaces", null);     
 
-        // Then override with pf-mobile content.
-        renderResource(context, "primefaces-mobile-full.css", "javax.faces.resource.Stylesheet", LibraryName, null);
-        renderResource(context, "primefaces-mobile-full.js", "javax.faces.resource.Script", LibraryName, null);
+        // Output the init script. Because we bind to mobileinit in here, we cannot include primefaces-mobile-full.js
+        // until after this is done.
+        renderResource(context, "helix.init.js", "javax.faces.resource.Script", HelixLibraryName, null);
         
-        // Registered resources - from primefaces
-        UIViewRoot viewRoot = context.getViewRoot();
-        ListIterator<UIComponent> iter = (viewRoot.getComponentResources(context, "head")).listIterator();
-        while (iter.hasNext()) {
-            writer.write("\n");
-            UIComponent resource = (UIComponent) iter.next();
-            resource.encodeAll(context);
-        }
-
-        // Then handle the user's postinit facet.
-        if(postinit != null) {
-            List<UIComponent> children = postinit.getChildren();
-            for (UIComponent postinitChild : children) {
-                postinitChild.encodeAll(context);
-            }
-        }
-        
-        // Finally output the init script.
+        // output the init script.
         
         //config options
         writer.startElement("script", null);
@@ -156,6 +140,27 @@ public class PageRenderer extends CoreRenderer {
         writer.write("});");
         
         writer.endElement("script");
+        
+        // Then override with pf-mobile content.
+        renderResource(context, "primefaces-mobile-full.css", "javax.faces.resource.Stylesheet", LibraryName, null);
+        renderResource(context, "primefaces-mobile-full.js", "javax.faces.resource.Script", LibraryName, null);
+        
+        // Registered resources - from primefaces
+        UIViewRoot viewRoot = context.getViewRoot();
+        ListIterator<UIComponent> iter = (viewRoot.getComponentResources(context, "head")).listIterator();
+        while (iter.hasNext()) {
+            writer.write("\n");
+            UIComponent resource = (UIComponent) iter.next();
+            resource.encodeAll(context);
+        }
+
+        // Then handle the user's postinit facet.
+        if(postinit != null) {
+            List<UIComponent> children = postinit.getChildren();
+            for (UIComponent postinitChild : children) {
+                postinitChild.encodeAll(context);
+            }
+        }
         
         writer.endElement("head");
 

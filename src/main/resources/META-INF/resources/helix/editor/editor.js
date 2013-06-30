@@ -226,6 +226,15 @@
         
         editor.name = $(area).attr('name');
 
+        // Capture the page for this item.
+        if (!options.page) {
+            options.page = $(area).closest('div[data-role="page"]');
+            if (options.page.length == 0) {
+                options.page = $.mobile.activePage;
+            }
+        }
+        editor.page = options.page;
+
         // Create the main container and append the textarea
         var $parent = editor.$parent = $(DIV_TAG);
         var $main = editor.$main = $(DIV_TAG)
@@ -386,16 +395,6 @@
             $(window).resize(function() {
                 refresh(editor);
             });
-
-
-        // Capture the page for this item.
-        if (!options.page) {
-            options.page = $(area).closest('div[data-role="page"]');
-            if (options.page.length == 0) {
-                options.page = $.mobile.activePage;
-            }
-        }
-        editor.page = options.page;
 
         // If the page is visible, create the iframe and resize the controls. Otherwise
         // wait until the page becomes visible with pageshow above.

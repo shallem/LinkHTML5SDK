@@ -33,6 +33,8 @@ public class FormLayoutRenderer extends CoreRenderer {
         
         startScript(writer, layout.getClientId(context));
         writer.write("\n(function($) {");
+        
+        writer.write("$(document).on('helixinit', function() {");
         writer.write("\n" + layout.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + layout.getClientId(context) + "')).helixFormLayout({");
         writer.write("items: [");
         boolean isFirst = true;
@@ -48,6 +50,8 @@ public class FormLayoutRenderer extends CoreRenderer {
         writer.write(",mode: " + Boolean.toString(layout.isEditMode()));
         writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
         writer.write("}).data('helix-helixFormLayout');");
+        writer.write("});");
+        
         writer.write("})(jQuery);\n");
         endScript(writer);
     }

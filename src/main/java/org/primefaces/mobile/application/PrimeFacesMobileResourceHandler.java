@@ -63,7 +63,8 @@ public class PrimeFacesMobileResourceHandler extends ResourceHandlerWrapper {
 
         Resource resource = super.createResource(finalResourceName, libraryName);
         if (resource != null && libraryName != null) {
-            if (libraryName.equalsIgnoreCase("primefaces-mobile")) {
+            if (libraryName.equalsIgnoreCase("primefaces-mobile") ||
+                    libraryName.equalsIgnoreCase("helix")) {
                 if (deliverUncompressedFile(resourceName)) {
                     //get uncompressed resource if project stage == development
                     resource = super.createResource(resourceName, Constants.LIBRARY_UNCOMPRESSED);

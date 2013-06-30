@@ -249,6 +249,9 @@ Helix.Layout = {
                 // These items must be side-by-side, otherwise the proposed layout is fully overlapping ...
                 continue;
             }
+            if (!$(children[i]).is(":visible")) {
+                continue;
+            }
 
             var child_i_height = $(children[i]).outerHeight(true);
             totHeight += child_i_height;

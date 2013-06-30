@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.primefaces.mobile.component.datalist;
+package org.helix.mobile.component.datalist;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;
@@ -133,6 +133,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getHoldAction() != null) {
             writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
         }
+        if (dlist.getItemContextMenu() != null) {
+            writer.append(",itemContextMenu: '" + dlist.getItemContextMenu() + "'");
+        }
         
         // Search
         if (dlist.getIndexedSearch() != null) {
@@ -162,6 +165,14 @@ public class DataListRenderer extends CoreRenderer {
         // Localizable strings.
         if (dlist.getStrings() != null) {
             writer.write(",strings: '" + dlist.getStrings() + "'");
+        }
+        
+        // Split theme
+        if (dlist.getSplitIcon() != null) {
+            writer.write(",splitIcon: '" + dlist.getSplitIcon() + "'");
+        }
+        if (dlist.getSplitTheme() != null) {
+            writer.write(",splitTheme: '" + dlist.getSplitTheme() + "'");
         }
         
         // The data list.

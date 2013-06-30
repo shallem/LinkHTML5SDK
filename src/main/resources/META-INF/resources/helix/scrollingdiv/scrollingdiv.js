@@ -63,11 +63,11 @@
             this._$wrapper.attr('id', Helix.Utils.getUniqueID());
             
             /* Make sure that if this.element is removed from the DOM we delete
-             * its scroller.
+             * its scroller. Since the user is not necessarily aware of the wrapper,
+             * he/she may delete the element.
              */
             var _self = this;
             this.element.on("remove", function() {
-                Helix.Layout.cleanupScrollers(_self._$wrapper);
                 _self._$wrapper.remove();
             });
             
@@ -143,6 +143,10 @@
          */
         refreshScroller: function() {
             Helix.Layout.updateScrollers(this._$wrapper);
+        },
+        
+        destroy: function() {
+            Helix.Layout.cleanupScrollers(this._$wrapper);
         }
     });
 }( jQuery ));

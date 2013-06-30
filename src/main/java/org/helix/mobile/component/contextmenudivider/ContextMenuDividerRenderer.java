@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.primefaces.mobile.component.contextmenuitem;
+package org.helix.mobile.component.contextmenudivider;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;
@@ -14,15 +14,15 @@ import org.primefaces.renderkit.CoreRenderer;
  *
  * @author shallem
  */
-public class ContextMenuItemRenderer extends CoreRenderer {
+public class ContextMenuDividerRenderer extends CoreRenderer {
     @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-        ContextMenuItem item = (ContextMenuItem) component; 
+        ContextMenuDivider item = (ContextMenuDivider) component;
+
         writer.startElement("li", item);
-        writer.startElement("a", null);
-        writer.writeAttribute("href", "javascript:void(0);", null);
-        writer.writeAttribute("onclick", item.getOntap(), null);
+        writer.writeAttribute("data-role", "divider", null);
+        writer.writeAttribute("data-theme", "a", null);
         writer.write((String)item.getValue());
     }
 
@@ -30,7 +30,6 @@ public class ContextMenuItemRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
 
-        writer.endElement("a");
         writer.endElement("li");
     }
 }

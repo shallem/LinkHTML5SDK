@@ -174,6 +174,20 @@
             itemList: null,
             
             /**
+             * Specify the icon for a split icon layout if one is going to be
+             * used for the list items. See jQuery Mobile documentation of the
+             * listview plugin for further detail on what a split icon layout
+             * means.
+             */
+            splitIcon: null,
+            
+            /**
+             * Specify the theme for the split button. This item is ignored unless
+             * splitIcon is non-null.
+             */
+            splitTheme: null,
+            
+            /**
              * Function used to render a single data row (i.e. a non-group-name
              * row). If a list row should be skipped the renderer should return
              * false. Otherwise, to include a row in the list it must return
@@ -210,15 +224,29 @@
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
             }
+            
+            /**
+             * Split icons, if appropriate.
+             */
+            if (this.options.splitIcon) {
+                this.$parent.attr('data-split-icon', this.options.splitIcon);
+            }
+            if (this.options.splitTheme) {
+                this.$parent.attr('data-split-theme', this.options.splitTheme);
+            }
 
             // Column setup.
             this._currentPage = 0;
-    
+            
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
+            //this.contextEvent = 'taphold';
             if (Helix.hasTouch) {
                 this.contextEvent = 'taphold';
+                this.tapEvent = 'tap';
             } else {
-                this.contextEvent = 'dblclick';
+                this.contextEvent = 'taphold';
+                //this.contextEvent = 'dblclick';
+                this.tapEvent = 'click';
             }
         
             // Default sort.
@@ -495,19 +523,22 @@
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
         _prependSearchBox: function() {
-            $(this.jqID + "_wrapper").prev(PrimeFaces.escapeClientId(this.cfg.id + "_searchwrapper")).remove();
-            $('<div />').attr({
-                'data-role' : 'fieldcontain',
-                'id' : this.cfg.id + "_searchwrapper"
-            }).append($('<label />').attr({
-                'for' : this.cfg.id + '_search'
-            })).append($('<input/>').attr({
+            if (this.$searchBox) {
+                this.$wrapper.prev().remove();
+            }
+            
+            var sboxID = Helix.Utils.getUniqueID();
+            this.$searchBox = $('<input/>').attr({
                 'type' : 'search',
-                'name' : this.cfg.id + '_search',
-                'id' : this.cfg.id + '_search',
+                'name' : 'search',
+                'id' : sboxID,
                 'value' : ''
-            })).insertBefore($(this.jqID + "_wrapper"));
-            $( PrimeFaces.escapeClientId(this.cfg.id + '_search') ).textinput();
+            }).insertBefore(this.$wrapper);
+            
+            this.$searchLabel = $('<label/>').attr({
+                'for': sboxID
+            }).append('Search').insertBefore(this.$searchBox).hide();
+            this.$searchBox.textinput();
         },
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection) {
@@ -618,12 +649,12 @@
             } else if (_self.options.holdAction) {
                 $(curRowParent).on(_self.contextEvent, function(event) {
                     _self.setSelected(event.target);
-                    _self.options.holdItem();
+                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                     event.stopPropagation();
                 }); 
             } 
             if (_self.options.selectAction) {
-                $(curRowParent).on('tap', function(event) {
+                $(curRowParent).on(_self.tapEvent, function(event) {
                     _self.setSelected(event.target);
                     _self.selectItem();
                     event.stopPropagation();
@@ -650,6 +681,9 @@
                 this.selected = this.displayList[this.selectedIndex];
             }
         },
+        getSelected: function() {
+            return this.selected;
+        },
     
         setSelectedByIndex: function(idx, groupIdx) {
             var targetElem;
@@ -674,30 +708,41 @@
         },
   
         createListRow: function(parentElement,rowComponents) {
+            var mainLink = $('<a />').attr({
+                'href' : 'javascript:void(0)'
+            }).appendTo($(parentElement));
+            
             if (rowComponents.image) {
-                $(parentElement).append('<img />').attr({
+                mainLink.append('<img />').attr({
                     'src' : rowComponents.image
                 });
             }
             if (rowComponents.header) {
-                $(parentElement).append($('<h3 />').append(rowComponents.header));
+                mainLink.append($('<h3 />').append(rowComponents.header));
             }
             if (rowComponents.subHeader) {
-                $(parentElement).append($('<p />')
+                mainLink.append($('<p />')
                 .append($('<strong />')
                 .append(rowComponents.subHeader)
             )
             );
             }
             if (rowComponents.body && (rowComponents.header || rowComponents.subHeader)) {
-                $(parentElement).append($('<p />').append(rowComponents.body));
+                mainLink.append($('<p />').append(rowComponents.body));
             } else {
-                $(parentElement).append(rowComponents.body);
+                mainLink.append(rowComponents.body);
             }
             if (rowComponents.aside) {
-                $(parentElement).append($('<p />').attr({
+                mainLink.append($('<p />').attr({
                     'class' : 'ui-li-aside'
                 }).append(rowComponents.aside));
+            }
+            if (rowComponents.splitLink) {
+                $(parentElement).append($('<a />').attr({
+                    'href' : 'javascript:void(0)'
+                }).on(this.tapEvent, function(ev) {
+                    rowComponents.splitLink(ev);
+                }));
             }
         },
         selectItem: function() {
@@ -717,6 +762,9 @@
         },
         displayFilterMenu: function(selector) {
             this._filterContainer.popup('open', { positionTo: selector });
+        },
+        setWrapperHeight: function(hgt) {
+            this.$wrapper.height(hgt);
         },
         /**
          * Refresh the scroller surrounding the datalist contents.

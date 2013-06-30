@@ -3,12 +3,12 @@
 ]>
 <component>
     <tag>contextMenuItem</tag>
-    <tagClass>org.primefaces.mobile.component.contextmenuitem.ContextMenuItemTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.contextmenuitem.ContextMenuItem</componentClass>
-    <componentType>org.primefaces.mobile.ContextMenuItem</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.ContextMenuItemRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.contextmenuitem.ContextMenuItemRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.contextmenuitem.ContextMenuItemTag</tagClass>
+    <componentClass>org.helix.mobile.component.contextmenuitem.ContextMenuItem</componentClass>
+    <componentType>org.helix.mobile.ContextMenuItem</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ContextMenuItemRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.contextmenuitem.ContextMenuItemRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <attributes>
 	<attribute>
@@ -17,14 +17,6 @@
             <type>java.lang.Object</type>
             <ignoreInComponent>true</ignoreInComponent>
             <description>Label of the menu item.</description>
-        </attribute>
-        <attribute>
-            <name>converter</name>
-            <required>false</required>
-            <type>java.faces.convert.Converter</type>
-            <ignoreInComponent>true</ignoreInComponent>
-            <description>An el expression or a literal text that defines a converter for the component. When it's an EL expression, it's resolved to a converter instance. 
-            In case it's a static text, it must refer to a converter id.</description>
         </attribute>
         <attribute>
             <name>ontap</name>

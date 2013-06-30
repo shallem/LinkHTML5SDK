@@ -5,12 +5,12 @@
 ]>
 <component>
     <tag>dataList</tag>
-    <tagClass>org.primefaces.mobile.component.datalist.DataListTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.datalist.DataList</componentClass>
-    <componentType>org.primefaces.mobile.component.DataList</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.DataListRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.datalist.DataListRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.datalist.DataListTag</tagClass>
+    <componentClass>org.helix.mobile.component.datalist.DataList</componentClass>
+    <componentType>org.helix.mobile.component.DataList</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.DataListRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.datalist.DataListRenderer</rendererClass>
     <parent>javax.faces.component.UIPanel</parent>
     <description>DataList is an enhanced version of the standard jQuery Mobile DataList that includes support for offline synchronization.</description>
     <interfaces>
@@ -183,6 +183,19 @@
             <type>java.lang.Boolean</type>
             <defaultValue>true</defaultValue>
             <description>Indicate if the contents of the list should be scrollable.</description>
+        </attribute>
+        <attribute>
+            <name>splitIcon</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Specify if a split icon will be used in the list elements.</description>
+        </attribute>
+        <attribute>
+            <name>splitTheme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>b</defaultValue>
+            <description>Specify the theme of the split element.</description>
         </attribute>
     </attributes>
     <resources>

@@ -3,12 +3,12 @@
 ]>
 <component>
     <tag>contextMenuDivider</tag>
-    <tagClass>org.primefaces.mobile.component.contextmenudivider.ContextMenuDividerTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.contextmenudivider.ContextMenuDivider</componentClass>
-    <componentType>org.primefaces.mobile.ContextMenuDivider</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.ContextMenuDividerRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.contextmenudivider.ContextMenuDividerRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.contextmenudivider.ContextMenuDividerTag</tagClass>
+    <componentClass>org.helix.mobile.component.contextmenudivider.ContextMenuDivider</componentClass>
+    <componentType>org.helix.mobile.ContextMenuDivider</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ContextMenuDividerRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.contextmenudivider.ContextMenuDividerRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <attributes>
 	<attribute>
@@ -17,14 +17,6 @@
             <type>java.lang.Object</type>
             <ignoreInComponent>true</ignoreInComponent>
             <description>Label of the menu item.</description>
-        </attribute>
-        <attribute>
-            <name>converter</name>
-            <required>false</required>
-            <type>java.faces.convert.Converter</type>
-            <ignoreInComponent>true</ignoreInComponent>
-            <description>An el expression or a literal text that defines a converter for the component. When it's an EL expression, it's resolved to a converter instance. 
-            In case it's a static text, it must refer to a converter id.</description>
         </attribute>
     </attributes>
 </component>

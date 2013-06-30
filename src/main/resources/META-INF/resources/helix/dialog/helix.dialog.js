@@ -55,8 +55,11 @@
     // cleditor - creates a new editor for the passed in textarea element
     helixDialog = function(parent, options) {
         this.options = options = $.extend({}, $.helixDialog.defaultOptions, options);        
+        this.$mainDiv = $(parent);
 
         this.refresh();
+        
+        this.$mainDiv.popup();
     }
     
     //===============
@@ -103,21 +106,20 @@
     }
     
     function refresh() {
-        var $mainDiv = this.$mainDiv = $(PrimeFaces.escapeClientId(this.options.id));
-        $mainDiv.empty();
+        this.$mainDiv.empty();
         
         if (this.options.hasForm) {
-            $mainDiv.attr('data-theme', 'a');
-            $mainDiv.append($('<div/>').attr({
+            this.$mainDiv.attr('data-theme', 'a');
+            this.$mainDiv.append($('<div/>').attr({
                 'style' : 'padding: 10px 20px;'
             }));
         } else {
-            $mainDiv.attr('data-theme', 'c');
-            $mainDiv.attr('data-overlay-theme', 'a');
+            this.$mainDiv.attr('data-theme', 'c');
+            this.$mainDiv.attr('data-overlay-theme', 'a');
         }
     
-        encodeHeader(this, $mainDiv);
-        encodeContent(this, $mainDiv);
+        encodeHeader(this, this.$mainDiv);
+        encodeContent(this, this.$mainDiv);
     }
 
     function encodeHeader(dialog,$mainDiv) {

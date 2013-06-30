@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>contextMenu</tag>
+    <tagClass>org.helix.mobile.component.contextmenu.ContextMenuTag</tagClass>
+    <componentClass>org.helix.mobile.component.contextmenu.ContextMenu</componentClass>
+    <componentType>org.helix.mobile.ContextMenu</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ContextMenuRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.contextmenu.ContextMenuRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+        <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>a</defaultValue>
+            <description>jQuery Mobile theme of the context menu popup.</description>
+        </attribute>
+        <attribute>
+            <name>listTheme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>b</defaultValue>
+            <description>jQuery Mobile theme of the context menu items list.</description>
+        </attribute>
+        <attribute>
+            <name>positionTo</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>origin</defaultValue>
+            <description>jQuery Mobile theme of the context menu popup.</description>
+        </attribute>
+        <attribute>
+            <name>id</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <ignoreInComponent>true</ignoreInComponent>
+            <literal>true</literal>
+            <description>Unique identifier of the component in a namingContainer.</description>
+        </attribute>
+    </attributes>
+</component>
