@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 (function($) {
-    $(document).on('mobileinit', function() {
+    $(document).on('ready', function() {
+        /* Update the .val method on textareas to preserve newlines. See
+         * http://api.jquery.com/val/
+         */
+        $.valHooks.textarea = {
+            get: function( elem ) {
+                return elem.value.replace( /\r?\n/g, "\r\n" );
+            }
+        };
+
         $(document).trigger('helixinit');
     });
 })(jQuery);

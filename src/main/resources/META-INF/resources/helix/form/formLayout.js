@@ -76,23 +76,28 @@
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var fieldID = this.options.items[idx].name;
                 var fieldType = this.options.items[idx].type;
+                if (fieldType !== "htmlarea" &&
+                    fieldType !== "text" &&
+                    fieldType !== "hidden") {
+                    /* All other types are unserializable. */
+                    continue;
+                }
                 $('[name="' + fieldID + '"]').each(function() {
-                    if (fieldType !== "htmlarea" &&
-                        fieldType !== "text") {
-                        /* All other types are unserializable. */
-                        return;
-                    }
-                    
                     if (fieldType === "htmlarea") {
                         var $editor = $(this).data('cleditor');
                         if ($editor) {
                             $editor.updateTextArea();
                         }
+                        toSerialize.push({
+                            name: fieldID,
+                            value: $(this).text()
+                        });
+                    } else {
+                        toSerialize.push({
+                            name : fieldID,
+                            value: $(this).attr('value')
+                        });
                     }
-                    toSerialize.push({
-                        name : fieldID,
-                        value: $(this).attr('value')
-                    });
                 });
             }
             return $.param(toSerialize);
