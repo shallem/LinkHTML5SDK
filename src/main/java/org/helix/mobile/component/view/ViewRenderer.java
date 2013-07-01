@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.primefaces.mobile.component.view;
+package org.helix.mobile.component.view;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;
@@ -34,12 +34,14 @@ public class ViewRenderer extends CoreRenderer {
         writer.startElement("div", view);
         writer.writeAttribute("id", view.getId(), "id");
         writer.writeAttribute("data-role", "page", null);
-        writer.writeAttribute("class", "ui-page", null);
+        String cssExtraClass = "";
         if (view.isLayoutFullPage()) {
             writer.writeAttribute("style", "overflow: hidden;", null);
         } else {
+            cssExtraClass= " hx-scrolling-page";
             writer.writeAttribute("style", "overflow-y: auto;", null);
         }
+        writer.writeAttribute("class", "ui-page" + cssExtraClass, null);
         
         if (swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);

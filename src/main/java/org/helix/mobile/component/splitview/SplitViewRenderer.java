@@ -2,14 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.primefaces.mobile.component.splitview;
+package org.helix.mobile.component.splitview;
 
 import java.io.IOException;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.primefaces.mobile.component.view.View;
 import org.primefaces.renderkit.CoreRenderer;
 
 /**

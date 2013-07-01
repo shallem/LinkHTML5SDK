@@ -140,24 +140,6 @@
     padding: 0 0;
 }
 
-/* Moved these to the jQM CSS directly because the selectors change across versions.
-
-.ui-state-default .ui-icon {
-    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
-}
-
-.ui-widget-content .ui-icon {
-    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
-}
-
-.ui-icon, .ui-icon-searchfield:after {
-    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
-}
-
-.ui-widget-header .ui-icon {
-    background-image: url("#{resource['primefaces-mobile:images/icons-18-white.png']}");
-}*/
-
 /* These icons do not exist in jqmobile. */
 .ui-icon-circle-triangle-w {
     background-position: 	-396px 50%;
@@ -197,6 +179,20 @@
 
 .hx-listview li:not(.ui-btn-active) {
     background-color: white;
+}
+
+/* Fixes a bug in mobile safari where components that appear off screen (or even on
+   the edge of a screen) on a screen that scrolls do not render properly when the
+   screen is scrolled or the keyboard appears. This particularly shows up in the
+   e-mail app, compose page, in landscape mode. Without this styling when one taps
+   and types in the compose box the entire screen goes blank. See 
+   
+    http://stackoverflow.com/questions/9807620/ipad-safari-scrolling-causes-html-elements-to-disappear-and-reappear-with-a-dela
+   
+    for the source of the fix.
+*/
+.hx-scrolling-page *:not(html) {
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 /*

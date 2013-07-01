@@ -4,12 +4,12 @@
 ]>
 <component>
     <tag>splitView</tag>
-    <tagClass>org.primefaces.mobile.component.splitview.SplitViewTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.splitview.SplitView</componentClass>
-    <componentType>org.primefaces.mobile.SplitView</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.SplitViewRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.splitview.SplitViewRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.splitview.SplitViewTag</tagClass>
+    <componentClass>org.helix.mobile.component.splitview.SplitView</componentClass>
+    <componentType>org.helix.mobile.SplitView</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.SplitViewRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.splitview.SplitViewRenderer</rendererClass>
     <parent>javax.faces.component.UIPanel</parent>
     <attributes>
 		&standard_uicomponent_attributes;

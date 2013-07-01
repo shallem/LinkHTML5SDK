@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
 <!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
-<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
-	<tag>view</tag>
-    <tagClass>org.primefaces.mobile.component.view.ViewTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.view.View</componentClass>
-	<componentType>org.primefaces.mobile.View</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.ViewRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.view.ViewRenderer</rendererClass>
-	<parent>javax.faces.component.UIPanel</parent>
-	<attributes>
+    <tag>view</tag>
+    <tagClass>org.helix.mobile.component.view.ViewTag</tagClass>
+    <componentClass>org.helix.mobile.component.view.View</componentClass>
+    <componentType>org.helix.mobile.View</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ViewRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.view.ViewRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <attributes>
 		&standard_uicomponent_attributes;
         <attribute>
             <name>title</name>
@@ -33,5 +32,5 @@
             <defaultValue>true</defaultValue>
             <description>Indicate if this view is a fixed size, full page view (value of true), or if it should have a vertical scroll.</description>
         </attribute>
-	</attributes>
+    </attributes>
 </component>

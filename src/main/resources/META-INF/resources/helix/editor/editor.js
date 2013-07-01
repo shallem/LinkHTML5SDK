@@ -154,7 +154,6 @@
     FORMATBAR_CLASS  = "ui-editor-toolbar", // toolbar above main div showing current format commands
     TOOLBAR_CLASS    = "ui-editor-toolbar",            // Editor toolbar
     GROUP_CLASS      = "ui-editor-group",   // group divs inside the toolbar div
-    BUTTON_CLASS     = "ui-editor-button",  // button divs inside group div
     DISABLED_CLASS   = "ui-editor-disabled",// disabled button divs
     DIVIDER_CLASS    = "ui-editor-divider", // divider divs inside group div
     POPUP_CLASS      = "ui-editor-popup",   // popup divs inside body
@@ -218,11 +217,9 @@
         // Hide the textarea and associate it with this editor
         var $area = editor.$area = $(area)
         .hide()
-        .data(CLEDITOR, editor)
-        .blur(function() {
-            // Update the iframe when the textarea loses focus
-            updateFrame(editor, true);
-        });
+        .height(0)
+        .width(0)
+        .data(CLEDITOR, editor);
         
         editor.name = $(area).attr('name');
 
@@ -410,6 +407,11 @@
         $(editor.$main).on("remove", function() {
             $(editor.page).off(eventName);
             editor.destroy();
+        });
+        
+        eventName = "orientationchange." + editor.name;
+        $(window).off(eventName).on(eventName, function() {
+            refresh(editor);
         });
         
         // Save this object int he widget var in the global scope, if one is supplied.
@@ -877,21 +879,20 @@
 
     // refresh - creates the iframe and resizes the controls
     function refresh(editor) {
+        var $contentParent = $(editor.$main).closest(".hx-main-content");
         if (editor.options.isFullWidth) {
             // Figure out the width available to the enclosing page tag.
-            var hxMain = $(editor.$main).closest(".hx-main-content");
-            editor.options.width = hxMain[0].clientWidth;
+            editor.options.width = $contentParent[0].clientWidth;
         }
         if (editor.options.isFullHeight) {
-            var fullHeight = $(editor.$main).closest(".ui-content").height()- 
-            ($(editor.$main).offset().top - 
-                $(editor.$main).closest(".ui-content").offset().top);
+            var fullHeight = $contentParent.height()- 
+                ($(editor.$main).offset().top - 
+                    $contentParent.offset().top);
             editor.options.height = fullHeight;
         }
 
 
         var $main = editor.$main,
-        $parent = editor.$parent,
         options = editor.options;
 
         // Remove the old iframe
@@ -919,7 +920,7 @@
             options.docType +
             '<html>' +
             ((options.docCSSFile === '') ? '' : '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
-            '<body style="' + options.bodyStyle + '" onload="window.focus()"></body></html>'
+            '<body style="' + options.bodyStyle + '"></body></html>'
             );
         doc.close();
 
@@ -929,6 +930,20 @@
             $doc.click(function() {
                 focus(editor);
             });
+
+        // Work around for bug in iPad which causes the screen to blank out
+        // when you start typing in landscape mode on an editor that is not
+        // full screen.
+        if (iOS) {
+            /*$doc.click(function() {
+                if (!editor.options.isFullHeight) {
+                    var scrollPos = editor.$frame.offset().top - $contentParent.offset().top;
+                    $contentParent.scrollTop(
+                        scrollPos
+                    );
+                }
+            });*/
+        }
 
         // Load the content
         updateFrame(editor);
@@ -974,13 +989,9 @@
 
         // Update the textarea when the iframe loses focus
         ($.browser.mozilla ? $doc : $(contentWindow)).blur(function(e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            updateTextArea(editor, true);
-        });
-        ($.browser.mozilla ? $doc : $(contentWindow)).focus(function(e) {
             //e.preventDefault();
             //e.stopImmediatePropagation();
+            updateTextArea(editor, true);
         });
    
         var $toolbar = editor.$toolbar,
@@ -1015,10 +1026,10 @@
 
         // Resize the textarea. IE6 textareas have a 1px top
         // & bottom margin that cannot be removed using css.
-        editor.$area.width(wid);
+        /*editor.$area.width(wid);
         if (hgt) {
             editor.$area.height(ie6 ? hgt - 2 : hgt);
-        }
+        }*/
         
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.

@@ -211,7 +211,7 @@
 		    <!-- Overrides to set image URLs based on PrimeFaces Mobile's resource handler. -->
 		    <include>datebox/pm-jqm-datebox-overrides.css</include>
 
-		    <include>helix.css</include>
+		    <include>css/helix.css</include>
 
 		    <!-- Styles from the PrimeFaces project. -->
 		    <include>primefaces-styles/primefaces-aristo.css</include>
@@ -222,7 +222,7 @@
 
 		    <!-- Overrides for use in a JSF context to reset the location
 			 of JSF icons. -->
-		    <include>helix.overrides.css</include>
+		    <include>css/helix.overrides.css</include>
 
 		  </includes>
 		  <aggregations>

@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import javax.el.ELContext;
-import javax.el.ExpressionFactory;
-import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIOutput;
 import javax.faces.component.UIViewRoot;
@@ -65,12 +62,6 @@ public class PageRenderer extends CoreRenderer {
         writer.writeAttribute("name", "viewport", null);
         writer.writeAttribute("content", "initial-scale=1.0", null);
         writer.endElement("meta");
-        
-        /*
-        //user defined meta
-        if(meta != null) {
-            meta.encodeAll(context);
-        }*/
 
         writer.startElement("title", null);
         writer.write(page.getTitle());
@@ -79,23 +70,6 @@ public class PageRenderer extends CoreRenderer {
         if(preinit != null) {
             preinit.encodeAll(context);
         }
-        
-        // Output PF theme
-        /*if(theme != null) {
-            ELContext elContext = context.getELContext();
-            ExpressionFactory expressionFactory = context.getApplication().getExpressionFactory();
-            ValueExpression ve = expressionFactory.createValueExpression(elContext, theme, String.class);
-
-            theme = (String) ve.getValue(elContext);
-        } 
-        else {
-            theme = "aristo";   //default
-        }*/
-
-        // SAH: Removed primefaces CSS - retained only the pieces we really need.
-        //if(theme != null && !theme.equals("none")) {
-        //    renderResource(context, "theme.css", "javax.faces.resource.Stylesheet", "primefaces-" + theme, null);
-        //}
         
         // jQuery
         renderResource(context, "jquery/jquery.js", "javax.faces.resource.Script", "primefaces", null);

@@ -4,12 +4,12 @@
 ]>
 <component>
     <tag>iconButton</tag>
-    <tagClass>org.primefaces.mobile.component.iconbutton.IconButtonTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.iconbutton.IconButton</componentClass>
-    <componentType>org.primefaces.mobile.IconButton</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.IconButtonRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.iconbutton.IconButtonRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.iconbutton.IconButtonTag</tagClass>
+    <componentClass>org.helix.mobile.component.iconbutton.IconButton</componentClass>
+    <componentType>org.helix.mobile.IconButton</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.IconButtonRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.iconbutton.IconButtonRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
 
     <attributes>

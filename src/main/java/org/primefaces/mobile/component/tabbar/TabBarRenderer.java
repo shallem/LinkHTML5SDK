@@ -11,8 +11,8 @@ import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import org.helix.mobile.component.view.View;
 import org.primefaces.mobile.component.tab.Tab;
-import org.primefaces.mobile.component.view.View;
 import org.primefaces.renderkit.CoreRenderer;
 
 /**

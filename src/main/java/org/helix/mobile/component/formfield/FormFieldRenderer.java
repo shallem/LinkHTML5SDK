@@ -21,7 +21,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 import org.helix.mobile.component.fieldlabel.FieldLabel;
-import org.primefaces.mobile.component.iconbutton.IconButton;
+import org.helix.mobile.component.iconbutton.IconButton;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class FormFieldRenderer extends CoreRenderer {
