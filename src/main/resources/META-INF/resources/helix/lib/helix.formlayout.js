@@ -468,6 +468,9 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
         page = $.mobile.activePage;
     }
     
+    // Clean up any scrollers in the parent div before we empty it out.
+    Helix.Layout.cleanupScrollers(parentDiv);
+    
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
     

@@ -90,12 +90,12 @@
                         }
                         toSerialize.push({
                             name: fieldID,
-                            value: $(this).text()
+                            value: $(this).val()
                         });
                     } else {
                         toSerialize.push({
                             name : fieldID,
-                            value: $(this).attr('value')
+                            value: $(this).val()
                         });
                     }
                 });
