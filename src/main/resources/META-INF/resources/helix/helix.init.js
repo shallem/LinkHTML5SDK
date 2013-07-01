@@ -13,6 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+Helix = {
+    
+};
+
+Helix.DB = {
+    
+};
+
+Helix.Ajax = {
+    
+};
+
+Helix.Utils = {
+    
+};
+
+Helix.Layout = {
+    
+};
+
 (function($) {
     $(document).on('ready', function() {
         /* Update the .val method on textareas to preserve newlines. See
