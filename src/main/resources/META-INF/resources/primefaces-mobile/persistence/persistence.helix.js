@@ -425,6 +425,13 @@ Helix.DB = {
         return schema;
     },
 
+    getSchemaNameForField: function(persistentObj, fieldName) {
+        if (fieldName in persistentObj.__pm_schema.__pm_subSchemas) {
+            return persistentObj.__pm_schema.__pm_subSchemas[fieldName].__pm_schema_name;
+        }
+        return null;
+    },
+
     convertRelationshipToString: function(relObject) {
         var f, r;
         var relSummary = {};

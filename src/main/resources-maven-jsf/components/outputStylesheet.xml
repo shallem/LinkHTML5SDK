@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
-<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
 ]>
 <component>
 	<tag>outputStylesheet</tag>
-        <tagClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheetTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheet</componentClass>
-	<componentType>org.primefaces.mobile.OutputStylesheet</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.OutputStylesheetRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.outputstylesheet.OutputStylesheetRenderer</rendererClass>
+        <tagClass>org.helix.mobile.component.outputstylesheet.OutputStylesheetTag</tagClass>
+	<componentClass>org.helix.mobile.component.outputstylesheet.OutputStylesheet</componentClass>
+	<componentType>org.helix.mobile.OutputStylesheet</componentType>
+	<componentFamily>org.helix.mobile.component</componentFamily>
+	<rendererType>org.helix.mobile.component.OutputStylesheetRenderer</rendererType>
+	<rendererClass>org.helix.mobile.component.outputstylesheet.OutputStylesheetRenderer</rendererClass>
 	<parent>javax.faces.component.UIOutput</parent>
 	<attributes>
         <attribute>

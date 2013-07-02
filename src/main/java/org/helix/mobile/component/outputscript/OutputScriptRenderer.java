@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.primefaces.mobile.component.outputscript;
+package org.helix.mobile.component.outputscript;
 
 import java.io.IOException;
 import javax.faces.component.UIComponent;

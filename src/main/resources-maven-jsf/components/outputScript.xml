@@ -4,12 +4,12 @@
 ]>
 <component>
 	<tag>outputScript</tag>
-        <tagClass>org.primefaces.mobile.component.outputscript.OutputScriptTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.outputscript.OutputScript</componentClass>
-	<componentType>org.primefaces.mobile.OutputScript</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.OutputScriptRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.outputscript.OutputScriptRenderer</rendererClass>
+        <tagClass>org.helix.mobile.component.outputscript.OutputScriptTag</tagClass>
+	<componentClass>org.helix.mobile.component.outputscript.OutputScript</componentClass>
+	<componentType>org.helix.mobile.OutputScript</componentType>
+	<componentFamily>org.helix.mobile.component</componentFamily>
+	<rendererType>org.helix.mobile.component.OutputScriptRenderer</rendererType>
+	<rendererClass>org.helix.mobile.component.outputscript.OutputScriptRenderer</rendererClass>
 	<parent>javax.faces.component.UIOutput</parent>
 	<attributes>
         <attribute>
