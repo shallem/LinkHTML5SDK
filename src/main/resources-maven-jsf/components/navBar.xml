@@ -5,12 +5,12 @@
 ]>
 <component>
 	<tag>navBar</tag>
-    <tagClass>org.primefaces.mobile.component.navbar.NavBarTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.navbar.NavBar</componentClass>
-	<componentType>org.primefaces.mobile.NavBar</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.NavBarRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.navbar.NavBarRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.navbar.NavBarTag</tagClass>
+	<componentClass>org.helix.mobile.component.navbar.NavBar</componentClass>
+	<componentType>org.helix.mobile.NavBar</componentType>
+	<componentFamily>org.helix.mobile.component</componentFamily>
+	<rendererType>org.helix.mobile.component.NavBarRenderer</rendererType>
+	<rendererClass>org.helix.mobile.component.navbar.NavBarRenderer</rendererClass>
 	<parent>javax.faces.component.UIPanel</parent>
 	<attributes>
 		&standard_uicomponent_attributes;

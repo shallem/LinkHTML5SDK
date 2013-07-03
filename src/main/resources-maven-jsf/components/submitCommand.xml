@@ -4,12 +4,12 @@
 ]>
 <component>
     <tag>submitCommand</tag>
-    <tagClass>org.primefaces.mobile.component.submitcommand.SubmitCommandTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.submitcommand.SubmitCommand</componentClass>
-    <componentType>org.primefaces.mobile.SubmitCommand</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.SubmitCommandRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.submitcommand.SubmitCommandRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.submitcommand.SubmitCommandTag</tagClass>
+    <componentClass>org.helix.mobile.component.submitcommand.SubmitCommand</componentClass>
+    <componentType>org.helix.mobile.SubmitCommand</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.SubmitCommandRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.submitcommand.SubmitCommandRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <description>SubmitCommand provides a way to easily submit a form via Ajax and process its result.</description>
     <attributes>
@@ -68,9 +68,4 @@
             <description>Message to display if the request fails.</description>
         </attribute>
     </attributes>
-    <resources>
-        <resource>
-            <name>jquery/jquery.js</name>
-        </resource>
-    </resources>
 </component>

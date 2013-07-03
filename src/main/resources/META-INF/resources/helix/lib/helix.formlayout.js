@@ -301,10 +301,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                     if (formElem.dialogSubmit) {
                         formElem.dialogSubmit(parentDiv);
                     }
-                    PrimeFaces.navigate(formElem.doneLink, {
-                        reverse: true,
-                        transition: 'fade'
-                    });
+                    $.mobile.changePage(formElem.doneLink, {});
                 })
         )
         .appendTo(parentDiv);
@@ -442,9 +439,8 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
        }
     } else if (formElem.type == 'horizontalScroll') {
         $('<div />').attr({
-            'class' : 'pm-scroller-horizontal pm-scroller-nozoom',
-            'id' : formElem.name
-        }).append(formElem.fieldTitle).appendTo($fieldContainer);
+            'class' : 'hx-horizontal-scroller-nozoom'
+        }).append(formElem.contents).appendTo($fieldContainer);
     } else if (formElem.type == 'separator') {
         $('<hr />').appendTo($fieldContainer);
     } else {
@@ -520,10 +516,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
                 .append(subPanelObj.dialog.dialogTitle)
                 .appendTo(subPanelDiv)
                 .on('tap', function() {
-                    PrimeFaces.navigate(PrimeFaces.escapeClientId(dialogObj.id), {
-                        reverse: false,
-                        transition: 'fade'
-                    });
+                    $.mobile.changePage(PrimeFaces.escapeClientId(dialogObj.id), {});
                 })
                 .button();
             }

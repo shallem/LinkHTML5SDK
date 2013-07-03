@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
-<!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
 ]>
 <component>
 
     <tag>overlay</tag>
-    <tagClass>org.primefaces.mobile.component.overlay.OverlayTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.overlay.Overlay</componentClass>
-    <componentType>org.primefaces.mobile.Overlay</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.OverlayRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.overlay.OverlayRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.overlay.OverlayTag</tagClass>
+    <componentClass>org.helix.mobile.component.overlay.Overlay</componentClass>
+    <componentType>org.helix.mobile.Overlay</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.OverlayRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.overlay.OverlayRenderer</rendererClass>
     <parent>javax.faces.component.UIPanel</parent>
 
     <attributes>
-		&standard_uicomponent_attributes;
+        <attribute>
+            <name>id</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <ignoreInComponent>true</ignoreInComponent>
+            <literal>true</literal>
+            <description>Unique identifier of the component in a namingContainer.</description>
+        </attribute>
         <attribute>
             <name>position</name>
             <required>false</required>

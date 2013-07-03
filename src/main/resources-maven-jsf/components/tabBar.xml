@@ -3,12 +3,12 @@
 ]>
 <component>
     <tag>tabBar</tag>
-    <tagClass>org.primefaces.mobile.component.tabbar.TabBarTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.tabbar.TabBar</componentClass>
-    <componentType>org.primefaces.mobile.TabBar</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.TabBarRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.tabbar.TabBarRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.tabbar.TabBarTag</tagClass>
+    <componentClass>org.helix.mobile.component.tabbar.TabBar</componentClass>
+    <componentType>org.helix.mobile.TabBar</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.TabBarRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.tabbar.TabBarRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <attributes>
 	

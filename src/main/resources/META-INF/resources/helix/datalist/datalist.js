@@ -210,7 +210,7 @@
         _create: function() {
             this.$wrapper = this.element;
             if (this.options.scroll) {
-                this.element.addClass('pm-scroller-nozoom');
+                this.element.addClass('hx-scroller-nozoom');
             }
             
             /**
@@ -219,8 +219,7 @@
             this.$parent = $('<ul/>').attr({
                 'data-role' : 'listview',
                 'class' : 'hx-listview'
-            }).appendTo(this.$wrapper)
-                .listview();
+            }).appendTo(this.$wrapper);
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
             }
@@ -234,6 +233,8 @@
             if (this.options.splitTheme) {
                 this.$parent.attr('data-split-theme', this.options.splitTheme);
             }
+
+            this.$parent.listview();
 
             // Column setup.
             this._currentPage = 0;
@@ -258,9 +259,9 @@
             }
             var _self = this;
             this.refreshList(this.options.itemList,this.options.condition,null,null,function() {
-                Helix.Layout.addScrollers(_self.$wrapper);
+                //Helix.Layout.addScrollers(_self.$wrapper);
                 setTimeout(function() {
-                    Helix.Layout.updateScrollers(_self.$wrapper);
+                    //Helix.Layout.updateScrollers(_self.$wrapper);
                 }, 0);
             });
         },
@@ -309,7 +310,7 @@
                 } else {
                     /* Update the scroller. */
                     if (_self.options.scroll) {
-                        Helix.Layout.updateScrollers(_self.$wrapper);
+                        //Helix.Layout.updateScrollers(_self.$wrapper);
                     }
                 }
                 _self.$parent.listview( "refresh" );
@@ -713,9 +714,9 @@
             }).appendTo($(parentElement));
             
             if (rowComponents.image) {
-                mainLink.append('<img />').attr({
+                mainLink.append($('<img />').attr({
                     'src' : rowComponents.image
-                });
+                }));
             }
             if (rowComponents.header) {
                 mainLink.append($('<h3 />').append(rowComponents.header));
@@ -727,10 +728,12 @@
             )
             );
             }
-            if (rowComponents.body && (rowComponents.header || rowComponents.subHeader)) {
-                mainLink.append($('<p />').append(rowComponents.body));
-            } else {
-                mainLink.append(rowComponents.body);
+            if (rowComponents.body) {
+                if (rowComponents.header || rowComponents.subHeader) {
+                    mainLink.append($('<p />').append(rowComponents.body));
+                } else {
+                    mainLink.append(rowComponents.body);
+                }
             }
             if (rowComponents.aside) {
                 mainLink.append($('<p />').attr({
@@ -770,7 +773,7 @@
          * Refresh the scroller surrounding the datalist contents.
          */
         refreshScroller: function() {
-            Helix.Layout.updateScrollers(this.$wrapper);
+            //Helix.Layout.updateScrollers(this.$wrapper);
         }
     
     });

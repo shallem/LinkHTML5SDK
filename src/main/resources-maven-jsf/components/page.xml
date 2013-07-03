@@ -4,63 +4,63 @@
 <!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
-	<tag>page</tag>
-    <tagClass>org.primefaces.mobile.component.page.PageTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.page.Page</componentClass>
-	<componentType>org.primefaces.mobile.Page</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.PageRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.page.PageRenderer</rendererClass>
-	<parent>javax.faces.component.UIPanel</parent>
-	<attributes>
+    <tag>page</tag>
+    <tagClass>org.helix.mobile.component.page.PageTag</tagClass>
+    <componentClass>org.helix.mobile.component.page.Page</componentClass>
+    <componentType>org.helix.mobile.Page</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.PageRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.page.PageRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <attributes>
 		&standard_uicomponent_attributes;
-		<attribute>
-			<name>title</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+        <attribute>
+            <name>title</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <defaultValue></defaultValue>
             <description>Title of the page.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>defaultPageTransition</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+            <name>defaultPageTransition</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <defaultValue></defaultValue>
             <description>Name of animation to use in view navigation.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>defaultDialogTransition</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+            <name>defaultDialogTransition</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <defaultValue></defaultValue>
             <description>Name of animation to use when displaying a dialog.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>loadingMessage</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+            <name>loadingMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <defaultValue></defaultValue>
             <description>Text to display in built-in ajax status.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>viewport</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+            <name>viewport</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <defaultValue>width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1</defaultValue>
             <description>Meta settings for viewport.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>manifest</name>
-			<required>false</required>
-			<type>java.lang.String</type>
+            <name>manifest</name>
+            <required>false</required>
+            <type>java.lang.String</type>
             <description>Manifest setting of document.</description>
-		</attribute>
+        </attribute>
         <attribute>
-			<name>mini</name>
-			<required>false</required>
-			<type>java.lang.Boolean</type>
+            <name>mini</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
             <description>When enabled form components displayed smaller.</description>
-		</attribute>
-	</attributes>
+        </attribute>
+    </attributes>
 </component>

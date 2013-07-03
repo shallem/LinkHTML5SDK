@@ -18,7 +18,7 @@ package org.helix.mobile.component.outputscript;
 import java.io.IOException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import org.primefaces.mobile.component.page.PageRenderer;
+import org.helix.mobile.component.page.PageRenderer;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class OutputScriptRenderer extends CoreRenderer {

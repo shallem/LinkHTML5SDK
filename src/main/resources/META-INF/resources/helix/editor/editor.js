@@ -134,7 +134,6 @@
     var
 
     // Misc constants
-    BACKGROUND_COLOR = "backgroundColor",
     BUTTON           = "button",
     BUTTON_NAME      = "buttonName",
     CHANGE           = "change",
@@ -146,34 +145,17 @@
     SPAN_TAG            = "<span />",
     LI_TAG           = "<li />",
     UL_TAG           = "<ul />",
-    TRANSPARENT      = "transparent",
-    UNSELECTABLE     = "unselectable",
 
     // Class name constants
     MAIN_CLASS       = "ui-editor ui-widget-content",    // main containing div
-    FORMATBAR_CLASS  = "ui-editor-toolbar", // toolbar above main div showing current format commands
     TOOLBAR_CLASS    = "ui-editor-toolbar",            // Editor toolbar
-    GROUP_CLASS      = "ui-editor-group",   // group divs inside the toolbar div
-    DISABLED_CLASS   = "ui-editor-disabled",// disabled button divs
-    DIVIDER_CLASS    = "ui-editor-divider", // divider divs inside group div
-    POPUP_CLASS      = "ui-editor-popup",   // popup divs inside body
-    LIST_CLASS       = "ui-editor-list",    // list popup divs inside body
-    COLOR_CLASS      = "ui-editor-color",   // color popup div inside body
     PROMPT_CLASS     = "ui-editor-prompt",  // prompt popup divs inside body
-    MSG_CLASS        = "ui-editor-message", // message popup div inside body
-
-    // Test for ie
-    ie = $.browser.msie,
-    ie6 = /msie\s6/i.test(navigator.userAgent),
 
     // Test for iPhone/iTouch/iPad
     iOS = /(iphone|ipad|ipod)/i.test(navigator.userAgent),
   
     // Popups are created once as needed and shared by all editor instances
     popups = {},
-
-    // Used to prevent the document click event from being bound more than once
-    documentClickAssigned,
 
     // Local copy of the buttons object
     buttons = $.cleditor.buttons;
@@ -555,8 +537,7 @@
             value = hex(target.style.backgroundColor);
         else if (buttonName == "highlight") {
             value = hex(target.style.backgroundColor);
-            if (ie) command = 'backcolor';
-            else useCSS = true;
+            useCSS = true;
         }
 
         // Fire the popupClick event
@@ -708,13 +689,6 @@
             });
         }
 
-        // Add the unselectable attribute to all items
-        if (ie) {
-            $popup.attr(UNSELECTABLE, "on")
-            .find("div,font,p,h1,h2,h3,h4,h5,h6")
-            .attr(UNSELECTABLE, "on");
-        }
-
         $(popupDiv).trigger('create');
 
         // Add the popup to the array and return it
@@ -736,13 +710,8 @@
         }
 
         // Switch the iframe into design mode.
-        // ie6 does not support designMode.
-        // ie7 & ie8 do not properly support designMode="off".
         try {
-            if (ie) editor.doc.body.contentEditable = !disabled;
-            else {
-                editor.doc.designMode = !disabled ? "on" : "off";
-            } 
+            editor.doc.designMode = !disabled ? "on" : "off"; 
         }
         // Firefox 1.5 throws an exception that can be ignored
         // when toggling designMode from off to on.
@@ -752,48 +721,39 @@
     // execCommand - executes a designMode command
     function execCommand(editor, command, value, useCSS, button) {
 
-        // Restore the current ie selection
-        restoreRange(editor);
-
         // Set the styling method
-        if (!ie) {
-            if (useCSS === undefined || useCSS === null)
-                useCSS = editor.options.useCSS;
-            editor.doc.execCommand("styleWithCSS", 0, useCSS.toString());
-        }
+        if (useCSS === undefined || useCSS === null)
+            useCSS = editor.options.useCSS;
+        editor.doc.execCommand("styleWithCSS", 0, useCSS.toString());
 
         // Execute the command and check for error
         var success = true, description;
-        if (ie && command.toLowerCase() == "inserthtml")
-            getRange(editor).pasteHTML(value);
-        else {
-            try {
-                editor.$frame[0].contentWindow.focus();
-                success = editor.doc.execCommand(command, 0, value || null);
-                if (success && (button.type == "font" || button.type == "style")) {
-                    if (button.type === "style") {
-                        var styleToToggle = 'ui-editor-' + command;
-                        editor.$formatFrame.toggleClass(styleToToggle);
-                    } else {
-                        if (command === "fontname") {
-                            editor.$formatFrame.css('font-family', value);
-                        } else if (command === "forecolor") {
-                            editor.$formatFrame.css('color', value);
-                        } else if (command === "hilitecolor") {
-                            editor.$formatFrame.css('background-color', value);
-                        }
+        try {
+            editor.$frame[0].contentWindow.focus();
+            success = editor.doc.execCommand(command, 0, value || null);
+            if (success && (button.type == "font" || button.type == "style")) {
+                if (button.type === "style") {
+                    var styleToToggle = 'ui-editor-' + command;
+                    editor.$formatFrame.toggleClass(styleToToggle);
+                } else {
+                    if (command === "fontname") {
+                        editor.$formatFrame.css('font-family', value);
+                    } else if (command === "forecolor") {
+                        editor.$formatFrame.css('color', value);
+                    } else if (command === "hilitecolor") {
+                        editor.$formatFrame.css('background-color', value);
                     }
                 }
-            } catch (err) {
-                description = err.description;
-                success = false;
             }
-            if (!success) {
-                if (!description) {
-                    description = "browser error."
-                }
-                PrimeFaces.Utils.statusMessage("Error", "Error executing the " + command + " command: " + description, "error");
+        } catch (err) {
+            description = err.description;
+            success = false;
+        }
+        if (!success) {
+            if (!description) {
+                description = "browser error."
             }
+            Helix.Utils.statusMessage("Error", "Error executing the " + command + " command: " + description, "error");
         }
 
         return success;
@@ -830,13 +790,11 @@
 
     // getRange - gets the current text range object
     function getRange(editor) {
-        if (ie) return getSelection(editor).createRange();
         return getSelection(editor).getRangeAt(0);
     }
 
     // getSelection - gets the current text range object
     function getSelection(editor) {
-        if (ie) return editor.doc.selection;
         return editor.$frame[0].contentWindow.getSelection();
     }
 
@@ -924,73 +882,11 @@
             );
         doc.close();
 
-        // Work around for bug in IE which causes the editor to lose
-        // focus when clicking below the end of the document.
-        if (ie)
-            $doc.click(function() {
-                focus(editor);
-            });
-
-        // Work around for bug in iPad which causes the screen to blank out
-        // when you start typing in landscape mode on an editor that is not
-        // full screen.
-        if (iOS) {
-            /*$doc.click(function() {
-                if (!editor.options.isFullHeight) {
-                    var scrollPos = editor.$frame.offset().top - $contentParent.offset().top;
-                    $contentParent.scrollTop(
-                        scrollPos
-                    );
-                }
-            });*/
-        }
-
         // Load the content
         updateFrame(editor);
 
-        // Bind the ie specific iframe event handlers
-        if (ie) {
-
-            // Save the current user selection. This code is needed since IE will
-            // reset the selection just after the beforedeactivate event and just
-            // before the beforeactivate event.
-            $doc.bind("beforedeactivate beforeactivate selectionchange keypress", function(e) {
-
-                // Flag the editor as inactive
-                if (e.type == "beforedeactivate")
-                    editor.inactive = true;
-
-                // Get rid of the bogus selection and flag the editor as active
-                else if (e.type == "beforeactivate") {
-                    if (!editor.inactive && editor.range && editor.range.length > 1)
-                        editor.range.shift();
-                    delete editor.inactive;
-                }
-
-                // Save the selection when the editor is active
-                else if (!editor.inactive) {
-                    if (!editor.range)
-                        editor.range = [];
-                    editor.range.unshift(getRange(editor));
-
-                    // We only need the last 2 selections
-                    while (editor.range.length > 2)
-                        editor.range.pop();
-                }
-
-            });
-
-            // Restore the text range when the iframe gains focus
-            $frame.focus(function() {
-                restoreRange(editor);
-            });
-
-        }
-
         // Update the textarea when the iframe loses focus
-        ($.browser.mozilla ? $doc : $(contentWindow)).blur(function(e) {
-            //e.preventDefault();
-            //e.stopImmediatePropagation();
+        $doc.blur(function(e) {
             updateTextArea(editor, true);
         });
    
@@ -1023,13 +919,6 @@
             // Subtract 25 accounting for the formatFrame
             $frame.height(hgt - 25);
         }
-
-        // Resize the textarea. IE6 textareas have a 1px top
-        // & bottom margin that cannot be removed using css.
-        /*editor.$area.width(wid);
-        if (hgt) {
-            editor.$area.height(ie6 ? hgt - 2 : hgt);
-        }*/
         
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.
@@ -1043,12 +932,6 @@
         focus(editor);
     }
 
-    // restoreRange - restores the current ie selection
-    function restoreRange(editor) {
-        if (ie && editor.range)
-            editor.range[0].select();
-    }
-
     // select - selects all the text in either the textarea or iframe
     function select(editor) {
         setTimeout(function() {
@@ -1059,10 +942,7 @@
 
     // selectedHTML - returns the current HTML selection or and empty string
     function selectedHTML(editor) {
-        restoreRange(editor);
         var range = getRange(editor);
-        if (ie)
-            return range.htmlText;
         var layer = $("<layer>")[0];
         layer.appendChild(range.cloneContents());
         var html = layer.innerHTML;
@@ -1072,8 +952,6 @@
 
     // selectedText - returns the current text selection or and empty string
     function selectedText(editor) {
-        restoreRange(editor);
-        if (ie) return getRange(editor).text;
         return getSelection(editor).toString();
     }
 
@@ -1135,10 +1013,6 @@
                 else if (button.image) map.backgroundImage = imageUrl(button.image);
                 if (button.stripIndex) map.backgroundPosition = button.stripIndex * -24;
                 button.onCSS = map;
-
-                // Add the unselectable attribute for ie
-                if (ie)
-                    $buttonDiv.attr(UNSELECTABLE, "on");
             }
         }
     }

@@ -197,10 +197,11 @@
             <defaultValue>b</defaultValue>
             <description>Specify the theme of the split element.</description>
         </attribute>
+        <attribute>
+            <name>headerText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Specify text to appear in a divider at the top of the list.</description>
+        </attribute>
     </attributes>
-    <resources>
-        <resource>
-            <name>jquery/jquery.js</name>
-        </resource>
-    </resources>
 </component>

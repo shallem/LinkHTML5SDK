@@ -175,6 +175,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",splitTheme: '" + dlist.getSplitTheme() + "'");
         }
         
+        // Header.
+        if (dlist.getHeaderText() != null) {
+            writer.write(",headerText: '" + dlist.getHeaderText() + "'");
+        }
+        
         // The data list.
         writer.write(",itemList: " + dlist.getItemList());
         

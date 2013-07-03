@@ -17,11 +17,11 @@
     /**
      * Private constants.
      */
-    var CONTENT_CLASS_MOBILE = "ui-datagrid-content ui-widget-content pm-scroller pm-scroller-nozoom mh-layout-parent-height";
+    var CONTENT_CLASS_MOBILE = "ui-datagrid-content ui-widget-content hx-scroller-nozoom mh-layout-parent-height";
     var EMPTY_CONTENT_CLASS = "ui-datagrid-content ui-datagrid-content-empty ui-widget-content mh-layout-parent-height";
     var TABLE_CLASS = "ui-datagrid-data";
     var TABLE_ROW_CLASS = "ui-datagrid-row";
-    var TABLE_COLUMN_CLASS = "ui-datagrid-column pm-full-height";
+    var TABLE_COLUMN_CLASS = "ui-datagrid-column";
     
     $.widget("helix.helixDatagrid", {        
         
@@ -157,7 +157,7 @@
             var _self = this;
             var refreshDone = function() {
                 /* Create the scroller on the content container. */
-                Helix.Layout.addScrollers(_self.contentContainer);
+                //Helix.Layout.addScrollers(_self.contentContainer);
                 
                 /* Attach the context menu to the grid header. */
                 if (_self.defaultContextMenu) {
@@ -358,12 +358,12 @@
         },
         refreshScroller: function() {
             if (this.contentContainer) {
-                Helix.Layout.updateScrollers(this.contentContainer);
+                //Helix.Layout.updateScrollers(this.contentContainer);
             }
         },
         destroy: function() {
             if (this.contentContainer) {
-                Helix.Layout.cleanupScrollers(this.parent);
+                //Helix.Layout.cleanupScrollers(this.parent);
             }
         },
         closeItemPopup: function() {

@@ -101,29 +101,30 @@
             /* Determine the scroller type and add/refresh the scroller. */
             var scrollingClass;
             if (this.options.orientation === "vertical") {
-                scrollingClass = "pm-scroller";
+                scrollingClass = "hx-scroller-nozoom";
             } else if (this.options.orientation === "horizontal") {
-                scrollingClass = "pm-scroller-horizontal";
+                scrollingClass = "hx-horizontal-scroller-nozoom";
             } else {
                 console.log("Invalid scroller orientation " + this.options.orientation);
                 return;
             }
             
             var zoomClass = "";
-            if (!this.options.zoom) {
-                zoomClass = "pm-scroller-nozoom";
+            if (this.options.zoom) {
+                // Not supported at this moment.
+                //zoomClass = "pm-scroller-nozoom";
             }
             
             if (this._$page.is(":visible")) {
                 if (this._$wrapper.hasClass(scrollingClass)) {
                     /* Refresh the scroller. */
-                    Helix.Layout.updateScrollers(this._$wrapper);
+                    //Helix.Layout.updateScrollers(this._$wrapper);
                 } else {
                     this._$wrapper.addClass(scrollingClass);
                     if (zoomClass) {
                         this._$wrapper.addClass(zoomClass);
                     }
-                    Helix.Layout.addScrollers(this._$wrapper);
+                    //Helix.Layout.addScrollers(this._$wrapper);
                 }
             }
         },
@@ -133,7 +134,7 @@
          * refresh the iScroll scroller.
          */
         refreshScroller: function() {
-            Helix.Layout.updateScrollers(this._$wrapper);
+            //Helix.Layout.updateScrollers(this._$wrapper);
         },
         
         /**
@@ -145,7 +146,7 @@
         },
         
         destroy: function() {
-            Helix.Layout.cleanupScrollers(this._$wrapper.parent());
+            //Helix.Layout.cleanupScrollers(this._$wrapper.parent());
         }
     });
 }( jQuery ));

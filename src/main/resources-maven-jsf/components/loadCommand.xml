@@ -4,13 +4,13 @@
 ]>
 <component>
     <tag>loadCommand</tag>
-    <tagClass>org.primefaces.mobile.component.loadcommand.LoadCommandTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.loadcommand.LoadCommand</componentClass>
-    <componentHandlerClass>org.primefaces.mobile.component.loadcommand.LoadCommandHandler</componentHandlerClass>
-    <componentType>org.primefaces.mobile.LoadCommand</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.LoadCommandRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.loadcommand.LoadCommandRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.loadcommand.LoadCommandTag</tagClass>
+    <componentClass>org.helix.mobile.component.loadcommand.LoadCommand</componentClass>
+    <componentHandlerClass>org.helix.mobile.component.loadcommand.LoadCommandHandler</componentHandlerClass>
+    <componentType>org.helix.mobile.LoadCommand</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.LoadCommandRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.loadcommand.LoadCommandRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <description>LoadCommand provides a way to easily load all of the data required to render an application page.</description>
     <interfaces>
@@ -76,9 +76,4 @@
             <description>Retrieve a serializeable object post load. Prior to load this should return an empty object that can be used to generate a template schema.</description>
         </attribute>
     </attributes>
-    <resources>
-        <resource>
-            <name>jquery/jquery.js</name>
-        </resource>
-    </resources>
 </component>

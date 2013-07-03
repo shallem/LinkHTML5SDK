@@ -330,12 +330,11 @@ $(document).bind('prerequest', function(ev, cfg) {
             
             /* 
              * Clean up all scrollers that may be deleted when this item is updated.
-             */
+             *
             $(updateSel).find(Helix.Layout.scrollerSel).each(function(index, element) {
-                /* Save off the height of the item we are going to update. */
                 var scrollerID = $(this).attr('id');
                 Helix.Layout.deleteScroller(scrollerID);
-            });
+            });*/
         }
     }
 });
@@ -369,12 +368,11 @@ $(document).bind('postrequest', function(ev, xhr) {
          * so, make sure we create those scrollers from scratch. Otherwise we may end
          * up with bogus scrollers added by the pageshow event that are then overwritten
          * by an AJAX update that happens when the page is first loading.
-         */
+         *
         $(updateSel).find(Helix.Layout.scrollerSel).each(function() {
-            /* Save off the height of the item we are going to update. */
             var scrollerID = $(this).attr('id');
             Helix.Layout.deleteScroller(scrollerID);
-        });
+        });*/
         
         /*
          * Trigger JQM enhancement and our own enhancement on the updated markup.
@@ -418,8 +416,6 @@ Helix.Layout.layoutPage = function(page) {
  * So we do it again on show.
  */
 $(document).on('pagebeforeshow', function(ev) {
-    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
-    
     /**
      * Layout the page based on the Mobile Helix styles.
      */
@@ -427,13 +423,12 @@ $(document).on('pagebeforeshow', function(ev) {
     
     /* Add all scrollers. NOTE, that components with dynamic data must update
      * the scroller with the updateScrollers call after any data transformations.
-     */
-    Helix.Layout.addScrollers(pageScrollers);
+     *
+    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
+    Helix.Layout.addScrollers(pageScrollers);*/
 });
 
 $(document).on('pageshow', function(ev) {
-    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
-    
     /**
      * Recompute the component heights.
      */
@@ -446,18 +441,19 @@ $(document).on('pageshow', function(ev) {
     /* NOTE: each time we update scrollers we make sure that the height has changed. Hence,
      * we call this function a few times at intervals of 200 MS. When there is no
      * updating to be done, nothing happens.
-     */
+     *
+    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
     setTimeout(function() {
         Helix.Layout.updateScrollers(pageScrollers);
-    }, 0);
+    }, 0);*/
 });
 
 /**
  * When a page is hidden, we kill all of its scrollers to save memory. 
- */
+ *
 $(document).on('pagebeforehide', function(ev) {
     Helix.Layout.cleanupScrollers(ev.target);
-});
+});*/
 
 Helix.deviceType = (function() {
     if (window.screen.width <= 480) {

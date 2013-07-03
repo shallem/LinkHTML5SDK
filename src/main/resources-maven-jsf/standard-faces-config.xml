@@ -1,18 +1,22 @@
     
-    <name>primefaces-mobile</name>
+    <name>helix</name>
     
     <ordering>
         <after>
             <name>primefaces</name>
             <name>primefaces-extensions</name>
+            <name>primefaces-mobile</name>
         </after>
     </ordering>
   
+    <lifecycle>
+        <phase-listener>org.helix.mobile.filters.LoadCommandListener</phase-listener>
+    </lifecycle>
+  
     <application>
-        <navigation-handler>org.primefaces.mobile.navigation.MobileNavigationHandler</navigation-handler>
-        <resource-handler>org.primefaces.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
+        <resource-handler>org.helix.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
         <system-event-listener>
-            <system-event-listener-class>org.primefaces.mobile.application.PostConstructApplicationEventListener</system-event-listener-class>
+            <system-event-listener-class>org.helix.mobile.application.PostConstructApplicationEventListener</system-event-listener-class>
             <system-event-class>javax.faces.event.PostConstructApplicationEvent</system-event-class>
             <source-class>javax.faces.application.Application</source-class>
         </system-event-listener>

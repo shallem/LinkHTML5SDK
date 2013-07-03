@@ -5,12 +5,12 @@
 ]>
 <component>
     <tag>outputField</tag>
-    <tagClass>org.primefaces.mobile.component.outputfield.OutputFieldTag</tagClass>
-    <componentClass>org.primefaces.mobile.component.outputfield.OutputField</componentClass>
-    <componentType>org.primefaces.mobile.OutputField</componentType>
-    <componentFamily>org.primefaces.mobile.component</componentFamily>
-    <rendererType>org.primefaces.mobile.component.OutputFieldRenderer</rendererType>
-    <rendererClass>org.primefaces.mobile.component.outputfield.OutputFieldRenderer</rendererClass>
+    <tagClass>org.helix.mobile.component.outputfield.OutputFieldTag</tagClass>
+    <componentClass>org.helix.mobile.component.outputfield.OutputField</componentClass>
+    <componentType>org.helix.mobile.OutputField</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.OutputFieldRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.outputfield.OutputFieldRenderer</rendererClass>
     <parent>javax.faces.component.html.HtmlOutputText</parent>
     
     <attributes>
@@ -35,11 +35,4 @@
             <description>Text of the label for this field.</description>
         </attribute>
     </attributes>
-        
-    <resources>
-        <resource>
-            <name>jquery/jquery.js</name>
-        </resource>
-    </resources>
-
 </component>

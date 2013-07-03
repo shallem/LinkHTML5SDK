@@ -4,27 +4,27 @@
 <!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
-	<tag>header</tag>
-    <tagClass>org.primefaces.mobile.component.header.HeaderTag</tagClass>
-	<componentClass>org.primefaces.mobile.component.header.Header</componentClass>
-	<componentType>org.primefaces.mobile.Header</componentType>
-	<componentFamily>org.primefaces.mobile.component</componentFamily>
-	<rendererType>org.primefaces.mobile.component.HeaderRenderer</rendererType>
-	<rendererClass>org.primefaces.mobile.component.header.HeaderRenderer</rendererClass>
-	<parent>javax.faces.component.UIPanel</parent>
-	<attributes>
+    <tag>header</tag>
+    <tagClass>org.helix.mobile.component.header.HeaderTag</tagClass>
+    <componentClass>org.helix.mobile.component.header.Header</componentClass>
+    <componentType>org.helix.mobile.Header</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.HeaderRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.header.HeaderRenderer</rendererClass>
+    <parent>javax.faces.component.UIPanel</parent>
+    <attributes>
 		&standard_uicomponent_attributes;
         <attribute>
-			<name>title</name>
-			<required>false</required>
-			<type>java.lang.String</type>
-		</attribute>
+            <name>title</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+        </attribute>
         <attribute>
-			<name>fixed</name>
-			<required>false</required>
-			<type>java.lang.Boolean</type>
+            <name>fixed</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
-		</attribute>
+        </attribute>
         <attribute>
             <name>swatch</name>
             <required>false</required>
@@ -43,5 +43,5 @@
             <type>java.lang.String</type>
             <description>Style class of the component.</description>
         </attribute>
-	</attributes>
+    </attributes>
 </component>

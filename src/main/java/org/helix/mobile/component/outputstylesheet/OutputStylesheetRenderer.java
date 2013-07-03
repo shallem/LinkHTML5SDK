@@ -20,12 +20,12 @@ import java.text.MessageFormat;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.primefaces.mobile.util.EnumMedia;
-import static org.primefaces.mobile.util.EnumMedia.PHABLET;
-import static org.primefaces.mobile.util.EnumMedia.PHABLET_AND_TABLET;
-import static org.primefaces.mobile.util.EnumMedia.PHONE;
-import static org.primefaces.mobile.util.EnumMedia.PHONE_AND_PHABLET;
-import static org.primefaces.mobile.util.EnumMedia.TABLET;
+import org.helix.mobile.util.EnumMedia;
+import static org.helix.mobile.util.EnumMedia.PHABLET;
+import static org.helix.mobile.util.EnumMedia.PHABLET_AND_TABLET;
+import static org.helix.mobile.util.EnumMedia.PHONE;
+import static org.helix.mobile.util.EnumMedia.PHONE_AND_PHABLET;
+import static org.helix.mobile.util.EnumMedia.TABLET;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class OutputStylesheetRenderer extends CoreRenderer {
