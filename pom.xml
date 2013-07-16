@@ -191,7 +191,7 @@
 	<executions>
 	  <execution>
 	    <id>compress-resources</id>
-	    <phase>prepare-package</phase>
+	    <phase>generate-resources</phase>
 	    <goals>
 	      <goal>optimize</goal>
 	    </goals>
