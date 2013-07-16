@@ -62,7 +62,8 @@
   </dependencies>
 
   <build>
-    
+    <defaultGoal>install</defaultGoal>    
+
     <resources>
       <resource>
 	<directory>src/main/resources</directory>
