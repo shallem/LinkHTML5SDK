@@ -67,6 +67,13 @@ import static org.helix.mobile.util.EnumDataTypes.SHORT;
  */
 public class JSONSerializer {
 
+    private static final String TYPE_FIELD_NAME = "__hx_type";
+    private static final String SCHEMA_TYPE_FIELD_NAME = "__hx_schema_type";
+    private static final String SCHEMA_NAME_FIELD_NAME = "__hx_schema_name";
+    private static final String KEY_FIELD_NAME = "__hx_key";
+    private static final String SORTS_FIELD_NAME = "__hx_sorts";
+    private static final String FILTERS_FIELD_NAME = "__hx_filters";
+    
     public JSONSerializer() {
     }
 
@@ -152,12 +159,12 @@ public class JSONSerializer {
                 jg.writeStartObject();
                 
                 /* Mark as a delta object for the client code. */
-                jg.writeFieldName("__pm_type");
+                jg.writeFieldName(TYPE_FIELD_NAME);
                 jg.writeNumber(1001);
 
                 Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
                 Class<?> returnType = m.getReturnType();
-                jg.writeFieldName("__pm_schema_type");
+                jg.writeFieldName(SCHEMA_TYPE_FIELD_NAME);
                 jg.writeString(returnType.getComponentType().getName());
                 this.iterateOverObjectField(jg, obj, visitedClasses, m);
                 
@@ -173,7 +180,7 @@ public class JSONSerializer {
                 jg.writeStartObject();
                 
                 /* Write the object type so that we can get the Schema back. */
-                jg.writeFieldName("__pm_schema_type");
+                jg.writeFieldName(SCHEMA_TYPE_FIELD_NAME);
                 jg.writeString(c.getName());
                 
                 for (Method m : c.getMethods()) {
@@ -284,7 +291,7 @@ public class JSONSerializer {
                 
                 jg.writeStartObject();
                 
-                jg.writeFieldName("__pm_schema_name");
+                jg.writeFieldName(SCHEMA_NAME_FIELD_NAME);
                 jg.writeString(c.getName());
                 
                 
@@ -295,7 +302,7 @@ public class JSONSerializer {
                  */
                 if (visitedClasses.contains(c.getCanonicalName())) {
                     // Indicate that this is, essentially, a forward ref.
-                    jg.writeFieldName("__pm_schema_type");
+                    jg.writeFieldName(SCHEMA_TYPE_FIELD_NAME);
                     jg.writeNumber(1002);
                     
                     jg.writeEndObject();
@@ -362,17 +369,17 @@ public class JSONSerializer {
                 if (keyField == null) {
                     throw new IOException("Client data must have at least one field annotated as a ClientDataKey.");
                 }
-                jg.writeFieldName("__pm_key");
+                jg.writeFieldName(KEY_FIELD_NAME);
                 jg.writeString(keyField);
 
-                jg.writeObjectFieldStart("__pm_sorts");
+                jg.writeObjectFieldStart(SORTS_FIELD_NAME);
                 for (Entry<String, String> e : sortFields.entrySet()) {
                     jg.writeFieldName(e.getKey());
                     jg.writeString(e.getValue());
                 }
                 jg.writeEndObject();
                 
-                jg.writeObjectFieldStart("__pm_filters");
+                jg.writeObjectFieldStart(FILTERS_FIELD_NAME);
                 for(Entry<String, String> e: filterFields.entrySet()) {
                     jg.writeFieldName(e.getKey());
                     jg.writeString(e.getValue());

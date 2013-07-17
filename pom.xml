@@ -181,6 +181,21 @@
 	      </resources>
 	    </configuration>
 	  </execution>
+	  <execution>
+	    <id>copy-resources-compressed</id>
+	    <phase>generate-resources</phase>
+	    <goals>
+	      <goal>copy-resources</goal>
+	    </goals>
+	    <configuration>
+	      <outputDirectory>${resources.dir.compressed}</outputDirectory>
+	      <resources>
+		<resource>
+		  <directory>${project.basedir}/src/main/resources/META-INF/resources/helix</directory>
+		</resource>
+	      </resources>
+	    </configuration>
+	  </execution>
 	</executions>
       </plugin>            
 
