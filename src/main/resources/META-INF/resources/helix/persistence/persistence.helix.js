@@ -31,7 +31,7 @@ Helix.DB = {
         // Check to see if this is a schema forward ref. If so, return null and 
         // let the caller fill in the actual schema after all peer fields have been
         // processed.
-        if (schemaTemplate.__pm_schema_type == 1002) {
+        if (schemaTemplate.__hx_schema_type == 1002) {
             return null;
         }
 
@@ -39,10 +39,10 @@ Helix.DB = {
             if (!schemaTemplate.hasOwnProperty(schemaField)) {
                 continue;
             }
-            if (schemaField === "__pm_sorts" ||
-                schemaField === "__pm_key" ||
-                schemaField === "__pm_schema_name" ||
-                schemaField === "__pm_filters") {
+            if (schemaField === "__hx_sorts" ||
+                schemaField === "__hx_key" ||
+                schemaField === "__hx_schema_name" ||
+                schemaField === "__hx_filters") {
                 continue;
             } 
             var subSchema = schemaTemplate[schemaField];
@@ -50,18 +50,18 @@ Helix.DB = {
                 var elemSchema = this.generatePersistenceFields(subSchema[0],schemaField,allVisited,recursiveFields,allSchemas);
                 if (elemSchema != null) {
                     subSchemas[schemaField] = elemSchema;
-                    oneToMany.push({ "field" : schemaField, "table" : elemSchema.__pm_schema_name });
+                    oneToMany.push({ "field" : schemaField, "table" : elemSchema.__hx_schema_name });
                 } else {
-                    myRecursiveFields.push({ 'schemaName': subSchema[0].__pm_schema_name, 'field' : schemaField, 'oneToMany' : true });
+                    myRecursiveFields.push({ 'schemaName': subSchema[0].__hx_schema_name, 'field' : schemaField, 'oneToMany' : true });
                 }
             } else if (Object.prototype.toString.call(subSchema) === '[object Object]') {
                 // This is a dependent object, which we assume is stored in another field.
                 var fieldSchema = this.generatePersistenceFields(subSchema,schemaField,allVisited,recursiveFields,allSchemas);
                 if (fieldSchema != null) {
                     subSchemas[schemaField] = fieldSchema;
-                    manyToOne.push({ "field" : schemaField, "table" : fieldSchema.__pm_schema_name });
+                    manyToOne.push({ "field" : schemaField, "table" : fieldSchema.__hx_schema_name });
                 } else {
-                    myRecursiveFields.push({ 'schemaName' : subSchema.__pm_schema_name, 'field' : schemaField, 'oneToMany' : false });
+                    myRecursiveFields.push({ 'schemaName' : subSchema.__hx_schema_name, 'field' : schemaField, 'oneToMany' : false });
                 }
             } else {
                 // Otherwise this is a scalar type and we handle all scalar types here mapping them
@@ -83,25 +83,25 @@ Helix.DB = {
             }
         }
         // Create the persistence schema.
-        var objSchema = persistence.define(schemaTemplate.__pm_schema_name, schemaFields, true);
-        objSchema.__pm_schema_name = schemaTemplate.__pm_schema_name;
-        objSchema.__pm_sorts = schemaTemplate.__pm_sorts;
-        objSchema.__pm_filters = schemaTemplate.__pm_filters;
+        var objSchema = persistence.define(schemaTemplate.__hx_schema_name, schemaFields, true);
+        objSchema.__hx_schema_name = schemaTemplate.__hx_schema_name;
+        objSchema.__hx_sorts = schemaTemplate.__hx_sorts;
+        objSchema.__hx_filters = schemaTemplate.__hx_filters;
 
-        objSchema.index(schemaTemplate.__pm_key, {unique: true});
-        objSchema.__pm_key = schemaTemplate.__pm_key;
+        objSchema.index(schemaTemplate.__hx_key, {unique: true});
+        objSchema.__hx_key = schemaTemplate.__hx_key;
         
         objSchema.__pm_subSchemas = subSchemas;
 
         // Save a reference to the schema.
-        window.__pmAllSchemas[schemaTemplate.__pm_schema_name] = objSchema;
+        window.__pmAllSchemas[schemaTemplate.__hx_schema_name] = objSchema;
 
         // Save the schemaFields and the relationships in the allSchemas array
         allSchemas.push({ 'schema': objSchema,
             'fields' : schemaFields,
-            'keyField' : schemaTemplate.__pm_key,
-            'sortFields' : schemaTemplate.__pm_sorts,
-            'filterFields' : schemaTemplate.__pm_filters
+            'keyField' : schemaTemplate.__hx_key,
+            'sortFields' : schemaTemplate.__hx_sorts,
+            'filterFields' : schemaTemplate.__hx_filters
         });
 
         // Insert all of the sub schemas.
@@ -131,15 +131,15 @@ Helix.DB = {
             objSchema.hasOne(manyToOneField, subSchemas[manyToOneField]);
         }
 
-        if (schemaTemplate.__pm_sorts) {
-           for (var sortField in schemaTemplate.__pm_sorts) {
+        if (schemaTemplate.__hx_sorts) {
+           for (var sortField in schemaTemplate.__hx_sorts) {
                objSchema.index(sortField);
            }
         }
         
-        if (schemaTemplate.__pm_filters) {
-            for (var filterField in schemaTemplate.__pm_filters) {
-                if (!schemaTemplate.__pm_sorts[filterField]) {
+        if (schemaTemplate.__hx_filters) {
+            for (var filterField in schemaTemplate.__hx_filters) {
+                if (!schemaTemplate.__hx_sorts[filterField]) {
                     objSchema.index(filterField);
                 }
             }
@@ -171,9 +171,9 @@ Helix.DB = {
          */
         var schemaNameToCheck;
         if (Object.prototype.toString.call(schemaTemplate) === '[object Array]') {
-            schemaNameToCheck = schemaTemplate[0].__pm_schema_name;
+            schemaNameToCheck = schemaTemplate[0].__hx_schema_name;
         } else {
-            schemaNameToCheck = schemaTemplate.__pm_schema_name;
+            schemaNameToCheck = schemaTemplate.__hx_schema_name;
         }
         
         if (window.__pmAllSchemas[schemaNameToCheck]) {
@@ -265,9 +265,9 @@ Helix.DB = {
         /* Generate the schema from this row. */
         var schema = persistence.define(masterRow.tableName, $.parseJSON(masterRow.tableFields) );
         schema.index(masterRow.keyField, { unique: true});
-        schema.__pm_key = masterRow.keyField;
-        schema.__pm_sorts = masterRow.sortFields;
-        schema.__pm_filters = masterRow.filterFields;
+        schema.__hx_key = masterRow.keyField;
+        schema.__hx_sorts = masterRow.sortFields;
+        schema.__hx_filters = masterRow.filterFields;
         schema.__pm_subSchemas = {};
         if (window.__pmLocalSchemas) {
             window.__pmLocalSchemas[masterRow.tableName] = schema;
@@ -404,7 +404,7 @@ Helix.DB = {
         }
         
         var schema = window.__pmAllSchemas[tableName];
-        return schema.__pm_sorts;
+        return schema.__hx_sorts;
     },
     
     getFiltersForTable: function(tableName) {
@@ -413,7 +413,7 @@ Helix.DB = {
         }
         
         var schema = window.__pmAllSchemas[tableName];
-        return schema.__pm_filters;
+        return schema.__hx_filters;
     },
 
     getSchemaForTable: function(tableName) {
@@ -426,10 +426,19 @@ Helix.DB = {
     },
 
     getSchemaNameForField: function(persistentObj, fieldName) {
-        if (fieldName in persistentObj.__pm_schema.__pm_subSchemas) {
-            return persistentObj.__pm_schema.__pm_subSchemas[fieldName].__pm_schema_name;
+        if (fieldName in persistentObj.__hx_schema.__pm_subSchemas) {
+            return persistentObj.__hx_schema.__pm_subSchemas[fieldName].__hx_schema_name;
         }
         return null;
+    },
+
+    prepareSchemaTemplate: function(templateObj, tableName, keyField, sorts, filters) {
+	templateObj.__hx_schema_name = tableName;
+	templateObj.__hx_key = keyField;
+	templateObj.__hx_sorts = sorts;
+	templateObj.__hx_filters = filters;
+
+	return templateObj;
     },
 
     convertRelationshipToString: function(relObject) {
@@ -438,7 +447,7 @@ Helix.DB = {
         if (relObject) {
             for (f in relObject) {
                 r = relObject[f];
-                relSummary[f] = {"table" : r.type.__pm_schema_name, "inverse": r.inverseProperty };
+                relSummary[f] = {"table" : r.type.__hx_schema_name, "inverse": r.inverseProperty };
             }
         }
         return JSON.stringify(relSummary);
@@ -589,7 +598,7 @@ Helix.DB = {
      * Extract the key field from the schema.
      */
     getKeyField: function(schema) {
-        return schema.__pm_key;
+        return schema.__hx_key;
     },
     
     
@@ -882,8 +891,8 @@ Helix.DB = {
             persistentObj = new objSchema();
             persistence.add(persistentObj);        
         }
-        persistentObj.__pm_schema = objSchema;
-        persistentObj.__pm_key = obj[this.getKeyField(objSchema)];
+        persistentObj.__hx_schema = objSchema;
+        persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
         
         var syncDone = function(field) {
             delete fieldsToSync[field];
@@ -901,7 +910,7 @@ Helix.DB = {
             if (!obj.hasOwnProperty(field)) {
                 continue;
             }
-            if (field === "__pm_schema_type") {
+            if (field === "__hx_schema_type") {
                 continue;
             }
             fieldsToSync[field] = 1;
@@ -922,7 +931,7 @@ Helix.DB = {
             } else if (Object.prototype.toString.call(obj[field]) === '[object Object]') {
                 var fieldSchema = objSchema.__pm_subSchemas[field];
                 var keyField = this.getKeyField(fieldSchema);
-                if (obj[field].__pm_type == 1001) {
+                if (obj[field].__hx_type == 1001) {
                     var deltaObj = obj[field];
                     Helix.DB.synchronizeDeltaField(deltaObj, persistentObj[field], 
                             fieldSchema, field, syncDone, overrides);                 
@@ -958,7 +967,7 @@ Helix.DB = {
         var keyField = this.getKeyField(objSchema);
         var syncDone = function(finalObj, opaque) {
             /* Store the schema in the final obj. */
-            finalObj.__pm_schema = objSchema;
+            finalObj.__hx_schema = objSchema;
             
             /* We get here when the synchronize is done. */
             persistence.flush();
@@ -984,7 +993,7 @@ Helix.DB = {
             Helix.DB.synchronizeArray(obj,objSchema,objSchema.all(),function(finalObj) {
                 syncDone(finalObj, opaque);
             },overrides);
-        } else if (obj.__pm_type == 1001) {
+        } else if (obj.__hx_type == 1001) {
             Helix.DB.synchronizeDeltaObject(obj,objSchema.all(),objSchema,function(finalObj) {
                 syncDone(finalObj, opaque);
             },overrides);
