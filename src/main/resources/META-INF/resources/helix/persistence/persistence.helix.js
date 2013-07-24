@@ -398,39 +398,6 @@ Helix.DB = {
         }        
     },
 
-    getSortsForTable: function(tableName) {
-        if (!window.__pmAllSchemas) {
-            return null;
-        }
-        
-        var schema = window.__pmAllSchemas[tableName];
-        return schema.__hx_sorts;
-    },
-    
-    getFiltersForTable: function(tableName) {
-        if (!window.__pmAllSchemas) {
-            return null;
-        }
-        
-        var schema = window.__pmAllSchemas[tableName];
-        return schema.__hx_filters;
-    },
-
-    getSchemaForTable: function(tableName) {
-        if (!window.__pmAllSchemas) {
-            return null;
-        }
-        
-        var schema = window.__pmAllSchemas[tableName];
-        return schema;
-    },
-
-    getSchemaNameForField: function(persistentObj, fieldName) {
-        if (fieldName in persistentObj.__hx_schema.__pm_subSchemas) {
-            return persistentObj.__hx_schema.__pm_subSchemas[fieldName].__hx_schema_name;
-        }
-        return null;
-    },
 
     prepareSchemaTemplate: function(templateObj, tableName, keyField, sorts, filters) {
 	templateObj.__hx_schema_name = tableName;
@@ -601,6 +568,43 @@ Helix.DB = {
         return schema.__hx_key;
     },
     
+    getSchemaForObject: function(obj) {
+        return obj.__hx_schema;
+    },
+    
+    getSortsForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
+        var schema = window.__pmAllSchemas[tableName];
+        return schema.__hx_sorts;
+    },
+    
+    getFiltersForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
+        var schema = window.__pmAllSchemas[tableName];
+        return schema.__hx_filters;
+    },
+
+    getSchemaForTable: function(tableName) {
+        if (!window.__pmAllSchemas) {
+            return null;
+        }
+        
+        var schema = window.__pmAllSchemas[tableName];
+        return schema;
+    },
+
+    getSchemaNameForField: function(persistentObj, fieldName) {
+        if (fieldName in persistentObj.__hx_schema.__pm_subSchemas) {
+            return persistentObj.__hx_schema.__pm_subSchemas[fieldName].__hx_schema_name;
+        }
+        return null;
+    },
     
     /**
      * Data synchronization routines.

@@ -419,9 +419,10 @@ function config(persistence, dialect) {
                    * update the ID in the DB, all children get orphaned.
                    */
                   propertyPairs.push("id=" + tm.outIdVar('?'));
-                  var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + obj.__pm_schema.__pm_key + " = ?";
+                  var schema = Helix.DB.getSchemaForObject(obj);
+                  var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + Helix.DB.getKeyField(schema) + " = ?";
                   // Add the unique key, which we are using to find the item to update.
-                  values.push(obj.__pm_key);
+                  values.push(Helix.DB.getKeyField(obj));
                   tx.executeSql(sql, values, callback, callback);
               } else {
                 persistence.errorHandler(e.message, e.code);
