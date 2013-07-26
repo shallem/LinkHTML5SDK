@@ -227,7 +227,7 @@
 		},
 		_event: function(e, p) {
                         console.log($(this).data());
-			var w = $(this).jqmData('mobileDatebox');
+			var w = $(this).data('mobile-datebox');
 			if ( ! e.isPropagationStopped() ) {
 				switch (p.method) {
 					case 'close':

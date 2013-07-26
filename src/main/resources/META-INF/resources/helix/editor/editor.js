@@ -220,9 +220,7 @@
         .addClass(MAIN_CLASS)
         .width(options.width)
         .appendTo($parent);
-        if (!iOS) {
-            $main.height(options.height);
-        }
+        $main.height(options.height);
 
         // Add the main div to the DOM and append the textarea
         $parent.insertBefore($area)
@@ -777,6 +775,10 @@
 
     // focus - sets focus to either the textarea or iframe
     function focus(editor) {
+        if (!$(editor.page).is(':visible')) {
+            // When the page is invisible we do not put the focus in the editor ...
+            return;
+        }
         setTimeout(function() {
             if (sourceMode(editor)) {
                 editor.$area.focus();
@@ -892,16 +894,7 @@
    
         var $toolbar = editor.$toolbar,
         wid = options.width - ($toolbar.width() * 1.05),
-        hgt;
-        
-        /* On iOS we cannot have independent scrollers inside a single page. The better
-         * option is to let the iFrame expand to the full height of the content, which
-         * is what this code is doing.
-         */
-        if (!iOS) {
-            hgt = Math.max(options.height, $toolbar.outerHeight(true));
-        }
-        
+        hgt = Math.max(options.height, $toolbar.outerHeight(true));        
     
         // Resize the main div.
         $main.width(wid);
@@ -912,6 +905,9 @@
         // Resize the format frame.
         $formatFrame.width(wid);
         $formatFrame.height("25px");
+
+        // Resize the parent surrounding both.
+        editor.$parent.height(hgt + 25);
 
         // Resize the iframe
         $frame.width(wid);

@@ -719,12 +719,12 @@
                 }));
             }
             if (rowComponents.header) {
-                mainLink.append($('<h3 />').append(rowComponents.header));
+                mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
             }
             if (rowComponents.subHeader) {
                 mainLink.append($('<p />')
                 .append($('<strong />')
-                .append(rowComponents.subHeader)
+                .text(rowComponents.subHeader)
             )
             );
             }

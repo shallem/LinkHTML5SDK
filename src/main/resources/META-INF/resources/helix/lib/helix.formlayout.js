@@ -111,18 +111,15 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'name' : formElem.name,
                 'id' : editorID + "_input"
             }).append(formElem.value);
-            $fieldContainer.append($('<div />').attr({
-                'data-role' : 'fieldcontain',
-                'id' : editorID
-            })
-            .append($('<label />').attr({
-                'for' : formElem.name
-                })
-                .append(formElem.fieldTitle)
-            )
-            .append(editorInput));
+            $fieldContainer.append($('<div />')
+                .append($('<label />').attr({
+                    'for' : formElem.name
+                    })
+                    .append(formElem.fieldTitle)
+                )
+                .append(editorInput)
+            );
             $(editorInput).cleditor({
-                'id' : editorID,
                 'widget' : editorID + "_widget",
                 'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
                 'isFullWidth' : isFullWidth,
@@ -133,8 +130,10 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             var htmlDiv = $('<div />').append(formElem.value);
             $fieldContainer.append(htmlDiv);
             if (formElem.isScroller) {
-                var scroller = $fieldContainer.helixScrollingDiv().data('helix-helixScrollingDiv');
+                var scroller = $fieldContainer.helixScrollingDiv({ width: '98%' }).data('helix-helixScrollingDiv');
                 newScrollers.push(scroller);
+            } else {
+                $fieldContainer.width('98%');
             }
         }
     } else if (formElem.type === 'htmlframe') {

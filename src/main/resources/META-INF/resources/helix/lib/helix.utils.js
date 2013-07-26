@@ -138,5 +138,8 @@ Helix.Utils =  {
     getUniqueID : function() {
         ++Helix.Utils.currentUniqueID;
         return "pm_idt" + Helix.Utils.currentUniqueID;
+    },
+    escapeQuotes : function(str) {
+        return str.replace(/"/g, "&quot;");
     }
 }

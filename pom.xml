@@ -220,8 +220,6 @@
 
 		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.css</include>
-		    <!-- Overrides to set image URLs based on PrimeFaces Mobile's resource handler. -->
-		    <include>datebox/pm-jqm-datebox-overrides.css</include>
 
 		    <include>css/helix.css</include>
 

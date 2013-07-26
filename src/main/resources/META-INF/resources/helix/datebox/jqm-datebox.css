@@ -15,8 +15,8 @@
 .ui-input-datebox .ui-btn-text {display: none;}
 .ui-input-datebox.ui-mini { min-height: 30px; font-size: 14px; }
 .ui-input-datebox.ui-mini .ui-btn-icon-notext { margin-top: 2px !important; margin-bottom: 2px !important; }
-.ui-icon-datebox { background-image: url('image/datebox.png') !important; background-repeat: no-repeat; background-position: 99% 8px; }
-.ui-icon-datebox-alt { background-image: url('image/datebox.png') !important; background-repeat: no-repeat; background-position: 99% -28px; }
+.ui-icon-datebox { background-image: url('images/datebox.png') !important; background-repeat: no-repeat; background-position: 99% 8px; }
+.ui-icon-datebox-alt { background-image: url('images/datebox.png') !important; background-repeat: no-repeat; background-position: 99% -28px; }
 .ui-mini.ui-icon-datebox { background-position: 99% 6px; }
 .ui-mini.ui-icon-datebox-alt { background-position: 99% -30px; }
 
