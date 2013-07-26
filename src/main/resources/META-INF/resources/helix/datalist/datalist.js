@@ -719,7 +719,11 @@
                 }));
             }
             if (rowComponents.header) {
-                mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                if( Object.prototype.toString.call(rowComponents.header) == '[object String]' ) {
+                    mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                } else {
+                    mainLink.append($('<h3 />').append(rowComponents.header));
+                }
             }
             if (rowComponents.subHeader) {
                 mainLink.append($('<p />')

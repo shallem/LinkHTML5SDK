@@ -438,7 +438,8 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
        }
     } else if (formElem.type == 'horizontalScroll') {
         $('<div />').attr({
-            'class' : 'hx-horizontal-scroller-nozoom'
+            'class' : 'hx-horizontal-scroller-nozoom',
+            'id' : formElem.id
         }).append(formElem.contents).appendTo($fieldContainer);
     } else if (formElem.type == 'separator') {
         $('<hr />').appendTo($fieldContainer);
