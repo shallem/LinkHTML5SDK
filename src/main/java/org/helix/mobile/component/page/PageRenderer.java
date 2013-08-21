@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import javax.faces.application.ProjectStage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIOutput;
 import javax.faces.component.UIViewRoot;
@@ -62,7 +63,11 @@ public class PageRenderer extends CoreRenderer {
         
         
         // jQuery first
-        renderResource(context, "jquery-2.0.2.js", "javax.faces.resource.Script", HelixLibraryName, null);
+        if (context.isProjectStage(ProjectStage.Development)) {
+            renderResource(context, "jquery-2.0.2.js", "javax.faces.resource.Script", HelixLibraryName, null);
+        } else {
+            renderResource(context, "jquery-2.0.2.min.js", "javax.faces.resource.Script", HelixLibraryName, null);
+        }
         
         // config options; must happen before we include jQuery Mobile, otherwise
         // we miss the mobileinit event.

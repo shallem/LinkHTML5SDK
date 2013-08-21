@@ -26,6 +26,12 @@
             <defaultValue>false</defaultValue>
         </attribute>
         <attribute>
+            <name>toggle</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+        </attribute>
+        <attribute>
             <name>swatch</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -109,7 +109,23 @@ Helix.Ajax = {
         }
     },
     
-    ajaxBeanLoad : function(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,itemKey) {
+    ajaxBeanLoad : function(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,itemKey,nRetries) {        
+        // Make sure the DB is ready. If not, wait 5 seconds.
+        if (!Helix.DB.persistenceIsReady()) {
+            if (!nRetries) {
+                nRetries = 1;
+            }
+            // Wait 2s and try again.
+            if (nRetries > 3) {
+                alert("Failed to prepare the synchronization layer. Please contact your administrator.");
+                return;
+            }
+            setTimeout(function() {
+                Helix.Ajax.ajaxBeanLoad(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,itemKey,nRetries+1);
+            }, 2000);
+            return;
+        }
+        
         if (!requestOptions.params) {
             requestOptions.params = [];
         }

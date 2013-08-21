@@ -49,6 +49,11 @@ public class HeaderRenderer extends CoreRenderer {
         if(header.isFixed()) {
             writer.writeAttribute("data-position", "fixed", null);
         }
+        if (header.isToggle()) {
+            writer.writeAttribute("data-tap-toggle", "true", null);
+        } else {
+            writer.writeAttribute("data-tap-toggle", "false", null);
+        }
 
         if(left != null) {
             left.encodeAll(context);

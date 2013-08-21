@@ -25,287 +25,352 @@
  */
 
 if(!window.persistence) { // persistence.js not loaded!
-  throw new Error("persistence.js should be loaded before persistence.migrations.js");
+    throw new Error("persistence.js should be loaded before persistence.migrations.js");
 }
 
 (function() {
   
     var Migrator = {
-      migrations: [],
+        migrations: [],
       
-      version: function(callback) {
-        persistence.transaction(function(t){
-          t.executeSql('SELECT current_version FROM schema_version', null, function(result){
-            if (result.length == 0) {
-              t.executeSql('INSERT INTO schema_version VALUES (0)', null, function(){
-                callback(0);
-              });
-            } else {
-              callback(result[0].current_version);
+        version: function(t, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.version(tx, callback);
+                });
+                return;
             }
-          });
-        });
-      },
+          
+            t.executeSql('SELECT current_version FROM schema_version', null, function(result){
+                if (result.length == 0) {
+                    t.executeSql('INSERT INTO schema_version VALUES (0)', null, function(){
+                        callback(0);
+                    });
+                } else {
+                    callback(result[0].current_version);
+                }
+            });
+        },
       
-      setVersion: function(v, callback) {
-        persistence.transaction(function(t){
-          t.executeSql('UPDATE schema_version SET current_version = ?', [v], function(){
-            Migrator._version = v;
-            if (callback) callback();
-          });
-        });
-      },
+        setVersion: function(t, v, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.setVersion(tx, v, callback);
+                });
+                return;
+            }
+            
+            t.executeSql('UPDATE schema_version SET current_version = ?', [v], function(){
+                Migrator._version = v;
+                if (callback) callback();
+            });
+        },
       
-      setup: function(callback) {
-        persistence.transaction(function(t){
-          t.executeSql('CREATE TABLE IF NOT EXISTS schema_version (current_version INTEGER)', null, function(){
+        setup: function(t, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.setup(tx, callback);
+                });
+                return;
+            }
+            t.executeSql('CREATE TABLE IF NOT EXISTS schema_version (current_version INTEGER)', null, function(){
+                // Creates a dummy migration just to force setting schema version when cleaning DB
+                Migrator.migration(0, {
+                    up: function() { }, 
+                    down: function() { }
+                });
+                if (callback) callback();
+            });
+        },
+      
+        // Method should only be used for testing
+        reset: function(callback) {
             // Creates a dummy migration just to force setting schema version when cleaning DB
-            Migrator.migration(0, { up: function() { }, down: function() { } });
-            if (callback) callback();
-          });
-        });
-      },
+            Migrator.migrations = [];
+            Migrator.migration(0, {
+                up: function() { }, 
+                down: function() { }
+            });
+            Migrator.setVersion(0, callback);
+        },
       
-      // Method should only be used for testing
-      reset: function(callback) {
-        // Creates a dummy migration just to force setting schema version when cleaning DB
-        Migrator.migrations = [];
-        Migrator.migration(0, { up: function() { }, down: function() { } });
-        Migrator.setVersion(0, callback);
-      },
+        migration: function(version, actions) {
+            Migrator.migrations[version] = new Migration(version, actions);
+            return Migrator.migrations[version];
+        },
       
-      migration: function(version, actions) {
-        Migrator.migrations[version] = new Migration(version, actions);
-        return Migrator.migrations[version];
-      },
-      
-      migrateUpTo: function(version, callback) {
-        var migrationsToRun = [];
-        
-        function migrateOne() {
-          var migration = migrationsToRun.pop();
-          
-          if (!migration) callback();
-          
-          migration.up(function(){
-            if (migrationsToRun.length > 0) {
-              migrateOne();
-            } else if (callback) {
-              callback();
+        migrateUpTo: function(t, version, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.migrateUpTo(tx, version, callback);
+                });
+                return;
             }
-          });
-        }
+            
+            var migrationsToRun = [];
         
-        this.version(function(currentVersion){
-          for (var v = currentVersion+1; v <= version; v++)
-            migrationsToRun.unshift(Migrator.migrations[v]);
+            function migrateOne(tx) {
+                var migration = migrationsToRun.pop();
           
-          if (migrationsToRun.length > 0) {
-            migrateOne();
-          } else if (callback) {
-            callback();
-          }
-        });
-      },
-      
-      migrateDownTo: function(version, callback) {
-        var migrationsToRun = [];
-        
-        function migrateOne() {
-          var migration = migrationsToRun.pop();
+                if (!migration) callback();
           
-          if (!migration) callback();
-          
-          migration.down(function(){
-            if (migrationsToRun.length > 0) {
-              migrateOne();
-            } else if (callback) {
-              callback();
+                migration.up(tx, function(){
+                    if (migrationsToRun.length > 0) {
+                        migrateOne(tx);
+                    } else if (callback) {
+                        callback();
+                    }
+                });
             }
-          });
-        }
         
-        this.version(function(currentVersion){
-          for (var v = currentVersion; v > version; v--)
-            migrationsToRun.unshift(Migrator.migrations[v]);
+            this.version(t, function(currentVersion){
+                for (var v = currentVersion+1; v <= version; v++)
+                    migrationsToRun.unshift(Migrator.migrations[v]);
           
-          if (migrationsToRun.length > 0) {
-            migrateOne();
-          } else if (callback) {
-            callback();
-          }
-        });
-      },
+                if (migrationsToRun.length > 0) {
+                    migrateOne(t);
+                } else if (callback) {
+                    callback();
+                }
+            });
+        },
       
-      migrate: function(version, callback) {
-        if ( arguments.length === 1 ) {
-          callback = version;
-          version = this.migrations.length-1;
-        }
+        migrateDownTo: function(t, version, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.migrateDownTo(tx, version, callback);
+                });
+                return;
+            }
+            
+            var migrationsToRun = [];
         
-        this.version(function(curVersion){
-          if (curVersion < version)
-            Migrator.migrateUpTo(version, callback);
-          else if (curVersion > version)
-            Migrator.migrateDownTo(version, callback);
-          else
-            callback();
-        });
-      }
+            function migrateOne(tx) {
+                var migration = migrationsToRun.pop();
+          
+                if (!migration) callback();
+          
+                migration.down(tx, function(){
+                    if (migrationsToRun.length > 0) {
+                        migrateOne(tx);
+                    } else if (callback) {
+                        callback();
+                    }
+                });
+            }
+        
+            this.version(t, function(currentVersion){
+                for (var v = currentVersion; v > version; v--)
+                    migrationsToRun.unshift(Migrator.migrations[v]);
+          
+                if (migrationsToRun.length > 0) {
+                    migrateOne(t);
+                } else if (callback) {
+                    callback();
+                }
+            });
+        },
+      
+        migrate: function(t, version, callback) {
+            if (!t) {
+                persistence.transaction(function(tx){
+                    Migrator.migrate(tx, version, callback);
+                });
+                return;
+            }
+            
+            if ( arguments.length === 1 ) {
+                callback = version;
+                version = this.migrations.length-1;
+            }
+        
+            this.version(t, function(curVersion){
+                if (curVersion < version)
+                    Migrator.migrateUpTo(t, version, callback);
+                else if (curVersion > version)
+                    Migrator.migrateDownTo(t, version, callback);
+                else
+                    callback();
+            });
+        }
     }
     
     var Migration = function(version, body) {
-      this.version = version;
-      // TODO check if actions contains up and down methods
-      this.body = body;
-      this.actions = [];
+        this.version = version;
+        // TODO check if actions contains up and down methods
+        this.body = body;
+        this.actions = [];
     };
     
-    Migration.prototype.executeActions = function(callback, customVersion) {
-      var actionsToRun = this.actions;
-      var version = (customVersion!==undefined) ? customVersion : this.version;
+    Migration.prototype.executeActions = function(t, callback, customVersion) {
+        if (!t) {
+            persistence.transaction(function(tx){
+                this.executeActions(tx, callback, customVersion);
+            });
+            return;
+        }
+        
+        var actionsToRun = this.actions;
+        var version = (customVersion!==undefined) ? customVersion : this.version;
       
-      persistence.transaction(function(tx){
         function actionFailure(err) {
             alert(err.message);
         }
-        
-        function nextAction() {
-          if (actionsToRun.length == 0)
-            Migrator.setVersion(version, callback);
-          else {
-            var action = actionsToRun.pop();
-            action(tx, nextAction, actionFailure);
-          }
+
+        function nextAction(tx) {
+            if (actionsToRun.length == 0)
+                Migrator.setVersion(tx, version, callback);
+            else {
+                var action = actionsToRun.pop();
+                action(tx, nextAction, actionFailure);
+            }
+        }
+
+        nextAction(t);
+    }
+    
+    Migration.prototype.up = function(t, callback) {
+        if (!t) {
+            persistence.transaction(function(tx){
+                this.up(tx, callback);
+            });
+            return;
         }
         
-        nextAction();
-      });
+        if (this.body.up) {
+            this.body.up.apply(this);
+        }
+        this.executeActions(t, callback);
     }
     
-    Migration.prototype.up = function(callback) {
-      if (this.body.up) {
-        this.body.up.apply(this);
-      }
-      this.executeActions(callback);
-    }
-    
-    Migration.prototype.down = function(callback) {
-      if (this.body.down) {
-        this.body.down.apply(this);
-      }
-      this.executeActions(callback, this.version-1);
+    Migration.prototype.down = function(t, callback) {
+        if (!t) {
+            persistence.transaction(function(tx){
+                this.down(tx, callback);
+            });
+            return;
+        }
+        if (this.body.down) {
+            this.body.down.apply(this);
+        }
+        this.executeActions(t, callback, this.version-1);
     }
     
     Migration.prototype.createTable = function(tableName, callback) {
-      var table = new ColumnsHelper();
+        var table = new ColumnsHelper();
       
-      if (callback) callback(table);
+        if (callback) callback(table);
       
-      var column;
-      var sql = 'CREATE TABLE `' + tableName + '` (id VARCHAR(32) PRIMARY KEY';
-      while (column = table.columns.pop()) {
-        sql += ', ' + column;
-      }
+        var column;
+        var sql = 'CREATE TABLE `' + tableName + '` (id VARCHAR(32) PRIMARY KEY';
+        while (column = table.columns.pop()) {
+            sql += ', ' + column;
+        }
       
-      this.executeSql(sql + ')');
+        this.executeSql(sql + ')');
     }
     
     Migration.prototype.dropTable = function(tableName) {
-      var sql = 'DROP TABLE `' + tableName + '`';
-      this.executeSql(sql);
+        var sql = 'DROP TABLE `' + tableName + '`';
+        this.executeSql(sql);
     }
     
     Migration.prototype.addColumn = function(tableName, columnName, columnType) {
-      var sql = 'ALTER TABLE `' + tableName + '` ADD ' + columnName + ' ' + columnType;
-      this.executeSql(sql);
+        var sql = 'ALTER TABLE `' + tableName + '` ADD ' + columnName + ' ' + columnType;
+        this.executeSql(sql);
     }
     
     Migration.prototype.removeColumn = function(tableName, columnName) {
-      this.action(function(tx, nextCommand, errorFn){
-        var sql = 'select sql from sqlite_master where type = "table" and name == "'+tableName+'"';
-        tx.executeSql(sql, null, function(result){
-          var matchArr = new RegExp("CREATE TABLE `?[A-Za-z0-9_.]+`? \\((.+)\\)").exec(result[0].sql);
-          var columns = matchArr[1].split(', ');
-          var selectColumns = [];
-          var columnsSql = [];
+        this.action(function(tx, nextCommand, errorFn){
+            var sql = 'select sql from sqlite_master where type = "table" and name == "'+tableName+'"';
+            tx.executeSql(sql, null, function(result){
+                var matchArr = new RegExp("CREATE TABLE `?[A-Za-z0-9_.]+`? \\((.+)\\)").exec(result[0].sql);
+                var columns = matchArr[1].split(', ');
+                var selectColumns = [];
+                var columnsSql = [];
           
-          for (var i = 0; i < columns.length; i++) {
-            var colName = new RegExp("`?(\\w+)`? .+").exec(columns[i])[1];
-            if (colName == columnName) continue;
+                for (var i = 0; i < columns.length; i++) {
+                    var colName = new RegExp("`?(\\w+)`? .+").exec(columns[i])[1];
+                    if (colName == columnName) continue;
             
-            columnsSql.push(columns[i]);
-            selectColumns.push(colName);
-          }
-          columnsSql = columnsSql.join(', ');
-          selectColumns = selectColumns.join(', ');
+                    columnsSql.push(columns[i]);
+                    selectColumns.push(colName);
+                }
+                columnsSql = columnsSql.join(', ');
+                selectColumns = selectColumns.join(', ');
           
-          var queries = [];
-          queries.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
-          queries.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
-          queries.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
-          queries.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
+                var queries = [];
+                queries.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
+                queries.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
+                queries.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
+                queries.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
           
-          persistence.executeQueriesSeq(tx, queries, nextCommand);
-        }, errorFn);
-      });
+                persistence.executeQueriesSeq(tx, queries, nextCommand);
+            }, errorFn);
+        });
     }
     
     Migration.prototype.addIndex = function(tableName, columnName, unique) {
-      var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON ' + tableName + ' (' + columnName + ')';
-      this.executeSql(sql);
+        var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON ' + tableName + ' (' + columnName + ')';
+        this.executeSql(sql);
     }
     
     Migration.prototype.removeIndex = function(tableName, columnName) {
-      var sql = 'DROP INDEX `' + tableName + '_' + columnName + '`';
-      this.executeSql(sql);
+        var sql = 'DROP INDEX `' + tableName + '_' + columnName + '`';
+        this.executeSql(sql);
     }
     
     Migration.prototype.executeSql = function(sql, args) {
-      this.action(function(tx, nextCommand, errorFn){
-        tx.executeSql(sql, args, nextCommand, errorFn);
-      });
+        this.action(function(t, nextCommand, errorFn){
+            t.executeSql(sql, args, nextCommand, errorFn);
+        });
     }
     
     Migration.prototype.action = function(callback) {
-      this.actions.unshift(callback);
+        this.actions.unshift(callback);
     }
     
     var ColumnsHelper = function() {
-      this.columns = [];
+        this.columns = [];
     }
     
     ColumnsHelper.prototype.text = function(columnName) {
-      this.columns.unshift(columnName + ' TEXT');
+        this.columns.unshift(columnName + ' TEXT');
     }
     
     ColumnsHelper.prototype.integer = function(columnName) {
-      this.columns.unshift(columnName + ' INT');
+        this.columns.unshift(columnName + ' INT');
     }
     
     ColumnsHelper.prototype.real = function(columnName) {
-      this.columns.unshift(columnName + ' REAL');
+        this.columns.unshift(columnName + ' REAL');
     }
     
     ColumnsHelper.prototype['boolean'] = function(columnName) {
-      this.columns.unshift(columnName + ' BOOL');
+        this.columns.unshift(columnName + ' BOOL');
     }
     
     ColumnsHelper.prototype.date = function(columnName) {
-      this.columns.unshift(columnName + ' DATE');
+        this.columns.unshift(columnName + ' DATE');
     }
     
     ColumnsHelper.prototype.json = function(columnName) {
-      this.columns.unshift(columnName + ' TEXT');
+        this.columns.unshift(columnName + ' TEXT');
     }
     
     // Makes Migrator and Migration available to tests
     persistence.migrations = {};
     persistence.migrations.Migrator = Migrator;
     persistence.migrations.Migration = Migration;
-    persistence.migrations.init = function() { Migrator.setup.apply(Migrator, Array.prototype.slice.call(arguments, 0))};
+    persistence.migrations.init = function() {
+        Migrator.setup.apply(Migrator, Array.prototype.slice.call(arguments, 0))
+    };
     
-    persistence.migrate = function() { Migrator.migrate.apply(Migrator, Array.prototype.slice.call(arguments, 0))};
-    persistence.defineMigration = function() { Migrator.migration.apply(Migrator, Array.prototype.slice.call(arguments, 0))};
+    persistence.migrate = function() {
+        Migrator.migrate.apply(Migrator, Array.prototype.slice.call(arguments, 0))
+    };
+    persistence.defineMigration = function() {
+        Migrator.migration.apply(Migrator, Array.prototype.slice.call(arguments, 0))
+    };
     
 }());
