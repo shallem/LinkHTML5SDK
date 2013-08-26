@@ -157,7 +157,7 @@
 }
 
 /* The heavy grey background doesn't look right in mobile. */
-.ui-widget-header {
+.ui-widget-header { 
     background: none;
 }
 

@@ -48,3 +48,11 @@ window.HelixServices = {
     }
 };
 })();
+
+(function() {
+window.HelixApp = {
+    getApplications: function(success, fail) {
+        return cordova.exec(success, fail, "HelixApp", "getApplications", []);
+    }
+};
+})();
