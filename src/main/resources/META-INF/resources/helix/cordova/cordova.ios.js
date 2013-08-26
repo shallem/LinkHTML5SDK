@@ -23,7 +23,8 @@
  under the License.
 */
 
-(function() {
+/* SAH: make this function explicitly invoked. */
+function cordova_ios_init() {
 
 // file: lib/scripts/require.js
 
@@ -6431,4 +6432,4 @@ require('cordova/channel').onNativeReady.fire();
 
 window.cordova.exec = require('cordova/exec');
 
-})();
+}

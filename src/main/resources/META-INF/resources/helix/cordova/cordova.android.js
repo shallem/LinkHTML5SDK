@@ -18,7 +18,8 @@
  specific language governing permissions and limitations
  under the License.
 */
-;(function() {
+/* SAH: make this function explicitly invoked. */
+function cordova_android_init() {
 var CORDOVA_JS_BUILD_LABEL = '3.0.0-0-ge670de9';
 // file: lib/scripts/require.js
 
@@ -1760,6 +1761,8 @@ function onScriptLoadingComplete(moduleList) {
                 if (module.runs && !(module.clobbers && module.clobbers.length) && !(module.merges && module.merges.length)) {
                     modulemapper.runs(module.id);
                 }
+                /* SAH: debug. */
+                alert("INSTALLED: " + module.id);
             }
             catch(err) {
                 // error with module, most likely clobbers, should we continue?
@@ -1796,12 +1799,22 @@ function handlePluginsObject(path, moduleList) {
     }
 
     for (var i = 0; i < moduleList.length; i++) {
-        injectScript(path + moduleList[i].file, scriptLoadedCallback);
+        scriptLoadedCallback();
+        /* SAH: we do not need to inject the script. We are explicitly loading all plugins. */
+        //injectScript(path + moduleList[i].file, scriptLoadedCallback);
     }
 }
 
 function injectPluginScript(pathPrefix) {
-    injectScript(pathPrefix + 'cordova_plugins.js', function(){
+    /* SAH: changed to use explicit loading of plugins because we are not packaging
+     * any JS on the client side. For now this is not dynamic - we pre-package all
+     * plugins.
+     */
+    cordova_30_plugins();
+    var moduleList = require("cordova/plugin_list");
+    handlePluginsObject(pathPrefix, moduleList);
+    
+    /*injectScript(pathPrefix + 'cordova_plugins.js', function(){
         try {
             var moduleList = require("cordova/plugin_list");
             handlePluginsObject(pathPrefix, moduleList);
@@ -1810,7 +1823,7 @@ function injectPluginScript(pathPrefix) {
             // this is an acceptable error, pre-3.0.0, so we just move on.
             finishPluginLoading();
         }
-    },finishPluginLoading); // also, add script load error handler for file not found
+    },finishPluginLoading); // also, add script load error handler for file not found*/
 }
 
 function findCordovaPath() {
@@ -2118,4 +2131,4 @@ window.cordova = require('cordova');
 require('cordova/exec')(null, null, 'PluginManager', 'startup', []);
 require('cordova/channel').onNativeReady.fire();
 
-})();
+}

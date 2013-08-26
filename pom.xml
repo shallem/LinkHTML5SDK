@@ -252,7 +252,9 @@
 		    <!-- Cordova, including custom plugins. -->
 		    <include>cordova/cordova-init.js</include>
 		    <include>cordova/cordova.ios.js</include>
-		    <include>cordova/cordova-plugins.js</include>
+		    <include>cordova/cordova.android.js</include>
+		    <include>cordova/cordova-3.0.plugins.js</include>
+		    <include>cordova/cordova.helix.plugins.js</include>
 
 		    <!-- Start of Link SDK. -->
 		    <include>helix.init.js</include>

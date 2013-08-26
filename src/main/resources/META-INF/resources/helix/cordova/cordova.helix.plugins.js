@@ -40,3 +40,11 @@
     }
  };
 })();
+
+(function() {
+window.HelixServices = {
+    auth: function(client, username, password, success, fail) {
+        return cordova.exec(success, fail, "HelixServices", "auth", [client, username, password]);
+    }
+};
+})();

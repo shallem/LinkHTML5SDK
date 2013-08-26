@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 (function() {
-    window.CordovaInstalled = navigator.userAgent.match(/\[CORDOVA\]/);
-    //window.CordovaInstalled = true;
+    window.CordovaIOS = navigator.userAgent.match(/\[CORDOVA\]/);
+    window.CordovaANDROID = navigator.userAgent.match(/\[CORDOVA-ANDROID\]/);
+    
+    if (window.CordovaIOS) {
+        cordova_ios_init();
+        window.CordovaInstalled = true;
+    } else if (window.CordovaANDROID) {
+        cordova_android_init();
+        window.CordovaInstalled = true;
+    } else {
+        window.CordovaInstalled = false;
+    }
 })();
