@@ -29,9 +29,13 @@ public class TabBarRenderer extends CoreRenderer {
     @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         TabBar bar = (TabBar) component;
-        if (bar.getFacet("tabs") != null && this.tabs.isEmpty()) {
-            collectTabs(context, bar.getFacet("tabs"));
+        
+        if (bar.getFacet("tabs") == null) {
+            throw new FacesException("you have specified a tab bar with no tabs.");
         }
+        if (this.tabs.isEmpty()) {
+            collectTabs(context, bar.getFacet("tabs"));
+        }         
     }
     
     private void collectTabs(FacesContext context, UIComponent tabsParent) {
