@@ -87,6 +87,31 @@ Helix.Ajax = {
         pin : false
     },
     
+    /**
+     * Show a loader with a text message.
+     * 
+     * @param msg Text message to show.
+     * @param theme jQuery Mobile theme (optional, defaults to "a")
+     */
+    showLoader: function(msg, theme) {
+        if (!theme) {
+            theme = "a";
+        }
+        $.mobile.loading('show', {
+            text: msg, 
+            textVisible: true,
+            theme: theme,
+            textonly: false
+        });
+    },
+    
+    /**
+     * Helper companion to showLoader. Hides the loader.
+     */
+    hideLoader: function() {
+        $.mobile.loading('hide');
+    },
+    
     /*
      * Helper used to set loader options.
      */

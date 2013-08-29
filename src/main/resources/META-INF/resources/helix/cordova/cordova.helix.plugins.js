@@ -45,14 +45,38 @@
 window.HelixServices = {
     auth: function(client, username, password, success, fail) {
         return cordova.exec(success, fail, "HelixServices", "auth", [client, username, password]);
+    },
+    refreshApplications: function(success, fail) {
+        return cordova.exec(success, fail, "HelixServices", "refreshApplications", []);
+    },
+    sessionIsActive: function(success) {
+        return cordova.exec(success, null, "HelixServices", "sessionIsActive", []);
     }
 };
 })();
 
 (function() {
 window.HelixApp = {
+    getRecentClient: function(success,fail) {
+        return cordova.exec(success, fail, "HelixApp", "getRecentClient", []);
+    },
+    getRecentUser: function(success,fail) {
+        return cordova.exec(success, fail, "HelixApp", "getRecentUser", []);
+    },
     getApplications: function(success, fail) {
         return cordova.exec(success, fail, "HelixApp", "getApplications", []);
+    },
+    logout: function(success) {
+        return cordova.exec(success, null, "HelixApp", "logout", []);
+    },
+    isOnline: function(success) {
+        return cordova.exec(success, null, "HelixApp", "isOnline", []);
+    },
+    lastError: function(success) {
+        return cordova.exec(success, null, "HelixApp", "lastError", []);
+    },
+    lastInfo: function(success) {
+        return cordova.exec(success, null, "HelixApp", "lastInfo", []);
     }
 };
 })();
