@@ -21,13 +21,13 @@
 
 /* SAH: make this explicitly invoked. For now, see cordova-android.js for the invocation. */
 function cordova_30_plugins() {
-    /* InAppBrowser */
-    cordova.define("org.apache.cordova.core.inappbrowser.InAppBrowser", function(require, exports, module) {
+    /* HelixAppBrowser */
+    cordova.define("com.mobilehelix.cordova.plugins.HelixAppBrowser", function(require, exports, module) {
         var exec = require('cordova/exec');
         var channel = require('cordova/channel');
         var modulemapper = require('cordova/modulemapper');
 
-        function InAppBrowser() {
+        function HelixAppBrowser() {
             this.channels = {
                 'loadstart': channel.create('loadstart'),
                 'loadstop' : channel.create('loadstop'),
@@ -36,17 +36,17 @@ function cordova_30_plugins() {
             };
         }
 
-        InAppBrowser.prototype = {
+        HelixAppBrowser.prototype = {
             _eventHandler: function (event) {
                 if (event.type in this.channels) {
                     this.channels[event.type].fire(event);
                 }
             },
             close: function (eventname) {
-                exec(null, null, "InAppBrowser", "close", []);
+                exec(null, null, "HelixAppBrowser", "close", []);
             },
             show: function (eventname) {
-                exec(null, null, "InAppBrowser", "show", []);
+                exec(null, null, "HelixAppBrowser", "show", []);
             },
             addEventListener: function (eventname,f) {
                 if (eventname in this.channels) {
@@ -61,9 +61,9 @@ function cordova_30_plugins() {
 
             executeScript: function(injectDetails, cb) {
                 if (injectDetails.code) {
-                    exec(cb, null, "InAppBrowser", "injectScriptCode", [injectDetails.code, !!cb]);
+                    exec(cb, null, "HelixAppBrowser", "injectScriptCode", [injectDetails.code, !!cb]);
                 } else if (injectDetails.file) {
-                    exec(cb, null, "InAppBrowser", "injectScriptFile", [injectDetails.file, !!cb]);
+                    exec(cb, null, "HelixAppBrowser", "injectScriptFile", [injectDetails.file, !!cb]);
                 } else {
                     throw new Error('executeScript requires exactly one of code or file to be specified');
                 }
@@ -71,17 +71,17 @@ function cordova_30_plugins() {
 
             insertCSS: function(injectDetails, cb) {
                 if (injectDetails.code) {
-                    exec(cb, null, "InAppBrowser", "injectStyleCode", [injectDetails.code, !!cb]);
+                    exec(cb, null, "HelixAppBrowser", "injectStyleCode", [injectDetails.code, !!cb]);
                 } else if (injectDetails.file) {
-                    exec(cb, null, "InAppBrowser", "injectStyleFile", [injectDetails.file, !!cb]);
+                    exec(cb, null, "HelixAppBrowser", "injectStyleFile", [injectDetails.file, !!cb]);
                 } else {
                     throw new Error('insertCSS requires exactly one of code or file to be specified');
                 }
             }
         };
 
-        module.exports = function(strUrl, strWindowName, strWindowFeatures) {
-            var iab = new InAppBrowser();
+        module.exports = function(strUrl, strWindowName, appID) {
+            var iab = new HelixAppBrowser();
             var cb = function(eventname) {
                 iab._eventHandler(eventname);
             };
@@ -92,7 +92,7 @@ function cordova_30_plugins() {
                 return origOpenFunc.apply(window, arguments);
             }
 
-            exec(cb, cb, "InAppBrowser", "open", [strUrl, strWindowName, strWindowFeatures]);
+            exec(cb, cb, "HelixAppBrowser", "open", [strUrl, strWindowName, appID]);
             return iab;
         };
 
@@ -102,9 +102,12 @@ function cordova_30_plugins() {
     cordova.define('cordova/plugin_list', function(require, exports, module) {
         module.exports = [
             {
-                /* SAH: inapp browser code is above, not in a separate file. */
-                /*"file": "plugins/org.apache.cordova.core.inappbrowser/www/InAppBrowser.js", */
-                "id": "org.apache.cordova.core.inappbrowser.InAppBrowser",
+                /**
+                 * SAH: inapp browser code is above, not in a separate file. Adapted to be the
+                 * HelixAppBrowser. 
+                 **/
+                /*"file": "plugins/org.apache.cordova.core.inappbrowser/www/HelixAppBrowser.js", */
+                "id": "com.mobilehelix.cordova.plugins.HelixAppBrowser",
                 "clobbers": [
                     "window.open"
                 ]

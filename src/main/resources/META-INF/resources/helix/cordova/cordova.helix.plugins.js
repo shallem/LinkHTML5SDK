@@ -77,6 +77,9 @@ window.HelixApp = {
     },
     lastInfo: function(success) {
         return cordova.exec(success, null, "HelixApp", "lastInfo", []);
+    },
+    refreshHome: function(success) {
+        return cordova.exec(success, null, "HelixApp", "refreshHome", []);
     }
 };
 })();
