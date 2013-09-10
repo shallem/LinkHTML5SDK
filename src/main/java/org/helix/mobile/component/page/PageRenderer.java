@@ -102,8 +102,8 @@ public class PageRenderer extends CoreRenderer {
         // Then override with pf-mobile content.
         renderResource(context, "helix-mobile-full.css", "javax.faces.resource.Stylesheet", HelixLibraryName, null);
         renderResource(context, "css/helix.overrides.css", "javax.faces.resource.Stylesheet", HelixLibraryName, null);
-        renderResource(context, "helix-mobile-full.js", "javax.faces.resource.Script", HelixLibraryName, null);
         renderResource(context, "cordova-full.js", "javax.faces.resource.Script", HelixLibraryName, null);
+        renderResource(context, "helix-mobile-full.js", "javax.faces.resource.Script", HelixLibraryName, null);
         
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
