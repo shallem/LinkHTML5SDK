@@ -154,6 +154,11 @@ Helix.Ajax = {
         if (!requestOptions.params) {
             requestOptions.params = [];
         }
+        if (!requestOptions.params.push) {
+            // the request options are not an array ...
+            alert("Parameters to an AJAX bean load must be an array of objects, each of the form { name:'<name>', value:<value> }.");
+            return;
+        }
         requestOptions.params.push({
             name: "__hxLoadKey",  
             value: requestOptions.loadKey
