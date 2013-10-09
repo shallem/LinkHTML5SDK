@@ -246,6 +246,17 @@
                 'data-index' : curState.startElem + idx
             }).appendTo(curState.curRow);
             if (curState.parent.itemContextMenu) {
+                $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu))
+                        .popup({
+                            afteropen: function(ev, ui) {
+                                _self.popupVisible = true;
+                            },
+                            afterclose: function(ev, ui) {
+                                _self.popupVisible = false;
+                                _self.popupOpened = false;
+                            },
+                            history: false
+                        });
                 $(nxtCol).on('taphold', function(event) {
                     // This allows the container to have taphold context menus that are not
                     // triggered when this event is triggered.
@@ -255,37 +266,39 @@
                     curState.parent.selectedIndex = $(event.target).closest("td").attr('data-index');
                     //curState.parent.selected = curState.parent.list[curState.parent.selectedIndex];
                     curState.parent.selected = elem;
-                    _self._popupOpened = true;
-                    $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu))
-                        .popup({
-                            afteropen: function(ev, ui) {
-                                alert("PVISIBLE");
-                                _self.popupVisible = true;
-                            },
-                            history: false
-                        });
+                    
                     $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "open", { 
                         positionTo: event.target 
                     });
+                    _self.popupOpened = true;
+                    //alert("TAPHOLD");
                 });
                 $(nxtCol).on('tap', function(event) {
-                    if (_self._popupOpened) {
-                        _self._popupOpened = false;
-                        alert("PTAP");
-                        if (_self.popupVisible) {
-                            alert("PHIDDEN");
-                            $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "close" );
-                            _self.popupVisible = false;
-                        }
-                        event.stopImmediatePropagation();
-                        event.preventDefault();
+                    // This is a click on the container or its contents. Close the 
+                    // context menu if it is open. Don't let the event propagate further.
+                    
+                    // NOTE: the popupOpened variable is introduced due to the following behavior -
+                    // in most cases it seems that the iPad triggers a tap *after* the taphold event.
+                    // This does not always happen on first page load, but thereafter it does. Chrome
+                    // does not have this behavior. Without the popupOpened flag, taphold will then 
+                    // trigger a tap that closes the context menu. Also note that this same issue
+                    // (taphold triggering a tap) causes tap events inside of the datagrid to trigger
+                    // on taphold. Hence, we have the bindEvent method below, and we supply the
+                    // datagrid object as the first parameter to the renderer.
+                    if (_self.popupOpened) {
+                        _self.popupOpened = false;
+                    } else if (_self.popupVisible) {
+                        $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "close" );
+                        _self.popupVisible = false;
                     }
+                    event.stopImmediatePropagation();
+                    event.preventDefault();
                 });
             }
             /* Must be called *AFTER* we attach the tap hold event so that any events attached
              * to nxtCol in the renderer can be stopped when we want to display the context
              * menu. */
-            curState.parent.renderer(nxtCol, elem, curState.parent.strings);
+            curState.parent.renderer(_self, nxtCol, elem, curState.parent.strings);
         },
     
         _refreshData: function(nElems, oncomplete) {
@@ -398,6 +411,15 @@
         },
         closeItemPopup: function() {
             $(PrimeFaces.escapeClientId(this.options.itemContextMenu)).popup( "close" );
+        },
+        bindEvent : function(target, evname, fn) {
+            var _self = this;
+            $(target).on(evname, function(ev) {
+                if (_self.popupVisible) {
+                    return;
+                }
+                fn(ev);
+            });
         }
     });
 }( jQuery ));
