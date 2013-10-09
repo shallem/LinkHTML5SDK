@@ -173,7 +173,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         startScript(writer, clientId);
         writer.write(widgetName + " = null;");
    
-        writer.write("function " + cmd.getName() + "_load(schemaObj, params, itemKey, oncomplete){ ");
+        writer.write("function " + cmd.getName() + "_load(schemaObj, params, itemKey, oncomplete, onerror){ ");
         
         writer.write("var loadingOptions = {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
@@ -201,7 +201,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("};\n");
         
         // Setup the widget.
-        writer.write(MessageFormat.format("Helix.Ajax.ajaxBeanLoad(requestOptions, loadingOptions, syncOverrides, ''{0}'', schemaObj, oncomplete, itemKey);",
+        writer.write(MessageFormat.format("Helix.Ajax.ajaxBeanLoad(requestOptions, loadingOptions, syncOverrides, ''{0}'', schemaObj, oncomplete, onerror, itemKey);",
                 new Object[] {
                     cmd.resolveWidgetVar()
                 }));
@@ -210,7 +210,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
-        writer.write("function " + cmd.getName() + "(params, oncomplete, itemKey){ ");
+        writer.write("function " + cmd.getName() + "(params, oncomplete, onerror, itemKey){ ");
         
         writer.write("if (!oncomplete) {\n oncomplete = " + onComplete.toString() + "; }\n");
         writer.write("Helix.DB.generatePersistenceSchema(");
@@ -220,7 +220,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("',");
         writer.write(cmd.getName());
         writer.write("_load,");
-        writer.write("[params, itemKey, oncomplete]);");
+        writer.write("[params, itemKey, oncomplete, onerror]);");
         
         writer.write("}");
         

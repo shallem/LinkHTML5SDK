@@ -80,6 +80,13 @@ $(document).bind('postrequest', function() {
 */
 Helix.Ajax = {
     /**
+     * Error codes
+     */
+    ERROR_OFFLINE_ACCESS : { code: 0, msg: "Cannot load this object while offline." },
+    ERROR_INVALID_PARAMS : { code : 1, msg: "Parameters to an AJAX bean load must be an array of objects, each of the form { name:'<name>', value:<value> }." },
+    ERROR_AJAX_LOAD_FAILED : { code : 2, msg : "AJAX load error." },
+
+    /**
      * Options specifying the appearance of the loading message, which is displayed
      * automatically during all AJAX loads.
      */
@@ -134,7 +141,16 @@ Helix.Ajax = {
         }
     },
     
-    ajaxBeanLoad : function(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,itemKey,nRetries) {        
+    defaultOnError: function(errorObj) {
+      Helix.Utils.statusMessage("Load Failed", errorObj.msg, "severe");  
+    },
+    
+    ajaxBeanLoad : function(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,onError,itemKey,nRetries) {        
+        // Set a default error handler if we do not have one.
+        if (!onError) {
+            onError = Helix.Ajax.defaultOnError;
+        }
+        
         // Make sure the DB is ready. If not, wait 5 seconds.
         if (!Helix.DB.persistenceIsReady()) {
             if (!nRetries) {
@@ -156,7 +172,7 @@ Helix.Ajax = {
         }
         if (!requestOptions.params.push) {
             // the request options are not an array ...
-            alert("Parameters to an AJAX bean load must be an array of objects, each of the form { name:'<name>', value:<value> }.");
+            onError(Helix.ajax.ERROR_INVALID_PARAMS)
             return;
         }
         requestOptions.params.push({
@@ -171,11 +187,15 @@ Helix.Ajax = {
                     window[widgetName] = widget;
                     onComplete(itemKey, "success");
                 },syncOverrides);
-            } else {
+            } else if (itemKey == null) {
+                /* An explicit null means load all objects. */
                 Helix.DB.loadAllObjects(widgetSchema, function(widgetList) {
                     window[widgetName] = widgetList;
                     onComplete(itemKey, "success");
                 });
+            } else {
+                /* itemKey is undefined. Nothing we can do when we are offline. */
+                onError(Helix.ajax.ERROR_OFFLINE_ACCESS)
             }
             return;
         }
@@ -193,7 +213,11 @@ Helix.Ajax = {
             success: function(data, status, xhr) {
                 var responseObj = data;
                 if (responseObj.error) {
-                    Helix.Utils.statusMessage("AJAX Load Error", responseObj.error, "severe");
+                    var error = Helix.ajax.ERROR_AJAX_LOAD_FAILED;
+                    if (responseObj.error) {
+                        error.msg = responseObj.error;
+                    }
+                    onError(error);
                     return;
                 }
 
@@ -209,7 +233,9 @@ Helix.Ajax = {
                 }
             },
             error: function(xhr, status, errorThrown) {
-                Helix.Utils.statusMessage("AJAX Load Error", status, "severe");
+                var error = Helix.ajax.ERROR_AJAX_LOAD_FAILED;
+                error.msg = status;
+                onError(error);
             },
             complete: function(xhr) {
                 $(document).trigger('postrequest', xhr);

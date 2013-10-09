@@ -240,22 +240,52 @@
                 .appendTo(tableBody);
             }
 
+            var _self = this;
             var nxtCol = $('<td />').attr({
                 'class' : TABLE_COLUMN_CLASS,
                 'data-index' : curState.startElem + idx
             }).appendTo(curState.curRow);
-            curState.parent.renderer(nxtCol, elem, curState.parent.strings);
             if (curState.parent.itemContextMenu) {
                 $(nxtCol).on('taphold', function(event) {
                     // This allows the container to have taphold context menus that are not
                     // triggered when this event is triggered.
                     event.stopImmediatePropagation();
+                    event.preventDefault();
+                    
                     curState.parent.selectedIndex = $(event.target).closest("td").attr('data-index');
                     //curState.parent.selected = curState.parent.list[curState.parent.selectedIndex];
                     curState.parent.selected = elem;
-                    $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "open", { positionTo: event.target });
+                    _self._popupOpened = true;
+                    $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu))
+                        .popup({
+                            afteropen: function(ev, ui) {
+                                alert("PVISIBLE");
+                                _self.popupVisible = true;
+                            },
+                            history: false
+                        });
+                    $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "open", { 
+                        positionTo: event.target 
+                    });
                 });
-            } 
+                $(nxtCol).on('tap', function(event) {
+                    if (_self._popupOpened) {
+                        _self._popupOpened = false;
+                        alert("PTAP");
+                        if (_self.popupVisible) {
+                            alert("PHIDDEN");
+                            $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "close" );
+                            _self.popupVisible = false;
+                        }
+                        event.stopImmediatePropagation();
+                        event.preventDefault();
+                    }
+                });
+            }
+            /* Must be called *AFTER* we attach the tap hold event so that any events attached
+             * to nxtCol in the renderer can be stopped when we want to display the context
+             * menu. */
+            curState.parent.renderer(nxtCol, elem, curState.parent.strings);
         },
     
         _refreshData: function(nElems, oncomplete) {
