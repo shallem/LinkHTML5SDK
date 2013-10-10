@@ -1035,9 +1035,10 @@ Helix.DB = {
             finalObj.__hx_schema = objSchema;
             
             /* We get here when the synchronize is done. */
-            persistence.flush(tx);
-            /* This will either send an object to the callback. */
-            callback(finalObj,opaque);
+            persistence.flush(tx, function() {
+                /* This will either send an object to the callback. */
+                callback(finalObj,opaque);
+            });
         };
         
         

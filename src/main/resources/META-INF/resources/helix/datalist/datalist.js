@@ -657,7 +657,8 @@
                 $(curRowParent).on(_self.tapEvent, function(event) {
                     _self.setSelected(event.target);
                     _self.selectItem();
-                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    event.preventDefault();
                 });
             }
         
@@ -777,6 +778,10 @@
          */
         refreshScroller: function() {
             //Helix.Layout.updateScrollers(this.$wrapper);
+        },
+        
+        setHeaderText: function(txt) {
+            this.options.headerText = txt;
         }
     
     });

@@ -35,8 +35,11 @@
 
 (function() {
  window.DocumentUpload = {
-    upload: function(uploadID, uploadURL, uploadParams, success, fail) {
-        return cordova.exec(success, fail, "DocumentUpload", "upload", [uploadID, uploadURL, uploadParams]);
+    getDocument: function(success, fail) {
+        return cordova.exec(success, fail, "DocumentUpload", "getDocument", []);
+    },
+    clearDocument: function(docid, success, fail) {
+        return cordova.exec(success, fail, "DocumentUpload", "clearDocument", [ docid ]);
     }
  };
 })();
