@@ -245,6 +245,9 @@ Helix.Ajax = {
     
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
         $(document).trigger('prerequest');
+        if (actions && actions.beforeSubmit) {
+            actions.beforeSubmit();
+        }
         $.ajax({
             type: "POST",
             url: url,

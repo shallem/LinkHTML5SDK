@@ -44,6 +44,12 @@
             <description>Message to display if the submit is successful (status 200).</description>
         </attribute>
         <attribute>
+            <name>beforeSubmit</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript action to execute before the submit.</description>
+        </attribute>
+        <attribute>
             <name>successAction</name>
             <required>false</required>
             <type>java.lang.String</type>

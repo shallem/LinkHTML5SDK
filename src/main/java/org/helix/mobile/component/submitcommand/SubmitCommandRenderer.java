@@ -34,16 +34,27 @@ public class SubmitCommandRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = cmd.getClientId();
         StringBuilder actions = new StringBuilder();
+        boolean actionWritten = false;
         
         actions.append("{");
         if (cmd.getSuccessAction() != null) {
             actions.append("success: function(data, textStatus, jqXHR){ ").append(cmd.getSuccessAction()).append("}");
+            actionWritten = true;
         }
-        if (cmd.getSuccessAction() != null && cmd.getErrorAction() != null) {
+        if (actionWritten) {
             actions.append(",");
+            actionWritten = false;
         }
         if (cmd.getErrorAction() != null) {
             actions.append("error: function(jqXHR,textStatus,errorThrown){ ").append(cmd.getErrorAction()).append("}");
+            actionWritten = true;
+        }
+        if (actionWritten) {
+            actions.append(",");
+            actionWritten = false;
+        }
+        if (cmd.getBeforeSubmit() != null) {
+            actions.append("beforeSubmit: ").append(cmd.getBeforeSubmit());
         }
         actions.append("}");
         
