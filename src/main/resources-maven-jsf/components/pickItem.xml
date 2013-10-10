@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>pickItem</tag>
+    <tagClass>org.helix.mobile.component.pickitem.PickItemTag</tagClass>
+    <componentClass>org.helix.mobile.component.pickitem.PickItem</componentClass>
+    <componentType>org.helix.mobile.PickItem</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.PickItemRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.pickitem.PickItemRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+        <attribute>
+            <name>label</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Label to display in the select menu.</description>
+        </attribute>
+        <attribute>
+            <name>value</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Value to be sent in any form posts.</description>
+        </attribute>
+    </attributes>
+</component>

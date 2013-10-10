@@ -124,13 +124,14 @@
             });
 
             //remove message on click of close icon
-            message.find('div.ui-growl-icon-close').click(function() {
+            message.find('div.ui-growl-icon-close').click(function(ev) {
                 _self.removeMessage(message);
 
                 //clear timeout if removed manually
                 if(!sticky) {
                     clearTimeout(message.data('timeout'));
                 }
+                ev.stopPropagation();
             });
 
             //hide the message after given time if not sticky

@@ -17,6 +17,111 @@
 /**
  * Layout a single form element.
  */
+
+/**
+ * Private helper functions.
+ */
+function __appendTextArea(mode, formElem, $fieldContainer) {
+    if (mode) {
+        /* Edit */
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            return;
+        }
+            
+        var inputMarkup = $('<textarea />').attr({
+            'name': formElem.name,
+            'id' : formElem.name
+        }).append(formElem.value);
+
+        if (!formElem.style) {
+            formElem.style = 'width: 90%';
+        }
+        var textContainer = $('<div />').attr({
+            'data-role' : 'fieldcontain',
+            'style' : formElem.style
+        })
+        .append($('<label />').attr({
+            'for' : formElem.name
+            })
+            .append(formElem.fieldTitle)
+        )
+        .append(inputMarkup);
+        $fieldContainer.append(textContainer);
+        textContainer.fieldcontain();
+        $(inputMarkup).textinput();
+        if (formElem.fieldTitleType === 'button') {
+            $(formElem.fieldTitle).button();
+        }
+        if (formElem.onblur) {
+            $(inputMarkup).blur(function() {
+                formElem.onblur(this);
+            });
+        }
+    } else {
+        if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
+            $fieldContainer.append(" " + formElem.value);
+        } else {
+            $fieldContainer.append($('<p />').append(formElem.value));
+        }
+    }
+}
+
+function __appendSelectMenu(mode, formElem, $fieldContainer) {
+    if (mode) {
+        /* Edit */
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            console.log("Invalid select menu. No field name specified.");
+            return;
+        }
+        if (!formElem.options) {
+            console.log("Invalid select menu. No option values specified.");
+            return;
+        }
+            
+        var inputMarkup = $('<select />').attr({
+            'name': formElem.name,
+            'id' : formElem.name
+        });
+
+        var i;
+        for (i = 0; i < formElem.options.length; ++i) {
+            // If not independent label is specified, make it the same as the value.
+            if (!formElem.options[i].label) {
+                formElem.options[i].label = formElem.options[i].value;
+            }
+            var option = $('<option />').attr({
+                'value': formElem.options[i].value
+            }).append(formElem.options[i].label).appendTo(inputMarkup);
+            
+            if (formElem.value && formElem.options[i].value == formElem.value) {
+                // This item is selected.
+                option.attr('selected', true);
+            }
+        }
+
+        if (!formElem.style) {
+            formElem.style = 'width: 90%';
+        }
+        var selectContainer = $('<div />').attr({
+            'data-role' : 'fieldcontain',
+            'style' : formElem.style
+        })
+        .append($('<label />').attr({
+            'for' : formElem.name
+            })
+            .append(formElem.fieldTitle)
+        )
+        .append(inputMarkup);
+        $fieldContainer.append(selectContainer);
+        selectContainer.fieldcontain();
+        $(inputMarkup).selectmenu();
+    } else {
+        $fieldContainer.append($('<p />').append(formElem.value));
+    }
+}
+
 Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers) {
     var $fieldContainer;
     if (!mode) {
@@ -94,6 +199,10 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 $fieldContainer.append($('<p />').append(formElem.value));
             }
         }
+    } else if (formElem.type == 'textarea') {
+        __appendTextArea(mode, formElem, $fieldContainer);
+    } else if (formElem.type == 'pickList') {
+        __appendSelectMenu(mode, formElem, $fieldContainer);
     } else if (formElem.type === 'htmlarea') {
         if (mode) {
             var editorWidth = formElem.width;

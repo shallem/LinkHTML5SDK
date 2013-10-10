@@ -22,6 +22,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 import org.helix.mobile.component.fieldlabel.FieldLabel;
 import org.helix.mobile.component.iconbutton.IconButton;
+import org.helix.mobile.component.pickitem.PickItem;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class FormFieldRenderer extends CoreRenderer {
@@ -74,6 +75,21 @@ public class FormFieldRenderer extends CoreRenderer {
                         writer.write(",'title' : '" + ic.getValue() + "'");
                     }
                     writer.write("}");
+                }
+            }
+            writer.write("]");
+        }
+        if (ffield.getType().equals("pickList")) {
+            writer.write(",'options' : [");
+            boolean firstOption = true;
+            for (UIComponent c : ffield.getChildren()) {
+                if (firstOption) {
+                    firstOption = false;
+                } else {
+                    writer.write(",");
+                }
+                if (c instanceof PickItem) {
+                    c.encodeAll(context);
                 }
             }
             writer.write("]");

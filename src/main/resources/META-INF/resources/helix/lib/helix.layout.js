@@ -32,6 +32,11 @@ Helix.Layout = {
     allScrollers : {},
     
     /**
+     * Content height, excluding headers and footers.
+     */
+    contentHeight : 0,
+    
+    /**
      * Create a scroller attached to the (optional) element, or attached to all elements
      * matching the scrollerSel selector.
      * 
@@ -297,6 +302,7 @@ Helix.Layout = {
     
     layoutPageFullScreen: function(page) {
         var contentHeight = Helix.Layout.resizePages(page);
+        Helix.Layout.contentHeight = contentHeight;
         $('[data-role="content"]', page).children().each(function() {
             if ($(this).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/
@@ -433,6 +439,7 @@ $(document).on('pageshow', function(ev) {
      * Recompute the component heights.
      */
     Helix.Layout.layoutPage(ev.target);
+    $(ev.target).trigger("hxLayoutDone");
     
     // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
     // in the "Mastering the Refresh() method" section. Updates all scrollers

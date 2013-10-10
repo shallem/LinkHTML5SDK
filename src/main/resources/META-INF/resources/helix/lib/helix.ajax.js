@@ -172,7 +172,7 @@ Helix.Ajax = {
         }
         if (!requestOptions.params.push) {
             // the request options are not an array ...
-            onError(Helix.ajax.ERROR_INVALID_PARAMS)
+            onError(Helix.Ajax.ERROR_INVALID_PARAMS)
             return;
         }
         requestOptions.params.push({
@@ -195,7 +195,7 @@ Helix.Ajax = {
                 });
             } else {
                 /* itemKey is undefined. Nothing we can do when we are offline. */
-                onError(Helix.ajax.ERROR_OFFLINE_ACCESS)
+                onError(Helix.Ajax.ERROR_OFFLINE_ACCESS)
             }
             return;
         }
@@ -213,7 +213,7 @@ Helix.Ajax = {
             success: function(data, status, xhr) {
                 var responseObj = data;
                 if (responseObj.error) {
-                    var error = Helix.ajax.ERROR_AJAX_LOAD_FAILED;
+                    var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                     if (responseObj.error) {
                         error.msg = responseObj.error;
                     }
@@ -233,7 +233,7 @@ Helix.Ajax = {
                 }
             },
             error: function(xhr, status, errorThrown) {
-                var error = Helix.ajax.ERROR_AJAX_LOAD_FAILED;
+                var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                 error.msg = status;
                 onError(error);
             },

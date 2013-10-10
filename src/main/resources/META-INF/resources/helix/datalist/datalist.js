@@ -506,7 +506,7 @@
                 },
                 /* Called on start. */
                 function(count) {
-                    
+                    _self.nElems = count;
                 },
                 /* Called on done. */
                 function(count) {
@@ -514,7 +514,6 @@
                         /* We did not render any rows. Call completion. */
                         oncomplete();
                     }
-                    _self.nElems = rowIndex;
                 }
             );
         },

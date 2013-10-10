@@ -150,7 +150,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         if (cmd.getOncomplete() != null) {
             onComplete.append("function (itemKey, statusText) {").append(cmd.getOncomplete()).append("}");
         } else {
-            onComplete.append("null");
+            onComplete = null;
         }
        
         Object v = cmd.getValue();
@@ -211,8 +211,9 @@ public class LoadCommandRenderer extends CoreRenderer {
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
         writer.write("function " + cmd.getName() + "(params, oncomplete, onerror, itemKey){ ");
-        
-        writer.write("if (!oncomplete) {\n oncomplete = " + onComplete.toString() + "; }\n");
+        if (onComplete != null) {
+            writer.write("if (!oncomplete) {\n oncomplete = " + onComplete.toString() + "; }\n");
+        }
         writer.write("Helix.DB.generatePersistenceSchema(");
         writer.write(schema);
         writer.write(", '");

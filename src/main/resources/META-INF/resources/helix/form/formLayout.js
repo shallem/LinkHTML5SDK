@@ -78,6 +78,8 @@
                 var fieldType = this.options.items[idx].type;
                 if (fieldType !== "htmlarea" &&
                     fieldType !== "text" &&
+                    fieldType !== "textarea" &&
+                    fieldType !== "pickList" &&
                     fieldType !== "hidden") {
                     /* All other types are unserializable. */
                     continue;
