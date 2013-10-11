@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-Helix = {
+function __initHelix() {
+    window.Helix = {
     
-};
+    };
+}
+(function() {
+    if (window.Helix === undefined) {
+        __initHelix();
+    }
+})();
 
-Helix.DB = {
-    
-};
 
 Helix.Ajax = {
     
