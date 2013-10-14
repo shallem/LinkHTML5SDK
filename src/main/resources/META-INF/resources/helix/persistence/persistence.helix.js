@@ -623,11 +623,22 @@ function initHelixDB() {
      * Extract the key field from the schema.
      */
         getKeyField: function(schema) {
-            return schema.__hx_key;
+            return schema.__hx_key
         },
     
         getSchemaForObject: function(obj) {
             return obj.__hx_schema;
+        },
+        
+        getSchemaNameForObject : function(obj) {
+            if (Object.prototype.toString.call(obj) === '[object Array]') {
+                if (obj.length > 0) {
+                    return Helix.DB.getSchemaNameForObject(obj[0]);
+                } else {
+                    return null;
+                }
+            }
+            return obj.__hx_schema.__hx_schema_name;
         },
     
         getSortsForTable: function(tableName) {
@@ -1057,7 +1068,6 @@ function initHelixDB() {
      * and flushes it to the DB. Invoke the callback on completion.
      */
         synchronizeObject: function(obj,objSchema,callback,opaque,overrides) {
-            var keyField = this.getKeyField(objSchema);
             var syncDone = function(tx, finalObj, opaque) {
                 /* Store the schema in the final obj. */
                 finalObj.__hx_schema = objSchema;
@@ -1092,7 +1102,28 @@ function initHelixDB() {
                     Helix.DB.synchronizeDeltaObject(tx, obj,objSchema.all(),objSchema,function(finalObj) {
                         syncDone(tx, finalObj, opaque);
                     },overrides);
+                } else if (obj.__hx_type == 1003) {
+                    // This is an aggregate load command. Each object field represents a distinct object that
+                    // should be synchronized independently of the others.
+                    var totSynced = 0;
+                    var toSync = Object.keys(obj).length;
+                    var resultObj = {};
+                    for (var syncComponent in obj) {
+                        if (syncComponent == "__hx_type") {
+                            ++totSynced;
+                            continue;
+                        }
+                        var loadCommandConfig = overrides.schemaMap[syncComponent];
+                        Helix.DB.synchronizeObject(obj[syncComponent], loadCommandConfig.schema, function(finalObj, objName) {
+                            ++totSynced;
+                            resultObj[objName] = finalObj;
+                            if (totSynced == toSync) {
+                                syncDone(tx, resultObj, opaque);
+                            }
+                        }, syncComponent, loadCommandConfig.syncOverrides);
+                    }
                 } else {
+                    var keyField = Helix.DB.getKeyField(objSchema);
                     objSchema.findBy(tx, keyField, obj[keyField], function(persistentObj) {
                         Helix.DB.synchronizeObjectFields(tx, obj, persistentObj, objSchema, function(finalObj) {
                             syncDone(tx, finalObj, opaque);

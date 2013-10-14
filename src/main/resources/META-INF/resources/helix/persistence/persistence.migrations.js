@@ -305,7 +305,9 @@ if(!window.persistence) { // persistence.js not loaded!
                 queries.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
                 queries.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
           
-                persistence.executeQueriesSeq(tx, queries, nextCommand);
+                persistence.executeQueriesSeq(tx, queries, function(results) {
+                    nextCommand(tx);
+                });
             }, errorFn);
         });
     }
@@ -322,7 +324,9 @@ if(!window.persistence) { // persistence.js not loaded!
     
     Migration.prototype.executeSql = function(sql, args) {
         this.action(function(t, nextCommand, errorFn){
-            t.executeSql(sql, args, nextCommand, errorFn);
+            t.executeSql(sql, args, function(results) {
+                nextCommand(t);
+            }, errorFn);
         });
     }
     

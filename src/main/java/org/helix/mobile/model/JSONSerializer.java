@@ -187,6 +187,20 @@ public class JSONSerializer {
                 
                 jg.writeEndObject();
                 return true;
+            } else if (this.isAggregateObject(c)) {
+                jg.writeStartObject();
+                
+                /* Mark as an aggreate object for the client code. */
+                jg.writeFieldName(TYPE_FIELD_NAME);
+                jg.writeNumber(1003);
+                
+                AggregateObject a = (AggregateObject)obj;
+                for (Map.Entry<String, Object> e : a.getAggregateMap().entrySet()) {
+                    this.serializeObjectFields(jg, e.getValue(), visitedClasses, e.getKey());
+                }
+                
+                jg.writeEndObject();
+                return true;
             } else if (this.hasClientDataMethods(c)) {
                 jg.writeStartObject();
                 
@@ -590,6 +604,13 @@ public class JSONSerializer {
             }
         }
         return isDelta;
+    }
+    
+    private boolean isAggregateObject(Class<?> c) {
+        if (c.getName().equals("org.helix.mobile.model.AggregateObject")) {
+            return true;
+        }
+        return false;
     }
     
     private String extractFieldName(String methodName) {

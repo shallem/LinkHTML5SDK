@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
+]>
+<component>
+    <tag>aggregateLoad</tag>
+    <tagClass>org.helix.mobile.component.aggregateload.AggregateLoadTag</tagClass>
+    <componentClass>org.helix.mobile.component.aggregateload.AggregateLoad</componentClass>
+    <componentHandlerClass>org.helix.mobile.component.aggregateload.AggregateLoadHandler</componentHandlerClass>
+    <componentType>org.helix.mobile.AggregateLoad</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.AggregateLoadRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.aggregateload.AggregateLoadRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <description>AggregateLoad provides a way to easily load all of the data required to render an application page by running multiple load commands.</description>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
+    <attributes>
+            &widget_var_attribute;
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <description>Name of the javascript function generated from this markup.</description>
+        </attribute>
+        <attribute>
+            <name>error</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>String property containing an error message, if one occurs. Return null if no error.</description>
+        </attribute>
+        <attribute>
+            <name>loadingMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display when executing this load command.</description>
+        </attribute>
+        <attribute>
+            <name>loadingTheme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>jQuery Mobile theme for the loader. Default is 'a'.</description>
+        </attribute>
+        <attribute>
+            <name>cmd</name>
+            <required>true</required>
+            <type>javax.el.MethodExpression</type>
+            <method-signature>java.lang.Object cmd()</method-signature>
+            <description>A 0 argument command used to execute the load phase of the load command.</description>
+        </attribute>
+        <attribute>
+            <name>value</name>
+            <required>true</required>
+            <type>java.lang.Object</type>
+            <description>Retrieve a serializeable object post load. Prior to load this should return an empty object that can be used to generate a template schema.</description>
+        </attribute>
+    </attributes>
+</component>

@@ -77,7 +77,7 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
       if(persistence.debug) {
         console.log(query, args);
       }
-      t.executeSql(query, args, function (_, result) {
+      t.executeSql(query, args, function (tx, result) {
           if (successFn) {
             var results = [];
             for ( var i = 0; i < result.rows.length; i++) {

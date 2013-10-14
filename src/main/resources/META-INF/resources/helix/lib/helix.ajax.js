@@ -95,6 +95,14 @@ Helix.Ajax = {
     },
     
     /**
+     * Global map that maintains all config for each load command. This allows us to
+     * easily create aggregate load commands.
+     */
+    loadCommands: {
+        
+    },
+    
+    /**
      * Show a loader with a text message.
      * 
      * @param msg Text message to show.
@@ -145,10 +153,97 @@ Helix.Ajax = {
       Helix.Utils.statusMessage("Load Failed", errorObj.msg, "severe");  
     },
     
-    ajaxBeanLoad : function(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,onError,itemKey,nRetries) {        
+    /**
+     * Used to run a single load command that turns the results of multiple other load commands.
+     * 
+     * @param loadCommandOptions Parameters for this load command, including request options, loading
+     * options, and commands - an array of objects each of which has a 'name' and an optional 'key' field.
+     * The name is the name of the load command. The key is the itemKey used to synchronize this particular
+     * item when the browser is offline.
+     */
+    ajaxAggregateLoad : function(loadCommandOptions) {
+        var nObjsToSync = loadCommandOptions.commands.length;
+        var nSchemasReady = 0;
+        var schemaDone = function(schema, cfg) {
+            cfg.schema = schema;
+            if (nSchemasReady == nObjsToSync) {
+                Helix.Ajax._executeAggregateLoad(loadCommandOptions);
+            }
+        };
+        
+        // Make sure we have schema objects for each load command.
+        for (var i = 0; i < nObjsToSync; ++i) {
+            var commandToLaunch = loadCommandOptions.commands[i].name;
+            var commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+            if (!commandConfig.schema) {
+                commandConfig.schemaFactory(function(schema, cfg) {
+                    ++nSchemasReady;
+                    schemaDone(schema, cfg);
+                }, [commandConfig]);
+            } else {
+                ++nSchemasReady;
+                schemaDone();
+            }
+        }
+    },
+    
+    _executeAggregateLoad: function(loadCommandOptions) {
+        // Execute the aggregate load.
+        var nObjsToSync = loadCommandOptions.commands.length;
+        var keyMap = {};
+        loadCommandOptions.oncomplete = function(finalKey, name, obj) {
+            for (var syncComponent in obj) {
+                if (syncComponent == "__hx_schema") {
+                    continue;
+                }
+                
+                var config = Helix.Ajax.loadCommands[syncComponent];
+                window[config.name] = obj[syncComponent];
+                if (config.oncomplete) {
+                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent]);
+                }
+            }
+        };
+        if (navigator.onLine) {
+            loadCommandOptions.syncOverrides = {};
+            loadCommandOptions.syncOverrides.schemaMap = {};
+            for (var i = 0; i < nObjsToSync; ++i) {
+                var commandToLaunch = loadCommandOptions.commands[i].name;
+                keyMap[commandToLaunch] = loadCommandOptions.commands[i].key;
+                
+                var commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+                loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
+            }
+            Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
+        } else {
+            // Run each item individually and synchronously.
+            var syncComplete = function(idx) {
+                if (idx < nObjsToSync) {
+                    commandToLaunch = loadCommandOptions.commands[i].name;
+                    commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+                    var itemKey = loadCommandOptions.commands[i].key;
+                    Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
+                }
+            };
+
+            syncComplete(0);
+        }
+    },
+    
+    synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
+        var origOncomplete = loadCommandOptions.oncomplete;
+        loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
+            origOncomplete(finalKey, name, finalObj);
+            onComplete(opaque);
+            loadCommandOptions.oncomplete = origOncomplete;
+        };
+        Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
+    },
+    
+    ajaxBeanLoad : function(loadCommandOptions,itemKey,nRetries) {        
         // Set a default error handler if we do not have one.
-        if (!onError) {
-            onError = Helix.Ajax.defaultOnError;
+        if (!loadCommandOptions.onerror) {
+            loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
         }
         
         // Make sure the DB is ready. If not, wait 5 seconds.
@@ -162,54 +257,54 @@ Helix.Ajax = {
                 return;
             }
             setTimeout(function() {
-                Helix.Ajax.ajaxBeanLoad(requestOptions,loadingOptions,syncOverrides,widgetName,widgetSchema,onComplete,itemKey,nRetries+1);
+                Helix.Ajax.ajaxBeanLoad(loadCommandOptions,itemKey,nRetries+1);
             }, 2000);
             return;
         }
         
-        if (!requestOptions.params) {
-            requestOptions.params = [];
+        if (!loadCommandOptions.requestOptions.params) {
+            loadCommandOptions.requestOptions.params = [];
         }
-        if (!requestOptions.params.push) {
+        if (!loadCommandOptions.requestOptions.params.push) {
             // the request options are not an array ...
-            onError(Helix.Ajax.ERROR_INVALID_PARAMS)
+            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS)
             return;
         }
-        requestOptions.params.push({
+        loadCommandOptions.requestOptions.params.push({
             name: "__hxLoadKey",  
-            value: requestOptions.loadKey
+            value: loadCommandOptions.requestOptions.loadKey
         });
 
         if (!navigator.onLine) {
             // Use the key to sync from the local DB.
             if (itemKey) {
-                Helix.DB.synchronizeObjectByKey(itemKey,widgetSchema,function(widget) {
-                    window[widgetName] = widget;
-                    onComplete(itemKey, "success");
-                },syncOverrides);
+                Helix.DB.synchronizeObjectByKey(itemKey,loadCommandOptions.schema,function(widget) {
+                    window[loadCommandOptions.name] = widget;
+                    loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, widget);
+                },loadCommandOptions.syncOverrides);
             } else if (itemKey == null) {
                 /* An explicit null means load all objects. */
-                Helix.DB.loadAllObjects(widgetSchema, function(widgetList) {
-                    window[widgetName] = widgetList;
-                    onComplete(itemKey, "success");
+                Helix.DB.loadAllObjects(loadCommandOptions.schema, function(widgetList) {
+                    window[loadCommandOptions.name] = widgetList;
+                    loadCommandOptions.oncomplete(null, loadCommandOptions.name, widgetList);
                 });
             } else {
                 /* itemKey is undefined. Nothing we can do when we are offline. */
-                onError(Helix.Ajax.ERROR_OFFLINE_ACCESS)
+                loadCommandOptions.onerror(Helix.Ajax.ERROR_OFFLINE_ACCESS)
             }
             return;
         }
 
         // Setup loader options.
         Helix.Ajax.loadOptions.pin = true;
-        Helix.Ajax.setLoaderOptions(loadingOptions);
+        Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
 
         $(document).trigger('prerequest');
         $.ajax({
             type: "POST",
-            url: requestOptions.postBack,
+            url: loadCommandOptions.requestOptions.postBack,
             dataType: "json",
-            data: $.param(requestOptions.params),
+            data: $.param(loadCommandOptions.requestOptions.params),
             success: function(data, status, xhr) {
                 var responseObj = data;
                 if (responseObj.error) {
@@ -217,25 +312,25 @@ Helix.Ajax = {
                     if (responseObj.error) {
                         error.msg = responseObj.error;
                     }
-                    onError(error);
+                    loadCommandOptions.onerror(error);
                     return;
                 }
 
-                if (widgetSchema) {
-                    Helix.DB.synchronizeObject(responseObj, widgetSchema, function(finalObj, finalKey) {
-                        window[widgetName] = finalObj;
+                if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
+                    Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                        window[loadCommandOptions.name] = finalObj;
                         Helix.Ajax.loadOptions.pin = false;
                         $.mobile.loading( "hide" );
-                        onComplete(finalKey, "success");
-                    }, itemKey, syncOverrides);
+                        loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
+                    }, itemKey, loadCommandOptions.syncOverrides);
                 } else {
-                    onComplete(itemKey, "success");
+                    loadCommandOptions.oncomplete(itemKey, "success");
                 }
             },
             error: function(xhr, status, errorThrown) {
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                 error.msg = status;
-                onError(error);
+                loadCommandOptions.onerror(error);
             },
             complete: function(xhr) {
                 $(document).trigger('postrequest', xhr);

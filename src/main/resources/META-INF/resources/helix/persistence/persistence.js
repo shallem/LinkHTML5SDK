@@ -1926,7 +1926,13 @@ persistence.get = function(arg1, arg2) {
       startFn = args.startFn;
       doneFn = args.doneFn;
 
-      this.list(tx, function(results) {
+      this.list(tx, function(results,error) {
+          if (!results) {
+              if (error) {
+                  alert(error);
+              }
+              return;
+          }
           if (startFn) {
               startFn(results.length);
           }
