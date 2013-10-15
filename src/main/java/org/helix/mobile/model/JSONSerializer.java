@@ -228,7 +228,7 @@ public class JSONSerializer {
         JsonFactory jsonF = new JsonFactory();
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
         
-        if (!serializeObjectForSchema(jg, cls, visitedClasses, null)) {
+        if (!serializeObjectForSchema(jg, cls, visitedClasses, null, null)) {
             throw new IOException("Attempting to generate schema for an object with no client data.");
         }
 
@@ -240,7 +240,8 @@ public class JSONSerializer {
     private boolean serializeObjectForSchema(JsonGenerator jg,
             Class<?> c,
             Set<String> visitedClasses,
-            String fieldName) throws IOException {
+            String fieldName,
+            String alternateName) throws IOException {
         if (fieldName != null &&
                 fieldName.equals("id")) {
             throw new IOException("Object " + c.getName() + " uses the field name 'id', which is reserved for use by PersistenceJS.");
@@ -264,7 +265,8 @@ public class JSONSerializer {
             if (!this.serializeObjectForSchema(jg,
                     componentType,
                     visitedClasses,
-                    null)) {
+                    null,
+                    alternateName)) {
                 throw new IOException("Array types returned by ClientData methods must be simple types or object types with at least one ClientData field. Class " + componentType.getName() + " does not comply.");
             }
             jg.writeEndArray();
@@ -278,7 +280,7 @@ public class JSONSerializer {
                     Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
                     Class<?> returnType = m.getReturnType();
                     if (!this.serializeObjectForSchema(jg, returnType, 
-                            visitedClasses, fieldName)) {
+                            visitedClasses, fieldName, alternateName)) {
                         /* The object neither has any fields marked as ClientData nor
                          * does it have a toString method - this is not legal.
                         */
@@ -317,8 +319,11 @@ public class JSONSerializer {
                 jg.writeStartObject();
                 
                 jg.writeFieldName(SCHEMA_NAME_FIELD_NAME);
-                jg.writeString(c.getName());
-                
+                if (alternateName == null) {
+                    jg.writeString(c.getName());
+                } else {
+                    jg.writeString(alternateName);
+                }
                 
                 /* Prevent infinite loops. If we have already visited this object then
                  * we have already defined its schema. Just return true. However, we do 
@@ -378,10 +383,16 @@ public class JSONSerializer {
                             indexFields.add(nxtFieldName);
                         }
                         
+                        /* See if there is an annotation indicating a table name other than the class name. */
+                        Annotation clientTableAnnot = m.getAnnotation(org.helix.mobile.model.ClientTableName.class);
+                        String altName = null;
+                        if (clientTableAnnot != null) {
+                            altName = ((ClientTableName)clientTableAnnot).tableName();
+                        }
 
                         /* Recurse over the method. */
                         Class<?> returnType = m.getReturnType();
-                        if (!this.serializeObjectForSchema(jg, returnType, visitedClasses, nxtFieldName)) {
+                        if (!this.serializeObjectForSchema(jg, returnType, visitedClasses, nxtFieldName, altName)) {
                             /* The object neither has any fields marked as ClientData nor
                              * does it have a toString method - this is not legal.
                             */
