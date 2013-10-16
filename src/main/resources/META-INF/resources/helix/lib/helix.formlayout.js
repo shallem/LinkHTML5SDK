@@ -503,7 +503,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         "height" : "128px",
         "style" : "margin: 0 auto"
         "styleClass" : "fooClass",
-        "target" : "_blank
+        "target"  : "_blank
         */
        if (!mode) {
            styleClass = "";
@@ -528,7 +528,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                'title' : formElem.name,
                'target' : formElem.target
            });
-           var txtElem = $('<span/>').attr({ 'style' : 'float:left' }).append('Tap to open ' + formElem.name);           
+           var txtElem = $('<span/>').attr({ 'style' : 'float:left' }).append('Tap to open ' + formElem.name);
            if (formElem.link) {
                surroundingDiv.append($('<a/>').attr({
                    'href' : formElem.link
