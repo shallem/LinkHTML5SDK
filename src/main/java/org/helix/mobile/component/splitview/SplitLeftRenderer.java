@@ -23,9 +23,6 @@ public class SplitLeftRenderer extends CoreRenderer {
         
         // Output the left div.
         writer.startElement("div", sleft);
-        writer.writeAttribute("class", "pm-split-left-area pm-layout-full-height", null);
-        writer.writeAttribute("style",
-                "width: " + sleft.getWidth() + "%;", null);
         for (UIComponent c : sleft.getChildren()) {
             c.encodeAll(context);
         }

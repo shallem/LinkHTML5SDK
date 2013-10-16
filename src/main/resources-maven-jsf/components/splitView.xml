@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
 <!ENTITY standard_uicomponent_attributes		SYSTEM "../entities/standard_uicomponent_attributes.xml">
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
     <tag>splitView</tag>
@@ -11,14 +12,47 @@
     <rendererType>org.helix.mobile.component.SplitViewRenderer</rendererType>
     <rendererClass>org.helix.mobile.component.splitview.SplitViewRenderer</rendererClass>
     <parent>javax.faces.component.UIPanel</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
     <attributes>
 		&standard_uicomponent_attributes;
+                &widget_var_attribute;
         <attribute>
             <name>verticalSeparator</name>
             <required>false</required>
             <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
             <description>When true, a vertical separator is displayed in between the left and right panels.</description>
+        </attribute>
+        <attribute>
+            <name>splitThreshold</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <defaultValue>800</defaultValue>
+            <description>Minimum pixel width above which both sides of the split view are simultaneously displayed.</description>
+        </attribute>
+        <attribute>
+            <name>leftWidth</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <defaultValue>30</defaultValue>
+            <description>Percentage of the full view occupied by the left split pane.</description>
+        </attribute>
+        <attribute>
+            <name>rightWidth</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <defaultValue>70</defaultValue>
+            <description>Percentage of the full view occupied by the right split pane.</description>
+        </attribute>
+        <attribute>
+            <name>onRefresh</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of a function to call when the split view is refreshed. Passed a single argument which is a string, either 'full' or 'split.'</description>
         </attribute>
     </attributes>
 </component>

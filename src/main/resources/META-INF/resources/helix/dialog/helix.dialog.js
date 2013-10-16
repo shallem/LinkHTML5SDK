@@ -169,8 +169,8 @@
                 ev.stopImmediatePropagation();
                 $(dialog.$mainDiv).popup( "close" );
                 return false;
-            }
-        ));
+            }).button()
+        );
         
         /* Confirm button. */
         $contentDiv.append($('<a/>').attr({
@@ -189,7 +189,7 @@
                 }
                 $(dialog.$mainDiv).popup( "close" );
                 return false;
-            })
+            }).button()
         );
 
         $mainDiv.append($contentDiv);

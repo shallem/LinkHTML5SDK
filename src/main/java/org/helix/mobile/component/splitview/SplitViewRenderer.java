@@ -25,19 +25,32 @@ public class SplitViewRenderer extends CoreRenderer {
         if (sview.getChildCount() > 2) {
             throw new FacesException("Split view " + sview.getClientId() + " can only have a maximum of two children.");
         }
-
+        
         // Output a full-width div enclosing the children.
         writer.startElement("div", sview);
-        // NOTE: instead of this just float left and float right the two sub-pieces.
-        // If we use inline-block display, then iScroll WILL NOT work.
-        //writer.writeAttribute("style", "display: inline-block;", null);
-        writer.writeAttribute("class", "splitMaster pm-layout-full-height", null);
         writer.writeAttribute("id", sview.getId(), null);
         for (UIComponent c : sview.getChildren()) {
             c.encodeAll(context);
         }
         
         writer.endElement("div");
+        
+        startScript(writer, sview.getClientId(context));
+        writer.write("\n(function($) {");
+        
+        writer.write("$(document).on('helixinit', function() {");
+        writer.write("\n" + sview.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + sview.getClientId(context) + "')).helixSplitView({");
+        writer.write("leftWidth: " + Integer.toString(sview.getLeftWidth()));
+        writer.write(",rightWidth: " + Integer.toString(sview.getRightWidth()));
+        writer.write(",splitThreshold: " + Integer.toString(sview.getSplitThreshold()));
+        if (sview.getOnRefresh() != null) {
+            writer.write(",onRefresh: " + sview.getOnRefresh());
+        }
+        writer.write("}).data('helix-helixSplitView');");
+        writer.write("});");
+        
+        writer.write("})(jQuery);\n");
+        endScript(writer);
     }
 
     @Override

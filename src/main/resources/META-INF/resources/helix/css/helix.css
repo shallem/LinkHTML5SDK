@@ -17,25 +17,31 @@
     padding-top: 2px;
 }
 
-.pm-split-left-area {
+.hx-split-left-area {
     float: left;
     background-color: white;
     border: 1px solid black;
     border-radius: 10px 10px 0px 0px;
 }
 
-.pm-split-right-area {
+.hx-split-right-area {
     float: right;
     background-color: white;
     border: 1px solid black;
     border-radius: 10px 10px 0px 0px;
 }   
 
+.hx-split-full {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+}
+
 /**
  * List views will leak out of the split view if we don't 
  * override JQM's default -15px margin.
  */
-.pm-split-left-area ul[data-role="listview"] {
+.hx-split-left-area ul[data-role="listview"] {
     margin: 0px;
 }
 
@@ -43,7 +49,7 @@
  * List views will leak out of the split view if we don't 
  * override JQM's default -15px margin.
  */
-.pm-split-right-area ul[data-role="listview"] {
+.hx-split-right-area ul[data-role="listview"] {
     margin: 0px;
 }
 

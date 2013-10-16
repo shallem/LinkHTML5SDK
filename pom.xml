@@ -304,6 +304,9 @@
 		    <!-- URL parsing. -->
 		    <include>lib/purl.js</include>
 
+		    <!-- Date arithmetic and manipulation. -->
+		    <include>lib/date.js</include>
+
 		    <!-- Persistence. -->
 		    <include>persistence/helix.websql.js</include>
 		    <include>persistence/persistence.js</include>
@@ -330,6 +333,9 @@
 
 		    <!-- Scrolling Div -->
 		    <include>scrollingdiv/scrollingdiv.js</include>
+
+		    <!-- Split View -->
+		    <include>splitview/helixSplitView.js</include>
 
 		    <include>lib/helix.utils.js</include>
 		    <include>lib/helix.ajax.js</include>

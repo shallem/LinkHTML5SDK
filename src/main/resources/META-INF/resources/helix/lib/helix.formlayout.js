@@ -204,12 +204,14 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
     } else if (formElem.type == 'pickList') {
         __appendSelectMenu(mode, formElem, $fieldContainer);
     } else if (formElem.type === 'htmlarea') {
-        if (mode) {
-            var editorWidth = formElem.width;
-            var isFullWidth = false;
+        var isFullWidth = false;
+        if (formElem.width) {
             if (formElem.width === "full") {
                 isFullWidth = true;
-            }
+            }            
+        }
+        if (mode) {
+            var editorWidth = formElem.width;
             if (!formElem.name) {
                 /* No field name. We cannot edit this field. */
                 return;
@@ -236,13 +238,19 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'page' : page
             });
         } else {
+            var width = "98%";
+            if (isFullWidth) {
+                width = "100%";
+            } else if (formElem.width) {
+                width = formElem.width;
+            }
             var htmlDiv = $('<div />').append(formElem.value);
             $fieldContainer.append(htmlDiv);
             if (formElem.isScroller) {
-                var scroller = $fieldContainer.helixScrollingDiv({ width: '98%' }).data('helix-helixScrollingDiv');
+                var scroller = $fieldContainer.helixScrollingDiv({ width: width }).data('helix-helixScrollingDiv');
                 newScrollers.push(scroller);
             } else {
-                $fieldContainer.width('98%');
+                $fieldContainer.width(width);
             }
         }
     } else if (formElem.type === 'htmlframe') {
