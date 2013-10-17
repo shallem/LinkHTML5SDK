@@ -311,15 +311,31 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             'data-type' : 'horizontal',
             'class' : 'buttonBarMaster buttonbar'
         }).appendTo($fieldContainer);
+        if (formElem.name) {
+            $buttonBar.attr('id', formElem.name);
+        }
         for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
             formButton = formElem.buttons[formButtonIdx];
+            if (!formButton.iconPos) {
+                formButton.iconPos = 'bottom';
+            }
+            if (!formButton.styleClass) {
+                formButton.styleClass = 'iconbutton';
+            }
+            if (!formButton.theme) {
+                formButton.theme = 'b';
+            }
             var $buttonBarLink = $('<a />').attr({
                 'data-role' : 'button',
-                'data-iconpos' : 'bottom',
+                'data-iconpos' : formButton.iconPos,
                 'data-icon' : formButton.iconClass,
                 'data-iconshadow' : false,
-                'class' : 'iconbutton'
+                'data-theme' : formButton.theme,
+                'class' : formButton.styleClass
             });
+            if (formButton.mini) {
+                $buttonBarLink.attr('data-mini', 'true');
+            }
             if (formButton.title) {
                 $buttonBarLink.append(formButton.title);
             } 

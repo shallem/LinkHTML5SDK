@@ -707,11 +707,26 @@
         getSelectedGroupRow: function() {
             return this.selectedGroupRow;
         },
+        
+        updateSelectedRow: function(rowComponents) {
+            var parentElement = $(this.element).find('[data-index="'+this.getSelectedRow()+'"]');
+            if (rowComponents.icon) {
+                var oldIcon = $(parentElement).attr('data-icon');
+                $(parentElement).attr('data-icon', rowComponents.icon);
+                $(parentElement).find('span')
+                    .removeClass('ui-icon-'+oldIcon)
+                    .addClass('ui-icon-'+rowComponents.icon);
+            }
+        },
   
         createListRow: function(parentElement,rowComponents) {
             var mainLink = $('<a />').attr({
                 'href' : 'javascript:void(0)'
             }).appendTo($(parentElement));
+            
+            if (rowComponents.icon) {
+                $(parentElement).attr('data-icon', rowComponents.icon);
+            }
             
             if (rowComponents.image) {
                 mainLink.append($('<img />').attr({
