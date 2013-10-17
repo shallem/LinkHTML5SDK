@@ -313,6 +313,7 @@
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
+		    <include>persistence/persistence.search.js</include>
 		    <include>persistence/persistence.helix.js</include>
 		    <include>persistence/persistence.helix.helpers.js</include>
 

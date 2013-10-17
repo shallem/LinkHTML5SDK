@@ -11,12 +11,12 @@ import java.lang.annotation.Target;
 
 /**
  * Currently a 0 argument annotation that indicates that a particular class member
- * should be indexed on the client for free text search.
+ * should be indexed on the client by adding a DB index on this field.
  * 
  * @author shallem
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
-public @interface ClientIndexed {
+public @interface ClientTextIndex {
     
 }

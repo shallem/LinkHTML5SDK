@@ -84,6 +84,7 @@ public class JSONSerializer {
     private static final String KEY_FIELD_NAME = "__hx_key";
     private static final String SORTS_FIELD_NAME = "__hx_sorts";
     private static final String FILTERS_FIELD_NAME = "__hx_filters";
+    private static final String TEXT_INDEX_FIELD_NAME = "__hx_text_index";
     
     public JSONSerializer() {
     }
@@ -378,7 +379,7 @@ public class JSONSerializer {
                         
                         /* Determine if this field is an indexed field. */
                         Annotation indexedAnnot =
-                                m.getAnnotation(org.helix.mobile.model.ClientIndexed.class);
+                                m.getAnnotation(org.helix.mobile.model.ClientTextIndex.class);
                         if (indexedAnnot != null) {
                             indexFields.add(nxtFieldName);
                         }
@@ -421,7 +422,13 @@ public class JSONSerializer {
                     jg.writeString(e.getValue());
                 }
                 jg.writeEndObject();
-
+                
+                jg.writeArrayFieldStart(TEXT_INDEX_FIELD_NAME);
+                for (String s : indexFields) {
+                    jg.writeString(s);
+                }
+                jg.writeEndArray();
+                
                 jg.writeEndObject();
                 return true;
             }  else {

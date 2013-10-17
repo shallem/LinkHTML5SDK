@@ -1909,6 +1909,38 @@ persistence.get = function(arg1, arg2) {
     }
 
     /**
+     * Execute a function for each item in the list. Replaces the callback below
+     * which does not allow for much flexibility in argument specification.
+     * @param tx the transaction to use (or null to open a new one)
+     * @param callbacks Object containing up to 3 callbacks - one to execute on
+     *   each element in the query collection (eachFn) one to execute at the start
+     *   of the iteration (startFn, accepting the number of elements as an arg),
+     *   and one to execute when the iteration is done (doneFn, also accepting the
+     *   number of results as an argument).
+     */
+    QueryCollection.prototype.newEach = function (tx, callbacks) {
+        this.list(tx, function(results,error) {
+          if (!results) {
+              if (error) {
+                  alert(error);
+              }
+              return;
+          }
+          if (callbacks.startFn) {
+              callbacks.startFn(results.length);
+          }
+          if (callbacks.eachFn) {
+            for(var i = 0; i < results.length; i++) {
+                callbacks.eachFn(results[i]);
+            }
+          }
+          if (callbacks.doneFn) {
+            callbacks.doneFn(i);
+          }
+        });
+    }
+
+    /**
      * Execute a function for each item in the list
      * @param tx the transaction to use (or null to open a new one)
      * @param eachFn (elem) the function to be executed for each item
