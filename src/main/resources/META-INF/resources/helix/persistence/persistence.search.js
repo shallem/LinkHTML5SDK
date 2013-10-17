@@ -43,13 +43,14 @@ persistence.search.config = function(persistence, dialect) {
   var argspec = persistence.argspec;
 
   function normalizeWord(word, filterShortWords) {
-    if(!(word in filteredWords || (filterShortWords && word.length < 3))) {
+    /*if(!(word in filteredWords || (filterShortWords && word.length < 3))) {
       word = word.replace(/ies$/, 'y');
       word = word.length > 3 ? word.replace(/s$/, '') : word;
       return word;
     } else {
       return false;
-    }
+    }*/
+    return word;
   }
 
   /**

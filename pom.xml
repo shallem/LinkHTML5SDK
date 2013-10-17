@@ -305,7 +305,7 @@
 		    <include>lib/purl.js</include>
 
 		    <!-- Date arithmetic and manipulation. -->
-		    <include>lib/date.js</include>
+		    <include>datelib/core.js</include>
 
 		    <!-- Persistence. -->
 		    <include>persistence/helix.websql.js</include>
@@ -341,7 +341,7 @@
 		    <include>lib/helix.utils.js</include>
 		    <include>lib/helix.ajax.js</include>
 		    <include>lib/helix.layout.js</include>
-		    <include>lib/helix.formlayout.js</include>		   
+		    <include>lib/helix.formlayout.js</include>
 
 		  </includes>
 		  <aggregations>

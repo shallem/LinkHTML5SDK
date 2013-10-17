@@ -182,7 +182,7 @@ Helix.Ajax = {
                 }, [commandConfig]);
             } else {
                 ++nSchemasReady;
-                schemaDone();
+                schemaDone(commandConfig.schema, commandConfig);
             }
         }
     },

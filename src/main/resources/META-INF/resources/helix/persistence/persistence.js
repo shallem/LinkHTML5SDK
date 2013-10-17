@@ -1919,6 +1919,10 @@ persistence.get = function(arg1, arg2) {
      *   number of results as an argument).
      */
     QueryCollection.prototype.newEach = function (tx, callbacks) {
+        if (tx.doneFn || tx.eachFn || tx.startFn) {
+            callbacks = tx;
+            tx = null;
+        }
         this.list(tx, function(results,error) {
           if (!results) {
               if (error) {

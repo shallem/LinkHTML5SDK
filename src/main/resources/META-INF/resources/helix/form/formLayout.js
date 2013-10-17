@@ -57,14 +57,32 @@
          * 
          * @param valuesMap Map form field names to values.
          */
-        refresh: function(valuesMap) {            
+        refresh: function(valuesMap) { 
+            if (!valuesMap) {
+                return;
+            }
+            
             var idx = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var fldName = this.options.items[idx].name;
-                if (valuesMap && (fldName in valuesMap)) {
+                if (fldName in valuesMap) {
                     this.options.items[idx].value = valuesMap[fldName];
-                } else {
-                    this.options.items[idx].value = "";
+                }
+                if (this.options.items[idx].condition) {
+                    if (this.options.items[idx].condition in valuesMap) {
+                        if (valuesMap[this.options.items[idx].condition]) {
+                            this.options.items[idx].hidden = false;
+                        } else {
+                            this.options.items[idx].hidden = true;
+                        }
+                    } else  {
+                        var fn = window[this.options.items[idx].condition];
+                        if(typeof fn === 'function') {
+                            this.options.items[idx].hidden = fn.call(this, valuesMap);
+                        } else {
+                            this.options.items[idx].hidden = true;
+                        }
+                    }
                 }
             }    
            Helix.Utils.layoutForm(this.element, this.options, this.page);

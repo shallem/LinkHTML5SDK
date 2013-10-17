@@ -36,7 +36,21 @@ public class FormFieldRenderer extends CoreRenderer {
         writer.write("'name' : '" + ffield.getName() + "',");
         writer.write("'type' : '" + ffield.getType() + "',");
         writer.write("'width' : '" + ffield.getWidth() + "',");
-        writer.write("'value' : ''");
+        
+        if (ffield.getValueText() != null) {
+            writer.write("'value' : '" + ffield.getValueText() + "'");
+        } else {
+            writer.write("'value' : ''");
+        }
+        if (ffield.getStyleClass() != null) {
+            writer.write(", 'styleClass' : '" + ffield.getStyleClass() + "'");
+        }
+        if (ffield.getTitleStyleClass() != null) {
+            writer.write(", 'titleStyleClass' : '" + ffield.getTitleStyleClass() + "'");
+        }        
+        if (ffield.getCondition() != null) {
+            writer.write(", 'condition' : '" + ffield.getCondition() + "'");
+        }
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");
         } else {

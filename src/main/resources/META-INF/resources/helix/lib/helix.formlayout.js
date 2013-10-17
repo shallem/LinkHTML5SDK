@@ -21,6 +21,74 @@
 /**
  * Private helper functions.
  */
+function __appendDate(mode, formElem, $fieldContainer) {
+    if (mode) {
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            return;
+        }
+
+        var defaultValue = false;
+        var defaultValueText;
+        if (formElem.value) {
+            defaultValue = formElem.value;
+            var defaultDate = new Date(Number(defaultValue));
+            defaultValueText = defaultDate.getFullYear() + "-" + (defaultDate.getMonth() + 1) + "-" + defaultDate.getDate();
+        }
+
+        /* Edit */
+
+        var dateDiv = $('<div />').attr({
+            'data-role' : 'fieldcontain'
+        })
+        .append($('<label />').attr({
+            'for' : formElem.name
+            })
+            .append(formElem.fieldTitle)
+        ).append($('<input />').attr({
+            'name': formElem.name,
+            'id': formElem.name,
+            'type': 'text',
+            'data-role' : 'datebox',
+            'style' : 'width: 50%; font-size: 16px',
+            'class' : 'ui-input-text',
+            'data-options' : '{"mode" : "flipbox", "useNewStyle":true, "defaultValue":' + defaultValue + '}'
+        }).datebox());
+        // 'value' : defaultValueText,
+        $fieldContainer.append(dateDiv);
+    } else {
+        var dateMarkup;
+        if (formElem.type === "date") {
+            if (formElem.value) {
+                var dateValue = new Date(Number(formElem.value));
+                dateMarkup = $('<a />').attr({
+                    'title': dateValue.toISOString()
+                }).prettyDate();
+            } else {
+                dateMarkup = "none";
+            }
+            if (formElem.fieldTitle) {
+                $fieldContainer.append(" ")
+                    .append($(dateMarkup).text()); 
+            } else {
+                $fieldContainer.append($('<div />').append($(dateMarkup).text()));
+            }
+        } else {
+            if (formElem.value) {
+                if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
+                    formElem.value = new Date(formElem.value);
+                }
+                
+                if (formElem.fieldTitle) {
+                    $fieldContainer.append(" ").append(formElem.value.toLocaleString());
+                } else {
+                    $fieldContainer.append($('<div />').append(formElem.value.toLocaleString()));
+                }
+            }
+        }
+    }
+}
+
 function __appendTextArea(mode, formElem, $fieldContainer) {
     if (mode) {
         /* Edit */
@@ -123,6 +191,10 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
 }
 
 Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers) {
+    if (formElem.hidden) {
+        return;
+    }
+    
     var $fieldContainer;
     if (!mode) {
         /* View mode. */
@@ -156,7 +228,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
     if (formElem.type == "text") {
         if (mode) {
             /* Edit */
-            if (!formElem.name) {
+            if (mode && !formElem.name) {
                 /* No field name. We cannot edit this field. */
                 return;
             }
@@ -298,9 +370,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         }
         $buttonLink.appendTo($fieldContainer);
         if (formElem.onclick) {
-            $buttonLink.on('tap', function() {
-                formElem.onclick($fieldContainer);
-            });
+            $buttonLink.on('tap', formElem.onclick);
         }
     } else if (formElem.type === 'buttonGroup') {
         var formButton;
@@ -345,68 +415,15 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 $buttonBarLink.attr('href', 'javascript:void(0);');
             }
             if (formButton.onclick) {
-                $buttonBarLink.on('tap', function(ev) {
-                    formButton.onclick(this, ev);
-                });
+                $buttonBarLink.on('tap', formButton.onclick);
             }
             $buttonBarLink.appendTo($buttonBar);
             $buttonBarLink.button();
         }
         $buttonBar.controlgroup({ type: "horizontal" });
-    } else if (formElem.type == 'date') {
-        if (mode) {
-            if (!formElem.name) {
-                /* No field name. We cannot edit this field. */
-                return;
-            }
-            
-            var defaultValue = false;
-            var defaultValueText = "";
-            if (formElem.value) {
-                defaultValue = formElem.value;
-                var defaultDate = new Date(Number(defaultValue));
-                defaultValueText = defaultDate.getFullYear() + "-" + (defaultDate.getMonth() + 1) + "-" + defaultDate.getDate();
-            }
-            
-            /* Edit */
-            
-            var dateDiv = $('<div />').attr({
-                'data-role' : 'fieldcontain'
-            })
-            .append($('<label />').attr({
-                'for' : formElem.name
-                })
-                .append(formElem.fieldTitle)
-            ).append($('<input />').attr({
-                'name': formElem.name,
-                'id': formElem.name,
-                'type': 'text',
-                'data-role' : 'datebox',
-                'style' : 'width: 50%; font-size: 16px',
-                'class' : 'ui-input-text',
-                'data-options' : '{"mode" : "flipbox", "useNewStyle":true, "defaultValue":' + defaultValue + '}'
-            }).datebox());
-            // 'value' : defaultValueText,
-            $fieldContainer.append(dateDiv);
-        } else {
-            var dateMarkup;
-            if (formElem.value) {
-                var dateValue = new Date(Number(formElem.value));
-                dateMarkup = $('<a />').attr({
-                    'title': dateValue.toISOString()
-                }).prettyDate();
-            } else {
-                dateMarkup = "none";
-            }
-            
-            if (formElem.fieldTitle) {
-                $fieldContainer.append(" ")
-                    .append($(dateMarkup).text()); 
-            } else {
-                $fieldContainer.append($('<div />').append($(dateMarkup).text()));
-            }
-
-        }
+    } else if (formElem.type == 'date' ||
+               formElem.type == 'exactdate') {
+        __appendDate(mode, formElem, $fieldContainer);
     } else if (formElem.type == 'dialog') {        
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.items.length; ++elemIdx) {

@@ -42,5 +42,29 @@
             <type>java.lang.String</type>
             <description>JavaScript function to execute when focus leaves this input element. Currently only implemented for type text.</description>
         </attribute>
+        <attribute>
+            <name>condition</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional, dynamic condition that determines if this form element is visible. Can either be a field name or a standalone expression.</description>
+        </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class for the field contents.</description>
+        </attribute>
+        <attribute>
+            <name>titleStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class for the field title</description>
+        </attribute>
+        <attribute>
+            <name>valueText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Text to fill in this field.</description>
+        </attribute>
     </attributes>
 </component>

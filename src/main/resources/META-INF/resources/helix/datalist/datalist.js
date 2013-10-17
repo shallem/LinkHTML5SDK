@@ -487,7 +487,7 @@
                 displayCollection = displayCollection.limit(_self.options.itemsPerPage);
                 /* XXX: Determine if there is a next page. If not, disable the next button. */
             }
-            if (orderby) {
+            if (orderby && !_self.__searchText) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
 
@@ -539,6 +539,21 @@
                 'for': sboxID
             }).append('Search').insertBefore(this.$searchBox).hide();
             this.$searchBox.textinput();
+            if (this.__searchText) {
+                this.$searchBox.val(this.__searchText);
+            }
+            var _self = this;
+            this.$searchBox.on('input', function() {
+                _self.__searchText = _self.$searchBox.val();
+                if (_self.__searchReadyTimeout) {
+                    clearTimeout(_self.__searchReadyTimeout);
+                }
+                
+                _self.__searchReadyTimeout = setTimeout(function() {
+                    _self.refreshList(_self.options.indexedSearch(_self.__searchText));
+                    _self.__searchReadyTimeout = null;
+                }, 3000);
+            });
         },
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection) {
