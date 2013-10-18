@@ -210,6 +210,7 @@
 /* Horizontal scrolling elements should have this style. */
 .hx-horizontal-scroller-nozoom {
     overflow-x: scroll;
+    white-space: nowrap;
     -webkit-overflow-scrolling: touch;
 }
 

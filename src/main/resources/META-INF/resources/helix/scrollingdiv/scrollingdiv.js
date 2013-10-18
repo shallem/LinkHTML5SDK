@@ -80,7 +80,7 @@
             /* Set the height/width of the scroller wrapper. */
             if (this.options.width === "full") {
                 this._$wrapper.width(this._$parentView.width());
-            } else {
+            } else if (this.options.width !== "auto") {
                 this._$wrapper.width(this.options.width);
             }
             if (this.options.height === "inherit") {
