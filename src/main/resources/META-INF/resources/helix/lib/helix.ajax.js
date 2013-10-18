@@ -246,6 +246,11 @@ Helix.Ajax = {
             loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
         }
         
+        // Setup loader options and show the loader.
+        Helix.Ajax.loadOptions.pin = true;
+        Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
+        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        
         // Make sure the DB is ready. If not, wait 5 seconds.
         if (!Helix.DB.persistenceIsReady()) {
             if (!nRetries) {
@@ -258,7 +263,7 @@ Helix.Ajax = {
             }
             setTimeout(function() {
                 Helix.Ajax.ajaxBeanLoad(loadCommandOptions,itemKey,nRetries+1);
-            }, 2000);
+            }, 1000);
             return;
         }
         
@@ -295,47 +300,46 @@ Helix.Ajax = {
             return;
         }
 
-        // Setup loader options.
-        Helix.Ajax.loadOptions.pin = true;
-        Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
-
         $(document).trigger('prerequest');
-        $.ajax({
-            type: "POST",
-            url: loadCommandOptions.requestOptions.postBack,
-            dataType: "json",
-            data: $.param(loadCommandOptions.requestOptions.params),
-            success: function(data, status, xhr) {
-                var responseObj = data;
-                if (responseObj.error) {
-                    var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+        /* Give the browser a change to handle the event and show the loader. */
+        setTimeout(function() {
+            $.ajax({
+                type: "POST",
+                url: loadCommandOptions.requestOptions.postBack,
+                dataType: "json",
+                data: $.param(loadCommandOptions.requestOptions.params),
+                success: function(data, status, xhr) {
+                    var responseObj = data;
                     if (responseObj.error) {
-                        error.msg = responseObj.error;
+                        var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                        if (responseObj.error) {
+                            error.msg = responseObj.error;
+                        }
+                        loadCommandOptions.onerror(error);
+                        return;
                     }
-                    loadCommandOptions.onerror(error);
-                    return;
-                }
 
-                if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
-                    Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
-                        window[loadCommandOptions.name] = finalObj;
-                        Helix.Ajax.loadOptions.pin = false;
-                        $.mobile.loading( "hide" );
-                        loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
-                    }, itemKey, loadCommandOptions.syncOverrides);
-                } else {
-                    loadCommandOptions.oncomplete(itemKey, "success");
+                    if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
+                        Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                            window[loadCommandOptions.name] = finalObj;
+                            Helix.Ajax.loadOptions.pin = false;
+                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
+                            $.mobile.loading( "hide" );
+                        }, itemKey, loadCommandOptions.syncOverrides);
+                    } else {
+                        loadCommandOptions.oncomplete(itemKey, "success");
+                    }
+                },
+                error: function(xhr, status, errorThrown) {
+                    var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                    error.msg = status;
+                    loadCommandOptions.onerror(error);
+                },
+                complete: function(xhr) {
+                    $(document).trigger('postrequest', xhr);
                 }
-            },
-            error: function(xhr, status, errorThrown) {
-                var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                error.msg = status;
-                loadCommandOptions.onerror(error);
-            },
-            complete: function(xhr) {
-                $(document).trigger('postrequest', xhr);
-            }
-        });
+            });
+        }, 0);
     },
     
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
