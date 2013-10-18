@@ -87,6 +87,13 @@
             <defaultValue></defaultValue>
             <description>CSS style class for this button.</description>
         </attribute>
+        <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>b</defaultValue>
+            <description>Button theme.</description>
+        </attribute>
     </attributes>
 
 </component>

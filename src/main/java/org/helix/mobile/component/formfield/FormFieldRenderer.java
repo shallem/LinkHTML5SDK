@@ -88,6 +88,7 @@ public class FormFieldRenderer extends CoreRenderer {
                     if (ic.getValue() != null) {
                         writer.write(",'title' : '" + ic.getValue() + "'");
                     }
+                    writer.write(",'theme' : '" + ic.getTheme() + "'");
                     writer.write("}");
                 }
             }

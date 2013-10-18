@@ -713,70 +713,84 @@ function initHelixDB() {
             }, overrides);
         },
     
-        cascadingRemoveQueryCollection: function(tx, queryCollection, fld, oncomplete, overrides) {
-            var toProcess = 0;
-            var nProcessed = 0;
-        
-            queryCollection.forEach(tx, function(elem) {
-                Helix.DB.cascadingRemove(tx, elem, function() {
-                    ++nProcessed;
-                    queryCollection.remove(elem);
-                    if (nProcessed >= toProcess) {
-                        oncomplete(fld);                        
-                    }
-                }, 
-                overrides);
-            },
-            function(tot) {
-                if (tot == 0) {
-                    oncomplete(fld);
+        cascadingRemoveQueryCollection: function(tx, queryCollection, oncomplete, overrides) {
+            var toDelete = [];
+            var cascade = function() {
+                if (toDelete.length == 0) {
+                    oncomplete();
+                    return;
                 }
-                toProcess = tot;
+                
+                var elem = toDelete.pop();
+                Helix.DB.cascadingRemove(tx, elem, function() {
+                    queryCollection.remove(elem);
+                    cascade();
+                }, overrides);
+            };
+        
+            
+            queryCollection.newEach(tx, {
+                eachFn: function(elem) {
+                    toDelete.push(elem);
+                },
+                doneFn: function(ct) {
+                    cascade();
+                }
             });
         },
     
         cascadingRemove: function(tx, persistentObj, oncomplete, overrides) {
-            var cascadeDone = function() {
-                oncomplete(persistentObj, "remove");
-                persistence.remove(persistentObj);
-            };
-        
-            // Duplicate the data keys.
-            var dataKeys = Object.keys(persistentObj._data).slice(0);
+            var toCascade = [];
             var recurseDown = function() {
-                if (dataKeys.length == 0) {
-                    cascadeDone();
+                if (toCascade.length == 0) {
+                    oncomplete(persistentObj, "remove");
+                    persistence.remove(persistentObj);
                     return;
                 }
                 
-                var fld = dataKeys.pop();
-                if (persistentObj.hasOwnProperty(fld)) {
-                    var getter = Object.getOwnPropertyDescriptor(persistentObj, fld).get;
-                    var subObj = null;
-                    try {
-                        subObj = getter();
-                        if (subObj && subObj.forEach) {
-                            Helix.DB.cascadingRemoveQueryCollection(tx, subObj, fld, recurseDown, overrides);
-                        } else {
-                            recurseDown();
-                        }
-                    } catch(err) {
-                        // We need to fetch subObj.
-                        persistentObj.fetch(subObj, function(obj) {
-                            if (obj) {
-                                Helix.DB.cascadingRemove(tx, obj, recurseDown, overrides);
-                            } else {
-                                recurseDown();
-                            }
-                        });
-                        return;
-                    }
+                var nxt = toCascade.pop();
+                if (nxt.forEach) {
+                    // Query collection.
+                    Helix.DB.cascadingRemoveQueryCollection(tx, nxt, recurseDown, overrides);
                 } else {
-                    recurseDown();
+                    Helix.DB.cascadingRemove(tx, nxt, recurseDown, overrides);
                 }
             };
-            // Start the recursive descent.
-            recurseDown();
+            
+            // First, save off the objects we need to delete recursively. When we are done, we call
+            // recurseDown above.
+            var fields = Object.keys(persistentObj._data).slice(0);
+            var collect = function() {
+                if (fields.length == 0) {
+                    recurseDown();
+                    return;
+                }
+                
+                var fld = fields.pop();
+                if (!persistentObj.hasOwnProperty(fld)) {
+                    collect();
+                    return;
+                }
+                
+                try {
+                    var getter = Object.getOwnPropertyDescriptor(persistentObj, fld).get;
+                    var subObj = getter();
+                    if (subObj && subObj.forEach) {
+                        toCascade.push(subObj);
+                    }
+                    collect();
+                } catch(err) {
+                    persistentObj.fetch(tx, fld, function(obj) {
+                        // This is a one-to-one relationship with an object.
+                        if (obj) {
+                            toCascade.push(obj);
+                        }
+                        collect();
+                    });
+                }
+            };
+            // Start the recursion.
+            collect();
         },
     
         synchronizeQueryCollection: function(tx,
@@ -915,7 +929,9 @@ function initHelixDB() {
                 if (deltaObj.deletes.length > 0) {
                     var toDeleteKey = deltaObj.deletes.pop();
                     parentCollection.filter(keyField, "=", toDeleteKey).each(tx, function(elem) { 
-                        Helix.DB.cascadingRemove(tx,elem,removeFn,overrides);
+                        if (elem) {
+                            Helix.DB.cascadingRemove(tx,elem,removeFn,overrides);
+                        }
                     });
                 } else {
                     /* Nothing more to remove. Add in any new objects. */
@@ -1067,6 +1083,12 @@ function initHelixDB() {
                 });
             };
         
+            if (!tx) {
+                persistence.transaction(function(tx) {
+                    Helix.DB.synchronizeObject(obj, objSchema, callback, opaque, overrides, tx);
+                });
+                return;
+            }
         
             /* Check the overrides. IF we do not have overrides for the field sync then
              * install the default.
@@ -1079,14 +1101,6 @@ function initHelixDB() {
             }
             if (!overrides.refineEntityArray) {
                 overrides.refineEntityArray = Helix.DB.Utils.identityRefineEntityArray;
-            }
-            
-            if (!tx) {
-                persistence.transaction(function(tx) {
-                    Helix.DB.synchronizeObject(obj,objSchema,callback,opaque,overrides,tx);
-                    return;
-                });
-                return;
             }
             
             if (Object.prototype.toString.call(obj) === '[object Array]') {
@@ -1119,7 +1133,7 @@ function initHelixDB() {
                     Helix.DB.synchronizeObject(obj[nxt], loadCommandConfig.schema, function(finalObj, objName) {
                         resultObj[objName] = finalObj;
                         syncComponent();
-                    }, nxt, loadCommandConfig.syncOverrides, tx);
+                    }, nxt, loadCommandConfig.syncOverrides,tx);
                 };
                 syncComponent();
             } else {
