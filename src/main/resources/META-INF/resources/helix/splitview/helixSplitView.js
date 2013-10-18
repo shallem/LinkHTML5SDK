@@ -101,12 +101,14 @@
                 if (this.__current === "left") {
                     $(this.__left).removeClass('hx-split-left-area');
                     $(this.__left).addClass('hx-split-full');
+                    $(this.__left).addClass('pm-layout-full-height');
                     $(this.__left).css('width', '');
                     $(this.__left).show();
                     $(this.__right).hide();
                 } else {
                     $(this.__right).removeClass('hx-split-right-area');
                     $(this.__right).addClass('hx-split-full');
+                    $(this.__right).addClass('pm-layout-full-height');
                     $(this.__right).css('width', '');
                     $(this.__right).show();
                     $(this.__left).hide();                    

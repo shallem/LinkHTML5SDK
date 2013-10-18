@@ -28,7 +28,10 @@ public class FormLayoutRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         FormLayout layout = (FormLayout) component;
         writer.startElement("div", layout);
-        writer.writeAttribute("id", layout.getClientId(context), "id");        
+        writer.writeAttribute("id", layout.getClientId(context), "id"); 
+        if (layout.getStyleClass() != null) {
+            writer.writeAttribute("class", layout.getStyleClass(), null);
+        }
         writer.endElement("div");
         
         startScript(writer, layout.getClientId(context));

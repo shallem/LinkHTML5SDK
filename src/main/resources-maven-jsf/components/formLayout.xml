@@ -38,5 +38,11 @@
             <defaultValue>false</defaultValue>
             <description>Indicates if a horizontal separator should be placed in between form fields.</description>
         </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class to apply to this form layout.</description>
+        </attribute>
     </attributes>
 </component>
