@@ -406,51 +406,48 @@ function initHelixDB() {
             if (!window.__pmMasterDB) {
                 throw "You must call initPersistence prior to calling this routine!";
             }
-            if (!Helix.DB.persistenceIsReady()) {
-                if (!nRetries) {
-                    nRetries = 1;
-                }
-                if (nRetries > 3) {
-                    alert("Failed to initialize persistence. Please reload the page and try again.");
-                    return;
-                }
-                setTimeout(function() {
-                    Helix.DB.generatePersistenceSchemaFromDB(schemaName,schemaTemplate,oncomplete,nRetries+1);
-                }, nRetries*1000);
-                return;
-            }
-        
-            /* First, check to see if the schema is already available. */
-            if (window.__pmLocalSchemas) {
-                if (window.__pmLocalSchemas[schemaName]) {
-                    oncomplete(window.__pmLocalSchemas[schemaName]);
-                    return;
-                }
-            } else {
-                window.__pmLocalSchemas = {};
-            }
-        
-            /* If we have a template, just generate the schema from that template. Otherwise
-         * we either (a) read the schema from the DB, or (b) return null because the schema
-         * does not exist.
-         */
-            if (schemaTemplate) {
-                Helix.DB.generatePersistenceSchema(schemaTemplate,schemaName,oncomplete);
-            } else {
-                /* Next, lookup this schema in the master DB and generate the schema
-             * from the DB. 
-             */
-                window.__pmAllTables.filter("tableName", "=", schemaName).one(function(masterRow) {
-                    if (masterRow) {
-                        Helix.DB.generatePersistenceSchemaFromDBRow(masterRow,function(schema) {
-                            persistence.schemaSync();
-                            oncomplete(schema);
-                        });
-                    } else {
-                        oncomplete(null);
+            
+            var __continuation = function() {
+                /* First, check to see if the schema is already available. */
+                if (window.__pmLocalSchemas) {
+                    if (window.__pmLocalSchemas[schemaName]) {
+                        oncomplete(window.__pmLocalSchemas[schemaName]);
+                        return;
                     }
+                } else {
+                    window.__pmLocalSchemas = {};
+                }
+
+                /* If we have a template, just generate the schema from that template. Otherwise
+                 * we either (a) read the schema from the DB, or (b) return null because the schema
+                 * does not exist.
+                 */
+                if (schemaTemplate) {
+                    Helix.DB.generatePersistenceSchema(schemaTemplate,schemaName,oncomplete);
+                } else {
+                    /* Next, lookup this schema in the master DB and generate the schema
+                     * from the DB. 
+                     */
+                    window.__pmAllTables.filter("tableName", "=", schemaName).one(function(masterRow) {
+                        if (masterRow) {
+                            Helix.DB.generatePersistenceSchemaFromDBRow(masterRow,function(schema) {
+                                persistence.schemaSync();
+                                oncomplete(schema);
+                            });
+                        } else {
+                            oncomplete(null);
+                        }
+                    });
+                }
+            };
+            
+            if (!Helix.DB.persistenceIsReady()) {
+                $(document).on('hxPersistenceReady', function() {
+                    __continuation();
                 });
-            }        
+            } else {
+                __continuation();
+            }    
         },
 
 
@@ -1009,20 +1006,22 @@ function initHelixDB() {
             persistentObj.__hx_schema = objSchema;
             persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
             
+            /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
+             * make a bunch of objects dirty and flush them over and over again as
+             * we recurse through their children. We make all non-relation changes before
+             * we do anything that might trigger a flush.
+             */
+            while (scalarFields.length > 0) {
+                field = scalarFields.pop();
+                /* Use the setter to make sure the object is marked as dirty appropriately. */
+                var setter = Object.getOwnPropertyDescriptor(persistentObj, field).set;
+                if (!overrides.syncFields(setter, obj, field)) {
+                    setter(obj[field]);
+                }
+            }
+            
             /* Called when an asynchronous relationship field is done sync'ing. */
             var syncDone = function() {
-                /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
-                 * make a bunch of objects dirty and flush them over and over again as
-                 * we recurse through their children.
-                 */
-                while (scalarFields.length > 0) {
-                    var field = scalarFields.pop();
-                    /* Use the setter to make sure the object is marked as dirty appropriately. */
-                    var setter = Object.getOwnPropertyDescriptor(persistentObj, field).set;
-                    if (!overrides.syncFields(setter, obj, field)) {
-                        setter(obj[field]);
-                    }
-                }
                 oncomplete(persistentObj);
             };
             
@@ -1190,7 +1189,9 @@ function initHelixDB() {
             });
             persistence.schemaSync(function(tx) {
                 window.__pmAllTables = window.__pmMasterDB.all();
-                persistence.flush(tx);
+                persistence.flush(tx, function() {
+                    $(document).trigger('hxPersistenceReady');
+                });
             });
         },
     

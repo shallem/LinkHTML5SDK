@@ -360,6 +360,48 @@ function config(persistence, dialect) {
     return o;
   }
 
+  function saveObj(obj, tx, callback, properties, values, propertyPairs, qs) {
+      var meta = persistence.getMeta(obj._type);
+      var tm = persistence.typeMapper;
+    
+      obj._dirtyProperties = {};
+      if (obj._new) {
+          properties.push('id');
+          values.push(tm.entityIdToDbId(obj.id));
+          qs.push(tm.outIdVar('?'));
+          var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
+          obj._new = false;
+          tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
+              if (e.code == 6) {
+                  // Failed due to constraint failure. Try again but try updating the
+                  // object instead of inserting it (because _new is now false ...).
+                  for (var p in meta.fields) {
+                    if(meta.fields.hasOwnProperty(p)) {
+                      obj._dirtyProperties[p] = true;
+                    }
+                  }
+                  /* We actually need to update the ID. Because this object is dirty, all one-to-many
+                   * children become dirty and get updated with the ID of this object. If we don't
+                   * update the ID in the DB, all children get orphaned.
+                   */
+                  propertyPairs.push("id=" + tm.outIdVar('?'));
+                  var schema = Helix.DB.getSchemaForObject(obj);
+                  var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + Helix.DB.getKeyField(schema) + " = ?";
+                  // Add the unique key, which we are using to find the item to update.
+                  values.push(Helix.DB.getKeyField(obj));
+                  tx.executeSql(sql, values, callback, callback);
+              } else {
+                persistence.errorHandler(e.message, e.code);
+                callback(t,e);                  
+              }
+              return false;
+          });
+        } else {
+          sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
+          tx.executeSql(sql, values, callback, callback);
+        }
+  }
+
   /**
    * Internal function to persist an object to the database
    * this function is invoked by persistence.flush()
@@ -393,48 +435,13 @@ function config(persistence, dialect) {
         additionalQueries = additionalQueries.concat(persistence.get(obj, p).persistQueries());
       }
     }
-    executeQueriesSeq(tx, additionalQueries, function() {
+    executeQueriesSeq(tx, additionalQueries, function(obj, callback, properties, values, propertyPairs, qs) {
         if (!obj._new && properties.length === 0) { // Nothing changed and not new
           if(callback) callback();
           return;
         }
-        obj._dirtyProperties = {};
-        if (obj._new) {
-          properties.push('id');
-          values.push(tm.entityIdToDbId(obj.id));
-          qs.push(tm.outIdVar('?'));
-          var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
-          obj._new = false;
-          tx.executeSql(sql, values, callback, function(t, e) {
-              if (e.code == 6) {
-                  // Failed due to constraint failure. Try again but try updating the
-                  // object instead of inserting it (because _new is now false ...).
-                  for (var p in meta.fields) {
-                    if(meta.fields.hasOwnProperty(p)) {
-                      obj._dirtyProperties[p] = true;
-                    }
-                  }
-                  /* We actually need to update the ID. Because this object is dirty, all one-to-many
-                   * children become dirty and get updated with the ID of this object. If we don't
-                   * update the ID in the DB, all children get orphaned.
-                   */
-                  propertyPairs.push("id=" + tm.outIdVar('?'));
-                  var schema = Helix.DB.getSchemaForObject(obj);
-                  var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + Helix.DB.getKeyField(schema) + " = ?";
-                  // Add the unique key, which we are using to find the item to update.
-                  values.push(Helix.DB.getKeyField(obj));
-                  tx.executeSql(sql, values, callback, callback);
-              } else {
-                persistence.errorHandler(e.message, e.code);
-                callback(t,e);                  
-              }
-              return false;
-          });
-        } else {
-          sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
-          tx.executeSql(sql, values, callback, callback);
-        }
-      });
+        saveObj(obj, tx, callback, properties, values, propertyPairs, qs);
+      }, obj, callback, properties, values, propertyPairs, qs);
   }
 
   persistence.save = save;

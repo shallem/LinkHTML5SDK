@@ -85,7 +85,10 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
             }
             successFn(results);
           }
-        }, errorFn);
+        }, 
+        function(t, e) {
+            errorFn(t, e, query, args);
+        });
     };
     return that;
   };

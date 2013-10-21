@@ -56,6 +56,7 @@
  */
 $(document).bind('prerequest', function() {
     $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+    Helix.Ajax.loadCt++;
 });
 
 /**
@@ -69,6 +70,16 @@ $(document).bind('postrequest', function() {
 
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadOptions = {};
+    Helix.Ajax.loadCt--;
+});
+
+/**
+ *
+ */
+$(document).ready(function() {
+    if (Helix.Ajax.loadCt > 0) {
+        $.mobile.loading( 'show', Helix.Ajax.loadOptions);    
+    }
 });
 
 /**
@@ -85,6 +96,11 @@ Helix.Ajax = {
     ERROR_OFFLINE_ACCESS : { code: 0, msg: "Cannot load this object while offline." },
     ERROR_INVALID_PARAMS : { code : 1, msg: "Parameters to an AJAX bean load must be an array of objects, each of the form { name:'<name>', value:<value> }." },
     ERROR_AJAX_LOAD_FAILED : { code : 2, msg : "AJAX load error." },
+
+    /**
+     * Count of on-going loads.
+     */
+    loadCt : 0,
 
     /**
      * Options specifying the appearance of the loading message, which is displayed
@@ -249,7 +265,7 @@ Helix.Ajax = {
         // Setup loader options and show the loader.
         Helix.Ajax.loadOptions.pin = true;
         Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
-        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        //$.mobile.loading( 'show', Helix.Ajax.loadOptions);
         
         // Make sure the DB is ready. If not, wait 5 seconds.
         if (!Helix.DB.persistenceIsReady()) {
@@ -262,6 +278,7 @@ Helix.Ajax = {
                 return;
             }
             setTimeout(function() {
+                alert("TRYING AGAIN.");
                 Helix.Ajax.ajaxBeanLoad(loadCommandOptions,itemKey,nRetries+1);
             }, 1000);
             return;
