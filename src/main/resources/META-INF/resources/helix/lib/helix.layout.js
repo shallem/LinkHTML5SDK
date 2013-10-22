@@ -288,8 +288,8 @@ Helix.Layout = {
         */
         page.height(height);
 
-        var headerHeight = page.children('[data-role="header"]').height();
-        var footerHeight = page.children('[data-role="footer"]').height();
+        var headerHeight = page.find('[data-role="header"]').height();
+        var footerHeight = page.find('[data-role="footer"]').height();
         var contentHeight = (.99 * height) - headerHeight - footerHeight;
         page.find('.hx-main-content').css('height', contentHeight);
         page.find('.hx-main-content').each(function() {

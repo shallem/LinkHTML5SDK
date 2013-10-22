@@ -56,7 +56,7 @@
             docCSSFile:   // CSS file used to style the document contained within the editor
             "",
             bodyStyle:    // style to assign to document body contained within the editor
-            "margin:4px; font:10pt Arial,Verdana; cursor:text"
+            "margin:4px; font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word"
         },
 
         // Define all usable toolbar buttons - the init string property is
@@ -215,23 +215,22 @@
         editor.page = options.page;
 
         // Create the main container and append the textarea
-        var $parent = editor.$parent = $(DIV_TAG);
+        var $parent = editor.$parent = $(DIV_TAG).insertAfter($area);
+        //$area.wrap($parent);
+
         var $main = editor.$main = $(DIV_TAG)
         .addClass(MAIN_CLASS)
         .width(options.width)
         .appendTo($parent);
         $main.height(options.height);
 
-        // Add the main div to the DOM and append the textarea
-        $parent.insertBefore($area)
-        $parent.append($area);
-
         // Add the first group to the toolbar
         var $toolbar = editor.$toolbar = $(DIV_TAG)
         .attr('class', 'ui-body-a ' + TOOLBAR_CLASS)
         .attr('data-role','controlgroup')
-        .attr('data-type','vertical')
-        .attr('style', 'float: right;');
+        .attr('data-type','horizontal');
+        //.attr('data-type','vertical');
+        //.attr('style', 'float: right;');
         //.insertAfter($main);
 
         // Add the styling commands popup to the button bar
@@ -343,7 +342,7 @@
         $.each(options.controls.actions.split(" "), function(idx, buttonName) {
             addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
         });        
-        $toolbar.appendTo($parent);
+        $toolbar.appendTo($main);
         
         $styleMenu.listview();
         $formatMenu.listview();
@@ -356,6 +355,9 @@
         $formatCommands.button();
         
         var popupOptions = {
+            beforeposition: function() {
+                focus(editor);
+            },
             afterclose: function() {
                 focus(editor);
             }
@@ -366,12 +368,6 @@
         $actionMenuPopup.popup(popupOptions);
     
         $toolbar.controlgroup();
-    
-        // Bind the window resize event when the width or height is auto or %
-        if (/auto|%/.test("" + options.width + options.height))
-            $(window).resize(function() {
-                refresh(editor);
-            });
 
         // If the page is visible, create the iframe and resize the controls. Otherwise
         // wait until the page becomes visible with pageshow above.
@@ -390,11 +386,11 @@
         });
         
         eventName = "orientationchange." + editor.name;
-        $(window).off(eventName).on(eventName, function() {
+        $(document).off(eventName).on(eventName, function() {
             refresh(editor);
         });
         
-        // Save this object int he widget var in the global scope, if one is supplied.
+        // Save this object int the widget var in the global scope, if one is supplied.
         if (options.widget) {
             window[options.widget] = editor;
         }
@@ -855,21 +851,23 @@
         var $main = editor.$main,
         options = editor.options;
 
-        // Remove the old iframe
-        if (editor.$frame)
-            editor.$frame.remove();
-        if (editor.$formatFrame)
-            editor.$formatFrame.remove();
+        var $formatFrame = null;
+        if (editor.$formatFrame) {
+            $formatFrame = editor.$formatFrame;
+        } else {
+            $formatFrame = editor.$formatFrame = 
+                $('<div/>').append("Current Format").addClass("ui-editor-format").hide().appendTo($main);
+        }
 
-        // Create an iFrame that we will use to show the current format
-        var $formatFrame = editor.$formatFrame = 
-            $('<div/>').append("Current Format").addClass("ui-editor-format").hide().appendTo($main);
-            
-        // Create a new iframe
-        var $frame = editor.$frame = $('<iframe frameborder="1" src="javascript:true;" style="overflow-x:hidden;">')
-        .hide()
-        .appendTo($main);
-
+        var $frame = null;
+        if (editor.$frame) {
+            $frame = editor.$frame;
+        } else {
+            $frame = editor.$frame = $('<iframe frameborder="1" src="javascript:true;">')
+                .hide()
+                .appendTo($main);
+        }
+                
         // Load the iframe document content
         var contentWindow = $frame[0].contentWindow,
         doc = editor.doc = contentWindow.document,
@@ -887,34 +885,42 @@
         // Load the content
         updateFrame(editor);
 
-        // Update the textarea when the iframe loses focus
-        $doc.blur(function(e) {
-            updateTextArea(editor, true);
+        // Update the textarea when the iframe changes. But wait until the typist has stopped
+        // before we do this update.
+        $doc.change(function(e) {
+            if (editor.changeTimeout) {
+                clearTimeout(editor.changeTimeout);
+                editor.changeTimeout = null;
+            }
+            editor.changeTimeout = setTimeout(function() {
+                updateTextArea(editor, true);
+            }, 3);
         });
    
-        var $toolbar = editor.$toolbar,
-        wid = options.width - ($toolbar.width() * 1.05),
-        hgt = Math.max(options.height, $toolbar.outerHeight(true));        
-    
-        // Resize the main div.
-        $main.width(wid);
-        if (hgt) {
-            $main.height(hgt);
-        }
-
-        // Resize the format frame.
-        $formatFrame.width(wid);
-        $formatFrame.height("25px");
+        //var $toolbar = editor.$toolbar,
+        //wid = options.width - ($toolbar.width() * 1.05),
+        var hgt = options.height;
 
         // Resize the parent surrounding both.
-        editor.$parent.height(hgt + 25);
+        editor.$parent.height(hgt);
+
+        // Resize the main div (which includes the toolbar).
+        $main.width(options.width);
+        $main.height(hgt);
+        
+        // Resize the format frame.
+        $formatFrame.width("100%");
+        $formatFrame.height("25px");
+
+        // Update hgt to account for the toolbar and the format frame.
+        hgt -= editor.$toolbar.outerHeight(true);        
+        hgt -= 25;
 
         // Resize the iframe
-        $frame.width(wid);
-        if (hgt) {
-            // Subtract 25 accounting for the formatFrame
-            $frame.height(hgt - 25);
-        }
+        $frame.width("100%");
+        $doc.width("100%");
+        $frame.height(hgt);
+        $doc.height(hgt);
         
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.
@@ -924,7 +930,7 @@
         // Switch the iframe into design mode if enabled
         disable(editor, editor.disabled);
     
-        // Put the focus on the editor. Otherwise when we try to top it does not work.
+        // Put the focus on the editor. Otherwise when we try to tap it does not work.
         focus(editor);
     }
 
