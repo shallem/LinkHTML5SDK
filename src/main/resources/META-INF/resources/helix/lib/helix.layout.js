@@ -463,7 +463,7 @@ $(document).on('pagebeforehide', function(ev) {
 });*/
 
 Helix.deviceType = (function() {
-    if (window.screen.width <= 480) {
+    if (window.screen.width <= 500) {
         return "phone";
     } else if (window.screen.width <= 767) {
         return "phablet";

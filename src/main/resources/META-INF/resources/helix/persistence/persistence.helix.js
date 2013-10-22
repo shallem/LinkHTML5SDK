@@ -289,10 +289,12 @@ function initHelixDB() {
 
         generateSubSchemaFromDBRow: function(tableName,parentField,parentSchema,inverseField,isOneToMany,oncomplete) {
             Helix.DB.generatePersistenceSchemaFromDB(tableName, null, function(subSchema) {
-                if (isOneToMany) {
-                    parentSchema.hasMany(parentField, subSchema, inverseField);
-                } else {
-                    subSchema.hasMany(inverseField, parentSchema, parentField);
+                if (subSchema) {
+                    if (isOneToMany) {
+                        parentSchema.hasMany(parentField, subSchema, inverseField);
+                    } else {
+                        subSchema.hasMany(inverseField, parentSchema, parentField);
+                    }
                 }
                 parentSchema.__pm_subSchemas[parentField] = subSchema;
                 oncomplete(parentField, subSchema);
@@ -1151,6 +1153,7 @@ function initHelixDB() {
      */
         synchronizeObjectByKey: function(key,objSchema,callback) {
             var loadDone = function(persistentObj) {
+                persistentObj.__hx_schema = objSchema;
                 callback(persistentObj);
             };
             var keyField = this.getKeyField(objSchema);

@@ -67,7 +67,6 @@
             this.refresh();
             var _self = this;
             $( window ).on( "orientationchange", function( event ) {
-                alert($(window).width());
                 _self.refresh();
             });
         },

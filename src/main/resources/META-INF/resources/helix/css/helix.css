@@ -229,3 +229,21 @@ a {
 
 /* Without this override our datalist component is cut off inside of overlay panels. */
 .ui-content .ui-listview, .ui-panel-inner > .ui-listview { margin: 0px; }
+
+/* Special styles for mini forms (on phones). */
+.hx-mini-fieldcontain {
+    padding: .2em;
+}
+
+.hx-mini-fieldcontain .ui-input-text {
+    display: inline-block;
+}
+
+.hx-mini-fieldcontain .ui-input-text .ui-body-c {
+    font-size: small;
+}
+
+.hx-mini-fieldcontain .ui-btn-text {
+    font-size: x-small;
+}
+

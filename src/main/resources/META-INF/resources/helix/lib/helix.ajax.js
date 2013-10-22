@@ -118,6 +118,14 @@ Helix.Ajax = {
         
     },
     
+    isDeviceOnline : function() {
+        if (Helix.Ajax.forceDeviceOffline) {
+            return false;
+        }
+        
+        return navigator.onLine;
+    },
+    
     /**
      * Show a loader with a text message.
      * 
@@ -220,7 +228,7 @@ Helix.Ajax = {
                 }
             }
         };
-        if (navigator.onLine) {
+        if (Helix.Ajax.isDeviceOnline()) {
             loadCommandOptions.syncOverrides = {};
             loadCommandOptions.syncOverrides.schemaMap = {};
             for (var i = 0; i < nObjsToSync; ++i) {
@@ -235,9 +243,9 @@ Helix.Ajax = {
             // Run each item individually and synchronously.
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
-                    commandToLaunch = loadCommandOptions.commands[i].name;
+                    commandToLaunch = loadCommandOptions.commands[idx].name;
                     commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
-                    var itemKey = loadCommandOptions.commands[i].key;
+                    var itemKey = loadCommandOptions.commands[idx].key;
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 }
             };
@@ -249,7 +257,9 @@ Helix.Ajax = {
     synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
         var origOncomplete = loadCommandOptions.oncomplete;
         loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
-            origOncomplete(finalKey, name, finalObj);
+            if (origOncomplete) {
+                origOncomplete(finalKey, name, finalObj);
+            }
             onComplete(opaque);
             loadCommandOptions.oncomplete = origOncomplete;
         };
@@ -297,7 +307,7 @@ Helix.Ajax = {
             value: loadCommandOptions.requestOptions.loadKey
         });
 
-        if (!navigator.onLine) {
+        if (!Helix.Ajax.isDeviceOnline()) {
             // Use the key to sync from the local DB.
             if (itemKey) {
                 Helix.DB.synchronizeObjectByKey(itemKey,loadCommandOptions.schema,function(widget) {

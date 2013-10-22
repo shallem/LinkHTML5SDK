@@ -190,7 +190,56 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
     }
 }
 
-Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers) {
+function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
+    if (mode) {
+        /* Edit */
+        if (mode && !formElem.name) {
+            /* No field name. We cannot edit this field. */
+            return;
+        }
+
+        var inputMarkup = $('<input />').attr({
+            'name': formElem.name,
+            'id' : formElem.name,
+            'type': 'text',
+            'value': formElem.value
+        });
+
+        if (!formElem.style) {
+            formElem.style = 'width: 90%';
+        }
+        var textContainer = $('<div />').attr({
+            'data-role' : 'fieldcontain',
+            'style' : formElem.style,
+            'class' : 'hx-mini-fieldcontain'
+        })
+        .append($('<label />').attr({
+            'for' : formElem.name
+            })
+            .append(formElem.fieldTitle)
+        )
+        .append(inputMarkup);
+        $fieldContainer.append(textContainer);
+        textContainer.fieldcontain();
+        $(inputMarkup).textinput();
+        if (formElem.fieldTitleType === 'button') {
+            $(formElem.fieldTitle).button();
+        }
+        if (formElem.onblur) {
+            $(inputMarkup).blur(function() {
+                formElem.onblur(this);
+            });
+        }
+    } else {
+        if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
+            $fieldContainer.append(" " + formElem.value);
+        } else {
+            $fieldContainer.append($('<p />').append(formElem.value));
+        }
+    }
+}
+
+Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers, useMiniLayout) {
     if (formElem.hidden) {
         return;
     }
@@ -226,51 +275,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
     formElem.DOM = $fieldContainer;
     
     if (formElem.type == "text") {
-        if (mode) {
-            /* Edit */
-            if (mode && !formElem.name) {
-                /* No field name. We cannot edit this field. */
-                return;
-            }
-            
-            var inputMarkup = $('<input />').attr({
-                'name': formElem.name,
-                'id' : formElem.name,
-                'type': 'text',
-                'value': formElem.value
-            });
-
-            if (!formElem.style) {
-                formElem.style = 'width: 90%';
-            }
-            var textContainer = $('<div />').attr({
-                'data-role' : 'fieldcontain',
-                'style' : formElem.style
-            })
-            .append($('<label />').attr({
-                'for' : formElem.name
-                })
-                .append(formElem.fieldTitle)
-            )
-            .append(inputMarkup);
-            $fieldContainer.append(textContainer);
-            textContainer.fieldcontain();
-            $(inputMarkup).textinput();
-            if (formElem.fieldTitleType === 'button') {
-                $(formElem.fieldTitle).button();
-            }
-            if (formElem.onblur) {
-                $(inputMarkup).blur(function() {
-                    formElem.onblur(this);
-                });
-            }
-        } else {
-            if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
-                $fieldContainer.append(" " + formElem.value);
-            } else {
-                $fieldContainer.append($('<p />').append(formElem.value));
-            }
-        }
+        __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type == 'textarea') {
         __appendTextArea(mode, formElem, $fieldContainer);
     } else if (formElem.type == 'pickList') {
@@ -428,7 +433,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.items.length; ++elemIdx) {
             var subElem = formElem.items[elemIdx];
-            Helix.Utils.layoutFormElement(subElem, parentDiv, true, false, page);
+            Helix.Utils.layoutFormElement(subElem, parentDiv, true, false, page, null, useMiniLayout);
         }
 
         /* Add a button to submit the dialog. */
@@ -606,7 +611,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
  */
 Helix.Utils.nSubPanels = 0;
 Helix.Utils.dynamicDialogs = {};
-Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
+Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     var mode = formLayout.mode;
     var newScrollers = [];
     var separateElements = formLayout.separateElements;
@@ -625,7 +630,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
     var formElements = formLayout.items;
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page, newScrollers);
+        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page, newScrollers, useMiniLayout);
     }
     
     if (formLayout.subPanels) {
@@ -645,7 +650,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page) {
             // but not between items in each element.
             for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
                 formElem = formSubPanelItems[elemIdx];
-                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page, newScrollers);
+                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page, newScrollers, useMiniLayout);
             }
             
             // Make sure we have a dynamic page used to create new items in this 

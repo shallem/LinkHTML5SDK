@@ -41,7 +41,16 @@
             /**
              * True if a horizontal separator should be placed in between field.
              */
-            separateElements: false
+            separateElements: false,
+            
+            /**
+             * Object mapping device types to a constant, true or false, which indicates
+             * if the form layout should be in "mini" mode for that device type. Supported
+             * device types are "tablet", "phablet", and "phone". The default is { "phone" : true }.
+             */
+            useMiniLayout : {
+                "phone" : true
+            }
         },
 
         _create: function() {
@@ -84,8 +93,14 @@
                         }
                     }
                 }
-            }    
-           Helix.Utils.layoutForm(this.element, this.options, this.page);
+            }
+            
+            var layoutMini = false;
+            if (Helix.deviceType in this.options.useMiniLayout &&
+                this.options.useMiniLayout[Helix.deviceType]) {
+                layoutMini = true;
+            }
+            Helix.Utils.layoutForm(this.element, this.options, this.page, layoutMini);
         },
         
         serialize: function() {
