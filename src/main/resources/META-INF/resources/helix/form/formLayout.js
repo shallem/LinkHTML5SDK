@@ -59,7 +59,9 @@
             }
             this.page = $(this.element).closest('[data-role="page"]');
             if (this.options.items.length > 0) {
+                this.rendered = false;
                 this.refresh();
+                this.rendered = true;
             }
         },
     
@@ -72,12 +74,19 @@
         refresh: function(valuesMap) { 
             if (!valuesMap) {
                 this.clear();
-                return;
+                if (this.rendered) {
+                    return;
+                }
             }
             
             var idx = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var fldName = this.options.items[idx].name;
+                if (!valuesMap) {
+                    this.options.items[idx].value = null;
+                    continue;
+                }
+                
                 if (fldName in valuesMap) {
                     this.options.items[idx].value = valuesMap[fldName];
                 }

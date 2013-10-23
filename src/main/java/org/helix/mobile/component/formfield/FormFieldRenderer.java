@@ -49,7 +49,7 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getStyleClassMap() != null) {
             writer.write("'styleClass' : " + ffield.getStyleClassMap() + ",");
         } else if (ffield.getStyleClass() != null) {
-            writer.write(", 'styleClass' : '" + ffield.getStyleClass() + "'");
+            writer.write("'styleClass' : '" + ffield.getStyleClass() + "',");
         }
         
         if (ffield.getValueText() != null) {
