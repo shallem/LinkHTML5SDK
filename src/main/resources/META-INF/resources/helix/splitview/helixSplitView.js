@@ -53,7 +53,6 @@
 
         _create: function() {
             // Setup styling of the parent element.
-            $(this.element).addClass('splitMaster');
             $(this.element).addClass('pm-layout-full-height');
         
             // Get the left/right.
@@ -82,7 +81,9 @@
             if (curWidth > this.options.splitThreshold) {
                 var leftWidth = Math.floor((this.options.leftWidth / 100) * curWidth);
                 var rightWidth = Math.floor((this.options.rightWidth / 100) * curWidth) - this.options.splitPadding;
-                
+               
+                $(this.element).addClass('hx-split-master');
+            
                 $(this.__left).addClass('hx-split-left-area').addClass('pm-layout-full-height');
                 $(this.__left).width(leftWidth);
                 $(this.__right).addClass('hx-split-right-area').addClass('pm-layout-full-height');

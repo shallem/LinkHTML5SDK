@@ -35,15 +35,27 @@ public class FormFieldRenderer extends CoreRenderer {
         writer.write("'id' : '" + ffield.getName() + "',");
         writer.write("'name' : '" + ffield.getName() + "',");
         writer.write("'type' : '" + ffield.getType() + "',");
-        writer.write("'width' : '" + ffield.getWidth() + "',");
+        if (ffield.getWidthMap() != null) {
+            writer.write("'width' : " + ffield.getWidthMap() + ",");
+        } else if (ffield.getWidth() != null) {
+            writer.write("'width' : '" + ffield.getWidth() + "',");
+        }
+        if (ffield.getStyleMap() != null) {
+            writer.write("'style' : " + ffield.getStyleMap() + ",");
+        } else if (ffield.getStyle() != null) {
+            writer.write("'style' : '" + ffield.getStyle() + "',");
+        }
+        
+        if (ffield.getStyleClassMap() != null) {
+            writer.write("'styleClass' : " + ffield.getStyleClassMap() + ",");
+        } else if (ffield.getStyleClass() != null) {
+            writer.write(", 'styleClass' : '" + ffield.getStyleClass() + "'");
+        }
         
         if (ffield.getValueText() != null) {
             writer.write("'value' : '" + ffield.getValueText() + "'");
         } else {
             writer.write("'value' : ''");
-        }
-        if (ffield.getStyleClass() != null) {
-            writer.write(", 'styleClass' : '" + ffield.getStyleClass() + "'");
         }
         if (ffield.getTitleStyleClass() != null) {
             writer.write(", 'titleStyleClass' : '" + ffield.getTitleStyleClass() + "'");

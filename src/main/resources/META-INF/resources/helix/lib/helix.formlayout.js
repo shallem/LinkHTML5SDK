@@ -169,9 +169,6 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
             }
         }
 
-        if (!formElem.style) {
-            formElem.style = 'width: 90%';
-        }
         var selectContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formElem.style
@@ -204,10 +201,7 @@ function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
             'type': 'text',
             'value': formElem.value
         });
-
-        if (!formElem.style) {
-            formElem.style = 'width: 90%';
-        }
+        
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formElem.style,
@@ -239,10 +233,43 @@ function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
     }
 }
 
+function __preprocessFormElement(formElem) {
+    if (formElem.styleClass) {
+        if (!Helix.Utils.isString(formElem.styleClass)) {
+            formElem.styleClass = 
+                (formElem.styleClass[Helix.deviceType] ?  formElem.styleClass[Helix.deviceType] : formElem.styleClass['default']);
+        }
+    }
+    
+    if (!formElem.style) {
+        formElem.style = '';
+    } else {
+        if (!Helix.Utils.isString(formElem.style)) {
+            formElem.style = 
+                (formElem.style[Helix.deviceType] ?  formElem.style[Helix.deviceType] : formElem.style['default']);
+        } else {
+            formElem.style = formElem.style + ";";
+        }
+    }
+
+    if (formElem.width) {
+        if (!Helix.Utils.isString(formElem.width)) {
+            /* Mapping from device type to width. */
+            formElem.style = formElem.style + 'width: ' + 
+                (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
+        } else {
+            formElem.style = formElem.style + 'width: ' + formElem.width;
+        }
+    } else {
+        formElem.style = 'width: 90%';
+    }    
+}
+
 Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers, useMiniLayout) {
     if (formElem.hidden) {
         return;
     }
+    __preprocessFormElement(formElem);
     
     var $fieldContainer;
     if (!mode) {
@@ -311,7 +338,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'widget' : editorID + "_widget",
                 'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
                 'isFullWidth' : isFullWidth,
-                'height' : (formElem.height ? formElem.height : 250),
+                'height' : (formElem.height ? formElem.height : 350),
                 'page' : page
             });
         } else {

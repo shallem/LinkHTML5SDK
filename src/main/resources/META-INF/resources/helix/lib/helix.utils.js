@@ -141,5 +141,8 @@ Helix.Utils =  {
     },
     escapeQuotes : function(str) {
         return str.replace(/"/g, "&quot;");
+    },
+    isString: function(x) {
+        return typeof x == "string" || (typeof x == "object" && x.constructor === String);
     }
 }

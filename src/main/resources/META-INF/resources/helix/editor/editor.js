@@ -26,11 +26,19 @@
             height:       300, // height not including margins, borders or padding
             controls:     // controls to add to the toolbar
             {
-                styles: "bold italic underline strikethrough subscript superscript",
-                font: "font size color highlight",
-                formats: "bullets numbering | outdent indent | alignleft center alignright justify" +
-                " | rule link unlink", /* image */
-                actions : "undo redo removeformat"
+                "default": {
+                    styles: "bold italic underline strikethrough subscript superscript",
+                    font: "font size color highlight",
+                    formats: "bullets numbering | outdent indent | alignleft center alignright justify" +
+                    " | rule link unlink", /* image */
+                    actions : "undo redo removeformat"
+                },
+                "phone" : {
+                    styles: "bold italic underline strikethrough subscript superscript",
+                    font: "font size color highlight",
+                    formats: "bullets numbering | outdent indent | alignleft center alignright justify",
+                    actions : "undo redo removeformat"
+                }
             }
             ,
             colors:       // colors in the color popup
@@ -196,6 +204,10 @@
         // Get the defaults and override with options
         editor.options = options = $.extend({}, $.cleditor.defaultOptions, options);
 
+        // Determine the set of controls based on the device type.
+        editor.controls = 
+            (options.controls[Helix.deviceType] ? options.controls[Helix.deviceType] : options.controls["default"]);
+
         // Hide the textarea and associate it with this editor
         var $area = editor.$area = $(area)
         .hide()
@@ -233,127 +245,154 @@
         //.attr('style', 'float: right;');
         //.insertAfter($main);
 
-        // Add the styling commands popup to the button bar
-        var $styleCommands = $(A_TAG)
-        .attr({
-            'href' : '#stylesPopup',
-            'data-rel' : "popup",
-            'data-role' : "button",
-            'data-theme' : "a"
-        }).append("Styles")
-        .appendTo($toolbar);
+        var doMini = 'false';
+        if (Helix.deviceType !== "tablet") {
+            doMini = 'true';
+        }
 
-        // Add the font commands popup to the button bar
-        var $fontCommands = $(A_TAG)
-        .attr({
-            'href' : '#fontsPopup',
-            'data-rel' : "popup",
-            'data-role' : "button",
-            'data-theme' : "a"
-        }).append("Font")
-        .appendTo($toolbar);
+        var $styleCommands = null;
+        var $styleMenuPopup = null;
+        var $styleMenu = null;
+        if (editor.controls.styles) {
+            // Add the styling commands popup to the button bar
+            $styleCommands = $(A_TAG)
+            .attr({
+                'href' : '#stylesPopup',
+                'data-rel' : "popup",
+                'data-role' : "button",
+                'data-theme' : "a",
+                'data-mini' : doMini
+            }).append("Styles")
+            .appendTo($toolbar);
 
-        // Add the format commands popup to the button bar
-        var $formatCommands = $(A_TAG)
-        .attr({
-            'href' : '#formatsPopup',
-            'data-rel' : "popup",
-            'data-role' : "button",
-            'data-theme' : "a"
-        }).append("Format")
-        .appendTo($toolbar);
-       
-        // Add the actions commands popup to the button bar
-        var $actionCommands = $(A_TAG)
-        .attr({
-            'href' : '#actionPopup',
-            'data-rel' : "popup",
-            'data-role' : "button",
-            'data-theme' : "a"
-        }).append("Actions")
-        .appendTo($toolbar);
+            $styleMenuPopup = $(DIV_TAG)
+            .attr({
+                'data-role' : 'popup',
+                'data-history': 'false',
+                'data-theme' : 'a',
+                'id' : 'stylesPopup'
+            }).appendTo($parent);
+            
+            $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
+                'data-role' : 'listview',
+                'data-inset' : 'true',
+                'style' : 'min-width:210px;',
+                'data-theme' : 'b'
+            }).appendTo($styleMenuPopup);
+            $.each(editor.controls.styles.split(" "), function(idx, buttonName) {
+                addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
+            });
+        }
 
-        // Now add in the actual popups
-        var $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
-            'data-role' : 'listview',
-            'data-inset' : 'true',
-            'style' : 'min-width:210px;',
-            'data-theme' : 'b'
-        });
-        var $fontMenuPopup = $(DIV_TAG)
-        .attr({
-            'data-role' : 'popup',
-            'data-history': 'false',
-            'data-theme' : 'a',
-            'id' : 'fontsPopup'
-        }).append($fontMenu)
-        .appendTo($parent);
-        $.each(options.controls.font.split(" "), function(idx, buttonName) {
-            addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
-        });
-    
-        var $styleMenuPopup = $(DIV_TAG)
-        .attr({
-            'data-role' : 'popup',
-            'data-history': 'false',
-            'data-theme' : 'a',
-            'id' : 'stylesPopup'
-        }).appendTo($parent);
-        var $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
-            'data-role' : 'listview',
-            'data-inset' : 'true',
-            'style' : 'min-width:210px;',
-            'data-theme' : 'b'
-        }).appendTo($styleMenuPopup);
-        $.each(options.controls.styles.split(" "), function(idx, buttonName) {
-            addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
-        });
+        var $fontCommands = null;
+        var $fontMenu = null;
+        var $fontMenuPopup = null;
+        if (editor.controls.font) {
+            // Add the font commands popup to the button bar
+            $fontCommands = $(A_TAG)
+            .attr({
+                'href' : '#fontsPopup',
+                'data-rel' : "popup",
+                'data-role' : "button",
+                'data-theme' : "a",
+                'data-mini' : doMini
+            }).append("Font")
+            .appendTo($toolbar);            
+        
+            // Create the fonts popup.
+            $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
+                'data-role' : 'listview',
+                'data-inset' : 'true',
+                'style' : 'min-width:210px;',
+                'data-theme' : 'b'
+            });
+            
+            $fontMenuPopup = $(DIV_TAG)
+            .attr({
+                'data-role' : 'popup',
+                'data-history': 'false',
+                'data-theme' : 'a',
+                'id' : 'fontsPopup'
+            }).append($fontMenu)
+            .appendTo($parent);
+            $.each(editor.controls.font.split(" "), function(idx, buttonName) {
+                addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
+            });
+        }
 
-        var $formatMenuPopup = $(DIV_TAG)
-        .attr({
-            'data-role' : 'popup',
-            'data-history': 'false',
-            'data-theme' : 'a',
-            'id' : 'formatsPopup'
-        }).appendTo($parent);
-        var $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
-            'data-role' : 'listview',
-            'data-inset' : 'true',
-            'style' : 'min-width:210px;',
-            'data-theme' : 'b'
-        }).appendTo($formatMenuPopup);
-        $.each(options.controls.formats.split(" "), function(idx, buttonName) {
-            addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
-        });
+        var $formatCommands = null;
+        var $formatMenuPopup = null;
+        var $formatMenu = null;
+        if (editor.controls.formats) {
+            // Add the format commands popup to the button bar
+            $formatCommands = $(A_TAG)
+            .attr({
+                'href' : '#formatsPopup',
+                'data-rel' : "popup",
+                'data-role' : "button",
+                'data-theme' : "a",
+                'data-mini' : doMini
+            }).append("Format")
+            .appendTo($toolbar);            
 
-        var $actionMenuPopup = $(DIV_TAG)
-        .attr({
-            'data-role' : 'popup',
-            'data-history': 'false',
-            'data-theme' : 'a',
-            'id' : 'actionPopup'
-        }).appendTo($parent);
-        var $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
-            'data-role' : 'listview',
-            'data-inset' : 'true',
-            'style' : 'min-width:210px;',
-            'data-theme' : 'b'
-        }).appendTo($actionMenuPopup);
-        $.each(options.controls.actions.split(" "), function(idx, buttonName) {
-            addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
-        });        
+            $formatMenuPopup = $(DIV_TAG)
+            .attr({
+                'data-role' : 'popup',
+                'data-history': 'false',
+                'data-theme' : 'a',
+                'id' : 'formatsPopup'
+            }).appendTo($parent);
+            
+            $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
+                'data-role' : 'listview',
+                'data-inset' : 'true',
+                'style' : 'min-width:210px;',
+                'data-theme' : 'b'
+            }).appendTo($formatMenuPopup);
+            $.each(editor.controls.formats.split(" "), function(idx, buttonName) {
+                addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
+            });
+        }
+        
+        var $actionCommands = null;
+        var $actionMenuPopup = null;
+        var $actionMenu = null;
+        if (editor.controls.actions) {
+            // Add the actions commands popup to the button bar
+            $actionCommands = $(A_TAG)
+            .attr({
+                'href' : '#actionPopup',
+                'data-rel' : "popup",
+                'data-role' : "button",
+                'data-theme' : "a",
+                'data-mini' : doMini
+            }).append("Actions")
+            .appendTo($toolbar);
+            
+            /* The action menu is "nice-to-have". Skip it on smaller screens. */
+            $actionMenuPopup = $(DIV_TAG)
+            .attr({
+                'data-role' : 'popup',
+                'data-history': 'false',
+                'data-theme' : 'a',
+                'id' : 'actionPopup'
+            }).appendTo($parent);
+            
+            $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
+                'data-role' : 'listview',
+                'data-inset' : 'true',
+                'style' : 'min-width:210px;',
+                'data-theme' : 'b'
+            }).appendTo($actionMenuPopup);
+            $.each(editor.controls.actions.split(" "), function(idx, buttonName) {
+                addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
+            });        
+        }
+        
+        /* Attach the toolbar to the enclosing div. */
         $toolbar.appendTo($main);
         
-        $styleMenu.listview();
-        $formatMenu.listview();
-        $fontMenu.listview()
-        $actionMenu.listview();
-        
-        $styleCommands.button();
-        $fontCommands.button();
-        $actionCommands.button();
-        $formatCommands.button();
-        
+        /* Instantiate the menus. */
         var popupOptions = {
             beforeposition: function() {
                 focus(editor);
@@ -362,10 +401,34 @@
                 focus(editor);
             }
         };
-        $fontMenuPopup.popup(popupOptions);
-        $styleMenuPopup.popup(popupOptions);
-        $formatMenuPopup.popup(popupOptions);
-        $actionMenuPopup.popup(popupOptions);
+        
+        /* Style */
+        if ($styleMenu && $styleCommands && $styleMenuPopup) {
+            $styleMenu.listview();
+            $styleCommands.button();
+            $styleMenuPopup.popup(popupOptions);            
+        }
+        
+        /* Format */
+        if ($formatMenu && $formatCommands && $formatMenuPopup) {
+            $formatMenu.listview();
+            $formatCommands.button();
+            $formatMenuPopup.popup(popupOptions);            
+        }
+        
+        /* Fonts */
+        if ($fontMenu && $fontCommands && $fontMenuPopup) {
+            $fontMenu.listview()
+            $fontCommands.button();
+            $fontMenuPopup.popup(popupOptions);
+        }
+        
+        /* Action. */
+        if ($actionMenu && $actionCommands && $actionMenuPopup) {
+            $actionMenu.listview();
+            $actionCommands.button();
+            $actionMenuPopup.popup(popupOptions);
+        }
     
         $toolbar.controlgroup();
 
@@ -528,9 +591,9 @@
         else if (buttonName == "style")
             value = "<" + target.tagName + ">";
         else if (buttonName == "color")
-            value = hex(target.style.backgroundColor);
+            value = e.data.color;
         else if (buttonName == "highlight") {
-            value = hex(target.style.backgroundColor);
+            value = e.data.color;
             useCSS = true;
         }
 
@@ -597,34 +660,19 @@
         }
         // Color
         else if (button.popupName == "color") {
-            var colorPicker = $popup;
-            var colorDiv = $(DIV_TAG).attr({
-                'style' : 'background-color: #ffffff; color: #000000'
-            }).append("Select a Color").appendTo(colorPicker);
-            $(colorPicker).ColorPicker({
-                color: '#ffffff',
-                eventName: 'tap',
-                onShow: function (colpkr) {
-                    $(colpkr).fadeIn(500);
-                    /* Bring in front of the popup. */
-                    $(colpkr).css('zIndex', 9999);
-                    return false;
-                },
-                onHide: function (colpkr) {
-                    $(colpkr).fadeOut(500);
-                    return false;
-                },
-                onChange: function (hsb, hex, rgb) {
-                    var updateDiv = $(colorPicker).find('div');
-                    updateDiv.css('backgroundColor', '#' + hex);
+            var colorInput = $('<input/>').appendTo($popup).spectrum({
+                color: 'black',
+                change: function(color) {
                     popupClick.call(editor, {
-                        target: updateDiv[0], 
+                        target: colorInput, 
                         data : { 
-                            popup: popupDiv 
+                            popup: popupDiv,
+                            color: color
                         } 
                     });
                 }
             });
+            
         }
 
         // Font

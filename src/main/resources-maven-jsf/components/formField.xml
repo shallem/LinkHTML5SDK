@@ -27,8 +27,14 @@
             <name>width</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Width of this field. Default to full screen width. Otherwise specify as a percentage.</description>
+            <description>Width of this field. Default to 90% screen width. Otherwise specify as a percentage.</description>
             <defaultValue>full</defaultValue>
+        </attribute>
+        <attribute>
+            <name>widthMap</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Width of this field as a map from device type to width values. Default to 90% screen width. Otherwise specify as a percentage.</description>
         </attribute>
         <attribute>
             <name>type</name>
@@ -49,10 +55,28 @@
             <description>Optional, dynamic condition that determines if this form element is visible. Can either be a field name or a standalone expression.</description>
         </attribute>
         <attribute>
+            <name>style</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style for the field contents.</description>
+        </attribute>
+        <attribute>
+            <name>styleMap</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional map from device type to style. Overrides the style attribute.</description>
+        </attribute>
+        <attribute>
             <name>styleClass</name>
             <required>false</required>
             <type>java.lang.String</type>
             <description>Optional style class for the field contents.</description>
+        </attribute>
+        <attribute>
+            <name>styleClassMap</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional map from device type to style class. Overrides the styleClass attribute.</description>
         </attribute>
         <attribute>
             <name>titleStyleClass</name>

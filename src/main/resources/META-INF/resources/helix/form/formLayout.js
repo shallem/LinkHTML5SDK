@@ -54,6 +54,9 @@
         },
 
         _create: function() {
+            if (this.options.useMiniLayout[Helix.deviceType]) {
+                $(this.element).addClass('hx-form-mini');
+            }
             this.page = $(this.element).closest('[data-role="page"]');
             if (this.options.items.length > 0) {
                 this.refresh();
@@ -68,6 +71,7 @@
          */
         refresh: function(valuesMap) { 
             if (!valuesMap) {
+                this.clear();
                 return;
             }
             
@@ -136,6 +140,31 @@
                 });
             }
             return $.param(toSerialize);
+        },
+        clear: function() {
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                var fieldType = this.options.items[idx].type;
+                if (fieldType !== "htmlarea" &&
+                    fieldType !== "text" &&
+                    fieldType !== "textarea" &&
+                    fieldType !== "pickList" &&
+                    fieldType !== "hidden") {
+                    /* All other types have nothing to clear.. */
+                    continue;
+                }
+                $('[name="' + fieldID + '"]').each(function() {
+                    if (fieldType === "htmlarea") {
+                        var $editor = $(this).data('cleditor');
+                        $editor.clear();
+                    } else if (fieldType === "pickList") { 
+                        $(this).find('option:selected').removeAttr('selected');
+                    } else {
+                        $(this).val('');
+                    }
+                });
+            }
         }
     });
 }( jQuery ));

@@ -283,14 +283,15 @@ Helix.Layout = {
         var width = $(window).width();
 
         /* In our mobile framework we never let pages scroll. Elements inside can scroll
-        * using the scrollingDiv. Here we just take the min-height that jQuery has assigned
-        * to a particular page and turn it into the page height. 
-        */
-        page.height(height);
-
+         * using the scrollingDiv. jQuery Mobile lays out headers and footers by attaching
+         * an appropriately sized padding to the page. This means that to prevent any
+         * scrolling by the browser we need to size the page contents to be the difference
+         * between the viewport height and the combined header/footer height. 
+         */
         var headerHeight = page.find('[data-role="header"]').height();
         var footerHeight = page.find('[data-role="footer"]').height();
-        var contentHeight = (.99 * height) - headerHeight - footerHeight;
+        var contentHeight = height - headerHeight - footerHeight;
+        //page.height(contentHeight);
         page.find('.hx-main-content').css('height', contentHeight);
         page.find('.hx-main-content').each(function() {
             //var innerWidth = width - (this.offsetWidth - this.clientWidth);

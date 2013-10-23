@@ -1153,7 +1153,9 @@ function initHelixDB() {
      */
         synchronizeObjectByKey: function(key,objSchema,callback) {
             var loadDone = function(persistentObj) {
-                persistentObj.__hx_schema = objSchema;
+                if (persistentObj) {
+                    persistentObj.__hx_schema = objSchema;
+                }
                 callback(persistentObj);
             };
             var keyField = this.getKeyField(objSchema);
