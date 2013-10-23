@@ -60,11 +60,11 @@
             ["Header 6","<h6>"]],
             useCSS:       false, // use CSS to style HTML when possible (not supported in ie)
             docType:      // Document type contained within the editor
-            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">',
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
             docCSSFile:   // CSS file used to style the document contained within the editor
             "",
             bodyStyle:    // style to assign to document body contained within the editor
-            "margin:4px; font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word"
+            "font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word; -webkit-transform: translate3d(0,0,0);"
         },
 
         // Define all usable toolbar buttons - the init string property is
@@ -762,6 +762,7 @@
 
     // execCommand - executes a designMode command
     function execCommand(editor, command, value, useCSS, button) {
+        editor.$frame[0].contentWindow.focus();
 
         // Set the styling method
         if (useCSS === undefined || useCSS === null)
@@ -771,7 +772,6 @@
         // Execute the command and check for error
         var success = true, description;
         try {
-            editor.$frame[0].contentWindow.focus();
             success = editor.doc.execCommand(command, 0, value || null);
             if (success && (button.type == "font" || button.type == "style")) {
                 if (button.type === "style") {
@@ -911,7 +911,7 @@
         if (editor.$frame) {
             $frame = editor.$frame;
         } else {
-            $frame = editor.$frame = $('<iframe frameborder="1" src="javascript:true;">')
+            $frame = editor.$frame = $('<iframe style="margin-bottom: 5px;" src="javascript:true;">')
                 .hide()
                 .appendTo($main);
         }
@@ -935,7 +935,7 @@
 
         // Update the textarea when the iframe changes. But wait until the typist has stopped
         // before we do this update.
-        $doc.change(function(e) {
+        $doc.on('keyup', function(e) {
             if (editor.changeTimeout) {
                 clearTimeout(editor.changeTimeout);
                 editor.changeTimeout = null;
@@ -943,6 +943,8 @@
             editor.changeTimeout = setTimeout(function() {
                 updateTextArea(editor, true);
             }, 3);
+            e.preventDefault();
+            e.stopImmediatePropagation();
         });
    
         //var $toolbar = editor.$toolbar,
@@ -1101,12 +1103,6 @@
                 popup: popup
             }, $.proxy(popupClick, editor));
         }
-
-        // Focus the first input element if any
-        setTimeout(function() {
-            //$popup.find(":text,textarea").eq(0).focus().select();
-            }, 100);
-
     }
 
     // sourceMode - returns true if the textarea is showing

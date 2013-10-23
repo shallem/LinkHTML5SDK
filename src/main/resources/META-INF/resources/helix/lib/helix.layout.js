@@ -288,10 +288,14 @@ Helix.Layout = {
          * scrolling by the browser we need to size the page contents to be the difference
          * between the viewport height and the combined header/footer height. 
          */
-        var headerHeight = page.find('[data-role="header"]').height();
+        var $header = page.find('[data-role="header"]');
+        var headerHeight = $header.height();
         var footerHeight = page.find('[data-role="footer"]').height();
-        var contentHeight = height - headerHeight - footerHeight;
-        //page.height(contentHeight);
+        var contentHeight = height - footerHeight;
+        if ($header.is('[data-position="fixed"]')) {
+            contentHeight = contentHeight - headerHeight;
+        }
+        page.height(contentHeight);
         page.find('.hx-main-content').css('height', contentHeight);
         page.find('.hx-main-content').each(function() {
             //var innerWidth = width - (this.offsetWidth - this.clientWidth);
