@@ -146,7 +146,7 @@
 					}
 					return this;
 				},
-				set: function(type, amount) {
+				dbset: function(type, amount) {
 					/* A chainable version of setWhatever() */
 					switch ( type ) {
 						case 0: this.setFullYear(amount); break;
@@ -183,15 +183,15 @@
 					return [this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds()];
 				},
 				setFirstDay: function (day) {
-					this.set(2,1).adj(2, (day - this.getDay()));
+					this.dbset(2,1).adj(2, (day - this.getDay()));
 					if ( this.get(2) > 10 ) { this.adj(2,7); }
 					return this; 
 				},
 				setWeek: function (type,num) {
 					if ( type === 4 ) {
-						return this.set(1,0).set(2,1).setFirstDay(4).adj(2,-3).adj(2,(num-1)*7);
+						return this.dbset(1,0).dbset(2,1).setFirstDay(4).adj(2,-3).adj(2,(num-1)*7);
 					}
-					return this.set(1,0).set(2,1).setFirstDay(type).adj(2,(num-1)*7);
+					return this.dbset(1,0).dbset(2,1).setFirstDay(type).adj(2,(num-1)*7);
 				},
 				getWeek: function (type) {
 					var t1, t2;
@@ -505,7 +505,7 @@
 					date.setWeek(d.wtyp, d.week);
 					if ( d.date > -1 ) { date.setDate(d.date); } 
 				}
-				if ( d.yday !== false ) { date.set(1,0).set(2,1).adj(2,(d.yday-1)); }
+				if ( d.yday !== false ) { date.dbset(1,0).dbset(2,1).adj(2,(d.yday-1)); }
 				if ( d.wday !== false ) { date.adj(2,(d.wday - date.getDay())); }
 			}
 			return date;

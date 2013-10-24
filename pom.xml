@@ -285,8 +285,8 @@
 		    <include>primefaces-js/growl.js</include>
 
 		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
-		    <include>datebox/jqm-datebox.core.js</include>
-		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
+		    <!-- <include>datebox/jqm-datebox.core.js</include> -->
+		    <!-- <include>datebox/jqm-datebox.mode.flipbox.js</include> -->
 
 		    <include>colorpicker/spectrum.js</include>
 
@@ -328,7 +328,7 @@
 		    <include>datalist/datalist.js</include>
 
 		    <!-- Form Layout -->
-		    <include>form/formLayout.js</include>
+		    <!-- <include>form/formLayout.js</include> -->
 
 		    <!-- Scrolling Div -->
 		    <include>scrollingdiv/scrollingdiv.js</include>

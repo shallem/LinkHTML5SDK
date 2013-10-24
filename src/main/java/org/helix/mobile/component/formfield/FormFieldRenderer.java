@@ -17,6 +17,7 @@ package org.helix.mobile.component.formfield;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
@@ -31,10 +32,21 @@ public class FormFieldRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         FormField ffield = (FormField) component;
+        if (ffield.isEditOnly() && ffield.isViewOnly()) {
+            throw new FacesException("Cannot specify that a form field is both viewOnly and editOnly.");
+        }
+        
         writer.write("{");
         writer.write("'id' : '" + ffield.getName() + "',");
         writer.write("'name' : '" + ffield.getName() + "',");
         writer.write("'type' : '" + ffield.getType() + "',");
+        if (ffield.isViewOnly()) {
+            writer.write("'mode' : 'view',");
+        } else if (ffield.isEditOnly()) {
+            writer.write("'mode' : 'edit',");
+        } else {
+            writer.write("'mode' : 'all',");
+        }
         if (ffield.getWidthMap() != null) {
             writer.write("'width' : " + ffield.getWidthMap() + ",");
         } else if (ffield.getWidth() != null) {
@@ -122,7 +134,7 @@ public class FormFieldRenderer extends CoreRenderer {
             writer.write("]");
         }
         if (ffield.getOnblur() != null) {
-            writer.write(",'onblur' : function(elem) {" + ffield.getOnblur() + "(elem); }");
+            writer.write(",'onblur' : function(elem) {" + ffield.getOnblur() + "; }");
         }
         
         writer.write("}");

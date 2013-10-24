@@ -26,6 +26,9 @@ public class ButtonRenderer extends CoreRenderer {
         if (button.getTheme() != null) {
             writer.writeAttribute("data-theme", button.getTheme(), null);
         }
+        if (button.getId() != null) {
+            writer.writeAttribute("id", button.getId(), null);
+        }
         
         String onclick = button.getOnclick();
         if (!isValueBlank(onclick)) {

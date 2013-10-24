@@ -13,7 +13,7 @@
     <attributes>
         <attribute>
             <name>name</name>
-            <required>true</required>
+            <required>false</required>
             <type>java.lang.String</type>
             <description>Name of the form field.</description>
         </attribute>
@@ -89,6 +89,20 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Text to fill in this field.</description>
+        </attribute>
+        <attribute>
+            <name>editOnly</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field is available in edit mode only.</description>
+        </attribute>
+        <attribute>
+            <name>viewOnly</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field is available in view mode only.</description>
         </attribute>
     </attributes>
 </component>

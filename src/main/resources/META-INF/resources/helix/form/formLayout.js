@@ -150,6 +150,7 @@
             }
             return $.param(toSerialize);
         },
+        
         clear: function() {
             var idx = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
