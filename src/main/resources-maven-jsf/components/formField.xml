@@ -104,5 +104,23 @@
             <defaultValue>false</defaultValue>
             <description>Indicates that this form field is available in view mode only.</description>
         </attribute>
+        <attribute>
+            <name>trueText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>For checkbox fields, displayed in view mode when the value is true. Ignored for other field types.</description>
+        </attribute>
+        <attribute>
+            <name>falseText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>For checkbox fields, displayed in view mode when the value is false. Ignored for other field types.</description>
+        </attribute>
+        <attribute>
+            <name>dataType</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>For text fields, indicate the HTML5 data type. Defaults to text.</description>
+        </attribute>
     </attributes>
 </component>

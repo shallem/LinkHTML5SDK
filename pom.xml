@@ -294,7 +294,7 @@
 		    <include>dialog/helix.dialog.js</include>
 
 		    <!-- Depends on colorpicker. -->
- 		    <include>editor/editor.js</include>
+ 		    <!-- <include>editor/editor.js</include> -->
 
 		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
 		    <include>lib/helix.crypto.js</include>

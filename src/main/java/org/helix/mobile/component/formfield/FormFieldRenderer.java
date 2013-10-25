@@ -133,6 +133,20 @@ public class FormFieldRenderer extends CoreRenderer {
             }
             writer.write("]");
         }
+        if (ffield.getType().equals("checkbox")) {
+            if (ffield.getTrueText() != null) {
+                writer.write(",'truetext': '" + ffield.getTrueText() + "'");
+            }
+            if (ffield.getFalseText() != null) {
+                writer.write(",'falsetext': '" + ffield.getFalseText() + "'");
+            }
+        }
+        if (ffield.getType().equals("text")) {
+            if (ffield.getDataType() != null) {
+                writer.write(",'dataType': '" + ffield.getDataType() + "'");
+            }
+        }
+        
         if (ffield.getOnblur() != null) {
             writer.write(",'onblur' : function(elem) {" + ffield.getOnblur() + "; }");
         }
