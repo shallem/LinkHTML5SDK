@@ -125,6 +125,22 @@ public class FormFieldRenderer extends CoreRenderer {
             }
             writer.write("]");
         }
+        if (ffield.getType().equals("controlset")) {
+            writer.write(",'controls' : [");
+            boolean firstButton = true;
+            for (UIComponent c : ffield.getChildren()) {
+                if (firstButton) {
+                    firstButton = false;
+                } else {
+                    writer.write(",");
+                }
+                if (c instanceof FormField) {
+                    c.encodeAll(context);
+                }
+            }
+            writer.write("]");
+        }
+        
         if (ffield.getType().equals("pickList")) {
             writer.write(",'options' : [");
             boolean firstOption = true;

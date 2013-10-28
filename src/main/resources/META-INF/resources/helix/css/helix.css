@@ -262,8 +262,8 @@ a {
     padding: .2em;
 }
 
-.hx-mini-fieldcontain .ui-input-text {
-    display: inline-block;
+.hx-mini-fieldcontain .ui-input-datebox {
+    padding: .2em;
 }
 
 .hx-mini-fieldcontain .ui-input-text .ui-body-c {
@@ -272,4 +272,12 @@ a {
 
 .hx-mini-fieldcontain .ui-btn-text {
     font-size: x-small;
+}
+
+.hx-display-inline {
+    display: inline-block;
+}
+
+.hx-full-width {
+    width: 100%;
 }

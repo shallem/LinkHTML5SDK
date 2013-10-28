@@ -81,10 +81,10 @@
     background-position: 99% -28px !important; 
 }
 
-.ui-field-contain.ui-input-datebox {
+.ui-field-contain .ui-input-datebox {
     width: auto;
 }
 
-.ui-input-datebox.ui-input-text {
+.ui-input-datebox .ui-input-text {
     width: auto;
 }

@@ -39,10 +39,34 @@
             <description>Indicates if a horizontal separator should be placed in between form fields.</description>
         </attribute>
         <attribute>
-            <name>styleClass</name>
+            <name>fieldStyle</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Style class to apply to this form layout.</description>
+            <description>Optional style for the field container.</description>
+        </attribute>
+        <attribute>
+            <name>fieldStyleMap</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional map from device type to style for the field container. Overrides the style attribute.</description>
+        </attribute>
+        <attribute>
+            <name>fieldStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class for the field container.</description>
+        </attribute>
+        <attribute>
+            <name>fieldStyleClassMap</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional map from device type to style class for the field container. Overrides the styleClass attribute.</description>
+        </attribute>
+        <attribute>
+            <name>titleStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Default style class for all field titles</description>
         </attribute>
     </attributes>
 </component>

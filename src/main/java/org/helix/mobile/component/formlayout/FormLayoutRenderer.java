@@ -29,9 +29,7 @@ public class FormLayoutRenderer extends CoreRenderer {
         FormLayout layout = (FormLayout) component;
         writer.startElement("div", layout);
         writer.writeAttribute("id", layout.getClientId(context), "id"); 
-        if (layout.getStyleClass() != null) {
-            writer.writeAttribute("class", layout.getStyleClass(), null);
-        }
+        
         writer.endElement("div");
         
         startScript(writer, layout.getClientId(context));
@@ -50,6 +48,23 @@ public class FormLayoutRenderer extends CoreRenderer {
             c.encodeAll(context);
         }
         writer.write("]");
+        if (layout.getFieldStyleMap() != null) {
+            writer.write(",'fieldStyle' : " + layout.getFieldStyleMap());
+        } else if (layout.getFieldStyle() != null) {
+            writer.write(",'fieldStyle' : '" + layout.getFieldStyle() + "'");
+        }
+        
+        if (layout.getFieldStyleClassMap() != null) {
+            writer.write(",'fieldStyleClass' : " + layout.getFieldStyleClassMap());
+        } else if (layout.getFieldStyleClass() != null) {
+            writer.write(",'fieldStyleClass' : '" + layout.getFieldStyleClass());
+        }
+        
+        if (layout.getTitleStyleClass() != null) {
+            writer.write(", 'titleStyleClass' : '" + layout.getTitleStyleClass() + "'");
+        } else {
+            writer.write(", 'titleStyleClass' : null");
+        }
         writer.write(",mode: " + Boolean.toString(layout.isEditMode()));
         writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
         writer.write("}).data('helix-helixFormLayout');");
