@@ -65,9 +65,9 @@ public class FormFieldRenderer extends CoreRenderer {
         }
         
         if (ffield.getValueText() != null) {
-            writer.write("'value' : '" + ffield.getValueText() + "'");
+            writer.write("'defaultValue' : '" + ffield.getValueText() + "'");
         } else {
-            writer.write("'value' : ''");
+            writer.write("'defaultValue' : ''");
         }
         if (ffield.getTitleStyleClass() != null) {
             writer.write(", 'titleStyleClass' : '" + ffield.getTitleStyleClass() + "'");
@@ -75,6 +75,13 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getCondition() != null) {
             writer.write(", 'condition' : '" + ffield.getCondition() + "'");
         }
+        if (ffield.getOnclick() != null) {
+            writer.write(", 'onclick' : " + ffield.getOnclick());
+        }
+        if (ffield.getOnchange() != null) {
+            writer.write(", 'onchange' : " + ffield.getOnchange());
+        }
+        
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");
         } else {
@@ -110,7 +117,7 @@ public class FormFieldRenderer extends CoreRenderer {
                         writer.write(",'onclick' : function(tgt,ev) {" + ic.getOnclick() + "}");
                     }
                     if (ic.getValue() != null) {
-                        writer.write(",'title' : '" + ic.getValue() + "'");
+                        writer.write(",'fieldTitle' : '" + ic.getValue() + "'");
                     }
                     writer.write(",'theme' : '" + ic.getTheme() + "'");
                     writer.write("}");
@@ -148,7 +155,7 @@ public class FormFieldRenderer extends CoreRenderer {
         }
         
         if (ffield.getOnblur() != null) {
-            writer.write(",'onblur' : function(elem) {" + ffield.getOnblur() + "; }");
+            writer.write(",'onblur' : function() {" + ffield.getOnblur() + "; }");
         }
         
         writer.write("}");

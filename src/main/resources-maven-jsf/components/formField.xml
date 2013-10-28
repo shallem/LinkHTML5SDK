@@ -122,5 +122,17 @@
             <type>java.lang.String</type>
             <description>For text fields, indicate the HTML5 data type. Defaults to text.</description>
         </attribute>
+        <attribute>
+            <name>onclick</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>On click event for field types that support it.</description>
+        </attribute>
+        <attribute>
+            <name>onchange</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>On change event for field types that support it.</description>
+        </attribute>
     </attributes>
 </component>

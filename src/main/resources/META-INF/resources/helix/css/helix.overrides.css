@@ -80,3 +80,11 @@
     background-repeat: no-repeat !important; 
     background-position: 99% -28px !important; 
 }
+
+.ui-field-contain.ui-input-datebox {
+    width: auto;
+}
+
+.ui-input-datebox.ui-input-text {
+    width: auto;
+}

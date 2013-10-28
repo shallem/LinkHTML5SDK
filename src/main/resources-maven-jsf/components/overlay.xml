@@ -29,6 +29,13 @@
             <description>Indicate if the overlay should appear to the left or the right of the screen.</description>
         </attribute>
         <attribute>
+            <name>positionFixed</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicate if the overlay should appear in a fixed position so that it is visible when the screen is scrolled.</description>
+        </attribute>
+        <attribute>
             <name>styleClass</name>
             <required>false</required>
             <type>java.lang.String</type>

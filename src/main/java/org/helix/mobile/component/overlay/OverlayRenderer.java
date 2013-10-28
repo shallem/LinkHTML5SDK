@@ -33,6 +33,7 @@ public class OverlayRenderer extends CoreRenderer {
         writer.writeAttribute("id", id, null);
         writer.writeAttribute("data-role", "panel", null);
         writer.writeAttribute("data-position", overlay.getPosition(), null);
+        writer.writeAttribute("data-position-fixed", Boolean.toString(overlay.isPositionFixed()), null);
         writer.writeAttribute("data-display", "overlay", null);
         writer.writeAttribute("data-theme", overlay.getTheme(), null);
         writer.writeAttribute("data-dismissible", "true", null);
