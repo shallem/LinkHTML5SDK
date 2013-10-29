@@ -101,7 +101,7 @@
              * Context menu to display if the user tap-holds (for touch devices)
              * or double clicks (for non-touch devices) on a list item. When 
              * both this option and holdAction are specified, this option takes
-             * precedence. Specify either a jQuery object or a select to uniquely
+             * precedence. Specify either a jQuery object or a selector to uniquely
              * identify the jQuery Mobile popup to open.
              */
             itemContextMenu: null,
@@ -151,6 +151,17 @@
              * the list is refreshed.
              */
             onSortChange: null,
+            
+            /**
+             * A common behavior is to have a visual cue that changes when the sort
+             * is ascending vs. descending. This component implements this behavior
+             * by automatically toggling between alternative buttons when the 
+             * direction changes. This behavior is enabled by providing an object
+             * for the sortButtons option that has an ascending and descending field,
+             * each of whose value is a selector to find the appropriate button that
+             * should be turned on/off. By default this behavior is disabled.
+             */
+            sortButtons : { },
             
             /**
              * List of fields to filter by. These fields are specified as a map
@@ -253,6 +264,7 @@
             // Default sort.
             this._currentSort = this.options.sortBy;
             this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._updateSortButtons();
         
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
@@ -302,6 +314,10 @@
                 _self._refreshFilterContainer(filters);
             }
             
+            /* Generate the actual data for the current page. */
+            _self._prependSearchBox(sorts, filters);
+            _self._updateSortButtons();
+            
             _self._currentPage = 1;
             _self._refreshData(function() {
                 if (_self.nElems == 0) {
@@ -324,6 +340,21 @@
              */
             _self._refreshPaginatorContainer();
         },
+        _updateSortButtons: function() {
+            if ('ascending' in this.options.sortButtons &&
+                'descending' in this.options.sortButtons) {
+                if (this._currentSortOrder === "DESCENDING") {
+                    // Show the ascending button to flip back to ascending.
+                    $(this.options.sortButtons.ascending).show();
+                    $(this.options.sortButtons.descending).hide();
+                } else {
+                    // Show the descending button to flip back to descending.
+                    $(this.options.sortButtons.descending).show();                            
+                    $(this.options.sortButtons.ascending).hide();
+                }
+            }
+        },
+        
         _refreshSortContainer: function(sorts) {
             var _self = this;
             /* we are only called if sorts is non-null. */
@@ -352,7 +383,7 @@
                     }).append(sorts[sortFld]));
                     $(sortsList).append(sortItem);
                     $(sortItem).on('tap', function(evt) {
-                        evt.stopImmediatePropagation();                        
+                        evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
                         if (newSortField == _self._currentSort) {
                             if (_self._currentSortOrder === "ASCENDING") {
@@ -371,6 +402,7 @@
                         if (_self.options.onSortChange) {
                             _self.options.onSortChange(_self._currentSort, _self._currentSortOrder);
                         }
+                        _self._updateSortButtons();
 
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
@@ -468,11 +500,6 @@
             this._clearListRows();
             _self.displayList = [];
         
-            /* Generate the actual data for the current page. */
-            if (_self.options.indexedSearch) {
-                _self._prependSearchBox();
-            }
-
             if (_self.options.headerText) {
                 $('<li />').attr({
                     'data-role' : 'list-divider'
@@ -522,38 +549,89 @@
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
-        _prependSearchBox: function() {
+        _prependSearchBox: function(sorts, filters) {
+            var hasButtons = sorts || filters;
             if (this.$searchBox) {
                 this.$wrapper.prev().remove();
             }
             
-            var sboxID = Helix.Utils.getUniqueID();
-            this.$searchBox = $('<input/>').attr({
-                'type' : 'search',
-                'name' : 'search',
-                'id' : sboxID,
-                'value' : ''
-            }).insertBefore(this.$wrapper);
-            
-            this.$searchLabel = $('<label/>').attr({
-                'for': sboxID
-            }).append('Search').insertBefore(this.$searchBox).hide();
-            this.$searchBox.textinput();
-            if (this.__searchText) {
-                this.$searchBox.val(this.__searchText);
-            }
             var _self = this;
-            this.$searchBox.on('input', function() {
-                _self.__searchText = _self.$searchBox.val();
-                if (_self.__searchReadyTimeout) {
-                    clearTimeout(_self.__searchReadyTimeout);
+            var $searchSortDiv = $('<div/>').insertBefore(this.$wrapper);
+            if (this.options.indexedSearch) {
+                var styleClass = 'hx-display-inline';
+                if (!hasButtons) {
+                    styleClass = styleClass + ' hx-full-width';
                 }
+                var $searchDiv = $('<div/>').attr({
+                    'class' : styleClass
+                }).appendTo($searchSortDiv);
+                var sboxID = Helix.Utils.getUniqueID();
+                this.$searchBox = $('<input/>').attr({
+                    'type' : 'search',
+                    'name' : 'search',
+                    'id' : sboxID,
+                    'value' : '',
+                    'data-role' : 'none'
+                }).appendTo($searchDiv);
+
+                this.$searchLabel = $('<label/>').attr({
+                    'for': sboxID
+                }).append('Search').appendTo($searchDiv).hide();
+                this.$searchBox.textinput();
+                if (this.__searchText) {
+                    this.$searchBox.val(this.__searchText);
+                }
+                this.$searchBox.on('input', function() {
+                    _self.__searchText = _self.$searchBox.val();
+                    if (_self.__searchReadyTimeout) {
+                        clearTimeout(_self.__searchReadyTimeout);
+                    }
+
+                    _self.__searchReadyTimeout = setTimeout(function() {
+                        _self.refreshList(_self.options.indexedSearch(_self.__searchText));
+                        _self.__searchReadyTimeout = null;
+                    }, 1500);
+                });
+            }
+            if (hasButtons) {
+                var sAscendID = Helix.Utils.getUniqueID();
+                var sDescendID = Helix.Utils.getUniqueID();
+                this.options.sortButtons = {
+                    'ascending' : PrimeFaces.escapeClientId(sAscendID),
+                    'descending' : PrimeFaces.escapeClientId(sDescendID)
+                };
                 
-                _self.__searchReadyTimeout = setTimeout(function() {
-                    _self.refreshList(_self.options.indexedSearch(_self.__searchText));
-                    _self.__searchReadyTimeout = null;
-                }, 3000);
-            });
+                var $sortDiv = $('<div/>').attr({
+                    'class' : 'hx-display-inline',
+                    'data-role' : 'none',
+                    'data-type' : 'horizontal'
+                }).appendTo($searchSortDiv);
+                this.$sortAscending = $('<a/>').attr({
+                    'id' : sAscendID,
+                    'data-role' : 'none',
+                    'data-icon' : 'arrow-u',
+                    'data-iconpos' : 'notext',
+                    'data-theme' : 'b',
+                    'data-mini' : 'true'
+                }).button()
+                .appendTo($sortDiv)
+                .on('tap', function() {
+                    _self.displaySortMenu(this);
+                });
+                this.$sortDescending = $('<a/>').attr({
+                    'id' : sDescendID,
+                    'data-role' : 'none',
+                    'data-icon' : 'arrow-d',
+                    'data-iconpos' : 'notext',
+                    'data-theme' : 'b',
+                    'data-mini' : 'true'
+                }).button()
+                .appendTo($sortDiv)
+                .on('tap', function() {
+                    _self.displaySortMenu(this);
+                });
+                $sortDiv.controlgroup();
+            }
         },
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection) {
@@ -656,6 +734,7 @@
                     // This allows the container to have taphold context menus that are not
                     // triggered when this event is triggered.
                     event.stopImmediatePropagation();
+                    event.preventDefault();
                     _self.setSelected(event.target);
                     $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
                         positionTo: event.target

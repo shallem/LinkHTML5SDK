@@ -20,20 +20,31 @@ public class IconButtonRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         IconButton button = (IconButton) component;
         String clientId = button.getClientId(context);
+        boolean useStdButton = false;
         
         writer.startElement("a", button);
         writer.writeAttribute("id", clientId, "id");
         writer.writeAttribute("name", clientId, "name");
         writer.writeAttribute("data-role", "button", null);
         writer.writeAttribute("data-iconpos", "bottom", null);
-        writer.writeAttribute("data-icon", button.getImage(), null);
+        if (button.getImage() != null) {
+            writer.writeAttribute("data-icon", button.getImage(), null);
+        } else if (button.getIcon() != null) {
+            writer.writeAttribute("data-icon", button.getIcon(), null);
+            writer.writeAttribute("data-theme", button.getTheme(), null);
+            useStdButton = true;
+        }
+        
         writer.writeAttribute("data-inline", "true", null);
         writer.writeAttribute("data-corners", "", null);
         writer.writeAttribute("data-mini", "true", null);
         writer.writeAttribute("style", "min-width: " + Integer.toString(button.getWidth()), null);
         writer.writeAttribute("href", button.getHref(), null);
         
-        String aClass = "iconbutton";
+        String aClass = ""; 
+        if (!useStdButton) {
+            aClass = "iconbutton";
+        }
         if (button.getStyleClass() != null) {
             aClass = aClass + " " + button.getStyleClass();
         }

@@ -18,6 +18,9 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
-public @interface ClientFilter {
+public @interface ClientGlobalFilter {
     String displayName();
+    String[] values() default {};
+    int[] intValues() default {};
+    String[] valueNames() default {};
 }

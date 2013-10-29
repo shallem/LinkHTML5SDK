@@ -84,7 +84,53 @@ public class JSONSerializer {
     private static final String KEY_FIELD_NAME = "__hx_key";
     private static final String SORTS_FIELD_NAME = "__hx_sorts";
     private static final String FILTERS_FIELD_NAME = "__hx_filters";
+    private static final String GLOBAL_FILTERS_FIELD_NAME = "__hx_global_filters";
     private static final String TEXT_INDEX_FIELD_NAME = "__hx_text_index";
+    
+    private class GlobalFilterField {
+        private String displayName;
+        private int[] intValues;
+        private String[] stringValues;
+        private String[] valueNames;
+        
+        public GlobalFilterField(String displayName,
+                int[] intValues,
+                String[] stringValues,
+                String[] valueNames) {
+            this.displayName = displayName;
+            this.intValues = intValues;
+            this.stringValues = stringValues;
+            this.valueNames = valueNames;
+        }
+        
+        public void serialize(JsonGenerator gen) throws IOException {
+            gen.writeStartObject();
+            gen.writeStringField("name", displayName);
+            
+            gen.writeArrayFieldStart("values");
+            if (this.intValues != null) {
+                for (int i : intValues) {
+                    gen.writeString(Integer.toString(i));
+                }
+            } else if (this.stringValues != null) {
+                for (String s : this.stringValues) {
+                    gen.writeString(s);
+                }
+            }
+            gen.writeEndArray();
+            
+            if (this.valueNames != null) {
+                gen.writeArrayFieldStart("valueNames");
+                for (String s : this.valueNames) {
+                    gen.writeString(s);
+                }
+                gen.writeEndArray();
+            }
+            
+            gen.writeEndObject();
+        }
+    }
+    
     
     public JSONSerializer() {
     }
@@ -315,6 +361,7 @@ public class JSONSerializer {
                 Map<String, String> sortFields = new TreeMap<String, String>();
                 Map<String, String> filterFields = new TreeMap<String, String>();
                 List<String> indexFields = new LinkedList<String>();
+                Map<String, GlobalFilterField> globalFilterFields = new TreeMap<String, GlobalFilterField>();
                 String keyField = null;
                 
                 jg.writeStartObject();
@@ -366,7 +413,19 @@ public class JSONSerializer {
                             ClientFilter cFilterAnnot = (ClientFilter)filterAnnot;
                             filterFields.put(nxtFieldName, cFilterAnnot.displayName());
                         }
-
+                        
+                        /* Determin if this field is a global filter field. */
+                        Annotation globalFilterAnnot =
+                                m.getAnnotation(org.helix.mobile.model.ClientGlobalFilter.class);
+                        if (globalFilterAnnot != null) {
+                            ClientGlobalFilter cFilterAnnot = (ClientGlobalFilter)globalFilterAnnot;
+                            globalFilterFields.put(nxtFieldName, new GlobalFilterField(cFilterAnnot.displayName(),
+                                    cFilterAnnot.intValues(),
+                                    cFilterAnnot.values(),
+                                    cFilterAnnot.valueNames()
+                                    ));
+                        }
+                        
                         /* Determine if this field is a key field. */
                         Annotation keyAnnot =
                                 m.getAnnotation(org.helix.mobile.model.ClientDataKey.class);
@@ -420,6 +479,13 @@ public class JSONSerializer {
                 for(Entry<String, String> e: filterFields.entrySet()) {
                     jg.writeFieldName(e.getKey());
                     jg.writeString(e.getValue());
+                }
+                jg.writeEndObject();
+                
+                jg.writeObjectFieldStart(GLOBAL_FILTERS_FIELD_NAME);
+                for(Entry<String, GlobalFilterField> ge : globalFilterFields.entrySet()) {
+                    jg.writeFieldName(ge.getKey());
+                    ge.getValue().serialize(jg);
                 }
                 jg.writeEndObject();
                 

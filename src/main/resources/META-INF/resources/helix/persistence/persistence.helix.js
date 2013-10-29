@@ -27,7 +27,8 @@ function initHelixDB() {
             "__hx_schema_name" : true,
             "__hx_filters" : true,
             "__hx_text_index" : true,
-            "__hx_schema_type" : true
+            "__hx_schema_type" : true,
+            "__hx_global_filters" : true
         },
 
         generatePersistenceFields: function(schemaTemplate,name,allVisited,recursiveFields,allSchemas) {
@@ -108,6 +109,7 @@ function initHelixDB() {
             objSchema.__hx_schema_name = schemaTemplate.__hx_schema_name;
             objSchema.__hx_sorts = schemaTemplate.__hx_sorts;
             objSchema.__hx_filters = schemaTemplate.__hx_filters;
+            objSchema.__hx_global_filters = schemaTemplate.__hx_global_filters;
 
             objSchema.index(schemaTemplate.__hx_key, {
                 unique: true
@@ -125,7 +127,8 @@ function initHelixDB() {
                 'fields' : schemaFields,
                 'keyField' : schemaTemplate.__hx_key,
                 'sortFields' : schemaTemplate.__hx_sorts,
-                'filterFields' : schemaTemplate.__hx_filters
+                'filterFields' : schemaTemplate.__hx_filters,
+                'globalFilterFields' : schemaTemplate.__hx_global_filters
             });
 
             // Insert all of the sub schemas.
@@ -170,8 +173,17 @@ function initHelixDB() {
                 }
             }
             
+            if (schemaTemplate.__hx_global_filters) {
+                for (var gFilterField in schemaTemplate.__hx_global_filters) {
+                    if (!schemaTemplate.__hx_sorts[filterField] &&
+                        !schemaTemplate.__hx_filters[filterField]) {
+                        objSchema.index(gFilterField);
+                    }
+                }
+            }
+            
             if (schemaTemplate.__hx_text_index) {
-                for (var i = 0; i < schemaTemplate.__hx_text_index.length; i++) {
+                for (i = 0; i < schemaTemplate.__hx_text_index.length; i++) {
                     var indexField = schemaTemplate.__hx_text_index[i];
                     objSchema.textIndex(indexField);
                 }
@@ -310,6 +322,7 @@ function initHelixDB() {
             schema.__hx_key = masterRow.keyField;
             schema.__hx_sorts = masterRow.sortFields;
             schema.__hx_filters = masterRow.filterFields;
+            schema.__hx_global_filters = masterRow.globalFilterFields;
             schema.__pm_subSchemas = {};
             if (window.__pmLocalSchemas) {
                 window.__pmLocalSchemas[masterRow.tableName] = schema;
@@ -488,6 +501,7 @@ function initHelixDB() {
                     newSchema.keyField = schema.keyField;
                     newSchema.sortFields = JSON.stringify(schema.sortFields);
                     newSchema.filterFields = JSON.stringify(schema.filterFields);
+                    newSchema.globalFilterFields = JSON.stringify(schema.globalFilterFields);
 
                     // Convert relationships to JSON.
                     newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
@@ -502,6 +516,7 @@ function initHelixDB() {
                     var oldKey, newKey;
                     var oldRefs, newRefs;
                     var oldFilters, newFilters;
+                    var oldGlobalFilters, newGlobalFilters;
                 
                     var fieldsString = JSON.stringify(schema.fields);
                     if (fieldsString !== schemaRec.tableFields) {
@@ -536,6 +551,14 @@ function initHelixDB() {
                         newFilters = schema.filterFields;
                         schemaRec.filterFields = filterFields;
                     }
+                    
+                    var globalFilterFields = JSON.stringify(schema.globalFilterFields);
+                    if (globalFilterFields !== schemaRec.globalFilterFields) {
+                        dirty = 1;
+                        oldGlobalFilters = $.parseJSON(schemaRec.globalFilterFields);
+                        newGlobalFilters = schema.globalFilterFields;
+                        schemaRec.globalFilterFields = globalFilterFields;
+                    }
                 
                     if (schema.keyField !== schemaRec.keyField) {
                         dirty = 1;
@@ -552,6 +575,7 @@ function initHelixDB() {
                             oldKey, newKey,
                             oldRefs, newRefs,
                             oldFilters, newFilters,
+                            oldGlobalFilters, newGlobalFilters,
                             oncomplete);
                     } else {
                         oncomplete(0);
@@ -567,6 +591,7 @@ function initHelixDB() {
             oldKey, newKey,
             oldRefs, newRefs,
             oldFilters, newFilters,
+            oldGlobalFilters, newGlobalFilters,
             oncomplete) {
             persistence.migrations.Migrator.version(tx, function(version) {
                 persistence.defineMigration(version + 1, {
@@ -608,6 +633,13 @@ function initHelixDB() {
                         if (oldFilters && newFilters) {
                             for (fld in oldFilters) {
                                 if (!newSorts[fld] && !newFilters[fld]) {
+                                    this.removeIndex(schemaRec.tableName, fld);                            
+                                }
+                            }
+                        }
+                        if (oldGlobalFilters && newGlobalFilters) {
+                            for (fld in oldGlobalFilters) {
+                                if (!newSorts[fld] && !newFilters[fld] && !newGlobalFilters[fld]) {
                                     this.removeIndex(schemaRec.tableName, fld);                            
                                 }
                             }
@@ -659,6 +691,15 @@ function initHelixDB() {
         
             var schema = window.__pmAllSchemas[tableName];
             return schema.__hx_filters;
+        },
+        
+        getGlobalFiltersForTable: function(tableName) {
+            if (!window.__pmAllSchemas) {
+                return null;
+            }
+        
+            var schema = window.__pmAllSchemas[tableName];
+            return schema.__hx_global_filters;
         },
 
         getSchemaForTable: function(tableName) {
@@ -1186,6 +1227,7 @@ function initHelixDB() {
                 keyField: "TEXT",
                 sortFields: "TEXT",
                 filterFields: "TEXT",
+                globalFilterFields: "TEXT",
                 tableOneToMany: "TEXT",
                 tableManyToOne: "TEXT"
             });

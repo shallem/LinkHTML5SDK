@@ -81,6 +81,13 @@
             <description>Style class for the image used in the button. The style class should have the format ui-icon-image.</description>
         </attribute>
         <attribute>
+            <name>icon</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Name of a standard jQM icon to use. This will render a standard jQM button.</description>
+        </attribute>
+        <attribute>
             <name>styleClass</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -157,6 +157,15 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",onSortChange: " + dlist.getOnSort());
         }
         
+        // Sort buttons.
+        if (dlist.getSortAscendingButton() != null &&
+                dlist.getSortDescendingButton() != null) {
+            writer.write(",sortButtons: {");
+            writer.write("  'ascending' : '" + dlist.getSortAscendingButton() + "',");
+            writer.write("  'descending' : '" + dlist.getSortDescendingButton() + "'");
+            writer.write("}");
+        }
+        
         // Filter callback.
         if (dlist.getDoFilter() != null) {
             writer.write(",doFilter: " + dlist.getDoFilter());

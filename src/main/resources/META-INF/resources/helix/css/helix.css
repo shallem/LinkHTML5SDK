@@ -257,7 +257,7 @@ a {
 /* Without this override our datalist component is cut off inside of overlay panels. */
 .ui-content .ui-listview, .ui-panel-inner > .ui-listview { margin: 0px; }
 
-/* Special styles for mini forms (on phones). */
+/* Special styles for mini forms (on phones, or because jQM can be rather bulbous). */
 .hx-mini-fieldcontain {
     padding: .2em;
 }
@@ -267,6 +267,10 @@ a {
 }
 
 .hx-mini-fieldcontain .ui-input-text .ui-body-c {
+    font-size: small;
+}
+
+.hx-mini-fieldcontain textarea.ui-input-text {
     font-size: small;
 }
 
@@ -280,4 +284,9 @@ a {
 
 .hx-full-width {
     width: 100%;
+}
+
+/* Highlight the current sort. */
+.hx-current-sort a.ui-link-inherit {
+    color: orange !important;
 }

@@ -311,7 +311,7 @@
 		    <include>persistence/persistence.migrations.js</include>
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
-		    <include>persistence/persistence.search.js</include>
+		    <!-- <include>persistence/persistence.search.js</include> -->
 		    <include>persistence/persistence.helix.js</include>
 		    <include>persistence/persistence.helix.helpers.js</include>
 
@@ -325,7 +325,7 @@
 		    <include>panelgroup/panelgroup.js</include>
 
 		    <!-- Data list. -->
-		    <include>datalist/datalist.js</include>
+		    <!-- <include>datalist/datalist.js</include> -->
 
 		    <!-- Form Layout -->
 		    <!-- <include>form/formLayout.js</include> -->

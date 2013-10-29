@@ -203,5 +203,17 @@
             <type>java.lang.String</type>
             <description>Specify text to appear in a divider at the top of the list.</description>
         </attribute>
+        <attribute>
+            <name>sortAscendingButton</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Selector used to find the sort-ascending button for this list.</description>
+        </attribute>
+        <attribute>
+            <name>sortDescendingButton</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Selector used to find the sort-descending button for this list.</description>
+        </attribute>
     </attributes>
 </component>
