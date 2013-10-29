@@ -37,101 +37,6 @@ Helix.Layout = {
     contentHeight : 0,
     
     /**
-     * Create a scroller attached to the (optional) element, or attached to all elements
-     * matching the scrollerSel selector.
-     * 
-     * @param elem
-     *      The optional element parameter. If not specified, scrollerSel is used to
-     *      find all scrollers in the active page.
-     */
-    addScrollers : function(elem) {
-        var toAdd;
-        if (elem === undefined) {
-            toAdd = $.mobile.activePage.find(Helix.Layout.scrollerSel);
-        } else {
-            toAdd = $(elem);
-        }
-
-        toAdd.each(function() {            
-            if (this.id in Helix.Layout.allScrollers) {
-                return;
-            } else {
-                // Make sure we have at least one child, otherwise there is nothing to scroll
-                // and iScroll fails.
-                if ($(this).children().length == 0) {
-                    return;
-                }
-
-                var doZoom = true;
-                var doScroll = true;
-                var doHScroll = false;
-                var doVScroll = doScroll;
-
-                if ($(this).hasClass('pm-scroller-zoomonly')) {
-                    doScroll = false;
-                } else if ($(this).hasClass('pm-scroller-nozoom')) {
-                    doZoom = false;
-                } 
-
-                if ($(this).hasClass('pm-scroller-horizontal')) {
-                    doHScroll = doScroll;
-                    doVScroll = false;
-                }
-
-                var newScroller = new iScroll(this.id, {
-                    hScroll        : doHScroll,
-                    vScroll        : doVScroll,
-                    hScrollbar     : false,
-                    vScrollbar     : false,
-                    fixedScrollbar : false,
-                    fadeScrollbar  : false,
-                    hideScrollbar  : false,
-                    bounce         : true,
-                    momentum       : true,
-                    lockDirection  : true,
-                    zoom           : doZoom,
-                    handleClick    : doZoom,
-                    onBeforeScrollStart: function (e) {
-                        return;
-                        var target = e.target;
-                        while (target.nodeType != 1) target = target.parentNode;
-
-                        if (target.tagName != 'SELECT' && target.tagName != 'INPUT' && target.tagName != 'TEXTAREA'){
-                            e.preventDefault();
-                        }
-                    }
-                });
-                Helix.Layout.allScrollers[this.id] = {
-                    scroller: newScroller,
-                    height: $(this).children().height()
-                };
-            }
-        });
-    },
-
-    /**
-     * Delete a single scroller.
-     */
-    deleteScroller: function(id) {
-        if (id in Helix.Layout.allScrollers) {
-            var toDelete = Helix.Layout.allScrollers[id].scroller;
-            toDelete.destroy();
-            toDelete = null;
-            delete Helix.Layout.allScrollers[id];
-        }
-    },
-
-    /**
-     * Cleanup all scrollers. Called when a page is hidden to free up memory for the 
-     * browser.
-     */
-    cleanupScrollers: function(page) {
-        $(page).find(Helix.Layout.scrollerSel).each(function() {
-            Helix.Layout.deleteScroller(this.id);
-        });
-    },
-
-    /**
      * Determine if an element is a scrolling element.
      */
     isScroller : function(elem) {
@@ -150,76 +55,7 @@ Helix.Layout = {
         }
         return false;
     },
-    
-    /**
-     * Update a single scroller, identified by an ID or JQM object.
-     */
-    updateScrollersForID : function(obj, objID, oldHeight, nRetries) {
-        if (!Helix.Layout.allScrollers[objID]) {
-            return;
-        }
         
-        var newHeight = $(obj).children().height();
-        var heightUpdated = (newHeight != oldHeight);
-
-        if (nRetries >= 3 ||
-            heightUpdated) {
-            Helix.Layout.allScrollers[objID].scroller.refresh(); 
-            Helix.Layout.allScrollers[objID].height = newHeight;
-            
-            // Update the starting height for future recursive calls.
-            oldHeight = newHeight;
-            
-            // If this or a parent object matches the scrollerSel then update it.
-            /*$(obj).closest(Helix.Layout.scrollerSel).each(function() {
-                if (this.id in Helix.Layout.allScrollers) {
-                    Helix.Layout.allScrollers[this.id].scroller.refresh(); 
-                    Helix.Layout.allScrollers[this.id].height = newHeight;
-                }
-            });*/
-
-            // Update scrollers in child objects.
-            /*$(obj).find(Helix.Layout.scrollerSel).each(function() {
-                if (this.id in Helix.Layout.allScrollers) {
-                    Helix.Layout.allScrollers[this.id].scroller.refresh(); 
-                    Helix.Layout.allScrollers[this.id].height = newHeight;
-                }
-            });*/
-        }
-        
-        if (nRetries < 3) {
-            /* WE set the timeout even when the height has already changed. This is because not
-             * all content loads at the same time, so over time more content may appear and, hence
-             * the scroller will need to update. A perfect example is images that are loaded into
-             * the page.
-             */
-            setTimeout(function() {
-                Helix.Layout.updateScrollersForID(obj, objID, oldHeight, ++nRetries);
-            }, 400);
-        }
-    },
-    
-    /**
-     * Update all scrollers related to components after an AJAX request.
-     */
-    updateScrollers : function(elem) {
-        var toUpdate;
-        if (elem === undefined) {
-            toUpdate = $.mobile.activePage.find(Helix.Layout.scrollerSel);
-        } else {
-            toUpdate = $(elem);
-        }
-
-        toUpdate.each(function() {            
-            if (this.id in Helix.Layout.allScrollers) {
-                Helix.Layout.updateScrollersForID(this,
-                        this.id,
-                        Helix.Layout.allScrollers[this.id].height, 
-                        1);
-            }
-        });
-    },
-    
     /**
      * Layout a component that should have height maxHeight. This function also
      * recursively lays out the children of the parent component such that the 
@@ -289,8 +125,8 @@ Helix.Layout = {
          * between the viewport height and the combined header/footer height. 
          */
         var $header = page.find('[data-role="header"]');
-        var headerHeight = $header.height();
-        var footerHeight = page.find('[data-role="footer"]').height();
+        var headerHeight = $header.outerHeight(true);
+        var footerHeight = page.find('[data-role="footer"]').outerHeight(true);
         var contentHeight = height - footerHeight;
         if ($header.is('[data-position="fixed"]')) {
             contentHeight = contentHeight - headerHeight;
@@ -431,12 +267,6 @@ $(document).on('pagebeforeshow', function(ev) {
      * Layout the page based on the Mobile Helix styles.
      */
     Helix.Layout.layoutPage(ev.target);
-    
-    /* Add all scrollers. NOTE, that components with dynamic data must update
-     * the scroller with the updateScrollers call after any data transformations.
-     *
-    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
-    Helix.Layout.addScrollers(pageScrollers);*/
 });
 
 $(document).on('pageshow', function(ev) {
@@ -445,27 +275,7 @@ $(document).on('pageshow', function(ev) {
      */
     Helix.Layout.layoutPage(ev.target);
     $(ev.target).trigger("hxLayoutDone");
-    
-    // Placing inside of setTimeout per the advice on cubiq.org/iscroll-4
-    // in the "Mastering the Refresh() method" section. Updates all scrollers
-    // currently on the page.
-    
-    /* NOTE: each time we update scrollers we make sure that the height has changed. Hence,
-     * we call this function a few times at intervals of 200 MS. When there is no
-     * updating to be done, nothing happens.
-     *
-    var pageScrollers = $(this).find(Helix.Layout.scrollerSel);
-    setTimeout(function() {
-        Helix.Layout.updateScrollers(pageScrollers);
-    }, 0);*/
 });
-
-/**
- * When a page is hidden, we kill all of its scrollers to save memory. 
- *
-$(document).on('pagebeforehide', function(ev) {
-    Helix.Layout.cleanupScrollers(ev.target);
-});*/
 
 Helix.deviceType = (function() {
     if (window.screen.width <= 500) {
