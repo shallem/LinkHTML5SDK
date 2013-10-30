@@ -221,5 +221,11 @@
             <type>java.lang.String</type>
             <description>Selector used to find the sort-descending button for this list.</description>
         </attribute>
+        <attribute>
+            <name>pullToRefresh</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function name to call when the user pulls down on the list to refresh it.</description>
+        </attribute>
     </attributes>
 </component>

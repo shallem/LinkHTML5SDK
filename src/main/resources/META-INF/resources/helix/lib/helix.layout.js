@@ -125,7 +125,7 @@ Helix.Layout = {
          * between the viewport height and the combined header/footer height. 
          */
         var $header = page.find('[data-role="header"]');
-        var headerHeight = $header.outerHeight(true);
+        var headerHeight = Helix.Layout.headerHeight = $header.outerHeight(true);
         var footerHeight = page.find('[data-role="footer"]').outerHeight(true);
         var contentHeight = height - footerHeight;
         if ($header.is('[data-position="fixed"]')) {
@@ -137,6 +137,11 @@ Helix.Layout = {
             //var innerWidth = width - (this.offsetWidth - this.clientWidth);
             $(this).css('width', width);
         });
+        
+        /* Fixed position panels need to have a padding at the top equal to the header height.
+         * Otherwise the top of the panel slides under the header.
+         */
+        $('.ui-panel-fixed').css('padding-top', Helix.Layout.headerHeight + 'px');
         
         return contentHeight;
     },

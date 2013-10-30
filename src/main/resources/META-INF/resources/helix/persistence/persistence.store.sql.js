@@ -87,13 +87,22 @@ var defaultTypeMapper = {
       return val.id;
     }
     else if (type === 'BOOL') {
-      return (val === 'false') ? 0 : (val ? 1 : 0);
+        if (val === 'false' || val === 'f' || val === '0') {
+            return false;
+        } else if (val === 'true' || val === 't' || val === '1') {
+            return true;
+        }
+        
+      return (val ? 1 : 0);
     }
     else if (type === 'DATE' || val.getTime) {
       // In order to make SQLite Date/Time functions work we should store
       // values in seconds and not as miliseconds as JS Date.getTime()
       val = new Date(val);
       return Math.round(val.getTime() / 1000);
+    }
+    else if (type === 'INT' && Helix.Utils.isString(val)) {
+        return parseInt(val);
     }
     else {
       return val;

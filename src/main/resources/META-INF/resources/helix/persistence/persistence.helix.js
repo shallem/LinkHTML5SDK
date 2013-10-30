@@ -632,14 +632,14 @@ function initHelixDB() {
                         }
                         if (oldFilters && newFilters) {
                             for (fld in oldFilters) {
-                                if (!newSorts[fld] && !newFilters[fld]) {
+                                if ((!newSorts || !newSorts[fld]) && !newFilters[fld]) {
                                     this.removeIndex(schemaRec.tableName, fld);                            
                                 }
                             }
                         }
                         if (oldGlobalFilters && newGlobalFilters) {
                             for (fld in oldGlobalFilters) {
-                                if (!newSorts[fld] && !newFilters[fld] && !newGlobalFilters[fld]) {
+                                if ((!newSorts || !newSorts[fld]) && (!newFilters || !newFilters[fld]) && !newGlobalFilters[fld]) {
                                     this.removeIndex(schemaRec.tableName, fld);                            
                                 }
                             }
