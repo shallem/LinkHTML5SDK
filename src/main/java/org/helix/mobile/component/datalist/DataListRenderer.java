@@ -166,9 +166,12 @@ public class DataListRenderer extends CoreRenderer {
             writer.write("}");
         }
         
-        // Filter callback.
-        if (dlist.getDoFilter() != null) {
-            writer.write(",doFilter: " + dlist.getDoFilter());
+        // Filter callbacks.
+        if (dlist.getDoThisFilter() != null) {
+            writer.write(",doThisFilter: " + dlist.getDoThisFilter());
+        }
+        if (dlist.getDoGlobalFilter() != null) {
+            writer.write(",doGlobalFilter: " + dlist.getDoGlobalFilter());
         }
         
         // Localizable strings.

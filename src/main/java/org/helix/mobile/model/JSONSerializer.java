@@ -105,7 +105,7 @@ public class JSONSerializer {
         
         public void serialize(JsonGenerator gen) throws IOException {
             gen.writeStartObject();
-            gen.writeStringField("name", displayName);
+            gen.writeStringField("display", displayName);
             
             gen.writeArrayFieldStart("values");
             if (this.intValues != null) {
