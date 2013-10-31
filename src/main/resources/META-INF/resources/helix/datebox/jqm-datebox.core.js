@@ -69,6 +69,9 @@
 			maxHour: false,
 			minuteStep: 1,
 			minuteStepRound: 0,
+                        
+                        /* SAH */
+                        displayInline : false,
 			
 			rolloverMode: { 'm': true, 'd': true, 'h': true, 'i': true, 's': true },
 			
@@ -432,6 +435,10 @@
 			
 			if ( exp_input === null || exp_input.length !== exp_format.length ) {
 				if ( o.defaultValue !== false ) {
+                                    if (Object.prototype.toString.call(o.defaultValue) === "[object Date]") {
+                                        /* we already have a date. No more parsing needed. */
+                                        date = o.defaultValue;
+                                    } else {
 					switch ( typeof o.defaultValue ) {
 						case 'object':
 							if ( o.defaultValue.length === 3 ) {
@@ -448,6 +455,7 @@
 								if ( exp_temp.length === 3 ) { date = w._pa([exp_temp[0],exp_temp[1]-1,exp_temp[2]], false); }
 							} break;
 					}
+                                    }
 				}
 				if ( isNaN(date.getDate()) ) { date = new w._date(); }
 			} else {
@@ -699,7 +707,7 @@
 				trans = o.useAnimation ? o.transition : 'none',
 				d = o.useNewStyle === false ? {
 					input: this.element,
-					wrap: this.element.wrap('<div class="ui-input-datebox ui-shadow-inset ui-corner-all '+ (this.element.jqmData("mini") === true ? 'ui-mini ':'') +'ui-body-'+ thisTheme +'"></div>').parent(),
+					wrap: this.element.wrap('<div class="ui-input-datebox ui-shadow-inset ui-corner-all '+ (this.element.jqmData("mini") === true ? 'ui-mini ':'') +'ui-body-'+ thisTheme + '"></div>').parent(),
 					mainWrap: $("<div>", { "class": 'ui-datebox-container ui-overlay-shadow ui-corner-all ui-datebox-hidden '+trans+' ui-body-'+thisTheme} ).css('zIndex', o.zindex),
 					intHTML: false
 				} : {
@@ -724,6 +732,11 @@
 				},
 				ns = (typeof $.mobile.ns !== 'undefined')?$.mobile.ns:'';
 				
+                                
+                        /* SAH */
+                        if (o.displayInline) {
+                            d.wrap.addClass('hx-display-inline');
+                        }
 			$.extend(w, {d: d, ns: ns, drag: drag, touch:touch});
 			
 			if ( o.usePlaceholder !== false ) {
@@ -820,6 +833,10 @@
 			
 			if ( o.useInline === true || o.useInlineBlind ) { w.open(); }
 			
+                        if (o.defaultValue) {
+                            w.d.input.trigger('datebox', {'method':'set', 'value':w._formatter(w.__fmt(),w.theDate), 'date':w.theDate});
+                        }
+                        
 			//Throw dateboxinit event
 			$( document ).trigger( "dateboxaftercreate" );
 		},

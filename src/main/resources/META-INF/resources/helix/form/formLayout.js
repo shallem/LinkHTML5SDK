@@ -50,18 +50,91 @@
              */
             useMiniLayout : {
                 "phone" : true
-            }
+            },
+            
+            /**
+             * Namespace. Used to prefix all names to all form elements to make sure we don't
+             * get naming conflicts between different forms in the same applications. It is strongly
+             * recommended that the namespace is non-empty.
+             */
+            namespace : ''
         },
 
         _create: function() {
-            if (this.options.useMiniLayout[Helix.deviceType]) {
-                $(this.element).addClass('hx-form-mini');
-            }
+            /* Initialize variables. */
+            this._typeMap = [];
+            
             this.page = $(this.element).closest('[data-role="page"]');
+            
+            /* Determine if we should use the mini layout based on the device
+             * type
+             */
+            this.layoutMini = false;
+            if (Helix.deviceType in this.options.useMiniLayout &&
+                this.options.useMiniLayout[Helix.deviceType]) {
+                $(this.element).addClass('hx-form-mini');
+                this.layoutMini = true;
+            }
+
+            /* Attach a namespace to each element. Also create a mapping from field names (no namespace)
+             * to types to make it easy to get the value of any field.
+             */
+            if (!this.options.namespace) {
+                this.options.namespace = $(this.element).attr('id');
+            }
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var formElem = this.options.items[idx];
+                this._typeMap[formElem.name] = formElem.type;
+                if (this.options.namespace) {
+                    formElem.name = this.options.namespace + "_" + formElem.name;
+                    formElem.id = this.options.namespace + "_" + formElem.id;
+                }
+            }
+
             if (this.options.items.length > 0) {
                 this.rendered = false;
                 this.refresh();
-                this.rendered = true;
+            }
+        },
+    
+        _stripNamespace: function(fldName) {
+            return fldName.replace(this.options.namespace + "_", '');
+        },
+        
+        _addNamespace : function(fldName) {
+            if (this.options.namespace) {
+                return this.options.namespace + "_" + fldName;
+            }
+            return fldName;
+        },
+    
+        _computeHidden : function(valuesMap) {
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var formElem = this.options.items[idx];
+                var fldName = this._stripNamespace(formElem.name);
+                if (valuesMap && fldName in valuesMap) {
+                    formElem.value = valuesMap[fldName];
+                }
+                // if we fall through then we don't want to overwrite a static value ...
+                
+                if (formElem.condition) {
+                    if (valuesMap && formElem.condition in valuesMap) {
+                        if (valuesMap[formElem.condition]) {
+                            formElem.hidden = false;
+                        } else {
+                            formElem.hidden = true;
+                        }
+                    } else  {
+                        var fn = window[formElem.condition];
+                        if(typeof fn === 'function') {
+                            formElem.hidden = !(fn.call(this, (valuesMap ? valuesMap : null)));
+                        } else {
+                            formElem.hidden = true;
+                        }
+                    }
+                }
             }
         },
     
@@ -72,48 +145,50 @@
          * @param valuesMap Map form field names to values.
          */
         refresh: function(valuesMap) { 
+            this._computeHidden(valuesMap);
+            
             if (!valuesMap) {
                 this.clear();
                 if (this.rendered) {
                     return;
                 }
             }
-            
-            var idx = 0;
-            for (idx = 0; idx < this.options.items.length; ++idx) {
-                var fldName = this.options.items[idx].name;
-                if (!valuesMap) {
-                    this.options.items[idx].value = null;
-                    continue;
-                }
-                
-                if (fldName in valuesMap) {
-                    this.options.items[idx].value = valuesMap[fldName];
-                }
-                if (this.options.items[idx].condition) {
-                    if (this.options.items[idx].condition in valuesMap) {
-                        if (valuesMap[this.options.items[idx].condition]) {
-                            this.options.items[idx].hidden = false;
-                        } else {
-                            this.options.items[idx].hidden = true;
-                        }
-                    } else  {
-                        var fn = window[this.options.items[idx].condition];
-                        if(typeof fn === 'function') {
-                            this.options.items[idx].hidden = fn.call(this, valuesMap);
-                        } else {
-                            this.options.items[idx].hidden = true;
-                        }
-                    }
-                }
+            this.currentValues = valuesMap;
+            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
+            this.rendered = true;
+        },
+        
+        toggle: function(valuesMap) {
+            if (this.options.mode) {
+                this.options.mode = false;
+            } else {
+                this.options.mode = true;
             }
-            
-            var layoutMini = false;
-            if (Helix.deviceType in this.options.useMiniLayout &&
-                this.options.useMiniLayout[Helix.deviceType]) {
-                layoutMini = true;
-            }
-            Helix.Utils.layoutForm(this.element, this.options, this.page, layoutMini);
+            this._computeHidden(valuesMap);
+            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
+            this.rendered = true;
+        },
+        
+        setView: function (valuesMap) {
+            this.options.mode = false;
+            this._computeHidden(valuesMap);
+            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
+        },
+        
+        setEdit : function(valuesMap) {
+            this.options.mode = true;
+            this._computeHidden(valuesMap);
+            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);            
+        },
+        
+        _serializeTypes : {
+            "htmlarea" : true,
+            "text" : true,
+            "textarea" : true,
+            "pickList" : true,
+            "hidden" : true,
+            "checkbox" : true,
+            "tzSelector" : true
         },
         
         serialize: function() {
@@ -121,28 +196,44 @@
             var toSerialize = [];
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var fieldID = this.options.items[idx].name;
+                var strippedFieldID = this._stripNamespace(fieldID);
                 var fieldType = this.options.items[idx].type;
-                if (fieldType !== "htmlarea" &&
-                    fieldType !== "text" &&
-                    fieldType !== "textarea" &&
-                    fieldType !== "pickList" &&
-                    fieldType !== "hidden") {
+                if (!(fieldType in this._serializeTypes)) {
                     /* All other types are unserializable. */
                     continue;
                 }
-                $('[name="' + fieldID + '"]').each(function() {
+                $(this.element).find('[name="' + fieldID + '"]').each(function() {
                     if (fieldType === "htmlarea") {
                         var $editor = $(this).data('cleditor');
                         if ($editor) {
                             $editor.updateTextArea();
                         }
                         toSerialize.push({
-                            name: fieldID,
+                            name: strippedFieldID,
                             value: $(this).val()
+                        });
+                    } else if (fieldType === "checkbox") {
+                        if ($(this).is(":checked")) {
+                            toSerialize.push({
+                                name : strippedFieldID,
+                                value: true
+                            }); 
+                        } else {
+                            toSerialize.push({
+                                name : strippedFieldID,
+                                value: false
+                            }); 
+                        }
+                    } else if (fieldType === "pickList" ||
+                               fieldType === "tzSelector") {
+                        var selected = $(this).find('option:selected');
+                        toSerialize.push({
+                                name : strippedFieldID,
+                                value: selected.val()
                         });
                     } else {
                         toSerialize.push({
-                            name : fieldID,
+                            name : strippedFieldID,
                             value: $(this).val()
                         });
                     }
@@ -156,25 +247,116 @@
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var fieldID = this.options.items[idx].name;
                 var fieldType = this.options.items[idx].type;
-                if (fieldType !== "htmlarea" &&
-                    fieldType !== "text" &&
-                    fieldType !== "textarea" &&
-                    fieldType !== "pickList" &&
-                    fieldType !== "hidden") {
+                
+                /* Clear out all values so that all fields are reset to their defaults. */
+                this.options.items[idx].value = null;
+
+                if (!(fieldType in this._serializeTypes)) {
                     /* All other types have nothing to clear.. */
                     continue;
                 }
-                $('[name="' + fieldID + '"]').each(function() {
+                $(this.element).find('[name="' + fieldID + '"]').each(function() {
                     if (fieldType === "htmlarea") {
                         var $editor = $(this).data('cleditor');
                         $editor.clear();
-                    } else if (fieldType === "pickList") { 
+                    } else if (fieldType === "pickList") {
                         $(this).find('option:selected').removeAttr('selected');
+                        $(this).selectmenu('refresh');
+                    } else if (fieldType === "checkbox") {
+                        $(this).attr('checked', false);
                     } else {
                         $(this).val('');
                     }
                 });
             }
+        },
+        
+        setValue: function(name, value) {
+            if (!this.rendered) {
+                for (var idx = 0; idx < this.options.items.length; ++idx) {
+                    var fieldID = this.options.items[idx].name;
+                    var strippedFieldID = this._stripNamespace(fieldID);
+
+                    if (name === strippedFieldID) {
+                        this.options.items[idx].value = value;
+                        break;
+                    }
+                }
+            } else {
+                var fldType = this._typeMap[name];
+                var searchName = this._addNamespace(name);
+                var thisField = $(this.element).find('[name="' + searchName + '"]');
+
+                if (fldType === 'date' ||
+                    fldType === 'exactdate' ||
+                    fldType === 'datetime') {
+                    $(thisField).trigger('datebox', { method: 'set', value : value });
+                    $(thisField).trigger('datebox', { method: 'doset' });
+                    
+                    var timeElem = $(this.element).find('[name="' + searchName + '_time"]');
+                    if (timeElem.length > 0) {
+                        $(timeElem).datebox('set', value);           
+                    }
+                } else if (fldType === 'tzSelector' ||
+                           fldType === 'pickList') {
+                    $(thisField).find('option').removeAttr('selected');
+                    var selected = $(thisField).find('option[value="' + value + '"]');
+                    if (selected.length > 0) {
+                        selected.attr('selected', 'true');
+                    }
+                    $(thisField).selectmenu('refresh');
+                } else if (fldType === 'checkbox') {
+                    if (value) {
+                        $(thisField).attr('checked', 'true');
+                    } else {
+                        $(thisField).removeAttr('checked');
+                    }
+                } else {
+                    thisField.val(value);
+                }
+            }
+        },
+        
+        getValue: function(name) {
+            var fldType = this._typeMap[name];
+            var searchName = this._addNamespace(name);
+            var thisField = $(this.element).find('[name="' + searchName + '"]');
+            
+            if (fldType === 'date' ||
+                fldType === 'exactdate' ||
+                fldType === 'datetime') {
+                var dateObj = thisField.data('mobile-datebox');
+                var timeElem = $(this.element).find('[name="' + searchName + '_time"]');
+                if (timeElem.length > 0) {
+                    var timeObj = timeElem.data('mobile-datebox');
+                    dateObj.theDate.set({
+                        hour : timeObj.theDate.getHours(),
+                        minute: timeObj.theDate.getMinutes()
+                    });           
+                }
+                return dateObj.theDate;
+            } else if (fldType === 'tzSelector' ||
+                       fldType === 'pickList') {
+                var selected = $(thisField).find('option:selected');
+                if (selected.length > 0) {
+                    return selected.val();
+                }
+            } else if (fldType === 'checkbox') {
+                if ($(thisField).is(":checked")) {
+                    return true;
+                }
+                return false;
+            } else {
+                return thisField.val();
+            }
+            
+            return null;
+        },
+        
+        getFieldElement: function(name) {
+            var searchName = this._addNamespace(name);
+            var thisField = $(this.element).find(PrimeFaces.escapeClientId(searchName));
+            return thisField;
         }
     });
 }( jQuery ));

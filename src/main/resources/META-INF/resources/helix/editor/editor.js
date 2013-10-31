@@ -257,11 +257,12 @@
             // Add the styling commands popup to the button bar
             $styleCommands = $(A_TAG)
             .attr({
-                'href' : '#stylesPopup',
+                'href' : '#stylesPopup-' + editor.name,
                 'data-rel' : "popup",
                 'data-role' : "button",
                 'data-theme' : "a",
-                'data-mini' : doMini
+                'data-mini' : doMini,
+                'class' : 'ui-disabled'
             }).append("Styles")
             .appendTo($toolbar);
 
@@ -270,7 +271,7 @@
                 'data-role' : 'popup',
                 'data-history': 'false',
                 'data-theme' : 'a',
-                'id' : 'stylesPopup'
+                'id' : 'stylesPopup-' + editor.name
             }).appendTo($parent);
             
             $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
@@ -291,11 +292,12 @@
             // Add the font commands popup to the button bar
             $fontCommands = $(A_TAG)
             .attr({
-                'href' : '#fontsPopup',
+                'href' : '#fontsPopup-' + editor.name,
                 'data-rel' : "popup",
                 'data-role' : "button",
                 'data-theme' : "a",
-                'data-mini' : doMini
+                'data-mini' : doMini,
+                'class' : 'ui-disabled'
             }).append("Font")
             .appendTo($toolbar);            
         
@@ -312,7 +314,7 @@
                 'data-role' : 'popup',
                 'data-history': 'false',
                 'data-theme' : 'a',
-                'id' : 'fontsPopup'
+                'id' : 'fontsPopup-' + editor.name
             }).append($fontMenu)
             .appendTo($parent);
             $.each(editor.controls.font.split(" "), function(idx, buttonName) {
@@ -327,11 +329,12 @@
             // Add the format commands popup to the button bar
             $formatCommands = $(A_TAG)
             .attr({
-                'href' : '#formatsPopup',
+                'href' : '#formatsPopup-' + editor.name,
                 'data-rel' : "popup",
                 'data-role' : "button",
                 'data-theme' : "a",
-                'data-mini' : doMini
+                'data-mini' : doMini,
+                'class' : 'ui-disabled'
             }).append("Format")
             .appendTo($toolbar);            
 
@@ -340,7 +343,7 @@
                 'data-role' : 'popup',
                 'data-history': 'false',
                 'data-theme' : 'a',
-                'id' : 'formatsPopup'
+                'id' : 'formatsPopup-' + editor.name
             }).appendTo($parent);
             
             $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
@@ -361,11 +364,12 @@
             // Add the actions commands popup to the button bar
             $actionCommands = $(A_TAG)
             .attr({
-                'href' : '#actionPopup',
+                'href' : '#actionPopup-' + editor.name,
                 'data-rel' : "popup",
                 'data-role' : "button",
                 'data-theme' : "a",
-                'data-mini' : doMini
+                'data-mini' : doMini,
+                'class' : 'ui-disabled'
             }).append("Actions")
             .appendTo($toolbar);
             
@@ -375,7 +379,7 @@
                 'data-role' : 'popup',
                 'data-history': 'false',
                 'data-theme' : 'a',
-                'id' : 'actionPopup'
+                'id' : 'actionPopup-' + editor.name
             }).appendTo($parent);
             
             $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
@@ -437,22 +441,22 @@
         if ($(editor.page).is(':visible')) {
             refresh(editor);
         }
-
-        var eventName = 'pageshow.' + editor.name;
-        $(editor.page).off(eventName).on(eventName, function() {
+        
+        $(editor.page).on("hxLayoutDone." + editor.name, function() {
             refresh(editor);
         });
-        
-        $(editor.$main).on("remove", function() {
-            $(editor.page).off(eventName);
-            editor.destroy();
-        });
-        
+                
         eventName = "orientationchange." + editor.name;
         $(document).off(eventName).on(eventName, function() {
-            refresh(editor);
+            if (editor.$main.is(':visible')) {
+                refresh(editor);
+            }
         });
-        
+
+        $(editor.$parent).on("remove", function() {
+            editor.destroy();
+        });
+
         // Save this object int the widget var in the global scope, if one is supplied.
         if (options.widget) {
             window[options.widget] = editor;
@@ -650,7 +654,10 @@
             }).appendTo(popupDiv);
         } else {
             $popup = $('<select />')
-            .attr('name', selectName)
+            .attr({ 
+                'name' : selectName,
+                'data-mini' : 'true'
+            })
             .appendTo(popupDiv);
         }
 
@@ -907,13 +914,14 @@
                 $('<div/>').append("Current Format").addClass("ui-editor-format").hide().appendTo($main);
         }
 
+        var $frameMaster = editor.$frameMaster = $('<div/>').appendTo($main);
         var $frame = null;
         if (editor.$frame) {
             $frame = editor.$frame;
         } else {
             $frame = editor.$frame = $('<iframe style="margin-bottom: 5px;" src="javascript:true;">')
                 .hide()
-                .appendTo($main);
+                .appendTo($frameMaster);
         }
                 
         // Load the iframe document content
@@ -945,6 +953,12 @@
             }, 3);
             e.preventDefault();
             e.stopImmediatePropagation();
+        });
+        $doc.find('body').focus(function(e) {
+            if (!editor.$toolbarEnabled) {
+                editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
+                editor.$toolbarEnabled = true;        
+            }
         });
    
         //var $toolbar = editor.$toolbar,
@@ -981,7 +995,9 @@
         disable(editor, editor.disabled);
     
         // Put the focus on the editor. Otherwise when we try to tap it does not work.
-        focus(editor);
+        //focus(editor); 
+        //editor.$toolbar.find('a[data-role="button"]').button("disable");
+        editor.$toolbarEnabled = false;
     }
 
     // select - selects all the text in either the textarea or iframe
@@ -1187,20 +1203,17 @@
 
     function destroy() {
         /* Remove the popup menus from the DOM. */
-        $(this.$fontMenu).closest(".ui-popup-container").next().remove();
+        $(this.$fontMenu).closest(".ui-popup-container").prev().remove();
         $(this.$fontMenu).closest(".ui-popup-container").remove();
-        $(this.$styleMenu).closest(".ui-popup-container").next().remove();
+        $(this.$styleMenu).closest(".ui-popup-container").prev().remove();
         $(this.$styleMenu).closest(".ui-popup-container").remove();
-        $(this.$formatMenu).closest(".ui-popup-container").next().remove();
+        $(this.$formatMenu).closest(".ui-popup-container").prev().remove();
         $(this.$formatMenu).closest(".ui-popup-container").remove();
-        $(this.$actionMenu).closest(".ui-popup-container").next().remove();
+        $(this.$actionMenu).closest(".ui-popup-container").prev().remove();
         $(this.$actionMenu).closest(".ui-popup-container").remove();
-
-        $(this.$fontMenu).find(".ui-color-picker").each(function() {
-            var colorPickerId = $(this).data("colorpickerId");
-            if (colorPickerId) {
-                $('#' + colorPickerId).remove();
-            }
-        })
+    
+        /* Stop listening ... */
+        $(this.page).off("hxLayoutDone." + this.name);
+        $(document).off("orientationchange." + this.name);
     }
 })(jQuery);

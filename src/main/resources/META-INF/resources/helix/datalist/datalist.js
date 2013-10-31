@@ -164,19 +164,53 @@
             sortButtons : { },
             
             /**
-             * List of fields to filter by. These fields are specified as a map
-             * similar to the sorts field.
+             * List of fields to use as "this filters." This filters allow the user
+             * to filter the list to the value of the currently selected item. Since
+             * selecting an item often navigates away from the screen displaying the list,
+             * it is recommended that the "this filters" list appears on tap-hold, using the
+             * itemContextMenu. These fields are specified as a map similar to the sorts field.
+             * The map's keys are field names which are present in each object in the list. The
+             * map's values are display strings used to present the filter options to the user
+             * in a popup list. Unlike sorts and global filters, no button is rendered to display
+             * this filters. Instead, call displayFilterMenu from your own context menus supplied
+             * as a selector value to the itemContextMenu option. NOTE, that because nested popups
+             * are NOT permitted in jQuery Mobile, you must call popup("close") on the context
+             * menu before calling displayFilterMenu! The argument to displayFilterMenu should
+             * be the event target (i.e. what was clicked to pop up this menu).
              */
-            filters: null,
+            thisFilters: null,
             
             /**
-             * Callback that is invoked to do the actual filtering. The input to
-             * this callback is the current query collection for all items in
+             * Callback that is invoked to do the actual filtering for this filters. 
+             * The input to this callback is the current query collection for all items in
              * the list, the field name from the filters list, and the
              * currently selected row. E.g.,
-             *     doFilter(allItemsCollection, fieldName, selectedRow)
+             *     doThisFilter(allItemsCollection, fieldName, selectedRow)
+             * The callback should return a filtered query collection object.
              */
-            doFilter: null,
+            doThisFilter: null,
+            
+            /**
+             * Map of global filters, which allow the user to narrow down the list to a particular
+             * value for a field present in each object in the list. Global filters, if present,
+             * are also displayed in a popup menu. That menu is opened via a sort button that is
+             * placed next to the sort button and search box. Each global filter is represented as
+             * an object, with fields 'display', for a string used to describe the filter in the
+             * popup menu, 'values', for a list of potential values for the field, and 'valueNames'
+             * for a list of descriptive names corresponding to those values. The globalFilters field
+             * itself is, much like thisFilters, a map from field names to global filter objects.
+             */
+            globalFilters: null,
+            
+            /**
+             * Callback that is invoked to do the actual filtering for global filters. The 
+             * input to this callback is the current query collection for all items in
+             * the list, the field name from the filters list, and the
+             * currently selected row. E.g.,
+             *     doThisFilter(allItemsCollection, fieldName, selectedVal)
+             * The callback should return a filtered query collection object.
+             */
+            doGlobalFilter: null,
             
             /**
              * List of data to display in the list. Must be a PersistenceJS
@@ -210,6 +244,12 @@
             rowRenderer: null,
             
             /**
+             * When supplied, a function to call on pull-to-refresh. When null,
+             * pull to refresh is disabled.
+             */
+            pullToRefresh: null,
+            
+            /**
              * Comma-separated list of localizable strings. These can be supplied
              * when a server generates this markup using a server-side localization
              * technique. These strings are separated into an array and then passed
@@ -222,6 +262,14 @@
             this.$wrapper = this.element;
             if (this.options.scroll) {
                 this.element.addClass('hx-scroller-nozoom');
+            }
+            
+            /**
+             * Append the hook div if we have pull to refresh setup.
+             */
+            this.$hookDiv = null;
+            if (this.options.pullToRefresh) {
+                this.$hookDiv = $('<div/>').appendTo(this.$wrapper);
             }
             
             /**
@@ -246,6 +294,17 @@
             }
 
             this.$parent.listview();
+            
+            var _self = this;
+            if (this.$hookDiv) {
+                this.$hookDiv.hook({
+                    reloadPage: false,
+                    scrollTarget: this.element,
+                    reloadEl: function() {
+                        _self.options.pullToRefresh.call(this);
+                    }
+                });            
+            }
 
             // Column setup.
             this._currentPage = 0;
@@ -269,7 +328,6 @@
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
             }
-            var _self = this;
             this.refreshList(this.options.itemList,this.options.condition,null,null,function() {
                 //Helix.Layout.addScrollers(_self.$wrapper);
                 setTimeout(function() {
@@ -277,7 +335,37 @@
                 }, 0);
             });
         },
-        refreshList: function(list,condition,sorts,filters,oncomplete) {
+        
+        _getSortsFromOptions: function(sortFilterOptions) {
+            if (sortFilterOptions.__hx_sorts) {
+                return sortFilterOptions.__hx_sorts;
+            }
+            
+            return sortFilterOptions.sorts;
+        },
+        
+        _getThisFiltersFromOptions: function(sortFilterOptions) {
+            if (sortFilterOptions.__hx_filters) {
+                return sortFilterOptions.__hx_filters;
+            }
+            
+            return sortFilterOptions.thisFilters;
+        },
+        
+        _getGlobalFiltersFromOptions: function(sortFilterOptions) {
+            if (sortFilterOptions.__hx_global_filters) {
+                return sortFilterOptions.__hx_global_filters;
+            }
+            
+            return sortFilterOptions.globalFilters;
+        },
+        
+        /**
+         * sortFilterOptions can either be a Mobile Helix enhanced PersistenceJS
+         * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
+         * and globalFilters with the format described in the options documentation.
+         */
+        refreshList: function(list,condition,sortFilterOptions,oncomplete) {
             /* List must be non-empty and it must be a query collection. */
             if (!list || !list.forEach) {
                 return;            
@@ -300,22 +388,38 @@
             }
             
             /* Create the sort popup */
-            if (!sorts) {
+            var sorts = null;
+            if (!sortFilterOptions) {
                 sorts = _self.options.sorts;
+            } else {
+                sorts = _self._getSortsFromOptions(sortFilterOptions);
             }
             if (sorts) {
                 _self._refreshSortContainer(sorts);
             }
             
-            if (!filters) {
-                filters = _self.options.filters;
+            var thisFilters = null;
+            if (!sortFilterOptions) {
+                thisFilters = _self.options.thisFilters;
+            } else {
+                thisFilters = _self._getThisFiltersFromOptions(sortFilterOptions);
             }
-            if (filters && _self.options.doFilter) {
-                _self._refreshFilterContainer(filters);
+            if (thisFilters && _self.options.doThisFilter) {
+                _self._refreshFilterContainer(thisFilters);
+            }
+            
+            var globalFilters = null;
+            if (!sortFilterOptions) {
+                globalFilters = _self.options.globalFilters;
+            } else {
+                globalFilters = _self._getGlobalFiltersFromOptions(sortFilterOptions);
+            }
+            if (globalFilters && _self.options.doGlobalFilter) {
+                _self._refreshGlobalFilterContainer(globalFilters);
             }
             
             /* Generate the actual data for the current page. */
-            _self._prependSearchBox(sorts, filters);
+            _self._prependSearchBox();
             _self._updateSortButtons();
             
             _self._currentPage = 1;
@@ -344,19 +448,31 @@
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
                 if (this._currentSortOrder === "DESCENDING") {
-                    // Show the ascending button to flip back to ascending.
-                    $(this.options.sortButtons.ascending).show();
-                    $(this.options.sortButtons.descending).hide();
-                } else {
-                    // Show the descending button to flip back to descending.
-                    $(this.options.sortButtons.descending).show();                            
+                    // Show the descending button, reflecting the CURRENT order.
+                    $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
+                } else {
+                    $(this.options.sortButtons.ascending).show();                            
+                    $(this.options.sortButtons.descending).hide();
                 }
             }
         },
         
         _refreshSortContainer: function(sorts) {
             var _self = this;
+            
+            /* See if the contents of the sorts has changed. */
+            var newSortsJSON = JSON.stringify(sorts);
+            if (_self._currentSortsJSON) {
+                if (newSortsJSON === _self._currentSortsJSON) {
+                    // No change.
+                    return;
+                }
+            }
+            _self._currentSortsJSON = newSortsJSON;
+            /* Need to refresh the search/sort area. */
+            _self._searchSortDirty = true;
+            
             /* we are only called if sorts is non-null. */
             if (_self._sortContainer) {
                 /* Remove the old context menu ... */
@@ -382,10 +498,17 @@
                         'data-field': sortFld
                     }).append(sorts[sortFld]));
                     $(sortsList).append(sortItem);
+                    
+                    /* Highlight the current sort. */
+                    if (sortFld === _self._currentSort) {
+                        $(sortItem).addClass('hx-current-sort');
+                    }
+                    
+                    /* Do the actual sorting ... */
                     $(sortItem).on('tap', function(evt) {
                         evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
-                        if (newSortField == _self._currentSort) {
+                        if (newSortField === _self._currentSort) {
                             if (_self._currentSortOrder === "ASCENDING") {
                                 _self._currentSortOrder = "DESCENDING";
                             } else {
@@ -403,6 +526,10 @@
                             _self.options.onSortChange(_self._currentSort, _self._currentSortOrder);
                         }
                         _self._updateSortButtons();
+                        
+                        // Change the li for this sort field so that we can see it is the current sort field.
+                        $(sortsList).find('li').removeClass('hx-current-sort');
+                        $(this).addClass('hx-current-sort');
 
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
@@ -413,8 +540,20 @@
             sortsList.listview();
             _self._sortContainer.popup();            
         },
+        
         _refreshFilterContainer: function(filters) {
             var _self = this;
+            
+            /* See if the contents of the filters has changed. */
+            var newFiltersJSON = JSON.stringify(filters);
+            if (_self._currentFiltersJSON) {
+                if (newFiltersJSON === _self._currentFiltersJSON) {
+                    // No change.
+                    return;
+                }
+            }
+            _self._currentFiltersJSON = newFiltersJSON;
+            
             /* we are only called if filters is non-null. */
             if (_self._filterContainer) {
                 /* Remove the old filter menu ... */
@@ -443,7 +582,7 @@
                     filterItem.on('tap', function(evt) {
                         evt.stopImmediatePropagation();                        
                         var newFilterField = $(evt.target).attr('data-field');
-                        _self.itemList = _self.options.doFilter(_self.unfilteredList, newFilterField, _self.selected);
+                        _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
                         });
@@ -467,6 +606,162 @@
             filtersList.listview();
             _self._filterContainer.popup();            
         },
+        
+        _refreshGlobalFilterContainer: function(filters) {
+            var _self = this;
+            
+            /* See if the contents of the filters has changed. */
+            var newFiltersJSON = JSON.stringify(filters);
+            if (_self._currentGlobalFiltersJSON) {
+                if (newFiltersJSON === _self._currentGlobalFiltersJSON) {
+                    // No change.
+                    return;
+                }
+            }
+            _self._currentGlobalFiltersJSON = newFiltersJSON;
+            /* Need to refresh the search/sort area. */
+            _self._searchSortDirty = true;
+            
+            /* we are only called if filters is non-null. */
+            if (_self._globalFilterContainer) {
+                /* Remove the old filter menu ... */
+                _self._globalFilterContainer.remove();
+            }
+            if (!_self._filterMap) {
+                _self._filterMap = {};
+            }
+            
+            _self._globalFilterContainer = $('<div/>').attr({
+                'data-role' : 'popup',
+                'id' : Helix.Utils.getUniqueID(),
+                'data-theme' : 'a',
+                'data-position-to' : 'origin',
+                'data-history': 'false'
+            }).appendTo(_self.$wrapper);
+            var filtersList = $('<ul />').attr({ 
+                'data-role' : 'listview',
+                'data-inset' : 'true',
+                'data-theme' : 'b'
+            }).appendTo(_self._globalFilterContainer);
+            for (var fldName in filters) {
+                var filterObj = filters[fldName];
+                var filterItem = null;
+                if (filterObj.values.length == 1) {
+                    filterItem = $('<li />').append($('<a />').attr({ 
+                        'href' : 'javascript:void(0)',
+                        'data-field': fldName,
+                        'data-value': filterObj.values[0]
+                    }).append(filterObj.valueNames[0]));
+                    filtersList.append(filterItem);
+                    
+                    // Execute the global filter.
+                    filterItem.on('tap', function(evt) {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        var newFilterField = $(evt.target).attr('data-field');
+                        var newFilterValue = $(evt.target).attr('data-value');
+                        _self.itemList = _self.options.doGlobalFilter(_self.unfilteredList, newFilterField, newFilterValue);
+                        _self._refreshData(function() {
+                            _self.$parent.listview( "refresh" );
+                        });
+                        $(_self._globalFilterContainer).popup("close");
+                    });
+                } else {
+                    var selectID = Helix.Utils.getUniqueID();
+                    $('<label/>').attr({ 
+                        'for' : selectID
+                    }).append(filterObj.display).appendTo(filtersList);
+                    filterItem = $('<select/>')
+                                    .attr({
+                                        'name' : selectID,
+                                        'id': selectID,
+                                        'data-field' : fldName
+                                    })
+                                    .appendTo(filtersList);
+                    for (var i = 0; i < filterObj.values.length; ++i) {
+                        $('<option/>').attr({
+                            'value' : filterObj.values[i],
+                            'data-field' : fldName
+                        })
+                        .append(filterObj.valueNames[i])
+                        .appendTo(filterItem);
+                    }
+                    // add a special 'clear' value, which is the default value.
+                    $('<option/>').attr({
+                        'value' : '__hx_clear',
+                        'data-field' : fldName,
+                        'selected' : 'true'
+                    }).append('Clear')
+                    .appendTo(filterItem);
+                    
+                    filterItem.selectmenu({ mini: true });
+                    
+                    filterItem.change(function(evt) {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        $(this).find("option:selected").each(function() {
+                            var gFilterField = $(this).attr('data-field');
+                            var gFilterValue = $(this).val();
+                            if (gFilterValue === '__hx_clear') {
+                                // Clear out this field, then starting from the unfiltered list re-instate all
+                                // remaining fields.
+                                delete _self._filterMap[gFilterField];
+                                var curCollection = _self.unfilteredList;
+                                for (var filteredFld in _self._filterMap) {
+                                    curCollection = _self.options.doGlobalFilter(curCollection, filteredFld, _self._filterMap[filteredFld]);
+                                }
+                                _self.itemList = curCollection;
+                                _self._refreshData(function() {
+                                    _self.$parent.listview( "refresh" );
+                                });
+                            } else {
+                                if (_self._filterMap[gFilterField] &&
+                                    _self._filterMap[gFilterField] === gFilterValue) {
+                                    // The filter did not change ... do nothing.
+                                } else {
+                                    // Use itemList in the call below as filters can build on each other.
+                                    _self._filterMap[gFilterField] = gFilterValue;
+                                    _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, gFilterValue);
+                                    _self._refreshData(function() {
+                                        _self.$parent.listview( "refresh" );
+                                    });
+                                }
+                            }
+                            $(_self._globalFilterContainer).popup("close");
+                        });
+                    });
+                }
+            }
+            
+            /* Always have a "Clear" option. */
+            $('<li />').append($('<a />').attr({ 
+                'href' : 'javascript:void(0)',
+                'data-field': '__clear'
+            }).append("Clear"))
+              .appendTo(filtersList)
+              .on('tap', function(evt) {
+                evt.stopImmediatePropagation();
+                evt.preventDefault();
+                
+                // Reset the values in the global filter popup.
+                for (var fField in _self._filterMap) {
+                    $('option[data-field="' + fField + '"]').removeAttr('selected');
+                    $('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
+                    $('select[data-field="' + fField + '"]').selectmenu('refresh');
+                }
+                
+                _self._filterMap = {};
+                _self.itemList = _self.unfilteredList;
+                _self._refreshData(function() {
+                    _self.$parent.listview( "refresh" );
+                });
+                $(_self._globalFilterContainer).popup("close");
+            });
+            
+            filtersList.listview();
+            _self._globalFilterContainer.popup();            
+        },
+        
         _refreshPaginatorContainer: function() {
             var _self = this;
             if (!_self.options.itemsPerPage) {
@@ -514,7 +809,7 @@
                 displayCollection = displayCollection.limit(_self.options.itemsPerPage);
                 /* XXX: Determine if there is a next page. If not, disable the next button. */
             }
-            if (orderby && !_self.__searchText) {
+            if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
 
@@ -549,30 +844,148 @@
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
-        _prependSearchBox: function(sorts, filters) {
-            var hasButtons = sorts || filters;
-            if (this.$searchBox) {
-                this.$wrapper.prev().remove();
+        
+        _doSearch: function() {
+            var _self = this;
+            _self.__searchText = _self.$searchBox.val();
+            if (_self.__searchReadyTimeout) {
+                clearTimeout(_self.__searchReadyTimeout);
+            }
+
+            _self.__searchReadyTimeout = setTimeout(function() {
+                _self.itemList = _self.options.indexedSearch(_self.__searchText);
+                _self._refreshData(function() {
+                    _self.$parent.listview( "refresh" );
+                });
+                _self.__searchReadyTimeout = null;
+            }, 1000);
+        },
+        
+        _prependSearchBox: function() {
+            var _self = this;
+            var hasButtons = _self._globalFilterContainer || _self._sortContainer; 
+            var useControlGroup = false;
+            if (_self._searchSortDiv && !_self._searchSortDirty) {
+                return;
             }
             
-            var _self = this;
-            var $searchSortDiv = $('<div/>').insertBefore(this.$wrapper);
+            if (_self._searchSortDiv) {
+                _self._searchSortDiv.remove();
+            }
+            _self._searchSortDirty = false;
+            
+            _self._searchSortDiv = $('<div/>')
+                .attr({
+                    'class' : 'hx-full-width'
+                })
+                .insertBefore(this.$wrapper);
+            if (hasButtons) {
+                if (_self._sortContainer && _self._globalFilterContainer) {
+                    useControlGroup = true;
+                }
+                
+                var $sortDiv = $('<div/>').attr({
+                    'class' : 'hx-display-inline',
+                    'data-role' : 'none',
+                    'data-type' : 'horizontal'
+                }).appendTo(_self._searchSortDiv);
+                if (_self._sortContainer) {
+                    /* Ascending/descending sort buttons. */
+                    var sAscendID = Helix.Utils.getUniqueID();
+                    var sDescendID = Helix.Utils.getUniqueID();
+                    this.options.sortButtons = {
+                        'ascending' : PrimeFaces.escapeClientId(sAscendID),
+                        'descending' : PrimeFaces.escapeClientId(sDescendID)
+                    };
+
+                    this.$sortAscending = $('<a/>').attr({
+                        'id' : sAscendID,
+                        'data-role' : 'none',
+                        'data-icon' : 'arrow-u',
+                        'data-iconpos' : 'notext',
+                        'data-theme' : 'b',
+                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                    }).button()
+                    .appendTo($sortDiv)
+                    .on('tap', function(ev) {
+                        ev.stopPropagation();
+                        ev.stopImmediatePropagation();
+                        ev.preventDefault();
+                        
+                        _self.displaySortMenu(this);
+                    });
+                    this.$sortDescending = $('<a/>').attr({
+                        'id' : sDescendID,
+                        'data-role' : 'none',
+                        'data-icon' : 'arrow-d',
+                        'data-iconpos' : 'notext',
+                        'data-theme' : 'b',
+                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                    }).button()
+                    .appendTo($sortDiv)
+                    .on('tap', function(ev) {
+                        ev.stopPropagation();
+                        ev.stopImmediatePropagation();
+                        ev.preventDefault();
+                        
+                        _self.displaySortMenu(this);
+                    });                    
+                }
+                
+                if (_self._globalFilterContainer) {
+                    /* Filter button. */
+                    var sFilterID = Helix.Utils.getUniqueID();
+                    this.$filter = $('<a/>').attr({
+                        'id' : sFilterID,
+                        'data-role' : 'none',
+                        'data-icon' : 'filter',
+                        'data-iconpos' : 'notext',
+                        'data-theme' : 'b',
+                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                    }).button()
+                    .appendTo($sortDiv)
+                    .on('tap', function(ev) {
+                        ev.stopPropagation();
+                        ev.stopImmediatePropagation();
+                        ev.preventDefault();
+                        
+                        _self.displayGlobalFilterMenu(this);
+                    });                    
+                }
+                
+                if (useControlGroup) {
+                    $sortDiv.controlgroup();
+                } else {
+                    $sortDiv.controlgroup({ corners: false });
+                }
+            }
             if (this.options.indexedSearch) {
                 var styleClass = 'hx-display-inline';
+                var widthStyle = null;
                 if (!hasButtons) {
                     styleClass = styleClass + ' hx-full-width';
+                } else {
+                    if (useControlGroup) {
+                        widthStyle = '60%';
+                    } else {
+                        widthStyle = '80%';
+                    }
                 }
                 var $searchDiv = $('<div/>').attr({
                     'class' : styleClass
-                }).appendTo($searchSortDiv);
+                }).appendTo(_self._searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 this.$searchBox = $('<input/>').attr({
                     'type' : 'search',
                     'name' : 'search',
                     'id' : sboxID,
                     'value' : '',
-                    'data-role' : 'none'
+                    'data-role' : 'none',
+                    'data-mini' : true
                 }).appendTo($searchDiv);
+                if (widthStyle) {
+                    $searchDiv.css('width', widthStyle);
+                }
 
                 this.$searchLabel = $('<label/>').attr({
                     'for': sboxID
@@ -582,55 +995,14 @@
                     this.$searchBox.val(this.__searchText);
                 }
                 this.$searchBox.on('input', function() {
-                    _self.__searchText = _self.$searchBox.val();
-                    if (_self.__searchReadyTimeout) {
-                        clearTimeout(_self.__searchReadyTimeout);
-                    }
-
-                    _self.__searchReadyTimeout = setTimeout(function() {
-                        _self.refreshList(_self.options.indexedSearch(_self.__searchText));
-                        _self.__searchReadyTimeout = null;
-                    }, 1500);
+                    _self._doSearch();
                 });
-            }
-            if (hasButtons) {
-                var sAscendID = Helix.Utils.getUniqueID();
-                var sDescendID = Helix.Utils.getUniqueID();
-                this.options.sortButtons = {
-                    'ascending' : PrimeFaces.escapeClientId(sAscendID),
-                    'descending' : PrimeFaces.escapeClientId(sDescendID)
-                };
-                
-                var $sortDiv = $('<div/>').attr({
-                    'class' : 'hx-display-inline',
-                    'data-role' : 'none',
-                    'data-type' : 'horizontal'
-                }).appendTo($searchSortDiv);
-                this.$sortAscending = $('<a/>').attr({
-                    'id' : sAscendID,
-                    'data-role' : 'none',
-                    'data-icon' : 'arrow-u',
-                    'data-iconpos' : 'notext',
-                    'data-theme' : 'b',
-                    'data-mini' : 'true'
-                }).button()
-                .appendTo($sortDiv)
-                .on('tap', function() {
-                    _self.displaySortMenu(this);
+                $searchDiv.find('a.ui-input-clear').on('tap', function() {
+                    _self.itemList = _self.unfilteredList;
+                    _self._refreshData(function() {
+                        _self.$parent.listview( "refresh" );
+                    });
                 });
-                this.$sortDescending = $('<a/>').attr({
-                    'id' : sDescendID,
-                    'data-role' : 'none',
-                    'data-icon' : 'arrow-d',
-                    'data-iconpos' : 'notext',
-                    'data-theme' : 'b',
-                    'data-mini' : 'true'
-                }).button()
-                .appendTo($sortDiv)
-                .on('tap', function() {
-                    _self.displaySortMenu(this);
-                });
-                $sortDiv.controlgroup();
             }
         },
         /* Apply the appropriate sort to the display collection. */
@@ -873,12 +1245,18 @@
             }
             this.options.holdAction(this.selected, this.selectedGroup, this.strings);          
         },
+        
+        /* Display sort and filter menus. */
         displaySortMenu: function(selector) {
             this._sortContainer.popup('open', { positionTo: selector });
         },
         displayFilterMenu: function(selector) {
             this._filterContainer.popup('open', { positionTo: selector });
         },
+        displayGlobalFilterMenu: function(selector) {
+            this._globalFilterContainer.popup('open', { positionTo: selector });
+        },
+        
         setWrapperHeight: function(hgt) {
             this.$wrapper.height(hgt);
         },

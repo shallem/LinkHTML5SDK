@@ -286,11 +286,14 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
     tx.successCallback = successCallback;
     tx.errorCallback = errorCallback;
     try {
-        cordova.exec(null, null, "MobileHelixStorage", "beginTX", [ tx.db ]);
-        process(tx);
-        cordova.exec(tx.successCallback, tx.errorCallback, "MobileHelixStorage", "commitTX", [ tx.db ]);
+        cordova.exec(function() {
+            // Txn is created - run the process function.
+            process(tx);
+        }, 
+        function(errMsg) {
+            alert("Error creating a transaction: " + errMsg);
+        }, "MobileHelixStorage", "beginTX", [ tx.db ]);
     } catch (e) {
-        cordova.exec(null, null, "MobileHelixStorage", "rollbackTX", [ tx.db ]);
         console.log("Transaction error: "+e);
         if (tx.errorCallback) {
             try {

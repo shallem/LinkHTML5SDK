@@ -74,24 +74,11 @@ persistence.search.config = function(persistence, dialect) {
     }
     return wordDict;
   }
-
+  
   /**
-   * Parses a search query and returns it as list SQL parts later to be OR'ed or AND'ed.
+   * Generate an SQL search phrase for a single word.
    */
-  function searchPhraseParser(query, indexTbl, prefixByDefault) {
-    query = query.toLowerCase().replace(/['"]/, '').replace(/(^\s+|\s+$)/g, '');
-    var words = query.split(/\s+/);
-    var sqlParts = [];
-    var restrictedToColumn = null;
-    for(var i = 0; i < words.length; i++) {
-      var word = normalizeWord(words[i]);
-      if(!word) {
-        continue;
-      }
-      if(word.search(/:$/) !== -1) {
-        restrictedToColumn = word.substring(0, word.length-1);
-        continue;
-      } 
+  function generateQueryElement(word, indexTbl, restrictedToColumn, prefixByDefault) {
       var sql = '(';
       if(word.search(/\*/) !== -1) {
         sql += "`" + indexTbl + "`.`word` LIKE '" + word.replace(/\*/g, '%') + "'";
@@ -104,6 +91,49 @@ persistence.search.config = function(persistence, dialect) {
         sql += ' AND `' + indexTbl + "`.`prop` = '" + restrictedToColumn + "'";
       }
       sql += ')';
+      return sql;
+  }
+
+  /**
+   * Parses a search query and returns it as list SQL parts later to be OR'ed or AND'ed.
+   */
+  function searchPhraseParser(query, indexTbl, prefixByDefault) {
+    query = query.toLowerCase().replace(/['"]/, '').replace(/(^\s+|\s+$)/g, '');
+    var words = query.split(/\s+/);
+    var sqlParts = [];
+    var restrictedToColumn = null;
+    var isFirst = true;
+    for(var i = 0; i < words.length; i++) {
+      var word = normalizeWord(words[i]);
+      if(!word) {
+        continue;
+      }
+      if(word.search(/:$/) !== -1) {
+        restrictedToColumn = word.substring(0, word.length-1);
+        continue;
+      } 
+      
+      // See if this is a comma separated list of words. If so, create a disjunction on
+      // those words.
+      var disjunctWords = word.split(/,/);
+      var sql = null;
+      if (disjunctWords.length > 1) {
+          sql = '(';
+          var djSql = [];
+          for (var j = 0; j < disjunctWords.length; ++j) {
+              djSql.push(generateQueryElement(disjunctWords[j], indexTbl, restrictedToColumn, prefixByDefault));
+          }
+          sql += djSql.join(' OR ');
+          sql += ')';
+      } else {
+          sql = generateQueryElement(word, indexTbl, restrictedToColumn, prefixByDefault);
+      }
+      if (isFirst) {
+          isFirst = false;
+      } else {
+          sql = "(`" + indexTbl + "`.`entityId` IN (select entityId from `" +
+              indexTbl + "` WHERE " + sql + "))";
+      }
       sqlParts.push(sql);
     }
     return sqlParts.length === 0 ? ["1=1"] : sqlParts;
@@ -167,9 +197,8 @@ persistence.search.config = function(persistence, dialect) {
     if(query) {
       this._additionalJoinSqls.push(', `' + entityName + '_Index`');
       this._additionalWhereSqls.push('`root`.id = `' + entityName + '_Index`.`entityId`');
-      this._additionalWhereSqls.push('(' + searchPhraseParser(query, entityName + '_Index', prefixByDefault).join(' OR ') + ')');
+      this._additionalWhereSqls.push('(' + searchPhraseParser(query, entityName + '_Index', prefixByDefault).join(' AND ') + ')');
       this._additionalGroupSqls.push(' GROUP BY (`' + entityName + '_Index`.`entityId`)');
-      this._additionalGroupSqls.push(' ORDER BY SUM(`' + entityName + '_Index`.`occurrences`) DESC');
     }
   }
 
@@ -185,8 +214,18 @@ persistence.search.config = function(persistence, dialect) {
     return clone;
   };
 
-  SearchQueryCollection.prototype.order = function() {
-    throw new Error("Imposing additional orderings is not support for search query collections.");
+  SearchQueryCollection.prototype.oldOrder = SearchQueryCollection.prototype.order;
+  SearchQueryCollection.prototype.order = function(property, ascending, caseSensitive) {
+      if (this._usingDefaultOrder) {
+        throw new Error("Imposing additional orderings is not support for search query collections.");
+      }
+      return this.oldOrder(property, ascending, caseSensitive);
+  };
+  
+  SearchQueryCollection.prototype.defaultOrder = function() {
+      var entityName = this._entityName;
+      this._additionalGroupSqls.push(' ORDER BY SUM(`' + entityName + '_Index`.`occurrences`) DESC');
+      this._usingDefaultOrder = true;
   };
 
   /*
