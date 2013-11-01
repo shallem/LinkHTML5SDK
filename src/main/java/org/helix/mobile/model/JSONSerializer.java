@@ -309,12 +309,16 @@ public class JSONSerializer {
             } else {
                 jg.writeStartArray();
             }
+            if (this.isSimpleType(componentType)) {
+                throw new IOException("Arrays of simple types (e.g., strings, ints, etc.) are currently not supported. Wrap your String in a class of its own and add a ClientData getter so that the wrapper class can become its own table on the client.");
+            }
+            
             if (!this.serializeObjectForSchema(jg,
                     componentType,
                     visitedClasses,
                     null,
                     alternateName)) {
-                throw new IOException("Array types returned by ClientData methods must be simple types or object types with at least one ClientData field. Class " + componentType.getName() + " does not comply.");
+                throw new IOException("Array types returned by ClientData methods must be object types with at least one ClientData field. Class " + componentType.getName() + " does not comply.");
             }
             jg.writeEndArray();
             return true;

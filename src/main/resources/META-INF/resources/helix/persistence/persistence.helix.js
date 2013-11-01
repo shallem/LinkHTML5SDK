@@ -175,8 +175,8 @@ function initHelixDB() {
             
             if (schemaTemplate.__hx_global_filters) {
                 for (var gFilterField in schemaTemplate.__hx_global_filters) {
-                    if (!schemaTemplate.__hx_sorts[filterField] &&
-                        !schemaTemplate.__hx_filters[filterField]) {
+                    if (!schemaTemplate.__hx_sorts[gFilterField] &&
+                        !schemaTemplate.__hx_filters[gFilterField]) {
                         objSchema.index(gFilterField);
                     }
                 }
