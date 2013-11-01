@@ -90,10 +90,10 @@ window.HelixApp = {
 (function() {
 window.HelixSystem = {
     suspendSleep: function() {
-        return cordova.exec(null, null, "HelixServices", "suspendSleep", []);
+        return cordova.exec(null, null, "HelixSystem", "suspendSleep", []);
     },
     allowSleep: function() {
-        return cordova.exec(null, null, "HelixServices", "allowSleep", []);
+        return cordova.exec(null, null, "HelixSystem", "allowSleep", []);
     }
 };
 })();
