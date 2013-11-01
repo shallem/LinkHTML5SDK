@@ -272,17 +272,20 @@
         },
         
         setValue: function(name, value) {
-            if (!this.rendered) {
-                for (var idx = 0; idx < this.options.items.length; ++idx) {
-                    var fieldID = this.options.items[idx].name;
-                    var strippedFieldID = this._stripNamespace(fieldID);
+            // Set the value fields in the form items regardless of whether or not the
+            // form has already been rendered. The reason is that we want to be certain
+            // that if we toggle the form we get the right values. Toggling the form re-renders
+            // all elements for obvious reasons ...
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                var strippedFieldID = this._stripNamespace(fieldID);
 
-                    if (name === strippedFieldID) {
-                        this.options.items[idx].value = value;
-                        break;
-                    }
+                if (name === strippedFieldID) {
+                    this.options.items[idx].value = value;
+                    break;
                 }
-            } else {
+            }
+            if (this.rendered) {
                 var fldType = this._typeMap[name];
                 var searchName = this._addNamespace(name);
                 var thisField = $(this.element).find('[name="' + searchName + '"]');
