@@ -56,6 +56,9 @@
  */
 $(document).bind('prerequest', function() {
     $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+    if (window.CordovaInstalled) {
+        window.HelixSystem.suspendSleep();
+    }
     Helix.Ajax.loadCt++;
 });
 
@@ -66,6 +69,9 @@ $(document).bind('postrequest', function() {
     if (!Helix.Ajax.loadOptions.pin) {
         /* Hide the loader. */
         $.mobile.loading( "hide" );
+        if (window.CordovaInstalled) {
+            window.HelixSystem.allowSleep();
+        }
     }
 
     /* Clear out the load options - this is meant as a per-load set of options. */
@@ -273,7 +279,6 @@ Helix.Ajax = {
         }
         
         // Setup loader options and show the loader.
-        Helix.Ajax.loadOptions.pin = true;
         Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
         //$.mobile.loading( 'show', Helix.Ajax.loadOptions);
         
@@ -345,12 +350,16 @@ Helix.Ajax = {
                         loadCommandOptions.onerror(error);
                         return;
                     }
-
+                    
+                    Helix.Ajax.loadOptions.pin = true;
                     if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
                         Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
                             window[loadCommandOptions.name] = finalObj;
                             Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
+                            if (window.CordovaInstalled) {
+                                window.HelixSystem.allowSleep();
+                            }
                             $.mobile.loading( "hide" );
                         }, itemKey, loadCommandOptions.syncOverrides);
                     } else {

@@ -86,3 +86,14 @@ window.HelixApp = {
     }
 };
 })();
+
+(function() {
+window.HelixSystem = {
+    suspendSleep: function() {
+        return cordova.exec(null, null, "HelixServices", "suspendSleep", []);
+    },
+    allowSleep: function() {
+        return cordova.exec(null, null, "HelixServices", "allowSleep", []);
+    }
+};
+})();

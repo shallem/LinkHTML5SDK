@@ -1106,7 +1106,9 @@
                     // This allows the container to have taphold context menus that are not
                     // triggered when this event is triggered.
                     event.stopImmediatePropagation();
+                    event.stopPropagation();
                     event.preventDefault();
+                    
                     _self.setSelected(event.target);
                     $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
                         positionTo: event.target
@@ -1114,6 +1116,10 @@
                 });
             } else if (_self.options.holdAction) {
                 $(curRowParent).on(_self.contextEvent, function(event) {
+                    event.stopImmediatePropagation();
+                    event.stopPropagation();
+                    event.preventDefault();
+                    
                     _self.setSelected(event.target);
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                     event.stopPropagation();
@@ -1121,10 +1127,12 @@
             } 
             if (_self.options.selectAction) {
                 $(curRowParent).on(_self.tapEvent, function(event) {
+                    event.stopImmediatePropagation();
+                    event.stopPropagation();
+                    event.preventDefault();
+
                     _self.setSelected(event.target);
                     _self.selectItem();
-                    event.stopImmediatePropagation();
-                    event.preventDefault();
                 });
             }
         

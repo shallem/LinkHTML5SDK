@@ -18,44 +18,177 @@
  * Layout a single form element.
  */
 
+Date.prototype.stdTimezoneOffset = function() {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+
+Date.prototype.dst = function() {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
+
 /**
  * Private helper functions.
  */
-function __appendDate(mode, formElem, $fieldContainer) {
+function __mkTZOption(tzOffsetHours, curTime, text, val) {
+    // Determine if the current time is in this time zone.
+    var selected = false;
+    if (Helix.Utils.isString(curTime)) {
+        selected = (curTime === val);    
+    } else {
+        var tzOffset = tzOffsetHours * 60;
+        if ((-tzOffset) == curTime.getTimezoneOffset()) {
+            selected = true;
+        }        
+    }
+
+    var tzO = $('<option />').attr({
+        value: val,
+        'data-offset' : tzOffsetHours
+    }).append(text);
+    if (selected) {
+        tzO.attr("selected", true);
+    }
+    
+    return tzO;
+}
+
+/**
+ * Return true if we are in daylight savings time. False if not.
+ */
+function __isCurrentTZ(stdOffsetHours) {
+    var today = new Date();
+    var offsetMinutes = today.stdTimezoneOffset();
+    if (offsetMinutes == (-stdOffsetHours * 60)) {
+        return true;
+    }
+    return false;
+}
+
+function __getTZSelect(name, curTime) {
+    var date = null;
+    if (!curTime) {
+        date = new Date();
+    } else if (!Helix.Utils.isString(curTime)) {
+        date = new Date(curTime);
+    }
+    
+    var tzSelect = $('<select />').attr({
+        'name' : name,
+        'id' : name
+    });
+    __mkTZOption(-12.0, date, "(GMT -12:00) Eniwetok, Kwajalein", "ENIWETOK").appendTo(tzSelect);
+    __mkTZOption(-11.0, date, "(GMT -11:00) Midway Island, Samoa", "MIDWAY_ISLAND").appendTo(tzSelect);
+    __mkTZOption(-10.0, date, "(GMT -10:00) Hawaii", "HAWAII").appendTo(tzSelect);
+    
+    if (date.dst()) {
+        __mkTZOption(-8.0, date, "(GMT -8:00) Alaska Daylight Time", "ALASKA").appendTo(tzSelect);
+        __mkTZOption(-7.0, date, "(GMT -7:00) Pacific Daylight Time (US &amp; Canada)", "PACIFIC").appendTo(tzSelect);
+        __mkTZOption(-6.0, date, "(GMT -6:00) Mountain Daylight Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);              
+        __mkTZOption(-5.0, date, "(GMT -5:00) Central Daylight Time (US &amp; Canada), Mexico City", "CENTRAL").appendTo(tzSelect);
+        __mkTZOption(-4.5, date, "(GMT -4:30) Venezuela Standard Time, Caracas", "CARACAS").appendTo(tzSelect);
+        __mkTZOption(-4.0, date, "(GMT -4:00) Eastern Daylight Time (US &amp; Canada), Bogota, Lima", "EASTERN").appendTo(tzSelect);
+        __mkTZOption(-3.0, date, "(GMT -3:00) Atlantic Daylight Time (Canada), La Paz", "ATLANTIC_CANADA").appendTo(tzSelect);
+        __mkTZOption(-2.5, date, "(GMT -2:30) Newfoundland Daylight Time", "NEWFOUNDLAND").appendTo(tzSelect);
+        __mkTZOption(-2.0, date, "(GMT -2:00) Brazil, Buenos Aires, Georgetown", "BUENOS_AIRES").appendTo(tzSelect);
+    } else {
+        __mkTZOption(-9.0, date, "(GMT -9:00) Alaska", "ALASKA").appendTo(tzSelect);
+        __mkTZOption(-8.0, date, "(GMT -8:00) Pacific Time (US &amp; Canada)", "PACIFIC").appendTo(tzSelect);
+        __mkTZOption(-7.0, date, "(GMT -7:00) Mountain Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);        
+        __mkTZOption(-6.0, date, "(GMT -6:00) Central Time (US &amp; Canada), Mexico City", "CENTRAL").appendTo(tzSelect);
+        __mkTZOption(-5.0, date, "(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima", "EASTERN").appendTo(tzSelect);
+        __mkTZOption(-4.5, date, "(GMT -4:30) Venezuela Standard Time, Caracas", "CARACAS").appendTo(tzSelect);
+        __mkTZOption(-4.0, date, "(GMT -4:00) Atlantic Time (Canada), La Paz", "ATLANTIC_CANADA").appendTo(tzSelect);
+        __mkTZOption(-3.5, date, "(GMT -3:30) Newfoundland", "NEWFOUNDLAND").appendTo(tzSelect);
+        __mkTZOption(-3.0, date, "(GMT -3:00) Brazil, Buenos Aires, Georgetown", "BUENOS_AIReS").appendTo(tzSelect);
+        __mkTZOption(-2.0, date, "(GMT -2:00) Mid-Atlantic", "MID_ATLANTIC").appendTo(tzSelect);
+    }
+    __mkTZOption(-1.0, date, "(GMT -1:00 hour) Azores, Cape Verde Islands", "AZORES").appendTo(tzSelect);
+    __mkTZOption(0.0, date, "(GMT) Western Europe Time, London, Lisbon, Casablanca", "GMT").appendTo(tzSelect);
+    __mkTZOption(1.0, date, "(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris", "PARIS").appendTo(tzSelect);
+    __mkTZOption(2.0, date, "(GMT +2:00) Cairo, South Africa", "CAIRO").appendTo(tzSelect);
+    __mkTZOption(3.0, date, "(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg", "MOSCOW").appendTo(tzSelect);
+    __mkTZOption(3.5, date, "(GMT +3:30) Tehran", "TEHRAN").appendTo(tzSelect);
+    __mkTZOption(4.0, date, "(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi", "ABU_DHABI").appendTo(tzSelect);
+    __mkTZOption(4.5, date, "(GMT +4:30) Kabul", "KABUL").appendTo(tzSelect);
+    __mkTZOption(5.0, date, "(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent", "ISLAMABAD").appendTo(tzSelect);
+    __mkTZOption(5.5, date, "(GMT +5:30) Bombay, Calcutta, Madras, New Delhi", "BOMBAY").appendTo(tzSelect);
+    __mkTZOption(5.75, date, "(GMT +5:45) Kathmandu", "NEPAL").appendTo(tzSelect);
+    __mkTZOption(6.0, date, "(GMT +6:00) Almaty, Dhaka, Colombo", "DHAKA").appendTo(tzSelect);
+    __mkTZOption(7.0, date, "(GMT +7:00) Bangkok, Hanoi, Jakarta", "BANGKOK").appendTo(tzSelect);
+    __mkTZOption(8.0, date, "(GMT +8:00) Beijing, Perth, Singapore, Hong Kong", "HONG_KONG").appendTo(tzSelect);
+    __mkTZOption(9.0, date, "(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk", "TOKYO").appendTo(tzSelect);
+    __mkTZOption(9.5, date, "(GMT +9:30) Adelaide, Darwin", "ADELAIDE").appendTo(tzSelect);
+    __mkTZOption(10.0, date, "(GMT +10:00) Eastern Australia, Guam, Vladivostok", "VLADIVOSTOK").appendTo(tzSelect);
+    __mkTZOption(11.0, date, "(GMT +11:00) Magadan, Solomon Islands, New Caledonia", "MAGADAN").appendTo(tzSelect);
+    __mkTZOption(12.0, date, "(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka", "WELLINGTON").appendTo(tzSelect);
+    return tzSelect;
+}
+
+function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (mode) {
         if (!formElem.name) {
             /* No field name. We cannot edit this field. */
             return;
         }
 
-        var defaultValue = false;
-        var defaultValueText;
+        var defaultValue = Date.now();
         if (formElem.value) {
             defaultValue = formElem.value;
-            var defaultDate = new Date(Number(defaultValue));
-            defaultValueText = defaultDate.getFullYear() + "-" + (defaultDate.getMonth() + 1) + "-" + defaultDate.getDate();
         }
 
         /* Edit */
-
         var dateDiv = $('<div />').attr({
-            'data-role' : 'fieldcontain'
+            'data-role' : 'fieldcontain',
+            'style' : formLayout.computedFieldStyle,
+            'class' : formLayout.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
         .append($('<label />').attr({
-            'for' : formElem.name
+            'for' : formElem.name,
+            'class' : formLayout.titleStyleClass + (useMiniLayout ? ' hx-full-width' : '')
             })
             .append(formElem.fieldTitle)
-        ).append($('<input />').attr({
+        );
+        var inputWrapper = $('<div />').attr({ 
+            'style' : formElem.computedStyle,
+            'class' : formElem.computedStyleClass
+        }).appendTo(dateDiv);
+        var dateInput = $('<input />').attr({
             'name': formElem.name,
             'id': formElem.name,
-            'type': 'text',
-            'data-role' : 'datebox',
-            'style' : 'width: 50%; font-size: 16px',
-            'class' : 'ui-input-text',
-            'data-options' : '{"mode" : "flipbox", "useNewStyle":true, "defaultValue":' + defaultValue + '}'
-        }).datebox());
+            'data-role' : 'none',
+            'style' : 'font-size: 16px'
+        }).appendTo(inputWrapper);
+        var timeInput = null;
+        if (formElem.type === 'datetime') {
+            /* Add a time box. */
+            timeInput = $('<input />').attr({
+                'name': formElem.name + "_time",
+                'id': formElem.name + "_time",
+                'data-role' : 'none',
+                'style' : 'font-size: 16px'
+            }).appendTo(inputWrapper);
+        }
+        
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
+        dateInput.datebox({"mode" : "flipbox", 
+            "useNewStyle":false, 
+            "defaultValue": defaultValue, 
+            "closeCallback" : formElem.onchange,
+            "displayInline" : (timeInput ? true : false)
+        });
+        if (timeInput) {
+            timeInput.datebox({"mode" : "timeflipbox", 
+                "overrideTimeFormat" : 12, 
+                "overrideTimeOutput" : "%l:%M %p", 
+                "defaultValue": defaultValue,
+                "closeCallback" : formElem.onchange,
+                "displayInline" : (timeInput ? true : false)
+            });
+        }
+        dateDiv.fieldcontain();
     } else {
         var dateMarkup;
         if (formElem.type === "date") {
@@ -79,13 +212,78 @@ function __appendDate(mode, formElem, $fieldContainer) {
                     formElem.value = new Date(formElem.value);
                 }
                 
+                var dateSpan = $('<span/>').append(formElem.value.toLocaleString());
+                if (formElem.computedStyle) {
+                    dateSpan.attr('style', formElem.computedStyle);
+                }
+                if (formElem.computedStyleClass) {
+                    dateSpan.addClass(formElem.computedStyleClass); 
+                }
                 if (formElem.fieldTitle) {
-                    $fieldContainer.append(" ").append(formElem.value.toLocaleString());
+                    $fieldContainer.append(" ").append(dateSpan);
                 } else {
-                    $fieldContainer.append($('<div />').append(formElem.value.toLocaleString()));
+                    $fieldContainer.append($('<div />').append(dateSpan));
                 }
             }
         }
+    }
+}
+
+function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    if (mode) {
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            return;
+        }
+
+        var defaultValue = Date.now();
+        if (formElem.value) {
+            defaultValue = formElem.value;
+        }
+
+        /* Edit */
+        var labelWidthOverride = '';
+        if (useMiniLayout) {
+            // On small devices force the label on to a full line.
+            labelWidthOverride = ';width: 100%';
+        }
+        var dateDiv = $('<div />').attr({
+            'data-role' : 'fieldcontain',
+            'style' : formLayout.computedFieldStyle,
+            'class' : formLayout.computedFieldStyleClass
+        })
+        .append($('<label />').attr({
+            'for' : formElem.name,
+            'style' : 'vertical-align: middle' + labelWidthOverride,
+            'class' : 'ui-input-text ' + formLayout.titleStyleClass
+            })
+            .append(formElem.fieldTitle)
+        );
+        
+        var tzSelect = __getTZSelect(formElem.name, defaultValue).appendTo(dateDiv);
+        if (formElem.onchange) {
+            $(tzSelect).change(function() {
+                var newVal = $(this).find("option:selected");
+                formElem.onchange.call(this, newVal.val(), newVal);
+            });
+        }
+        
+        // 'value' : defaultValueText,
+        $fieldContainer.append(dateDiv);
+        tzSelect.selectmenu();
+        dateDiv.fieldcontain();
+        if (formElem.computedStyle || formElem.computedStyleClass) {
+            var uiSelect = $(dateDiv).find('div.ui-select');
+            if (formElem.computedStyle) {
+                uiSelect.attr('style', formElem.computedStyle);
+            }
+            if (formElem.computedStyleClass) {
+                uiSelect.addClass(formElem.computedStyleClass); 
+            }
+        }
+
+    } else {
+        $fieldContainer.append($('<p />').append(formElem.value));
     }
 }
 
@@ -97,17 +295,16 @@ function __appendTextArea(mode, formElem, $fieldContainer) {
             return;
         }
             
+        // Use the mini style to set font size to 'small'
         var inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
-            'id' : formElem.name
+            'id' : formElem.name,
+            'class': 'hx-mini-fieldcontain'
         }).append(formElem.value);
 
-        if (!formElem.style) {
-            formElem.style = 'width: 90%';
-        }
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
-            'style' : formElem.style
+            'style' : formElem.computedStyle
         })
         .append($('<label />').attr({
             'for' : formElem.name
@@ -123,7 +320,7 @@ function __appendTextArea(mode, formElem, $fieldContainer) {
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function() {
-                formElem.onblur(this);
+                formElem.onblur.apply(this);
             });
         }
     } else {
@@ -171,7 +368,7 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
 
         var selectContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
-            'style' : formElem.style
+            'style' : formElem.computedStyle
         })
         .append($('<label />').attr({
             'for' : formElem.name
@@ -187,7 +384,7 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
     }
 }
 
-function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
+function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (mode) {
         /* Edit */
         if (mode && !formElem.name) {
@@ -195,20 +392,26 @@ function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
             return;
         }
 
+        if (!formElem.dataType) {
+            formElem.dataType = "text";
+        }
+
         var inputMarkup = $('<input />').attr({
             'name': formElem.name,
             'id' : formElem.name,
-            'type': 'text',
+            'type': formElem.dataType,
             'value': formElem.value
         });
         
+        // WE always use the mini style. Otherwise the fonts are too large even on tablets.
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
-            'style' : formElem.style,
-            'class' : 'hx-mini-fieldcontain'
+            'style' : formLayout.computedFieldStyle,
+            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
         })
         .append($('<label />').attr({
-            'for' : formElem.name
+            'for' : formElem.name,
+            'class' : formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
         )
@@ -221,55 +424,240 @@ function __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout) {
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function() {
-                formElem.onblur(this);
+                formElem.onblur.apply(this);
             });
+        }
+        // Apply styling to the input text div ...
+        if (formElem.computedStyle || formElem.computedStyleClass) {
+            var uiInputText = textContainer.find('div.ui-input-text');
+            if (formElem.computedStyle) {
+                $(uiInputText).attr('style', formElem.computedStyle);
+            }
+            if (formElem.computedStyleClass) {
+                $(uiInputText).addClass(formElem.computedStyleClass);
+            }
         }
     } else {
         if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
-            $fieldContainer.append(" " + formElem.value);
+            var valSpan = $('<span/>').append("&nbsp;" + formElem.value)
+            if (formElem.computedStyle) {
+                valSpan.attr('style', formElem.computedStyle);
+            }
+            if (formElem.computedStyleClass) {
+                valSpan.addClass(formElem.computedStyleClass);
+            }
+            $fieldContainer.append(valSpan);
         } else {
             $fieldContainer.append($('<p />').append(formElem.value));
         }
     }
 }
 
-function __preprocessFormElement(formElem) {
+function __appendCheckBox(mode, formElem, $fieldContainer, useMiniLayout) {
+    if (mode) {
+        /* Edit */
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            console.log("Invalid checkbox menu. No field name specified.");
+            return;
+        }
+        
+        var inputMarkup = $('<input/>').attr({
+            'name': formElem.name,
+            'id' : formElem.name,
+            'type' : 'checkbox'
+        });
+        if (formElem.value) {
+            if (typeof formElem.value === "boolean" &&
+                formElem.value) {
+                inputMarkup.attr('checked', 'true');
+            } else if (formElem.value === "true") {
+                inputMarkup.attr('checked', 'true');
+            }
+        }
+        $('<label />').append(inputMarkup).append(formElem.fieldTitle).appendTo($fieldContainer);
+        $(inputMarkup).checkboxradio({ mini: useMiniLayout });
+    } else {
+        var fieldText = '';
+        if (formElem.value) {
+            if (formElem.truetext) {
+                fieldText = formElem.truetext;
+            } else {
+                fieldText = 'true';
+            }
+        } else {
+            if (formElem.falsetext) {
+                fieldText = formElem.falsetext;
+            } else {
+                fieldText = 'false';
+            }
+        }
+        $fieldContainer.append("&nbsp;" + fieldText);
+    }
+}
+
+function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    var fieldMarkup = $('<div />').attr({
+        'data-role' : 'fieldcontain'
+    }).appendTo($fieldContainer);
+
+    var wrapperMarkup = $('<fieldset/>').attr({
+        'data-role' : 'controlgroup',
+        'data-type' : 'horizontal'
+    }).appendTo(fieldMarkup);
+
+    if (formElem.fieldTitle) {
+        wrapperMarkup.append($('<legend/>').attr({
+            'class' : formLayout.titleStyleClass
+        }).append(formElem.fieldTitle));
+    }
+
+    var i = 0;
+    for (i = 0; i < formElem.controls.length; ++i) {
+        var subElem = formElem.controls[i];
+        __preprocessFormElement(formLayout, subElem);
+        if (subElem.hidden || subElem.disabled) {
+            continue;
+        }
+        if (!subElem.name) {
+            console.log("Skipping controlset checkbox because it has no name.");
+            continue;
+        }
+        var inputMarkup = $('<input/>').attr({
+            'name': subElem.name,
+            'id' : subElem.name,
+            'type' : 'checkbox'
+        }).appendTo(wrapperMarkup);
+        if (subElem.value) {
+            if (typeof subElem.value === "boolean" &&
+                subElem.value) {
+                inputMarkup.attr('checked', 'true');
+            } else if (subElem.value === "true") {
+                inputMarkup.attr('checked', 'true');
+            }
+        }
+        $('<label />').attr({
+            'for' : subElem.name
+        }).appendTo(wrapperMarkup).append(subElem.fieldTitle);
+        
+        $(inputMarkup).checkboxradio({ mini: useMiniLayout });
+        if (!mode) {
+            /* View */
+            $(inputMarkup).checkboxradio("disable");
+        }
+    }
+    $(wrapperMarkup).controlgroup();
+    $(fieldMarkup).fieldcontain();
+}
+
+function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    var $buttonLink;
+    if (!formElem.fieldTitle) {
+        formElem.fieldTitle = "";
+    }
+    if (formElem.iconClass) {
+        $buttonLink = $('<a />').attr({
+            'data-role' : 'button',
+            'data-iconpos' : 'bottom',
+            'data-icon' : formElem.iconClass,
+            'data-iconshadow' : true,
+            'class' : 'iconbutton'
+        }).append(formElem.fieldTitle).button();            
+    } else {
+        $buttonLink = $('<a />').attr({
+            'data-role' : 'button',
+            'data-inline' : true,
+            'data-theme' : 'b'
+        }).append(formElem.fieldTitle).button();
+    }
+    if (formElem.href) {
+        $buttonLink.attr('href', formElem.href);
+    } else {
+        $buttonLink.attr('href', 'javascript:void(0);');
+    }
+    $buttonLink.appendTo($fieldContainer);
+    $buttonLink.buttonMarkup({ mini : useMiniLayout });
+    if (formElem.onclick) {
+        $buttonLink.on('tap', function(ev) {
+            formElem.onclick.call(this, ev);
+        });
+    }
+}
+
+function __preprocessFormElement(formLayout, formElem) {
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
-            formElem.styleClass = 
+            formElem.computedStyleClass = 
                 (formElem.styleClass[Helix.deviceType] ?  formElem.styleClass[Helix.deviceType] : formElem.styleClass['default']);
+        } else {
+            formElem.computedStyleClass = formElem.styleClass;
         }
     }
     
-    if (!formElem.style) {
-        formElem.style = '';
-    } else {
+    formElem.computedStyle = '';
+    if (formElem.style) {
         if (!Helix.Utils.isString(formElem.style)) {
-            formElem.style = 
+            formElem.computedStyle = 
                 (formElem.style[Helix.deviceType] ?  formElem.style[Helix.deviceType] : formElem.style['default']);
         } else {
-            formElem.style = formElem.style + ";";
+            formElem.computedStyle = formElem.style + ";";
         }
     }
 
     if (formElem.width) {
         if (!Helix.Utils.isString(formElem.width)) {
             /* Mapping from device type to width. */
-            formElem.style = formElem.style + 'width: ' + 
+            formElem.computedStyle = formElem.computedStyle + 'width: ' + 
                 (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
         } else {
-            formElem.style = formElem.style + 'width: ' + formElem.width;
+            formElem.computedStyle = formElem.computedStyle + 'width: ' + (formElem.width === 'full' ? "100%" : formElem.width);
         }
     } else {
-        formElem.style = 'width: 90%';
-    }    
+        formElem.computedStyle = 'width: 90%';
+    }
+    
+    if (!formElem.mode) {
+        formElem.mode = 'all';
+    }
+    
+    if (!formElem.value) {
+        // Set to the default.
+        formElem.value = formElem.defaultValue;
+    }
+    
+    if (!formLayout.mode) {
+        /* skip in view mode. */
+        formElem.disabled = (formElem.mode === 'edit');
+        return;
+    } 
+    
+    if (formLayout.mode) {
+        /* skip in edit mode. */
+        formElem.disabled = (formElem.mode === 'view');
+        return;
+    } 
+    
+    formElem.disabled = false;
 }
 
-Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElements, page, newScrollers, useMiniLayout) {
-    if (formElem.hidden) {
+Helix.Utils.noTitleLayouts = {
+    "button" : true,
+    "controlset" : true
+};
+
+Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
+    var mode = formLayout.mode;
+    var separateElements = formLayout.separateElements;
+    
+    __preprocessFormElement(formLayout, formElem);
+    
+    if (formElem.hidden || formElem.disabled) {
         return;
     }
-    __preprocessFormElement(formElem);
+    if (formElem.type == 'separator') {
+        $('<hr />').appendTo(parentDiv);
+        return;
+    } 
     
     var $fieldContainer;
     if (!mode) {
@@ -277,19 +665,23 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         $fieldContainer = $('<div />')
         .css("clear", "both")
         .appendTo(parentDiv);
-        if (formElem.styleClass) {
-            $fieldContainer.attr('class', formElem.styleClass);
+        if (formLayout.computedFieldStyleClass) {
+            $fieldContainer.attr('class', formLayout.computedFieldStyleClass);
         }
         if (formElem.id) {
             $fieldContainer.attr('id', formElem.id);
         }
-        if (formElem.style) {
-            $fieldContainer.attr('style', formElem.style);
+        if (formLayout.computedFieldStyle) {
+            $fieldContainer.attr('style', formLayout.computedFieldStyle);
         }
-        if (formElem.fieldTitle) {
+        if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
             if (formElem.titleStyleClass) {
                 $fieldContainer.append($('<span />').attr({
                     'class' : formElem.titleStyleClass
+                }).append(formElem.fieldTitle));
+            } else if (formLayout.titleStyleClass) {
+                $fieldContainer.append($('<span />').attr({
+                    'class' : formLayout.titleStyleClass
                 }).append(formElem.fieldTitle));
             } else {
                 $fieldContainer.append(formElem.fieldTitle);
@@ -302,11 +694,15 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
     formElem.DOM = $fieldContainer;
     
     if (formElem.type == "text") {
-        __appendTextBox(mode, formElem, $fieldContainer, useMiniLayout);
+        __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type == 'textarea') {
         __appendTextArea(mode, formElem, $fieldContainer);
     } else if (formElem.type == 'pickList') {
         __appendSelectMenu(mode, formElem, $fieldContainer);
+    } else if (formElem.type == 'checkbox') {
+        __appendCheckBox(mode, formElem, $fieldContainer, useMiniLayout);
+    } else if (formElem.type === 'controlset') {
+        __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'htmlarea') {
         var isFullWidth = false;
         if (formElem.width) {
@@ -315,7 +711,6 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             }            
         }
         if (mode) {
-            var editorWidth = formElem.width;
             if (!formElem.name) {
                 /* No field name. We cannot edit this field. */
                 return;
@@ -349,10 +744,15 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 width = formElem.width;
             }
             var htmlDiv = $('<div />').append(formElem.value);
+            if (formElem.computedStyle) {
+                htmlDiv.attr('style', formElem.computedStyle);
+            }
+            if (formElem.computedStyleClass) {
+                htmlDiv.addClass(formElem.computedStyleClass); 
+            }
             $fieldContainer.append(htmlDiv);
             if (formElem.isScroller) {
-                var scroller = $fieldContainer.helixScrollingDiv({ width: width }).data('helix-helixScrollingDiv');
-                newScrollers.push(scroller);
+                $fieldContainer.helixScrollingDiv({ width: width });
             } else {
                 $fieldContainer.width(width);
             }
@@ -376,34 +776,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             }));
         }
     } else if (formElem.type === 'button') {
-        var $buttonLink;
-        if (!formElem.title) {
-            formElem.title = "";
-        }
-        if (formElem.iconClass) {
-            $buttonLink = $('<a />').attr({
-                'data-role' : 'button',
-                'data-iconpos' : 'bottom',
-                'data-icon' : formElem.iconClass,
-                'data-iconshadow' : true,
-                'class' : 'iconbutton'
-            }).append(formElem.title).button();            
-        } else {
-            $buttonLink = $('<a />').attr({
-                'data-role' : 'button',
-                'data-inline' : true,
-                'data-theme' : 'b'
-            }).append(formElem.title).button();
-        }
-        if (formElem.href) {
-            $buttonLink.attr('href', formElem.href);
-        } else {
-            $buttonLink.attr('href', 'javascript:void(0);');
-        }
-        $buttonLink.appendTo($fieldContainer);
-        if (formElem.onclick) {
-            $buttonLink.on('tap', formElem.onclick);
-        }
+        __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'buttonGroup') {
         var formButton;
         var formButtonIdx;
@@ -418,14 +791,17 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         }
         for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
             formButton = formElem.buttons[formButtonIdx];
-            if (!formButton.iconPos) {
+            if (!formButton.iconPos && formButton.iconPos !== 'none') {
                 formButton.iconPos = 'bottom';
             }
-            if (!formButton.styleClass) {
-                formButton.styleClass = 'iconbutton';
+            if (!formButton.computedStyleClass && formButton.iconPos !== 'none') {
+                formButton.computedStyleClass = 'iconbutton';
             }
             if (!formButton.theme) {
                 formButton.theme = 'b';
+            }
+            if (!formButton.iconClass) {
+                formButton.iconClass = '';
             }
             var $buttonBarLink = $('<a />').attr({
                 'data-role' : 'button',
@@ -433,13 +809,13 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                 'data-icon' : formButton.iconClass,
                 'data-iconshadow' : false,
                 'data-theme' : formButton.theme,
-                'class' : formButton.styleClass
+                'class' : formButton.computedStyleClass
             });
             if (formButton.mini) {
                 $buttonBarLink.attr('data-mini', 'true');
             }
-            if (formButton.title) {
-                $buttonBarLink.append(formButton.title);
+            if (formButton.fieldTitle) {
+                $buttonBarLink.append(formButton.fieldTitle);
             } 
             if (formButton.href) {
                 $buttonBarLink.attr('href', formButton.href);
@@ -453,9 +829,12 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             $buttonBarLink.button();
         }
         $buttonBar.controlgroup({ type: "horizontal" });
-    } else if (formElem.type == 'date' ||
-               formElem.type == 'exactdate') {
-        __appendDate(mode, formElem, $fieldContainer);
+    } else if (formElem.type === 'date' ||
+               formElem.type === 'exactdate' ||
+               formElem.type === 'datetime') {
+        __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+    } else if (formElem.type === 'tzSelector') {
+        __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type == 'dialog') {        
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.items.length; ++elemIdx) {
@@ -504,7 +883,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         }
     } else if (formElem.type == 'upload') {
         /* For desktop use only! Create an HTML5 uploader. */
-        var styleClass = formElem.styleClass;
+        var styleClass = formElem.computedStyleClass;
         if (!styleClass) {
             styleClass = '';
         }
@@ -580,8 +959,8 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
         */
        if (!mode) {
            styleClass = "";
-           if (formElem.styleClass) {
-               styleClass = formElem.styleClass;
+           if (formElem.computedStyleClass) {
+               styleClass = formElem.computedStyleClass;
            }
            if (!formElem.target) {
                formElem.target = "";
@@ -596,7 +975,7 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
                'src': formElem.src,
                'width' : formElem.width,
                'height' : formElem.height,
-               'style' : formElem.style,
+               'style' : formElem.computedStyle,
                'alt' : formElem.name,
                'title' : formElem.name,
                'target' : formElem.target
@@ -623,13 +1002,33 @@ Helix.Utils.layoutFormElement = function(formElem, parentDiv, mode, separateElem
             'class' : 'hx-horizontal-scroller-nozoom',
             'id' : formElem.id
         }).append(formElem.contents).appendTo($fieldContainer);
-    } else if (formElem.type == 'separator') {
-        $('<hr />').appendTo($fieldContainer);
     } else {
         separateElements = false;
     }
     if (separateElements) {
         $('<hr />').appendTo($fieldContainer);
+    }
+}
+
+function __preprocessFormLayout(formLayout) {
+   formLayout.computedFieldStyleClass = '';
+    if (formLayout.fieldStyleClass) {
+        if (!Helix.Utils.isString(formLayout.fieldStyleClass)) {
+            formLayout.computedFieldStyleClass = 
+                (formLayout.fieldStyleClass[Helix.deviceType] ?  formLayout.fieldStyleClass[Helix.deviceType] : formLayout.fieldStyleClass['default']);
+        } else {
+            formLayout.computedFieldStyleClass = formLayout.fieldStyleClass;
+        }
+    }
+    
+    formLayout.computedFieldStyle = '';
+    if (formLayout.fieldStyle) {
+        if (!Helix.Utils.isString(formLayout.fieldStyle)) {
+            formLayout.computedFieldStyle = 
+                (formLayout.fieldStyle[Helix.deviceType] ?  formLayout.fieldStyle[Helix.deviceType] : formLayout.fieldStyle['default']);
+        } else {
+            formLayout.computedFieldStyle = formLayout.fieldStyle + ";";
+        }
     }
 }
 
@@ -640,14 +1039,10 @@ Helix.Utils.nSubPanels = 0;
 Helix.Utils.dynamicDialogs = {};
 Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     var mode = formLayout.mode;
-    var newScrollers = [];
-    var separateElements = formLayout.separateElements;
+    __preprocessFormLayout(formLayout);
     if (!page) {
         page = $.mobile.activePage;
     }
-    
-    // Clean up any scrollers in the parent div before we empty it out.
-    Helix.Layout.cleanupScrollers(parentDiv);
     
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
@@ -657,7 +1052,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     var formElements = formLayout.items;
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        Helix.Utils.layoutFormElement(formElem, parentDiv, mode, separateElements, page, newScrollers, useMiniLayout);
+        Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
     
     if (formLayout.subPanels) {
@@ -723,12 +1118,6 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     Helix.Layout.layoutPage();
     if (formLayout.scroller) {
         formLayout.scroller.refresh();
-    }
-    // Refresh all component scrollers in the new layout.
-    var sidx = 0;
-    for (sidx = 0; sidx < newScrollers.length; ++sidx) {
-        var sdiv = newScrollers[sidx];
-        sdiv.refresh();
     }
 }
 
