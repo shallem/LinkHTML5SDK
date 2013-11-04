@@ -162,7 +162,7 @@ function config(persistence, dialect) {
     }
     var queries = [], meta, colDefs, otherMeta, tableName;
 
-	var tm = persistence.typeMapper;
+    var tm = persistence.typeMapper;
     var entityMeta = persistence.getEntityMeta();
     for (var entityName in entityMeta) {
       if (entityMeta.hasOwnProperty(entityName)) {
@@ -219,7 +219,10 @@ function config(persistence, dialect) {
     }
     var fns = persistence.schemaSyncHooks;
     for(var i = 0; i < fns.length; i++) {
-      fns[i](tx);
+      var moreQueries = fns[i](tx);
+      if (moreQueries) {
+          queries = queries.concat(moreQueries);
+      }
     }
     if(emulate) {
       // Done

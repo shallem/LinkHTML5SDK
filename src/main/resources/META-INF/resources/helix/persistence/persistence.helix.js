@@ -270,6 +270,13 @@ function initHelixDB() {
                     var oncompleteArgs = [ schemaObj ];
                     oncompleteArgs = oncompleteArgs.concat(opaque);
                     oncomplete.apply(this, oncompleteArgs);
+                    
+                    // Launch async indexing ... these calls do nothing if there are
+                    // no fields to index or if async indexing is not enabled.
+                    for (var schemaName in window.__pmAllSchemas) { 
+                        var indexSchema = window.__pmAllSchemas[schemaName];
+                        indexSchema.indexAsync(/*tx*/);
+                    }
                 });
             });
         
@@ -741,18 +748,6 @@ function initHelixDB() {
          * Data synchronization routines.
          */
     
-        addObjectToQueryCollection: function(tx,
-            obj,
-            elemSchema, 
-            queryCollection, 
-            overrides,
-            oncomplete) {
-            Helix.DB.synchronizeObjectFields(tx, obj, null, elemSchema, function(finalObj) {
-                queryCollection.add(finalObj);
-                oncomplete();
-            }, overrides);
-        },
-    
         cascadingRemoveQueryCollection: function(tx, queryCollection, oncomplete, overrides) {
             var toDelete = [];
             var cascade = function() {
@@ -833,7 +828,21 @@ function initHelixDB() {
             collect();
         },
     
+        addObjectToQueryCollection: function(tx,
+            allSchemas,
+            obj,
+            elemSchema, 
+            queryCollection, 
+            overrides,
+            oncomplete) {
+            Helix.DB.synchronizeObjectFields(tx, allSchemas, obj, null, elemSchema, function(finalObj) {
+                queryCollection.add(finalObj);
+                oncomplete();
+            }, overrides);
+        },
+    
         synchronizeQueryCollection: function(tx,
+            allSchemas,
             newObjectMap, 
             queryCollection, 
             elemSchema, 
@@ -880,7 +889,7 @@ function initHelixDB() {
                     var doAdds = function() {
                         if (addObjs.length > 0) {
                             var toAdd = addObjs.pop();
-                            Helix.DB.addObjectToQueryCollection(tx, toAdd, elemSchema, queryCollection, overrides, doAdds, k);
+                            Helix.DB.addObjectToQueryCollection(tx, allSchemas, toAdd, elemSchema, queryCollection, overrides, doAdds, k);
                         } else {
                             oncomplete(oncompleteArg);
                         }
@@ -903,7 +912,7 @@ function initHelixDB() {
                     var syncFn = function() {
                         if (syncObjs.length > 0) {
                             var toSync = syncObjs.pop();
-                            Helix.DB.synchronizeObjectFields(tx, toSync.newObj, toSync.oldObj, elemSchema, syncFn, overrides);
+                            Helix.DB.synchronizeObjectFields(tx, allSchemas, toSync.newObj, toSync.oldObj, elemSchema, syncFn, overrides);
                         } else {
                             /* Nothing more to sync. Do all removes. */
                             removeFn();
@@ -915,7 +924,7 @@ function initHelixDB() {
             });
         },
 
-        synchronizeArrayField: function(tx, objArray, parentCollection, elemSchema, field, oncomplete, overrides) {
+        synchronizeArrayField: function(tx, allSchemas, objArray, parentCollection, elemSchema, field, oncomplete, overrides) {
             /* Synchronize the query collection. First, we create a map from keys to objects
              * from the new objects in obj[arrLocalField].
              */
@@ -937,24 +946,24 @@ function initHelixDB() {
             /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
              * efficient way to do this!
              */
-            Helix.DB.synchronizeQueryCollection(tx, elemMap, parentCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
+            Helix.DB.synchronizeQueryCollection(tx, allSchemas, elemMap, parentCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
         },
     
-        updateOneObject: function(tx, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
+        updateOneObject: function(tx, allSchemas, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
             elemSchema.findBy(tx, keyField, toUpdateKey, function(toUpdateObj) { 
-                Helix.DB.synchronizeObjectFields(tx, updatedObj,toUpdateObj,elemSchema,function(newObj) {
+                Helix.DB.synchronizeObjectFields(tx, allSchemas, updatedObj,toUpdateObj,elemSchema,function(newObj) {
                     oncomplete(newObj);
                 }, overrides);
             });
         },
     
-        synchronizeDeltaField: function(tx, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
+        synchronizeDeltaField: function(tx, allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
             
             var doAdds = function() {
                 if (deltaObj.adds.length > 0) {
                     var toAdd = deltaObj.adds.pop();
-                    Helix.DB.addObjectToQueryCollection(tx,toAdd,elemSchema, parentCollection,overrides,doAdds);
+                    Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds);
                 } else {
                     /* Nothing more to add - we are done. */
                     oncomplete(field);
@@ -983,7 +992,7 @@ function initHelixDB() {
                 if (deltaObj.updates.length > 0) {
                     var updatedObj = deltaObj.updates.pop();
                     var toUpdateKey = updatedObj[keyField];
-                    Helix.DB.updateOneObject(tx,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);
+                    Helix.DB.updateOneObject(tx,allSchemas,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);
                 } else {
                     /* Nothing more to sync. Do all removes. */
                     removeFn();
@@ -994,18 +1003,18 @@ function initHelixDB() {
             syncFn();
         },
     
-        synchronizeDeltaObject: function(tx, deltaObj, parentCollection, elemSchema, oncomplete, overrides) {
-            Helix.DB.synchronizeDeltaField(tx, deltaObj, parentCollection, elemSchema, null, function() {
+        synchronizeDeltaObject: function(tx, allSchemas, deltaObj, parentCollection, elemSchema, oncomplete, overrides) {
+            Helix.DB.synchronizeDeltaField(tx, allSchemas, deltaObj, parentCollection, elemSchema, null, function() {
                 oncomplete(parentCollection);
             }, overrides);
         },
     
-        synchronizeObjectField: function(tx, obj, persistentObj, objSchema, field, keyField, oncomplete, overrides) {
+        synchronizeObjectField: function(tx, allSchemas, obj, persistentObj, objSchema, field, keyField, oncomplete, overrides) {
             // Update the old object (if it exists) or add the new with a recursive call.
             var objLocalField = field;
             var setter = Object.getOwnPropertyDescriptor(persistentObj, objLocalField).set;
             objSchema.findBy(tx, keyField, obj[keyField], function(dbObj) {
-                Helix.DB.synchronizeObjectFields(tx, obj,dbObj,objSchema,function(newObj) {
+                Helix.DB.synchronizeObjectFields(tx, allSchemas, obj,dbObj,objSchema,function(newObj) {
                     setter(newObj);
                     oncomplete(objLocalField);
                 }, overrides);
@@ -1016,7 +1025,7 @@ function initHelixDB() {
          * Synchronizes the object fields against either (a) a fresh object, or (b) a 
          * populated object read from the database.
          */
-        synchronizeObjectFields: function(tx, obj, persistentObj, objSchema, oncomplete, overrides) {
+        synchronizeObjectFields: function(tx, allSchemas, obj, persistentObj, objSchema, oncomplete, overrides) {
             /* First determine what fields we will need to handle asynchronously. We are going
              * to execute a recursive descent algorithm, going into sub-arrays and sub-objects of
              * obj and synchronizing them before we synchronize obj itself. The reason is that
@@ -1027,6 +1036,7 @@ function initHelixDB() {
              */
             var asyncFields = [];
             var scalarFields = [];
+            allSchemas.push(objSchema);
             for (var field in obj) {
                 if (!obj.hasOwnProperty(field)) {
                     continue;
@@ -1085,13 +1095,13 @@ function initHelixDB() {
                     /* Synchronize the array field - since this is not a delta object, we assume the returned
                      * object has all fields that should be in this data table.
                      */
-                    Helix.DB.synchronizeArrayField(tx, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
+                    Helix.DB.synchronizeArrayField(tx, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type == 1001) {
-                        Helix.DB.synchronizeDeltaField(tx, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
+                        Helix.DB.synchronizeDeltaField(tx, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
                     } else {
                         var keyField = Helix.DB.getKeyField(fieldSchema);
-                        Helix.DB.synchronizeObjectField(tx, fieldVal, persistentObj, fieldSchema, field, keyField, handleAsyncFields, overrides); 
+                        Helix.DB.synchronizeObjectField(tx, allSchemas, fieldVal, persistentObj, fieldSchema, field, keyField, handleAsyncFields, overrides); 
                     }      
                 }                
             };
@@ -1100,8 +1110,8 @@ function initHelixDB() {
             handleAsyncFields();
         },
 
-        synchronizeArray: function(tx, obj,objSchema,persistentObj,callback,overrides) {
-            Helix.DB.synchronizeArrayField(tx, obj, persistentObj, objSchema, null, function() {
+        synchronizeArray: function(tx, allSchemas, obj,objSchema,persistentObj,callback,overrides) {
+            Helix.DB.synchronizeArrayField(tx, allSchemas, obj, persistentObj, objSchema, null, function() {
                 callback(persistentObj);
             }, overrides);
         },
@@ -1114,6 +1124,7 @@ function initHelixDB() {
          * and flushes it to the DB. Invoke the callback on completion.
          */
         synchronizeObject: function(obj,objSchema,callback,opaque,overrides,tx) {
+            var allSchemas = [  ];
             var syncDone = function(tx, finalObj, opaque) {
                 /* Store the schema in the final obj. */
                 finalObj.__hx_schema = objSchema;
@@ -1122,6 +1133,16 @@ function initHelixDB() {
                 persistence.flush(tx, function() {
                     /* This will either send an object to the callback. */
                     callback(finalObj,opaque);
+                    
+                    /* Again launch async indexing. If indexing is already in progress or there
+                     * is nothing to do, then this will do nothing.
+                     */
+                    // Launch async indexing ... these calls do nothing if there are
+                    // no fields to index or if async indexing is not enabled.
+                    for (var i = 0; i < allSchemas.length; ++i) { 
+                        var indexSchema = allSchemas[i];
+                        indexSchema.indexAsync();
+                    }
                 });
             };
         
@@ -1146,11 +1167,11 @@ function initHelixDB() {
             }
             
             if (Object.prototype.toString.call(obj) === '[object Array]') {
-                Helix.DB.synchronizeArray(tx, obj,objSchema,objSchema.all(),function(finalObj) {
+                Helix.DB.synchronizeArray(tx, allSchemas, obj,objSchema,objSchema.all(),function(finalObj) {
                     syncDone(tx, finalObj, opaque);
                 },overrides);
             } else if (obj.__hx_type == 1001) {
-                Helix.DB.synchronizeDeltaObject(tx, obj,objSchema.all(),objSchema,function(finalObj) {
+                Helix.DB.synchronizeDeltaObject(tx, allSchemas, obj,objSchema.all(),objSchema,function(finalObj) {
                     syncDone(tx, finalObj, opaque);
                 },overrides);
             } else if (obj.__hx_type == 1003) {
@@ -1181,7 +1202,7 @@ function initHelixDB() {
             } else {
                 var keyField = Helix.DB.getKeyField(objSchema);
                 objSchema.findBy(tx, keyField, obj[keyField], function(persistentObj) {
-                    Helix.DB.synchronizeObjectFields(tx, obj, persistentObj, objSchema, function(finalObj) {
+                    Helix.DB.synchronizeObjectFields(tx, allSchemas, obj, persistentObj, objSchema, function(finalObj) {
                         syncDone(tx, finalObj, opaque);
                     }, overrides);
                 });
@@ -1250,7 +1271,9 @@ function initHelixDB() {
             persistence.migrations.init();
             
             /* Initialize PersistenceJS searching. */
-            persistence.search.config(persistence, persistence.store.websql.sqliteDialect);
+            persistence.search.config(persistence, persistence.store.websql.sqliteDialect, {
+                indexAsync : true
+            });
         
             /* Keep a master list of all widget schemas we have attempted to create. This ensures we
              * don't recreate the schema each time we run a load command.
