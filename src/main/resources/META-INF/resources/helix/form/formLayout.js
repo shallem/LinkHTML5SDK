@@ -360,6 +360,71 @@
             var searchName = this._addNamespace(name);
             var thisField = $(this.element).find(PrimeFaces.escapeClientId(searchName));
             return thisField;
+        },
+        
+        _checkNonEmpty: function(val) {
+            if (val) {
+                return true;
+            }  
+            
+            return false;
+        },
+        
+        validate: function() {
+            var idx = 0;
+            var validationErrors = {};
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                var fieldID = nxtItem.name;
+                var strippedFieldID = this._stripNamespace(fieldID);
+                var fieldType = nxtItem.type;
+                if (!(fieldType in this._serializeTypes)) {
+                    /* All other types are unserializable. */
+                    continue;
+                }
+                
+                var validator = null;
+                // Determine the validator function.
+                if (nxtItem.validate) {
+                    if (Helix.Utils.isString(nxtItem.validate)) {
+                        if (nxtItem.validate === 'notempty') {
+                            validator = this._checkNonEmpty;
+                        }
+                    } else {
+                        validator = nxtItem.validate;
+                    }
+                } else {
+                    continue;
+                }
+                
+                $(this.element).find('[name="' + fieldID + '"]').each(function() {
+                    var toValidate = "";
+                    if (fieldType === "htmlarea") {
+                        var $editor = $(this).data('cleditor');
+                        if ($editor) {
+                            $editor.updateTextArea();
+                        }
+                        toValidate = $(this).val();
+                    } else if (fieldType === "checkbox") {
+                        if ($(this).is(":checked")) {
+                            toValidate = true;
+                        } else {
+                            toValidate = false;
+                        }
+                    } else if (fieldType === "pickList" ||
+                               fieldType === "tzSelector") {
+                        var selected = $(this).find('option:selected');
+                        toValidate = selected.val();
+                    } else {
+                        toValidate = $(this).val();
+                    }
+                    if (!validator.call(this, toValidate)) {
+                        // Validation failed.
+                        validationErrors[strippedFieldID] = nxtItem;
+                    }
+                });
+            }
+            return validationErrors;
         }
     });
 }( jQuery ));

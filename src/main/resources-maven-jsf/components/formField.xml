@@ -134,5 +134,17 @@
             <type>java.lang.String</type>
             <description>On change event for field types that support it.</description>
         </attribute>
+        <attribute>
+            <name>validator</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>String referencing a validator - e.g., notempty.</description>
+        </attribute>
+        <attribute>
+            <name>validatorFn</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function to use as the validator. This option is ignored if validator is also specified.</description>
+        </attribute>
     </attributes>
 </component>

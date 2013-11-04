@@ -534,6 +534,7 @@
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
                         });
+                        $(_self._sortContainer).popup("close");
                     });
                 }
             }
@@ -586,6 +587,7 @@
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
                         });
+                        $(_self._filterContainer).popup("close");
                     });
                 }
             }
@@ -1159,6 +1161,10 @@
         getSelected: function() {
             return this.selected;
         },
+        
+        getSelectedLI: function() {
+            return this.selectedLI;
+        },
     
         setSelectedByIndex: function(idx, groupIdx) {
             var targetElem;
@@ -1190,6 +1196,9 @@
                 $(parentElement).find('span')
                     .removeClass('ui-icon-'+oldIcon)
                     .addClass('ui-icon-'+rowComponents.icon);
+            }
+            if (rowComponents.updateFn) {
+                rowComponents.updateFn.call(this, parentElement);
             }
         },
   

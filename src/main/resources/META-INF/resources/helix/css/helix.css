@@ -261,6 +261,8 @@ a {
 /* Special styles for mini forms (on phones, or because jQM can be rather bulbous). */
 .hx-mini-fieldcontain {
     padding: .2em;
+    margin-bottom: .1em;
+    margin-top: .5em;
 }
 
 .hx-mini-fieldcontain .ui-input-datebox {

@@ -169,6 +169,11 @@ public class FormFieldRenderer extends CoreRenderer {
                 writer.write(",'dataType': '" + ffield.getDataType() + "'");
             }
         }
+        if (ffield.getValidator() != null) {
+            writer.write(",'validator': '" + ffield.getValidator() + "'");
+        } else if (ffield.getValidatorFn() != null) {
+            writer.write(",'validatorFn': " + ffield.getValidatorFn());
+        }
         
         if (ffield.getOnblur() != null) {
             writer.write(",'onblur' : function() {" + ffield.getOnblur() + "; }");

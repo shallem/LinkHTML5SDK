@@ -37,7 +37,7 @@ var persistence = (window && window.persistence) ? window.persistence : {};
 
 persistence.search = {};
 
-persistence.search.config = function(persistence, dialect) {
+persistence.search.config = function(persistence, dialect, options) {
     var filteredWords = {
         'and':true, 
         'the': true, 
@@ -45,15 +45,9 @@ persistence.search.config = function(persistence, dialect) {
     };
 
     var argspec = persistence.argspec;
+    persistence.search.options = options;
 
     function normalizeWord(word, filterShortWords) {
-        /*if(!(word in filteredWords || (filterShortWords && word.length < 3))) {
-      word = word.replace(/ies$/, 'y');
-      word = word.length > 3 ? word.replace(/s$/, '') : word;
-      return word;
-    } else {
-      return false;
-    }*/
         // Filter out <3 letter words
         if (filterShortWords && word.length < 3) {
             return null;
@@ -262,13 +256,23 @@ persistence.search.config = function(persistence, dialect) {
 
     persistence.entityDecoratorHooks.push(function(Entity) {
         /**
-       * Declares a property to be full-text indexed.
-       */
+         * Declares a property to be full-text indexed.
+         */
         Entity.textIndex = function(prop) {
             if(!Entity.meta.textIndex) {
                 Entity.meta.textIndex = {};
             }
             Entity.meta.textIndex[prop] = true;
+            
+            // SAH - add a field to indicate if this object has been indexed if we
+            // are doing async indexing.
+            if (persistence.search.options.indexAsync) {
+                if (!('__hx_indexed' in Entity.meta.fields)) {
+                    Entity.meta.fields['__hx_indexed'] = 'BOOL';
+                    //this.addField('__hx_indexed');
+                }
+            }
+            
             // Subscribe
             var entityName = Entity.meta.name;
             if(!queryCollSubscribers[entityName]) {
@@ -277,9 +281,9 @@ persistence.search.config = function(persistence, dialect) {
         };
 
         /**
-       * Returns a query collection representing the result of a search
-       * @param query an object with the following fields:
-       */
+         * Returns a query collection representing the result of a search
+         * @param query an object with the following fields:
+         */
         Entity.search = function(session, query, prefixByDefault) {
             var args = argspec.getArgs(arguments, [
             {
@@ -290,12 +294,12 @@ persistence.search.config = function(persistence, dialect) {
                 }, 
                 defaultValue: persistence
             },
-{
+            {
                 name: 'query', 
                 optional: false, 
                 check: argspec.hasType('string')
             },
-{
+            {
                 name: 'prefixByDefault', 
                 optional: false
             }
@@ -306,6 +310,76 @@ persistence.search.config = function(persistence, dialect) {
 
             return session.uniqueQueryCollection(new SearchQueryCollection(session, Entity.meta.name, query, prefixByDefault));
         };
+        
+        Entity.indexAsync = function(callback) {
+            // Launch asynchronous indexing, if that has been enabled. This will launch
+            // a background task (essentially) to index a table in batches of 100 records
+            // at a time.
+            if (!persistence.search.options.indexAsync) {
+                return;
+            }
+            if (this.__hx_indexing) {
+                // We are already indexing ...
+                return;
+            }
+            
+            // Pull up to 100 objects from the entity and iterate over them.
+            var propList = [];
+            if(this.meta.textIndex) {
+                for ( var p in this.meta.textIndex) {
+                    if (this.meta.textIndex.hasOwnProperty(p)) {
+                        propList.push(p);
+                    }
+                }
+            }
+            if (propList.length == 0) {
+                // Nothing to do ...
+                return;
+            }
+            
+            // Run a query to get 100 objects that are not yet indexed.
+            var indexQueries = [];
+            var updateQueries = [];
+            var toIndex = 0;
+            var nIndexed = 0;
+            var that = this;
+            that.__hx_indexing = true;
+            this.all().filter('__hx_indexed', '=', 0).limit(25).newEach({
+                startFn: function(ct) {
+                    toIndex = ct;
+                    if (toIndex <= 0) {
+                        that.__hx_indexing = false;
+                    }
+                },
+                eachFn: function(elem) {
+                    persistence.transaction(function(tx) {
+                        indexObject(persistence, elem, propList, indexQueries, tx, function() {
+                            updateQueries.push(["UPDATE `" + elem._type + "` SET __hx_indexed=1 WHERE id='" + elem.id + "'", null]);
+
+                            ++nIndexed;
+                            if (nIndexed == toIndex) {
+                                // Run the queries against the DB.
+                                indexQueries.reverse();
+                                persistence.executeQueriesSeq(tx, indexQueries, function() {
+                                    // Now mark everything we just indexed as indexed. No need to reverse because
+                                    // update ordering doesn't matter.
+                                    persistence.executeQueriesSeq(tx, updateQueries, function() {
+                                        // Mark the object as indexed, but do not use the setter because
+                                        // we don't want to mark the object as dirty on account of this update.
+                                        elem._data['__hx_indexed'] = true;
+
+                                        // Now start over ...
+                                        that.__hx_indexing = false;
+                                        that.indexAsync();
+                                    });
+                                });
+                            }
+                        });
+                    });
+                }
+                 
+            });
+        }
     });
 
     persistence.schemaSyncHooks.push(function(tx) {
@@ -329,7 +403,8 @@ persistence.search.config = function(persistence, dialect) {
             }
         }
         queries.reverse();
-        persistence.executeQueriesSeq(tx, queries);
+        //persistence.executeQueriesSeq(tx, queries);
+        return queries;
     });
 
 
@@ -338,10 +413,8 @@ persistence.search.config = function(persistence, dialect) {
     var entityIdMap = {};
   
     function handleProperties(tx, obj, indexProperties, queries, id, oncomplete) {
-        var indexTbl = obj._type + '_Index';
-        var propTbl = obj._type + '_IndexFields';
-        
-        var pushQueries = function(indexProperties, propID, rawText) {
+        var pushQueries = function(tx, obj, indexProperties, queries, id, oncomplete, propID, rawText) {
+            var indexTbl = obj._type + '_Index';
             queries.push(['DELETE FROM `' + indexTbl + '` WHERE `entityId` = ? AND `prop` = ?', [id, propID]]);
             var occurrences = searchTokenizer(rawText);
             for(var word in occurrences) {
@@ -349,40 +422,70 @@ persistence.search.config = function(persistence, dialect) {
                     queries.push(['INSERT INTO `' + indexTbl + '` VALUES (?, ?, ?, ?)', [id, propID, word.substring(1), occurrences[word]]]);
                 }
             }
-            processOne(indexProperties);
+            processOne(tx, obj, indexProperties, queries, id, oncomplete);
         };
         
-        var processOne = function(indexProperties) {
+        var processOne = function(tx, obj, indexProperties, queries, id, oncomplete) {
             if (indexProperties.length == 0) {
                 oncomplete();
                 return;
             }
             
+            var propTbl = obj._type + '_IndexFields';
             var p = indexProperties.pop();
             var rawText = obj._data[p];
             var propID;
             if (p in propMap) {
                 propID = propMap[p];
-                pushQueries(indexProperties, propID, rawText);
+                pushQueries(tx, obj, indexProperties, queries, id, oncomplete, propID, rawText);
             } else {
                 tx.executeSql('SELECT ROWID FROM `' + propTbl + '` WHERE propName=?', [ p ], function(r, orig) {
                     if (r.length == 0) {
                         tx.executeSql('INSERT INTO `' + propTbl + '` VALUES(?)', [p], function(r, orig) {
                             propMap[p] = orig.insertId;
-                            pushQueries(indexProperties, orig.insertId, rawText);
+                            pushQueries(tx, obj, indexProperties, queries, id, oncomplete, orig.insertId, rawText);
                         }, function(t, e) {
                             persistence.errorHandler(e.message, e.code);
                         });
                     } else {
                         propMap[p] = r[0].ROWID;
-                        pushQueries(indexProperties, r[0].ROWID, rawText);
+                        pushQueries(tx, obj, indexProperties, queries, id, oncomplete, r[0].ROWID, rawText);
                     }
                 }, function(t, e) {
                     persistence.errorHandler(e.message, e.code);
                 });
             }
         }
-        processOne(indexProperties);
+        processOne(tx, obj, indexProperties, queries, id, oncomplete);
+    }
+  
+    function indexObject(session, obj, propList, queries, tx, callback) {
+        if (obj.id in entityIdMap) {
+            handleProperties(tx, obj, propList.slice(0), queries, entityIdMap[obj.id], function() {
+                callback();
+            });
+        } else {
+            var eidTbl = obj._type + '_IndexEIDs';
+            tx.executeSql('SELECT ROWID FROM `' + eidTbl + '` WHERE entityId=?', [ obj.id ], function(r, orig) {
+                if (r.length == 0) {
+                    tx.executeSql('INSERT INTO `' + eidTbl + '` VALUES(?)', [ obj.id ], function(r, orig) {
+                        entityIdMap[obj.id] = orig.insertId;
+                        handleProperties(tx, obj, propList.slice(0), queries, orig.insertId, function() {
+                            callback();
+                        });
+                    }, function(t, e) {
+                        persistence.errorHandler(e.message, e.code);
+                    });
+                } else {
+                    entityIdMap[obj.id] = r[0].ROWID;
+                    handleProperties(tx, obj, propList.slice(0), queries, r[0].ROWID, function() {
+                        callback();
+                    });
+                }
+            }, function(t, e) {
+                persistence.errorHandler(e.message, e.code);
+            });
+        }
     }
   
     function handleInserts(queries, session, tx, callback) {
@@ -405,7 +508,6 @@ persistence.search.config = function(persistence, dialect) {
             
             var id = worklist.pop();
             // See if we have the entityId in our mapping.
-            var eID;
             var obj = session.getTrackedObjects()[id];
             
             // Make sure we are going to index this row.
@@ -424,31 +526,9 @@ persistence.search.config = function(persistence, dialect) {
                 return;
             }
             
-            if (id in entityIdMap) {
-                eID = entityIdMap[id];
-                indexRow(obj, eID, session, queries, tx, callback);
-            } else {
-                var eidTbl = obj._type + '_IndexEIDs';
-                tx.executeSql('SELECT ROWID FROM `' + eidTbl + '` WHERE entityId=?', [ id ], function(r, orig) {
-                    if (r.length == 0) {
-                        tx.executeSql('INSERT INTO `' + eidTbl + '` VALUES(?)', [ id ], function(r, orig) {
-                            entityIdMap[id] = orig.insertId;
-                            handleProperties(tx, obj, propList, queries, orig.insertId, function() {
-                                processOne(worklist, session, queries, tx, callback);
-                            });
-                        }, function(t, e) {
-                            persistence.errorHandler(e.message, e.code);
-                        });
-                    } else {
-                        entityIdMap[id] = r[0].ROWID;
-                        handleProperties(tx, obj, propList, queries, r[0].ROWID, function() {
-                            processOne(worklist, session, queries, tx, callback);
-                        });
-                    }
-                }, function(t, e) {
-                    persistence.errorHandler(e.message, e.code);
-                });
-            }
+            indexObject(session, obj, propList, queries, tx, function() {
+                processOne(worklist, session, queries, tx, callback);
+            });
         }
         processOne(worklist, session, queries, tx, callback);
     }
@@ -459,7 +539,8 @@ persistence.search.config = function(persistence, dialect) {
                 var obj = persistence.getObjectsToRemove()[id];
                 var meta = persistence.getEntityMeta()[obj._type];
                 if(meta.textIndex) {
-                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` = ?', [id]]);
+                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '_IndexEIDs` WHERE `entityId`=?)', [id]]);
+                    queries.push(['DELETE FROM `' + obj._type + '_IndexEIDs` WHERE `entityId`=?', [id]]);
                 }
             }
         }
@@ -474,9 +555,17 @@ persistence.search.config = function(persistence, dialect) {
   
     persistence.flushHooks.push(function(session, tx, callback) {
         var queries = [];
-        // When handleInserts is done it will call handleDeletes, which will in turn push the
-        // queries on to the execute list and invoke the callback with pushQueries
-        handleInserts(queries, session, tx, callback);
+        if (!persistence.search.options.indexAsync) {
+            // This is synchronous indexing, which means it happens when an object is flushed.
+            // When you have lots of data to index this is a bad idea because the user cannot
+            // proceed while indexing is in progress.
+            // 
+            // When handleInserts is done it will call handleDeletes, which will in turn push the
+            // queries on to the execute list and invoke the callback with pushQueries
+            handleInserts(queries, session, tx, callback);
+        } else {
+            handleDeletes(queries, tx, callback);
+        }
     });
 };
 

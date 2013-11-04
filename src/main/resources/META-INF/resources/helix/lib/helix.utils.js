@@ -36,7 +36,7 @@ Helix.Utils =  {
     
     growl : function(summary, msg, severity, lifetime) {
         if (!lifetime) {
-            lifetime = 15000;
+            lifetime = 10000;
         }
         
         var growlContainer = $('<div/>');

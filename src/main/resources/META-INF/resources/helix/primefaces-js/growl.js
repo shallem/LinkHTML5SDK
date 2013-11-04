@@ -30,9 +30,9 @@
             
             /**
              * Time (in milliseconds) after which the growl disappears. Note that
-             * this option is only used if sticky is false.
+             * this option is only used if sticky is false. The default is 6 seconds.
              */
-            life: 15000
+            life: 6000
             
         },
     

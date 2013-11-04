@@ -778,8 +778,8 @@ function initHelixDB() {
             var toCascade = [];
             var recurseDown = function() {
                 if (toCascade.length == 0) {
+                    //persistence.remove(persistentObj);
                     oncomplete(persistentObj, "remove");
-                    persistence.remove(persistentObj);
                     return;
                 }
                 
@@ -1036,7 +1036,7 @@ function initHelixDB() {
              */
             var asyncFields = [];
             var scalarFields = [];
-            allSchemas.push(objSchema);
+            allSchemas[objSchema.__hx_schema_name] = objSchema;
             for (var field in obj) {
                 if (!obj.hasOwnProperty(field)) {
                     continue;
@@ -1124,7 +1124,7 @@ function initHelixDB() {
          * and flushes it to the DB. Invoke the callback on completion.
          */
         synchronizeObject: function(obj,objSchema,callback,opaque,overrides,tx) {
-            var allSchemas = [  ];
+            var allSchemas = {};
             var syncDone = function(tx, finalObj, opaque) {
                 /* Store the schema in the final obj. */
                 finalObj.__hx_schema = objSchema;
@@ -1139,8 +1139,8 @@ function initHelixDB() {
                      */
                     // Launch async indexing ... these calls do nothing if there are
                     // no fields to index or if async indexing is not enabled.
-                    for (var i = 0; i < allSchemas.length; ++i) { 
-                        var indexSchema = allSchemas[i];
+                    for (var schemaName in allSchemas) { 
+                        var indexSchema = allSchemas[schemaName];
                         indexSchema.indexAsync();
                     }
                 });
