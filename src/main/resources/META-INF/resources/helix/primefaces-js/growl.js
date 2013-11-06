@@ -124,17 +124,29 @@
             });
 
             //remove message on click of close icon
-            message.find('div.ui-growl-icon-close').click(function(ev) {
-                _self.removeMessage(message);
+            if (Helix.hasTouch) {
+                message.find('div.ui-growl-icon-close').click(function(ev) {
+                    _self.removeMessage(message);
 
-                //clear timeout if removed manually
-                if(!sticky) {
-                    clearTimeout(message.data('timeout'));
-                }
-                ev.stopPropagation();
-                ev.stopImmediatePropagation();
-                ev.preventDefault();
-            });
+                    //clear timeout if removed manually
+                    if(!sticky) {
+                        clearTimeout(message.data('timeout'));
+                    }
+                    ev.stopImmediatePropagation();
+                    return false;
+                });
+            } else {
+                message.find('div.ui-growl-icon-close').on('tap', function(ev) {
+                    _self.removeMessage(message);
+
+                    //clear timeout if removed manually
+                    if(!sticky) {
+                        clearTimeout(message.data('timeout'));
+                    }
+                    ev.stopImmediatePropagation();
+                    return false;
+                });
+            }
 
             //hide the message after given time if not sticky
             if(!sticky) {

@@ -321,9 +321,28 @@
             // Column setup.
             this._currentPage = 0;
             
-            // Flags used for internal state.
-            this.holdAction = false;
-            this.popupVisible = false;
+            // Initialize the context menu. We need to track its open state to prevent
+            // tap-holds from also triggering taps.
+            _self.contextAction = false;
+            _self.popupVisible = false;
+            if (_self.options.itemContextMenu) {
+                var thisPage = $(this.element).closest('[data-role="page"]');
+                $(thisPage).on('pageinit', function() {
+                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupbeforeposition', function(ev, ui) {
+                        $(ev.target).find('a').on('click.disabled', function(ev) {
+                            ev.preventDefault();
+                        });
+                    });
+                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupafteropen', function(ev, ui) {
+                        _self.popupVisible = true;
+                        $(ev.target).find('a').off('click.disabled');
+                    });
+                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupafterclose', function(ev, ui) {
+                        _self.popupVisible = false;
+                        _self.contextAction = false;
+                    });
+                });
+            }
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
@@ -521,7 +540,7 @@
                     }
                     
                     /* Do the actual sorting ... */
-                    $(sortItem).on('tap', function(evt) {
+                    $(sortItem).on(_self.tapEvent, function(evt) {
                         evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
                         if (newSortField === _self._currentSort) {
@@ -596,8 +615,16 @@
                         'data-field': filterFld
                     }).append(filters[filterFld]));
                     filtersList.append(filterItem);
-                    filterItem.on('tap', function(evt) {
-                        evt.stopImmediatePropagation();                        
+                    filterItem.on(_self.tapEvent, function(evt) {
+                        evt.stopImmediatePropagation();
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                        
+                        if (_self.contextAction) {
+                            _self.contextAction = false;
+                            return;
+                        }
+                        
                         var newFilterField = $(evt.target).attr('data-field');
                         _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
                         _self._refreshData(function() {
@@ -607,14 +634,21 @@
                     });
                 }
             }
+                    
             /* Always have a "Clear" option. */
             $('<li />').append($('<a />').attr({ 
                 'href' : 'javascript:void(0)',
                 'data-field': '__clear'
             }).append("Clear"))
               .appendTo(filtersList)
-              .on('tap', function(evt) {
-                evt.stopImmediatePropagation();                        
+              .on(_self.tapEvent, function(evt) {
+                evt.stopImmediatePropagation();
+                evt.preventDefault();
+                if (_self.contextAction) {
+                    _self.contextAction = false;
+                    return;
+                }
+                
                 _self.itemList = _self.unfilteredList;
                 _self._refreshData(function() {
                     _self.$parent.listview( "refresh" );
@@ -622,7 +656,15 @@
             });
             
             filtersList.listview();
-            _self._filterContainer.popup();            
+            _self._filterContainer.popup({
+                afteropen: function(ev, ui) {
+                    _self.popupVisible = true;
+                },
+                afterclose: function(ev, ui) {
+                    _self.popupVisible = false;
+                    _self.contextAction = false;
+                }
+            });
         },
         
         _refreshGlobalFilterContainer: function(filters) {
@@ -673,7 +715,7 @@
                     filtersList.append(filterItem);
                     
                     // Execute the global filter.
-                    filterItem.on('tap', function(evt) {
+                    filterItem.on(_self.tapEvent, function(evt) {
                         evt.stopImmediatePropagation();
                         evt.preventDefault();
                         var newFilterField = $(evt.target).attr('data-field');
@@ -757,7 +799,7 @@
                 'data-field': '__clear'
             }).append("Clear"))
               .appendTo(filtersList)
-              .on('tap', function(evt) {
+              .on(_self.tapEvent, function(evt) {
                 evt.stopImmediatePropagation();
                 evt.preventDefault();
                 
@@ -925,7 +967,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
-                    .on('tap', function(ev) {
+                    .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
                         ev.preventDefault();
@@ -941,7 +983,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
-                    .on('tap', function(ev) {
+                    .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
                         ev.preventDefault();
@@ -962,7 +1004,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
-                    .on('tap', function(ev) {
+                    .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
                         ev.preventDefault();
@@ -1015,7 +1057,7 @@
                 this.$searchBox.on('input', function() {
                     _self._doSearch();
                 });
-                $searchDiv.find('a.ui-input-clear').on('tap', function() {
+                $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.unfilteredList;
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
@@ -1129,17 +1171,10 @@
                         event.preventDefault();
 
                         _self.setSelected(event.target);
-                        _self.holdAction = true;
+                        _self.contextAction = true;
+                        _self.currentPopup = _self.options.itemContextMenu;
                         $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
-                            positionTo: event.target,
-                            afteropen: function(ev, ui) {
-                                _self.popupVisible = true;
-                            },
-                            afterclose: function(ev, ui) {
-                                _self.popupVisible = false;
-                                _self.holdAction = false;
-                            },
-                            history: false
+                            positionTo: event.target
                         });
                     });
 
@@ -1159,11 +1194,13 @@
                     event.stopImmediatePropagation();
                     event.stopPropagation();
                     event.preventDefault();
-
-                    if (_self.holdAction) {
-                        _self.holdAction = false;
+                    
+                    if (_self.contextAction) {
+                        _self.contextAction = false;
                         return;
                     } else if (_self.popupVisible) {
+                        $(_self.currentPopup).popup("close");
+                        _self.currentPopup = null;
                         return;
                     }
 
@@ -1302,6 +1339,8 @@
             this._sortContainer.popup('open', { positionTo: selector });
         },
         displayFilterMenu: function(selector) {
+            this.contextAction = true;
+            this.currentPopup = this._filterContainer;
             this._filterContainer.popup('open', { positionTo: selector });
         },
         displayGlobalFilterMenu: function(selector) {
