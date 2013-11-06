@@ -40,6 +40,12 @@
             <description>ID of a popup to display when the user executes the context action on a list item.</description>
         </attribute>
         <attribute>
+            <name>itemContextMenuFilter</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function accepting a single argument, a row record, and returning true if the context menu should be attached.</description>
+        </attribute>
+        <attribute>
             <name>holdAction</name>
             <required>false</required>
             <type>java.lang.String</type>

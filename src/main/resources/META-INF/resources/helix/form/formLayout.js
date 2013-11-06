@@ -109,32 +109,42 @@
             return fldName;
         },
     
+        _computeOneHidden: function(formElem, valuesMap) {
+            var fldName = this._stripNamespace(formElem.name);
+            if (valuesMap && fldName in valuesMap) {
+                formElem.value = valuesMap[fldName];
+            }
+            if (formElem.condition) {
+                if (valuesMap && formElem.condition in valuesMap) {
+                    if (valuesMap[formElem.condition]) {
+                        formElem.hidden = false;
+                    } else {
+                        formElem.hidden = true;
+                    }
+                } else  {
+                    var fn = window[formElem.condition];
+                    if(typeof fn === 'function') {
+                        formElem.hidden = !(fn.call(this, (valuesMap ? valuesMap : null)));
+                    } else {
+                        formElem.hidden = true;
+                    }
+                }
+            }
+        },
+    
         _computeHidden : function(valuesMap) {
             var idx = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var formElem = this.options.items[idx];
-                var fldName = this._stripNamespace(formElem.name);
-                if (valuesMap && fldName in valuesMap) {
-                    formElem.value = valuesMap[fldName];
-                }
-                // if we fall through then we don't want to overwrite a static value ...
                 
-                if (formElem.condition) {
-                    if (valuesMap && formElem.condition in valuesMap) {
-                        if (valuesMap[formElem.condition]) {
-                            formElem.hidden = false;
-                        } else {
-                            formElem.hidden = true;
-                        }
-                    } else  {
-                        var fn = window[formElem.condition];
-                        if(typeof fn === 'function') {
-                            formElem.hidden = !(fn.call(this, (valuesMap ? valuesMap : null)));
-                        } else {
-                            formElem.hidden = true;
-                        }
+                // Process sub items.
+                if (formElem.type in this._groupedTypes) {
+                    for (var i = 0; i < formElem.controls.length; ++i) {
+                        var subItem = formElem.controls[i];
+                        this._computeOneHidden(subItem, valuesMap);
                     }
-                }
+                } 
+                this._computeOneHidden(formElem, valuesMap);
             }
         },
     
@@ -181,6 +191,14 @@
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);            
         },
         
+        isEdit : function() {
+            return this.options.mode;
+        },
+        
+        isView: function() {
+            return !(this.isEdit());
+        },
+        
         _serializeTypes : {
             "htmlarea" : true,
             "text" : true,
@@ -191,53 +209,73 @@
             "tzSelector" : true
         },
         
-        serialize: function() {
-            var idx = 0;
-            var toSerialize = [];
-            for (idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
-                var strippedFieldID = this._stripNamespace(fieldID);
-                var fieldType = this.options.items[idx].type;
-                if (!(fieldType in this._serializeTypes)) {
-                    /* All other types are unserializable. */
-                    continue;
-                }
-                $(this.element).find('[name="' + fieldID + '"]').each(function() {
-                    if (fieldType === "htmlarea") {
-                        var $editor = $(this).data('cleditor');
-                        if ($editor) {
-                            $editor.updateTextArea();
-                        }
+        _groupedTypes: {
+            "controlset" : true
+        },
+        
+        serializeItem: function(nxtItem, toSerialize) {
+            var fieldID = nxtItem.name;
+            var strippedFieldID = this._stripNamespace(fieldID);
+            var fieldType = nxtItem.type;
+            
+            $(this.element).find('[name="' + fieldID + '"]').each(function() {
+                if (fieldType === "htmlarea") {
+                    var $editor = $(this).data('cleditor');
+                    if ($editor) {
+                        $editor.updateTextArea();
+                    }
+                    toSerialize.push({
+                        name: strippedFieldID,
+                        value: $(this).val()
+                    });
+                } else if (fieldType === "checkbox") {
+                    if ($(this).is(":checked")) {
                         toSerialize.push({
-                            name: strippedFieldID,
-                            value: $(this).val()
-                        });
-                    } else if (fieldType === "checkbox") {
-                        if ($(this).is(":checked")) {
-                            toSerialize.push({
-                                name : strippedFieldID,
-                                value: true
-                            }); 
-                        } else {
-                            toSerialize.push({
-                                name : strippedFieldID,
-                                value: false
-                            }); 
-                        }
-                    } else if (fieldType === "pickList" ||
-                               fieldType === "tzSelector") {
-                        var selected = $(this).find('option:selected');
-                        toSerialize.push({
-                                name : strippedFieldID,
-                                value: selected.val()
-                        });
+                            name : strippedFieldID,
+                            value: true
+                        }); 
                     } else {
                         toSerialize.push({
                             name : strippedFieldID,
-                            value: $(this).val()
-                        });
+                            value: false
+                        }); 
                     }
-                });
+                } else if (fieldType === "pickList" ||
+                           fieldType === "tzSelector") {
+                    var selected = $(this).find('option:selected');
+                    toSerialize.push({
+                            name : strippedFieldID,
+                            value: selected.val()
+                    });
+                } else {
+                    toSerialize.push({
+                        name : strippedFieldID,
+                        value: $(this).val()
+                    });
+                }
+            });
+        },
+        
+        serialize: function() {
+            var toSerialize = [];
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                var fieldType = nxtItem.type;
+                
+                if (fieldType in this._groupedTypes) {
+                    // Process sub items.
+                    for (var i = 0; i < nxtItem.controls.length; ++i) {
+                        var subItem = nxtItem.controls[i];
+                        this.serializeItem(subItem, toSerialize);
+                    }
+                    // We don't serialize the controlset itself - just its component checkboxes
+                    continue;
+                }
+                if (fieldType in this._serializeTypes) {
+                    this.serializeItem(nxtItem, toSerialize);
+                }
+                
+                /* All other types are for display - they are not serialized. */
             }
             return $.param(toSerialize);
         },
@@ -370,6 +408,19 @@
             return false;
         },
         
+        _checkNotPast: function(val) {
+            // Val should be a date object
+            if (!val.getTime && isNaN(val)) {
+                // Not a date object.
+                return false;
+            }
+            
+            if (!val.getTime) {
+                val = new Date(parseInt(val));
+            }
+            return !(val.isBefore(new Date()));
+        },
+        
         validate: function() {
             var idx = 0;
             var validationErrors = {};
@@ -385,13 +436,15 @@
                 
                 var validator = null;
                 // Determine the validator function.
-                if (nxtItem.validate) {
-                    if (Helix.Utils.isString(nxtItem.validate)) {
-                        if (nxtItem.validate === 'notempty') {
+                if (nxtItem.validator) {
+                    if (Helix.Utils.isString(nxtItem.validator)) {
+                        if (nxtItem.validator === 'notempty') {
                             validator = this._checkNonEmpty;
+                        } else if (nxtItem.validator === 'notpast') {
+                            validator = this._checkNotPast;
                         }
                     } else {
-                        validator = nxtItem.validate;
+                        validator = nxtItem.validator;
                     }
                 } else {
                     continue;

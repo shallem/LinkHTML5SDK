@@ -132,6 +132,8 @@
                     clearTimeout(message.data('timeout'));
                 }
                 ev.stopPropagation();
+                ev.stopImmediatePropagation();
+                ev.preventDefault();
             });
 
             //hide the message after given time if not sticky

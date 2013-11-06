@@ -136,6 +136,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getItemContextMenu() != null) {
             writer.append(",itemContextMenu: '" + dlist.getItemContextMenu() + "'");
         }
+        if (dlist.getItemContextMenuFilter() != null) {
+            writer.append(",itemContextMenuFilter: " + dlist.getItemContextMenuFilter());
+        }
         
         // Search
         if (dlist.getIndexedSearch() != null) {

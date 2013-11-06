@@ -201,8 +201,10 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 dateMarkup = "none";
             }
             if (formElem.fieldTitle) {
-                $fieldContainer.append(" ")
-                    .append($(dateMarkup).text()); 
+                $fieldContainer.append($('<span/>').attr({
+                    'style' : formElem.computedStyle,
+                    'class' : formElem.computedStyleClass
+                }).append("&nbsp;" + $(dateMarkup).text())); 
             } else {
                 $fieldContainer.append($('<div />').append($(dateMarkup).text()));
             }
@@ -287,7 +289,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
     }
 }
 
-function __appendTextArea(mode, formElem, $fieldContainer) {
+function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
     if (mode) {
         /* Edit */
         if (!formElem.name) {
@@ -299,12 +301,14 @@ function __appendTextArea(mode, formElem, $fieldContainer) {
         var inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
             'id' : formElem.name,
-            'class': 'hx-mini-fieldcontain'
+            'style': formElem.computedStyle,
+            'class' : formElem.computedStyleClass
         }).append(formElem.value);
 
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
-            'style' : formElem.computedStyle
+            'style' : formLayout.computedFieldStyle,
+            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : formElem.name
@@ -696,7 +700,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     if (formElem.type == "text") {
         __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type == 'textarea') {
-        __appendTextArea(mode, formElem, $fieldContainer);
+        __appendTextArea(mode, formLayout, formElem, $fieldContainer);
     } else if (formElem.type == 'pickList') {
         __appendSelectMenu(mode, formElem, $fieldContainer);
     } else if (formElem.type == 'checkbox') {
@@ -837,9 +841,9 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type == 'dialog') {        
         var elemIdx;
-        for (elemIdx = 0; elemIdx < formElem.items.length; ++elemIdx) {
-            var subElem = formElem.items[elemIdx];
-            Helix.Utils.layoutFormElement(subElem, parentDiv, true, false, page, null, useMiniLayout);
+        for (elemIdx = 0; elemIdx < formElem.controls.length; ++elemIdx) {
+            var subElem = formElem.controls[elemIdx];
+            Helix.Utils.layoutFormElement(formLayout, subElem, parentDiv, page, useMiniLayout);
         }
 
         /* Add a button to submit the dialog. */
@@ -1072,7 +1076,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
             // but not between items in each element.
             for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
                 formElem = formSubPanelItems[elemIdx];
-                Helix.Utils.layoutFormElement(formElem, subPanelDiv, mode, false, page, newScrollers, useMiniLayout);
+                Helix.Utils.layoutFormElement(formLayout, formElem, subPanelDiv, page, useMiniLayout);
             }
             
             // Make sure we have a dynamic page used to create new items in this 
@@ -1100,28 +1104,15 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
             
             // Create the collapsible content.
             subPanelDiv.collapsible();
-            $(document).on("expand", PrimeFaces.escapeClientId(subPanelID), function (event, ui) {
-                if (formLayout.scroller) {
-                    formLayout.scroller.refreshScroller();
-                }
-            });
-            $(document).on("collapse", PrimeFaces.escapeClientId(subPanelID), function(event,ui) {
-                if (formLayout.scroller) {
-                    formLayout.scroller.refreshScroller();
-                }
-            });
         }
     }    
     
     // Re-layout the page because we have substantially changed the DOM. Also form
     // elements may have layout directives.
     Helix.Layout.layoutPage();
-    if (formLayout.scroller) {
-        formLayout.scroller.refresh();
-    }
 }
 
-Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page) {
+Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page, useMiniLayout) {
     var dialogId = Helix.Utils.getUniqueID();
     var dialogObj = Helix.Utils.dynamicDialogs[dialogName];
     var isCreated = false;
@@ -1173,7 +1164,7 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page)
         $(dialogObj.page).page();
         //$(dialogObj.page).trigger("pagecreate");
 
-        Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page);
+        Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page, useMiniLayout);
     }
     
     return dialogObj;

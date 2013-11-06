@@ -107,6 +107,18 @@
             itemContextMenu: null,
             
             /**
+             * Filter to apply to determine whether or not a particular item has
+             * the context menu attached to it. By default, all list items have the
+             * context menu attached. If a function returning a boolean value is 
+             * specified for this option, then when that function returns true
+             * the item context menu is attached, and when the function returns false
+             * it is not. This function accepts a single argument, which is the row
+             * record from the itemList specified as an option at create time or in a
+             * call to refreshList.
+             */
+            itemContextMenuFilter: null,
+            
+            /**
              * Action to perform if the user tap-holds (for touch devices) or 
              * double clicks (for non-touch devices) on a list item.
              */
@@ -309,6 +321,10 @@
             // Column setup.
             this._currentPage = 0;
             
+            // Flags used for internal state.
+            this.holdAction = false;
+            this.popupVisible = false;
+            
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
             if (Helix.hasTouch) {
@@ -328,7 +344,7 @@
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
             }
-            this.refreshList(this.options.itemList,this.options.condition,null,null,function() {
+            this.refreshList(this.options.itemList,this.options.condition,null,function() {
                 //Helix.Layout.addScrollers(_self.$wrapper);
                 setTimeout(function() {
                     //Helix.Layout.updateScrollers(_self.$wrapper);
@@ -1104,18 +1120,30 @@
             }
             
             if (_self.options.itemContextMenu) {
-                $(curRowParent).on(this.contextEvent, function(event) {
-                    // This allows the container to have taphold context menus that are not
-                    // triggered when this event is triggered.
-                    event.stopImmediatePropagation();
-                    event.stopPropagation();
-                    event.preventDefault();
-                    
-                    _self.setSelected(event.target);
-                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
-                        positionTo: event.target
+                if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(row)) {
+                    $(curRowParent).on(this.contextEvent, function(event) {
+                        // This allows the container to have taphold context menus that are not
+                        // triggered when this event is triggered.
+                        event.stopImmediatePropagation();
+                        event.stopPropagation();
+                        event.preventDefault();
+
+                        _self.setSelected(event.target);
+                        _self.holdAction = true;
+                        $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
+                            positionTo: event.target,
+                            afteropen: function(ev, ui) {
+                                _self.popupVisible = true;
+                            },
+                            afterclose: function(ev, ui) {
+                                _self.popupVisible = false;
+                                _self.holdAction = false;
+                            },
+                            history: false
+                        });
                     });
-                });
+
+                }
             } else if (_self.options.holdAction) {
                 $(curRowParent).on(_self.contextEvent, function(event) {
                     event.stopImmediatePropagation();
@@ -1124,7 +1152,6 @@
                     
                     _self.setSelected(event.target);
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
-                    event.stopPropagation();
                 }); 
             } 
             if (_self.options.selectAction) {
@@ -1132,6 +1159,13 @@
                     event.stopImmediatePropagation();
                     event.stopPropagation();
                     event.preventDefault();
+
+                    if (_self.holdAction) {
+                        _self.holdAction = false;
+                        return;
+                    } else if (_self.popupVisible) {
+                        return;
+                    }
 
                     _self.setSelected(event.target);
                     _self.selectItem();
