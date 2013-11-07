@@ -617,7 +617,7 @@ function __preprocessFormElement(formLayout, formElem) {
             formElem.computedStyle = formElem.computedStyle + 'width: ' + (formElem.width === 'full' ? "100%" : formElem.width);
         }
     } else {
-        formElem.computedStyle = 'width: 90%';
+        formElem.computedStyle = formElem.computedStyle + 'width: 90%;';
     }
     
     if (!formElem.mode) {
@@ -758,6 +758,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             if (formElem.isScroller) {
                 $fieldContainer.helixScrollingDiv({ width: width });
             } else {
+                $fieldContainer.css('overflow', 'none');
                 $fieldContainer.width(width);
             }
         }

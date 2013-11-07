@@ -409,6 +409,11 @@
                 //Helix.Layout.cleanupScrollers(this.parent);
             }
         },
+        clear: function() {
+            if (this.contentContainer) {
+                $(this.contentContainer).children('div').empty();
+            }
+        },
         closeItemPopup: function() {
             $(PrimeFaces.escapeClientId(this.options.itemContextMenu)).popup( "close" );
         },
