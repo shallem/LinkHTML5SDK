@@ -659,9 +659,16 @@ function config(persistence, dialect) {
       return;
     }
 
-    function selectAll (meta, tableAlias, prefix) {
+    function selectAll (meta, tableAlias, prefix, excludes, includes) {
       var selectFields = [ tm.inIdVar("`" + tableAlias + "`.id") + " AS `" + prefix + "id`" ];
       for ( var p in meta.fields) {
+        if (excludes && (p in excludes)) {
+            continue;
+        }
+        if (includes && !(p in includes)) {
+            continue;
+        }
+          
         if (meta.fields.hasOwnProperty(p)) {
           selectFields.push(tm.inVar("`" + tableAlias + "`.`" + p + "`", meta.fields[p]) + " AS `"
             + prefix + p + "`");
@@ -673,13 +680,16 @@ function config(persistence, dialect) {
             + prefix + p + "`");
         }
       }
+      selectFields.push(tm.inVar("`" + tableAlias + "`.`rowid`", 'INT') + " AS `"
+            + prefix + "rowid`");
       return selectFields;
     }
     var args = [];
-    var mainPrefix = entityName + "_";
+    //var mainPrefix = entityName + "_";
+    var mainPrefix = meta.alias + "_";
 
     var mainAlias = 'root';
-    var selectFields = selectAll(meta, mainAlias, mainPrefix);
+    var selectFields = selectAll(meta, mainAlias, mainPrefix, this._excludes, this._includes);
 
     var joinSql = '';
     var additionalWhereSqls = this._additionalWhereSqls.slice(0);

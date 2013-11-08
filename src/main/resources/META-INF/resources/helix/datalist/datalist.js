@@ -325,7 +325,7 @@
             // tap-holds from also triggering taps.
             _self.contextAction = false;
             _self.popupVisible = false;
-            if (_self.options.itemContextMenu) {
+            /*if (_self.options.itemContextMenu) {
                 var thisPage = $(this.element).closest('[data-role="page"]');
                 $(thisPage).on('pageinit', function() {
                     $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupbeforeposition', function(ev, ui) {
@@ -342,7 +342,7 @@
                         _self.contextAction = false;
                     });
                 });
-            }
+            }*/
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
@@ -457,7 +457,7 @@
             _self._prependSearchBox();
             _self._updateSortButtons();
             
-            _self._currentPage = 1;
+            _self._currentPage = 0;
             _self._refreshData(function() {
                 if (_self.nElems == 0) {
                     _self.$parent.empty();
@@ -469,15 +469,15 @@
                     }
                 }
                 _self.$parent.listview( "refresh" );
+                /**
+                 * Must go after the _refreshData call because we need to compute the
+                 * list we are actually going to display before we paginate it.
+                 */
+                _self._refreshPaginatorContainer();
                 if (oncomplete) {
                     oncomplete(_self);            
                 }
             });
-            /**
-             * Must go after the _refreshData call because we need to compute the
-             * list we are actually going to display before we paginate it.
-             */
-            _self._refreshPaginatorContainer();
         },
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
@@ -836,10 +836,23 @@
                 _self._paginatorContainer.empty();
             }
             
+            var totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;            
             $.each(this.options.paginatorTemplate.split(" "), function(idx, obj) {
+                if (_self._currentPage == 0 &&
+                    obj === '{PreviousPageLink}') {
+                    // No prev page.
+                    return;
+                }
+                
+                if (_self._currentPage == (totalPages - 1) &&
+                    obj === '{NextPageLink}') {
+                    // No next page.
+                    return;
+                }
+                
                 Helix.Utils.paginator.render(obj, _self._paginatorContainer, {
                     'page' : _self._currentPage,
-                    'totalItems' : _self.displayList.length,
+                    'totalItems' : _self.nElems,
                     'itemsPerPage' : _self.options.itemsPerPage,
                     'nextPage' : _self.nextPage,
                     'prevPage' : _self.prevPage,
@@ -847,6 +860,27 @@
                 });
             });
         },
+        nextPage: function() {
+            this._currentPage++;
+            var _self = this;
+            this._refreshData(function() {
+                _self.$parent.listview( "refresh" );
+                _self._refreshPaginatorContainer();
+            });
+        },
+        
+        prevPage: function() {
+            if (this._currentPage == 0) {
+                return;
+            }
+            this._currentPage--;
+            var _self = this;
+            this._refreshData(function() {
+                _self.$parent.listview( "refresh" );
+                _self._refreshPaginatorContainer();
+            });            
+        },
+        
         _refreshData: function(oncomplete) {
             var _self = this;
             var orderby = _self._currentSort; 
@@ -862,11 +896,14 @@
                 .appendTo(_self.$parent);
             }
         
+            var startIndex = 0;
+            var itemsPerPage = 0;
             if (_self.options.itemsPerPage && _self.options.itemsPerPage > 0) {
-                if (_self.currentPage > 1) {
-                    displayCollection = displayCollection.skip((_self.currentPage - 1) * _self.options.itemsPerPage);
+                if (_self._currentPage > 0) {
+                    startIndex = (_self._currentPage) * _self.options.itemsPerPage;
                 }
-                displayCollection = displayCollection.limit(_self.options.itemsPerPage);
+                itemsPerPage = _self.options.itemsPerPage;
+                //displayCollection = displayCollection.limit(_self.options.itemsPerPage);
                 /* XXX: Determine if there is a next page. If not, disable the next button. */
             }
             if (orderby /*&& !_self.__searchText*/) {
@@ -874,16 +911,25 @@
             }
 
             var rowIndex = 0;
+            var nRendered = 0;
             displayCollection.each(
                 /* Process each element. */
                 function(curRow) {
-                    if (_self._renderSingleRow(curRow, rowIndex, function(finishedIdx) {
+                    ++rowIndex;
+                    if (nRendered >= itemsPerPage) {
+                        return;
+                    }
+                    if (itemsPerPage > 0 && rowIndex < startIndex) {
+                        return;
+                    }
+                    
+                    if (_self._renderSingleRow(curRow, nRendered, function(finishedIdx) {
                         if (_self.options.grouped && (finishedIdx == (_self.nElems - 1))) {
                             /* Call completion when all rows are done rendering. */
                             oncomplete();
                         }
                     })) {
-                        ++rowIndex;
+                        ++nRendered;
                     }
                 },
                 /* Called on start. */
@@ -892,7 +938,7 @@
                 },
                 /* Called on done. */
                 function(count) {
-                    if (rowIndex == 0 || (!_self.options.grouped)) {
+                    if (nRendered == 0 || (!_self.options.grouped)) {
                         /* We did not render any rows. Call completion. */
                         oncomplete();
                     }
@@ -1170,12 +1216,15 @@
                         event.stopPropagation();
                         event.preventDefault();
 
-                        _self.setSelected(event.target);
+                        _self.options.itemContextMenu.open({
+                            positionTo: event.target
+                        });
+                        /*_self.setSelected(event.target);
                         _self.contextAction = true;
                         _self.currentPopup = _self.options.itemContextMenu;
                         $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
                             positionTo: event.target
-                        });
+                        });*/
                     });
 
                 }

@@ -15,7 +15,7 @@ import org.primefaces.renderkit.CoreRenderer;
  * @author shallem
  */
 public class ContextMenuItemRenderer extends CoreRenderer {
-    @Override
+    /*@Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         ContextMenuItem item = (ContextMenuItem) component; 
@@ -24,13 +24,28 @@ public class ContextMenuItemRenderer extends CoreRenderer {
         writer.writeAttribute("href", "javascript:void(0);", null);
         writer.writeAttribute("onclick", item.getOntap(), null);
         writer.write((String)item.getValue());
-    }
+    }*/
 
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
+        ContextMenuItem item = (ContextMenuItem) component; 
 
-        writer.endElement("a");
-        writer.endElement("li");
+        /*writer.endElement("a");
+        writer.endElement("li");*/
+        writer.write("{");
+        writer.write("'display' : '" + item.getValue() + "'");
+        writer.write(",'action' : " + item.getOntap());
+        writer.write("}");
+    }
+    
+    @Override
+    public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
+        //Rendering happens on encodeEnd
+    }
+    
+    @Override
+    public boolean getRendersChildren() {
+        return true;
     }
 }

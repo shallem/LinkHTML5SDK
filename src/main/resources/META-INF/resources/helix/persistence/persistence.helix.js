@@ -275,7 +275,7 @@ function initHelixDB() {
                     // no fields to index or if async indexing is not enabled.
                     for (var schemaName in window.__pmAllSchemas) { 
                         var indexSchema = window.__pmAllSchemas[schemaName];
-                        indexSchema.indexAsync(/*tx*/);
+                        indexSchema.indexAsync(0);
                     }
                 });
             });
@@ -1141,7 +1141,7 @@ function initHelixDB() {
                     // no fields to index or if async indexing is not enabled.
                     for (var schemaName in allSchemas) { 
                         var indexSchema = allSchemas[schemaName];
-                        indexSchema.indexAsync();
+                        indexSchema.indexAsync(0);
                     }
                 });
             };

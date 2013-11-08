@@ -330,6 +330,9 @@
 		    <!-- Data list. -->
 		    <include>datalist/datalist.js</include>
 
+		    <!-- Context menu -->
+		    <include>contextMenu/contextMenu.js</include>
+
 		    <!-- Form Layout -->
 		    <include>form/formLayout.js</include>
 

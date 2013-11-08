@@ -65,6 +65,8 @@ public class DataListRenderer extends CoreRenderer {
         startScript(writer, clientId);
         writer.write("\n(function($) {");
         
+        writer.write("$(document).on('helixinit', function() {");
+        
         writer.write("\n" + dlist.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "_wrapper')).helixDatalist({");
         
         /**
@@ -134,7 +136,7 @@ public class DataListRenderer extends CoreRenderer {
             writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
         }
         if (dlist.getItemContextMenu() != null) {
-            writer.append(",itemContextMenu: '" + dlist.getItemContextMenu() + "'");
+            writer.append(",itemContextMenu: " + dlist.getItemContextMenu());
         }
         if (dlist.getItemContextMenuFilter() != null) {
             writer.append(",itemContextMenuFilter: " + dlist.getItemContextMenuFilter());
@@ -208,6 +210,7 @@ public class DataListRenderer extends CoreRenderer {
         
         writer.write("}).data('helix-helixDatalist');");
         
+        writer.write("});");
         writer.write("})(jQuery);\n");
 
         endScript(writer);

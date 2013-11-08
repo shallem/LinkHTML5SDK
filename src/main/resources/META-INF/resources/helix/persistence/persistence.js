@@ -194,6 +194,21 @@ persistence.get = function(arg1, arg2) {
         }
       }
     }
+    
+    /**
+     * To keep queries small we use single or multi-letter aliases.
+     */
+    var currentPrefix = 'a';
+    function getNextLetter() {
+        var ch = currentPrefix.charAt(currentPrefix.length - 1);
+        if (ch == 'z') {
+            currentPrefix = currentPrefix + 'a';
+        } else {
+            var nxtCh = String.fromCharCode(ch.charCodeAt(0) + 1);
+            currentPrefix = currentPrefix.substring(0, currentPrefix.length - 2) + nxtCh;
+        }
+        return currentPrefix;
+    }
 
     /**
      * Retrieves metadata about entity, mostly for internal use
@@ -244,7 +259,8 @@ persistence.get = function(arg1, arg2) {
         isMixin: false,
         indexes: [],
         hasMany: {},
-        hasOne: {}
+        hasOne: {},
+        alias: getNextLetter()
       };
       entityMeta[entityName] = meta;
       return getEntity(entityName, true);
@@ -1741,6 +1757,12 @@ persistence.get = function(arg1, arg2) {
       } else {
         c.subscribers = this.subscribers;
       }
+      if (this._includes) {
+          c._includes = this._includes;
+      }
+      if (this._excludes) {
+          c._excludes = this._excludes;
+      }
       return c;
     };
 
@@ -1976,6 +1998,30 @@ persistence.get = function(arg1, arg2) {
           }
         });
     }
+    
+    /**
+     * Restrict the set of fields selected to *exclude* those provided.
+     */
+    QueryCollection.prototype.exclude = function(fieldList) {
+        var c = this.clone();
+        c._excludes = {};
+        for (var i = 0; i < fieldList.length; ++i) {
+            c._excludes[fieldList[i]] = true;
+        }
+        return c;
+    },
+    
+    /**
+     * Restrict the set of fields selected to *include* those provided.
+     */
+    QueryCollection.prototype.include = function(fieldList) {
+        var c = this.clone();
+        c._includes = {};
+        for (var i = 0; i < fieldList.length; ++i) {
+            c._includes[fieldList[i]] = true;
+        }
+        return c;
+    },
 
     /**
      * Execute a function for each item in the list

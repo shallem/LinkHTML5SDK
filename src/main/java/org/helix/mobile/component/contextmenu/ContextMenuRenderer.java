@@ -30,7 +30,7 @@ public class ContextMenuRenderer extends CoreRenderer {
         ContextMenu menu = (ContextMenu)component;
         String clientId = menu.getClientId();
         
-        writer.startElement("div", null);
+        /*writer.startElement("div", null);
         writer.writeAttribute("data-role", "popup", null);
         writer.writeAttribute("data-history", "false", null);
         writer.writeAttribute("id", clientId, null);
@@ -44,7 +44,38 @@ public class ContextMenuRenderer extends CoreRenderer {
             writer.writeAttribute("data-theme", menu.getListTheme(), null);
             renderChildren(context, menu);
             writer.endElement("ul");
+        writer.endElement("div");*/
+        writer.startElement("div", menu);
+        writer.writeAttribute("id", menu.getClientId(context), "id"); 
+        
         writer.endElement("div");
+        
+        startScript(writer, menu.getClientId(context));
+        writer.write("\n(function($) {");
+        
+        writer.write("$(document).on('helixinit', function() {");
+        writer.write("\n" + menu.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + menu.getClientId(context) + "')).helixContextMenu({");
+        writer.write("items: [");
+        boolean isFirst = true;
+        for (UIComponent c : menu.getChildren()) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                writer.write(",\n");
+            }
+            c.encodeAll(context);
+        }
+        writer.write("]");
+        
+        if (menu.getUseMiniLayout() != null) {
+            writer.write(",useMiniLayout: " + menu.getUseMiniLayout());
+        }
+        
+        writer.write("}).data('helix-helixContextMenu');");
+        writer.write("});");
+        
+        writer.write("})(jQuery);\n");
+        endScript(writer);
     }
     
     @Override

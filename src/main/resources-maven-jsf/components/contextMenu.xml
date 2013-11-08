@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY widget_var_attribute					SYSTEM "../entities/widget_var_attribute.xml">
 ]>
 <component>
     <tag>contextMenu</tag>
@@ -10,7 +11,13 @@
     <rendererType>org.helix.mobile.component.ContextMenuRenderer</rendererType>
     <rendererClass>org.helix.mobile.component.contextmenu.ContextMenuRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
+    <interfaces>
+        <interface>
+            <name>org.primefaces.component.api.Widget</name>
+        </interface>
+    </interfaces>
     <attributes>
+            &widget_var_attribute;
         <attribute>
             <name>theme</name>
             <required>false</required>
@@ -31,6 +38,12 @@
             <type>java.lang.String</type>
             <defaultValue>origin</defaultValue>
             <description>jQuery Mobile theme of the context menu popup.</description>
+        </attribute>
+        <attribute>
+            <name>useMiniLayout</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>A JavaScript map from device type string to boolean value indicating if the mini layout should be used. The default is to use the mini layout for phones only.</description>
         </attribute>
         <attribute>
             <name>id</name>
