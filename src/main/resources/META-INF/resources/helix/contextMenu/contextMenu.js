@@ -68,19 +68,26 @@
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
                 var nxtLI = $('<li />');
-                var nxtLink = $('<a />').attr({ 
-                    'href' : 'javascript:void(0)',
-                    'data-index' : i
-                }).append(nxtItem.display);
-                if (nxtItem.data) {
-                    nxtLink.attr('data-field', nxtItem.data);
+                
+                if (nxtItem.isDivider) {
+                    nxtLI.attr('data-role', 'divider');
+                    nxtLI.attr('data-theme', 'a');
+                    nxtLI.append(nxtItem.display); 
+                } else {
+                    var nxtLink = $('<a />').attr({ 
+                        'href' : 'javascript:void(0)',
+                        'data-index' : i
+                    }).append(nxtItem.display);
+                    if (nxtItem.data) {
+                        nxtLink.attr('data-field', nxtItem.data);
+                    }
+                    nxtLI.append(nxtLink);
                 }
-                nxtLI.append(nxtLink);
                 optionsList.append(nxtLI);
             }
             
             var _self = this;
-            optionsList.on(_self.tapEvent, 'li', function(evt) {
+            optionsList.on(_self.tapEvent, 'a', function(evt) {
                 evt.stopImmediatePropagation();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -90,7 +97,11 @@
 
                 var item = _self.options.items[cbIndex];
                 if (item.action) {
-                    item.action.call(_self, cbData);
+                    if (_self._thisArg) {
+                        item.action.call(_self._thisArg, cbData);
+                    } else {
+                        item.action.call(_self, cbData);
+                    }
                 }
                 _self.close();
             });
@@ -117,6 +128,7 @@
         
         open: function(obj) {
             this._menuContainer.popup("open", obj);
+            this._thisArg = obj.thisArg;
         },
         
         close: function() {

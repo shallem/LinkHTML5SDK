@@ -15,7 +15,7 @@ import org.primefaces.renderkit.CoreRenderer;
  * @author shallem
  */
 public class ContextMenuDividerRenderer extends CoreRenderer {
-    @Override
+    /*@Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         ContextMenuDivider item = (ContextMenuDivider) component;
@@ -31,5 +31,28 @@ public class ContextMenuDividerRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
 
         writer.endElement("li");
+    }*/
+    
+    @Override
+    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+        ResponseWriter writer = context.getResponseWriter();
+        ContextMenuDivider item = (ContextMenuDivider) component; 
+
+        /*writer.endElement("a");
+        writer.endElement("li");*/
+        writer.write("{");
+        writer.write("'display' : '" + item.getValue() + "'");
+        writer.write(",'isDivider' : true");
+        writer.write("}");
+    }
+    
+    @Override
+    public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
+        //Rendering happens on encodeEnd
+    }
+    
+    @Override
+    public boolean getRendersChildren() {
+        return true;
     }
 }

@@ -350,8 +350,7 @@
                 this.contextEvent = 'taphold';
                 this.tapEvent = 'tap';
             } else {
-                this.contextEvent = 'taphold';
-                //this.contextEvent = 'dblclick';
+                this.contextEvent = 'contextmenu';
                 this.tapEvent = 'click';
             }
         
@@ -916,7 +915,7 @@
                 /* Process each element. */
                 function(curRow) {
                     ++rowIndex;
-                    if (nRendered >= itemsPerPage) {
+                    if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
                         return;
                     }
                     if (itemsPerPage > 0 && rowIndex < startIndex) {
@@ -1216,10 +1215,12 @@
                         event.stopPropagation();
                         event.preventDefault();
 
+                        _self.setSelected(event.target);
                         _self.options.itemContextMenu.open({
-                            positionTo: event.target
+                            positionTo: event.target,
+                            thisArg: _self
                         });
-                        /*_self.setSelected(event.target);
+                        /*
                         _self.contextAction = true;
                         _self.currentPopup = _self.options.itemContextMenu;
                         $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
@@ -1243,15 +1244,6 @@
                     event.stopImmediatePropagation();
                     event.stopPropagation();
                     event.preventDefault();
-                    
-                    if (_self.contextAction) {
-                        _self.contextAction = false;
-                        return;
-                    } else if (_self.popupVisible) {
-                        $(_self.currentPopup).popup("close");
-                        _self.currentPopup = null;
-                        return;
-                    }
 
                     _self.setSelected(event.target);
                     _self.selectItem();
@@ -1408,7 +1400,10 @@
         
         setHeaderText: function(txt) {
             this.options.headerText = txt;
+        },
+        
+        closeItemContextMenu: function() {
+            this.options.itemContextMenu.close();
         }
-    
     });
 })(jQuery);

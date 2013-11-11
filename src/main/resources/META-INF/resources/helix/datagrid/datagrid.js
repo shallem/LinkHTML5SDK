@@ -74,7 +74,7 @@
             
             /**
              * Context menu that is attached to individual grid elements. This
-             * should be a standard jQuery Mobile popup menu.
+             * should be a Link SDK contextMenu component.
              */
             itemContextMenu: null,
             
@@ -125,7 +125,12 @@
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
             }
-        
+            if (Helix.hasTouch) {
+                this.contextEvent = 'taphold';
+            } else {
+                this.contextEvent = 'contextmenu';
+            }
+            
             this.parent = this.element;
             this.refresh(this.list, this.options.condition);
             this._setupEvents();
@@ -162,9 +167,7 @@
                 /* Attach the context menu to the grid header. */
                 if (_self.defaultContextMenu) {
                     var cMenu = _self.defaultContextMenu;
-                    var evName;
-                    evName = 'taphold';
-                    $(_self.parent).on(evName, function(event) {
+                    $(_self.parent).on(_self.contextEvent, function(event) {
                         event.preventDefault();
                         event.stopImmediatePropagation();
                         $(PrimeFaces.escapeClientId(cMenu)).popup( "open" );
@@ -246,53 +249,19 @@
                 'data-index' : curState.startElem + idx
             }).appendTo(curState.curRow);
             if (curState.parent.itemContextMenu) {
-                $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu))
-                        .popup({
-                            afteropen: function(ev, ui) {
-                                _self.popupVisible = true;
-                            },
-                            afterclose: function(ev, ui) {
-                                _self.popupVisible = false;
-                                _self.popupOpened = false;
-                            },
-                            history: false
-                        });
-                $(nxtCol).on('taphold', function(event) {
-                    // This allows the container to have taphold context menus that are not
-                    // triggered when this event is triggered.
-                    event.stopImmediatePropagation();
+                $(nxtCol).on(_self.contextEvent, function(event) {
                     event.preventDefault();
+                    event.stopPropagation();
                     
+                    // Select the item that is being tap-held/double clicked.
                     curState.parent.selectedIndex = $(event.target).closest("td").attr('data-index');
-                    //curState.parent.selected = curState.parent.list[curState.parent.selectedIndex];
                     curState.parent.selected = elem;
-                    
-                    $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "open", { 
-                        positionTo: event.target 
+
+                    // Open the context menu.
+                    _self.itemContextMenu.open({ 
+                        positionTo: event.target,
+                        thisArg: _self
                     });
-                    _self.popupOpened = true;
-                    //alert("TAPHOLD");
-                });
-                $(nxtCol).on('tap', function(event) {
-                    // This is a click on the container or its contents. Close the 
-                    // context menu if it is open. Don't let the event propagate further.
-                    
-                    // NOTE: the popupOpened variable is introduced due to the following behavior -
-                    // in most cases it seems that the iPad triggers a tap *after* the taphold event.
-                    // This does not always happen on first page load, but thereafter it does. Chrome
-                    // does not have this behavior. Without the popupOpened flag, taphold will then 
-                    // trigger a tap that closes the context menu. Also note that this same issue
-                    // (taphold triggering a tap) causes tap events inside of the datagrid to trigger
-                    // on taphold. Hence, we have the bindEvent method below, and we supply the
-                    // datagrid object as the first parameter to the renderer.
-                    if (_self.popupOpened) {
-                        _self.popupOpened = false;
-                    } else if (_self.popupVisible) {
-                        $(PrimeFaces.escapeClientId(curState.parent.itemContextMenu)).popup( "close" );
-                        _self.popupVisible = false;
-                    }
-                    event.stopImmediatePropagation();
-                    event.preventDefault();
                 });
             }
             /* Must be called *AFTER* we attach the tap hold event so that any events attached
@@ -414,17 +383,17 @@
                 $(this.contentContainer).children('div').empty();
             }
         },
-        closeItemPopup: function() {
-            $(PrimeFaces.escapeClientId(this.options.itemContextMenu)).popup( "close" );
+        closeItemContextMenu: function() {
+            this.options.itemContextMenu.close();
         },
         bindEvent : function(target, evname, fn) {
             var _self = this;
             $(target).on(evname, function(ev) {
-                if (_self.popupVisible) {
-                    return;
-                }
                 fn(ev);
             });
+        },
+        getSelected: function() {
+            return this.selected;
         }
     });
 }( jQuery ));

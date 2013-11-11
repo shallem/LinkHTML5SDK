@@ -93,5 +93,11 @@
             <type>java.lang.String</type>
             <description>Name of the data object required to render this panel group. Useful when the data is loaded dynamically on page load.</description>
         </attribute>
+        <attribute>
+            <name>itemContextMenu</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of the context menu widget to open on tap-hold of an item in the grid.</description>
+        </attribute>
     </attributes>
 </component>

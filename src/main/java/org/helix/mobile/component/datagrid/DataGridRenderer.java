@@ -57,26 +57,6 @@ public class DataGridRenderer extends DataRenderer {
                     DataGridRenderer.DATAGRID_CLASS_MOBILE : 
                     DataGridRenderer.DATAGRID_CLASS_MOBILE + " " + grid.getStyleClass();
         
-        if (grid.getFacet("defaultmenu") != null) {
-            contextMenuID = clientId + "_menu";
-            renderContextMenu(context, 
-                    writer, 
-                    grid, 
-                    grid.getFacet("defaultmenu"), 
-                    contextMenuID, 
-                    "window");
-        }
-        
-        if (grid.getFacet("contextmenu") != null) {
-            itemMenuID = clientId + "_item_menu";
-            renderContextMenu(context, 
-                    writer, 
-                    grid, 
-                    grid.getFacet("contextmenu"), 
-                    itemMenuID, 
-                    "origin");
-        }
-        
         StringBuilder styleStrBuilder = new StringBuilder();
         if (grid.getWidth() != null) {
             styleStrBuilder.append("width: ").append(grid.getWidth()).append(";");
@@ -104,6 +84,8 @@ public class DataGridRenderer extends DataRenderer {
         startScript(writer, clientId);
 
         writer.write("\n(function($) {");
+        
+        writer.write("$(document).on('helixinit', function() {");
         
         // Define the data list and condition, handling the case where a data widget
         // is specified and that widget may be undefined.
@@ -133,11 +115,8 @@ public class DataGridRenderer extends DataRenderer {
         if (grid.getCondition() != null) {
             writer.write("condition: renderCondition,");
         }
-        if (this.contextMenuID != null) {
-            writer.write("defaultContextMenu: '" + this.contextMenuID + "',");
-        }
-        if (this.itemMenuID != null) {
-            writer.write("itemContextMenu: '" + this.itemMenuID + "',");
+        if (grid.getItemContextMenu() != null) {
+            writer.write("itemContextMenu: " + grid.getItemContextMenu() + ",");
         }
         if (grid.getEmptyMessage() != null) {
             writer.write("emptyMessage: '" + grid.getEmptyMessage() + "',");
@@ -151,6 +130,7 @@ public class DataGridRenderer extends DataRenderer {
         writer.write("cols: '" + grid.getCols() + "'");
         writer.write("}).data('helix-helixDatagrid');");
 
+        writer.write("});");
         writer.write("})(jQuery);\n");
         
         endScript(writer);
