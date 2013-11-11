@@ -357,7 +357,7 @@ persistence.search.config = function(persistence, dialect, options) {
                         that.__hx_indexing = false;
                     } else {
                         if (nxtCall == 1) {
-                            Helix.Utils.statusMessage("Indexing", "Your inbox is being indexed in the background. The application may be slow while indexing is in progress. This may take a few minutes.", "info");
+                            Helix.Utils.statusMessage("Indexing", "Your data is being indexed in the background. The application may be slow while indexing is in progress. This may take a few minutes.", "info");
                         }
                     }
                 },

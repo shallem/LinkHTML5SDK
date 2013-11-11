@@ -321,29 +321,6 @@
             // Column setup.
             this._currentPage = 0;
             
-            // Initialize the context menu. We need to track its open state to prevent
-            // tap-holds from also triggering taps.
-            _self.contextAction = false;
-            _self.popupVisible = false;
-            /*if (_self.options.itemContextMenu) {
-                var thisPage = $(this.element).closest('[data-role="page"]');
-                $(thisPage).on('pageinit', function() {
-                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupbeforeposition', function(ev, ui) {
-                        $(ev.target).find('a').on('click.disabled', function(ev) {
-                            ev.preventDefault();
-                        });
-                    });
-                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupafteropen', function(ev, ui) {
-                        _self.popupVisible = true;
-                        $(ev.target).find('a').off('click.disabled');
-                    });
-                    $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).on('popupafterclose', function(ev, ui) {
-                        _self.popupVisible = false;
-                        _self.contextAction = false;
-                    });
-                });
-            }*/
-            
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
             if (Helix.hasTouch) {
@@ -595,75 +572,43 @@
                 _self._filterContainer.remove();
             }
             
-            _self._filterContainer = $('<div/>').attr({
-                'data-role' : 'popup',
-                'id' : Helix.Utils.getUniqueID(),
-                'data-theme' : 'a',
-                'data-position-to' : 'origin',
-                'data-history': 'false'
-            }).appendTo(_self.$wrapper);
-            var filtersList = $('<ul />').attr({ 
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'data-theme' : 'b'
-            }).appendTo(_self._filterContainer);
+            _self._filterContainer = $('<div/>').appendTo(_self.$wrapper);
+            
+            var contextMenuItems = [];
             for (var filterFld in filters) {
                 if (filters[filterFld] !== "[none]") {
                     var filterItem = $('<li />').append($('<a />').attr({ 
                         'href' : 'javascript:void(0)',
                         'data-field': filterFld
-                    }).append(filters[filterFld]));
-                    filtersList.append(filterItem);
-                    filterItem.on(_self.tapEvent, function(evt) {
-                        evt.stopImmediatePropagation();
-                        evt.stopPropagation();
-                        evt.preventDefault();
-                        
-                        if (_self.contextAction) {
-                            _self.contextAction = false;
-                            return;
+                    }).append());
+                    contextMenuItems.push({
+                        'display': filters[filterFld],
+                        'data': filterFld,
+                        'action': function(newFilterField) {
+                            _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
+                            _self._refreshData(function() {
+                                _self.$parent.listview( "refresh" );
+                            });
+                            _self._filterContextMenu.close();
                         }
-                        
-                        var newFilterField = $(evt.target).attr('data-field');
-                        _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
-                        _self._refreshData(function() {
-                            _self.$parent.listview( "refresh" );
-                        });
-                        $(_self._filterContainer).popup("close");
                     });
                 }
             }
                     
             /* Always have a "Clear" option. */
-            $('<li />').append($('<a />').attr({ 
-                'href' : 'javascript:void(0)',
-                'data-field': '__clear'
-            }).append("Clear"))
-              .appendTo(filtersList)
-              .on(_self.tapEvent, function(evt) {
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-                if (_self.contextAction) {
-                    _self.contextAction = false;
-                    return;
-                }
-                
-                _self.itemList = _self.unfilteredList;
-                _self._refreshData(function() {
-                    _self.$parent.listview( "refresh" );
-                });
-            });
-            
-            filtersList.listview();
-            _self._filterContainer.popup({
-                afteropen: function(ev, ui) {
-                    _self.popupVisible = true;
-                },
-                afterclose: function(ev, ui) {
-                    _self.popupVisible = false;
-                    _self.contextAction = false;
+            contextMenuItems.push({
+                'display' : 'Clear',
+                'action' : function() {
+                    _self.itemList = _self.unfilteredList;
+                    _self._refreshData(function() {
+                        _self.$parent.listview( "refresh" );
+                    });
+                    _self._filterContextMenu.close();
                 }
             });
+            _self._filterContextMenu = $(_self._filterContainer).helixContextMenu({
+                items: contextMenuItems
+            }).data('helix-helixContextMenu');
         },
         
         _refreshGlobalFilterContainer: function(filters) {
@@ -1220,12 +1165,6 @@
                             positionTo: event.target,
                             thisArg: _self
                         });
-                        /*
-                        _self.contextAction = true;
-                        _self.currentPopup = _self.options.itemContextMenu;
-                        $(PrimeFaces.escapeClientId(_self.options.itemContextMenu)).popup( "open", {
-                            positionTo: event.target
-                        });*/
                     });
 
                 }
@@ -1236,6 +1175,7 @@
                     event.preventDefault();
                     
                     _self.setSelected(event.target);
+                    _self.selectItem();
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                 }); 
             } 
@@ -1366,7 +1306,9 @@
             if (!this.selected) {
                 this.setSelectedByIndex(0, 0);
             }
-            this.options.selectAction(this.selected, this.selectedGroup, this.strings);          
+            if (this.options.selectAction) {
+                this.options.selectAction(this.selected, this.selectedGroup, this.strings);
+            }          
         },
         holdItem: function() {
             if (!this.selected) {
@@ -1380,9 +1322,9 @@
             this._sortContainer.popup('open', { positionTo: selector });
         },
         displayFilterMenu: function(selector) {
-            this.contextAction = true;
-            this.currentPopup = this._filterContainer;
-            this._filterContainer.popup('open', { positionTo: selector });
+            this._filterContextMenu.open({
+                positionTo: selector
+            });
         },
         displayGlobalFilterMenu: function(selector) {
             this._globalFilterContainer.popup('open', { positionTo: selector });
