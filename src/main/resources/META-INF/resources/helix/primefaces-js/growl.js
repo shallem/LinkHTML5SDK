@@ -125,7 +125,7 @@
 
             //remove message on click of close icon
             if (Helix.hasTouch) {
-                message.find('div.ui-growl-icon-close').click(function(ev) {
+                message.find('div.ui-growl-icon-close').on('click', function(ev) {
                     _self.removeMessage(message);
 
                     //clear timeout if removed manually

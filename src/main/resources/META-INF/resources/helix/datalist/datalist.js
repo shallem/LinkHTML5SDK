@@ -585,6 +585,7 @@
                         'display': filters[filterFld],
                         'data': filterFld,
                         'action': function(newFilterField) {
+                            _self._currentPage = 0;
                             _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
                             _self._refreshData(function() {
                                 _self.$parent.listview( "refresh" );
@@ -599,6 +600,7 @@
             contextMenuItems.push({
                 'display' : 'Clear',
                 'action' : function() {
+                    _self._currentPage = 0;
                     _self.itemList = _self.unfilteredList;
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
@@ -664,6 +666,8 @@
                         evt.preventDefault();
                         var newFilterField = $(evt.target).attr('data-field');
                         var newFilterValue = $(evt.target).attr('data-value');
+                        
+                        _self._currentPage = 0;
                         _self.itemList = _self.options.doGlobalFilter(_self.unfilteredList, newFilterField, newFilterValue);
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
@@ -714,6 +718,7 @@
                                 for (var filteredFld in _self._filterMap) {
                                     curCollection = _self.options.doGlobalFilter(curCollection, filteredFld, _self._filterMap[filteredFld]);
                                 }
+                                _self._currentPage = 0;
                                 _self.itemList = curCollection;
                                 _self._refreshData(function() {
                                     _self.$parent.listview( "refresh" );
@@ -725,6 +730,8 @@
                                 } else {
                                     // Use itemList in the call below as filters can build on each other.
                                     _self._filterMap[gFilterField] = gFilterValue;
+                                    
+                                    _self._currentPage = 0;
                                     _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, gFilterValue);
                                     _self._refreshData(function() {
                                         _self.$parent.listview( "refresh" );
@@ -755,6 +762,7 @@
                 }
                 
                 _self._filterMap = {};
+                _self._currentPage = 0;
                 _self.itemList = _self.unfilteredList;
                 _self._refreshData(function() {
                     _self.$parent.listview( "refresh" );

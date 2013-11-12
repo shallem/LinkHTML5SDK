@@ -336,7 +336,8 @@
                     
                     var timeElem = $(this.element).find('[name="' + searchName + '_time"]');
                     if (timeElem.length > 0) {
-                        $(timeElem).datebox('set', value);           
+                        $(timeElem).trigger('datebox', { method: 'set', value: value });
+                        $(timeElem).trigger('datebox', { method: 'doset' });
                     }
                 } else if (fldType === 'tzSelector' ||
                            fldType === 'pickList') {
@@ -345,7 +346,9 @@
                     if (selected.length > 0) {
                         selected.attr('selected', 'true');
                     }
-                    $(thisField).selectmenu('refresh');
+                    setTimeout(function() {
+                        $(thisField).selectmenu('refresh');
+                    }, 0);
                 } else if (fldType === 'checkbox') {
                     if (value) {
                         $(thisField).attr('checked', 'true');

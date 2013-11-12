@@ -48,7 +48,23 @@
              * depending on whether the split view is showing as a split view or as two full
              * screen views.
              */
-            onRefresh: null
+            onRefresh: null,
+            
+            /**
+             * Boolean flag that indicates if the split view should use header buttons to navigate
+             * between the right and left panes in the single-pane view. A typical scenario is to have
+             * a list in the left pane that, when an item is tapped, updates the right pane to show detail
+             * of the selected item. In this scenario, you would use this flag to have the jQM header's 
+             * left button say "Close" and toggle from the right pane back to the left. The default value
+             * is true.
+             */
+            useHeaderToToggle: true,
+            
+            /**
+             * A string that is used for the text in the toggle button when useHeaderToToggle is set to true.
+             * The default is 'Close'.
+             */
+            headerToggleText: "Close"
         },
 
         _create: function() {
@@ -59,9 +75,25 @@
             this.__left = $(this.element).children()[0];
             this.__right = $(this.element).children()[1];
             
+            if (this.options.useHeaderToToggle) {
+                // Get the enclosing page.
+                this.__page = $(this.element).closest('[data-role="page"]');
+            
+                // Get the header element in the enclosing page, if it exists.
+                this.__pageHeader = $(this.__page).find('[data-role="header"]')
+            }
+            
             if (!this.__left || !this.__right) {
                 alert("A split view must have two children, representing the left and right portions of the split.");
             }
+            
+            if (Helix.hasTouch) {
+                this.__clickEvent = 'tap';
+            } else {
+                this.__clickEvent = 'click';
+            }
+            
+            this.__restoreMarkup = null;
             this.__current = null;
             this.refresh();
             var _self = this;
@@ -78,6 +110,8 @@
          */
         refresh: function() {            
             var curWidth = $(window).width();
+            var curLeftBtn = null;
+            var __self = this;
             if (curWidth > this.options.splitThreshold) {
                 var leftWidth = Math.floor((this.options.leftWidth / 100) * curWidth);
                 var rightWidth = Math.floor((this.options.rightWidth / 100) * curWidth) - this.options.splitPadding;
@@ -105,13 +139,50 @@
                     $(this.__left).css('width', '');
                     $(this.__left).show();
                     $(this.__right).hide();
+                    
+                    if (this.options.useHeaderToToggle && this.__pageHeader.length > 0 && this.__restoreMarkup) {
+                        // Remove or restore the left button depending on whether or
+                        // not there was a left button before we toggled.
+                        curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
+                        if (curLeftBtn.length > 0) {
+                            $(curLeftBtn).remove();
+                        }
+                        
+                        // Insert or update the left button.
+                        $(this.__pageHeader).prepend(this.__restoreMarkup);
+                    }
                 } else {
                     $(this.__right).removeClass('hx-split-right-area');
                     $(this.__right).addClass('hx-split-full');
                     $(this.__right).addClass('pm-layout-full-height');
                     $(this.__right).css('width', '');
                     $(this.__right).show();
-                    $(this.__left).hide();                    
+                    $(this.__left).hide();
+                    
+                    if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
+                        // Capture the current left button so that we can restore it.
+                        var theme;
+                        curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
+                        if (curLeftBtn.length > 0) {
+                            this.__restoreMarkup = $(curLeftBtn);
+                            theme = $(curLeftBtn).attr('data-theme');
+                            $(curLeftBtn).remove();
+                        }
+                        if (!theme) {
+                            theme = 'a';
+                        }
+                        
+                        // Insert or update the left button.
+                        $(this.__pageHeader).prepend($('<a/>').attr({
+                            'href' : 'javascript:void(0)',
+                            'class' : 'ui-btn-left',
+                            'data-theme' : theme,
+                            'data-icon' : 'back'
+                        }).append(this.options.headerToggleText).on(this.__clickEvent, function(ev) {
+                            ev.preventDefault();
+                            __self.toggle();
+                        }).button());
+                    }
                 }
             }
             if (this.options.onRefresh) {

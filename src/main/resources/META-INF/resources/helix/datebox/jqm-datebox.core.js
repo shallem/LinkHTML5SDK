@@ -240,6 +240,11 @@
 					case 'set':
 						$(this).val(p.value);
 						$(this).trigger('change');
+                                                if (Helix.Utils.isString(p.value)) {
+                                                    w.theDate = w._makeDate(p.value);
+                                                } else {
+                                                    w.theDate = p.value;
+                                                }
 						break;
 					case 'doset':
 						if ( $.isFunction(w['_'+w.options.mode+'DoSet']) ) {
@@ -873,6 +878,12 @@
 					y: (o.centerVert) ? doc.t + ((doc.h / 2) - (size.h / 2)) : iput.y  - ( size.h / 2 ),
 					x: (doc.w < 400 || o.centerHoriz ) ? (doc.w / 2) - (size.w /2) : iput.x  - (size.w / 2)
 				};
+                        if (pos.x < 10) {
+                            /* SAH - make sure the edge of box is never off the screen, and provide 10px of padding on the left so that
+                             * it is not right on the edge either.
+                             */
+                            pos.x = 10;
+                        }
 				
 			if ( o.centerVert === false ) {
 				if ( o.hideFixedToolbars === true && ( typeof fixd.f !== 'undefined' || typeof fixd.h !== 'undefined' )) {
