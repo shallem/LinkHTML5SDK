@@ -714,7 +714,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             var editorInput = $('<textarea />').attr({
                 'name' : formElem.name,
                 'id' : editorID + "_input"
-            }).append(formElem.value);
+            }).val(formElem.value);
             $fieldContainer.append($('<div />')
                 .append($('<label />').attr({
                     'for' : formElem.name
@@ -754,21 +754,37 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         }
     } else if (formElem.type === 'htmlframe') {
         if (!mode) {
-            var frameParams = formElem.frameParams;
-            var frameSrc = formElem.frameSrc;
-            if (frameParams && frameParams.length > 0) {
-                frameSrc = frameSrc + "?" + $.param(frameParams);
-            }
-            var frameStyle = "";
-            if (formElem.frameStyle) {
-                frameStyle = formElem.frameStyle;
+            var $frameWrapper = $('<div/>').appendTo($fieldContainer)
+                .css('height', '100%')
+                .css('-webkit-overflow-scrolling', 'touch')
+                .css('overflow-y', 'scroll');
+            if (formElem.computedStyleClass) {
+                $frameWrapper.addClass(formElem.computedStyleClass);
             }
             
-            /* This is a layout-only component - it does not make sense when editing. */
-            $fieldContainer.append($('<iframe />').attr({
-                'src' : frameSrc,
-                'style' : frameStyle
-            }));
+            var $frame = $('<iframe style="width: 100%; height: 100%; overflow-y: hidden;" src="javascript:true;">').appendTo($frameWrapper).hide();
+                
+            // Load the iframe document content
+            var contentWindow = $frame[0].contentWindow;
+            var doc = contentWindow.document;
+            //$doc = $(doc);
+
+            doc.open();
+            if (!formElem.noHTML) {
+                doc.write('<html>');
+            }
+            if (!formElem.noBody) {
+                doc.write('<body>');
+            }
+            doc.write(formElem.value);
+            if (!formElem.noHTML) {
+                doc.write('</html>');
+            }
+            if (!formElem.noBody) {
+                doc.write('</body>');
+            }
+            doc.close();
+            $frame.show();
         }
     } else if (formElem.type === 'button') {
         __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);

@@ -325,6 +325,7 @@ persistence.search.config = function(persistence, dialect, options) {
             if (ncalls == 3) {
                 // We only do this up to 3 times per index, otherwise the application can
                 // be sluggish for far too long.
+                Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
                 return;
             }
             

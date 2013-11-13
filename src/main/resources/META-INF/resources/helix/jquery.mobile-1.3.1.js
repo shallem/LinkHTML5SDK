@@ -8271,7 +8271,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 	},
 
 	selected: function() {
-		return this._selectOptions().filter( ":selected" );
+                return this._selectOptions().filter( ":selected" );
 	},
 
 	selectedIndices: function() {

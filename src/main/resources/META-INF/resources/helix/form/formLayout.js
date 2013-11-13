@@ -289,7 +289,8 @@
                 /* Clear out all values so that all fields are reset to their defaults. */
                 this.options.items[idx].value = null;
 
-                if (!(fieldType in this._serializeTypes)) {
+                if (!(fieldType in this._serializeTypes) ||
+                    fieldType === "horizontalScroll") {
                     /* All other types have nothing to clear.. */
                     continue;
                 }
@@ -298,10 +299,15 @@
                         var $editor = $(this).data('cleditor');
                         $editor.clear();
                     } else if (fieldType === "pickList") {
-                        $(this).find('option:selected').removeAttr('selected');
+                        $(this).find('option:selected').each(function() {
+                            this.selected = false;
+                            $(this).removeAttr('selected');
+                        });
                         $(this).selectmenu('refresh');
                     } else if (fieldType === "checkbox") {
                         $(this).attr('checked', false);
+                    } else if (fieldType === "horizontalScroll") {
+                        $(this).empty();
                     } else {
                         $(this).val('');
                     }
@@ -341,14 +347,13 @@
                     }
                 } else if (fldType === 'tzSelector' ||
                            fldType === 'pickList') {
-                    $(thisField).find('option').removeAttr('selected');
-                    var selected = $(thisField).find('option[value="' + value + '"]');
-                    if (selected.length > 0) {
-                        selected.attr('selected', 'true');
-                    }
-                    setTimeout(function() {
-                        $(thisField).selectmenu('refresh');
-                    }, 0);
+                    $(thisField).find('option:selected').each(function() {
+                        $(this).prop({ selected : false });
+                    });
+                    $(thisField).find('option[value="' + value + '"]').each(function() {
+                        $(this).prop({ selected : true });
+                    });
+                    $(thisField).selectmenu('refresh');
                 } else if (fldType === 'checkbox') {
                     if (value) {
                         $(thisField).attr('checked', 'true');
