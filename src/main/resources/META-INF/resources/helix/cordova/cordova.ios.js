@@ -6366,11 +6366,6 @@ function cordova_ios_init() {
     // file: lib/scripts/bootstrap.js
 
     (function (context) {
-	if (!context.CordovaInstalled) {
-            // The browser does not have Cordova, hence nothing to do here ...
-            return;
-	}
-
 	var channel = require('cordova/channel');
 	var platformInitChannelsArray = [channel.onNativeReady, channel.onPluginsReady];
 
@@ -6452,11 +6447,6 @@ function cordova_ios_init() {
     // This is an async process, but onDeviceReady is blocked on onPluginsReady.
     // onPluginsReady is fired when there are no plugins to load, or they are all done.
     (function (context) {
-	if (!context.CordovaInstalled) {
-            // The browser does not have Cordova, hence nothing to do here ...
-            return;
-	}
-	
 	// To be populated with the handler by handlePluginsObject.
 	var onScriptLoadingComplete;
 

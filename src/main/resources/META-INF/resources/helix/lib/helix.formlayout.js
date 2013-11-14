@@ -1221,6 +1221,7 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                     dateValue = Date.now();
                 } else {
                     dateValue = parseInt(formElem.value);
+                    dateValue = new Date(dateValue);
                 }
                 $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue}).trigger('datebox', {'method':'doset'});
             } else if (formElem.type === "text" ||
