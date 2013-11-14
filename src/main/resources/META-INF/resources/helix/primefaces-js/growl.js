@@ -101,15 +101,15 @@
                 detailEL.html(msg.detail);
             }
 
-            this.bindEvents(message);
-
             message.appendTo(this.element).fadeIn();
+            this.bindEvents(message);
         },
     
         bindEvents: function(message) {
             var _self = this,
             sticky = this.options.sticky;
 
+/*
             message.mouseover(function() {
                 var msg = $(this);
 
@@ -121,11 +121,11 @@
             .mouseout(function() {        
                 //visuals
                 $(this).find('div.ui-growl-icon-close:first').hide();
-            });
+            }); */
 
             //remove message on click of close icon
-            if (Helix.hasTouch) {
-                message.find('div.ui-growl-icon-close').on('click', function(ev) {
+            if (!Helix.hasTouch) {
+                message.on('click', function(ev) {
                     _self.removeMessage(message);
 
                     //clear timeout if removed manually
@@ -136,7 +136,7 @@
                     return false;
                 });
             } else {
-                message.find('div.ui-growl-icon-close').on('tap', function(ev) {
+                message.on('tap', function(ev) {
                     _self.removeMessage(message);
 
                     //clear timeout if removed manually

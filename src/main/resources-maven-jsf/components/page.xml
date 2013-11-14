@@ -46,7 +46,7 @@
             <name>viewport</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1</defaultValue>
+            <defaultValue>width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0</defaultValue>
             <description>Meta settings for viewport.</description>
         </attribute>
         <attribute>
