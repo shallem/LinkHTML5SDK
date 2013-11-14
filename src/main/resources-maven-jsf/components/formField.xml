@@ -135,6 +135,12 @@
             <description>On change event for field types that support it.</description>
         </attribute>
         <attribute>
+            <name>onfocus</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>On focus event for field types that support it.</description>
+        </attribute>
+        <attribute>
             <name>validator</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -145,6 +151,12 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Function to use as the validator. This option is ignored if validator is also specified.</description>
+        </attribute>
+        <attribute>
+            <name>options</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript object (as a JSON string) describing field specific options. E.e., the minuteStep for a time box.</description>
         </attribute>
     </attributes>
 </component>

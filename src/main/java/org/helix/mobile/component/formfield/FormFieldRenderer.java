@@ -81,6 +81,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getOnchange() != null) {
             writer.write(", 'onchange' : " + ffield.getOnchange());
         }
+        if (ffield.getOnfocus() != null) {
+            writer.write(", 'onfocus' : " + ffield.getOnfocus());
+        }
+        if (ffield.getOptions() != null) {
+            writer.write(", 'options' : " + ffield.getOptions());
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

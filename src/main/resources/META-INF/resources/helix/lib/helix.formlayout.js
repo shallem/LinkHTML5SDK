@@ -166,16 +166,23 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         dateInput.datebox({"mode" : "flipbox", 
             "useNewStyle":false, 
             "defaultValue": defaultValue, 
-            "closeCallback" : formElem.onchange,
+            "openCallback" : (formElem.onfocus ? formElem.onfocus : false),
+            "closeCallback" : (formElem.onchange ? formElem.onchange : false),
             "displayInline" : (timeInput ? true : false)
         });
         if (timeInput) {
+            var minuteStep = 1;
+            if (formElem.options && formElem.options.minuteStep) {
+                minuteStep = formElem.options.minuteStep;
+            }
             timeInput.datebox({"mode" : "timeflipbox", 
                 "overrideTimeFormat" : 12, 
                 "overrideTimeOutput" : "%l:%M %p", 
                 "defaultValue": defaultValue,
-                "closeCallback" : formElem.onchange,
-                "displayInline" : (timeInput ? true : false)
+                "openCallback" : (formElem.onfocus ? formElem.onfocus : false),
+                "closeCallback" : (formElem.onchange ? formElem.onchange : false),
+                "displayInline" : (timeInput ? true : false),
+                "minuteStep" : minuteStep
             });
         }
         dateDiv.fieldcontain();
@@ -578,6 +585,57 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
 }
 
+
+function __autoResize(id){
+    var newheight;
+    var newwidth;
+    var elem = document.getElementById(id);
+
+    newheight=elem.contentWindow.document.body.scrollHeight;
+    newwidth=elem.contentWindow.document.body.scrollWidth;
+
+    elem.height= (newheight) + "px";
+    elem.width= (newwidth) + "px";
+}
+
+function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    if (!mode) {
+        /*var $frameWrapper = $('<div/>').appendTo($fieldContainer)
+            .css('height', '100%')
+            .css('-webkit-overflow-scrolling', 'touch')
+            .css('overflow-y', 'scroll');
+        if (formElem.computedStyleClass) {
+            $frameWrapper.addClass(formElem.computedStyleClass);
+        }*/
+        /* height: 100%; overflow-y: hidden; */
+        var frameID = Helix.Utils.getUniqueID();
+        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
+        var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
+
+        // Load the iframe document content
+        var contentWindow = $frame[0].contentWindow;
+        var doc = contentWindow.document;
+        //$doc = $(doc);
+
+        doc.open();
+        if (!formElem.noHTML) {
+            doc.write('<html style="overflow: hidden;">');
+        }
+        if (!formElem.noBody) {
+            doc.write('<body>');
+        }
+        doc.write(formElem.value);
+        if (!formElem.noHTML) {
+            doc.write('</html>');
+        }
+        if (!formElem.noBody) {
+            doc.write('</body>');
+        }
+        doc.close();
+        $frame.show();
+    }
+}
+
 function __preprocessFormElement(formLayout, formElem) {
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
@@ -753,39 +811,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             }
         }
     } else if (formElem.type === 'htmlframe') {
-        if (!mode) {
-            var $frameWrapper = $('<div/>').appendTo($fieldContainer)
-                .css('height', '100%')
-                .css('-webkit-overflow-scrolling', 'touch')
-                .css('overflow-y', 'scroll');
-            if (formElem.computedStyleClass) {
-                $frameWrapper.addClass(formElem.computedStyleClass);
-            }
-            
-            var $frame = $('<iframe style="width: 100%; height: 100%; overflow-y: hidden;" src="javascript:true;">').appendTo($frameWrapper).hide();
-                
-            // Load the iframe document content
-            var contentWindow = $frame[0].contentWindow;
-            var doc = contentWindow.document;
-            //$doc = $(doc);
-
-            doc.open();
-            if (!formElem.noHTML) {
-                doc.write('<html>');
-            }
-            if (!formElem.noBody) {
-                doc.write('<body>');
-            }
-            doc.write(formElem.value);
-            if (!formElem.noHTML) {
-                doc.write('</html>');
-            }
-            if (!formElem.noBody) {
-                doc.write('</body>');
-            }
-            doc.close();
-            $frame.show();
-        }
+        __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'button') {
         __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'buttonGroup') {
