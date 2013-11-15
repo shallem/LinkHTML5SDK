@@ -49,6 +49,8 @@
             } else {
                 this.tapEvent = 'click';
             }
+            this.page = this.element.closest( ".ui-page" );
+            this.id = Helix.Utils.getUniqueID();
             this.refresh();
         },
         
@@ -56,7 +58,7 @@
             $(this.element).empty();
             this._menuContainer = $('<div/>').attr({
                 'data-role' : 'popup',
-                'id' : Helix.Utils.getUniqueID(),
+                'id' : this.id,
                 'data-theme' : 'a',
                 'data-history': 'false'
             }).appendTo(this.element);
@@ -112,27 +114,43 @@
                     ev.preventDefault();
                     ev.stopPropagation();
                     ev.stopImmediatePropagation();
+                    return false;
                 });
             }
             
             optionsList.listview();
             _self._menuContainer.popup({
-                afteropen: function(ev, ui) {
-                    _self.active = true;
-                },
-                afterclose: function(ev, ui) {
-                    _self.active = false;
-                }
+                dismissible: !Helix.hasTouch // We will explicitly close the popup when this is a touch device.
             });
         },
         
         open: function(obj) {
+            this.active = true;
             this._menuContainer.popup("open", obj);
+            if (Helix.hasTouch) {
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
+            }
             this._thisArg = obj.thisArg;
         },
         
+        _stopAndClose: function(ev) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            this.close();
+            return false;
+        },
+        
+        _stop: function(ev) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            return false;
+        },
+        
         close: function() {
+            this.active = false;
             this._menuContainer.popup("close");
+            $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
         }
     });
 }( jQuery ));

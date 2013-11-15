@@ -269,8 +269,6 @@
 		</resourcesSet>
 		<resourcesSet>
 		  <includes>
-		    <!-- <include>iscroll.js</include> -->
-
 		    <include>jquery.mobile-1.3.1.js</include>
 
 		    <!-- Cordova, including custom plugins.

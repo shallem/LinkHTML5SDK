@@ -1192,9 +1192,14 @@
                     event.stopImmediatePropagation();
                     event.stopPropagation();
                     event.preventDefault();
+                    
+                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
+                        return false;
+                    }
 
                     _self.setSelected(event.target);
                     _self.selectItem();
+                    return false;
                 });
             }
         
