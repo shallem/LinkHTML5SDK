@@ -62,6 +62,12 @@
             <description>JavaScript functon to invoke when the user confirms the action described by the dialog. Takes either no arguments or a serialized form if hasForm is true.</description>
         </attribute>
         <attribute>
+            <name>onDismiss</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript functon to invoke when the user dismisses the action described by the dialog. Takes no arguments.</description>
+        </attribute>
+        <attribute>
             <name>hasForm</name>
             <required>false</required>
             <type>java.lang.Boolean</type>

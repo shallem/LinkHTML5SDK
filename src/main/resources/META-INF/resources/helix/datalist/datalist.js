@@ -339,11 +339,8 @@
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
             }
+
             this.refreshList(this.options.itemList,this.options.condition,null,function() {
-                //Helix.Layout.addScrollers(_self.$wrapper);
-                setTimeout(function() {
-                    //Helix.Layout.updateScrollers(_self.$wrapper);
-                }, 0);
             });
         },
         
@@ -389,14 +386,13 @@
              */
             _self.unfilteredList = _self.itemList = list;
         
+            /* Hide the list while we are manipulating it. */
+            _self.$wrapper.hide();
             if ((condition !== undefined) &&
                 !condition) {
-                /* The condition is false. Remove this entirely from the DOM. */
-                _self.$wrapper.hide();
+                /* The condition is false. Remove this entirely from the DOM. */    
                 return;
-            } else {
-                _self.$wrapper.show();
-            }
+            }   
             
             /* Create the sort popup */
             var sorts = null;
@@ -438,11 +434,6 @@
                 if (_self.nElems == 0) {
                     _self.$parent.empty();
                     _self.$parent.append($('<li />').append(_self.options.emptyMessage));
-                } else {
-                    /* Update the scroller. */
-                    if (_self.options.scroll) {
-                        //Helix.Layout.updateScrollers(_self.$wrapper);
-                    }
                 }
                 _self.$parent.listview( "refresh" );
                 /**
@@ -451,7 +442,10 @@
                  */
                 _self._refreshPaginatorContainer();
                 if (oncomplete) {
+                    _self.$wrapper.show();
                     oncomplete(_self);            
+                } else {
+                    _self.$wrapper.show();
                 }
             });
         },

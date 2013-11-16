@@ -30,9 +30,9 @@
             
             /**
              * Time (in milliseconds) after which the growl disappears. Note that
-             * this option is only used if sticky is false. The default is 6 seconds.
+             * this option is only used if sticky is false. The default is 4 seconds.
              */
-            life: 6000
+            life: 4000
             
         },
     
@@ -156,9 +156,7 @@
     
         removeMessage: function(message) {
             message.fadeTo('normal', 0, function() {
-                message.slideUp('normal', 'easeInOutCirc', function() {
-                    message.remove();
-                });
+                message.remove();
             });
         },
     

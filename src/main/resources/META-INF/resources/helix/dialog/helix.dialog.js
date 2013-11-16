@@ -20,6 +20,7 @@
         defaultOptions: {
             hasForm: false,
             onConfirm: null,
+            onDismiss: null,
             confirmTitle: "Confirm",
             dismissTitle: "Dismiss",
             positionTo: 'origin'
@@ -149,8 +150,12 @@
             $contentDiv.attr('data-role', 'content');
             $contentDiv.attr('data-theme', 'd');
         
-            $contentDiv.append($('<h3/>').append(dialog.options.bodyHeader));
-            $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
+            if (dialog.options.bodyHeader) {
+                $contentDiv.append($('<h3/>').append(dialog.options.bodyHeader));
+            }
+            if (dialog.options.bodyContent) {
+                $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
+            }
         } else {
             dialog.form = $('<form/>').attr({
                 'id' : dialog.options.id + "_form"
@@ -167,6 +172,9 @@
         }).append(dialog.options.dismissTitle)
             .on('tap', function(ev) {
                 ev.stopImmediatePropagation();
+                if (dialog.options.onDismiss) {
+                    dialog.options.onDismiss.call(dialog);
+                }
                 $(dialog.$mainDiv).popup( "close" );
                 return false;
             }).button()

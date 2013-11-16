@@ -57,15 +57,28 @@ public class DialogRenderer extends CoreRenderer {
         
         writer.write("$(document).on('helixinit', function() {");
         writer.write("\nwindow." + dialog.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDialog({");
-        writer.write("id:'" + clientId + "',");
         writer.write("title:'" + dialog.getTitle() + "',");
         writer.write("hasForm:" + dialog.isHasForm() + ",");
         writer.write("onConfirm:" + dialog.getOnConfirm() + ",");
+        if (dialog.getOnDismiss() != null) {
+            writer.write("onDismiss:" + dialog.getOnDismiss() + ",");
+        }
+        if (dialog.getConfirmTitle() != null) {
+            writer.write("confirmTitle:'" + dialog.getConfirmTitle() + "',");
+        }
+        if (dialog.getDismissTitle() != null) {
+            writer.write("dismissTitle:'" + dialog.getDismissTitle() + "',");
+        }
         writer.write("styleClass:'" + (dialog.getStyleClass() != null ? dialog.getStyleClass() : "") + "',");
         writer.write("titleStyleClass:'" + (dialog.getTitleStyleClass() != null ? dialog.getTitleStyleClass() : "") + "',");
         writer.write("contentStyleClass:'" + (dialog.getContentStyleClass() != null ? dialog.getContentStyleClass() : "") + "',");
-        writer.write("bodyHeader:'" + dialog.getBodyHeader() + "',");
-        writer.write("bodyContent:'" + dialog.getBodyContent() + "'");
+        if (dialog.getBodyHeader() != null) {
+            writer.write("bodyHeader:'" + dialog.getBodyHeader() + "',");
+        }
+        if (dialog.getBodyContent() != null) {
+            writer.write("bodyContent:'" + dialog.getBodyContent() + "',");
+        }
+        writer.write("id:'" + clientId + "'");
         writer.write("});\n");
         writer.write("});");
         
