@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-Helix.DB.Utils = {
+function initHelixDBUtils() {
+    Helix.DB.Utils = {
     
-    /**
+        /**
      * Check if a numeric value is an integer. Used to infer data types for
      * object schema.
      */
-    isInt: function(n) {
-        return n % 1 === 0;
-    },
+        isInt: function(n) {
+            return n % 1 === 0;
+        },
     
-    /**
+        /**
      * Default sync fields override. Just return false, which means that the framework
      * should handle the field sync.
      * 
@@ -33,11 +34,11 @@ Helix.DB.Utils = {
      * @param fieldName The name of the field we are synchronizing.
      * @return true if this routine handled the sync; false if not
      */
-    defaultFieldSync: function(persistentObjSetter, newObj, fieldName) {
-        return false;
-    },
+        defaultFieldSync: function(persistentObjSetter, newObj, fieldName) {
+            return false;
+        },
     
-    /**
+        /**
      * Default array refinement function that just returns the identity (i.e., returns
      * the query collection it is given). This override is used when only a subset
      * of a table is synchronized during a load command.
@@ -46,7 +47,8 @@ Helix.DB.Utils = {
      * @param queryCollection Collection in the DB that should match the array pointed to by field.
      * @return Returns a query collection that represents the proper set of objects to compare.
      */
-    identityRefineEntityArray: function(field, queryCollection) {
-        return queryCollection;
-    }
-};
+        identityRefineEntityArray: function(field, queryCollection) {
+            return queryCollection;
+        }
+    };
+}

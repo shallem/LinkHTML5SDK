@@ -121,7 +121,7 @@
 	background-image:         linear-gradient( #555 /*{a-bhover-background-start}*/, #383838 /*{a-bhover-background-end}*/);
 }
 .ui-btn-hover-a:visited,
-.ui-btn-hover-a:hover,
+/*.ui-btn-hover-a:hover,*/
 .ui-btn-hover-a a.ui-link-inherit {
 	color: 					#fff /*{a-bhover-color}*/;
 }
@@ -365,7 +365,7 @@
 .ui-body-c .ui-link:active {
 	color: #2489ce /*{c-body-link-active}*/;
 }
-.ui-btn-up-c {
+.ui-btn-up-c,.ui-btn-hover-c {
 	border: 1px solid 		#ccc /*{c-bup-border}*/;
 	background: 			#eee /*{c-bup-background-color}*/;
 	font-weight: bold;
@@ -379,27 +379,12 @@
 	background-image:         linear-gradient( #fff /*{c-bup-background-start}*/, #f1f1f1 /*{c-bup-background-end}*/);
 }
 .ui-btn-up-c:visited,
+.ui-btn-hover-c:visited,
+.ui-btn-hover-c a.ui-link-inherit,
 .ui-btn-up-c a.ui-link-inherit {
 	color: 					#2f3e46 /*{c-bup-color}*/;
 }
-.ui-btn-hover-c {
-	border: 1px solid 		#bbb /*{c-bhover-border}*/;
-	background: 			#dfdfdf /*{c-bhover-background-color}*/;
-	font-weight: bold;
-	color: 					#222 /*{c-bhover-color}*/;
-	text-shadow: 0 /*{c-bhover-shadow-x}*/ 1px /*{c-bhover-shadow-y}*/ 0 /*{c-bhover-shadow-radius}*/ #fff /*{c-bhover-shadow-color}*/;
-	background-image: -webkit-gradient(linear, left top, left bottom, from( #f6f6f6 /*{c-bhover-background-start}*/), to( #e0e0e0 /*{c-bhover-background-end}*/)); /* Saf4+, Chrome */
-	background-image: -webkit-linear-gradient( #f6f6f6 /*{c-bhover-background-start}*/, #e0e0e0 /*{c-bhover-background-end}*/); /* Chrome 10+, Saf5.1+ */
-	background-image:    -moz-linear-gradient( #f6f6f6 /*{c-bhover-background-start}*/, #e0e0e0 /*{c-bhover-background-end}*/); /* FF3.6 */
-	background-image:     -ms-linear-gradient( #f6f6f6 /*{c-bhover-background-start}*/, #e0e0e0 /*{c-bhover-background-end}*/); /* IE10 */
-	background-image:      -o-linear-gradient( #f6f6f6 /*{c-bhover-background-start}*/, #e0e0e0 /*{c-bhover-background-end}*/); /* Opera 11.10+ */
-	background-image:         linear-gradient( #f6f6f6 /*{c-bhover-background-start}*/, #e0e0e0 /*{c-bhover-background-end}*/);
-}
-.ui-btn-hover-c:visited,
-.ui-btn-hover-c:hover,
-.ui-btn-hover-c a.ui-link-inherit {
-	color: 					#2f3e46 /*{c-bhover-color}*/;
-}
+
 .ui-btn-down-c {
 	border: 1px solid 		#bbb /*{c-bdown-border}*/;
 	background: 			#d6d6d6 /*{c-bdown-background-color}*/;

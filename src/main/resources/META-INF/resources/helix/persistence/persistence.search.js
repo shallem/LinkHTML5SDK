@@ -407,11 +407,9 @@ persistence.search.config = function(persistence, dialect, options) {
         return queries;
     });
   
-    function indexObject(obj, propMap, eIDMap, queries, insertRows) {
+    function indexObject(obj, propMap, eIDMap, insertRows) {
         if (obj.id in eIDMap) {
             var id = eIDMap[obj.id];
-            var indexTbl = obj._type + '_Index';
-            queries.push(['DELETE FROM `' + indexTbl + '` WHERE `entityId` = ?', [id]]);
             for (var prop in propMap) {
                 var propID = propMap[prop];
                 var rawText = obj[prop];
@@ -425,28 +423,7 @@ persistence.search.config = function(persistence, dialect, options) {
                 }
             }
         } else {
-            alert("WHAT??");
-            /*
-            var eidTbl = obj._type + '_IndexEIDs';
-            tx.executeSql('SELECT ROWID FROM `' + eidTbl + '` WHERE entityId=?', [ obj.id ], function(r, orig) {
-                if (r.length == 0) {
-                    tx.executeSql('INSERT INTO `' + eidTbl + '` VALUES(?)', [ obj.id ], function(r, orig) {
-                        entityIdMap[obj.id] = orig.insertId;
-                        handleProperties(tx, obj, propList.slice(0), queries, orig.insertId, function() {
-                            callback();
-                        });
-                    }, function(t, e) {
-                        persistence.errorHandler(e.message, e.code);
-                    });
-                } else {
-                    entityIdMap[obj.id] = r[0].ROWID;
-                    handleProperties(tx, obj, propList.slice(0), queries, r[0].ROWID, function() {
-                        callback();
-                    });
-                }
-            }, function(t, e) {
-                persistence.errorHandler(e.message, e.code);
-            });*/
+            alert("Could not find index EID in the database. The database is likely corrupt. Please delete the app cache and reload the app.");
         }
     }
 
@@ -483,6 +460,18 @@ persistence.search.config = function(persistence, dialect, options) {
                 ret = "'" + _real_escape_string(eidList[x]) + "'";
             } else {
                 ret = ret + ",'" + _real_escape_string(eidList[x]) + "'";
+            }
+        }
+        return ret;
+    }
+    
+    function makeIntVector(eidList) {
+        var ret = null;
+        for (var x = 0; x < eidList.length; ++x) {
+            if (!ret) {
+                ret = eidList[x].toString();
+            } else {
+                ret = ret + "," + eidList[x].toString();
             }
         }
         return ret;
@@ -583,13 +572,23 @@ persistence.search.config = function(persistence, dialect, options) {
                 // Step 3 - do the indexing.
                 var indexRows = [];
                 var indexQueries = [];
-                for (var i = 0; i < updateObjs.length; ++i) {
+                var i;
+                
+                // Delete all existing index entries in one large delete.
+                var indexTbl = entity.meta.name + '_Index';
+                var deleteIDs = [];
+                for (i = 0; i < updateIDs.length; ++i) {
+                    deleteIDs.push(eIDMap[updateIDs[i]]);
+                }
+                var deleteVec = makeIntVector(deleteIDs);
+                indexQueries.push(['DELETE FROM `' + indexTbl + '` WHERE `entityId` IN (' + deleteVec + ')', null]);
+            
+                for (i = 0; i < updateObjs.length; ++i) {
                     var elem = updateObjs[i];
-                    indexObject(elem, propMap, eIDMap, indexQueries, indexRows);
+                    indexObject(elem, propMap, eIDMap, indexRows);
                 }
                 
                 // Turn the rows list into blocks of 50 inserts
-                var indexTbl = entity.meta.name + '_Index';
                 var maxRows = 0;
                 var nxtInsert = null;
                 for(var k = 0; k < indexRows.length; ++k) {

@@ -178,11 +178,15 @@ function config(persistence, dialect) {
             if (meta.hasOne.hasOwnProperty(rel)) {
               otherMeta = meta.hasOne[rel].type.meta;
               colDefs.push([rel, tm.idType]);
-              queries.push([dialect.createIndex(meta.name, [rel]), null]);
+              if (!persistence.generatedTables[meta.name]) {
+                queries.push([dialect.createIndex(meta.name, [rel]), null]);
+              }
             }
           }
-          for (var i = 0; i < meta.indexes.length; i++) {
-            queries.push([dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]), null]);
+          if (!persistence.generatedTables[meta.name]) {
+              for (var i = 0; i < meta.indexes.length; i++) {
+                queries.push([dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]), null]);
+              }
           }
         }
         for (var rel in meta.hasMany) {
@@ -210,7 +214,7 @@ function config(persistence, dialect) {
             }
           }
         }
-        if (!meta.isMixin) {
+        if (!meta.isMixin && !persistence.generatedTables[meta.name]) {
           colDefs.push(["id", tm.idType, "PRIMARY KEY"]);
           persistence.generatedTables[meta.name] = true;
           queries.push([dialect.createTable(meta.name, colDefs), null]);
@@ -224,6 +228,15 @@ function config(persistence, dialect) {
           queries = queries.concat(moreQueries);
       }
     }
+    fns = persistence.nextSchemaSyncHooks;
+    for(i = 0; i < fns.length; i++) {
+      moreQueries = fns[i](tx);
+      if (moreQueries) {
+          queries = queries.concat(moreQueries);
+      }
+    }
+    // Only run on 1 sync.
+    persistence.nextSchemaSyncHooks = [];
     if(emulate) {
       // Done
       callback(tx);
@@ -347,16 +360,18 @@ function config(persistence, dialect) {
    */
   function rowToEntity(session, entityName, row, prefix) {
     prefix = prefix || '';
-    if (session.trackedObjects[row[prefix + "id"]]) { // Cached version
-      return session.trackedObjects[row[prefix + "id"]];
-    }
     var tm = persistence.typeMapper;
     var rowMeta = persistence.getMeta(entityName);
     var ent = persistence.define(entityName); // Get entity
     if(!row[prefix+'id']) { // null value, no entity found
       return null;
     }
-    var o = new ent(session, undefined, true);
+    var o = null;
+    if (session.trackedObjects[row[prefix + "id"]]) { // Cached version
+      o = session.trackedObjects[row[prefix + "id"]];
+    } else {
+      o = new ent(session, undefined, true);
+    }
     o.id = tm.dbValToEntityVal(row[prefix + 'id'], tm.idType);
     o._new = false;
     for ( var p in row) {
@@ -433,7 +448,7 @@ function config(persistence, dialect) {
       }
     }
     for ( var p in obj._dirtyProperties) {
-      if (obj._dirtyProperties.hasOwnProperty(p)) {
+      if (obj._dirtyProperties.hasOwnProperty(p) && !(obj._ignoreProperties[p])) {
         properties.push("`" + p + "`");
         var type = meta.fields[p] || tm.idType;
         values.push(tm.entityValToDbVal(obj._data[p], type));

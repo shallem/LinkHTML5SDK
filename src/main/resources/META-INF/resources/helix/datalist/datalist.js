@@ -273,7 +273,21 @@
         _create: function() {
             this.$wrapper = this.element;
             if (this.options.scroll) {
-                this.element.addClass('hx-scroller-nozoom');
+                this.$wrapper.addClass('pm-layout-full-height');
+            }
+            
+            this.$searchSortDiv = $('<div/>')
+                .appendTo(this.$wrapper)
+                .addClass('hx-full-width')
+                .hide();
+            this._searchSortDirty = true;
+            
+            this.$paginatorDiv = null;
+            if (this.options.itemsPerPage) {
+                this.$paginatorDiv = $('<div/>')
+                    .appendTo(this.$wrapper)
+                    .addClass(Helix.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS)
+                    .hide();
             }
             
             /**
@@ -287,10 +301,15 @@
             /**
              * Append the data list.
              */
+            var listWrapper = $('<div/>').appendTo(this.$wrapper);
+            if (this.options.scroll) {
+                listWrapper.addClass('hx-scroller-nozoom');
+                listWrapper.addClass('mh-layout-parent-height');
+            }
             this.$parent = $('<ul/>').attr({
                 'data-role' : 'listview',
                 'class' : 'hx-listview'
-            }).appendTo(this.$wrapper);
+            }).appendTo(listWrapper);
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
             }
@@ -311,7 +330,7 @@
             if (this.$hookDiv) {
                 this.$hookDiv.hook({
                     reloadPage: false,
-                    scrollTarget: this.element,
+                    scrollTarget: listWrapper,
                     reloadEl: function() {
                         _self.options.pullToRefresh.call(this);
                     }
@@ -525,7 +544,7 @@
                         }
                         if (_self.nElems == 0) {
                             /* Nothing to do. */
-                            return;
+                            return false;
                         }
                         if (_self.options.onSortChange) {
                             _self.options.onSortChange(_self._currentSort, _self._currentSortOrder);
@@ -536,10 +555,12 @@
                         $(sortsList).find('li').removeClass('hx-current-sort');
                         $(this).addClass('hx-current-sort');
 
+                        _self._currentPage = 0;
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
                         });
                         $(_self._sortContainer).popup("close");
+                        return false;
                     });
                 }
             }
@@ -774,13 +795,7 @@
                 return;
             }
         
-            if (!_self._paginatorContainer) {
-                _self._paginatorContainer = $('<div />').attr({
-                    'class': Helix.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS
-                }).insertBefore(_self.$parent);
-            } else {
-                _self._paginatorContainer.empty();
-            }
+            _self.$paginatorDiv.empty().hide();
             
             var totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;            
             $.each(this.options.paginatorTemplate.split(" "), function(idx, obj) {
@@ -796,7 +811,7 @@
                     return;
                 }
                 
-                Helix.Utils.paginator.render(obj, _self._paginatorContainer, {
+                Helix.Utils.paginator.render(obj, _self.$paginatorDiv, {
                     'page' : _self._currentPage,
                     'totalItems' : _self.nElems,
                     'itemsPerPage' : _self.options.itemsPerPage,
@@ -804,6 +819,7 @@
                     'prevPage' : _self.prevPage,
                     'owner' : _self
                 });
+                _self.$paginatorDiv.show();
             });
         },
         nextPage: function() {
@@ -917,20 +933,13 @@
             var _self = this;
             var hasButtons = _self._globalFilterContainer || _self._sortContainer; 
             var useControlGroup = false;
-            if (_self._searchSortDiv && !_self._searchSortDirty) {
+            if (!_self._searchSortDirty) {
                 return;
             }
             
-            if (_self._searchSortDiv) {
-                _self._searchSortDiv.remove();
-            }
+            _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
-            
-            _self._searchSortDiv = $('<div/>')
-                .attr({
-                    'class' : 'hx-full-width'
-                })
-                .insertBefore(this.$wrapper);
+
             if (hasButtons) {
                 if (_self._sortContainer && _self._globalFilterContainer) {
                     useControlGroup = true;
@@ -940,7 +949,7 @@
                     'class' : 'hx-display-inline',
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
-                }).appendTo(_self._searchSortDiv);
+                }).appendTo(_self.$searchSortDiv);
                 if (_self._sortContainer) {
                     /* Ascending/descending sort buttons. */
                     var sAscendID = Helix.Utils.getUniqueID();
@@ -1025,7 +1034,7 @@
                 }
                 var $searchDiv = $('<div/>').attr({
                     'class' : styleClass
-                }).appendTo(_self._searchSortDiv);
+                }).appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 this.$searchBox = $('<input/>').attr({
                     'type' : 'search',
@@ -1056,6 +1065,8 @@
                     });
                 });
             }
+            
+            _self.$searchSortDiv.show();
         },
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection) {

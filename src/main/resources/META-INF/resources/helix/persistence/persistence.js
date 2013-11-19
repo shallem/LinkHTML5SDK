@@ -129,6 +129,7 @@ persistence.get = function(arg1, arg2) {
     persistence.entityDecoratorHooks = [];
     persistence.flushHooks = [];
     persistence.schemaSyncHooks = [];
+    persistence.nextSchemaSyncHooks = [];
 
     // Enable debugging (display queries using console.log etc)
     persistence.debug = true;
@@ -428,6 +429,7 @@ persistence.get = function(arg1, arg2) {
             if(oldValue !== val || (oldValue && val && oldValue.getTime && val.getTime)) { // Don't mark properties as dirty and trigger events unnecessarily
               that._data[f] = val;
               that._dirtyProperties[f] = oldValue;
+              that._ignoreProperties[f] = false;
               that.triggerEvent('set', that, f, val);
               that.triggerEvent('change', that, f, val);
               session.propertyChanged(that, f, oldValue, val);
@@ -454,6 +456,7 @@ persistence.get = function(arg1, arg2) {
         this._new = true;
         this._type = entityName;
         this._dirtyProperties = {};
+        this._ignoreProperties = {};
         this._data = {};
         this._data_obj = {}; // references to objects
         this._session = session || persistence;
@@ -633,6 +636,11 @@ persistence.get = function(arg1, arg2) {
 
       Entity.prototype.equals = function(other) {
         return this.id == other.id;
+      };
+      
+      /* SAH - ignore a named field until its value is reset. */
+      Entity.prototype.ignoreField = function(fld) {
+          this._ignoreProperties[fld] = true;
       };
 
       Entity.prototype.toJSON = function() {

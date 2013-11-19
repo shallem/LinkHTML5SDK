@@ -315,6 +315,7 @@
 		    <include>persistence/persistence.search.js</include>
 		    <include>persistence/persistence.helix.js</include>
 		    <include>persistence/persistence.helix.helpers.js</include>
+		    <include>persistence/persistence.init.js</include>
 
 		    <!-- Pretty dates. -->
 		    <include>prettydate/jquery.prettydate.js</include>

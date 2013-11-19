@@ -120,14 +120,17 @@
             
             optionsList.listview();
             _self._menuContainer.popup({
-                dismissible: !Helix.hasTouch // We will explicitly close the popup when this is a touch device.
+                dismissible: !Helix.hasTouch, // We will explicitly close the popup when this is a touch device.
+                afterclose: function() {
+                    _self.active = false;
+                }
             });
         },
         
         open: function(obj) {
-            this.active = true;
             this._menuContainer.popup("open", obj);
             if (Helix.hasTouch) {
+                this.active = true;
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
             }
@@ -150,7 +153,9 @@
         close: function() {
             this.active = false;
             this._menuContainer.popup("close");
-            $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
+            if (Helix.hasTouch) {
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
+            }
         }
     });
 }( jQuery ));
