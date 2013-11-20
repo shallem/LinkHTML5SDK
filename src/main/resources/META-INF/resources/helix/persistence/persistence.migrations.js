@@ -23,12 +23,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-
-if(!window.persistence) { // persistence.js not loaded!
-    throw new Error("persistence.js should be loaded before persistence.migrations.js");
-}
-
-(function() {
+function definePersistenceMigrations() {
   
     var Migrator = {
         migrations: [],
@@ -52,18 +47,9 @@ if(!window.persistence) { // persistence.js not loaded!
             });
         },
       
-        setVersion: function(t, v, callback) {
-            if (!t) {
-                persistence.transaction(function(tx){
-                    Migrator.setVersion(tx, v, callback);
-                });
-                return;
-            }
-            
-            t.executeSql('UPDATE schema_version SET current_version = ?', [v], function(){
-                Migrator._version = v;
-                if (callback) callback();
-            });
+        setVersion: function(allMigrations, v) {
+            Migrator._version = v;
+            allMigrations.unshift(['UPDATE schema_version SET current_version = ?', [v]]);
         },
       
         setup: function(t, callback) {
@@ -84,14 +70,14 @@ if(!window.persistence) { // persistence.js not loaded!
         },
       
         // Method should only be used for testing
-        reset: function(callback) {
+        reset: function() {
             // Creates a dummy migration just to force setting schema version when cleaning DB
             Migrator.migrations = [];
             Migrator.migration(0, {
                 up: function() { }, 
                 down: function() { }
             });
-            Migrator.setVersion(0, callback);
+            Migrator.setVersion(allMigrations, 0);
         },
       
         migration: function(version, actions) {
@@ -99,98 +85,43 @@ if(!window.persistence) { // persistence.js not loaded!
             return Migrator.migrations[version];
         },
       
-        migrateUpTo: function(t, version, callback) {
-            if (!t) {
-                persistence.transaction(function(tx){
-                    Migrator.migrateUpTo(tx, version, callback);
-                });
-                return;
-            }
-            
+        migrateUpTo: function(allMigrations, curVersion, version) {
             var migrationsToRun = [];
-        
-            function migrateOne(tx) {
-                var migration = migrationsToRun.pop();
-          
-                if (!migration) callback();
-          
-                migration.up(tx, function(){
-                    if (migrationsToRun.length > 0) {
-                        migrateOne(tx);
-                    } else if (callback) {
-                        callback();
-                    }
-                });
+            
+            for (var v = curVersion + 1; v <= version; ++v) {
+                migrationsToRun.push(Migrator.migrations[v]);
             }
-        
-            this.version(t, function(currentVersion){
-                for (var v = currentVersion+1; v <= version; v++)
-                    migrationsToRun.unshift(Migrator.migrations[v]);
-          
-                if (migrationsToRun.length > 0) {
-                    migrateOne(t);
-                } else if (callback) {
-                    callback();
-                }
-            });
+                
+            for (var i = 0; i < migrationsToRun.length; ++i) {
+                var migration = migrationsToRun[i];
+                migration.up(allMigrations);
+            }
         },
       
-        migrateDownTo: function(t, version, callback) {
-            if (!t) {
-                persistence.transaction(function(tx){
-                    Migrator.migrateDownTo(tx, version, callback);
-                });
-                return;
-            }
-            
+        migrateDownTo: function(allMigrations, curVersion, version) {
             var migrationsToRun = [];
-        
-            function migrateOne(tx) {
-                var migration = migrationsToRun.pop();
-          
-                if (!migration) callback();
-          
-                migration.down(tx, function(){
-                    if (migrationsToRun.length > 0) {
-                        migrateOne(tx);
-                    } else if (callback) {
-                        callback();
-                    }
-                });
+            
+            for (var v = curVersion; v > version; v--) {
+                migrationsToRun.push(Migrator.migrations[v]);
             }
-        
-            this.version(t, function(currentVersion){
-                for (var v = currentVersion; v > version; v--)
-                    migrationsToRun.unshift(Migrator.migrations[v]);
-          
-                if (migrationsToRun.length > 0) {
-                    migrateOne(t);
-                } else if (callback) {
-                    callback();
-                }
-            });
+                
+            for (var i = 0; i < migrationsToRun.length; ++i) {
+                var migration = migrationsToRun[i];
+                migration.down(allMigrations);
+            }
         },
       
-        migrate: function(t, version, callback) {
-            if (!t) {
-                persistence.transaction(function(tx){
-                    Migrator.migrate(tx, version, callback);
-                });
+        migrate: function(curVersion, newVersion) {
+            var allMigrations = [];
+            if (curVersion < newVersion)
+                Migrator.migrateUpTo(allMigrations, curVersion, newVersion);
+            else if (curVersion > newVersion)
+                Migrator.migrateDownTo(allMigrations, curVersion, newVersion);
+            else
                 return;
-            }
             
-            if ( arguments.length === 1 ) {
-                callback = version;
-                version = this.migrations.length-1;
-            }
-        
-            this.version(t, function(curVersion){
-                if (curVersion < version)
-                    Migrator.migrateUpTo(t, version, callback);
-                else if (curVersion > version)
-                    Migrator.migrateDownTo(t, version, callback);
-                else
-                    callback();
+            persistence.nextSchemaSyncHooks.push(function() {
+                return allMigrations;
             });
         }
     }
@@ -202,58 +133,29 @@ if(!window.persistence) { // persistence.js not loaded!
         this.actions = [];
     };
     
-    Migration.prototype.executeActions = function(t, callback, customVersion) {
-        if (!t) {
-            persistence.transaction(function(tx){
-                this.executeActions(tx, callback, customVersion);
-            });
-            return;
-        }
-        
+    Migration.prototype.executeActions = function(allMigrations, customVersion) {
         var actionsToRun = this.actions;
         var version = (customVersion!==undefined) ? customVersion : this.version;
       
-        function actionFailure(err) {
-            alert(err.message);
+        for (var i = 0; i < actionsToRun.length; ++i) {
+            var action = actionsToRun[i];
+            action(allMigrations);
         }
-
-        function nextAction(tx) {
-            if (actionsToRun.length == 0)
-                Migrator.setVersion(tx, version, callback);
-            else {
-                var action = actionsToRun.pop();
-                action(tx, nextAction, actionFailure);
-            }
-        }
-
-        nextAction(t);
+        Migrator.setVersion(allMigrations, version);
     }
     
-    Migration.prototype.up = function(t, callback) {
-        if (!t) {
-            persistence.transaction(function(tx){
-                this.up(tx, callback);
-            });
-            return;
-        }
-        
+    Migration.prototype.up = function(allMigrations) {
         if (this.body.up) {
-            this.body.up.apply(this);
+            this.body.up.apply(this, allMigrations);
         }
-        this.executeActions(t, callback);
+        this.executeActions(allMigrations);
     }
     
-    Migration.prototype.down = function(t, callback) {
-        if (!t) {
-            persistence.transaction(function(tx){
-                this.down(tx, callback);
-            });
-            return;
-        }
+    Migration.prototype.down = function(allMigrations) {
         if (this.body.down) {
-            this.body.down.apply(this);
+            this.body.down.apply(this, allMigrations);
         }
-        this.executeActions(t, callback, this.version-1);
+        this.executeActions(allMigrations, this.version-1);
     }
     
     Migration.prototype.createTable = function(tableName, callback) {
@@ -275,40 +177,28 @@ if(!window.persistence) { // persistence.js not loaded!
         this.executeSql(sql);
     }
     
-    Migration.prototype.addColumn = function(tableName, columnName, columnType) {
-        var sql = 'ALTER TABLE `' + tableName + '` ADD ' + columnName + ' ' + columnType;
-        this.executeSql(sql);
-    }
-    
-    Migration.prototype.removeColumn = function(tableName, columnName) {
-        this.action(function(tx, nextCommand, errorFn){
-            var sql = 'select sql from sqlite_master where type = "table" and name == "'+tableName+'"';
-            tx.executeSql(sql, null, function(result){
-                var matchArr = new RegExp("CREATE TABLE `?[A-Za-z0-9_.]+`? \\((.+)\\)").exec(result[0].sql);
-                var columns = matchArr[1].split(', ');
-                var selectColumns = [];
-                var columnsSql = [];
-          
-                for (var i = 0; i < columns.length; i++) {
-                    var colName = new RegExp("`?(\\w+)`? .+").exec(columns[i])[1];
-                    if (colName == columnName) continue;
-            
-                    columnsSql.push(columns[i]);
-                    selectColumns.push(colName);
+    Migration.prototype.updateColumns = function(allColumns, tableName) {
+        this.action(function(arr){
+            var columnsSql = [];
+            var selectColumns = [];
+            for (var col in allColumns) {
+                var colTarget = allColumns[col];
+                if (Helix.Utils.isString(colTarget)) {
+                    columnsSql.push(col + " " + colTarget);
+                } else {
+                    // This is a relationship column.
+                    columnsSql.push(col + " VARCHAR(32)");
                 }
-                columnsSql = columnsSql.join(', ');
-                selectColumns = selectColumns.join(', ');
-          
-                var queries = [];
-                queries.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
-                queries.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
-                queries.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
-                queries.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
-          
-                persistence.executeQueriesSeq(tx, queries, function(results) {
-                    nextCommand(tx);
-                });
-            }, errorFn);
+                
+                selectColumns.push(col);
+            }
+            columnsSql = columnsSql.join(', ');
+            selectColumns = selectColumns.join(', ');
+
+            arr.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
+            arr.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
+            arr.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
+            arr.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
         });
     }
     
@@ -323,10 +213,8 @@ if(!window.persistence) { // persistence.js not loaded!
     }
     
     Migration.prototype.executeSql = function(sql, args) {
-        this.action(function(t, nextCommand, errorFn){
-            t.executeSql(sql, args, function(results) {
-                nextCommand(t);
-            }, errorFn);
+        this.action(function(arr){
+            arr.unshift([sql, args]);
         });
     }
     
@@ -377,4 +265,4 @@ if(!window.persistence) { // persistence.js not loaded!
         Migrator.migration.apply(Migrator, Array.prototype.slice.call(arguments, 0))
     };
     
-}());
+}

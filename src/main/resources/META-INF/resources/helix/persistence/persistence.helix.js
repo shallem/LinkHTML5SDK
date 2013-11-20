@@ -21,6 +21,10 @@
 function initHelixDB() {
     Helix.DB = {
         
+        __masterDBVer : 1,
+        
+        __schemaVersion: 0,
+        
         reservedFields : {
             "__hx_sorts" : true,
             "__hx_key" : true,
@@ -128,7 +132,8 @@ function initHelixDB() {
                 'keyField' : schemaTemplate.__hx_key,
                 'sortFields' : schemaTemplate.__hx_sorts,
                 'filterFields' : schemaTemplate.__hx_filters,
-                'globalFilterFields' : schemaTemplate.__hx_global_filters
+                'globalFilterFields' : schemaTemplate.__hx_global_filters,
+                'textIndexFields' : schemaTemplate.__hx_text_index
             });
 
             // Insert all of the sub schemas.
@@ -217,8 +222,8 @@ function initHelixDB() {
                 return;
             }
             /* Next, check to see if this specific schema is already available from a previous call to
-         * generatePersistenceSchema. 
-         */
+             * generatePersistenceSchema. 
+             */
             var schemaNameToCheck;
             if (Object.prototype.toString.call(schemaTemplate) === '[object Array]') {
                 schemaNameToCheck = schemaTemplate[0].__hx_schema_name;
@@ -256,10 +261,15 @@ function initHelixDB() {
                 }
             }
         
-            // Determine if any upgrades need to be generated and run.
-            Helix.DB.doMigrations(tx,name,allSchemas,s,function(schemaObj) {
-                persistence.schemaSync(function(tx) {
-                    var oncompleteArgs = [ schemaObj ];
+            // Determine if any upgrades need to be generated. The required SQL commands
+            // are stored as schema sync hooks.
+            Helix.DB.doMigrations(name,allSchemas);
+            
+            // Flush all schemas.
+            persistence.schemaSync(function(tx) {
+                // Flush all master DB changes.
+                persistence.flush(tx, function() {
+                    var oncompleteArgs = [ s ];
                     oncompleteArgs = oncompleteArgs.concat(opaque);
                     oncomplete.apply(this, oncompleteArgs);
 
@@ -276,30 +286,188 @@ function initHelixDB() {
             this.createdSchemas[name] = s;
         },
 
-        doMigrations: function(tx,metaName,allSchemas,schemaObj,oncomplete) {
+        doMigrations: function(metaName,allSchemas) {
             // Migrate tables one at a time.
-            var migrateOne = function() {
-                if (allSchemas.length == 0) {
-                    oncomplete(schemaObj);
-                    return;
-                }
-                var schema = allSchemas.pop();
-                Helix.DB.migrateTable(tx,schema, metaName, function(curVer, tblName) {
-                    if (curVer > 0) {
-                        persistence.migrate(tx, curVer, function() {
-                            // Done with table updates. Call the continuation function.
-                            migrateOne();
-                        });
-                    } else if (curVer <= 0) {
-                        if (curVer == 0) {
-                            // This table is already in the DB. Mark it as a generated table.
-                            persistence.generatedTables[tblName] = true;
-                        }
-                        migrateOne();
+            if (allSchemas.length == 0) {
+                return;
+            }
+
+            
+            for (var i = 0; i < allSchemas.length; ++i) {
+                var schema = allSchemas[i];
+                var tableName = schema.schema.meta.name;
+                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName);
+                if (curVer > 0) {
+                    persistence.migrate(Helix.DB.__schemaVersion, curVer);
+                    // This table exists. All updates to it are handle as sync hooks.
+                    persistence.generatedTables[tableName] = true;
+                } else if (curVer <= 0) {
+                    if (curVer == 0) {
+                        // This table is already in the DB. Mark it as a generated table.
+                        persistence.generatedTables[tableName] = true;
                     }
-                });
-            };
-            migrateOne();
+                }
+            }
+        },
+
+        migrateTable: function(oldVersion, schema, metaName) {
+            var tableName = schema.schema.meta.name;
+            var schemaRec = window.__pmAllTables[tableName];
+            if (schemaRec == null) {
+                // This is a new table.
+                var newSchema = new window.__pmMasterDB();
+                newSchema.metaName = metaName;
+                newSchema.tableVersion = 0;
+                newSchema.tableName = tableName;
+                newSchema.tableFields = JSON.stringify(schema.fields);
+                newSchema.keyField = schema.keyField;
+                newSchema.sortFields = JSON.stringify(schema.sortFields);
+                newSchema.filterFields = JSON.stringify(schema.filterFields);
+                newSchema.globalFilterFields = JSON.stringify(schema.globalFilterFields);
+                newSchema.textIndexFields = JSON.stringify(schema.textIndexFields);
+
+                // Convert relationships to JSON.
+                newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
+                newSchema.tableManyToOne = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
+
+                persistence.add(newSchema);
+                
+                // New table - return -1;
+                return -1;
+            } else {
+                var dirty = 0;
+                var fieldsChanged = 0;
+                var oldSorts, newSorts;
+                var oldKey, newKey;
+                var oldFilters, newFilters;
+                var oldGlobalFilters, newGlobalFilters;
+                var oldTextIndex, newTextIndex;
+                var allNewFields = {};
+
+                var fieldsString = JSON.stringify(schema.fields);
+                if (fieldsString !== schemaRec.tableFields) {
+                    dirty = 1;
+                    fieldsChanged = 1;
+                    schemaRec.tableFields = fieldsString;
+                }
+                $.extend(allNewFields, schema.fields);
+                
+                var manyToOneStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
+                if (manyToOneStr !== schemaRec.tableManyToOne) {
+                    dirty = 1;
+                    fieldsChanged = 1;
+                    schemaRec.tableManyToOne = manyToOneStr;
+                } 
+                $.extend(allNewFields, schema.schema.meta.hasOne);
+                
+                var oneToManyStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
+                if (oneToManyStr !== schemaRec.tableOneToMany) {
+                    dirty = 1;
+                    schemaRec.tableOneToMany = oneToManyStr;
+                }
+                
+                var sortFields = JSON.stringify(schema.sortFields);
+                if (sortFields !== schemaRec.sortFields) {
+                    dirty = 1;
+                    oldSorts = $.parseJSON(schemaRec.sortFields);
+                    newSorts = schema.sortFields;
+                    schemaRec.sortFields = sortFields;
+                }
+                var filterFields = JSON.stringify(schema.filterFields);
+                if (filterFields !== schemaRec.filterFields) {
+                    dirty = 1;
+                    oldFilters = $.parseJSON(schemaRec.filterFields);
+                    newFilters = schema.filterFields;
+                    schemaRec.filterFields = filterFields;
+                }
+
+                var globalFilterFields = JSON.stringify(schema.globalFilterFields);
+                if (globalFilterFields !== schemaRec.globalFilterFields) {
+                    dirty = 1;
+                    oldGlobalFilters = $.parseJSON(schemaRec.globalFilterFields);
+                    newGlobalFilters = schema.globalFilterFields;
+                    schemaRec.globalFilterFields = globalFilterFields;
+                }
+
+                var textIndexFields = JSON.stringify(schema.textIndexFields);
+                if (textIndexFields !== schemaRec.textIndexFields) {
+                    dirty = 1;
+                    oldTextIndex = $.parseJSON(schemaRec.textIndexFields);
+                    newTextIndex = schema.textIndexFields;
+                    schemaRec.textIndexFields = textIndexFields;
+                }
+
+                if (schema.keyField !== schemaRec.keyField) {
+                    dirty = 1;
+                    oldKey = schemaRec.keyField;
+                    newKey = schema.keyField;
+                    schemaRec.keyField = schema.keyField;
+                }
+                if (dirty) {
+                    schemaRec.tableVersion = schemaRec.tableVersion + 1;
+                    Helix.DB.defineTableMigration(oldVersion,
+                        schemaRec, allNewFields, fieldsChanged,
+                        oldSorts, newSorts,
+                        oldKey, newKey,
+                        oldFilters, newFilters,
+                        oldGlobalFilters, newGlobalFilters,
+                        oldTextIndex, newTextIndex);
+                    
+                    // > 0 - means we need to migrate.
+                    return schemaRec.tableVersion;
+                } else {
+                    // 0 means schema is unchanged.
+                    return 0;
+                }
+            }
+        },
+    
+        defineTableMigration: function(oldVersion,
+            schemaRec, allNewFields, fieldsChanged,
+            oldSorts, newSorts,
+            oldKey, newKey,
+            oldFilters, newFilters,
+            oldGlobalFilters, newGlobalFilters,
+            oldTextIndex, newTextIndex) {
+            
+            persistence.defineMigration(oldVersion + 1, {
+                up: function() {
+                    var allNewIndices = {};
+                    if (fieldsChanged) {
+                        this.updateColumns(schemaRec.tableName, allNewFields);              
+                    }
+                    if (oldSorts && newSorts) {
+                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldSorts, newSorts, allNewIndices);
+                    }
+                    if (oldFilters && newFilters) {
+                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldFilters, newFilters, allNewIndices);
+                    }
+                    if (oldGlobalFilters && newGlobalFilters) {
+                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldGlobalFilters, newGlobalFilters, allNewIndices);
+                    }
+                    if (oldTextIndex && newTextIndex) {
+                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldTextIndex, newTextIndex, allNewIndices);
+                    }
+                    if (oldKey && newKey) {
+                        this.removeIndex(schemaRec.tableName, oldKey);
+                        this.addIndex(schemaRec.tableName, newKey);
+                    }
+                    
+                }
+            });
+        },
+        
+        migrateIndexes: function(tableName, oldIndexList, newIndexList, allNewIndices) {
+            var fld = null;
+            for (fld in oldIndexList) {
+                if (!newIndexList[fld] && !allNewIndices[fld]) {
+                    this.removeIndex(tableName, fld);                            
+                }
+            }
+            for (fld in newIndexList) {
+                this.addIndex(tableName, fld);
+                allNewIndices[fld] = true;
+            }
         },
 
         generateSubSchemaFromDBRow: function(tableName,parentField,parentSchema,inverseField,isOneToMany,oncomplete) {
@@ -492,170 +660,6 @@ function initHelixDB() {
                 }
             }
             return JSON.stringify(relSummary);
-        },
-
-        migrateTable: function(tx,schema, metaName, oncomplete) {
-            var tableName = schema.schema.meta.name;
-            var schemaRec = window.__pmAllTables[tableName];
-            if (schemaRec == null) {
-                // This is a new table.
-                var newSchema = new window.__pmMasterDB();
-                newSchema.metaName = metaName;
-                newSchema.tableVersion = 0;
-                newSchema.tableName = tableName;
-                newSchema.tableFields = JSON.stringify(schema.fields);
-                newSchema.keyField = schema.keyField;
-                newSchema.sortFields = JSON.stringify(schema.sortFields);
-                newSchema.filterFields = JSON.stringify(schema.filterFields);
-                newSchema.globalFilterFields = JSON.stringify(schema.globalFilterFields);
-
-                // Convert relationships to JSON.
-                newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
-                newSchema.tableManyToOne = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
-
-                persistence.add(newSchema);
-                oncomplete(-1);
-            } else {
-                var dirty = 0;
-                var oldFields, newFields;
-                var oldSorts, newSorts;
-                var oldKey, newKey;
-                var oldRefs, newRefs;
-                var oldFilters, newFilters;
-                var oldGlobalFilters, newGlobalFilters;
-
-                var fieldsString = JSON.stringify(schema.fields);
-                if (fieldsString !== schemaRec.tableFields) {
-                    dirty = 1;
-                    oldFields = $.parseJSON(schemaRec.tableFields);
-                    newFields = schema.fields;
-                    schemaRec.tableFields = fieldsString;
-                }
-                var oneToManyStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
-                if (oneToManyStr !== schemaRec.tableOneToMany) {
-                    dirty = 1;
-                    schemaRec.tableOneToMany = oneToManyStr;
-                }
-                var manyToOneStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
-                if (manyToOneStr !== schemaRec.tableManyToOne) {
-                    dirty = 1;
-                    oldRefs = $.parseJSON(schemaRec.tableManyToOne);
-                    newRefs = $.parseJSON(manyToOneStr);
-                    schemaRec.tableManyToOne = manyToOneStr;
-                }
-                var sortFields = JSON.stringify(schema.sortFields);
-                if (sortFields !== schemaRec.sortFields) {
-                    dirty = 1;
-                    oldSorts = $.parseJSON(schemaRec.sortFields);
-                    newSorts = schema.sortFields;
-                    schemaRec.sortFields = sortFields;
-                }
-                var filterFields = JSON.stringify(schema.filterFields);
-                if (filterFields !== schemaRec.filterFields) {
-                    dirty = 1;
-                    oldFilters = $.parseJSON(schemaRec.filterFields);
-                    newFilters = schema.filterFields;
-                    schemaRec.filterFields = filterFields;
-                }
-
-                var globalFilterFields = JSON.stringify(schema.globalFilterFields);
-                if (globalFilterFields !== schemaRec.globalFilterFields) {
-                    dirty = 1;
-                    oldGlobalFilters = $.parseJSON(schemaRec.globalFilterFields);
-                    newGlobalFilters = schema.globalFilterFields;
-                    schemaRec.globalFilterFields = globalFilterFields;
-                }
-
-                if (schema.keyField !== schemaRec.keyField) {
-                    dirty = 1;
-                    oldKey = schemaRec.keyField;
-                    newKey = schema.keyField;
-                    schemaRec.keyField = schema.keyField;
-                }
-                if (dirty) {
-                    schemaRec.tableVersion = schemaRec.tableVersion + 1;
-                    Helix.DB.defineTableMigration(tx,
-                        schemaRec, 
-                        oldFields, newFields,
-                        oldSorts, newSorts,
-                        oldKey, newKey,
-                        oldRefs, newRefs,
-                        oldFilters, newFilters,
-                        oldGlobalFilters, newGlobalFilters,
-                        oncomplete);
-                } else {
-                    oncomplete(0, tableName);
-                }
-            }
-        },
-    
-        defineTableMigration: function(tx, 
-            schemaRec, 
-            oldFields, newFields,
-            oldSorts, newSorts,
-            oldKey, newKey,
-            oldRefs, newRefs,
-            oldFilters, newFilters,
-            oldGlobalFilters, newGlobalFilters,
-            oncomplete) {
-            persistence.migrations.Migrator.version(tx, function(version) {
-                persistence.defineMigration(version + 1, {
-                    up: function() {
-                        var fld;
-                        if (oldFields && newFields) {
-                            for (fld in newFields) {
-                                if (!oldFields[fld]) {
-                                    /* New column. */
-                                    this.addColumn(schemaRec.tableName, fld, newFields[fld]);
-                                }
-                            }
-                            for (fld in oldFields) {
-                                if (!newFields[fld]) {
-                                    /* New column. */
-                                    this.removeColumn(schemaRec.tableName, fld);
-                                }
-                            }                    
-                        }
-                        if (oldRefs && newRefs) {
-                            for (fld in oldRefs) {
-                                if (!newRefs[fld]) {
-                                    this.removeColumn(schemaRec.tableName, fld);
-                                }
-                            }
-                            for (fld in newRefs) {
-                                if (!oldRefs[fld]) {
-                                    this.addColumn(schemaRec.tableName, fld, "VARCHAR(32)");
-                                }
-                            }
-                        }
-                        if (oldSorts && newSorts) {
-                            for (fld in oldSorts) {
-                                if (!newSorts[fld]) {
-                                    this.removeIndex(schemaRec.tableName, fld);                            
-                                }
-                            }
-                        }
-                        if (oldFilters && newFilters) {
-                            for (fld in oldFilters) {
-                                if ((!newSorts || !newSorts[fld]) && !newFilters[fld]) {
-                                    this.removeIndex(schemaRec.tableName, fld);                            
-                                }
-                            }
-                        }
-                        if (oldGlobalFilters && newGlobalFilters) {
-                            for (fld in oldGlobalFilters) {
-                                if ((!newSorts || !newSorts[fld]) && (!newFilters || !newFilters[fld]) && !newGlobalFilters[fld]) {
-                                    this.removeIndex(schemaRec.tableName, fld);                            
-                                }
-                            }
-                        }
-                        if (oldKey && newKey) {
-                            this.removeIndex(schemaRec.tableName, oldKey);
-                        }
-                    }
-                });
-                oncomplete(version + 1, schemaRec.tableName);
-            });
         },
 
         /**
@@ -957,15 +961,40 @@ function initHelixDB() {
     
         synchronizeDeltaField: function(tx, allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
+            var uidToEID = {};
             
             var doAdds = function() {
                 if (deltaObj.adds.length > 0) {
                     var toAdd = deltaObj.adds.pop();
-                    Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds);
+                    var toAddKey = toAdd[keyField];
+                    var objId = uidToEID[toAddKey];
+                    if (objId) {
+                        Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
+                            parentCollection.add(pObj);
+                            doAdds();
+                        },overrides);
+                    } else {
+                        Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds);
+                    }
                 } else {
                     /* Nothing more to add - we are done. */
                     oncomplete(field);
                 }
+            };
+            
+            var prepareAdds = function() {
+                var addUniqueIDs = [];
+                for (var i = 0; i < deltaObj.adds.length; ++i) {
+                    addUniqueIDs.push(deltaObj.adds[i][keyField]);
+                }
+                elemSchema.all().filter(keyField, 'in', addUniqueIDs).newEach(tx, {
+                    eachFn: function(elem) {
+                        uidToEID[elem[keyField]] = elem.id;
+                    }, 
+                    doneFn: function(ct) {
+                        doAdds(uidToEID);
+                    }
+                })
             };
 
             var removeFn = function(persistentObj) {
@@ -982,7 +1011,7 @@ function initHelixDB() {
                     });
                 } else {
                     /* Nothing more to remove. Add in any new objects. */
-                    doAdds();
+                    prepareAdds();
                 }
             };
 
@@ -1066,7 +1095,7 @@ function initHelixDB() {
                 field = scalarFields.pop();
                 /* Use the setter to make sure the object is marked as dirty appropriately. */
                 var setter = Object.getOwnPropertyDescriptor(persistentObj, field).set;
-                if (!overrides.syncFields(setter, obj, field)) {
+                if (!overrides.syncFields(setter, obj, field, persistentObj)) {
                     setter(obj[field]);
                 }
             }
@@ -1247,35 +1276,63 @@ function initHelixDB() {
                 sortFields: "TEXT",
                 filterFields: "TEXT",
                 globalFilterFields: "TEXT",
+                textIndexFields: "TEXT",
                 tableOneToMany: "TEXT",
-                tableManyToOne: "TEXT"
+                tableManyToOne: "TEXT",
+                masterDBVer: "INT"
             });
             window.__pmMasterDB.index('tableName', {
                 unique: true
             });
+            
             var allTables = {};
+            var masterDBVer = 0;
             persistence.schemaSync(function(tx) {
                 window.__pmMasterDB.all().newEach({
                     eachFn: function(elem) {
+                        if (elem.masterDBVer) {
+                            masterDBVer = elem.masterDBVer;
+                        }
+                        
                         allTables[elem.tableName] = elem;
                     }, 
-                    doneFn: function() {
-                        persistence.flush(tx, function() {
+                    doneFn: function(ct) {
+                        var dirty = 0;
+                        if (masterDBVer == 0 && ct > 0) {
+                            dirty = 1;
+                            persistence.schemaSyncHooks.push(function() {
+                                var queries = [];
+                                queries.push(["ALTER TABLE MasterDB ADD COLUMN masterDBVer TEXT" , null]);
+                                queries.push(["ALTER TABLE MasterDB ADD COLUMN textIndexFields TEXT" , null]);
+                                return queries.reverse();
+                            });
+                        }
+                        if (masterDBVer != Helix.DB.__masterDBVer) {
+                            dirty = 1;
+                            persistence.nextSchemaSyncHooks.push(function() {
+                                var queries = [];
+                                queries.push(["UPDATE MasterDB SET masterDBVer=?", [ Helix.DB.__masterDBVer ]]);
+                                return queries;
+                            });
+                        }
+                        
+                        if (dirty) {
+                            persistence.schemaSync(function() {
+                                window.__pmAllTables = allTables;
+                                $(document).trigger('hxPersistenceReady');
+                            });
+                        } else {
                             window.__pmAllTables = allTables;
                             $(document).trigger('hxPersistenceReady');
-                        });
+                        }
                     }
                 })
-                
             });
         },
     
         initPersistence: function () {
             /* Initialize PersistenceJS for use with WebSQL. Eventually need to add IndexedDB support. */
             persistence.store.websql.config(persistence, 'OfflineAppDB', 'Managed offline DB for app.', 5 * 1024 * 1024);
-        
-            /* Initialize PersistenceJS migrations. */
-            persistence.migrations.init();
             
             /* Initialize PersistenceJS searching. */
             persistence.search.config(persistence, persistence.store.websql.sqliteDialect, {
@@ -1287,7 +1344,15 @@ function initHelixDB() {
              */
             this.createdSchemas = {};
         
-            this.pmCreateMasterTable();
+            /* Initialize PersistenceJS migrations. */
+            persistence.transaction(function(tx) {
+                persistence.migrations.init(tx, function() {
+                    persistence.migrations.Migrator.version(tx, function(schemaVer) {
+                        Helix.DB.__schemaVersion = schemaVer;
+                        Helix.DB.pmCreateMasterTable();
+                    });
+                });
+            });
         },
     
         persistenceIsReady: function() {
@@ -1298,12 +1363,6 @@ function initHelixDB() {
             return true;
         }
     };
-}
-
-(function() {
-    if (window.Helix.DB === undefined) {
-        initHelixDB();
-    }
     
-    Helix.DB.initPersistence();
-})();
+    initHelixDBUtils();
+}

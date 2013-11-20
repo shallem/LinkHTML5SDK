@@ -27,8 +27,16 @@
 
 (function() {
  window.OfflineSave = {
-        openWith: function ( name, thumbURL, viewURL, editURL, success, fail) {
-            return cordova.exec(success, fail, "OfflineSave", "openWith", [name, thumbURL, viewURL, editURL]);
+        openWith: function ( name, lastModified, thumbURL, viewURL, editURL, success, fail) {
+            return cordova.exec(success, fail, "OfflineSave", "openWith", [name, lastModified, thumbURL, viewURL, editURL]);
+        }
+    };
+})();
+
+(function() {
+ window.OfflinePost = {
+        savePost: function ( url, contentType, postBody, jsonObj, success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj]);
         }
     };
 })();

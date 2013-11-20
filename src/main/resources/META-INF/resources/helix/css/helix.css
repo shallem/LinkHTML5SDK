@@ -210,6 +210,8 @@
     margin: 0px !important;
 }
 
+
+
 .hx-listview li:not(.ui-btn-active) {
     background-color: white;
 }
@@ -231,15 +233,15 @@
 /* Scrolling elements should have this style. */
 .hx-scroller-nozoom {
     overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
 }
+/* Causing problems on iOS 6+. We are not supporting iOS 5. -webkit-overflow-scrolling: touch; */
 
 /* Horizontal scrolling elements should have this style. */
 .hx-horizontal-scroller-nozoom {
     overflow-x: scroll;
     white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
 }
+/* Causing problems on iOS 6+. We are not supporting iOS 5. -webkit-overflow-scrolling: touch; */
 
 /*
 img { 

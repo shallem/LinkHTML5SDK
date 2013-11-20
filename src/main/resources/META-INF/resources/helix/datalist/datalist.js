@@ -276,6 +276,8 @@
                 this.$wrapper.addClass('pm-layout-full-height');
             }
             
+            this.$page = this.$wrapper.closest('.ui-page');
+            
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$wrapper)
                 .addClass('hx-full-width')
@@ -301,11 +303,7 @@
             /**
              * Append the data list.
              */
-            var listWrapper = $('<div/>').appendTo(this.$wrapper);
-            if (this.options.scroll) {
-                listWrapper.addClass('hx-scroller-nozoom');
-                listWrapper.addClass('mh-layout-parent-height');
-            }
+            var listWrapper = this.$listWrapper = $('<div/>').appendTo(this.$wrapper);
             this.$parent = $('<ul/>').attr({
                 'data-role' : 'listview',
                 'class' : 'hx-listview'
@@ -360,6 +358,7 @@
             }
 
             this.refreshList(this.options.itemList,this.options.condition,null,function() {
+                
             });
         },
         
@@ -460,11 +459,21 @@
                  * list we are actually going to display before we paginate it.
                  */
                 _self._refreshPaginatorContainer();
+                _self.$wrapper.show();
+                
+                /* It seems that attaching the scrolling classes after showing the list
+                 * is required to make scrolling work properly on iOS.
+                 */
+                if (_self.options.scroll) {
+                    _self.$listWrapper.removeClass('hx-scroller-nozoom');
+                    _self.$listWrapper.addClass('hx-scroller-nozoom');
+                    _self.$listWrapper.addClass('mh-layout-parent-height');
+                }
+                if (_self.options.pullToRefresh) {
+                    _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
+                }
                 if (oncomplete) {
-                    _self.$wrapper.show();
                     oncomplete(_self);            
-                } else {
-                    _self.$wrapper.show();
                 }
             });
         },

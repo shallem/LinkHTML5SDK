@@ -609,7 +609,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         }*/
         /* height: 100%; overflow-y: hidden; */
         var frameID = Helix.Utils.getUniqueID();
-        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
+        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%; height: 200px;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
         var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
 
         // Load the iframe document content

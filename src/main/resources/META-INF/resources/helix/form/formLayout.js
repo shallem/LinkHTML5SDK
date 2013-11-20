@@ -305,7 +305,7 @@
                         });
                         $(this).selectmenu('refresh');
                     } else if (fieldType === "checkbox") {
-                        $(this).attr('checked', false);
+                        $(this).removeAttr('checked');
                     } else if (fieldType === "horizontalScroll") {
                         $(this).empty();
                     } else {
@@ -427,6 +427,27 @@
                 val = new Date(parseInt(val));
             }
             return !(val.isBefore(new Date()));
+        },
+        
+        save: function () {
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                var fieldID = nxtItem.name;
+                var fieldType = nxtItem.type;
+                if (fieldType !== 'htmlarea') {
+                    /* Other types don't require an explicit save. */
+                    continue;
+                }
+                $(this.element).find('[name="' + fieldID + '"]').each(function() {
+                    if (fieldType === "htmlarea") {
+                        var $editor = $(this).data('cleditor');
+                        if ($editor) {
+                            $editor.updateTextArea();
+                        }
+                    }
+                });
+            }
         },
         
         validate: function() {
