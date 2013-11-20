@@ -296,3 +296,11 @@ Helix.hasTouch = (function() {
     return !!('ontouchstart' in window) // works on most browsers 
         || !!('onmsgesturechange' in window); // works on ie10
 })();
+
+Helix.clickEvent = (function() {
+    return (Helix.hasTouch ? 'tap' : 'click');
+})();
+
+Helix.contextEvent = (function() {
+    return (Helix.hasTouch ? 'taphold' : 'contextmenu');
+})();

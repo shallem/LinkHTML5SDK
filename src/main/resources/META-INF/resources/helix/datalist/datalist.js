@@ -447,7 +447,6 @@
             _self._prependSearchBox();
             _self._updateSortButtons();
             
-            _self._currentPage = 0;
             _self._refreshData(function() {
                 if (_self.nElems == 0) {
                     _self.$parent.empty();
@@ -458,7 +457,7 @@
                  * Must go after the _refreshData call because we need to compute the
                  * list we are actually going to display before we paginate it.
                  */
-                _self._refreshPaginatorContainer();
+                _self._resetPaging();
                 _self.$wrapper.show();
                 
                 /* It seems that attaching the scrolling classes after showing the list
@@ -564,8 +563,8 @@
                         $(sortsList).find('li').removeClass('hx-current-sort');
                         $(this).addClass('hx-current-sort');
 
-                        _self._currentPage = 0;
                         _self._refreshData(function() {
+                            _self._resetPaging();
                             _self.$parent.listview( "refresh" );
                         });
                         $(_self._sortContainer).popup("close");
@@ -609,9 +608,9 @@
                         'display': filters[filterFld],
                         'data': filterFld,
                         'action': function(newFilterField) {
-                            _self._currentPage = 0;
                             _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
                             _self._refreshData(function() {
+                                _self._resetPaging();
                                 _self.$parent.listview( "refresh" );
                             });
                             _self._filterContextMenu.close();
@@ -624,9 +623,9 @@
             contextMenuItems.push({
                 'display' : 'Clear',
                 'action' : function() {
-                    _self._currentPage = 0;
                     _self.itemList = _self.unfilteredList;
                     _self._refreshData(function() {
+                        _self._resetPaging();
                         _self.$parent.listview( "refresh" );
                     });
                     _self._filterContextMenu.close();
@@ -691,9 +690,10 @@
                         var newFilterField = $(evt.target).attr('data-field');
                         var newFilterValue = $(evt.target).attr('data-value');
                         
-                        _self._currentPage = 0;
+                        
                         _self.itemList = _self.options.doGlobalFilter(_self.unfilteredList, newFilterField, newFilterValue);
                         _self._refreshData(function() {
+                            _self._resetPaging();
                             _self.$parent.listview( "refresh" );
                         });
                         $(_self._globalFilterContainer).popup("close");
@@ -711,11 +711,16 @@
                                     })
                                     .appendTo(filtersList);
                     for (var i = 0; i < filterObj.values.length; ++i) {
+                        var filterName = filterObj.valueNames[i];
+                        if (!filterName || !filterName.trim()) {
+                            continue;
+                        }
+                        
                         $('<option/>').attr({
                             'value' : filterObj.values[i],
                             'data-field' : fldName
                         })
-                        .append(filterObj.valueNames[i])
+                        .append(filterName)
                         .appendTo(filterItem);
                     }
                     // add a special 'clear' value, which is the default value.
@@ -742,9 +747,10 @@
                                 for (var filteredFld in _self._filterMap) {
                                     curCollection = _self.options.doGlobalFilter(curCollection, filteredFld, _self._filterMap[filteredFld]);
                                 }
-                                _self._currentPage = 0;
+                                
                                 _self.itemList = curCollection;
                                 _self._refreshData(function() {
+                                    _self._resetPaging();
                                     _self.$parent.listview( "refresh" );
                                 });
                             } else {
@@ -755,9 +761,9 @@
                                     // Use itemList in the call below as filters can build on each other.
                                     _self._filterMap[gFilterField] = gFilterValue;
                                     
-                                    _self._currentPage = 0;
                                     _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, gFilterValue);
                                     _self._refreshData(function() {
+                                        _self._resetPaging();
                                         _self.$parent.listview( "refresh" );
                                     });
                                 }
@@ -786,9 +792,9 @@
                 }
                 
                 _self._filterMap = {};
-                _self._currentPage = 0;
                 _self.itemList = _self.unfilteredList;
                 _self._refreshData(function() {
+                    _self._resetPaging();
                     _self.$parent.listview( "refresh" );
                 });
                 $(_self._globalFilterContainer).popup("close");
@@ -831,6 +837,12 @@
                 _self.$paginatorDiv.show();
             });
         },
+        
+        _resetPaging: function() {
+            this._currentPage = 0;
+            this._refreshPaginatorContainer();
+        },
+        
         nextPage: function() {
             this._currentPage++;
             var _self = this;
@@ -932,6 +944,7 @@
             _self.__searchReadyTimeout = setTimeout(function() {
                 _self.itemList = _self.options.indexedSearch(_self.__searchText);
                 _self._refreshData(function() {
+                    _self._resetPaging();
                     _self.$parent.listview( "refresh" );
                 });
                 _self.__searchReadyTimeout = null;
@@ -1070,6 +1083,7 @@
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.unfilteredList;
                     _self._refreshData(function() {
+                        _self._resetPaging();
                         _self.$parent.listview( "refresh" );
                     });
                 });
