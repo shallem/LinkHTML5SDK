@@ -590,11 +590,19 @@ function __autoResize(id){
     var newheight;
     var newwidth;
     var elem = document.getElementById(id);
+    var bodyElem = elem.contentWindow.document.body;
 
-    newheight=elem.contentWindow.document.body.scrollHeight;
-    newwidth=elem.contentWindow.document.body.scrollWidth;
+    newheight=bodyElem.scrollHeight;
+    newwidth=bodyElem.scrollWidth;
 
-    elem.height= (newheight) + "px";
+    //elem.height= (newheight) + "px";
+    var parentHeight = elem.parentNode.clientHeight;
+    if (newheight > parentHeight) {
+        var padding = ($(bodyElem).outerHeight(true) - $(bodyElem).innerHeight());
+        elem.height = (parentHeight - padding) + "px";
+        $(bodyElem).css('overflow-y', 'scroll');
+    }
+    
     elem.width= (newwidth) + "px";
 }
 
@@ -609,7 +617,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         }*/
         /* height: 100%; overflow-y: hidden; */
         var frameID = Helix.Utils.getUniqueID();
-        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%; height: 200px;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
+        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
         var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
 
         // Load the iframe document content
@@ -622,7 +630,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             doc.write('<html style="overflow: hidden;">');
         }
         if (!formElem.noBody) {
-            doc.write('<body>');
+            doc.write('<body style="height: 100%">');
         }
         doc.write(formElem.value);
         if (!formElem.noHTML) {
@@ -716,6 +724,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         /* View mode. */
         $fieldContainer = $('<div />')
         .css("clear", "both")
+        .css('-webkit-user-select', 'none')
         .appendTo(parentDiv);
         if (formLayout.computedFieldStyleClass) {
             $fieldContainer.attr('class', formLayout.computedFieldStyleClass);

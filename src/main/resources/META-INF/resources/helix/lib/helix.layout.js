@@ -298,7 +298,7 @@ Helix.hasTouch = (function() {
 })();
 
 Helix.clickEvent = (function() {
-    return (Helix.hasTouch ? 'tap' : 'click');
+    return (Helix.hasTouch ? 'vclick' : 'click');
 })();
 
 Helix.contextEvent = (function() {
