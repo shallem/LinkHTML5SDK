@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 (function() {
- window.ExternalFileUtil = {
-        openWith: function ( name, editURL, component, success, fail) {
+ window.OfflineSave = {
+        saveDoc: function ( name, lastModified, fullPathDigest, thumbURL, viewURL, editURL, success, fail) {
+            return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, fullPathDigest, thumbURL, viewURL, editURL]);
+        },
+        editDoc: function ( docID, component, success, fail ) {
             if (component === undefined) {
-                return cordova.exec(success, fail, "ExternalFileUtil", "openWith", [name, editURL, 0, 0]);
+                return cordova.exec(success, fail, "OfflineSave", "editDoc", [docID, 0, 0]);
             }
             var position = Helix.Utils.getPosition(component);
-            return cordova.exec(success, fail, "ExternalFileUtil", "openWith", [name, editURL, position.x, position.y ]);
-        }
-    };
-})();
-
-(function() {
- window.OfflineSave = {
-        openWith: function ( name, lastModified, thumbURL, viewURL, editURL, success, fail) {
-            return cordova.exec(success, fail, "OfflineSave", "openWith", [name, lastModified, thumbURL, viewURL, editURL]);
+            return cordova.exec(success, fail, "OfflineSave", "editDoc", [docID, position.x, position.y ]);
         }
     };
 })();

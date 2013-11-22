@@ -50,6 +50,7 @@ Helix.Layout = {
         };
 
         $(document).trigger('helixinit');
+        $(document).trigger('helixready');
     });
 })(jQuery);
 

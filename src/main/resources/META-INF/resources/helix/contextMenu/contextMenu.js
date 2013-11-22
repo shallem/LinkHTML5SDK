@@ -100,9 +100,9 @@
                 var item = _self.options.items[cbIndex];
                 if (item.action) {
                     if (_self._thisArg) {
-                        item.action.call(_self._thisArg, cbData);
+                        item.action.call(_self._thisArg, cbData, evt);
                     } else {
-                        item.action.call(_self, cbData);
+                        item.action.call(_self, cbData, evt);
                     }
                 }
                 _self.close();
