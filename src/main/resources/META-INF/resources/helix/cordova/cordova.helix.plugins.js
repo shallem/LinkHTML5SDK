@@ -19,7 +19,7 @@
             return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, fullPathDigest, thumbURL, viewURL, editURL]);
         },
         editDoc: function ( docID, component, success, fail ) {
-            if (component === undefined) {
+            if (!component) {
                 return cordova.exec(success, fail, "OfflineSave", "editDoc", [docID, 0, 0]);
             }
             var position = Helix.Utils.getPosition(component);

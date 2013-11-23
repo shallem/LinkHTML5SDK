@@ -132,8 +132,14 @@ Helix.Layout = {
             contentHeight = contentHeight - headerHeight;
         }
         page.height(contentHeight);
-        page.find('.hx-main-content').css('height', contentHeight);
-        page.find('.hx-main-content').each(function() {
+        
+        var content = page.find('.hx-main-content');
+        content.css('height', contentHeight);
+        if (!$(content).parent().is('.ui-page')) {
+            $(content).parent().css('height', contentHeight);
+        }
+        
+        content.each(function() {
             //var innerWidth = width - (this.offsetWidth - this.clientWidth);
             $(this).css('width', width);
         });

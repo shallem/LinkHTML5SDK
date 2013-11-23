@@ -434,7 +434,7 @@ function initHelixDB() {
                 up: function() {
                     var allNewIndices = {};
                     if (fieldsChanged) {
-                        this.updateColumns(schemaRec.tableName, allNewFields);              
+                        this.updateColumns(allNewFields, schemaRec.tableName);              
                     }
                     if (oldSorts && newSorts) {
                         Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldSorts, newSorts, allNewIndices);

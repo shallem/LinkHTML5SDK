@@ -192,6 +192,10 @@ function definePersistenceMigrations() {
                 
                 selectColumns.push(col);
             }
+            // Add the 'id' column that exists on all tables managed by persistence JS.
+            columnsSql.push('id VARCHAR(32) PRIMARY KEY');
+            selectColumns.push('id');
+            
             columnsSql = columnsSql.join(', ');
             selectColumns = selectColumns.join(', ');
 
