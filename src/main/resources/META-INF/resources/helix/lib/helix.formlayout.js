@@ -585,6 +585,12 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
 }
 
+function __setHref(elem, href) {
+    elem.href = null;
+    elem.onclick = function() {
+        window.open(href);
+    };
+}
 
 function __autoResize(id){
     var newheight;
@@ -601,9 +607,20 @@ function __autoResize(id){
         var padding = ($(bodyElem).outerHeight(true) - $(bodyElem).innerHeight());
         elem.height = (parentHeight - padding) + "px";
         $(bodyElem).css('overflow-y', 'scroll');
+        $(bodyElem).css('overflow-x', 'scroll');
     }
     
     elem.width= (newwidth) + "px";
+    
+    // Eventually add a way to toggle this off.
+    var allLinks = elem.contentWindow.document.getElementsByTagName("a");
+    for (var i = 0; i < allLinks.length; ++i) {
+        var nxt = allLinks[i];
+        var href = nxt.href;
+        if (href) {
+            __setHref(nxt, href);
+        }
+    }
 }
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
@@ -628,6 +645,11 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         doc.open();
         if (!formElem.noHTML) {
             doc.write('<html style="overflow: hidden;">');
+        }
+        if (!formElem.noHead) {
+            doc.write('<head>');
+            doc.write('<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1"/>');
+            doc.write('</head>');
         }
         if (!formElem.noBody) {
             doc.write('<body style="height: 100%">');

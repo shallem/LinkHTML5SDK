@@ -108,8 +108,10 @@ Helix.Utils =  {
                             'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_ICON_CLASS
                         }).append("&nbsp;")
                     );
-                $(output).on('tap', function() {
+                $(output).on('tap', function(ev) {
+                    ev.stopImmediatePropagation();
                     params.prevPage.apply(params.owner);
+                    return false;
                 });
                 obj.append(output);
             },
@@ -123,8 +125,10 @@ Helix.Utils =  {
                             'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_ICON_CLASS
                         }).append("&nbsp;")
                     );
-                $(output).on('tap', function() {
+                $(output).on('tap', function(ev) {
+                    ev.stopImmediatePropagation();
                     params.nextPage.apply(params.owner, [ totalPages ]);
+                    return false;
                 });
                 obj.append(output);
             }
