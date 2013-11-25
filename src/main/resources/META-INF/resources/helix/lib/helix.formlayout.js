@@ -587,9 +587,18 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 
 function __setHref(elem, href) {
     elem.href = null;
-    elem.onclick = function() {
-        window.open(href);
-    };
+    if (!Helix.hasTouch) {
+        elem.onclick = function() {
+            window.open(href);
+        };
+    } else {
+        elem.ontouchstart = function() {
+            window.open(href);
+        };
+        /*elem.addEventListener('touchstart', function() {
+            window.open(href);
+        }, false);*/
+    }
 }
 
 function __autoResize(id){

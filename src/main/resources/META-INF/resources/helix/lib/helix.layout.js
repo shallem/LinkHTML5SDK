@@ -253,7 +253,7 @@ $(document).bind('postrequest', function(ev, xhr) {
  * In general, apps should use the pagebeforeshow event to layout the DOM. When
  * the page load is done, they should call this function.
  */
-Helix.Layout.layoutPage = function(page) {
+Helix.Layout.layoutPage = function(page, noTrigger) {
     if (!page) {
         page = $.mobile.activePage;
         if (!page) {
@@ -268,7 +268,9 @@ Helix.Layout.layoutPage = function(page) {
     Helix.Layout.layoutPageFullScreen(page);
     
     /* Trigger an event indicating that the page layout is done. */
-    $(page).trigger("hxLayoutDone");
+    if (!noTrigger) {
+        $(page).trigger("hxLayoutDone");
+    }
 }
 
 /**
@@ -280,7 +282,7 @@ $(document).on('pagebeforeshow', function(ev) {
     /**
      * Layout the page based on the Mobile Helix styles.
      */
-    Helix.Layout.layoutPage(ev.target);
+    Helix.Layout.layoutPage(ev.target, true);
 });
 
 $(document).on('pageshow', function(ev) {
