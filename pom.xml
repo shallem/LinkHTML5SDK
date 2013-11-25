@@ -222,7 +222,7 @@
 		    <include>datebox/jqm-datebox.css</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <include>calendar/fullcalendar.js</include>
+		    <include>calendar/fullcalendar.css</include>
 
 		    <!-- http://usehook.com/ pull to refresh.
 		    <include>css/hook.css</include>  -->

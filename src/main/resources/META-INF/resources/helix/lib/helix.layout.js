@@ -266,6 +266,9 @@ Helix.Layout.layoutPage = function(page) {
     
     /* Reset the full screen layout of the page. */
     Helix.Layout.layoutPageFullScreen(page);
+    
+    /* Trigger an event indicating that the page layout is done. */
+    $(page).trigger("hxLayoutDone");
 }
 
 /**
@@ -285,7 +288,6 @@ $(document).on('pageshow', function(ev) {
      * Recompute the component heights.
      */
     Helix.Layout.layoutPage(ev.target);
-    $(ev.target).trigger("hxLayoutDone");
 });
 
 Helix.deviceType = (function() {

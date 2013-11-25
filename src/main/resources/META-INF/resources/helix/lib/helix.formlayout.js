@@ -596,6 +596,11 @@ function __autoResize(id){
     var newheight;
     var newwidth;
     var elem = document.getElementById(id);
+    if (elem == null) {
+        // Frame has been removed from the DOM.
+        return;
+    }
+    
     var bodyElem = elem.contentWindow.document.body;
 
     newheight=bodyElem.scrollHeight;
@@ -603,14 +608,19 @@ function __autoResize(id){
 
     //elem.height= (newheight) + "px";
     var parentHeight = elem.parentNode.clientHeight;
+    var parentWidth = elem.parentNode.clientWidth;
+    
+    var padding = ($(bodyElem).outerHeight(true) - $(bodyElem).innerHeight());
+    elem.height = (parentHeight - padding) + "px";
     if (newheight > parentHeight) {
-        var padding = ($(bodyElem).outerHeight(true) - $(bodyElem).innerHeight());
-        elem.height = (parentHeight - padding) + "px";
         $(bodyElem).css('overflow-y', 'scroll');
+    }
+    if (newwidth > parentWidth) {
         $(bodyElem).css('overflow-x', 'scroll');
     }
     
-    elem.width= (newwidth) + "px";
+    elem.width = (parentWidth - padding) + "px";
+    $(bodyElem).css('width', (parentWidth - padding) + "px");
     
     // Eventually add a way to toggle this off.
     var allLinks = elem.contentWindow.document.getElementsByTagName("a");
@@ -623,7 +633,18 @@ function __autoResize(id){
     }
 }
 
-function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+function __layoutFrames(page, formLayout) {
+    $(page).off('hxLayoutDone.frames').on('hxLayoutDone.frames', function() {
+        if (!formLayout.__layoutFrames) {
+            return;
+        }
+        for (var i = 0; i < formLayout.__layoutFrames.length; ++i) {
+            __autoResize(formLayout.__layoutFrames[i]);
+        }
+    });
+}
+
+function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout) {
     if (!mode) {
         /*var $frameWrapper = $('<div/>').appendTo($fieldContainer)
             .css('height', '100%')
@@ -634,9 +655,17 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         }*/
         /* height: 100%; overflow-y: hidden; */
         var frameID = Helix.Utils.getUniqueID();
-        var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
+        //var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
+        var iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;">';
+        //__layoutFrame(page, frameID);
+        if (!formLayout.__layoutFrames || formLayout.__layoutFrames.length == 0) {
+            formLayout.__layoutFrames = [];
+            __layoutFrames(page, formLayout);
+        }
+        formLayout.__layoutFrames.push(frameID)
+        
         var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
-
+        
         // Load the iframe document content
         var contentWindow = $frame[0].contentWindow;
         var doc = contentWindow.document;
@@ -842,7 +871,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             }
         }
     } else if (formElem.type === 'htmlframe') {
-        __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'button') {
         __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'buttonGroup') {
@@ -1114,6 +1143,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
+    formLayout.__layoutFrames = [];
     
     var formElem;
     var elemIdx;
