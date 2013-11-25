@@ -221,6 +221,9 @@
 		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.css</include>
 
+		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
+		    <include>calendar/fullcalendar.js</include>
+
 		    <!-- http://usehook.com/ pull to refresh.
 		    <include>css/hook.css</include>  -->
 
@@ -288,6 +291,9 @@
 		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
 		    <include>datebox/jqm-datebox.core.js</include>
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
+
+		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
+		    <include>calendar/fullcalendar.js</include>
 
 		    <include>colorpicker/spectrum.js</include>
 
