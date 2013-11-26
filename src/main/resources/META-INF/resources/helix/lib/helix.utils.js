@@ -148,5 +148,25 @@ Helix.Utils =  {
     },
     isString: function(x) {
         return typeof x == "string" || (typeof x == "object" && x.constructor === String);
+    },
+    objectsEqual: function(obj1, obj2) {
+        for (var x in obj1) {
+            if (!(x in obj2)) {
+                return false;
+            }
+            if (obj1[x] != obj2[x]) {
+                return false;
+            }
+        }
+        
+        // At this point, all properties in obj1 are in obj2 and all are equivalent
+        // We need to make sure obj2 doesn't have any fields not in obj1.
+        for (x in obj2) {
+            if (!(x in obj1)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }

@@ -344,8 +344,9 @@ function initHelixDB() {
                 var oldTextIndex, newTextIndex;
                 var allNewFields = {};
 
-                var fieldsString = JSON.stringify(schema.fields);
-                if (fieldsString !== schemaRec.tableFields) {
+                var tf = $.parseJSON(schemaRec.tableFields);
+                if (!Helix.Utils.objectsEqual(tf, schema.fields)) {
+                    var fieldsString = JSON.stringify(schema.fields);
                     dirty = 1;
                     fieldsChanged = 1;
                     schemaRec.tableFields = fieldsString;
@@ -414,7 +415,7 @@ function initHelixDB() {
                         oldTextIndex, newTextIndex);
                     
                     // > 0 - means we need to migrate.
-                    return schemaRec.tableVersion;
+                    return oldVersion + 1;
                 } else {
                     // 0 means schema is unchanged.
                     return 0;
