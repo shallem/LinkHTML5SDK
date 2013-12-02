@@ -56,7 +56,7 @@ function __isCurrentTZ(stdOffsetHours) {
     return false;
 }
 
-function __getTZSelect(name, curTime) {
+function __getTZSelect(tabIndex, name, curTime) {
     var date = null;
     if (!curTime) {
         date = new Date();
@@ -66,7 +66,8 @@ function __getTZSelect(name, curTime) {
     
     var tzSelect = $('<select />').attr({
         'name' : name,
-        'id' : name
+        'id' : name,
+        'tabIndex' : tabIndex
     });
     __mkTZOption(-12.0, date, "(GMT -12:00) Eniwetok, Kwajalein", "ENIWETOK").appendTo(tzSelect);
     __mkTZOption(-11.0, date, "(GMT -11:00) Midway Island, Samoa", "MIDWAY_ISLAND").appendTo(tzSelect);
@@ -259,7 +260,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
             .append(formElem.fieldTitle)
         );
         
-        var tzSelect = __getTZSelect(formElem.name, defaultValue).appendTo(dateDiv);
+        var tzSelect = __getTZSelect(formLayout.__tabIndex++, formElem.name, defaultValue).appendTo(dateDiv);
         if (formElem.onchange) {
             $(tzSelect).change(function() {
                 var newVal = $(this).find("option:selected");
@@ -299,7 +300,8 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
             'name': formElem.name,
             'id' : formElem.name,
             'style': formElem.computedStyle,
-            'class' : formElem.computedStyleClass
+            'class' : formElem.computedStyleClass,
+            'tabindex' : formLayout.__tabIndex++
         }).append(formElem.value);
 
         var textContainer = $('<div />').attr({
@@ -333,7 +335,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
     }
 }
 
-function __appendSelectMenu(mode, formElem, $fieldContainer) {
+function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer) {
     if (mode) {
         /* Edit */
         if (!formElem.name) {
@@ -348,7 +350,8 @@ function __appendSelectMenu(mode, formElem, $fieldContainer) {
             
         var inputMarkup = $('<select />').attr({
             'name': formElem.name,
-            'id' : formElem.name
+            'id' : formElem.name,
+            'tabindex' : formLayout.__tabIndex++
         });
 
         var i;
@@ -401,7 +404,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             'name': formElem.name,
             'id' : formElem.name,
             'type': formElem.dataType,
-            'value': formElem.value
+            'value': formElem.value,
+            'tabindex' : formLayout.__tabIndex++
         });
         
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
@@ -454,7 +458,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
     }
 }
 
-function __appendCheckBox(mode, formElem, $fieldContainer, useMiniLayout) {
+function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (mode) {
         /* Edit */
         if (!formElem.name) {
@@ -466,7 +470,8 @@ function __appendCheckBox(mode, formElem, $fieldContainer, useMiniLayout) {
         var inputMarkup = $('<input/>').attr({
             'name': formElem.name,
             'id' : formElem.name,
-            'type' : 'checkbox'
+            'type' : 'checkbox',
+            'tabindex' : formLayout.__tabIndex++
         });
         if (formElem.value) {
             if (typeof formElem.value === "boolean" &&
@@ -527,7 +532,8 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         var inputMarkup = $('<input/>').attr({
             'name': subElem.name,
             'id' : subElem.name,
-            'type' : 'checkbox'
+            'type' : 'checkbox',
+            'tabIndex' : formLayout.__tabIndex++
         }).appendTo(wrapperMarkup);
         if (subElem.value) {
             if (typeof subElem.value === "boolean" &&
@@ -819,9 +825,9 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     } else if (formElem.type == 'textarea') {
         __appendTextArea(mode, formLayout, formElem, $fieldContainer);
     } else if (formElem.type == 'pickList') {
-        __appendSelectMenu(mode, formElem, $fieldContainer);
+        __appendSelectMenu(mode, formLayout, formElem, $fieldContainer);
     } else if (formElem.type == 'checkbox') {
-        __appendCheckBox(mode, formElem, $fieldContainer, useMiniLayout);
+        __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'controlset') {
         __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'htmlarea') {
@@ -855,7 +861,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                 'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
                 'isFullWidth' : isFullWidth,
                 'height' : (formElem.height ? formElem.height : 350),
-                'page' : page
+                'page' : page,
+                'tabIndex' : formLayout.__tabIndex++
             });
         } else {
             var width = "98%";
@@ -1153,6 +1160,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
     formLayout.__layoutFrames = [];
+    formLayout.__tabIndex = 1;
     
     var formElem;
     var elemIdx;

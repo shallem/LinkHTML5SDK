@@ -283,6 +283,13 @@ $(document).on('pagebeforeshow', function(ev) {
      * Layout the page based on the Mobile Helix styles.
      */
     Helix.Layout.layoutPage(ev.target, true);
+    
+    /**
+     * Fix .ui-header-fixed, per
+     * 
+     * http://stackoverflow.com/questions/13514163/header-jump-to-the-middle-of-screen-jquerymobile
+     */
+    $('.ui-header-fixed').css('position', 'fixed');
 });
 
 $(document).on('pageshow', function(ev) {
