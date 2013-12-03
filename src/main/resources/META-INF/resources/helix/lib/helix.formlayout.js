@@ -846,7 +846,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             var editorID = Helix.Utils.getUniqueID();
             var editorInput = $('<textarea />').attr({
                 'name' : formElem.name,
-                'id' : editorID + "_input"
+                'id' : editorID + "_input",
+                'tabIndex' : -1
             }).val(formElem.value);
             $fieldContainer.append($('<div />')
                 .append($('<label />').attr({
@@ -1143,6 +1144,9 @@ function __preprocessFormLayout(formLayout) {
             formLayout.computedFieldStyle = formLayout.fieldStyle + ";";
         }
     }
+    
+    formLayout.__layoutFrames = [];
+    formLayout.__tabIndex = 1;
 }
 
 /**
@@ -1159,8 +1163,6 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
-    formLayout.__layoutFrames = [];
-    formLayout.__tabIndex = 1;
     
     var formElem;
     var elemIdx;
@@ -1173,12 +1175,11 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     if (formLayout.subPanels) {
         for (var subPanelTitle in formLayout.subPanels) {
             var subPanelObj = formLayout.subPanels[subPanelTitle];
+            __preprocessFormLayout(subPanelObj);
             var formSubPanelItems = subPanelObj.items;
             ++Helix.Utils.nSubPanels;
             var subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
             var subPanelDiv = $('<div />').attr({
-                'data-role' : 'collapsible',
-                'data-content-theme' : 'c',
                 'id' : subPanelID
             }).append($('<h3 />').append(subPanelTitle))
                 .appendTo(parentDiv);
@@ -1187,7 +1188,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
             // but not between items in each element.
             for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
                 formElem = formSubPanelItems[elemIdx];
-                Helix.Utils.layoutFormElement(formLayout, formElem, subPanelDiv, page, useMiniLayout);
+                Helix.Utils.layoutFormElement(subPanelObj, formElem, subPanelDiv, page, useMiniLayout);
             }
             
             // Make sure we have a dynamic page used to create new items in this 
@@ -1214,7 +1215,12 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
             }
             
             // Create the collapsible content.
-            subPanelDiv.collapsible();
+            if (!subPanelObj.noCollapse) {
+                subPanelDiv.collapsible();
+                $(subPanelDiv).on('collapsibleexpand', function(event, ui) {
+                    __layoutFrames(page, subPanelObj);
+                });
+            }
         }
     }    
     

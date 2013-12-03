@@ -177,7 +177,7 @@ function definePersistenceMigrations() {
         this.executeSql(sql);
     }
     
-    Migration.prototype.updateColumns = function(allColumns, tableName) {
+    Migration.prototype.updateColumns = function(allColumns, allOldColumns, tableName) {
         this.action(function(arr){
             var columnsSql = [];
             var selectColumns = [];
@@ -190,7 +190,9 @@ function definePersistenceMigrations() {
                     columnsSql.push(col + " VARCHAR(32)");
                 }
                 
-                selectColumns.push(col);
+                if (col in allOldColumns) {
+                    selectColumns.push(col);
+                }
             }
             // Add the 'id' column that exists on all tables managed by persistence JS.
             columnsSql.push('id VARCHAR(32) PRIMARY KEY');
@@ -207,7 +209,7 @@ function definePersistenceMigrations() {
     }
     
     Migration.prototype.addIndex = function(tableName, columnName, unique) {
-        var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON ' + tableName + ' (' + columnName + ')';
+        var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON `' + tableName + '` (' + columnName + ')';
         this.executeSql(sql);
     }
     

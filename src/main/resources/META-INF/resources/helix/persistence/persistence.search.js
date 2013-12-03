@@ -261,6 +261,8 @@ persistence.search.config = function(persistence, dialect, options) {
         Entity.textIndex = function(prop) {
             if(!Entity.meta.textIndex) {
                 Entity.meta.textIndex = {};
+                // We have not yet generated the index tables.
+                Entity.meta.textIndex['__hx_generated'] = false;
             }
             Entity.meta.textIndex[prop] = true;
             
@@ -371,7 +373,13 @@ persistence.search.config = function(persistence, dialect, options) {
                         return;
                     }
                     persistence.transaction(function(tx) {
-                        indexObjectList(updateIDs, updateObjs, that, Object.keys(that.meta.textIndex), function() {
+                        var propList = [];
+                        for (var prop in that.meta.textIndex) {
+                            if (prop !== '__hx_generated') {
+                                propList.push(prop);
+                            }
+                        }
+                        indexObjectList(updateIDs, updateObjs, that, propList, function() {
                             // Now start over ...
                             that.__hx_indexing = false;
                             that.indexAsync(nxtCall);
@@ -387,7 +395,7 @@ persistence.search.config = function(persistence, dialect, options) {
         var queries = [];
         for(var entityName in entityMeta) {
             var meta = entityMeta[entityName];
-            if(meta.textIndex) {
+            if(meta.textIndex && !(meta.textIndex['__hx_generated'])) {
                 queries.push([dialect.createTable(entityName + '_Index', [['entityId', 'INTEGER'], ['prop', 'INTEGER'], ['word', 'VARCHAR(100)'], ['occurrences', 'INT']]), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['prop', 'word']), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['word']), null]);

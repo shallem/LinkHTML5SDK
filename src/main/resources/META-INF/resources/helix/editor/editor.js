@@ -27,44 +27,41 @@
             controls:     // controls to add to the toolbar
             {
                 "default": {
-                    styles: "bold italic underline strikethrough subscript superscript",
-                    font: "font size color highlight",
+                    styles: "bold italic underline strikethrough subscript superscript | sizexxsmall sizexsmall sizesmall sizenormal sizelarge sizexlarge sizexxlarge",
+                    //font: "font size color highlight",
+                    font: "font",
                     formats: "bullets numbering | outdent indent | alignleft center alignright justify" +
-                    " | rule link unlink", /* image */
-                    actions : "undo redo removeformat"
+                    " | rule", /* image link unlink*/
+                    actions : "undo redo" /* removeformat */,
+                    color : "color highlight"
                 },
                 "phone" : {
                     styles: "bold italic underline strikethrough subscript superscript",
-                    font: "font size color highlight",
+                    //font: "font size color highlight",
+                    font: "font",
                     formats: "bullets numbering | outdent indent | alignleft center alignright justify",
-                    actions : "undo redo removeformat"
+                    actions : "undo redo" /* removeformat */,
+                    color : "color highlight"
                 }
             }
             ,
-            colors:       // colors in the color popup
-            "FFF FCC FC9 FF9 FFC 9F9 9FF CFF CCF FCF " +
-            "CCC F66 F96 FF6 FF3 6F9 3FF 6FF 99F F9F " +
-            "BBB F00 F90 FC6 FF0 3F3 6CC 3CF 66C C6C " +
-            "999 C00 F60 FC3 FC0 3C0 0CC 36F 63F C3C " +
-            "666 900 C60 C93 990 090 399 33F 60C 939 " +
-            "333 600 930 963 660 060 366 009 339 636 " +
-            "000 300 630 633 330 030 033 006 309 303",
-            fonts:        // font names in the font popup
+            font:        // font names in the font popup
             "Arial,Arial Black,Comic Sans MS,Courier New,Narrow,Garamond," +
             "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
-            sizes:        // sizes in the font size popup
-            "1,2,3,4,5,6,7",
             styles:       // styles in the style popup
             [["Paragraph", "<p>"], ["Header 1", "<h1>"], ["Header 2", "<h2>"],
             ["Header 3", "<h3>"],  ["Header 4","<h4>"],  ["Header 5","<h5>"],
             ["Header 6","<h6>"]],
-            useCSS:       false, // use CSS to style HTML when possible (not supported in ie)
+            useCSS:       true, // use CSS to style HTML when possible (not supported in ie)
             docType:      // Document type contained within the editor
-            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+            //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+            '<!DOCTYPE html>',
             docCSSFile:   // CSS file used to style the document contained within the editor
             "",
             bodyStyle:    // style to assign to document body contained within the editor
-            "font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word; -webkit-transform: translate3d(0,0,0);"
+            "font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word;",
+            // -webkit-transform: translate3d(0,0,0)
+            tabIndex: -1
         },
 
         // Define all usable toolbar buttons - the init string property is
@@ -81,10 +78,10 @@
         "subscript,,|" +
         "superscript,,|" +
         "font,,fontname,|" +
-        "size,Font Size,fontsize,|" +
+        "size,,fontsize,|" +
         "style,,formatblock,|" +
-        "color,Font Color,forecolor,|" +
-        "highlight,Text Highlight,hilitecolor,color|" +
+        "color,Font Color,forecolor|" +
+        "highlight,Text Highlight,hilitecolor|" +
         "removeformat,Remove Formatting,|" +
         "bullets,,insertunorderedlist|" +
         "numbering,,insertorderedlist|" +
@@ -104,7 +101,14 @@
         "paste,,|" +
         "pastetext,Paste as Text,inserthtml,|" +
         "print,,|" +
-        "source,Show Source"
+        "source,Show Source,|" +
+        "sizexxsmall,XX-small Text,fontsize,1|" +
+        "sizexsmall,X-small Text,fontsize,2|" +
+        "sizesmall,Small Text,fontsize,3|" +
+        "sizenormal,Normal Text,fontsize,4|" +
+        "sizelarge,Large Text,fontsize,5|" +
+        "sizexlarge,X-large Text,fontsize,6|" +
+        "sizexxlarge,XX-large Text,fontsize,7|"
         },
         /*"image,Insert Image,insertimage,url|" +*/
 
@@ -144,6 +148,7 @@
     // Misc constants
     BUTTON           = "button",
     BUTTON_NAME      = "buttonName",
+    BUTTON_VALUE      = "buttonValue",
     CHANGE           = "change",
     CLEDITOR         = "cleditor",
     DISABLED         = "disabled",
@@ -170,7 +175,7 @@
 
     var CLICK            = "click";
     if (Helix.hasTouch) {
-        CLICK = "tap";
+        CLICK = "vclick";
     }
 
     //===============
@@ -187,7 +192,7 @@
             name: name,
             title: items[1] === "" ? name.charAt(0).toUpperCase() + name.substr(1) : items[1],
             command: items[2] === "" ? name : items[2],
-            popupName: items[3] === "" ? name : items[3]
+            data: items[3] === "" ? "" : items[3]
         };
     });
     delete buttons.init;
@@ -250,147 +255,37 @@
             doMini = 'true';
         }
 
-        var $styleCommands = null;
-        var $styleMenuPopup = null;
-        var $styleMenu = null;
-        if (editor.controls.styles) {
-            // Add the styling commands popup to the button bar
-            $styleCommands = $(A_TAG)
-            .attr({
-                'href' : '#stylesPopup-' + editor.name,
-                'data-rel' : "popup",
-                'data-role' : "button",
-                'data-theme' : "a",
-                'data-mini' : doMini,
-                'class' : 'ui-disabled'
-            }).append("Styles")
-            .appendTo($toolbar);
+        editor.menuPopups = {};
+        editor.menuToolbar = {};
+        editor.menus = {};
 
-            $styleMenuPopup = $(DIV_TAG)
-            .attr({
-                'data-role' : 'popup',
-                'data-history': 'false',
-                'data-theme' : 'a',
-                'id' : 'stylesPopup-' + editor.name
-            }).appendTo($parent);
-            
-            $styleMenu = editor.$styleMenu = $(UL_TAG).attr({
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'style' : 'min-width:210px;',
-                'data-theme' : 'b'
-            }).appendTo($styleMenuPopup);
-            $.each(editor.controls.styles.split(" "), function(idx, buttonName) {
-                addButtonToMenu(editor, $styleMenu, $styleMenuPopup, buttonName, "style");
-            });
+        if (editor.controls.styles) {
+            createPopupMenu.call(editor, 'style', 'Style', $parent, $toolbar, editor.controls.styles, doMini)
+            editor.$styleMenu = editor.menus['style'];
         }
 
-        var $fontCommands = null;
-        var $fontMenu = null;
-        var $fontMenuPopup = null;
         if (editor.controls.font) {
             // Add the font commands popup to the button bar
-            $fontCommands = $(A_TAG)
-            .attr({
-                'href' : '#fontsPopup-' + editor.name,
-                'data-rel' : "popup",
-                'data-role' : "button",
-                'data-theme' : "a",
-                'data-mini' : doMini,
-                'class' : 'ui-disabled'
-            }).append("Font")
-            .appendTo($toolbar);            
-        
-            // Create the fonts popup.
-            $fontMenu = editor.$fontMenu = $(UL_TAG).attr({
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'style' : 'min-width:210px;',
-                'data-theme' : 'b'
-            });
-            
-            $fontMenuPopup = $(DIV_TAG)
-            .attr({
-                'data-role' : 'popup',
-                'data-history': 'false',
-                'data-theme' : 'a',
-                'id' : 'fontsPopup-' + editor.name
-            }).append($fontMenu)
-            .appendTo($parent);
-            $.each(editor.controls.font.split(" "), function(idx, buttonName) {
-                addButtonToMenu(editor, $fontMenu, $fontMenuPopup, buttonName, "font");
-            });
+            createPopupMenu.call(editor, 'font', 'Font', $parent, $toolbar, editor.controls.font, doMini)
+            editor.$fontMenu = editor.menus['font'];
         }
 
-        var $formatCommands = null;
-        var $formatMenuPopup = null;
-        var $formatMenu = null;
         if (editor.controls.formats) {
             // Add the format commands popup to the button bar
-            $formatCommands = $(A_TAG)
-            .attr({
-                'href' : '#formatsPopup-' + editor.name,
-                'data-rel' : "popup",
-                'data-role' : "button",
-                'data-theme' : "a",
-                'data-mini' : doMini,
-                'class' : 'ui-disabled'
-            }).append("Format")
-            .appendTo($toolbar);            
-
-            $formatMenuPopup = $(DIV_TAG)
-            .attr({
-                'data-role' : 'popup',
-                'data-history': 'false',
-                'data-theme' : 'a',
-                'id' : 'formatsPopup-' + editor.name
-            }).appendTo($parent);
-            
-            $formatMenu = editor.$formatMenu = $(UL_TAG).attr({
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'style' : 'min-width:210px;',
-                'data-theme' : 'b'
-            }).appendTo($formatMenuPopup);
-            $.each(editor.controls.formats.split(" "), function(idx, buttonName) {
-                addButtonToMenu(editor, $formatMenu, $formatMenuPopup, buttonName, "format");
-            });
+            createPopupMenu.call(editor, 'format', 'Format', $parent, $toolbar, editor.controls.formats, doMini)
+            editor.$formatMenu = editor.menus['format'];
         }
         
-        var $actionCommands = null;
-        var $actionMenuPopup = null;
-        var $actionMenu = null;
-        if (editor.controls.actions) {
-            // Add the actions commands popup to the button bar
-            $actionCommands = $(A_TAG)
-            .attr({
-                'href' : '#actionPopup-' + editor.name,
-                'data-rel' : "popup",
-                'data-role' : "button",
-                'data-theme' : "a",
-                'data-mini' : doMini,
-                'class' : 'ui-disabled'
-            }).append("Actions")
-            .appendTo($toolbar);
-            
+        if (editor.controls.color) {
             /* The action menu is "nice-to-have". Skip it on smaller screens. */
-            $actionMenuPopup = $(DIV_TAG)
-            .attr({
-                'data-role' : 'popup',
-                'data-history': 'false',
-                'data-theme' : 'a',
-                'id' : 'actionPopup-' + editor.name
-            }).appendTo($parent);
-            
-            $actionMenu = editor.$actionMenu = $(UL_TAG).attr({
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'style' : 'min-width:210px;',
-                'data-theme' : 'b'
-            }).appendTo($actionMenuPopup);
-            $.each(editor.controls.actions.split(" "), function(idx, buttonName) {
-                addButtonToMenu(editor, $actionMenu, $actionMenuPopup, buttonName, "action");
-            });        
+            createPopupMenu.call(editor, 'color', 'Color', $parent, $toolbar, editor.controls.color, doMini)
+            editor.$colorMenu = editor.menus['color'];
+        }
+        
+        if (editor.controls.actions) {
+            /* The action menu is "nice-to-have". Skip it on smaller screens. */
+            createPopupMenu.call(editor, 'action', 'Action', $parent, $toolbar, editor.controls.actions, doMini)
+            editor.$actionMenu = editor.menus['action'];
         }
         
         /* Attach the toolbar to the enclosing div. */
@@ -399,39 +294,45 @@
         /* Instantiate the menus. */
         var popupOptions = {
             beforeposition: function() {
-                focus(editor);
+                //focus(editor);
+                if (editor.$toolbarEnabled) {
+                    editor.popupOpen = true;
+                }
             },
             afterclose: function() {
-                focus(editor);
-            }
+                if (editor.nextAction) {
+                    focus(editor, function() {                    
+                        editor.nextAction();
+                        editor.nextAction = null;
+                    });
+                } else {
+                    if (editor.popupOpen) {
+                        focus(editor, function() {
+                        });
+                    }
+                }
+                editor.popupOpen = false;
+            },
+            history: false,
+            theme: 'a'
         };
         
-        /* Style */
-        if ($styleMenu && $styleCommands && $styleMenuPopup) {
-            $styleMenu.listview();
-            $styleCommands.button();
-            $styleMenuPopup.popup(popupOptions);            
-        }
-        
-        /* Format */
-        if ($formatMenu && $formatCommands && $formatMenuPopup) {
-            $formatMenu.listview();
-            $formatCommands.button();
-            $formatMenuPopup.popup(popupOptions);            
-        }
-        
-        /* Fonts */
-        if ($fontMenu && $fontCommands && $fontMenuPopup) {
-            $fontMenu.listview()
-            $fontCommands.button();
-            $fontMenuPopup.popup(popupOptions);
-        }
-        
-        /* Action. */
-        if ($actionMenu && $actionCommands && $actionMenuPopup) {
-            $actionMenu.listview();
-            $actionCommands.button();
-            $actionMenuPopup.popup(popupOptions);
+        for (var menuName in editor.menuPopups) {
+            var $popup = editor.menuPopups[menuName];
+            var $menu = editor.menus[menuName];
+            var $button = editor.menuToolbar[menuName];
+            if ($popup && $menu && $button) {
+                $menu.listview();
+                $button.button();
+                $popup.popup(popupOptions);
+                
+                // Reduce text padding in the buttons to make them fit on smaller
+                // screens.
+                if (doMini) {
+                    $button.find('.ui-btn-inner').css('padding-left', '10px');
+                    $button.find('.ui-btn-inner').css('padding-right', '10px');                    
+                }
+            }
         }
     
         $toolbar.controlgroup();
@@ -446,7 +347,7 @@
             refresh(editor);
         });
                 
-        eventName = "orientationchange." + editor.name;
+        var eventName = "orientationchange." + editor.name;
         $(document).off(eventName).on(eventName, function() {
             if (editor.$main.is(':visible')) {
                 refresh(editor);
@@ -461,6 +362,8 @@
         if (options.widget) {
             window[options.widget] = editor;
         }
+        
+        editor.nextAction = null;
     };
 
     //===============
@@ -524,43 +427,28 @@
         buttonDiv = $(e.target).closest("li"),
         buttonName = buttonDiv.data(BUTTON_NAME),
         button = buttons[buttonName],
-        popupName = button.popupName,
-        popup = popups[popupName],
-        menu = button.menu;
-
-        // Check if disabled
-        if (editor.disabled || $(buttonDiv).attr(DISABLED) == DISABLED)
-            return false;
-
-        // If this click is on the link button make sure we have a selection.
-        var value;
-        if (getSelection(editor).toString()) {
-            value = getRange(editor);
-        }
-        if ((buttonName == "link" || buttonName == "unlink") && !value) {
-            alert("You cannot insert or remove hyperlinks without selecting a URL in the text editor.");
-            return false;
-        }
+        menu = button.menu,
+        value = buttonDiv.data(BUTTON_VALUE);
 
         // Fire the buttonClick event
         var data = {
             editor: editor,
             button: buttonDiv,
             buttonName: buttonName,
-            popup: popup,
             value: value,
-            popupName: popupName,
             command: button.command,
             useCSS: editor.options.useCSS
         };
 
-        if (button.buttonClick && button.buttonClick(e, data) === false)
-            return false;
-  
-        // All other buttons
-        if (!execCommand(editor, data.command, data.value, data.useCSS, button)) {
-            return false;
-        }
+        editor.nextAction = function() {
+            if (button.buttonClick && button.buttonClick(e, data) === false)
+                return;
+
+            // All other buttons
+            if (!execCommand(editor, data.command, data.value, data.useCSS, button)) {
+                return;
+            }
+        };
 
         menu.popup("close");
         return true;
@@ -569,63 +457,73 @@
     // popupClick - click event handler for popup items
     function popupClick(e) {
         var editor = this,
-        popup = e.data.popup,
-        target = e.target;
+        buttonName = e.data.buttonName,
+        value = e.data.value,
+        command = e.data.command;
+        var menu = e.data.menu;
 
-        // Check for message and prompt popups
-        if (popup === popups.msg || $(popup).hasClass(PROMPT_CLASS))
-            return false;
 
         // Get the button info
-        var buttonDiv = $(popup),
-        buttonName = buttonDiv.data(BUTTON_NAME),
-        button = buttons[buttonName],
-        command = button.command,
-        value,
+        var button = buttons[buttonName],
         useCSS = editor.options.useCSS;
-
-        // Get the command value
-        if (buttonName == "font") {
-            value = $(target).find("font").html();
-        // Opera returns the fontfamily wrapped in quotes
-        // value = target.style.fontFamily.replace(/"/g, "");
-        } else if (buttonName == "size") {
-            value = $(target).find("font").html();
-        }
-        else if (buttonName == "style")
-            value = "<" + target.tagName + ">";
-        else if (buttonName == "color")
-            value = e.data.color;
-        else if (buttonName == "highlight") {
-            value = e.data.color;
-            useCSS = true;
-        }
 
         // Fire the popupClick event
         var data = {
             editor: editor,
-            button: buttonDiv,
             buttonName: buttonName,
-            popup: popup,
-            popupName: button.popupName,
             command: command,
             value: value,
             useCSS: useCSS
         };
-
-        if (button.popupClick && button.popupClick(e, data) === false)
-            return false;
+        
+        editor.nextAction = function() {
+            if (button.popupClick && button.popupClick(e, data) === false)
+                return;
     
-        // Execute the command
-        if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, button))
-            return false;
-
-        return true;
+            // Execute the command
+            if (data.command && !execCommand(editor, data.command, data.value, data.useCSS, button))
+                return;
+        };
+        $(menu).popup("close");
     }
 
     //==================
     // Private Functions
     //==================
+    
+    function createPopupMenu(menuName, buttonText, $parent, $toolbar, menuOptions, doMini) {
+        var editor = this;
+        var $popup = this.menuPopups[menuName] = $(DIV_TAG)
+            .attr({
+                'id' : 'stylesPopup-' + this.name,
+                'style' : 'max-height: 200px; overflow-y: scroll'
+            }).appendTo($parent);
+            
+        var $menu = this.menus[menuName] = $(UL_TAG).attr({
+            'data-role' : 'listview',
+            'data-inset' : 'true',
+            'style' : 'min-width:210px;',
+            'data-theme' : 'b'
+        }).appendTo($popup);
+        $.each(menuOptions.split(" "), function(idx, buttonName) {
+            addButtonToMenu(editor, $menu, $popup, buttonName, menuName);
+        });
+        
+        var $button = this.menuToolbar[menuName] = $(A_TAG)
+        .attr({
+            'href' : 'javascript:void(0)',
+            'data-role' : "button",
+            'data-theme' : "a",
+            'data-mini' : doMini,
+            'class' : 'ui-disabled'
+        }).append(buttonText)
+        .appendTo($toolbar)
+        .on(CLICK, function() {
+            $popup.popup("open", { positionTo: $button });
+            return false;
+        });
+    }
+    
     // checksum - returns a checksum using the Adler-32 method
     function checksum(text)
     {
@@ -641,108 +539,6 @@
     function clear(editor) {
         editor.$area.val("");
         updateFrame(editor);
-    }
-
-    // createPopup - creates a popup and adds it to the body
-    function createPopup(editor, button, selectName, popupDiv, menu) {
-
-        // Create the popup
-        var $popup = null;
-        if (button.popupName == "color") {
-            $popup = $(DIV_TAG).attr({
-                'class' : 'ui-color-picker'
-            }).appendTo(popupDiv);
-        } else {
-            $popup = $('<select />')
-            .attr({ 
-                'name' : selectName,
-                'data-mini' : 'true'
-            })
-            .appendTo(popupDiv);
-        }
-
-        // Custom popup
-        if (button.popupContent) {
-            $popup.html(button.popupContent);
-        }
-        // Color
-        else if (button.popupName == "color") {
-            var colorInput = $('<input/>').appendTo($popup).spectrum({
-                color: 'black',
-                change: function(color) {
-                    popupClick.call(editor, {
-                        target: colorInput, 
-                        data : { 
-                            popup: popupDiv,
-                            color: color
-                        } 
-                    });
-                }
-            });
-            
-        }
-
-        // Font
-        else if (button.popupName == "font") {
-            $.each(editor.options.fonts.split(","), function(idx, font) {
-                var fontItem = $('<option />').append($(SPAN_TAG)
-                    .append($('<font />').attr({
-                        'face' : font
-                    })
-                    .append(font))
-                    ).appendTo($popup);
-            });
-            $popup.change(function() {
-                $(this).find("option:selected").each(function() {
-                    popupClick.call(editor, {
-                        target: this, 
-                        data : { 
-                            popup: popupDiv 
-                        } 
-                    });
-                });
-                $(menu).popup("close");
-            });
-        }
-        // Size
-        else if (button.popupName == "size") {
-            $.each(editor.options.sizes.split(","), function(idx, size) {
-                var sizeItem = $('<option />').append($(SPAN_TAG)
-                    .html("<font size=" + size + ">" + size + "</font>")
-                    ).appendTo($popup);
-            });
-            $popup.change(function() {
-                $(this).find("option:selected").each(function() {
-                    popupClick.call(editor, {
-                        target: this, 
-                        data : { 
-                            popup: popupDiv 
-                        } 
-                    });
-                });
-                $(menu).popup("close");
-            });
-        }
-        // Style
-        else if (button.popupName == "style") {
-            $.each(editor.options.styles, function(idx, style) {
-                var styleItem = $('<option />').append($(SPAN_TAG)
-                    .html(style[1] + style[0] + style[1].replace("<", "</"))
-                    ).appendTo($popup);
-                styleItem.bind(CLICK, {
-                    popup: popupDiv
-                }, function() {
-                    $.proxy(popupClick, editor);
-                    $(menu).popup("close"); 
-                });
-            });
-        }
-
-        $(popupDiv).trigger('create');
-
-        // Add the popup to the array and return it
-        popups[button.popupName] = $popup[0];
-        return $popup[0];
     }
 
     // disable - enables or disables the editor
@@ -769,8 +565,17 @@
 
     // execCommand - executes a designMode command
     function execCommand(editor, command, value, useCSS, button) {
+        if (command === 'removeformat' && selectionIsEmpty(editor)) {
+            Helix.Utils.statusMessage("Remove Format", "The remove format command removes formatting from selected text. You must select text to use this command.", "info");
+            return true;
+        }
+        if (command === 'createlink' && selectionIsEmpty(editor)) {
+            Helix.Utils.statusMessage("Create Link", "The create link command turns the selected text into a hyperlink. You must select text to use this command.", "info");
+            return true;
+        }
+        
         editor.$frame[0].contentWindow.focus();
-
+        
         // Set the styling method
         if (useCSS === undefined || useCSS === null)
             useCSS = editor.options.useCSS;
@@ -780,7 +585,7 @@
         var success = true, description;
         try {
             success = editor.doc.execCommand(command, 0, value || null);
-            if (success && (button.type == "font" || button.type == "style")) {
+            if (success && (button.type == "font" || button.type == "style" || button.type == 'color')) {
                 if (button.type === "style") {
                     var styleToToggle = 'ui-editor-' + command;
                     editor.$formatFrame.toggleClass(styleToToggle);
@@ -808,6 +613,19 @@
         return success;
     }
 
+    function selectionIsEmpty(editor) {
+        var selection = getSelection(editor);
+        if (selection.rangeCount == 0) {
+            return true;
+        }
+        var range = selection.getRangeAt(0);
+        if (range.collapsed) {
+            return true;
+        }
+        
+        return false;
+    }
+
     function selectText(window,doc,textElement) {
         var range, selection
         ;    
@@ -825,7 +643,7 @@
     }
 
     // focus - sets focus to either the textarea or iframe
-    function focus(editor) {
+    function focus(editor, oncomplete) {
         if (!$(editor.page).is(':visible')) {
             // When the page is invisible we do not put the focus in the editor ...
             return;
@@ -835,7 +653,13 @@
                 editor.$area.focus();
             } else {
                 if (editor.$frame) {
-                    editor.$frame[0].contentWindow.focus();
+                    setTimeout(function() {
+                        editor.$frame[0].contentWindow.focus();
+                        if (oncomplete) {
+                            oncomplete();
+                        }
+                        //editor.doc.body.click();    
+                    }, 70);
                 }
             }
         }, 0);
@@ -911,7 +735,7 @@
             $formatFrame = editor.$formatFrame;
         } else {
             $formatFrame = editor.$formatFrame = 
-                $('<div/>').append("Current Format").addClass("ui-editor-format").hide().appendTo($main);
+                $('<div/>').append("Current Text Format").addClass("ui-editor-format").hide().appendTo($main);
         }
 
         var $frameMaster = editor.$frameMaster = $('<div/>').appendTo($main);
@@ -919,7 +743,7 @@
         if (editor.$frame) {
             $frame = editor.$frame;
         } else {
-            $frame = editor.$frame = $('<iframe style="margin-bottom: 5px;" src="javascript:true;">')
+            $frame = editor.$frame = $('<iframe style="margin-bottom: 5px;" src="javascript:true;" tabindex="' + options.tabIndex + '">')
                 .hide()
                 .appendTo($frameMaster);
         }
@@ -934,7 +758,7 @@
             options.docType +
             '<html>' +
             ((options.docCSSFile === '') ? '' : '<head><link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" /></head>') +
-            '<body style="' + options.bodyStyle + '"></body></html>'
+            '<body style="' + options.bodyStyle + '"><br></body></html>'
             );
         doc.close();
 
@@ -955,10 +779,12 @@
             e.stopImmediatePropagation();
         });
         $doc.find('body').focus(function(e) {
-            if (!editor.$toolbarEnabled) {
-                editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
-                editor.$toolbarEnabled = true;        
-            }
+            editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
+            editor.$toolbarEnabled = true;        
+        });
+        $doc.find('body').blur(function(e) {
+            editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
+            editor.$toolbarEnabled = false;        
         });
    
         //var $toolbar = editor.$toolbar,
@@ -1023,6 +849,11 @@
         return getSelection(editor).toString();
     }
 
+    function capitalizeFirstLetter(string)
+    {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     // Add a button to a popup menu.
     function addButtonToMenu(editor, popupMenu, menu, buttonName, buttonType) {
         if (buttonName === "") return;
@@ -1041,28 +872,86 @@
 
         // Button
         else {
-
             // Get the button definition
             var button = buttons[buttonName];
             button.type = buttonType;
             button.menu = menu;
 
-            if (button.popupName) {
-                var $popupDiv = $(DIV_TAG).attr({
-                    'data-role' : 'fieldcontain'
+            if (editor.options[button.name]) {
+                var list = null;
+                var renderOption = null;
+                list = editor.options[button.name];
+                
+                if (button.name === 'font') {
+                    renderOption = function(buttonDiv, font) {
+                        buttonDiv
+                        .append($('<font />').attr({
+                            'face' : font
+                        })
+                        .append(font));
+                    }
+                }
+                
+                $.each(list.split(","), function(idx, val) {
+                    var $linkDiv = $(A_TAG)
+                        .attr({
+                            'href' : 'javascript:void(0);',
+                            'data-button' : buttonName
+                        });
+                    var $buttonDiv = $(LI_TAG).append($linkDiv).appendTo(popupMenu);
+                    renderOption($linkDiv, val);
+                    $buttonDiv.on(CLICK, $.proxy(buttonClick, editor));
+                    $buttonDiv.data(BUTTON_NAME, buttonName);
+                    $buttonDiv.data(BUTTON_VALUE, val);
+                }); 
+            } else if (button.name === 'color' || button.name === 'highlight') {
+                $(DIV_TAG).attr({
+                    'class' : 'ui-color-picker',
+                    'style' : 'width: 100%;'
+                }).appendTo(popupMenu).append(button.title);
+                var colorInput = $('<input/>').appendTo(popupMenu)
+                .attr({
+                    'data-command' : button.command
                 })
-                .append($('<label />').attr({
-                    'for' : buttonName + "-select",
-                    'class' : 'select'
-                }).append(button.title))
-                .appendTo(popupMenu);
-                $popupDiv.data(BUTTON_NAME, buttonName);
-                createPopup(editor,
-                    button,
-                    buttonName + "-select",
-                    $popupDiv,
-                    menu);
+                .spectrum({
+                    color: 'black',
+                    change: function(color) {
+                        popupClick.call(editor, {
+                            target: colorInput, 
+                            data : { 
+                                buttonName: button.name,
+                                command: button.command,
+                                value: color.toHexString(),
+                                menu: menu
+                            } 
+                        });
+                    }
+                });
+                var restoreColor = '#000000';
+                if (button.name === 'highlight') {
+                    restoreColor = '#FFFFFF';
+                }
+                
+                $(A_TAG).attr({
+                    'href' : 'javascript:void(0);'
+                })
+                .append('Clear ' + capitalizeFirstLetter(button.name))
+                .appendTo(popupMenu).buttonMarkup({
+                    mini: true
+                }).on(CLICK, function(ev) {
+                    $('input[data-command="' + button.command + '"]').spectrum("set", restoreColor);
+                    popupClick.call(editor, {
+                        target: colorInput, 
+                        data : { 
+                            buttonName: button.name,
+                            command: button.command,
+                            value: restoreColor,
+                            menu: menu
+                        } 
+                    });
+                });
             } else {
+
         
                 // Add a new button to the group
                 var $buttonDiv = $(LI_TAG).append(
@@ -1074,6 +963,9 @@
                     ).appendTo(popupMenu);
                 $buttonDiv.on(CLICK, $.proxy(buttonClick, editor));
                 $buttonDiv.data(BUTTON_NAME, buttonName);
+                if (button.data) {
+                    $buttonDiv.data(BUTTON_VALUE, button.data);
+                }
 
                 // Prepare the button image
                 var map = {};
@@ -1082,42 +974,6 @@
                 if (button.stripIndex) map.backgroundPosition = button.stripIndex * -24;
                 button.onCSS = map;
             }
-        }
-    }
-
-    // showPopup - shows a popup
-    function showPopup(editor, popup, button) {
-
-        var offset, left, top, $popup = $(popup);
-
-        // Determine the popup location
-        if (button) {
-            var $button = $(button);
-            offset = $button.offset();
-            left = --offset.left;
-            top = offset.top + $button.height();
-        }
-        else {
-            var $toolbar = editor.$toolbar;
-            offset = $toolbar.offset();
-            left = Math.floor(($toolbar.width() - $popup.width()) / 2) + offset.left;
-            top = offset.top + $toolbar.height() - 2;
-        }
-
-        // Position and show the popup
-        hidePopups();
-        $popup.css({
-            left: left, 
-            top: top
-        })
-        .show();
-
-        // Assign the popup button and click event handler
-        if (button) {
-            $popup.data(BUTTON, button);
-            $popup.bind(CLICK, {
-                popup: popup
-            }, $.proxy(popupClick, editor));
         }
     }
 
@@ -1145,9 +1001,12 @@
 
         // Convert the textarea source code into iframe html
         var html = updateFrameCallback ? updateFrameCallback(code) : code;
-
-        // Prevent script injection attacks by html encoding script tags
-        html = html.replace(/<(?=\/?script)/ig, "&lt;");
+        if (!html) {
+            html = "<br>";
+        } else {
+            // Prevent script injection attacks by html encoding script tags
+            html = html.replace(/<(?=\/?script)/ig, "&lt;");
+        }
 
         // Update the iframe checksum
         if (options.updateTextArea)
