@@ -782,10 +782,12 @@
             editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
             editor.$toolbarEnabled = true;        
         });
-        $doc.find('body').blur(function(e) {
-            editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
-            editor.$toolbarEnabled = false;        
-        });
+        if (Helix.hasTouch) {
+            $doc.find('body').blur(function(e) {
+                editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
+                editor.$toolbarEnabled = false;        
+            });
+        }
    
         //var $toolbar = editor.$toolbar,
         //wid = options.width - ($toolbar.width() * 1.05),
