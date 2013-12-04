@@ -306,7 +306,7 @@
                         editor.nextAction = null;
                     });
                 } else {
-                    if (editor.popupOpen) {
+                    if (editor.popupOpen && editor.$toolbarEnabled) {
                         focus(editor, function() {
                         });
                     }
@@ -334,6 +334,7 @@
                 }
             }
         }
+        attachKeyboardHideEvent(editor);
     
         $toolbar.controlgroup();
 
@@ -491,11 +492,23 @@
     // Private Functions
     //==================
     
+    function attachKeyboardHideEvent(editor) {
+        $(document).on('keyboardHide', function() {
+            editor.$toolbarEnabled = false;
+            editor.popupOpen = false;
+            for (var menuName in editor.menuPopups) {
+                var editorName = '#' + menuName + "_" + editor.name;
+                $(editorName).popup("close");
+            }
+            editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
+        });
+    }
+    
     function createPopupMenu(menuName, buttonText, $parent, $toolbar, menuOptions, doMini) {
         var editor = this;
         var $popup = this.menuPopups[menuName] = $(DIV_TAG)
             .attr({
-                'id' : 'stylesPopup-' + this.name,
+                'id' : menuName + "_" + editor.name,
                 'style' : 'max-height: 200px; overflow-y: scroll'
             }).appendTo($parent);
             
@@ -780,12 +793,13 @@
         });
         $doc.find('body').focus(function(e) {
             editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
-            editor.$toolbarEnabled = true;        
+            editor.$toolbarEnabled = true;
         });
         if (Helix.hasTouch) {
             $doc.find('body').blur(function(e) {
                 editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
-                editor.$toolbarEnabled = false;        
+                editor.$toolbarEnabled = false;
+                updateTextArea(editor);
             });
         }
    
@@ -928,6 +942,10 @@
                             } 
                         });
                     }
+                })
+                
+                $(document).on('keyboardHide', function() {
+                    colorInput.spectrum("hide");
                 });
                 var restoreColor = '#000000';
                 if (button.name === 'highlight') {
@@ -951,6 +969,7 @@
                             menu: menu
                         } 
                     });
+                    return false;
                 });
             } else {
 
