@@ -234,6 +234,12 @@
 .hx-scroller-nozoom {
     overflow-y: scroll;
 }
+
+.hx-no-scroll {
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
 /* Causing problems on iOS 6+. We are not supporting iOS 5. -webkit-overflow-scrolling: touch; */
 
 /* Horizontal scrolling elements should have this style. */
