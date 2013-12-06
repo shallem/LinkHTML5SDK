@@ -17,11 +17,5 @@
             <type>java.lang.String</type>
             <description>Label to display in the select menu.</description>
         </attribute>
-        <attribute>
-            <name>value</name>
-            <required>true</required>
-            <type>java.lang.String</type>
-            <description>Value to be sent in any form posts.</description>
-        </attribute>
     </attributes>
 </component>
