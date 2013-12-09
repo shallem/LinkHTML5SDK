@@ -24,5 +24,11 @@
             <type>java.lang.Object</type>
             <description>Javascript to execute when the menu item is tapped.</description>
         </attribute>
+        <attribute>
+            <name>enabled</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <description>Disable this menu item if set to false.</description>
+        </attribute>
     </attributes>
 </component>
