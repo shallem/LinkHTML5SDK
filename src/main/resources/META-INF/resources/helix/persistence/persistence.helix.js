@@ -296,21 +296,37 @@ function initHelixDB() {
             for (var i = 0; i < allSchemas.length; ++i) {
                 var schema = allSchemas[i];
                 var tableName = schema.schema.meta.name;
-                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName);
+                var dirtyMap = {};
+
+                if (schema.schema.meta.textIndex) {
+                    schema.schema.meta.textIndex['__hx_generated'] = false;
+                }
+                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap);
                 if (curVer > 0) {
                     persistence.migrate(Helix.DB.__schemaVersion, curVer);
                     // This table exists. All updates to it are handle as sync hooks.
                     persistence.generatedTables[tableName] = true;
+                    
+                    if (!dirtyMap['textindex']) {
+                        // Do not regenerate textIndex tables.
+                        if (schema.schema.meta.textIndex) {
+                            schema.schema.meta.textIndex['__hx_generated'] = true;
+                        }
+                    }
                 } else if (curVer <= 0) {
                     if (curVer == 0) {
                         // This table is already in the DB. Mark it as a generated table.
                         persistence.generatedTables[tableName] = true;
+                        // Do not regenerate textIndex tables.
+                        if (schema.schema.meta.textIndex) {
+                            schema.schema.meta.textIndex['__hx_generated'] = true;
+                        }
                     }
                 }
             }
         },
 
-        migrateTable: function(oldVersion, schema, metaName) {
+        migrateTable: function(oldVersion, schema, metaName, dirtyMap) {
             var tableName = schema.schema.meta.name;
             var schemaRec = window.__pmAllTables[tableName];
             if (schemaRec == null) {
@@ -343,21 +359,26 @@ function initHelixDB() {
                 var oldGlobalFilters, newGlobalFilters;
                 var oldTextIndex, newTextIndex;
                 var allNewFields = {};
+                var allOldFields = {};
 
                 var tf = $.parseJSON(schemaRec.tableFields);
                 if (!Helix.Utils.objectsEqual(tf, schema.fields)) {
+                    $.extend(allOldFields, tf);
                     var fieldsString = JSON.stringify(schema.fields);
                     dirty = 1;
                     fieldsChanged = 1;
                     schemaRec.tableFields = fieldsString;
+                    dirtyMap['fields'] = true;
                 }
                 $.extend(allNewFields, schema.fields);
                 
                 var manyToOneStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
                 if (manyToOneStr !== schemaRec.tableManyToOne) {
+                    $.extend(allOldFields, $.parseJSON(schemaRec.tableManyToOne));
                     dirty = 1;
                     fieldsChanged = 1;
                     schemaRec.tableManyToOne = manyToOneStr;
+                    dirtyMap['manytoone'] = true;
                 } 
                 $.extend(allNewFields, schema.schema.meta.hasOne);
                 
@@ -365,6 +386,7 @@ function initHelixDB() {
                 if (oneToManyStr !== schemaRec.tableOneToMany) {
                     dirty = 1;
                     schemaRec.tableOneToMany = oneToManyStr;
+                    dirtyMap['onetomany'] = true;
                 }
                 
                 var sortFields = JSON.stringify(schema.sortFields);
@@ -373,6 +395,7 @@ function initHelixDB() {
                     oldSorts = $.parseJSON(schemaRec.sortFields);
                     newSorts = schema.sortFields;
                     schemaRec.sortFields = sortFields;
+                    dirtyMap['sorts'] = true;
                 }
                 var filterFields = JSON.stringify(schema.filterFields);
                 if (filterFields !== schemaRec.filterFields) {
@@ -380,6 +403,7 @@ function initHelixDB() {
                     oldFilters = $.parseJSON(schemaRec.filterFields);
                     newFilters = schema.filterFields;
                     schemaRec.filterFields = filterFields;
+                    dirtyMap['filters'] = true;
                 }
 
                 var globalFilterFields = JSON.stringify(schema.globalFilterFields);
@@ -388,6 +412,7 @@ function initHelixDB() {
                     oldGlobalFilters = $.parseJSON(schemaRec.globalFilterFields);
                     newGlobalFilters = schema.globalFilterFields;
                     schemaRec.globalFilterFields = globalFilterFields;
+                    dirtyMap['globalfilters'] = true;
                 }
 
                 var textIndexFields = JSON.stringify(schema.textIndexFields);
@@ -396,6 +421,7 @@ function initHelixDB() {
                     oldTextIndex = $.parseJSON(schemaRec.textIndexFields);
                     newTextIndex = schema.textIndexFields;
                     schemaRec.textIndexFields = textIndexFields;
+                    dirtyMap['textindex'] = true;
                 }
 
                 if (schema.keyField !== schemaRec.keyField) {
@@ -403,11 +429,13 @@ function initHelixDB() {
                     oldKey = schemaRec.keyField;
                     newKey = schema.keyField;
                     schemaRec.keyField = schema.keyField;
+                    dirtyMap['key'] = true;
                 }
+                
                 if (dirty) {
                     schemaRec.tableVersion = schemaRec.tableVersion + 1;
                     Helix.DB.defineTableMigration(oldVersion,
-                        schemaRec, allNewFields, fieldsChanged,
+                        schemaRec, allNewFields, allOldFields, fieldsChanged,
                         oldSorts, newSorts,
                         oldKey, newKey,
                         oldFilters, newFilters,
@@ -424,7 +452,7 @@ function initHelixDB() {
         },
     
         defineTableMigration: function(oldVersion,
-            schemaRec, allNewFields, fieldsChanged,
+            schemaRec, allNewFields, allOldFields, fieldsChanged,
             oldSorts, newSorts,
             oldKey, newKey,
             oldFilters, newFilters,
@@ -435,7 +463,7 @@ function initHelixDB() {
                 up: function() {
                     var allNewIndices = {};
                     if (fieldsChanged) {
-                        this.updateColumns(allNewFields, schemaRec.tableName);              
+                        this.updateColumns(allNewFields, allOldFields, schemaRec.tableName);              
                     }
                     if (oldSorts && newSorts) {
                         Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldSorts, newSorts, allNewIndices);
@@ -466,6 +494,10 @@ function initHelixDB() {
                 }
             }
             for (fld in newIndexList) {
+                if (oldIndexList[fld]) {
+                    // Already indexed.
+                    continue;
+                }
                 this.addIndex(tableName, fld);
                 allNewIndices[fld] = true;
             }
@@ -497,6 +529,7 @@ function initHelixDB() {
             schema.__hx_sorts = masterRow.sortFields;
             schema.__hx_filters = masterRow.filterFields;
             schema.__hx_global_filters = masterRow.globalFilterFields;
+            schema.__hx_text_indexes = masterRow.textIndexFields;
             schema.__pm_subSchemas = {};
             if (window.__pmLocalSchemas) {
                 window.__pmLocalSchemas[masterRow.tableName] = schema;
@@ -528,6 +561,16 @@ function initHelixDB() {
                         schema.index(filterField);
                     }
                 }
+            }
+            
+            var textIndexFields = $.parseJSON(masterRow.textIndexFields);
+            for (var i = 0; i < textIndexFields.length; i++) {
+                var indexField = textIndexFields[i];
+                schema.textIndex(indexField);
+            }
+            // We read this from the DB - no need to attempt to re-generate the text index tables.
+            if (schema.textIndex) {
+                schema.textIndex['__hx_generated'] = true;
             }
         
             /* Recurse over any dependent tables for which we don't have schema. */
@@ -620,7 +663,7 @@ function initHelixDB() {
                     var masterRow = window.__pmAllTables[schemaName];
                     if (masterRow) {
                         Helix.DB.generatePersistenceSchemaFromDBRow(masterRow,function(schema) {
-                            persistence.schemaSync();
+                            // This table is already in the DB. No need to call schemaSync.
                             oncomplete(schema);
                         });
                     } else {

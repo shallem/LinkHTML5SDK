@@ -128,9 +128,9 @@ Helix.Layout = {
         var headerHeight = Helix.Layout.headerHeight = $header.outerHeight(true);
         var footerHeight = page.find('[data-role="footer"]').outerHeight(true);
         var contentHeight = height - footerHeight;
-        if ($header.is('[data-position="fixed"]')) {
+        //if ($header.is('[data-position="fixed"]')) {
             contentHeight = contentHeight - headerHeight;
-        }
+        //}
         page.height(contentHeight);
         
         var content = page.find('.hx-main-content');
@@ -283,6 +283,13 @@ $(document).on('pagebeforeshow', function(ev) {
      * Layout the page based on the Mobile Helix styles.
      */
     Helix.Layout.layoutPage(ev.target, true);
+    
+    /**
+     * Fix .ui-header-fixed, per
+     * 
+     * http://stackoverflow.com/questions/13514163/header-jump-to-the-middle-of-screen-jquerymobile
+     */
+    $('.ui-header-fixed').css('position', 'fixed');
 });
 
 $(document).on('pageshow', function(ev) {
@@ -290,6 +297,10 @@ $(document).on('pageshow', function(ev) {
      * Recompute the component heights.
      */
     Helix.Layout.layoutPage(ev.target);
+});
+
+$(document).on('keyboardHide', function(ev) {
+    Helix.Layout.layoutPage();
 });
 
 Helix.deviceType = (function() {

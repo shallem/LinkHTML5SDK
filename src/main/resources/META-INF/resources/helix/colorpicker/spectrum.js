@@ -787,8 +787,16 @@
         var viewWidth = docElem.clientWidth + $(doc).scrollLeft();
         var viewHeight = docElem.clientHeight + $(doc).scrollTop();
         var offset = input.offset();
-        offset.top += inputHeight;
-
+        offset.left += (input.outerWidth());
+        //offset.top += inputHeight;
+        offset.top -= (dpHeight / 2);
+        if (offset.top < 0) {
+            offset.top = 0;
+        }
+        if (offset.top < $(doc).scrollTop()) {
+            offset.top = $(doc).scrollTop();
+        }
+        
         offset.left -=
             Math.min(offset.left, (offset.left + dpWidth > viewWidth && viewWidth > dpWidth) ?
             Math.abs(offset.left + dpWidth - viewWidth) : 0);

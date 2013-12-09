@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../misc/component.dtd" [
+<!ENTITY output_component_attributes		SYSTEM "../entities/output_component_attributes.xml">
 ]>
 <component>
     <tag>pickItem</tag>
@@ -11,17 +12,12 @@
     <rendererClass>org.helix.mobile.component.pickitem.PickItemRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <attributes>
+        &output_component_attributes;
         <attribute>
             <name>label</name>
             <required>false</required>
             <type>java.lang.String</type>
             <description>Label to display in the select menu.</description>
-        </attribute>
-        <attribute>
-            <name>value</name>
-            <required>true</required>
-            <type>java.lang.String</type>
-            <description>Value to be sent in any form posts.</description>
         </attribute>
     </attributes>
 </component>

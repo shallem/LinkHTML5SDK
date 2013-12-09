@@ -148,6 +148,19 @@
             }
         },
     
+        updateItem: function(name, updatedProperties) {
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var formElem = this.options.items[idx];
+                var fldName = this._stripNamespace(formElem.name);
+                if (fldName === name) {
+                    for (var prop in updatedProperties) {
+                        formElem[prop] = updatedProperties[prop];
+                    }
+                }
+            }
+        },
+    
         /**
          * Render the form using the form layout code. valuesMap is an optional
          * map from field names to field values.
@@ -197,6 +210,10 @@
         
         isView: function() {
             return !(this.isEdit());
+        },
+        
+        setSubPanels : function(subPanels) {
+            this.options.subPanels = subPanels;
         },
         
         _serializeTypes : {
@@ -406,6 +423,20 @@
             var searchName = this._addNamespace(name);
             var thisField = $(this.element).find(PrimeFaces.escapeClientId(searchName));
             return thisField;
+        },
+        
+        disableField: function(name) {
+            var fieldElem = this.getFieldElement(name);
+            if (fieldElem.is('input')) {
+                fieldElem.addClass('ui-disabled');
+            }
+        },
+        
+        enableField: function(name) {
+            var fieldElem = this.getFieldElement(name);
+            if (fieldElem.is('input')) {
+                fieldElem.removeClass('ui-disabled');
+            }
         },
         
         _checkNonEmpty: function(val) {
