@@ -105,7 +105,7 @@ public class LoadCommandAction {
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            throw new FacesException("Failed to invoke loader: " + ex.getMessage());
+            throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getMessage());
         }
         if (gotten != null) {
             JSONSerializer s = new JSONSerializer();

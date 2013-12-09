@@ -419,6 +419,17 @@
             return null;
         },
         
+        getValues: function() {
+            var obj = {};
+            var idx = 0;
+            for (idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                obj[fieldID] = this.getValues(fieldID);
+            }
+            
+            return obj;
+        },
+        
         getFieldElement: function(name) {
             var searchName = this._addNamespace(name);
             var thisField = $(this.element).find(PrimeFaces.escapeClientId(searchName));
