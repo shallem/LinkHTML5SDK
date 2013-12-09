@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 (function($) {
-    
-    $.widget("helix.helixContextMenu", {        
-        
+
+    $.widget("helix.helixContextMenu", {
+
         options: {
             /**
              * Array of context menu items that are included in the popup menu. Each item
              * is an object that specifies a menu item delaratively as follows:
              *
              * display : String to display.
+             * enabled : If false, the menu item is displayed but disabled
              * action : Function to execute when this item is tapped. This function is
              *          executed with this popup menu object as the 'this' object.
              * data: String to store in each item in the context menu and to pass to the action as
@@ -30,7 +31,7 @@
              *       if data is not specified.
              */
             items: [],
-            
+
             /**
              * Object mapping device types to a constant, true or false, which indicates
              * if the form layout should be in "mini" mode for that device type. Supported
@@ -43,7 +44,7 @@
 
         _create: function() {
             this.active = false;
-            
+
             if (Helix.hasTouch) {
                 this.tapEvent = 'touchstart';
             } else {
@@ -54,6 +55,28 @@
             this.refresh();
         },
         
+        // status = true or false
+        enableItem: function(itemIndex, status) {
+            var selected = this.options.items[itemIndex];
+            var items = this._menuContainer.find('li');
+            var target = items[itemIndex];
+
+            if (status === true) {
+                // Enable item
+                if (selected.enabled === false) {
+                    $(target).removeClass('ui-disabled');
+                    }
+                } else {
+                // Disable item
+                // 'enabled' may be true, false or null/undefined
+                if (!(selected.enabled === false)) {
+                    $(target).addClass('ui-disabled');
+                    }   
+                }
+                
+                selected.enabled = status;
+            },
+
         refresh: function() {
             $(this.element).empty();
             this._menuContainer = $('<div/>').attr({
@@ -62,7 +85,7 @@
                 'data-theme' : 'a',
                 'data-history': 'false'
             }).appendTo(this.element);
-            var optionsList = $('<ul />').attr({ 
+            var optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
                 'data-theme' : 'b'
@@ -70,24 +93,27 @@
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
                 var nxtLI = $('<li />');
-                
+
                 if (nxtItem.isDivider) {
                     nxtLI.attr('data-role', 'divider');
                     nxtLI.attr('data-theme', 'a');
-                    nxtLI.append(nxtItem.display); 
+                    nxtLI.append(nxtItem.display);
                 } else {
-                    var nxtLink = $('<a />').attr({ 
+                    var nxtLink = $('<a />').attr({
                         'href' : 'javascript:void(0)',
                         'data-index' : i
                     }).append(nxtItem.display);
                     if (nxtItem.data) {
                         nxtLink.attr('data-field', nxtItem.data);
                     }
+                    if (nxtItem.enabled === false) {
+                        nxtLI.addClass('ui-disabled');
+                    }
                     nxtLI.append(nxtLink);
                 }
                 optionsList.append(nxtLI);
             }
-            
+
             var _self = this;
             optionsList.on(_self.tapEvent, 'a', function(evt) {
                 evt.stopImmediatePropagation();
@@ -107,7 +133,7 @@
                 }
                 _self.close();
             });
-            
+
             if (Helix.hasTouch) {
                 // Prevent touch events from propagating.
                 optionsList.on('tap', function(ev) {
@@ -117,7 +143,7 @@
                     return false;
                 });
             }
-            
+
             optionsList.listview();
             _self._menuContainer.popup({
                 dismissible: !Helix.hasTouch, // We will explicitly close the popup when this is a touch device.
@@ -126,7 +152,7 @@
                 }
             });
         },
-        
+
         open: function(obj) {
             this._menuContainer.popup("open", obj);
             if (Helix.hasTouch) {
@@ -136,20 +162,20 @@
             }
             this._thisArg = obj.thisArg;
         },
-        
+
         _stopAndClose: function(ev) {
             ev.preventDefault();
             ev.stopImmediatePropagation();
             this.close();
             return false;
         },
-        
+
         _stop: function(ev) {
             ev.preventDefault();
             ev.stopImmediatePropagation();
             return false;
         },
-        
+
         close: function() {
             this.active = false;
             this._menuContainer.popup("close");
