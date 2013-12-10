@@ -57,8 +57,17 @@
         
         // status = true or false
         enableItem: function(itemIndex, status) {
+            if (itemIndex >= this.options.items.length) {
+                return false;
+            }
+            
             var selected = this.options.items[itemIndex];
             var items = this._menuContainer.find('li');
+
+            if (itemIndex >= items.length) {
+                return false;
+            }
+            
             var target = items[itemIndex];
 
             if (status === true) {
@@ -75,6 +84,7 @@
                 }
                 
                 selected.enabled = status;
+                return true;
             },
 
         refresh: function() {
