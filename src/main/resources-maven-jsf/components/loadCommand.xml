@@ -63,6 +63,18 @@
             <description>Name of an override function for array field synchronization. Used when a particular load command only synchronizes a portion of a database table.</description>
         </attribute>
         <attribute>
+            <name>addHook</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Hook that is invoked each time an object is added. The object to add is passed as an argument.</description>
+        </attribute>
+        <attribute>
+            <name>deleteHook</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Hook that is invoked each time an object is deleted. The object to remove is passed as an argument.</description>
+        </attribute>
+        <attribute>
             <name>cmd</name>
             <required>true</required>
             <type>javax.el.MethodExpression</type>

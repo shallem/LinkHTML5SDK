@@ -805,6 +805,9 @@ function initHelixDB() {
                 var elem = toDelete.pop();
                 Helix.DB.cascadingRemove(tx, elem, function() {
                     queryCollection.remove(elem);
+                    if (overrides.deleteHook) {
+                        overrides.deleteHook(elem);
+                    }
                     cascade();
                 }, overrides);
             };
@@ -944,6 +947,9 @@ function initHelixDB() {
                     var removeFn = function(persistentObj) {
                         if (persistentObj) {
                             queryCollection.remove(persistentObj);
+                            if (overrides.deleteHook) {
+                                overrides.deleteHook(persistentObj);
+                            }
                         }
 
                         if (deleteObjs.length > 0) {
@@ -1044,6 +1050,9 @@ function initHelixDB() {
             var removeFn = function(persistentObj) {
                 if (persistentObj) {
                     parentCollection.remove(persistentObj);
+                    if (overrides.deleteHook){
+                        overrides.deleteHook(persistentObj);
+                    }
                 }
 
                 if (deltaObj.deletes.length > 0) {
@@ -1146,6 +1155,10 @@ function initHelixDB() {
             
             /* Called when an asynchronous relationship field is done sync'ing. */
             var syncDone = function() {
+                if (overrides.addHook) {
+                    overrides.addHook(persistentObj);
+                }
+                
                 oncomplete(persistentObj);
             };
             

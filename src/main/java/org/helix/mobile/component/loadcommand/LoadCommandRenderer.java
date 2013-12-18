@@ -192,8 +192,24 @@ public class LoadCommandRenderer extends CoreRenderer {
         if (cmd.getRefineOverride() != null) {
             if (needsComma) {
                 writer.append(",");
+            } else {
+                needsComma = true;
             }
             writer.append(" 'refineEntityArray' : " + cmd.getRefineOverride());
+        }
+        if (cmd.getAddHook() != null) {
+            if (needsComma) {
+                writer.append(",");
+            } else {
+                needsComma = true;
+            }
+            writer.append(" 'addHook' : " + cmd.getAddHook());
+        }
+        if (cmd.getDeleteHook() != null) {
+            if (needsComma) {
+                writer.append(",");
+            }
+            writer.append(" 'deleteHook' : " + cmd.getDeleteHook());
         }
         writer.write("}");
         writer.write("};\n");

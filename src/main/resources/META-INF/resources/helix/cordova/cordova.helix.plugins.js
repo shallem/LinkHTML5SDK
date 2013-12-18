@@ -37,6 +37,18 @@
 })();
 
 (function() {
+    window.HelixPolicy = {
+        getPolicy: function ( policy, success, fail ) {
+            if (Object.prototype.toString.call(policy) === '[object Array]') {
+                return cordova.exec(success, fail, "Policy", "getPolicyList", [ policy ]);
+            } else {
+                return cordova.exec(success, fail, "Policy", "getPolicy", [ policy ]);
+            }
+        }
+    };
+})();
+
+(function() {
  window.DocumentUpload = {
     getDocument: function(success, fail) {
         return cordova.exec(success, fail, "DocumentUpload", "getDocument", []);

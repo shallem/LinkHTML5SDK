@@ -636,6 +636,53 @@
             }).data('helix-helixContextMenu');
         },
         
+        _normalizeFilterValue: function(val) {
+            var intValue = parseInt(val);
+            if (intValue === NaN) {
+                return val;
+            } else {
+                return intValue;
+            }
+        },
+        
+        _resetGlobalFilters: function() {
+            var curCollection = this.unfilteredList;
+            for (var filteredFld in this._filterMap) {
+                curCollection = this.options.doGlobalFilter(curCollection, filteredFld, this._filterMap[filteredFld]);
+            }
+            return curCollection;
+        },
+        
+        _doGlobalFilter: function(gFilterField, gFilterValue) {
+            var _self = this;
+            var _filterValue = this._normalizeFilterValue(gFilterValue);
+            if (gFilterValue === '__hx_clear') {
+                // Clear out this field, then starting from the unfiltered list re-instate all
+                // remaining fields.
+                delete _self._filterMap[gFilterField];
+                _self.itemList = this._resetGlobalFilters();
+            } else {
+                if (_self._filterMap[gFilterField] &&
+                    _self._filterMap[gFilterField] === _filterValue) {
+                    // The filter did not change ... do nothing.
+                    return;
+                } else if (_self._filterMap[gFilterField] &&
+                           _self._filterMap[gFilterField] !== _filterValue) {
+                    // Start over.
+                    _self._filterMap[gFilterField] = _filterValue;
+                    _self.itemList = this._resetGlobalFilters();
+                } else {
+                    // Use itemList in the call below as filters can build on each other.
+                    _self._filterMap[gFilterField] = _filterValue;
+                    _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue);
+                }
+            }
+            _self._refreshData(function() {
+                _self._resetPaging();
+                _self.$parent.listview( "refresh" );
+            });
+        },
+        
         _refreshGlobalFilterContainer: function(filters) {
             var _self = this;
             
@@ -690,12 +737,7 @@
                         var newFilterField = $(evt.target).attr('data-field');
                         var newFilterValue = $(evt.target).attr('data-value');
                         
-                        
-                        _self.itemList = _self.options.doGlobalFilter(_self.unfilteredList, newFilterField, newFilterValue);
-                        _self._refreshData(function() {
-                            _self._resetPaging();
-                            _self.$parent.listview( "refresh" );
-                        });
+                        _self._doGlobalFilter(newFilterField, newFilterValue);
                         $(_self._globalFilterContainer).popup("close");
                     });
                 } else {
@@ -739,35 +781,7 @@
                         $(this).find("option:selected").each(function() {
                             var gFilterField = $(this).attr('data-field');
                             var gFilterValue = $(this).val();
-                            if (gFilterValue === '__hx_clear') {
-                                // Clear out this field, then starting from the unfiltered list re-instate all
-                                // remaining fields.
-                                delete _self._filterMap[gFilterField];
-                                var curCollection = _self.unfilteredList;
-                                for (var filteredFld in _self._filterMap) {
-                                    curCollection = _self.options.doGlobalFilter(curCollection, filteredFld, _self._filterMap[filteredFld]);
-                                }
-                                
-                                _self.itemList = curCollection;
-                                _self._refreshData(function() {
-                                    _self._resetPaging();
-                                    _self.$parent.listview( "refresh" );
-                                });
-                            } else {
-                                if (_self._filterMap[gFilterField] &&
-                                    _self._filterMap[gFilterField] === gFilterValue) {
-                                    // The filter did not change ... do nothing.
-                                } else {
-                                    // Use itemList in the call below as filters can build on each other.
-                                    _self._filterMap[gFilterField] = gFilterValue;
-                                    
-                                    _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, gFilterValue);
-                                    _self._refreshData(function() {
-                                        _self._resetPaging();
-                                        _self.$parent.listview( "refresh" );
-                                    });
-                                }
-                            }
+                            _self._doGlobalFilter(gFilterField, gFilterValue);
                             $(_self._globalFilterContainer).popup("close");
                         });
                     });
