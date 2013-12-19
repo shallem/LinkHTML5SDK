@@ -29,10 +29,12 @@ public class TabRenderer extends CoreRenderer {
         writer.writeAttribute("href", "#" + tab.getPage(), null);
         writer.writeAttribute("style", "height: 48px", null);
         //writer.writeAttribute("data-icon", "custom", null);
+        String styleClass = "";
         if (!tab.isCustomIcon()) {
             writer.writeAttribute("data-icon", tab.getIcon(), null);
+        } else {
+            styleClass = "ui-icon-" + tab.getIcon();
         }
-        String styleClass = "ui-icon-" + tab.getIcon();
         if (isActive) {
             writer.writeAttribute("class", styleClass + " ui-btn-active", null);
         } else {
