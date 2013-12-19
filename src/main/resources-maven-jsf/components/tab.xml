@@ -24,6 +24,13 @@
             <description>Value for the data-icon attribute. Either a built-in jQM icon or 'custom'.</description>
         </attribute>
         <attribute>
+            <name>customIcon</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <description>Set to true if this icon is a custom icon. Default is false.</description>
+            <defaultValue>false</defaultValue>
+        </attribute>
+        <attribute>
             <name>name</name>
             <required>true</required>
             <type>java.lang.String</type>

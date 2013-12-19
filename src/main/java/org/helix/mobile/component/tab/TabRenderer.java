@@ -29,6 +29,9 @@ public class TabRenderer extends CoreRenderer {
         writer.writeAttribute("href", "#" + tab.getPage(), null);
         writer.writeAttribute("style", "height: 48px", null);
         //writer.writeAttribute("data-icon", "custom", null);
+        if (!tab.isCustomIcon()) {
+            writer.writeAttribute("data-icon", tab.getIcon(), null);
+        }
         String styleClass = "ui-icon-" + tab.getIcon();
         if (isActive) {
             writer.writeAttribute("class", styleClass + " ui-btn-active", null);
