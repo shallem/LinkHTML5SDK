@@ -661,23 +661,20 @@ function __layoutFrames(page, formLayout) {
 
 function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout) {
     if (!mode) {
-        /*var $frameWrapper = $('<div/>').appendTo($fieldContainer)
-            .css('height', '100%')
-            .css('-webkit-overflow-scrolling', 'touch')
-            .css('overflow-y', 'scroll');
-        if (formElem.computedStyleClass) {
-            $frameWrapper.addClass(formElem.computedStyleClass);
-        }*/
-        /* height: 100%; overflow-y: hidden; */
         var frameID = Helix.Utils.getUniqueID();
-        //var iFrameMarkup = '<iframe id="' + frameID + '" style="width: 100%;" src="javascript:true;" onLoad="__autoResize(\'' + frameID + '\')">';
-        var iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;">';
-        //__layoutFrame(page, frameID);
-        if (!formLayout.__layoutFrames || formLayout.__layoutFrames.length == 0) {
-            formLayout.__layoutFrames = [];
-            __layoutFrames(page, formLayout);
+        var iFrameMarkup = null;
+        
+        if (!formElem.height) {
+            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;">';
+            if (!formLayout.__layoutFrames || formLayout.__layoutFrames.length == 0) {
+                formLayout.__layoutFrames = [];
+                __layoutFrames(page, formLayout);
+            }
+            formLayout.__layoutFrames.push(frameID)
+        } else {
+            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + 
+                '" width="' + (formElem.width ? formElem.width : '100%') + '">';
         }
-        formLayout.__layoutFrames.push(frameID)
         
         var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
         
@@ -688,7 +685,7 @@ function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMi
 
         doc.open();
         if (!formElem.noHTML) {
-            doc.write('<html style="overflow: hidden;">');
+            doc.write('<html>');
         }
         if (!formElem.noHead) {
             doc.write('<head>');
@@ -696,7 +693,10 @@ function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMi
             doc.write('</head>');
         }
         if (!formElem.noBody) {
-            doc.write('<body style="height: 100%">');
+            doc.write('<body style="height: 100%;">');
+        }
+        if (formElem.isScroller) {
+            $(doc.body).css('overflow-y', 'scroll');
         }
         doc.write(formElem.value);
         if (!formElem.noHTML) {

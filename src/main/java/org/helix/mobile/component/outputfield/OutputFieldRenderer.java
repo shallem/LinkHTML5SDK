@@ -57,6 +57,13 @@ public class OutputFieldRenderer extends CoreRenderer {
                 writer.writeAttribute("type", "text", null);
             }
         }
+        if (!field.isAutoComplete()) {
+            writer.writeAttribute("autocomplete", "off", null);
+        }
+        if (!field.isAutoCorrect()) {
+            writer.writeAttribute("autocorrect", "off", null);
+        }
+        
         writer.writeAttribute("name", field.getName(), null);
         writer.writeAttribute("id", field.getName(), null);
         writer.writeAttribute("value", field.getValue(), null);

@@ -34,5 +34,19 @@
             <type>java.lang.String</type>
             <description>Text of the label for this field.</description>
         </attribute>
+        <attribute>
+            <name>autoComplete</name>
+            <required>false</required>
+            <defaultValue>true</defaultValue>
+            <type>java.lang.Boolean</type>
+            <description>When set to false, disables iOS autocomplete. Default is true.</description>
+        </attribute>
+        <attribute>
+            <name>autoCorrect</name>
+            <required>false</required>
+            <defaultValue>true</defaultValue>
+            <type>java.lang.Boolean</type>
+            <description>When set to false, disables iOS autocorrect. Default is true.</description>
+        </attribute>
     </attributes>
 </component>

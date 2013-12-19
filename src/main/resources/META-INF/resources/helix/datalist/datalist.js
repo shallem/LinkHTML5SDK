@@ -330,13 +330,19 @@
                     reloadPage: false,
                     scrollTarget: listWrapper,
                     reloadEl: function() {
-                        _self.options.pullToRefresh.call(this);
+                        if (!_self.refreshInProgress) {
+                            _self.options.pullToRefresh.call(this);
+                            _self._clearGlobalFilterMenu();
+                        }
                     }
                 });            
             }
 
-            // Column setup.
+            // Pagination setup.
             this._currentPage = 0;
+            
+            // Other globals.
+            this.refreshInProgress = false;
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
@@ -449,6 +455,7 @@
             
             _self._refreshData(function() {
                 if (_self.nElems == 0) {
+                    // Make sure emptying and repopulating the list does not trigger a hook event.
                     _self.$parent.empty();
                     _self.$parent.append($('<li />').append(_self.options.emptyMessage));
                 }
@@ -683,6 +690,14 @@
             });
         },
         
+        _clearGlobalFilterMenu: function() {
+            for (var fField in this._filterMap) {
+                $('option[data-field="' + fField + '"]').removeAttr('selected');
+                $('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
+                $('select[data-field="' + fField + '"]').selectmenu('refresh');
+            }
+        },
+        
         _refreshGlobalFilterContainer: function(filters) {
             var _self = this;
             
@@ -799,11 +814,7 @@
                 evt.preventDefault();
                 
                 // Reset the values in the global filter popup.
-                for (var fField in _self._filterMap) {
-                    $('option[data-field="' + fField + '"]').removeAttr('selected');
-                    $('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
-                    $('select[data-field="' + fField + '"]').selectmenu('refresh');
-                }
+                _self._clearGlobalFilterMenu();
                 
                 _self._filterMap = {};
                 _self.itemList = _self.unfilteredList;
@@ -884,6 +895,7 @@
             var displayCollection = _self.itemList;
         
             this._clearListRows();
+            _self.refreshInProgress = true;
             _self.displayList = [];
         
             if (_self.options.headerText) {
@@ -923,6 +935,7 @@
                     if (_self._renderSingleRow(curRow, nRendered, function(finishedIdx) {
                         if (_self.options.grouped && (finishedIdx == (_self.nElems - 1))) {
                             /* Call completion when all rows are done rendering. */
+                            _self.refreshInProgress = false;
                             oncomplete();
                         }
                     })) {
@@ -937,12 +950,14 @@
                 function(count) {
                     if (nRendered == 0 || (!_self.options.grouped)) {
                         /* We did not render any rows. Call completion. */
+                        _self.refreshInProgress = false;
                         oncomplete();
                     }
                 }
             );
         },
         _clearListRows: function() {
+            this.$listWrapper.scrollTop(0);
             var toRemove = this.$parent.find("li").filter(":not(li[data-fixed-header='yes'])");
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
@@ -956,7 +971,15 @@
             }
 
             _self.__searchReadyTimeout = setTimeout(function() {
-                _self.itemList = _self.options.indexedSearch(_self.__searchText);
+                if (_self.__searchReadyTimeout) {
+                    clearTimeout(_self.__searchReadyTimeout);
+                }
+                
+                _self.itemList = _self.options.indexedSearch(_self.__searchText.trim());
+                if (!_self.itemList) {
+                    // The user cleared the search text.
+                    _self.itemList = _self.unfilteredList;
+                }
                 _self._refreshData(function() {
                     _self._resetPaging();
                     _self.$parent.listview( "refresh" );
