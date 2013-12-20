@@ -351,6 +351,7 @@ Helix.Ajax = {
                         return;
                     }
                     
+                    console.log("AJAX bean load is complete.");
                     Helix.Ajax.loadOptions.pin = true;
                     if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
                         Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {

@@ -1424,6 +1424,20 @@
         
         closeItemContextMenu: function() {
             this.options.itemContextMenu.close();
+        },
+        
+        /* Puts the list in compact mode. Mostly this just adds the hx-listview-mini
+         * style to the ul tag, which other parts of the code (or the user's code) can
+         * use to render a more compact style using CSS.
+         */
+        setMiniView: function() {
+           this.$parent.addClass('hx-listview-mini'); 
+        },
+        
+        /* Puts the list in regular mode by removing hx-listview-mini.
+         */
+        setRegularView: function() {
+           this.$parent.removeClass('hx-listview-mini'); 
         }
     });
 })(jQuery);

@@ -192,6 +192,8 @@ function definePersistenceMigrations() {
                 
                 if (col in allOldColumns) {
                     selectColumns.push(col);
+                } else {
+                    selectColumns.push('NULL');
                 }
             }
             // Add the 'id' column that exists on all tables managed by persistence JS.

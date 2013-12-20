@@ -126,7 +126,12 @@ Helix.Layout = {
          */
         var $header = page.find('[data-role="header"]');
         var headerHeight = Helix.Layout.headerHeight = $header.outerHeight(true);
-        var footerHeight = page.find('[data-role="footer"]').outerHeight(true);
+        
+        var $footer = page.find('[data-role="footer"]');
+        var footerHeight = 0;
+        if ($footer.is(':visible')) {
+            footerHeight = $footer.outerHeight(true);
+        }
         var contentHeight = height - footerHeight;
         //if ($header.is('[data-position="fixed"]')) {
             contentHeight = contentHeight - headerHeight;

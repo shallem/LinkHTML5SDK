@@ -359,7 +359,8 @@ persistence.search.config = function(persistence, dialect, options) {
                     if (toIndex <= 0) {
                         that.__hx_indexing = false;
                     } else {
-                        if (nxtCall == 1) {
+                        if (nxtCall == 2) {
+                            // Only display if we are going to index more than once.
                             Helix.Utils.statusMessage("Indexing", "Your data is being indexed in the background. The application may be slow while indexing is in progress. This may take a few minutes.", "info");
                         }
                     }

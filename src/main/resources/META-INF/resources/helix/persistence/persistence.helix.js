@@ -286,6 +286,26 @@ function initHelixDB() {
             this.createdSchemas[name] = s;
         },
 
+        doAppMigrations: function(tableName, migrationOptions) {
+            Helix.DB.defineTableMigration(Helix.DB.__schemaVersion,
+                        tableName, 
+                        migrationOptions.newFields, 
+                        migrationOptions.oldFields, 
+                        (migrationOptions.newFields && migrationOptions.oldFields),
+                        migrationOptions.oldIndexes, 
+                        migrationOptions.newIndexes,
+                        null,
+                        null,
+                        null, 
+                        null,
+                        null, 
+                        null,
+                        null, 
+                        null);
+            persistence.migrate(Helix.DB.__schemaVersion, Helix.DB.__schemaVersion + 1);
+            Helix.DB.__schemaVersion = Helix.DB.__schemaVersion + 1;
+        },
+
         doMigrations: function(metaName,allSchemas) {
             // Migrate tables one at a time.
             if (allSchemas.length == 0) {
@@ -304,6 +324,8 @@ function initHelixDB() {
                 var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap);
                 if (curVer > 0) {
                     persistence.migrate(Helix.DB.__schemaVersion, curVer);
+                    Helix.DB.__schemaVersion = curVer;
+                    
                     // This table exists. All updates to it are handle as sync hooks.
                     persistence.generatedTables[tableName] = true;
                     
@@ -435,7 +457,7 @@ function initHelixDB() {
                 if (dirty) {
                     schemaRec.tableVersion = schemaRec.tableVersion + 1;
                     Helix.DB.defineTableMigration(oldVersion,
-                        schemaRec, allNewFields, allOldFields, fieldsChanged,
+                        schemaRec.tableName, allNewFields, allOldFields, fieldsChanged,
                         oldSorts, newSorts,
                         oldKey, newKey,
                         oldFilters, newFilters,
@@ -452,7 +474,7 @@ function initHelixDB() {
         },
     
         defineTableMigration: function(oldVersion,
-            schemaRec, allNewFields, allOldFields, fieldsChanged,
+            tableName, allNewFields, allOldFields, fieldsChanged,
             oldSorts, newSorts,
             oldKey, newKey,
             oldFilters, newFilters,
@@ -463,23 +485,23 @@ function initHelixDB() {
                 up: function() {
                     var allNewIndices = {};
                     if (fieldsChanged) {
-                        this.updateColumns(allNewFields, allOldFields, schemaRec.tableName);              
+                        this.updateColumns(allNewFields, allOldFields, tableName);              
                     }
                     if (oldSorts && newSorts) {
-                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldSorts, newSorts, allNewIndices);
+                        Helix.DB.migrateIndexes.call(this, tableName, oldSorts, newSorts, allNewIndices);
                     }
                     if (oldFilters && newFilters) {
-                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldFilters, newFilters, allNewIndices);
+                        Helix.DB.migrateIndexes.call(this, tableName, oldFilters, newFilters, allNewIndices);
                     }
                     if (oldGlobalFilters && newGlobalFilters) {
-                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldGlobalFilters, newGlobalFilters, allNewIndices);
+                        Helix.DB.migrateIndexes.call(this, tableName, oldGlobalFilters, newGlobalFilters, allNewIndices);
                     }
                     if (oldTextIndex && newTextIndex) {
-                        Helix.DB.migrateIndexes.call(this, schemaRec.tableName, oldTextIndex, newTextIndex, allNewIndices);
+                        Helix.DB.migrateIndexes.call(this, tableName, oldTextIndex, newTextIndex, allNewIndices);
                     }
                     if (oldKey && newKey) {
-                        this.removeIndex(schemaRec.tableName, oldKey);
-                        this.addIndex(schemaRec.tableName, newKey);
+                        this.removeIndex(tableName, oldKey);
+                        this.addIndex(tableName, newKey);
                     }
                     
                 }

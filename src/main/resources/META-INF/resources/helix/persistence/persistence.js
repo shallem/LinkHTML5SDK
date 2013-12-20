@@ -1733,6 +1733,18 @@ persistence.get = function(arg1, arg2) {
       for(var i = 0; i < this._prefetchFields.length; i++) {
         s += this._prefetchFields[i];
       }
+      s += '|Includes:';
+      if (this._includes) {
+        for(var fld in this._includes) {
+          s += fld;
+        }          
+      }
+      s += '|Excludes:';
+      if (this._excludes) {
+        for(fld in this._excludes) {
+          s += fld;
+        }          
+      }
       s += '|Limit:';
       s += this._limit;
       s += '|Skip:';
