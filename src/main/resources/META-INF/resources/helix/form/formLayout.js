@@ -87,8 +87,10 @@
                 var formElem = this.options.items[idx];
                 this._typeMap[formElem.name] = formElem.type;
                 if (this.options.namespace) {
+                    if (formElem.id) {
+                        formElem.id = this.options.namespace + "_" + formElem.id;
+                    }
                     formElem.name = this.options.namespace + "_" + formElem.name;
-                    formElem.id = this.options.namespace + "_" + formElem.id;
                 }
             }
 
@@ -170,7 +172,7 @@
         refresh: function(valuesMap) { 
             this._computeHidden(valuesMap);
             
-            if (!valuesMap) {
+            if (!valuesMap && this.options.mode) {
                 this.clear();
                 if (this.rendered) {
                     return;
@@ -303,6 +305,10 @@
                 var fieldID = this.options.items[idx].name;
                 var fieldType = this.options.items[idx].type;
                 
+                if (this.options.items[idx].readOnly) {
+                    continue;
+                }
+                
                 /* Clear out all values so that all fields are reset to their defaults. */
                 this.options.items[idx].value = null;
 
@@ -332,36 +338,34 @@
             }
         },
         
-        setValue: function(name, value) {
-            // Set the value fields in the form items regardless of whether or not the
-            // form has already been rendered. The reason is that we want to be certain
-            // that if we toggle the form we get the right values. Toggling the form re-renders
-            // all elements for obvious reasons ...
-            for (var idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
-                var strippedFieldID = this._stripNamespace(fieldID);
-
-                if (name === strippedFieldID) {
-                    this.options.items[idx].value = value;
-                    break;
-                }
-            }
+        __updateValue: function(mode, name, item) {
+            var value = item.value;
             if (this.rendered) {
                 var fldType = this._typeMap[name];
                 var searchName = this._addNamespace(name);
                 var thisField = $(this.element).find('[name="' + searchName + '"]');
 
+                if (item.hidden) {
+                    if (item.DOM) {
+                        $(item.DOM).hide();
+                        if (item.SEPARATOR) {
+                            // Hide the HR.
+                            $(item.SEPARATOR).hide();
+                        }
+                    }
+                    return;
+                } else {
+                    $(item.DOM).show();
+                    if (item.SEPARATOR) {
+                        // Show the HR.
+                        $(item.SEPARATOR).show();
+                    }
+                }
+
                 if (fldType === 'date' ||
                     fldType === 'exactdate' ||
                     fldType === 'datetime') {
-                    $(thisField).trigger('datebox', { method: 'set', value : value });
-                    $(thisField).trigger('datebox', { method: 'doset' });
-                    
-                    var timeElem = $(this.element).find('[name="' + searchName + '_time"]');
-                    if (timeElem.length > 0) {
-                        $(timeElem).trigger('datebox', { method: 'set', value: value });
-                        $(timeElem).trigger('datebox', { method: 'doset' });
-                    }
+                    __refreshDate(mode, item);
                 } else if (fldType === 'tzSelector' ||
                            fldType === 'pickList') {
                     $(thisField).find('option:selected').each(function() {
@@ -377,10 +381,57 @@
                     } else {
                         $(thisField).removeAttr('checked');
                     }
+                } else if (fldType === 'htmlframe') {
+                    __refreshIFrame(item);
+                } else if (fldType === 'buttonGroup') {
+                    __refreshButtonGroup(item);
+                } else if (fldType === 'pickList') {
+                    __refreshSelectMenu(item);
+                } else if (fldType === 'text') {
+                    __refreshTextBox(mode, item);
+                } else if (fldType === 'horizontalScroll') {
+                    __refreshHorizontalScroll(item);
                 } else {
                     thisField.val(value);
                 }
             }
+        },
+        
+        refreshValues: function(mode, valuesMap) {
+            this._computeHidden(valuesMap);
+            
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                var strippedFieldID = this._stripNamespace(fieldID);
+
+                if (!this.options.items[idx].readOnly) {
+                    var fldType = this._typeMap[strippedFieldID];
+                    if (fldType !== 'buttonGroup') {
+                        this.options.items[idx].value = valuesMap[strippedFieldID];
+                    } else {
+                        this.options.items[idx].buttons = valuesMap[strippedFieldID];
+                    }
+                }
+                
+                this.__updateValue(mode, strippedFieldID, this.options.items[idx]);
+            }
+        },
+        
+        setValue: function(name, value) {
+            // Set the value fields in the form items regardless of whether or not the
+            // form has already been rendered. The reason is that we want to be certain
+            // that if we toggle the form we get the right values. Toggling the form re-renders
+            // all elements for obvious reasons ...
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var fieldID = this.options.items[idx].name;
+                var strippedFieldID = this._stripNamespace(fieldID);
+
+                if (name === strippedFieldID) {
+                    this.options.items[idx].value = value;
+                    break;
+                }
+            }
+            this.__updateValue(name, this.options.items[idx]);
         },
         
         getValue: function(name) {
