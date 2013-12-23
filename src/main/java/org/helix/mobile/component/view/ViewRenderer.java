@@ -50,6 +50,10 @@ public class ViewRenderer extends CoreRenderer {
         if (title != null) {
             writer.writeAttribute("data-title", title, null);
         }
+        
+        if (view.isAsync()) {
+            writer.writeAttribute("data-async", "true", null);
+        }
     }
 
     @Override

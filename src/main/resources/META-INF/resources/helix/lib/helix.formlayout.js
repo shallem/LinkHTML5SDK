@@ -659,6 +659,36 @@ function __layoutFrames(page, formLayout) {
     });
 }
 
+function __refreshIFrameValues($frame, formElem) {
+    // Load the iframe document content
+    var contentWindow = $frame[0].contentWindow;
+    var doc = contentWindow.document;
+    doc.open();
+    if (!formElem.noHTML) {
+        doc.write('<html>');
+    }
+    if (!formElem.noHead) {
+        doc.write('<head>');
+        doc.write('<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1"/>');
+        doc.write('</head>');
+    }
+    if (!formElem.noBody) {
+        doc.write('<body style="height: 100%;">');
+    }
+    if (formElem.isScroller) {
+        $(doc.body).css('overflow-y', 'scroll');
+    }
+    doc.write(formElem.value);
+    if (!formElem.noHTML) {
+        doc.write('</html>');
+    }
+    if (!formElem.noBody) {
+        doc.write('</body>');
+    }
+    doc.close();
+    $frame.show();
+}
+
 function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout) {
     if (!mode) {
         var frameID = Helix.Utils.getUniqueID();
@@ -677,37 +707,65 @@ function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMi
         }
         
         var $frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
-        
-        // Load the iframe document content
-        var contentWindow = $frame[0].contentWindow;
-        var doc = contentWindow.document;
-        //$doc = $(doc);
-
-        doc.open();
-        if (!formElem.noHTML) {
-            doc.write('<html>');
-        }
-        if (!formElem.noHead) {
-            doc.write('<head>');
-            doc.write('<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1"/>');
-            doc.write('</head>');
-        }
-        if (!formElem.noBody) {
-            doc.write('<body style="height: 100%;">');
-        }
-        if (formElem.isScroller) {
-            $(doc.body).css('overflow-y', 'scroll');
-        }
-        doc.write(formElem.value);
-        if (!formElem.noHTML) {
-            doc.write('</html>');
-        }
-        if (!formElem.noBody) {
-            doc.write('</body>');
-        }
-        doc.close();
-        $frame.show();
+        __refreshIFrameValues($frame, formElem);
     }
+}
+
+function __refreshButtonGroupValues($buttonBar, formElem) {
+    var formButton;
+    var formButtonIdx;
+    for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
+        formButton = formElem.buttons[formButtonIdx];
+        if (!formButton.iconPos && formButton.iconPos !== 'none') {
+            formButton.iconPos = 'bottom';
+        }
+        if (!formButton.computedStyleClass && formButton.iconPos !== 'none') {
+            formButton.computedStyleClass = 'iconbutton';
+        }
+        if (!formButton.theme) {
+            formButton.theme = 'b';
+        }
+        if (!formButton.iconClass) {
+            formButton.iconClass = '';
+        }
+        var $buttonBarLink = $('<a />').attr({
+            'data-role' : 'button',
+            'data-iconpos' : formButton.iconPos,
+            'data-icon' : formButton.iconClass,
+            'data-iconshadow' : false,
+            'data-theme' : formButton.theme,
+            'class' : formButton.computedStyleClass
+        });
+        if (formButton.mini) {
+            $buttonBarLink.attr('data-mini', 'true');
+        }
+        if (formButton.fieldTitle) {
+            $buttonBarLink.append(formButton.fieldTitle);
+        } 
+        if (formButton.href) {
+            $buttonBarLink.attr('href', formButton.href);
+        } else {
+            $buttonBarLink.attr('href', 'javascript:void(0);');
+        }
+        if (formButton.onclick) {
+            $buttonBarLink.on('tap', formButton.onclick);
+        }
+        $buttonBarLink.appendTo($buttonBar);
+        $buttonBarLink.button();
+    }
+}
+
+function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    var $buttonBar = $('<div />').attr({
+        'data-role' : 'controlgroup',
+        'data-type' : 'horizontal',
+        'class' : 'buttonBarMaster buttonbar'
+    }).appendTo($fieldContainer);
+    if (formElem.name) {
+        $buttonBar.attr('id', formElem.name);
+    }
+    __refreshButtonGroupValues($buttonBar, formElem);
+    $buttonBar.controlgroup({ type: "horizontal" });
 }
 
 function __preprocessFormElement(formLayout, formElem) {
@@ -892,57 +950,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     } else if (formElem.type === 'button') {
         __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'buttonGroup') {
-        var formButton;
-        var formButtonIdx;
-
-        var $buttonBar = $('<div />').attr({
-            'data-role' : 'controlgroup',
-            'data-type' : 'horizontal',
-            'class' : 'buttonBarMaster buttonbar'
-        }).appendTo($fieldContainer);
-        if (formElem.name) {
-            $buttonBar.attr('id', formElem.name);
-        }
-        for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
-            formButton = formElem.buttons[formButtonIdx];
-            if (!formButton.iconPos && formButton.iconPos !== 'none') {
-                formButton.iconPos = 'bottom';
-            }
-            if (!formButton.computedStyleClass && formButton.iconPos !== 'none') {
-                formButton.computedStyleClass = 'iconbutton';
-            }
-            if (!formButton.theme) {
-                formButton.theme = 'b';
-            }
-            if (!formButton.iconClass) {
-                formButton.iconClass = '';
-            }
-            var $buttonBarLink = $('<a />').attr({
-                'data-role' : 'button',
-                'data-iconpos' : formButton.iconPos,
-                'data-icon' : formButton.iconClass,
-                'data-iconshadow' : false,
-                'data-theme' : formButton.theme,
-                'class' : formButton.computedStyleClass
-            });
-            if (formButton.mini) {
-                $buttonBarLink.attr('data-mini', 'true');
-            }
-            if (formButton.fieldTitle) {
-                $buttonBarLink.append(formButton.fieldTitle);
-            } 
-            if (formButton.href) {
-                $buttonBarLink.attr('href', formButton.href);
-            } else {
-                $buttonBarLink.attr('href', 'javascript:void(0);');
-            }
-            if (formButton.onclick) {
-                $buttonBarLink.on('tap', formButton.onclick);
-            }
-            $buttonBarLink.appendTo($buttonBar);
-            $buttonBarLink.button();
-        }
-        $buttonBar.controlgroup({ type: "horizontal" });
+        __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     } else if (formElem.type === 'date' ||
                formElem.type === 'exactdate' ||
                formElem.type === 'datetime') {
@@ -1112,10 +1120,13 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
            });
        }
     } else if (formElem.type == 'horizontalScroll') {
-        $('<div />').attr({
+        var hscroll = $('<div />').attr({
             'class' : 'hx-horizontal-scroller-nozoom',
             'id' : formElem.id
-        }).append(formElem.contents).appendTo($fieldContainer);
+        }).appendTo($fieldContainer);
+        if (formElem.value) {
+            hscroll.append(formElem.value);
+        }
     } else {
         separateElements = false;
     }
@@ -1223,10 +1234,6 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
             }
         }
     }    
-    
-    // Re-layout the page because we have substantially changed the DOM. Also form
-    // elements may have layout directives.
-    Helix.Layout.layoutPage();
 }
 
 Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page, useMiniLayout) {

@@ -32,5 +32,12 @@
             <defaultValue>true</defaultValue>
             <description>Indicate if this view is a fixed size, full page view (value of true), or if it should have a vertical scroll.</description>
         </attribute>
+        <attribute>
+            <name>async</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>When set to true, the user must explicitly call Helix.Layout.refresh to finalize the page layout.</description>
+        </attribute>
     </attributes>
 </component>

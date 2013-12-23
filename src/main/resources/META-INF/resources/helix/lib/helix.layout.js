@@ -107,7 +107,8 @@ Helix.Layout = {
          * rest of the screen.
          */
         if (childrenToRecurse.length == 0) {
-            $(children[children.length - 1]).height(maxHeight - remainingHeight);
+            var $fullHeightChild = $(children[children.length - 1]);
+            $fullHeightChild.height(maxHeight - remainingHeight);
         } else {
             childrenToRecurse.each(function() {
                 Helix.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
@@ -172,6 +173,30 @@ Helix.Layout = {
                 contentHeight = contentHeight - $(this).outerHeight(true);
             }
         });        
+    },
+    
+    renderer: function(page, fn) {
+        var renderers = $(page).data('hxrender');
+        if (!renderers) {
+            renderers = [];
+            $(page).data('hxrender', renderers);
+        } 
+        renderers.push(fn);
+    },
+    
+    refresh: function(page, noTrigger) {
+        if (!page) {
+            page = $.mobile.activePage;
+        }
+        
+        var renderers = $(page).data('hxrender');
+        if (renderers) {
+            for (var i = 0; i < renderers.length; ++i) {
+                renderers[i].call(this);
+            }
+        }
+        
+        Helix.Layout.layoutPage($(page), noTrigger);
     }
 };
 
@@ -283,11 +308,14 @@ Helix.Layout.layoutPage = function(page, noTrigger) {
  * effect. However, the heights of the different elements are not quite right. 
  * So we do it again on show.
  */
-$(document).on('pagebeforeshow', function(ev) {
+$(document).on('pagebeforeshow', function(ev, data) {
     /**
-     * Layout the page based on the Mobile Helix styles.
+     * Layout the page based on the Mobile Helix styles unless this is an async page, in which case
+     * we wait for the app to explicitly trigger the final render actions on the page.
      */
-    Helix.Layout.layoutPage(ev.target, true);
+    if (!$.mobile.activePage.is('[data-async="true"]')) {
+        Helix.Layout.refresh(ev.target, true);
+    }
     
     /**
      * Fix .ui-header-fixed, per
@@ -299,9 +327,12 @@ $(document).on('pagebeforeshow', function(ev) {
 
 $(document).on('pageshow', function(ev) {
     /**
-     * Recompute the component heights.
+     * Trigger the layout done event unless this is an async page, in which case
+     * we wait for the app to explicitly trigger the final render actions on the page.
      */
-    Helix.Layout.layoutPage(ev.target);
+    if (!$.mobile.activePage.is('[data-async="true"]')) {
+        $(this).trigger("hxLayoutDone");
+    }
 });
 
 $(document).on('keyboardHide', function(ev) {

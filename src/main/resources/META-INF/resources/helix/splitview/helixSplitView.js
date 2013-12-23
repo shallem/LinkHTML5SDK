@@ -188,9 +188,6 @@
             if (this.options.onRefresh) {
                 this.options.onRefresh((this.__current) ? "full" : "split");
             }
-            
-            /* Reset the full screen layout of the page. */
-            Helix.Layout.layoutPage();
         },
         
         toggle: function() {
@@ -203,6 +200,8 @@
                 this.__current = "left";
             }
             this.refresh();
+            
+            Helix.Layout.refresh();
         },
         
         isSplitView: function() {
