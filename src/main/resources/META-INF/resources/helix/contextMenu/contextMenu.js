@@ -50,6 +50,7 @@
             } else {
                 this.tapEvent = 'click';
             }
+            this.optionsList = null;
             this.page = this.element.closest( ".ui-page" );
             this.id = Helix.Utils.getUniqueID();
             this.refresh();
@@ -95,7 +96,7 @@
                 'data-theme' : 'a',
                 'data-history': 'false'
             }).appendTo(this.element);
-            var optionsList = $('<ul />').attr({
+            this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
                 'data-theme' : 'b'
@@ -119,13 +120,16 @@
                     if (nxtItem.enabled === false) {
                         nxtLI.addClass('ui-disabled');
                     }
+                    if (nxtItem.group) {
+                        nxtLI.attr('data-group', nxtItem.group);
+                    }
                     nxtLI.append(nxtLink);
                 }
-                optionsList.append(nxtLI);
+                this.optionsList.append(nxtLI);
             }
 
             var _self = this;
-            optionsList.on(_self.tapEvent, 'a', function(evt) {
+            this.optionsList.on(_self.tapEvent, 'a', function(evt) {
                 evt.stopImmediatePropagation();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -146,7 +150,7 @@
 
             if (Helix.hasTouch) {
                 // Prevent touch events from propagating.
-                optionsList.on('tap', function(ev) {
+                this.optionsList.on('tap', function(ev) {
                     ev.preventDefault();
                     ev.stopPropagation();
                     ev.stopImmediatePropagation();
@@ -154,7 +158,7 @@
                 });
             }
 
-            optionsList.listview();
+            this.optionsList.listview();
             _self._menuContainer.popup({
                 dismissible: !Helix.hasTouch, // We will explicitly close the popup when this is a touch device.
                 afterclose: function() {
@@ -171,6 +175,16 @@
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
             }
             this._thisArg = obj.thisArg;
+        },
+        
+        hideGroup: function(grp) {
+            $(this.optionsList).find('[data-group="' + grp + '"]').hide();
+            this.optionsList.listview("refresh");
+        },
+        
+        showGroup: function(grp) {
+            $(this.optionsList).find('[data-group="' + grp + '"]').show();
+            this.optionsList.listview("refresh");
         },
 
         _stopAndClose: function(ev) {

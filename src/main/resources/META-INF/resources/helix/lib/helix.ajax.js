@@ -293,7 +293,6 @@ Helix.Ajax = {
                 return;
             }
             setTimeout(function() {
-                alert("TRYING AGAIN.");
                 Helix.Ajax.ajaxBeanLoad(loadCommandOptions,itemKey,nRetries+1);
             }, 1000);
             return;

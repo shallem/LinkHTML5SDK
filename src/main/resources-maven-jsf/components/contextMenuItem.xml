@@ -30,5 +30,11 @@
             <type>java.lang.Object</type>
             <description>Disable this menu item if set to false.</description>
         </attribute>
+        <attribute>
+            <name>group</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Named group for menu items to make it easy to show/hide items in context.</description>
+        </attribute>
     </attributes>
 </component>

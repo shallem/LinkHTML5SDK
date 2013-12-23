@@ -37,6 +37,9 @@ public class ContextMenuItemRenderer extends CoreRenderer {
         writer.write("'display' : '" + item.getValue() + "'");
         writer.write(",'action' : " + item.getOntap());
         writer.write(",'enabled' : " + item.getEnabled());
+        if (item.getGroup() != null) {
+            writer.write(",'group' : '" + item.getGroup() + "'");
+        }
         writer.write("}");
     }
     

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
-import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.el.ValueExpression;
@@ -217,6 +216,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("function " + cmd.getName() + "_load(schemaObj, options, itemKey){ ");
         writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
         writer.write("if (options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
+        writer.write("if (options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
         writer.write("loadCommandOptions.onerror = options.onerror;");
         writer.write("loadCommandOptions.schema = schemaObj;");
         writer.write("loadCommandOptions.requestOptions.params = options.params;");

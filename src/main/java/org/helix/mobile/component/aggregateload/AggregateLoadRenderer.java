@@ -84,6 +84,9 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         writer.write(" 'commands' : options.commands");
         writer.write("};\n");
         
+        // Overrides.
+        writer.write("if (options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
+        
         // Setup the widget.
         writer.write("Helix.Ajax.ajaxAggregateLoad(loadCommandOptions);");
 
