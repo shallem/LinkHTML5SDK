@@ -34,9 +34,15 @@
             items: [],
             
             /**
-             * True if we are laying out a form for editing. False if not.
+             * Supported modes. Can be 'view', 'edit', or 'all'.
              */
-            mode: false,
+            modes: 'view',
+            
+            /**
+             * Current mode. Can be 'view' or 'edit'. Cannot be a mode not specified
+             * in the modes option.
+             */
+            currentMode: 'view',
             
             /**
              * True if a horizontal separator should be placed in between field.
@@ -111,7 +117,7 @@
             return fldName;
         },
     
-        _computeOneHidden: function(formElem, valuesMap) {
+        __computeOneHidden: function(formElem, valuesMap) {
             var fldName = this._stripNamespace(formElem.name);
             if (valuesMap && fldName in valuesMap) {
                 formElem.value = valuesMap[fldName];
@@ -131,22 +137,30 @@
                         formElem.hidden = true;
                     }
                 }
+            } else {
+                formElem.hidden = false;
             }
         },
     
         _computeHidden : function(valuesMap) {
             var idx = 0;
+            var i = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var formElem = this.options.items[idx];
                 
                 // Process sub items.
                 if (formElem.type in this._groupedTypes) {
-                    for (var i = 0; i < formElem.controls.length; ++i) {
+                    for (i = 0; i < formElem.controls.length; ++i) {
                         var subItem = formElem.controls[i];
-                        this._computeOneHidden(subItem, valuesMap);
+                        this.__computeOneHidden(subItem, valuesMap);
                     }
-                } 
-                this._computeOneHidden(formElem, valuesMap);
+                } else if (formElem.type === 'subPanel') { 
+                    for (i = 0; idx < formElem.items.length; ++idx) {
+                        var subpItem = formElem.items.items[idx];
+                        this.__computeOneHidden(subpItem, valuesMap);
+                    }
+                }
+                this.__computeOneHidden(formElem, valuesMap);
             }
         },
     
@@ -172,50 +186,51 @@
         refresh: function(valuesMap) { 
             this._computeHidden(valuesMap);
             
-            if (!valuesMap && this.options.mode) {
-                this.clear();
-                if (this.rendered) {
-                    return;
-                }
+            if (!valuesMap) {
+                this.__clearValues(this.options.items);
+            } else {
+                this.__copyValues(this.options.items, valuesMap);
             }
-            this.currentValues = valuesMap;
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
             this.rendered = true;
         },
         
         toggle: function(valuesMap) {
-            if (this.options.mode) {
-                this.options.mode = false;
+            if (this.options.currentMode === 'edit') {
+                this.setView();
             } else {
-                this.options.mode = true;
+                this.setEdit();
             }
-            this._computeHidden(valuesMap);
-            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
-            this.rendered = true;
+            
+            if (this.rendered) {
+                this.refreshValues(valuesMap);
+            } else {
+                this.refresh(valuesMap);
+            }
         },
         
-        setView: function (valuesMap) {
-            this.options.mode = false;
-            this._computeHidden(valuesMap);
-            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
+        setView: function () {
+            if (this.options.modes !== 'all' &&
+                this.options.modes !== 'view') {
+                alert("Attempting to set a form to view mode when view mode is not supported.");
+            }
+            this.options.currentMode = 'view';
         },
         
-        setEdit : function(valuesMap) {
-            this.options.mode = true;
-            this._computeHidden(valuesMap);
-            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);            
+        setEdit : function() {
+            if (this.options.modes !== 'all' &&
+                this.options.modes !== 'edit') {
+                alert("Attempting to set a form to edit mode when view mode is not supported.");
+            }
+            this.options.currentMode = 'edit';
         },
         
         isEdit : function() {
-            return this.options.mode;
+            return (this.options.currentMode === 'edit');
         },
         
         isView: function() {
             return !(this.isEdit());
-        },
-        
-        setSubPanels : function(subPanels) {
-            this.options.subPanels = subPanels;
         },
         
         _serializeTypes : {
@@ -300,50 +315,44 @@
         },
         
         clear: function() {
-            var idx = 0;
-            for (idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
-                var fieldType = this.options.items[idx].type;
-                
-                if (this.options.items[idx].readOnly) {
-                    continue;
-                }
-                
-                /* Clear out all values so that all fields are reset to their defaults. */
-                this.options.items[idx].value = null;
-
-                if (!(fieldType in this._serializeTypes) ||
-                    fieldType === "horizontalScroll") {
-                    /* All other types have nothing to clear.. */
-                    continue;
-                }
-                $(this.element).find('[name="' + fieldID + '"]').each(function() {
-                    if (fieldType === "htmlarea") {
-                        var $editor = $(this).data('cleditor');
-                        $editor.clear();
-                    } else if (fieldType === "pickList") {
-                        $(this).find('option:selected').each(function() {
-                            this.selected = false;
-                            $(this).removeAttr('selected');
-                        });
-                        $(this).selectmenu('refresh');
-                    } else if (fieldType === "checkbox") {
-                        $(this).removeAttr('checked');
-                    } else if (fieldType === "horizontalScroll") {
-                        $(this).empty();
-                    } else {
-                        $(this).val('');
-                    }
-                });
-            }
+            this.__clearValues(this.options.items);
+            this.refreshValues({});
         },
         
-        __updateValue: function(mode, name, item) {
+        __updateValue: function(name, item, valuesMap) {
             var value = item.value;
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             if (this.rendered) {
-                var fldType = this._typeMap[name];
+                var fldType = item.type;
                 var searchName = this._addNamespace(name);
                 var thisField = $(this.element).find('[name="' + searchName + '"]');
+
+                if (mode) {
+                    // This element does not exist in edit mode.
+                    if (!item.editDOM) {
+                        if (item.DOM) {
+                            item.DOM.hide();
+                        }
+                        return;
+                    }
+                    item.DOM = item.editDOM;
+                    if (item.viewDOM) {
+                        item.viewDOM.hide();
+                    }
+                } else {
+                    // This element does not exist in view mode.
+                    if (!item.viewDOM) {
+                        if (item.DOM) {
+                            item.DOM.hide();
+                        }
+                        return;
+                    }
+                    
+                    item.DOM = item.viewDOM;
+                    if (item.editDOM) {
+                        item.editDom.hide();
+                    }
+                }
 
                 if (item.hidden) {
                     if (item.DOM) {
@@ -361,6 +370,11 @@
                         $(item.SEPARATOR).show();
                     }
                 }
+                
+                if (item.readOnly) {
+                    // No further updating required.
+                    return;
+                }
 
                 if (fldType === 'date' ||
                     fldType === 'exactdate' ||
@@ -368,18 +382,32 @@
                     __refreshDate(mode, item);
                 } else if (fldType === 'tzSelector' ||
                            fldType === 'pickList') {
-                    $(thisField).find('option:selected').each(function() {
-                        $(this).prop({ selected : false });
-                    });
-                    $(thisField).find('option[value="' + value + '"]').each(function() {
-                        $(this).prop({ selected : true });
-                    });
-                    $(thisField).selectmenu('refresh');
-                } else if (fldType === 'checkbox') {
-                    if (value) {
-                        $(thisField).attr('checked', 'true');
+                    if (mode) {
+                        $(thisField).find('option:selected').each(function() {
+                            $(this).prop({ selected : false });
+                        });
+                        $(thisField).find('option[value="' + value + '"]').each(function() {
+                            $(this).prop({ selected : true });
+                        });
+                        $(thisField).selectmenu('refresh');                        
                     } else {
-                        $(thisField).removeAttr('checked');
+                        if (value === undefined) {
+                            value = "";
+                        }
+                        $(thisField).html(value);
+                    }
+                } else if (fldType === 'checkbox') {
+                    if (mode) {
+                        if (value) {
+                            $(thisField).attr('checked', 'true');
+                        } else {
+                            $(thisField).removeAttr('checked');
+                        }                        
+                    } else {
+                        if (value === undefined) {
+                            value = "";
+                        }
+                        $(thisField).html("&nbsp;" + value);
                     }
                 } else if (fldType === 'htmlframe') {
                     __refreshIFrame(item);
@@ -391,29 +419,81 @@
                     __refreshTextBox(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
+                } else if (fldType === 'subPanel') { 
+                    for (var idx = 0; idx < item.items.length; ++idx) {
+                        var subpItem = item.items[idx];
+                        this.__refreshOneValue(mode, subpItem, valuesMap);
+                    }
+                } else if (fldType === 'htmlarea') {
+                    __refreshHTMLArea(item);
                 } else {
-                    thisField.val(value);
+                    
+                    if (value === undefined) {
+                        value = "";
+                    }
+                    if (mode) {
+                        thisField.val(value);
+                    } else {
+                        thisField.html(value);
+                    }
                 }
             }
         },
         
-        refreshValues: function(mode, valuesMap) {
-            this._computeHidden(valuesMap);
-            
-            for (var idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
-                var strippedFieldID = this._stripNamespace(fieldID);
-
-                if (!this.options.items[idx].readOnly) {
-                    var fldType = this._typeMap[strippedFieldID];
-                    if (fldType !== 'buttonGroup') {
-                        this.options.items[idx].value = valuesMap[strippedFieldID];
-                    } else {
-                        this.options.items[idx].buttons = valuesMap[strippedFieldID];
-                    }
+        __copyOneValue : function(item, valuesMap) {
+            var fieldID = item.name;
+            var strippedFieldID = this._stripNamespace(fieldID);
+            if (!item.readOnly && (valuesMap[strippedFieldID] !== undefined)) {
+                var fldType = item.type;
+                if (fldType !== 'buttonGroup') {
+                    item.value = valuesMap[strippedFieldID];
+                } else {
+                    item.buttons = valuesMap[strippedFieldID];
                 }
-                
-                this.__updateValue(mode, strippedFieldID, this.options.items[idx]);
+            }
+        },
+        
+        __refreshOneValue: function(item, valuesMap) {
+            this.__computeOneHidden(item, valuesMap);
+            this.__copyOneValue(item, valuesMap);
+            this.__updateValue(this._stripNamespace(item.name), item, valuesMap);
+        },
+        
+        refreshValues: function(valuesMap) {
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                this.__refreshOneValue(nxtItem, valuesMap);
+            }
+        },
+        
+        __copyValues: function(items, valuesMap) {
+            for (var idx = 0; idx < items.length; ++idx) {
+                var nxtItem = items[idx];
+                this.__copyOneValue(nxtItem, valuesMap);
+                if (nxtItem.type === 'subPanel') {
+                    this.__copyValues(nxtItem.items, valuesMap);
+                }
+            }
+        },
+        
+        __clearOneValue : function(item) {
+            if (!item.readOnly) {
+                var fldType = item.type;
+                if (fldType !== 'buttonGroup') {
+                    item.value = null;
+                } else {
+                    item.buttons = null;
+                }
+            }
+        },
+        
+        __clearValues: function(items) {
+            for (var idx = 0; idx < items.length; ++idx) {
+                var nxtItem = items[idx];
+                this.__clearOneValue(nxtItem);
+                if (nxtItem.type === 'subPanel') {
+                    this.__clearValues(nxtItem.items);
+                }
             }
         },
         
@@ -435,9 +515,9 @@
         },
         
         getValue: function(name) {
-            var fldType = this._typeMap[name];
             var searchName = this._addNamespace(name);
             var thisField = $(this.element).find('[name="' + searchName + '"]');
+            var fldType = $(thisField).attr('data-formType');
             
             if (fldType === 'date' ||
                 fldType === 'exactdate' ||

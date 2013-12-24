@@ -35,7 +35,6 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.isEditOnly() && ffield.isViewOnly()) {
             throw new FacesException("Cannot specify that a form field is both viewOnly and editOnly.");
         }
-        
         writer.write("{");
         writer.write("'id' : '" + ffield.getName() + "',");
         writer.write("'name' : '" + ffield.getName() + "',");
@@ -51,6 +50,9 @@ public class FormFieldRenderer extends CoreRenderer {
             writer.write("'width' : " + ffield.getWidthMap() + ",");
         } else if (ffield.getWidth() != null) {
             writer.write("'width' : '" + ffield.getWidth() + "',");
+        }
+        if (ffield.getHeight() != null) {
+            writer.write("'height' : '" + ffield.getHeight() + "',");
         }
         if (ffield.getStyleMap() != null) {
             writer.write("'style' : " + ffield.getStyleMap() + ",");
@@ -86,6 +88,21 @@ public class FormFieldRenderer extends CoreRenderer {
         }
         if (ffield.getOptions() != null) {
             writer.write(", 'options' : " + ffield.getOptions());
+        }
+        if (ffield.isIsScroller()) {
+            writer.write(", 'isScroller' : " + Boolean.toString(ffield.isIsScroller()));
+        }
+        if (ffield.isNoHTML()) {
+            writer.write(", 'noHTML' : " + Boolean.toString(ffield.isNoHTML()));
+        }
+        if (ffield.isNoBody()) {
+            writer.write(", 'noBody' : " + Boolean.toString(ffield.isNoBody()));
+        }
+        if (ffield.isNoHead()) {
+            writer.write(", 'noHead' : " + Boolean.toString(ffield.isNoHead()));
+        }
+        if (ffield.isNoCollapse()) {
+            writer.write(", 'noCollapse' : " + Boolean.toString(ffield.isNoCollapse()));
         }
         
         if (ffield.getTitle() != null) {
@@ -130,8 +147,7 @@ public class FormFieldRenderer extends CoreRenderer {
                 }
             }
             writer.write("]");
-        }
-        if (ffield.getType().equals("controlset")) {
+        } else if (ffield.getType().equals("controlset")) {
             writer.write(",'controls' : [");
             boolean firstButton = true;
             for (UIComponent c : ffield.getChildren()) {
@@ -145,9 +161,7 @@ public class FormFieldRenderer extends CoreRenderer {
                 }
             }
             writer.write("]");
-        }
-        
-        if (ffield.getType().equals("pickList")) {
+        } else if (ffield.getType().equals("pickList")) {
             writer.write(",'options' : [");
             boolean firstOption = true;
             for (UIComponent c : ffield.getChildren()) {
@@ -161,20 +175,25 @@ public class FormFieldRenderer extends CoreRenderer {
                 }
             }
             writer.write("]");
-        }
-        if (ffield.getType().equals("checkbox")) {
+        } else if (ffield.getType().equals("checkbox")) {
             if (ffield.getTrueText() != null) {
                 writer.write(",'truetext': '" + ffield.getTrueText() + "'");
             }
             if (ffield.getFalseText() != null) {
                 writer.write(",'falsetext': '" + ffield.getFalseText() + "'");
             }
-        }
-        if (ffield.getType().equals("text")) {
+        } else if (ffield.getType().equals("text")) {
             if (ffield.getDataType() != null) {
                 writer.write(",'dataType': '" + ffield.getDataType() + "'");
             }
+        } else if (ffield.getType().equals("subPanel")) {
+            writer.write(", 'items': [");
+            for (UIComponent c : ffield.getChildren()) {
+                c.encodeAll(context);
+            }
+            writer.write("]");
         }
+        
         if (ffield.getValidator() != null) {
             writer.write(",'validator': '" + ffield.getValidator() + "'");
         } else if (ffield.getValidatorFn() != null) {

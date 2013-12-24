@@ -1035,11 +1035,11 @@ function initHelixDB() {
             var keyField = this.getKeyField(elemSchema);
             var uidToEID = {};
             
-            var doAdds = function() {
+            var doAdds = function(idMap) {
                 if (deltaObj.adds.length > 0) {
                     var toAdd = deltaObj.adds.pop();
                     var toAddKey = toAdd[keyField];
-                    var objId = uidToEID[toAddKey];
+                    var objId = idMap[toAddKey];
                     if (objId) {
                         Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
                             parentCollection.add(pObj);

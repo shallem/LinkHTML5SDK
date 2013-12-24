@@ -553,6 +553,11 @@
         editor.$area.val("");
         updateFrame(editor);
     }
+    
+    function update(editor, val) {
+        editor.$area.val(val);
+        updateFrame(editor);
+    }
 
     // disable - enables or disables the editor
     function disable(editor, disabled) {
@@ -1005,6 +1010,11 @@
 
     // updateFrame - updates the iframe with the textarea contents
     function updateFrame(editor, checkForChange) {
+        if (!editor.doc) {
+            // Have not rendered the iframe yet ...
+            return;
+        }
+
 
         var code = editor.$area.val(),
         options = editor.options,

@@ -135,7 +135,6 @@ function __refreshDate(mode, formElem) {
                 formElem.value = new Date(Number(formElem.value));
             }
 
-
             var dateMarkup;
             if (formElem.type === "date") {
                 if (formElem.value) {
@@ -407,13 +406,13 @@ function __refreshSelectMenu(formElem) {
 }
 
 function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer) {
+    if (!formElem.name) {
+        /* No field name. We cannot edit this field. */
+        alert("Invalid select menu in form layout. No field name specified.");
+        return;
+    }
     if (mode) {
         /* Edit */
-        if (!formElem.name) {
-            /* No field name. We cannot edit this field. */
-            console.log("Invalid select menu. No field name specified.");
-            return;
-        }
         if (!formElem.options) {
             return;
         }
@@ -422,7 +421,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer) {
             
         __refreshSelectMenu(formElem, $fieldContainer);
     } else {
-        $fieldContainer.append($('<p />').append(formElem.value ? formElem.value : ""));
+        $fieldContainer.append($('<p />').attr('id', formElem.name).append(formElem.value ? formElem.value : ""));
     }
 }
 
@@ -520,14 +519,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
 }
 
 function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    if (!formElem.name) {
+        /* No field name. We cannot edit this field. */
+        alert("Invalid checkbox in form layout. No field name specified.");
+        return;
+    }
+    
     if (mode) {
         /* Edit */
-        if (!formElem.name) {
-            /* No field name. We cannot edit this field. */
-            console.log("Invalid checkbox menu. No field name specified.");
-            return;
-        }
-        
         var inputMarkup = $('<input/>').attr({
             'name': formElem.name,
             'id' : formElem.name,
@@ -559,7 +558,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
                 fieldText = 'false';
             }
         }
-        $fieldContainer.append("&nbsp;" + fieldText);
+        $fieldContainer.append($('<span />').attr('id', formElem.name).append("&nbsp;" + fieldText));
     }
 }
 
@@ -721,7 +720,8 @@ function __layoutFrames(page, formLayout) {
 }
 
 function __refreshIFrame(formElem) {
-    var $frame = formElem.DOM.find(PrimeFaces.escapeClientId(formElem.name));
+    var frameID = (formElem.id ? formElem.id : formElem.name);
+    var $frame = formElem.DOM.find(PrimeFaces.escapeClientId(frameID));
     
     // Load the iframe document content
     var contentWindow = $frame[0].contentWindow;
@@ -752,13 +752,17 @@ function __refreshIFrame(formElem) {
     $frame.show();
 }
 
-function __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout) {
+function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     if (formElem.height === 'full') {
         $fieldContainer.addClass('pm-layout-full-height');
     }
     
     if (!mode) {
-        var frameID = (formElem.name ? formElem.name : Helix.Utils.getUniqueID());
+        var frameID = (formElem.id ? formElem.id : formElem.name);
+        if (!frameID) {
+            alert("Each IFrame form element must have either an id or a name. Cannot specify an IFrame form element without either.");
+            return;
+        }
         var iFrameMarkup = null;
         var iFrameStyle = ' style="border:0px;"';
         
@@ -786,8 +790,7 @@ function __refreshButtonGroup(formElem) {
     if (!formElem.buttons) {
         return;
     }
-    var $buttonBar = $(formElem.DOM).find(PrimeFaces.escapeClientId(formElem.name));
-    $buttonBar.empty();
+    var $buttonBar = $(formElem.DOM).find('.buttonBarMaster').empty();
     
     var formButton;
     var formButtonIdx;
@@ -806,7 +809,6 @@ function __refreshButtonGroup(formElem) {
             formButton.iconClass = '';
         }
         var $buttonBarLink = $('<a />').attr({
-            'data-role' : 'button',
             'data-iconpos' : formButton.iconPos,
             'data-icon' : formButton.iconClass,
             'data-iconshadow' : false,
@@ -830,19 +832,87 @@ function __refreshButtonGroup(formElem) {
         $buttonBarLink.appendTo($buttonBar);
         $buttonBarLink.button();
     }
+    $buttonBar.controlgroup({ type: "horizontal" });
+}
+
+function __refreshHTMLArea(formElem) {
+    var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
+    var $editor = $(elem).data('cleditor');
+    if (!elem.value) {
+        $editor.clear(); 
+    } else {
+        $editor.update(formElem.value);
+    }
+}
+
+function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
+    var isFullWidth = false;
+    if (formElem.width) {
+        if (formElem.width === "full") {
+            isFullWidth = true;
+        }            
+    }
+    if (mode) {
+        if (!formElem.name) {
+            /* No field name. We cannot edit this field. */
+            alert("Cannot layout an HTML area in edit mode without an element name.");
+            return;
+        }
+
+        var editorID = Helix.Utils.getUniqueID();
+        var editorInput = $('<textarea />').attr({
+            'name' : formElem.name,
+            'id' : editorID + "_input",
+            'tabIndex' : -1
+        }).val(formElem.value);
+        $fieldContainer.append($('<div />')
+            .append($('<label />').attr({
+                'for' : formElem.name
+                })
+                .append(formElem.fieldTitle)
+            )
+            .append(editorInput)
+        );
+        $(editorInput).cleditor({
+            'widget' : editorID + "_widget",
+            'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
+            'isFullWidth' : isFullWidth,
+            'height' : (formElem.height ? formElem.height : 350),
+            'page' : page,
+            'tabIndex' : formLayout.__tabIndex++
+        });
+    } else {
+        var width = "98%";
+        if (isFullWidth) {
+            width = "100%";
+        } else if (formElem.width) {
+            width = formElem.width;
+        }
+        var htmlDiv = $('<div />').append(formElem.value);
+        if (formElem.computedStyle) {
+            htmlDiv.attr('style', formElem.computedStyle);
+        }
+        if (formElem.computedStyleClass) {
+            htmlDiv.addClass(formElem.computedStyleClass); 
+        }
+        $fieldContainer.append(htmlDiv);
+        if (formElem.isScroller) {
+            $fieldContainer.helixScrollingDiv({ width: width });
+        } else {
+            $fieldContainer.css('overflow', 'none');
+            $fieldContainer.width(width);
+        }
+    }
 }
 
 function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var $buttonBar = $('<div />').attr({
-        'data-role' : 'controlgroup',
-        'data-type' : 'horizontal',
         'class' : 'buttonBarMaster buttonbar'
     }).appendTo($fieldContainer);
     if (formElem.name) {
         $buttonBar.attr('id', formElem.name);
     }
     __refreshButtonGroup(formElem);
-    $buttonBar.controlgroup({ type: "horizontal" });
 }
 
 function __refreshHorizontalScroll(formElem) {
@@ -853,6 +923,78 @@ function __refreshHorizontalScroll(formElem) {
     }).appendTo(formElem.DOM);
     if (formElem.value) {
         hscroll.append(formElem.value);
+    }
+}
+
+function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    __refreshHorizontalScroll(formElem);
+}
+
+function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
+    var subPanelObj = formElem;
+    
+    if (!subPanelObj.mode) {
+        subPanelObj.mode = formLayout.modes;
+    }
+    
+    if (subPanelObj.mode !== 'all') {
+        if (mode && subPanelObj.mode === 'view') {
+            // The caller is asking for an edit render. This subpanel only shows up in view mode.
+            return;
+        } else if (!mode && subPanelObj.mode === 'edit') {
+            // The caller is asking for a view render. This subpanel only shows up in edit mode.
+            return;
+        }
+    }
+    
+    if (!subPanelObj.mode || subPanelObj.mode === 'all') {
+        subPanelObj.modes = formLayout.modes;
+    }
+    subPanelObj.currentMode = formLayout.currentMode;
+    
+    ++Helix.Utils.nSubPanels;
+    var subPanelID = formElem.id;
+    if (!subPanelID) {
+        subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
+    }
+    var subPanelDiv = $('<div />').attr({
+        'id' : subPanelID
+    }).append($('<h3 />').append(formElem.fieldTitle))
+        .appendTo($fieldContainer);
+
+    // Layout the elements in the sub-panel add a separator between elements
+    // but not between items in each element.
+    Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+
+    // Make sure we have a dynamic page used to create new items in this 
+    // subpanel.
+    //var dialogId;
+    if (subPanelObj.dialog &&
+        (subPanelObj.dialog.activeMode == -1 ||
+            mode == subPanelObj.dialog.activeMode )) {
+        var dialogObj = Helix.Utils.createDialog(subPanelObj.dialog, subPanelObj.dialog.uniqueID, formElem.fieldTitle, page);
+
+        // Add a button to open the dialog.
+        $('<a />').attr({
+            'href' : 'javascript:void(0)',
+            'data-role' : 'button',
+            'data-inline' : 'true',
+            'data-theme' : 'b'
+        })
+        .append(subPanelObj.dialog.dialogTitle)
+        .appendTo(subPanelDiv)
+        .on('tap', function() {
+            $.mobile.changePage(PrimeFaces.escapeClientId(dialogObj.id), {});
+        })
+        .button();
+    }
+
+    // Create the collapsible content.
+    if (!subPanelObj.noCollapse) {
+        subPanelDiv.collapsible();
+        $(subPanelDiv).on('collapsibleexpand', function(event, ui) {
+            __layoutFrames(page, subPanelObj);
+        });
     }
 }
 
@@ -897,13 +1039,13 @@ function __preprocessFormElement(formLayout, formElem) {
         formElem.value = formElem.defaultValue;
     }
     
-    if (!formLayout.mode) {
+    if (formLayout.currentMode === 'view') {
         /* skip in view mode. */
         formElem.disabled = (formElem.mode === 'edit');
         return;
     } 
     
-    if (formLayout.mode) {
+    if (formLayout.currentMode === 'edit') {
         /* skip in edit mode. */
         formElem.disabled = (formElem.mode === 'view');
         return;
@@ -918,7 +1060,9 @@ Helix.Utils.noTitleLayouts = {
 };
 
 Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
-    var mode = formLayout.mode;
+    var supportedModes = formLayout.modes;
+    var currentMode = formLayout.currentMode;
+    
     var separateElements = formLayout.separateElements;
     
     __preprocessFormElement(formLayout, formElem);
@@ -931,120 +1075,83 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         return;
     } 
     
-    var $fieldContainer;
-    if (!mode) {
+    var $viewFieldContainer, $editFieldContainer;
+    var containerID = null;    
+    if (formElem.id) {
+        containerID = formElem.id + "_container";
+    } else if (formElem.name) {
+        containerID = formElem.name + "_container";
+    } else {
+        containerID = Helix.Utils.getUniqueID();
+    }
+    
+    if (supportedModes !== 'edit') {
         /* View mode. */
-        $fieldContainer = $('<div />')
+        formElem.viewDOM = $viewFieldContainer = $('<div />')
         .css("clear", "both")
         .css('-webkit-user-select', 'none')
         .appendTo(parentDiv);
         if (formLayout.computedFieldStyleClass) {
-            $fieldContainer.attr('class', formLayout.computedFieldStyleClass);
+            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass);
         }
         if (formElem.id) {
-            $fieldContainer.attr('id', formElem.id);
+            $viewFieldContainer.attr('id', containerID);
         }
         if (formLayout.computedFieldStyle) {
-            $fieldContainer.attr('style', formLayout.computedFieldStyle);
+            $viewFieldContainer.attr('style', formLayout.computedFieldStyle);
         }
         if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
             if (formElem.titleStyleClass) {
-                $fieldContainer.append($('<span />').attr({
+                $viewFieldContainer.append($('<span />').attr({
                     'class' : formElem.titleStyleClass
                 }).append(formElem.fieldTitle));
             } else if (formLayout.titleStyleClass) {
-                $fieldContainer.append($('<span />').attr({
+                $viewFieldContainer.append($('<span />').attr({
                     'class' : formLayout.titleStyleClass
                 }).append(formElem.fieldTitle));
             } else {
-                $fieldContainer.append(formElem.fieldTitle);
+                $viewFieldContainer.append(formElem.fieldTitle);
             }
         }
-    } else {
-        /* Edit mode. */
-        $fieldContainer = parentDiv;
-    }
-    formElem.DOM = $fieldContainer;
+    } 
     
+    if (supportedModes !== 'view') {
+        /* Edit mode. */
+        formElem.editDOM = $editFieldContainer = $('<div />').attr({
+            'id' : containerID
+        }).appendTo(parentDiv);
+    }
+    if (currentMode === 'view') {
+        formElem.DOM = $viewFieldContainer;
+    } else {
+        formElem.DOM = $editFieldContainer;
+    }
+    
+    var renderFn = null;
     if (formElem.type == "text") {
-        __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendTextBox;
     } else if (formElem.type == 'textarea') {
-        __appendTextArea(mode, formLayout, formElem, $fieldContainer);
+        renderFn = __appendTextArea;
     } else if (formElem.type == 'pickList') {
-        __appendSelectMenu(mode, formLayout, formElem, $fieldContainer);
+        renderFn = __appendSelectMenu;
     } else if (formElem.type == 'checkbox') {
-        __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendCheckBox;
     } else if (formElem.type === 'controlset') {
-        __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendControlSet;
     } else if (formElem.type === 'htmlarea') {
-        var isFullWidth = false;
-        if (formElem.width) {
-            if (formElem.width === "full") {
-                isFullWidth = true;
-            }            
-        }
-        if (mode) {
-            if (!formElem.name) {
-                /* No field name. We cannot edit this field. */
-                return;
-            }
-            
-            var editorID = Helix.Utils.getUniqueID();
-            var editorInput = $('<textarea />').attr({
-                'name' : formElem.name,
-                'id' : editorID + "_input",
-                'tabIndex' : -1
-            }).val(formElem.value);
-            $fieldContainer.append($('<div />')
-                .append($('<label />').attr({
-                    'for' : formElem.name
-                    })
-                    .append(formElem.fieldTitle)
-                )
-                .append(editorInput)
-            );
-            $(editorInput).cleditor({
-                'widget' : editorID + "_widget",
-                'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
-                'isFullWidth' : isFullWidth,
-                'height' : (formElem.height ? formElem.height : 350),
-                'page' : page,
-                'tabIndex' : formLayout.__tabIndex++
-            });
-        } else {
-            var width = "98%";
-            if (isFullWidth) {
-                width = "100%";
-            } else if (formElem.width) {
-                width = formElem.width;
-            }
-            var htmlDiv = $('<div />').append(formElem.value);
-            if (formElem.computedStyle) {
-                htmlDiv.attr('style', formElem.computedStyle);
-            }
-            if (formElem.computedStyleClass) {
-                htmlDiv.addClass(formElem.computedStyleClass); 
-            }
-            $fieldContainer.append(htmlDiv);
-            if (formElem.isScroller) {
-                $fieldContainer.helixScrollingDiv({ width: width });
-            } else {
-                $fieldContainer.css('overflow', 'none');
-                $fieldContainer.width(width);
-            }
-        }
+        renderFn = __appendHTMLArea;
     } else if (formElem.type === 'htmlframe') {
-        __appendIFrame(mode, formLayout, formElem, page, $fieldContainer, useMiniLayout);
+        renderFn = __appendIFrame;
     } else if (formElem.type === 'button') {
-        __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendButton;
     } else if (formElem.type === 'buttonGroup') {
-        __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendButtonGroup;
     } else if (formElem.type === 'date' ||
                formElem.type === 'exactdate' ||
                formElem.type === 'datetime') {
-        __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendDate;
     } else if (formElem.type === 'tzSelector') {
-        __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
+        renderFn = __appendTZSelector;
     } else if (formElem.type == 'dialog') {        
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.controls.length; ++elemIdx) {
@@ -1077,14 +1184,14 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         .appendTo(parentDiv);
         separateElements = false;
     } else if (formElem.type == 'hidden') {
-        if (mode) {
+        if ($editFieldContainer) {
             /* Edit. */
             if (!formElem.name) {
                 /* No field name. We cannot include this field in the form. */
                 return;
             }
             
-            $fieldContainer.append($('<input />').attr({
+            $editFieldContainer.append($('<input />').attr({
                     'name': formElem.name,
                     'id': formElem.name,
                     'type': 'hidden',
@@ -1092,82 +1199,78 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             }));
         }
     } else if (formElem.type == 'upload') {
-        /* For desktop use only! Create an HTML5 uploader. */
-        var styleClass = formElem.computedStyleClass;
-        if (!styleClass) {
-            styleClass = '';
-        }
-        
-        /* Append a span with a message indicating what the user should do. */
-        $('<span/>').attr({
-            'class' : styleClass
-        }).append(formElem.fieldTitle)
-            .appendTo($fieldContainer);   
-        
-        var uploadId = Helix.Utils.getUniqueID();
-        var uploadDiv= $('<div/>').attr({
-            'id' : uploadId,
-            'class' : "mh-uploads"
-        }).appendTo($fieldContainer);
+        if ($editFieldContainer) {
+            /* For desktop use only! Create an HTML5 uploader. */
+            var styleClass = formElem.computedStyleClass;
+            if (!styleClass) {
+                styleClass = '';
+            }
 
-        
-        $(page).on('pagecreate', function() {
-           var dropbox = $fieldContainer;
-           dropbox.filedrop(uploadDiv, {
-                // The name of the $_FILES entry:
-                paramname:'file',
+            /* Append a span with a message indicating what the user should do. */
+            $('<span/>').attr({
+                'class' : styleClass
+            }).append(formElem.fieldTitle)
+                .appendTo($editFieldContainer);   
 
-                maxfiles: 1,
-                maxfilesize: 20, // in mb
-                url: '/clientws/sharepoint/upload',
-                headers: {
-                    'listUUID' : currentList.uuidName,
-                    'siteURL' : currentSite.siteURL
-                },
+            var uploadId = Helix.Utils.getUniqueID();
+            var uploadDiv= $('<div/>').attr({
+                'id' : uploadId,
+                'class' : "mh-uploads"
+            }).appendTo($editFieldContainer);
 
-                uploadFinished:function(i,file,response){
-                    Helix.Utils.statusMessage("Upload Complete", response.msg, "info");
-                },
 
-                error: function(err, file) {
-                    switch(err) {
-                        case 'BrowserNotSupported':
-                            Helix.Utils.statusMessage('Unsupported Operation', 'Your browser does not support HTML5 file uploads!', 'severe');
-                            break;
-                        case 'TooManyFiles':
-                            Helix.Utils.statusMessage('Error', 'Too many files! Please select 1 at most!', 'severe');
-                            break;
-                        case 'FileTooLarge':
-                            Helix.Utils.statusMessage(file.name+' is too large! Please upload files up to 2mb.');
-                            break;
-                        default:
-                            break;
+            $(page).on('pagecreate', function() {
+               var dropbox = $editFieldContainer;
+               dropbox.filedrop(uploadDiv, {
+                    // The name of the $_FILES entry:
+                    paramname:'file',
+
+                    maxfiles: 1,
+                    maxfilesize: 20, // in mb
+                    url: formElem.options.url,
+                    headers: formElem.options.headers,
+                    
+                    /* '/clientws/sharepoint/upload' */
+                    /*
+                     * {
+                        'listUUID' : currentList.uuidName,
+                        'siteURL' : currentSite.siteURL
+                        }
+                     */
+
+                    uploadFinished:function(i,file,response){
+                        Helix.Utils.statusMessage("Upload Complete", response.msg, "info");
+                    },
+
+                    error: function(err, file) {
+                        switch(err) {
+                            case 'BrowserNotSupported':
+                                Helix.Utils.statusMessage('Unsupported Operation', 'Your browser does not support HTML5 file uploads!', 'severe');
+                                break;
+                            case 'TooManyFiles':
+                                Helix.Utils.statusMessage('Error', 'Too many files! Please select 1 at most!', 'severe');
+                                break;
+                            case 'FileTooLarge':
+                                Helix.Utils.statusMessage(file.name+' is too large! Please upload files up to 2mb.');
+                                break;
+                            default:
+                                break;
+                        }
+                    },
+
+                    // Called before each upload is started
+                    beforeEach: function(file){
+                        if (!formElem.name) {
+                            this.headers['fileName'] = file.name;
+                        } else {
+                            this.headers['fileName'] = formElem.name;
+                        }
                     }
-                },
-
-                // Called before each upload is started
-                beforeEach: function(file){
-                    if (!formElem.name) {
-                        this.headers['fileName'] = file.name;
-                    } else {
-                        this.headers['fileName'] = formElem.name;
-                    }
-                }
-            });           
-        });
-            
+                });           
+            });
+        }   
     } else if (formElem.type == "image") {
-       /*
-        "type" : "image",
-        "src" : thumbURL,
-        "link" : viewURL,
-        "width" : "128px",
-        "height" : "128px",
-        "style" : "margin: 0 auto"
-        "styleClass" : "fooClass",
-        "target"  : "_blank
-        */
-       if (!mode) {
+       if ($viewFieldContainer) {
            styleClass = "";
            if (formElem.computedStyleClass) {
                styleClass = formElem.computedStyleClass;
@@ -1179,7 +1282,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
            /* Only show images in view mode. */
            var surroundingDiv = $('<div/>').attr({
                'class' : styleClass
-           }).appendTo($fieldContainer);
+           }).appendTo($viewFieldContainer);
            
            var imgTag = $('<img/>').attr({
                'src': formElem.src,
@@ -1208,13 +1311,32 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
            });
        }
     } else if (formElem.type == 'horizontalScroll') {
-        __refreshHorizontalScroll(formElem);
+        renderFn = __appendHorizontalScroll;
+    } else if (formElem.type === 'subPanel') {
+        renderFn = __appendSubPanel;
     } else {
         separateElements = false;
     }
     
+    if ($viewFieldContainer) {
+        if (renderFn) {
+            renderFn.call(formElem, 0, formLayout, formElem, $viewFieldContainer, useMiniLayout, page, parentDiv);
+        }
+        if (currentMode === 'edit') {
+            $viewFieldContainer.hide();
+        }
+    }
+    if ($editFieldContainer) {
+        if (renderFn) {
+            renderFn.call(formElem, 1, formLayout, formElem, $editFieldContainer, useMiniLayout, page, parentDiv);
+        }
+        if (currentMode === 'view') {
+            $editFieldContainer.hide();
+        }
+    }
+    
     if (separateElements) {
-        formElem.SEPARATOR = $('<hr />').insertAfter($fieldContainer);
+        formElem.SEPARATOR = $('<hr />').insertAfter(formElem.DOM);
     }
     if (formElem.hidden) {
         $(formElem.DOM).hide();
@@ -1256,7 +1378,6 @@ function __preprocessFormLayout(formLayout) {
 Helix.Utils.nSubPanels = 0;
 Helix.Utils.dynamicDialogs = {};
 Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
-    var mode = formLayout.mode;
     __preprocessFormLayout(formLayout);
     if (!page) {
         page = $.mobile.activePage;
@@ -1272,58 +1393,6 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
         formElem = formElements[elemIdx];
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
-    
-    if (formLayout.subPanels) {
-        for (var subPanelTitle in formLayout.subPanels) {
-            var subPanelObj = formLayout.subPanels[subPanelTitle];
-            __preprocessFormLayout(subPanelObj);
-            var formSubPanelItems = subPanelObj.items;
-            ++Helix.Utils.nSubPanels;
-            var subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
-            var subPanelDiv = $('<div />').attr({
-                'id' : subPanelID
-            }).append($('<h3 />').append(subPanelTitle))
-                .appendTo(parentDiv);
-            
-            // Layout the elements in the sub-panel add a separator between elements
-            // but not between items in each element.
-            for (elemIdx = 0; elemIdx < formSubPanelItems.length; ++elemIdx) {
-                formElem = formSubPanelItems[elemIdx];
-                Helix.Utils.layoutFormElement(subPanelObj, formElem, subPanelDiv, page, useMiniLayout);
-            }
-            
-            // Make sure we have a dynamic page used to create new items in this 
-            // subpanel.
-            //var dialogId;
-            if (subPanelObj.dialog &&
-                (subPanelObj.dialog.activeMode == -1 ||
-                    mode == subPanelObj.dialog.activeMode )) {
-                var dialogObj = Helix.Utils.createDialog(subPanelObj.dialog, subPanelObj.dialog.uniqueID, subPanelTitle, page);
-                
-                // Add a button to open the dialog.
-                $('<a />').attr({
-                    'href' : 'javascript:void(0)',
-                    'data-role' : 'button',
-                    'data-inline' : 'true',
-                    'data-theme' : 'b'
-                })
-                .append(subPanelObj.dialog.dialogTitle)
-                .appendTo(subPanelDiv)
-                .on('tap', function() {
-                    $.mobile.changePage(PrimeFaces.escapeClientId(dialogObj.id), {});
-                })
-                .button();
-            }
-            
-            // Create the collapsible content.
-            if (!subPanelObj.noCollapse) {
-                subPanelDiv.collapsible();
-                $(subPanelDiv).on('collapsibleexpand', function(event, ui) {
-                    __layoutFrames(page, subPanelObj);
-                });
-            }
-        }
-    }    
 }
 
 Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page, useMiniLayout) {

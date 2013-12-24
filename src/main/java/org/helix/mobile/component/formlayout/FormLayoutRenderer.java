@@ -27,15 +27,21 @@ public class FormLayoutRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         FormLayout layout = (FormLayout) component;
+        String id = layout.getClientId(context);
+        
         writer.startElement("div", layout);
-        writer.writeAttribute("id", layout.getClientId(context), "id"); 
+        writer.writeAttribute("id", id, "id"); 
         
         writer.endElement("div");
         
         startScript(writer, layout.getClientId(context));
+        writer.write("\nvar " + layout.resolveWidgetVar() + " = null;");
         writer.write("\n(function($) {");
         
-        writer.write("$(document).on('helixinit', function() {");
+        writer.write("$(document).on('pagecreate', function(ev) {");
+        writer.write("Helix.Layout.renderer(");
+        writer.write("$(PrimeFaces.escapeClientId('" + id + "')).closest('.ui-page'),'" + id + "', function() {");
+        writer.write("\n if (" + layout.resolveWidgetVar() + ") { return; }");
         writer.write("\n" + layout.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + layout.getClientId(context) + "')).helixFormLayout({");
         writer.write("items: [");
         boolean isFirst = true;
@@ -65,9 +71,11 @@ public class FormLayoutRenderer extends CoreRenderer {
         } else {
             writer.write(", 'titleStyleClass' : null");
         }
-        writer.write(",mode: " + Boolean.toString(layout.isEditMode()));
+        writer.write(",modes : '" + layout.getModes() + "'");
+        writer.write(",currentMode: '" + layout.getCurrentMode() + "'");
         writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
         writer.write("}).data('helix-helixFormLayout');");
+        writer.write("});");
         writer.write("});");
         
         writer.write("})(jQuery);\n");

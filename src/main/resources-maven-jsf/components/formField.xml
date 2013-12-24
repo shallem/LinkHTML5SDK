@@ -31,6 +31,12 @@
             <defaultValue>auto</defaultValue>
         </attribute>
         <attribute>
+            <name>height</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Height of this field.</description>
+        </attribute>
+        <attribute>
             <name>widthMap</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -157,6 +163,41 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Javascript object (as a JSON string) describing field specific options. E.e., the minuteStep for a time box.</description>
+        </attribute>
+        <attribute>
+            <name>isScroller</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field is scrollable. Only relevant for container fields.</description>
+        </attribute>
+        <attribute>
+            <name>noHTML</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this iframe field should not insert an html tag.</description>
+        </attribute>
+        <attribute>
+            <name>noBody</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this iframe field should not insert a body tag.</description>
+        </attribute>
+        <attribute>
+            <name>noHead</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this iframe field should not insert a head tag.</description>
+        </attribute>
+        <attribute>
+            <name>noCollapse</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this subPanel field should not be collapsible.</description>
         </attribute>
     </attributes>
 </component>

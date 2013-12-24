@@ -25,11 +25,18 @@
             <description>Client ID of this form layout.</description>
         </attribute>
         <attribute>
-            <name>editMode</name>
+            <name>modes</name>
             <required>false</required>
-            <type>java.lang.Boolean</type>
-            <defaultValue>false</defaultValue>
-            <description>Indicates if the form should be displayed in view or edit mode.</description>
+            <type>java.lang.String</type>
+            <defaultValue>all</defaultValue>
+            <description>Indicates what modes this form supports. Must be one of view, edit, or all.</description>
+        </attribute>
+        <attribute>
+            <name>currentMode</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>view</defaultValue>
+            <description>Indicates the current mode of the form. Must be either view or edit.</description>
         </attribute>
         <attribute>
             <name>separateElements</name>

@@ -175,7 +175,25 @@ Helix.Layout = {
         });        
     },
     
-    renderer: function(page, fn) {
+    renderer: function(page, id, fn) {
+        if (!Helix.Utils.isString(id)) {
+            fn = id;
+            id = null;
+        }
+        
+        if (id) {
+            var renderersMap = $(page).data('hxrendermap');
+            if (!renderersMap) {
+                renderersMap = {};
+                $(page).data('hxrendermap', renderersMap);
+            }
+            if (id in renderersMap) {
+                // Already installed this named renderer
+                return;
+            }
+            renderersMap[id] = true;
+        }
+        
         var renderers = $(page).data('hxrender');
         if (!renderers) {
             renderers = [];
