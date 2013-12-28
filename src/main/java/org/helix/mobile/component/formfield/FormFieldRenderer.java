@@ -36,8 +36,16 @@ public class FormFieldRenderer extends CoreRenderer {
             throw new FacesException("Cannot specify that a form field is both viewOnly and editOnly.");
         }
         writer.write("{");
-        writer.write("'id' : '" + ffield.getName() + "',");
-        writer.write("'name' : '" + ffield.getName() + "',");
+        if (ffield.getName() != null) {
+            writer.write("'id' : '" + ffield.getName() + "',");
+        } else {
+            writer.write("'id' : Helix.Utils.getUniqueID(),");
+        }
+        if (ffield.getName() != null) {
+            writer.write("'name' : '" + ffield.getName() + "',");
+        } else {
+            writer.write("'name' : Helix.Utils.getUniqueID(),");
+        }
         writer.write("'type' : '" + ffield.getType() + "',");
         if (ffield.isViewOnly()) {
             writer.write("'mode' : 'view',");
@@ -104,6 +112,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.isNoCollapse()) {
             writer.write(", 'noCollapse' : " + Boolean.toString(ffield.isNoCollapse()));
         }
+        if (ffield.getPanelMode() != null) {
+            writer.write(", 'panelMode' : '" + ffield.getPanelMode() + "'");
+        }
+        if (ffield.isReadOnly()) {
+            writer.write(", 'readOnly' : true");
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");
@@ -147,7 +161,8 @@ public class FormFieldRenderer extends CoreRenderer {
                 }
             }
             writer.write("]");
-        } else if (ffield.getType().equals("controlset")) {
+        } else if (ffield.getType().equals("controlset") ||
+                ffield.getType().equals("radio")) {
             writer.write(",'controls' : [");
             boolean firstButton = true;
             for (UIComponent c : ffield.getChildren()) {

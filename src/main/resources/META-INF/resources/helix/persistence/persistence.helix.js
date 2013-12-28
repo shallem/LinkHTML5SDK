@@ -401,7 +401,11 @@ function initHelixDB() {
                     fieldsChanged = 1;
                     schemaRec.tableManyToOne = manyToOneStr;
                     dirtyMap['manytoone'] = true;
-                } 
+                } else if (dirtyMap['fields']) {
+                    // We are going to migrate all fields. Make sure we don't omit an id
+                    // relationship field.
+                    $.extend(allOldFields, $.parseJSON(schemaRec.tableManyToOne));
+                }
                 $.extend(allNewFields, schema.schema.meta.hasOne);
                 
                 var oneToManyStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
@@ -1035,11 +1039,11 @@ function initHelixDB() {
             var keyField = this.getKeyField(elemSchema);
             var uidToEID = {};
             
-            var doAdds = function(idMap) {
+            var doAdds = function() {
                 if (deltaObj.adds.length > 0) {
                     var toAdd = deltaObj.adds.pop();
                     var toAddKey = toAdd[keyField];
-                    var objId = idMap[toAddKey];
+                    var objId = uidToEID[toAddKey];
                     if (objId) {
                         Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
                             parentCollection.add(pObj);
@@ -1064,7 +1068,7 @@ function initHelixDB() {
                         uidToEID[elem[keyField]] = elem.id;
                     }, 
                     doneFn: function(ct) {
-                        doAdds(uidToEID);
+                        doAdds();
                     }
                 })
             };

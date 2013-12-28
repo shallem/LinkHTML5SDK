@@ -240,6 +240,7 @@
         .width(options.width)
         .appendTo($parent);
         $main.height(options.height);
+        $parent.height(options.height);
 
         // Add the first group to the toolbar
         var $toolbar = editor.$toolbar = $(DIV_TAG)
@@ -346,6 +347,7 @@
         
         $(editor.page).on("hxLayoutDone." + editor.name, function() {
             refresh(editor);
+            editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
         });
                 
         var eventName = "orientationchange." + editor.name;
@@ -785,7 +787,8 @@
 
         // Update the textarea when the iframe changes. But wait until the typist has stopped
         // before we do this update.
-        $doc.on('keyup', function(e) {
+        var keyupName = 'keyup.' + editor.name;
+        $doc.off(keyupName).on(keyupName, function(e) {
             if (editor.changeTimeout) {
                 clearTimeout(editor.changeTimeout);
                 editor.changeTimeout = null;

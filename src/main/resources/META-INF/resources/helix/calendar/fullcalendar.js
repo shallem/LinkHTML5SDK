@@ -407,9 +407,10 @@ function Calendar(element, options, eventSources) {
 			!currentView.start || // never rendered before
 			inc || date < currentView.start || date >= currentView.end // or new date range
 		) {
-			if (elementVisible()) {
+                        // SAH - we render on pagebeforeshow, when this page is NOT visible.
+			//if (elementVisible()) {
 				_renderView(inc);
-			}
+			//}
 		}
 	}
 

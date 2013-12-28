@@ -111,6 +111,13 @@
             <description>Indicates that this form field is available in view mode only.</description>
         </attribute>
         <attribute>
+            <name>readOnly</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field is read only. Read only form elements are not influenced by clear calls.</description>
+        </attribute>
+        <attribute>
             <name>trueText</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -198,6 +205,12 @@
             <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
             <description>Indicates that this subPanel field should not be collapsible.</description>
+        </attribute>
+        <attribute>
+            <name>panelMode</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Mode in which to edit a sub-panel. The default is to use the same mode as the parent panel.</description>
         </attribute>
     </attributes>
 </component>

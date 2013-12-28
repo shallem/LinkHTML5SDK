@@ -293,7 +293,7 @@
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <include>calendar/fullcalendar.js</include>
+		    <!-- <include>calendar/fullcalendar.js</include> -->
 
 		    <include>colorpicker/spectrum.js</include>
 
@@ -301,7 +301,7 @@
 		    <include>dialog/helix.dialog.js</include>
 
 		    <!-- Depends on colorpicker. -->
- 		    <include>editor/editor.js</include>
+ 		    <!-- <include>editor/editor.js</include> -->
 
 		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
 		    <include>lib/helix.crypto.js</include>
@@ -339,7 +339,8 @@
 		    <include>contextMenu/contextMenu.js</include>
 
 		    <!-- Form Layout -->
-		    <include>form/formLayout.js</include>
+		    <!-- <include>form/formLayout.js</include> -->
+		    <!-- <include>form/helix.formlayout.js</include> -->
 
 		    <!-- Scrolling Div -->
 		    <include>scrollingdiv/scrollingdiv.js</include>
@@ -350,7 +351,6 @@
 		    <include>lib/helix.utils.js</include>
 		    <include>lib/helix.ajax.js</include>
 		    <include>lib/helix.layout.js</include>
-		    <include>lib/helix.formlayout.js</include>
 
 		    <!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
 		    <include>lib/hook.js</include>

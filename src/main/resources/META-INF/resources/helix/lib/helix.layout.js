@@ -70,7 +70,16 @@ Helix.Layout = {
      *      The target component whose height should be set to maxHeight.
      */
     layoutFullHeightComponent: function(maxHeight, component) {
-        $(component).height(maxHeight);
+        var paddingPixels = $(component).outerHeight(true) - $(component).innerHeight();
+        var offsetPixels = 0;
+        if ($(component).css('top') !== 'auto') {
+            // Doesn't handle all unit types.
+            var cssAuto = $(component).css('top');
+            offsetPixels = parseInt(cssAuto, 10);
+        }
+        
+        $(component).height(maxHeight - paddingPixels - offsetPixels);
+        
         if ($(component).is(".mh-layout-parent-height")) {
             /* This selector means to set the layout to the parent height and
              * not recurse any further.
@@ -133,16 +142,18 @@ Helix.Layout = {
         if ($footer.is(':visible')) {
             footerHeight = $footer.outerHeight(true);
         }
+        var pageHeight = height;
         var contentHeight = height - footerHeight;
-        //if ($header.is('[data-position="fixed"]')) {
-            contentHeight = contentHeight - headerHeight;
-        //}
-        page.height(contentHeight);
+        contentHeight = contentHeight - headerHeight;
+        if ($header.is('[data-position="fixed"]')) {
+            pageHeight = contentHeight;
+        } 
+        page.height(pageHeight);
         
         var content = page.find('.hx-main-content');
         content.css('height', contentHeight);
         if (!$(content).parent().is('.ui-page')) {
-            $(content).parent().css('height', contentHeight);
+            $(content).parent().height(pageHeight);
         }
         
         content.each(function() {
@@ -202,6 +213,15 @@ Helix.Layout = {
         renderers.push(fn);
     },
     
+    postRenderer: function(page, fn) {
+        var postRenderers = $(page).data('hxpostrender');
+        if (!postRenderers) {
+            postRenderers = [];
+            $(page).data('hxpostrender', postRenderers);
+        } 
+        postRenderers.push(fn);
+    },
+    
     refresh: function(page, noTrigger) {
         if (!page) {
             page = $.mobile.activePage;
@@ -214,7 +234,20 @@ Helix.Layout = {
             }
         }
         
-        Helix.Layout.layoutPage($(page), noTrigger);
+        //Helix.Layout.layoutPage($(page), noTrigger);
+    },
+    
+    postRefresh: function(page) {
+        if (!page) {
+            page = $.mobile.activePage;
+        }
+        
+        var prenderers = $(page).data('hxpostrender');
+        if (prenderers) {
+            for (var i = 0; i < prenderers.length; ++i) {
+                prenderers[i].call(this);
+            }
+        }
     }
 };
 
@@ -349,7 +382,8 @@ $(document).on('pageshow', function(ev) {
      * we wait for the app to explicitly trigger the final render actions on the page.
      */
     if (!$.mobile.activePage.is('[data-async="true"]')) {
-        $(this).trigger("hxLayoutDone");
+        Helix.Layout.layoutPage($.mobile.activePage);
+        Helix.Layout.postRefresh(ev.target, true);
     }
 });
 
