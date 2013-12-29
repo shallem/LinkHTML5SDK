@@ -238,6 +238,9 @@
 					case 'open':
 						w.open(); break;
 					case 'set':
+                                                if (!p.value) {
+                                                    p.value = new Date();
+                                                }
 						$(this).val(p.value);
 						$(this).trigger('change');
                                                 if (Helix.Utils.isString(p.value)) {

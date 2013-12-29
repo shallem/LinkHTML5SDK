@@ -37,11 +37,6 @@ public class FormFieldRenderer extends CoreRenderer {
         }
         writer.write("{");
         if (ffield.getName() != null) {
-            writer.write("'id' : '" + ffield.getName() + "',");
-        } else {
-            writer.write("'id' : Helix.Utils.getUniqueID(),");
-        }
-        if (ffield.getName() != null) {
             writer.write("'name' : '" + ffield.getName() + "',");
         } else {
             writer.write("'name' : Helix.Utils.getUniqueID(),");

@@ -871,9 +871,14 @@
         nextPage: function() {
             this._currentPage++;
             var _self = this;
+            
+            var isMini = this.$parent.hasClass('hx-listview-mini'); 
             this._refreshData(function() {
                 _self.$parent.listview( "refresh" );
                 _self._refreshPaginatorContainer();
+                if (isMini) {
+                    _self.setMiniView();
+                }
             });
         },
         
@@ -882,10 +887,15 @@
                 return;
             }
             this._currentPage--;
+            
+            var isMini = this.$parent.hasClass('hx-listview-mini'); 
             var _self = this;
             this._refreshData(function() {
                 _self.$parent.listview( "refresh" );
                 _self._refreshPaginatorContainer();
+                if (isMini) {
+                    _self.setMiniView();
+                }
             });            
         },
         
