@@ -46,6 +46,12 @@
             <description>A JavaScript map from device type string to boolean value indicating if the mini layout should be used. The default is to use the mini layout for phones only.</description>
         </attribute>
         <attribute>
+            <name>beforeOpen</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional callback to be invoked before the context menu opens on screen.</description>
+        </attribute>
+        <attribute>
             <name>id</name>
             <required>false</required>
             <type>java.lang.String</type>

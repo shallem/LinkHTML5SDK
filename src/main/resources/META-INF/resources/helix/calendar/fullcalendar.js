@@ -509,6 +509,9 @@ function Calendar(element, options, eventSources) {
 		}
 	}
 	
+        $(element).closest('.ui-page').on('hxLayoutDone', function() {
+            updateSize();
+        });
 	
 	
 	/* Event Fetching/Rendering
@@ -2005,6 +2008,8 @@ function getSkinCss(event, opt) {
 		event.textColor ||
 		source.textColor ||
 		opt('eventTextColor');
+        var isHatched =
+                event.isHatched;
 	var statements = [];
 	if (backgroundColor) {
 		statements.push('background-color:' + backgroundColor);
@@ -2015,6 +2020,10 @@ function getSkinCss(event, opt) {
 	if (textColor) {
 		statements.push('color:' + textColor);
 	}
+        if (isHatched) {
+            // From http://www.patternify.com/
+            statements.push('background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAJElEQVQIW2NkYGD4D8SMQAwHMA6KBLIKuASKNphR6IIgc/8DAACiBQXgDbYOAAAAAElFTkSuQmCC) repeat');
+        }
 	return statements.join(';');
 }
 
@@ -2375,7 +2384,7 @@ function BasicView(element, calendar, viewName) {
 
 	function buildTableHTML() {
 		var html =
-			"<table class='fc-border-separate' style='width:100%' cellspacing='0'>" +
+			"<table class='fc-border-separate' style='width:100%' cellspacing='0' class='pm-layout-full-height'>" +
 			buildHeadHTML() +
 			buildBodyHTML() +
 			"</table>";
@@ -2420,11 +2429,11 @@ function BasicView(element, calendar, viewName) {
 		var col;
 		var date;
 
-		html += "<tbody>";
+		html += "<tbody class='pm-layout-full-height'>";
 
 		for (row=0; row<rowCnt; row++) {
 
-			html += "<tr class='fc-week'>";
+			html += "<tr class='fc-week pm-layout-full-height'>";
 
 			if (showWeekNumbers) {
 				date = cellToDate(row, 0);
@@ -2476,13 +2485,14 @@ function BasicView(element, calendar, viewName) {
 		else {
 			classNames.push('fc-future');
 		}
+                classNames.push('pm-layout-full-height');
 
 		html +=
 			"<td" +
 			" class='" + classNames.join(' ') + "'" +
 			" data-date='" + formatDate(date, 'yyyy-MM-dd') + "'" +
 			">" +
-			"<div>";
+			"<div class='mh-layout-parent-height'>";
 
 		if (showNumbers) {
 			html += "<div class='fc-day-number'>" + date.getUTCDate() + "</div>"; /* SAH - to UTC */
@@ -3057,7 +3067,7 @@ function AgendaView(element, calendar, viewName) {
 		buildDayTable();
 		
 		slotLayer =
-			$("<div style='position:absolute;z-index:2;left:0;width:100%'/>")
+			$("<div style='position:absolute;z-index:2;left:0;width:100%' class='pm-layout-full-height'/>")
 				.appendTo(element);
 				
 		if (opt('allDaySlot')) {
@@ -3167,7 +3177,7 @@ function AgendaView(element, calendar, viewName) {
 
 	function buildDayTableHTML() {
 		var html =
-			"<table style='width:100%' class='fc-agenda-days fc-border-separate' cellspacing='0'>" +
+			"<table style='width:100%' class='fc-agenda-days fc-border-separate pm-layout-full-height' cellspacing='0'>" +
 			buildDayTableHeadHTML() +
 			buildDayTableBodyHTML() +
 			"</table>";

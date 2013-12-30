@@ -39,7 +39,15 @@
              */
             useMiniLayout : {
                 "phone" : true
-            }
+            },
+            
+            /**
+             * Optional callback that is invoked before the context menu is opened. The 'this' variable
+             * in the call is determined by the object that opens this context menu. If that object specifies
+             * a 'this' object, then that specified object is relayed to the callback. Otherwise the context menu
+             * object is 'this' in the callback.
+             */
+            beforeopen: null
         },
 
         _create: function() {
@@ -168,13 +176,22 @@
         },
 
         open: function(obj) {
+            this._thisArg = obj.thisArg;
+            if (this.options.beforeopen) {
+                if (this._thisArg) {
+                    this.options.beforeopen.call(this._thisArg);
+                } else {
+                    this.options.beforeopen.call(this);
+                }
+            }
+            
             this._menuContainer.popup("open", obj);
             if (Helix.hasTouch) {
                 this.active = true;
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
             }
-            this._thisArg = obj.thisArg;
+            
         },
         
         hideGroup: function(grp) {

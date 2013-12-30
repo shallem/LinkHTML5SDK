@@ -69,6 +69,7 @@
         _create: function() {
             /* Initialize variables. */
             this._typeMap = [];
+            this._fieldMap = [];
             
             this.page = $(this.element).closest('[data-role="page"]');
             
@@ -88,21 +89,33 @@
             if (!this.options.namespace) {
                 this.options.namespace = $(this.element).attr('id');
             }
-            var idx = 0;
-            for (idx = 0; idx < this.options.items.length; ++idx) {
-                var formElem = this.options.items[idx];
+            
+            this._processItems(this.options.items);
+
+            if (this.options.items.length > 0) {
+                this.rendered = false;
+                this.refresh();
+            }
+        },
+        
+        _processItems: function(itemsList) {
+            for (var idx = 0; idx < itemsList.length; ++idx) {
+                var formElem = itemsList[idx];
                 this._typeMap[formElem.name] = formElem.type;
+                this._fieldMap[formElem.name] = formElem;
                 if (this.options.namespace) {
                     if (formElem.id) {
                         formElem.id = this.options.namespace + "_" + formElem.id;
                     }
                     formElem.name = this.options.namespace + "_" + formElem.name;
                 }
-            }
-
-            if (this.options.items.length > 0) {
-                this.rendered = false;
-                this.refresh();
+                if (formElem.type === 'controlset') {
+                    // Control set.
+                    this._processItems(formElem.controls);
+                } else if (formElem.items) {
+                    // Sub panel.
+                    this._processItems(formElem.items);
+                }
             }
         },
     
@@ -155,8 +168,8 @@
                         this.__computeOneHidden(subItem, valuesMap);
                     }
                 } else if (formElem.type === 'subPanel') { 
-                    for (i = 0; idx < formElem.items.length; ++idx) {
-                        var subpItem = formElem.items.items[idx];
+                    for (i = 0; i < formElem.items.length; ++i) {
+                        var subpItem = formElem.items[i];
                         this.__computeOneHidden(subpItem, valuesMap);
                     }
                 }
@@ -197,32 +210,38 @@
         
         toggle: function(valuesMap) {
             if (this.options.currentMode === 'edit') {
-                this.setView();
+                this.setView(valuesMap);
             } else {
-                this.setEdit();
-            }
-            
-            if (this.rendered) {
-                this.refreshValues(valuesMap);
-            } else {
-                this.refresh(valuesMap);
+                this.setEdit(valuesMap);
             }
         },
         
-        setView: function () {
+        setView: function (valuesMap) {
             if (this.options.modes !== 'all' &&
                 this.options.modes !== 'view') {
                 alert("Attempting to set a form to view mode when view mode is not supported.");
             }
             this.options.currentMode = 'view';
+            
+            if (this.rendered) {
+                this.refreshValues(valuesMap ? valuesMap : {});
+            } else {
+                this.refresh(valuesMap ? valuesMap : {});
+            }
         },
         
-        setEdit : function() {
+        setEdit : function(valuesMap) {
             if (this.options.modes !== 'all' &&
                 this.options.modes !== 'edit') {
                 alert("Attempting to set a form to edit mode when view mode is not supported.");
             }
             this.options.currentMode = 'edit';
+            
+            if (this.rendered) {
+                this.refreshValues(valuesMap ? valuesMap : {});
+            } else {
+                this.refresh(valuesMap ? valuesMap : {});
+            }
         },
         
         isEdit : function() {
@@ -240,7 +259,8 @@
             "pickList" : true,
             "hidden" : true,
             "checkbox" : true,
-            "tzSelector" : true
+            "tzSelector" : true,
+            "radio" : true
         },
         
         _groupedTypes: {
@@ -251,8 +271,9 @@
             var fieldID = nxtItem.name;
             var strippedFieldID = this._stripNamespace(fieldID);
             var fieldType = nxtItem.type;
+            var selector = '[name="' + fieldID + '"]';
             
-            $(this.element).find('[name="' + fieldID + '"]').each(function() {
+            var __serializeOneItem = function() {
                 if (fieldType === "htmlarea") {
                     var $editor = $(this).data('cleditor');
                     if ($editor) {
@@ -274,6 +295,13 @@
                             value: false
                         }); 
                     }
+                } else if (fieldType === "radio") {
+                    if ($(this).is(":checked")) {
+                        toSerialize.push({
+                            name : strippedFieldID,
+                            value: $(this).attr('data-value')
+                        });
+                    }
                 } else if (fieldType === "pickList" ||
                            fieldType === "tzSelector") {
                     var selected = $(this).find('option:selected');
@@ -287,22 +315,40 @@
                         value: $(this).val()
                     });
                 }
-            });
+            }
+            
+            if ($(nxtItem.DOM).is(selector)) {
+                __serializeOneItem.call(nxtItem.DOM);
+            } else {
+                $(nxtItem.DOM).find(selector).each(function() {
+                    __serializeOneItem.call(this);
+                });
+            }
         },
         
         serialize: function() {
             var toSerialize = [];
+            var i;
+            var subItem;
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
                 var fieldType = nxtItem.type;
                 
                 if (fieldType in this._groupedTypes) {
                     // Process sub items.
-                    for (var i = 0; i < nxtItem.controls.length; ++i) {
-                        var subItem = nxtItem.controls[i];
+                    for (i = 0; i < nxtItem.controls.length; ++i) {
+                        subItem = nxtItem.controls[i];
                         this.serializeItem(subItem, toSerialize);
                     }
                     // We don't serialize the controlset itself - just its component checkboxes
+                    continue;
+                } else if (fieldType === 'subPanel') {
+                    // Process sub items.
+                    for (i = 0; i < nxtItem.items.length; ++i) {
+                        subItem = nxtItem.items[i];
+                        this.serializeItem(subItem, toSerialize);
+                    }
+                    // We don't serialize the subPanel itself - just its components
                     continue;
                 }
                 if (fieldType in this._serializeTypes) {
@@ -319,9 +365,8 @@
             this.refreshValues({});
         },
         
-        __updateValue: function(name, item, valuesMap) {
+        __updateValue: function(mode, name, item, valuesMap) {
             var value = item.value;
-            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             if (this.rendered) {
                 var fldType = item.type;
                 var searchName = this._addNamespace(name);
@@ -332,6 +377,9 @@
                     if (!item.editDOM) {
                         if (item.DOM) {
                             item.DOM.hide();
+                        }
+                        if (item.SEPARATOR) {
+                            item.SEPARATOR.hide();
                         }
                         return;
                     }
@@ -345,12 +393,15 @@
                         if (item.DOM) {
                             item.DOM.hide();
                         }
+                        if (item.SEPARATOR) {
+                            item.SEPARATOR.hide();
+                        }
                         return;
                     }
                     
                     item.DOM = item.viewDOM;
                     if (item.editDOM) {
-                        item.editDom.hide();
+                        item.editDOM.hide();
                     }
                 }
 
@@ -380,8 +431,9 @@
                     fldType === 'exactdate' ||
                     fldType === 'datetime') {
                     __refreshDate(mode, item);
-                } else if (fldType === 'tzSelector' ||
-                           fldType === 'pickList') {
+                } else if (fldType === 'tzSelector') {
+                    __refreshTZSelector(mode, item);
+                } else if (fldType === 'pickList') {
                     if (mode) {
                         $(thisField).find('option:selected').each(function() {
                             $(this).prop({ selected : false });
@@ -397,18 +449,9 @@
                         $(thisField).html(value);
                     }
                 } else if (fldType === 'checkbox') {
-                    if (mode) {
-                        if (value) {
-                            $(thisField).attr('checked', 'true');
-                        } else {
-                            $(thisField).removeAttr('checked');
-                        }                        
-                    } else {
-                        if (value === undefined) {
-                            value = "";
-                        }
-                        $(thisField).html("&nbsp;" + value);
-                    }
+                    __refreshControl(item);
+                } else if (fldType === 'radio') {
+                    __refreshRadioButtons(item);
                 } else if (fldType === 'htmlframe') {
                     __refreshIFrame(item);
                 } else if (fldType === 'buttonGroup') {
@@ -417,17 +460,34 @@
                     __refreshSelectMenu(item);
                 } else if (fldType === 'text') {
                     __refreshTextBox(mode, item);
+                } else if (fldType === 'textarea') {
+                    __refreshTextArea(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
                 } else if (fldType === 'subPanel') { 
+                    if (item.panelMode) {
+                        if (item.panelMode === 'reverse') {
+                            // The sub-panel uses the opposite mode of the parent.
+                            mode = (mode ? 0 : 1);
+                        } else {
+                            mode = (item.panelMode === 'edit' ? 1 : 0);
+                        }
+                    }
                     for (var idx = 0; idx < item.items.length; ++idx) {
                         var subpItem = item.items[idx];
                         this.__refreshOneValue(mode, subpItem, valuesMap);
                     }
+                } else if (fldType === 'controlset') {
+                    // Controlset
+                    for (idx = 0; idx < item.controls.length; ++idx) {
+                        var controlItem = item.controls[idx];
+                        this.__refreshOneValue(mode, controlItem, valuesMap);
+                    }
                 } else if (fldType === 'htmlarea') {
                     __refreshHTMLArea(item);
+                } else if (fldType === 'separator') {
+                    return;
                 } else {
-                    
                     if (value === undefined) {
                         value = "";
                     }
@@ -443,26 +503,33 @@
         __copyOneValue : function(item, valuesMap) {
             var fieldID = item.name;
             var strippedFieldID = this._stripNamespace(fieldID);
-            if (!item.readOnly && (valuesMap[strippedFieldID] !== undefined)) {
-                var fldType = item.type;
-                if (fldType !== 'buttonGroup') {
-                    item.value = valuesMap[strippedFieldID];
-                } else {
-                    item.buttons = valuesMap[strippedFieldID];
+            if (!item.readOnly) {
+                if (valuesMap[strippedFieldID] !== undefined ||
+                    valuesMap['default'] !== undefined) {
+                    var newValue = (valuesMap[strippedFieldID] !== undefined ? 
+                                        valuesMap[strippedFieldID] : valuesMap['default']);
+                    
+                    var fldType = item.type;
+                    if (fldType !== 'buttonGroup') {
+                        item.value = newValue;
+                    } else {
+                        item.buttons = newValue;
+                    }
                 }
             }
         },
         
-        __refreshOneValue: function(item, valuesMap) {
+        __refreshOneValue: function(mode, item, valuesMap) {
             this.__computeOneHidden(item, valuesMap);
             this.__copyOneValue(item, valuesMap);
-            this.__updateValue(this._stripNamespace(item.name), item, valuesMap);
+            this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
         },
         
         refreshValues: function(valuesMap) {
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                this.__refreshOneValue(nxtItem, valuesMap);
+                this.__refreshOneValue(mode, nxtItem, valuesMap);
             }
         },
         
@@ -493,31 +560,66 @@
                 this.__clearOneValue(nxtItem);
                 if (nxtItem.type === 'subPanel') {
                     this.__clearValues(nxtItem.items);
+                } else if (nxtItem.type === 'controlset') {
+                    // controlset or radio
+                    this.__clearValues(nxtItem.controls);
                 }
             }
         },
         
         setValue: function(name, value) {
-            // Set the value fields in the form items regardless of whether or not the
-            // form has already been rendered. The reason is that we want to be certain
-            // that if we toggle the form we get the right values. Toggling the form re-renders
-            // all elements for obvious reasons ...
+            var item;
             for (var idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
+                item = this.options.items[idx];
+                var fieldID = item.name;
                 var strippedFieldID = this._stripNamespace(fieldID);
 
                 if (name === strippedFieldID) {
-                    this.options.items[idx].value = value;
                     break;
                 }
             }
-            this.__updateValue(name, this.options.items[idx]);
+            if (!item) {
+                return;
+            }
+            
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
+            var valuesObj = {};
+            valuesObj[name] = value;
+            this.__refreshOneValue(mode, item, valuesObj);
         },
         
         getValue: function(name) {
+            var fld = this._fieldMap[name];
+            if (!fld) {
+                return null;
+            }
+            if (!fld.name) {
+                // Cannot get the value of name-less fields.
+                return null;
+            }
+            
             var searchName = this._addNamespace(name);
-            var thisField = $(this.element).find('[name="' + searchName + '"]');
-            var fldType = $(thisField).attr('data-formType');
+            var thisField = $(fld.DOM).find('[name="' + searchName + '"]');
+            var fldType = this._typeMap[name];
+            
+            // Checkboxes and radios are handled the same regardless of mode.
+            if (fldType === 'checkbox') {
+                if ($(thisField).is(":checked")) {
+                    return true;
+                }
+                return false;
+            } else if (fldType === 'radio') {
+                var checked = $(fld.DOM).find(':checked');
+                if (checked.length > 0) {
+                    return checked.attr('data-value');
+                }
+                return null;
+            }
+            
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
+            if (!mode) {
+                return $(fld.DOM).find('[data-name="' + fld.name + '"]').html();
+            }
             
             if (fldType === 'date' ||
                 fldType === 'exactdate' ||
@@ -538,11 +640,6 @@
                 if (selected.length > 0) {
                     return selected.val();
                 }
-            } else if (fldType === 'checkbox') {
-                if ($(thisField).is(":checked")) {
-                    return true;
-                }
-                return false;
             } else {
                 return thisField.val();
             }
@@ -552,31 +649,50 @@
         
         getValues: function() {
             var obj = {};
-            var idx = 0;
-            for (idx = 0; idx < this.options.items.length; ++idx) {
-                var fieldID = this.options.items[idx].name;
-                obj[fieldID] = this.getValues(fieldID);
+            for (var fieldID in this._fieldMap) {
+                obj[fieldID] = this.getValue(fieldID);
             }
             
             return obj;
         },
         
         getFieldElement: function(name) {
-            var searchName = this._addNamespace(name);
-            var thisField = $(this.element).find(PrimeFaces.escapeClientId(searchName));
-            return thisField;
+            var fld = this._fieldMap[name];
+            var ret = null;
+            if (fld) {
+                if (!fld.name) {
+                    return fld.DOM;
+                }
+                
+                if (fld.type === 'radio') {
+                    // The radio field is the container itself.
+                    return fld.DOM;
+                } 
+                
+                
+                ret = $(fld.DOM).find('input[name="' + fld.name + '"]');
+                if (ret.length == 0) {
+                    ret = $(fld.DOM).find('[data-name="' + fld.name + '"]');
+                }
+                if (ret.length == 0) {
+                    ret = $(fld.DOM);
+                }
+                
+                return ret;
+            }
+            return null;
         },
         
         disableField: function(name) {
             var fieldElem = this.getFieldElement(name);
-            if (fieldElem.is('input')) {
+            if (fieldElem && fieldElem.is('input')) {
                 fieldElem.addClass('ui-disabled');
             }
         },
         
         enableField: function(name) {
             var fieldElem = this.getFieldElement(name);
-            if (fieldElem.is('input')) {
+            if (fieldElem && fieldElem.is('input')) {
                 fieldElem.removeClass('ui-disabled');
             }
         },
@@ -612,12 +728,10 @@
                     /* Other types don't require an explicit save. */
                     continue;
                 }
-                $(this.element).find('[name="' + fieldID + '"]').each(function() {
-                    if (fieldType === "htmlarea") {
-                        var $editor = $(this).data('cleditor');
-                        if ($editor) {
-                            $editor.updateTextArea();
-                        }
+                $(this.element).find('textarea[name="' + fieldID + '"]').each(function() {
+                    var $editor = $(this).data('cleditor');
+                    if ($editor) {
+                        $editor.updateTextArea();
                     }
                 });
             }

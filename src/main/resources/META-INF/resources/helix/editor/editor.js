@@ -391,8 +391,10 @@
     ["selectedText", selectedText, true],
     ["updateFrame", updateFrame],
     ["updateTextArea", updateTextArea],
+    ["update", update],
     ["getHTML", getHTML],
-    ["destroy", destroy]
+    ["destroy", destroy],
+    ["adjustHeight", adjustHeight]
     ];
 
     $.each(methods, function(idx, method) {
@@ -732,6 +734,20 @@
         return "url(" + imagesPath() + filename + ")";
     }
 
+    // adjustHeight - changes the height of the editor.
+    function adjustHeight(editor, hgt) {
+        editor.options.height = hgt;
+        editor.$parent.height(hgt);
+        editor.$main.height(hgt);
+        
+        // Update hgt to account for the toolbar and the format frame.
+        hgt -= editor.$toolbar.outerHeight(true);        
+        hgt -= 25;
+        
+        editor.$frame.height(hgt);
+        $(editor.doc).height(hgt);
+    }
+
     // refresh - creates the iframe and resizes the controls
     function refresh(editor) {
         var $contentParent = $(editor.$main).closest(".hx-main-content");
@@ -787,8 +803,7 @@
 
         // Update the textarea when the iframe changes. But wait until the typist has stopped
         // before we do this update.
-        var keyupName = 'keyup.' + editor.name;
-        $doc.off(keyupName).on(keyupName, function(e) {
+        $doc.on('keyup', function(e) {
             if (editor.changeTimeout) {
                 clearTimeout(editor.changeTimeout);
                 editor.changeTimeout = null;
@@ -811,30 +826,16 @@
             });
         }
    
-        //var $toolbar = editor.$toolbar,
-        //wid = options.width - ($toolbar.width() * 1.05),
-        var hgt = options.height;
-
-        // Resize the parent surrounding both.
-        editor.$parent.height(hgt);
-
+        // Set the width;
         // Resize the main div (which includes the toolbar).
         $main.width(options.width);
-        $main.height(hgt);
-        
-        // Resize the format frame.
-        $formatFrame.width("100%");
-        $formatFrame.height("25px");
-
-        // Update hgt to account for the toolbar and the format frame.
-        hgt -= editor.$toolbar.outerHeight(true);        
-        hgt -= 25;
-
-        // Resize the iframe
         $frame.width("100%");
         $doc.width("100%");
-        $frame.height(hgt);
-        $doc.height(hgt);
+        $formatFrame.width("100%");
+        
+        // Set the height
+        var hgt = options.height;
+        adjustHeight(editor, hgt);
         
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.
@@ -1057,7 +1058,7 @@
     // updateTextArea - updates the textarea with the iframe contents
     function updateTextArea(editor, checkForChange) {
 
-        var html = $(editor.doc.body).html(),
+        var html = $(editor.doc.documentElement).html(),
         options = editor.options,
         updateTextAreaCallback = options.updateTextArea,
         $area = editor.$area;

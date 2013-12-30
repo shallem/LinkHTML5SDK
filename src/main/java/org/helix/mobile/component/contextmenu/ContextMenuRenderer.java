@@ -28,23 +28,6 @@ public class ContextMenuRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         ContextMenu menu = (ContextMenu)component;
-        String clientId = menu.getClientId();
-        
-        /*writer.startElement("div", null);
-        writer.writeAttribute("data-role", "popup", null);
-        writer.writeAttribute("data-history", "false", null);
-        writer.writeAttribute("id", clientId, null);
-        writer.writeAttribute("data-theme", menu.getTheme(), null);
-        if (menu.getPositionTo() != null) {
-            writer.writeAttribute("data-position-to", menu.getPositionTo(), null);
-        }
-            writer.startElement("ul", null);
-            writer.writeAttribute("data-role", "listview", null);
-            writer.writeAttribute("data-inset", "true", null);
-            writer.writeAttribute("data-theme", menu.getListTheme(), null);
-            renderChildren(context, menu);
-            writer.endElement("ul");
-        writer.endElement("div");*/
         writer.startElement("div", menu);
         writer.writeAttribute("id", menu.getClientId(context), "id"); 
         
@@ -69,6 +52,9 @@ public class ContextMenuRenderer extends CoreRenderer {
         
         if (menu.getUseMiniLayout() != null) {
             writer.write(",useMiniLayout: " + menu.getUseMiniLayout());
+        }
+        if (menu.getBeforeOpen() != null) {
+            writer.write(",beforeopen: " + menu.getBeforeOpen());
         }
         
         writer.write("}).data('helix-helixContextMenu');");
