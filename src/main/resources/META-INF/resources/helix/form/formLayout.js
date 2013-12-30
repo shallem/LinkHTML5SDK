@@ -670,7 +670,8 @@
                 } 
                 
                 
-                ret = $(fld.DOM).find('input[name="' + fld.name + '"]');
+                var nameAttribute = '[name="' + fld.name + '"]';
+                ret = $(fld.DOM).find('input'+nameAttribute+",textarea"+nameAttribute);
                 if (ret.length == 0) {
                     ret = $(fld.DOM).find('[data-name="' + fld.name + '"]');
                 }

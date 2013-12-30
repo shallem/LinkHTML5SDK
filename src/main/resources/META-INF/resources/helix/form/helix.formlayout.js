@@ -1159,7 +1159,8 @@ function __preprocessFormElement(formLayout, formElem) {
 Helix.Utils.noTitleLayouts = {
     "button" : true,
     "controlset" : true,
-    "radio" : true
+    "radio" : true,
+    "subPanel" : true
 };
 
 Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
