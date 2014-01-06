@@ -544,7 +544,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
     } else {
         if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
             var valSpan = $('<span/>').attr({
-                'data-name' : formElem.name 
+                'data-name' : formElem.name,
+                'class' : 'ui-input-text'
             }).append("&nbsp;" + formElem.value)
             if (formElem.computedStyle) {
                 valSpan.attr('style', formElem.computedStyle);
@@ -555,7 +556,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             $fieldContainer.append(valSpan);
         } else {
             $fieldContainer.append($('<p />').attr({
-                'data-name' : formElem.name 
+                'data-name' : formElem.name,
+                'class' : formElem.computedStyleClass + ' ui-input-text'
             }).append(formElem.value));
         }
     }
@@ -1163,6 +1165,13 @@ Helix.Utils.noTitleLayouts = {
     "subPanel" : true
 };
 
+Helix.Utils.fieldContainers = {
+    'text' : true,
+    'date' : true,
+    'exactdate' : true,
+    'datetime' : true
+};
+
 Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
     var supportedModes = formLayout.modes;
     var currentMode = formLayout.currentMode;
@@ -1221,14 +1230,20 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
             if (formElem.titleStyleClass) {
                 $viewFieldContainer.append($('<span />').attr({
-                    'class' : formElem.titleStyleClass
+                    'class' : formElem.titleStyleClass + ' ui-input-text'
                 }).append(formElem.fieldTitle));
             } else if (formLayout.titleStyleClass) {
                 $viewFieldContainer.append($('<span />').attr({
-                    'class' : formLayout.titleStyleClass
+                    'class' : formLayout.titleStyleClass + ' ui-input-text'
                 }).append(formElem.fieldTitle));
             } else {
                 $viewFieldContainer.append(formElem.fieldTitle);
+            }
+            if (formElem.type in Helix.Utils.fieldContainers) {
+                $viewFieldContainer.addClass('hx-mini-fieldview'); 
+                $viewFieldContainer.addClass('ui-fieldcontain'); 
+                $viewFieldContainer.addClass('ui-body'); 
+                $viewFieldContainer.addClass('ui-br');
             }
         }
     } 

@@ -511,6 +511,7 @@ function Calendar(element, options, eventSources) {
 	
         $(element).closest('.ui-page').on('hxLayoutDone', function() {
             updateSize();
+            (currentView.afterRender || noop)();
         });
 	
 	

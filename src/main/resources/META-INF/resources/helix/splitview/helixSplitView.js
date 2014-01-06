@@ -202,6 +202,7 @@
             this.refresh();
             
             Helix.Layout.refresh();
+            Helix.Layout.layoutPage($.mobile.activePage, true);
         },
         
         isSplitView: function() {
