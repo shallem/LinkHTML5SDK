@@ -85,7 +85,7 @@ public class LoadCommandAction {
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            throw new FacesException("Failed to invoke loader: " + ex.getMessage());
+            throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getLocalizedMessage());
         }
         return thisObject;
     }
@@ -122,7 +122,7 @@ public class LoadCommandAction {
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             } catch (InvocationTargetException ex) {
                 LOG.log(Level.SEVERE, null, ex);
-                throw new FacesException("Failed to invoke getter: " + ex.getMessage());
+                throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getMessage());
             } catch (NoSuchMethodException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());

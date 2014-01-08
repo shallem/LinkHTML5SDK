@@ -367,10 +367,10 @@
         
         __updateValue: function(mode, name, item, valuesMap) {
             var value = item.value;
+            var thisField = null;
             if (this.rendered) {
                 var fldType = item.type;
                 var searchName = this._addNamespace(name);
-                var thisField = $(this.element).find('[name="' + searchName + '"]');
 
                 if (mode) {
                     // This element does not exist in edit mode.
@@ -435,6 +435,7 @@
                     __refreshTZSelector(mode, item);
                 } else if (fldType === 'pickList') {
                     if (mode) {
+                        thisField = $(item.DOM).find('[name="' + searchName + '"]');
                         $(thisField).find('option:selected').each(function() {
                             $(this).prop({ selected : false });
                         });
@@ -443,6 +444,7 @@
                         });
                         $(thisField).selectmenu('refresh');                        
                     } else {
+                        thisField = $(item.DOM).find('[data-name="' + searchName + '"]');
                         if (value === undefined) {
                             value = "";
                         }
@@ -492,8 +494,10 @@
                         value = "";
                     }
                     if (mode) {
+                        thisField = $(item.DOM).find('[name="' + searchName + '"]');
                         thisField.val(value);
                     } else {
+                        thisField = $(item.DOM).find('[data-name="' + searchName + '"]');
                         thisField.html(value);
                     }
                 }
