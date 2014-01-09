@@ -309,3 +309,11 @@ a {
 .hx-current-sort a.ui-link-inherit {
     color: orange !important;
 }
+
+.hx-no-hscroll {
+    overflow-x: hidden;
+}
+
+.hx-no-vscroll {
+    overflow-y: hidden;
+}

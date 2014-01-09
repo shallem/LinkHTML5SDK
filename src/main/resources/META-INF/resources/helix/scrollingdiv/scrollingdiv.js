@@ -101,9 +101,9 @@
             /* Determine the scroller type and add/refresh the scroller. */
             var scrollingClass;
             if (this.options.orientation === "vertical") {
-                scrollingClass = "hx-scroller-nozoom";
+                scrollingClass = "hx-scroller-nozoom hx-no-hscroll";
             } else if (this.options.orientation === "horizontal") {
-                scrollingClass = "hx-horizontal-scroller-nozoom";
+                scrollingClass = "hx-horizontal-scroller-nozoom hx-no-vscroll";
             } else {
                 console.log("Invalid scroller orientation " + this.options.orientation);
                 return;
