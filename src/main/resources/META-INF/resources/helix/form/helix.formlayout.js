@@ -837,6 +837,13 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.height === 'full') {
         $fieldContainer.addClass('pm-layout-full-height');
     }
+    if (formElem.computedFieldStyle) {
+        var combinedStyle = $fieldContainer.attr('style') + ' ' + formElem.computedFieldStyle;
+        $fieldContainer.attr('style', combinedStyle);
+    }
+    if (formElem.computedFieldStyleClass) {
+        $fieldContainer.addClass(formElem.computedFieldStyleClass);
+    }
     
     if (!mode) {
         var frameID = formElem.name;
@@ -1471,7 +1478,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         }
     }
     
-    if (separateElements) {
+    if (separateElements && !formElem.noSeparator) {
         formElem.SEPARATOR = $('<hr />').insertAfter(formElem.editDOM ? formElem.editDOM : formElem.viewDOM);
     }
     if (formElem.hidden && formElem.DOM) {
