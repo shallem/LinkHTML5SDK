@@ -263,12 +263,24 @@ function initHelixDB() {
         
             // Determine if any upgrades need to be generated. The required SQL commands
             // are stored as schema sync hooks.
-            Helix.DB.doMigrations(name,allSchemas);
+            var dirty = false;
+            if (Helix.DB.doMigrations(name,allSchemas)) {
+                dirty = true;
+            }
             
             // Flush all schemas.
             persistence.schemaSync(function(tx) {
                 // Flush all master DB changes.
                 persistence.flush(tx, function() {
+                    if (dirty) {
+                        // Clean out Persistence JS' cache of all tracked objects and cached
+                        // query collections. Otherwise we can end up with stale objects/queries
+                        // that refer to a field list that is out of sync with the flushed schema
+                        // changes that we just completed. NOTE that everything we do here should
+                        // happen before we are manipulating data from a particular table.
+                        persistence.clean();
+                    }
+                    
                     var oncompleteArgs = [ s ];
                     oncompleteArgs = oncompleteArgs.concat(opaque);
                     oncomplete.apply(this, oncompleteArgs);
@@ -309,10 +321,10 @@ function initHelixDB() {
         doMigrations: function(metaName,allSchemas) {
             // Migrate tables one at a time.
             if (allSchemas.length == 0) {
-                return;
+                return false;
             }
 
-            
+            var dirty = false;
             for (var i = 0; i < allSchemas.length; ++i) {
                 var schema = allSchemas[i];
                 var tableName = schema.schema.meta.name;
@@ -323,6 +335,9 @@ function initHelixDB() {
                 }
                 var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap);
                 if (curVer > 0) {
+                    // Migrations must be done.
+                    dirty = true;
+                    
                     persistence.migrate(Helix.DB.__schemaVersion, curVer);
                     Helix.DB.__schemaVersion = curVer;
                     
@@ -346,6 +361,7 @@ function initHelixDB() {
                     }
                 }
             }
+            return dirty;
         },
 
         migrateTable: function(oldVersion, schema, metaName, dirtyMap) {
@@ -1083,9 +1099,16 @@ function initHelixDB() {
 
                 if (deltaObj.deletes.length > 0) {
                     var toDeleteKey = deltaObj.deletes.pop();
-                    parentCollection.filter(keyField, "=", toDeleteKey).each(tx, function(elem) { 
-                        if (elem) {
-                            Helix.DB.cascadingRemove(tx,elem,removeFn,overrides);
+                    parentCollection.filter(keyField, "=", toDeleteKey).newEach(tx, {
+                        eachFn: function(elem) { 
+                            if (elem) {
+                                Helix.DB.cascadingRemove(tx,elem,removeFn,overrides);
+                            }
+                        },
+                        startFn: function(ct) {
+                            if (ct == 0) {
+                                removeFn();
+                            }
                         }
                     });
                 } else {

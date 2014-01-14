@@ -215,7 +215,7 @@ Helix.Layout = {
                 return;
             }
             
-            if ($(this).is('.pm-layout-full-height,.mh-layout-parent-height')) {
+            if ($(this).is('.pm-layout-full-height,.hx-layout-full-height,.mh-layout-parent-height')) {
                 Helix.Layout.layoutFullHeightComponent(contentHeight, this);
             } else if ($(this).is('.hx-overlay-full-height')) {
                 Helix.Layout.layoutFullHeightComponent(fullContentHeight, this);

@@ -398,11 +398,6 @@
          * and globalFilters with the format described in the options documentation.
          */
         refreshList: function(list,condition,sortFilterOptions,oncomplete) {
-            /* List must be non-empty and it must be a query collection. */
-            if (!list || !list.forEach) {
-                return;            
-            }
-        
             var _self = this;
             
             /* itemList is the current query collection. Display list is an array
@@ -925,6 +920,12 @@
                 //displayCollection = displayCollection.limit(_self.options.itemsPerPage);
                 /* XXX: Determine if there is a next page. If not, disable the next button. */
             }
+            
+            /* List must be non-empty and it must be a query collection. */
+            if (!displayCollection || !displayCollection.forEach) {
+                return;            
+            }
+            
             if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
