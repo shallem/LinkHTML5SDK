@@ -419,8 +419,15 @@
                 sorts = _self.options.sorts;
             } else {
                 sorts = _self._getSortsFromOptions(sortFilterOptions);
-            }
+            }            
             if (sorts) {
+                // If there is a default sort that is not returned in the list of sorts,
+                // add it. (EG. It can happen if the default sort uses a combination
+                // of fields).
+                if ((this.options.sortBy) && (sorts[this.options.sortBy] === undefined)) {
+                   sorts[this.options.sortBy] = "Default";
+                }
+                
                 _self._refreshSortContainer(sorts);
             }
             
@@ -549,7 +556,7 @@
                                 _self._currentSortOrder = "ASCENDING";
                             }
                         } else {
-                            _self._currentSort = newSortField;
+                               _self._currentSort = newSortField;
                             _self._currentSortOrder = "ASCENDING";
                         }
                         if (_self.nElems == 0) {
