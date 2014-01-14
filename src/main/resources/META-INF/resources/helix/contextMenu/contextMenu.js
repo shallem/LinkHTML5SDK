@@ -71,30 +71,30 @@
             }
             
             var selected = this.options.items[itemIndex];
-            var items = this._menuContainer.find('li');
+            var items = this.optionsList.find('[data-index="' + itemIndex + '"]');
 
-            if (itemIndex >= items.length) {
+            if (items.length == 0) {
                 return false;
             }
-            
-            var target = items[itemIndex];
+            var target = items[0];
 
             if (status === true) {
                 // Enable item
                 if (selected.enabled === false) {
-                    $(target).removeClass('ui-disabled');
-                    }
-                } else {
+                    $(target).closest('li').removeClass('ui-disabled');
+                }
+            } else {
                 // Disable item
                 // 'enabled' may be true, false or null/undefined
-                if (!(selected.enabled === false)) {
-                    $(target).addClass('ui-disabled');
-                    }   
-                }
-                
-                selected.enabled = status;
-                return true;
-            },
+                if (selected.enabled || (selected.enabled === undefined)) {
+                    var li = $(target).closest('li');
+                    $(li).addClass('ui-disabled');
+                }   
+            }
+
+            selected.enabled = status;
+            return true;
+        },
 
         refresh: function() {
             $(this.element).empty();

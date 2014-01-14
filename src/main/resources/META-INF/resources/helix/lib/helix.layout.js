@@ -27,6 +27,34 @@ Helix.Layout = {
     scrollerSel : '.pm-scroller,.pm-scroller-nozoom,.pm-scroller-zoomonly,.pm-scroller-horizontal',
 
     /**
+     * Selectors used to identify full height components.
+     */
+    fullHeightClasses: [
+        '.pm-layout-full-height',
+        '.hx-layout-full-height',
+        '.mh-layout-parent-height',
+        '.hx-overlay-full-height',
+        '.hx-layout-parent-height',
+        /* Include built-in jQM wrapper classes. These classes are inserted in between
+         * two elements with a user-controllable class list. If the parent has a recursive 
+         * layout class then we want to layout the child, even though it will not have any
+         * layout classes attached to it. If the parent does no have a recursive layout class
+         * attached then the class' presence here means nothing.
+         */
+        '.ui-panel-inner'
+    ],
+    
+    /**
+     * Selectors used to identify components that should be recursively laid out.
+     */
+    recurseLayoutClasses: [
+        '.pm-layout-full-height',
+        '.hx-layout-full-height',
+        '.hx-overlay-full-height',
+        '.ui-panel-inner'
+    ],
+
+    /**
      * List of all scrollers in the application.
      */
     allScrollers : {},
@@ -70,32 +98,35 @@ Helix.Layout = {
      *      The target component whose height should be set to maxHeight.
      */
     layoutFullHeightComponent: function(maxHeight, component) {
-        var paddingPixels = $(component).outerHeight(true) - $(component).innerHeight();
+        var paddingPixels = $(component).outerHeight(true) - $(component).height();
         var offsetPixels = 0;
+        var fullHeightSelector = Helix.Layout.fullHeightClasses.join(",");
+        var recurseSelector = Helix.Layout.recurseLayoutClasses.join(",");
+        
         if ($(component).css('top') !== 'auto') {
             // Doesn't handle all unit types.
             var cssAuto = $(component).css('top');
             offsetPixels = parseInt(cssAuto, 10);
         }
         
-        $(component).height(maxHeight - paddingPixels - offsetPixels);
+        var totHeight = paddingPixels + offsetPixels;
+        $(component).height(maxHeight - totHeight);
         
-        if ($(component).is(".mh-layout-parent-height")) {
-            /* This selector means to set the layout to the parent height and
+        if (!$(component).is(recurseSelector)) {
+            /* Set the layout to the parent height and do
              * not recurse any further.
              */
             return;
         }
         
         var children = $(component).children();
-        var totHeight = 0;
         var remainingHeight = 0;
         for (var i = 0; i < children.length; ++i) {
             if ($(children[i]).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/
                 continue;
             }
-            if ($(children[i]).is(".pm-layout-full-height,.mh-layout-parent-height")) {
+            if ($(children[i]).is(fullHeightSelector)) {
                 // These items must be side-by-side, otherwise the proposed layout is fully overlapping ...
                 continue;
             }
@@ -110,7 +141,7 @@ Helix.Layout = {
             }
         }
         
-        var childrenToRecurse = $(component).children('.pm-layout-full-height,.mh-layout-parent-height');
+        var childrenToRecurse = $(component).children(fullHeightSelector);
         
         /* If there are no elements to recurse over, set the last child of this element to full the 
          * rest of the screen.
@@ -120,7 +151,11 @@ Helix.Layout = {
             $fullHeightChild.height(maxHeight - remainingHeight);
         } else {
             childrenToRecurse.each(function() {
-                Helix.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
+                if ($(this).is('.hx-overlay-full-height')) {
+                    Helix.Layout.layoutFullHeightComponent(maxHeight, this);
+                } else {
+                    Helix.Layout.layoutFullHeightComponent(maxHeight - totHeight, this);
+                }
             });
         }
     },
@@ -171,6 +206,8 @@ Helix.Layout = {
     
     layoutPageFullScreen: function(page) {
         var contentHeight = Helix.Layout.resizePages(page);
+        var fullContentHeight = contentHeight;
+        
         Helix.Layout.contentHeight = contentHeight;
         $('[data-role="content"]', page).children().each(function() {
             if ($(this).is("style,script")) {
@@ -180,6 +217,8 @@ Helix.Layout = {
             
             if ($(this).is('.pm-layout-full-height,.mh-layout-parent-height')) {
                 Helix.Layout.layoutFullHeightComponent(contentHeight, this);
+            } else if ($(this).is('.hx-overlay-full-height')) {
+                Helix.Layout.layoutFullHeightComponent(fullContentHeight, this);
             } else {
                 contentHeight = contentHeight - $(this).outerHeight(true);
             }
