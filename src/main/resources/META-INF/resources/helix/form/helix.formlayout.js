@@ -704,7 +704,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     for (i = 0; i < formElem.controls.length; ++i) {
         var subElem = formElem.controls[i];
         __preprocessFormElement(formLayout, subElem);
-        if (subElem.hidden || subElem.disabled) {
+        if (subElem.disabled) {
             continue;
         }
         if (!subElem.name) {
@@ -712,19 +712,21 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
             continue;
         }
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
-        if (mode) {
-            subElem.editDOM = inputMarkup;
-        } else {
-            subElem.viewDOM = inputMarkup;
-        }
-        if (formLayout.currentMode === 'edit') {
-            subElem.DOM = subElem.editDOM;
-        } else {
-            subElem.DOM = subElem.viewDOM;
+        subElem.DOM = subElem.viewDOM = subElem.editDOM = inputMarkup;
+        if (subElem.hidden) {
+            $(subElem.DOM).hide();
         }
     }
     $(wrapperMarkup).controlgroup({ mini : useMiniLayout });
     $(fieldMarkup).fieldcontain();
+    
+    // After enhancement, hide any hidden controls
+    for (i = 0; i < formElem.controls.length; ++i) {
+        subElem = formElem.controls[i];
+        if (subElem.hidden) {
+            $(subElem.DOM).closest('div.ui-checkbox').hide();
+        }
+    }
 }
 
 function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
