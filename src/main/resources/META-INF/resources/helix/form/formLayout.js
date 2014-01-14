@@ -603,7 +603,14 @@
             }
             
             var searchName = this._addNamespace(name);
-            var thisField = $(fld.DOM).find('[name="' + searchName + '"]');
+            
+            var fldSelector = '[name="' + searchName + '"]';
+            var thisField;
+            if ($(fld.DOM).is(fldSelector)) {
+                thisField = $(fld.DOM);
+            } else {
+                thisField = $(fld.DOM).find(fldSelector);
+            }
             var fldType = this._typeMap[name];
             
             // Checkboxes and radios are handled the same regardless of mode.

@@ -274,9 +274,16 @@ a {
     margin-top: .5em;
 }
 
-.hx-mini-fieldview {
-    padding: .2em;
+.hx-fieldview {
+    padding: .1em;
     margin-bottom: .1em;
+    margin-top: 0em;
+    width: auto;
+}
+
+.hx-mini-fieldview {
+    padding: 0em;
+    margin-bottom: 0em;
     margin-top: 0em;
     width: auto;
 }

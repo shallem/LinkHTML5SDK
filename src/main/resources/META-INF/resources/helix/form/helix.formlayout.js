@@ -138,14 +138,15 @@ function __refreshDate(mode, formElem) {
             }
 
             var dateMarkup;
-            if (formElem.type === "date") {
-                if (formElem.value) {
+            if (formElem.type === 'date' ||
+                formElem.type === 'exactdate') {
+                if (formElem.type === 'date') {
                     var dateValue = new Date(Number(formElem.value));
                     dateMarkup = $('<a />').attr({
                         'title': dateValue.toISOString()
                     }).prettyDate();
                 } else {
-                    dateMarkup = "none";
+                    dateMarkup = $('<a />').append(formElem.value.toLocaleDateString());
                 }
                 if (formElem.fieldTitle) {
                     formElem.DOM.append($('<span/>').attr({
@@ -586,6 +587,11 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     $('<label />').attr('for', inputID).append(formElem.fieldTitle).appendTo($fieldContainer);
     $(inputMarkup).appendTo($fieldContainer);
     $(inputMarkup).checkboxradio({ mini: useMiniLayout });
+    if (formElem.onchange) {
+        $(inputMarkup).change(function() {
+            formElem.onchange.call(this);
+        });
+    }
     if (!mode) {
         /* View */
         $(inputMarkup).checkboxradio("disable");
@@ -835,14 +841,14 @@ function __refreshIFrame(formElem) {
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     if (formElem.height === 'full') {
-        $fieldContainer.addClass('pm-layout-full-height');
+        $fieldContainer.addClass('hx-layout-full-height');
     }
-    if (formElem.computedFieldStyle) {
-        var combinedStyle = $fieldContainer.attr('style') + ' ' + formElem.computedFieldStyle;
+    if (formElem.computedStyle) {
+        var combinedStyle = $fieldContainer.attr('style') + ' ' + formElem.computedStyle;
         $fieldContainer.attr('style', combinedStyle);
     }
-    if (formElem.computedFieldStyleClass) {
-        $fieldContainer.addClass(formElem.computedFieldStyleClass);
+    if (formElem.computedStyleClass) {
+        $fieldContainer.addClass(formElem.computedStyleClass);
     }
     
     if (!mode) {
@@ -856,7 +862,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         
         if (!formElem.height || (formElem.height === 'full')) {
             iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;"' +
-                ' width="' + (formElem.width ? formElem.width : '100%') + '"' +
+                ' width="' + formElem.computedWidth + '"' +
                 iFrameStyle + '">';
             if (!formLayout.__layoutFrames || formLayout.__layoutFrames.length == 0) {
                 formLayout.__layoutFrames = [];
@@ -865,7 +871,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             formLayout.__layoutFrames.push(frameID)
         } else {
             iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + 
-                '" width="' + (formElem.width ? formElem.width : '100%') + '"' +
+                '" width="' + formElem.computedWidth + '"' +
                 iFrameStyle + '">';
         }
         
@@ -1092,7 +1098,8 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
 
     // Create the collapsible content.
     subPanelDiv.collapsible({
-        collapsed: !subPanelObj.noCollapse
+        collapsed: !subPanelObj.noCollapse,
+        mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false))
     });
     $(subPanelDiv).on('collapsibleexpand', function(event, ui) {
         __layoutFrames(page, subPanelObj);
@@ -1123,7 +1130,7 @@ function __preprocessFormElement(formLayout, formElem) {
     if (formElem.style) {
         if (!Helix.Utils.isString(formElem.style)) {
             formElem.computedStyle = 
-                (formElem.style[Helix.deviceType] ?  formElem.style[Helix.deviceType] : formElem.style['default']);
+                (formElem.style[Helix.deviceType] ?  formElem.style[Helix.deviceType] : formElem.style['default']) + ";";
         } else {
             formElem.computedStyle = formElem.style + ";";
         }
@@ -1132,13 +1139,15 @@ function __preprocessFormElement(formLayout, formElem) {
     if (formElem.width) {
         if (!Helix.Utils.isString(formElem.width)) {
             /* Mapping from device type to width. */
-            formElem.computedStyle = formElem.computedStyle + 'width: ' + 
-                (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
+            formElem.computedWidth = (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
         } else {
-            formElem.computedStyle = formElem.computedStyle + 'width: ' + (formElem.width === 'full' ? "100%" : formElem.width);
+            formElem.computedWidth = (formElem.width === 'full' ? "100%" : formElem.width);
         }
     } else {
-        formElem.computedStyle = formElem.computedStyle + 'width: 90%;';
+        formElem.computedWidth = '90%';
+    }
+    if (!formElem.computedStyle) {
+        formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
     }
     
     if (!formElem.mode) {
@@ -1150,17 +1159,15 @@ function __preprocessFormElement(formLayout, formElem) {
         formElem.value = formElem.defaultValue;
     }
     
-    if (formLayout.currentMode === 'view') {
-        /* skip in view mode. */
-        formElem.disabled = (formElem.mode === 'edit');
-        return;
-    } 
-    
-    if (formLayout.currentMode === 'edit') {
-        /* skip in edit mode. */
-        formElem.disabled = (formElem.mode === 'view');
-        return;
-    } 
+    /**
+     * Check if this element is disabled on this device.
+     */
+    if (formElem.deviceType && formElem.deviceType !== 'all') {
+        if (formElem.deviceType !== Helix.Utils.deviceType) {
+            formElem.disabled = true;
+            return;
+        }
+    }
     
     formElem.disabled = false;
 }
@@ -1187,9 +1194,9 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     
     __preprocessFormElement(formLayout, formElem);
     
-    /*if (formElem.disabled) {
+    if (formElem.disabled) {
         return;
-    }*/
+    }
     
     if (formElem.type == 'separator') {
         if (formElem.mode === 'all') {
@@ -1247,7 +1254,12 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                 $viewFieldContainer.append(formElem.fieldTitle);
             }
             if (formElem.type in Helix.Utils.fieldContainers) {
-                $viewFieldContainer.addClass('hx-mini-fieldview'); 
+                if (formElem.mini) {
+                    $viewFieldContainer.addClass('hx-mini-fieldview'); 
+                } else {
+                    $viewFieldContainer.addClass('hx-fieldview'); 
+                }
+                
                 $viewFieldContainer.addClass('ui-fieldcontain'); 
                 $viewFieldContainer.addClass('ui-body'); 
                 $viewFieldContainer.addClass('ui-br');

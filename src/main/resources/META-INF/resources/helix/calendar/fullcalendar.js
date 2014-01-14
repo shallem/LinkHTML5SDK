@@ -234,6 +234,7 @@ function Calendar(element, options, eventSources) {
 	t.option = option;
 	t.trigger = trigger;
         t.contentOffset = getContentOffset;
+        t.gotoHour = gotoHour;
 	
 	
 	// imports
@@ -657,7 +658,13 @@ function Calendar(element, options, eventSources) {
 		}
 		renderView();
 	}
-	
+        
+        function gotoHour(firstHour) {
+                this.options['firstHour'] = firstHour;
+                if (currentView.resetScroll) {
+                    currentView.resetScroll();
+                }
+        }
 	
 	function incrementDate(years, months, days) {
 		if (years !== undefined) {
@@ -2907,6 +2914,7 @@ function AgendaView(element, calendar, viewName) {
 	t.setWidth = setWidth;
 	t.setHeight = setHeight;
 	t.afterRender = afterRender;
+        t.resetScroll = resetScroll;
 	t.defaultEventEnd = defaultEventEnd;
 	t.timePosition = timePosition;
 	t.getIsCellAllDay = getIsCellAllDay;
