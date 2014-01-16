@@ -1310,6 +1310,14 @@
             return this.selected;
         },
         
+        clearSelected: function() {
+            if (this.selected) {
+                this.selectedLI.removeClass('ui-btn-active');
+                this.selectedLI = null;
+                this.selected = null;
+            }
+        },
+        
         getSelectedLI: function() {
             return this.selectedLI;
         },
