@@ -599,7 +599,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     return inputMarkup;
 }
 
-function __refreshControl(subElem, noRefresh) {
+function __refreshControl(subElem, noRefresh, mode) {
     var DOM;
     if ($(subElem.DOM).is('input')) {
         DOM = subElem.DOM;
@@ -619,6 +619,13 @@ function __refreshControl(subElem, noRefresh) {
     }
     if (!noRefresh) {
         $(DOM).checkboxradio("refresh");
+        if (!mode) {
+            /* View */
+            $(DOM).checkboxradio("disable");
+        } else {
+            /* Edit */
+            $(DOM).checkboxradio("enable");
+        }
     }
 }
 
@@ -1190,9 +1197,16 @@ Helix.Utils.fieldContainers = {
     'datetime' : true
 };
 
+Helix.Utils.oneContainerLayouts = {
+    'controlset' : true,
+    'checkbox' : true
+};
+
 Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
     var supportedModes = formLayout.modes;
     var currentMode = formLayout.currentMode;
+    var renderFn = null;
+    var oneContainer = false;
     
     var separateElements = formLayout.separateElements;
     
@@ -1273,10 +1287,15 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     
     if (supportedModes !== 'view' &&
         formElem.mode !== 'view') {
-        /* Edit mode. */
-        formElem.editDOM = $editFieldContainer = $('<div />').attr({
-            'id' : containerID + "_edit"
-        }).appendTo(parentDiv);
+        if (formElem.type in Helix.Utils.oneContainerLayouts) {
+            formElem.editDOM = $editFieldContainer = $viewFieldContainer;
+            oneContainer = true;
+        } else {
+            /* Edit mode. */
+            formElem.editDOM = $editFieldContainer = $('<div />').attr({
+                'id' : containerID + "_edit"
+            }).appendTo(parentDiv);            
+        }
     }
     if (currentMode === 'view') {
         formElem.DOM = $viewFieldContainer;
@@ -1284,7 +1303,6 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.DOM = $editFieldContainer;
     }
     
-    var renderFn = null;
     if (formElem.type == "text") {
         renderFn = __appendTextBox;
     } else if (formElem.type == 'textarea') {
@@ -1492,15 +1510,15 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         if (renderFn) {
             renderFn.call(formElem, 0, formLayout, formElem, $viewFieldContainer, useMiniLayout, page, parentDiv);
         }
-        if (currentMode === 'edit') {
+        if (currentMode === 'edit' && !oneContainer) {
             $viewFieldContainer.hide();
         }
     }
-    if ($editFieldContainer) {
+    if ((!oneContainer && $editFieldContainer)) {
         if (renderFn) {
             renderFn.call(formElem, 1, formLayout, formElem, $editFieldContainer, useMiniLayout, page, parentDiv);
         }
-        if (currentMode === 'view') {
+        if (currentMode === 'view' && !oneContainer) {
             $editFieldContainer.hide();
         }
     }

@@ -451,7 +451,7 @@
                         $(thisField).html(value);
                     }
                 } else if (fldType === 'checkbox') {
-                    __refreshControl(item);
+                    __refreshControl(item, false, mode);
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
                 } else if (fldType === 'htmlframe') {

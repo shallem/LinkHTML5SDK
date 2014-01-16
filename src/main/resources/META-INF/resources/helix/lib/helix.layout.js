@@ -170,19 +170,24 @@ Helix.Layout = {
          * between the viewport height and the combined header/footer height. 
          */
         var $header = page.find('[data-role="header"]');
-        var headerHeight = Helix.Layout.headerHeight = $header.outerHeight(true);
+        var headerHeight = Helix.Layout.headerHeight = 0;
+        if ($header.is(':visible')) {
+            headerHeight = Helix.Layout.headerHeight = $header.outerHeight(true);
+        }
         
         var $footer = page.find('[data-role="footer"]');
-        var footerHeight = 0;
+        var footerHeight = Helix.Layout.footerHeight = 0;
         if ($footer.is(':visible')) {
-            footerHeight = $footer.outerHeight(true);
+            footerHeight = Helix.Layout.footerHeight = $footer.outerHeight(true);
         }
         var pageHeight = height;
-        var contentHeight = height - footerHeight;
-        contentHeight = contentHeight - headerHeight;
+        var contentHeight = height - footerHeight - headerHeight;
         if ($header.is('[data-position="fixed"]')) {
-            pageHeight = contentHeight;
-        } 
+            pageHeight -= headerHeight;
+        }
+        if ($footer.is('[data-position="fixed"]')) {
+            pageHeight -= footerHeight;
+        }
         page.height(pageHeight);
         
         var content = page.find('.hx-main-content');
