@@ -2031,6 +2031,11 @@ function getSkinCss(event, opt) {
         if (isHatched) {
             // From http://www.patternify.com/
             statements.push('background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAJElEQVQIW2NkYGD4D8SMQAwHMA6KBLIKuASKNphR6IIgc/8DAACiBQXgDbYOAAAAAElFTkSuQmCC) repeat');
+            if (!backgroundColor) {
+                statements.push('background-color: white');
+            }
+            // Otherwise it is hard to read the text on the hatched background.
+            statements.push('font-weight: bold');
         }
 	return statements.join(';');
 }
