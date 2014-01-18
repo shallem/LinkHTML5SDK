@@ -610,12 +610,12 @@ function __refreshControl(subElem, noRefresh, mode) {
     if (subElem.value) {
         if (typeof subElem.value === "boolean" &&
             subElem.value) {
-            $(DOM).attr('checked', 'true');
+            $(DOM).prop('checked', true);
         } else if (subElem.value === "true") {
-            $(DOM).attr('checked', 'true');
+            $(DOM).prop('checked', true);
         }
     } else if (subElem.value !== undefined) {
-        $(DOM).removeAttr('checked');
+        $(DOM).prop('checked', false);
     }
     if (!noRefresh) {
         $(DOM).checkboxradio("refresh");
@@ -719,10 +719,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
             continue;
         }
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
-        subElem.DOM = subElem.viewDOM = subElem.editDOM = inputMarkup;
-        if (subElem.hidden) {
-            $(subElem.DOM).hide();
-        }
+        subElem.DOM = inputMarkup;
     }
     $(wrapperMarkup).controlgroup({ mini : useMiniLayout });
     $(fieldMarkup).fieldcontain();
@@ -730,8 +727,17 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     // After enhancement, hide any hidden controls
     for (i = 0; i < formElem.controls.length; ++i) {
         subElem = formElem.controls[i];
+        subElem.DOM = subElem.viewDOM = subElem.editDOM = $(subElem.DOM).closest('div.ui-checkbox');
         if (subElem.hidden) {
-            $(subElem.DOM).closest('div.ui-checkbox').hide();
+            $(subElem.DOM).hide();
+        }
+        if (subElem.mode === 'edit') {
+            /* No view. */
+            subElem.viewDOM = null;
+        }
+        if (subElem.mode === 'view') {
+            /* No edit. */
+            subElem.editDOM = null;
         }
     }
 }

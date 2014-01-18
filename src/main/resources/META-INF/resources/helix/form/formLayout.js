@@ -483,11 +483,11 @@
                     // Controlset
                     for (idx = 0; idx < item.controls.length; ++idx) {
                         var controlItem = item.controls[idx];
-                        if (!controlItem.hidden) {
+                        /*if (!controlItem.hidden) {
                             $(controlItem.DOM).closest('div.ui-checkbox').show();
                         } else {
                             $(controlItem.DOM).closest('div.ui-checkbox').hide();
-                        }
+                        }*/
                         
                         this.__refreshOneValue(mode, controlItem, valuesMap);
                     }
