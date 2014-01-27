@@ -18,9 +18,10 @@
 
 package org.helix.mobile.application;
 
+import java.io.InputStream;
+import java.util.Properties;
 import javax.faces.application.Resource;
 import javax.faces.application.ResourceWrapper;
-import org.primefaces.util.Constants;
 
 /**
  * {@link ResourceWrapper} which appends the version of PrimeFaces to the URL.
@@ -37,7 +38,29 @@ public class PrimeFacesResource extends ResourceWrapper {
 	public PrimeFacesResource(final Resource resource) {
 		super();
 		wrapped = resource;
-		version = "&amp;v=" + Constants.VERSION;
+		version = "&amp;v=";//+ Constants.VERSION;
+		try {	// Get version number on runtime ot Primefaces 3.4.x or 3.5.x
+			Class<?> constantsClass = Class.forName("org.primefaces.util.Constants");
+			version = version + (String) constantsClass.getDeclaredField("VERSION").get(String.class);
+        	} catch (NoSuchFieldException e1) {
+
+            		try {	// Primefaces 4.x
+                	Properties pomProperties = new Properties();
+                	Class<?> constantsClass = Class.forName("org.primefaces.util.Constants");
+                	ClassLoader classLoader = constantsClass.getClassLoader();
+                	InputStream inputStream = classLoader.getResourceAsStream(
+                        	"META-INF/maven/org.primefaces/primefaces/pom.properties");
+               		if (inputStream != null) {
+                    		pomProperties.load(inputStream);
+                    		inputStream.close();
+                   		version = version + pomProperties.getProperty("version");
+                	}
+			} catch (Exception e2) {
+                		// Ignore -- PrimeFaces is likely not present.
+ 			}
+		} catch (Exception e3) {
+
+		}
 	}
 
 	@Override
