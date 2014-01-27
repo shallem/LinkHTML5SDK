@@ -38,7 +38,7 @@ various 3rd party components.
 jQuery Mobile
 =============
 
-At the heart of the Link HTML5 SDK is jQuery Mobile, v1.3.1. In
+At the heart of the Link HTML5 SDK is jQuery Mobile, v1.3.2. In
 addition, we have wrapped certain jQM components in our on plugins to
 provide additional features, such as native-style scrolling on touch
 devices and rich-text editing. We have also added a number of features
