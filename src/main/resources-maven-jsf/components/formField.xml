@@ -154,6 +154,18 @@
             <description>On focus event for field types that support it.</description>
         </attribute>
         <attribute>
+            <name>autocomplete</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function to call to generate a list of autocomplete options. Only available for text fields.</description>
+        </attribute>
+        <attribute>
+            <name>autocompleteSelect</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Action to execute when an element is selected from an autocomplete list.</description>
+        </attribute>
+        <attribute>
             <name>validator</name>
             <required>false</required>
             <type>java.lang.String</type>

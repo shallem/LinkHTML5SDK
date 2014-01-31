@@ -89,6 +89,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getOnfocus() != null) {
             writer.write(", 'onfocus' : " + ffield.getOnfocus());
         }
+        if (ffield.getAutocomplete() != null) {
+            writer.write(", 'autocomplete' : " + ffield.getAutocomplete());
+        }
+        if (ffield.getAutocompleteSelect() != null) {
+            writer.write(", 'autocompleteSelect' : " + ffield.getAutocompleteSelect());
+        }
         if (ffield.getOptions() != null) {
             writer.write(", 'options' : " + ffield.getOptions());
         }
