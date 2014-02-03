@@ -93,6 +93,14 @@
             paginatorTemplate: '{PreviousPageLink} {CurrentPageReport} {NextPageLink}',
             
             /**
+             * Optional callback invoked with a single argument that is the component of
+             * the paginator template. If the function returns non-null, a custom template
+             * is used in lieu of the default for that component. This is particularly useful
+             * to customize the text in the {CurrentPageReport} object.
+             */
+            customPaginatorTemplate : null,
+            
+            /**
              * Action to perform if the user taps/clicks on a list item.
              */
             selectAction: null,
@@ -859,10 +867,11 @@
                     'itemsPerPage' : _self.options.itemsPerPage,
                     'nextPage' : _self.nextPage,
                     'prevPage' : _self.prevPage,
-                    'owner' : _self
+                    'owner' : _self,
+                    'template' : (_self.options.customPaginatorTemplate ? _self.options.customPaginatorTemplate(obj) : null)
                 });
-                _self.$paginatorDiv.show();
             });
+            _self.$paginatorDiv.show();
         },
         
         _resetPaging: function() {

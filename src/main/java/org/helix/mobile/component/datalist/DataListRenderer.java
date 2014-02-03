@@ -197,6 +197,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",pullToRefresh: " + dlist.getPullToRefresh());
         }
         
+        // Custom paginator template.
+        if (dlist.getCustomPaginatorTemplate() != null) {
+            writer.write(",customPaginatorTemplate: " + dlist.getCustomPaginatorTemplate());
+        }
+        
         // Header.
         if (dlist.getHeaderText() != null) {
             writer.write(",headerText: '" + dlist.getHeaderText() + "'");

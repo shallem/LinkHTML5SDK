@@ -324,3 +324,12 @@ a {
 .hx-no-vscroll {
     overflow-y: hidden;
 }
+
+/* On iOS, scrolling blocks can show a very distracting flicker. According to this site:
+    https://gist.github.com/bdalziel/3005482
+   the CSS below fixes the flicker. It does seem to work.
+*/
+li {
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0,0,0);
+}

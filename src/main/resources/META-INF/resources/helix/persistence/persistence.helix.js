@@ -401,28 +401,53 @@ function initHelixDB() {
 
                 var tf = $.parseJSON(schemaRec.tableFields);
                 if (!Helix.Utils.objectsEqual(tf, schema.fields)) {
-                    $.extend(allOldFields, tf);
                     var fieldsString = JSON.stringify(schema.fields);
                     dirty = 1;
                     fieldsChanged = 1;
                     schemaRec.tableFields = fieldsString;
                     dirtyMap['fields'] = true;
                 }
+                $.extend(allOldFields, tf);
                 $.extend(allNewFields, schema.fields);
                 
                 var manyToOneStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
+                var oldManyToOne = $.parseJSON(schemaRec.tableManyToOne);
                 if (manyToOneStr !== schemaRec.tableManyToOne) {
-                    $.extend(allOldFields, $.parseJSON(schemaRec.tableManyToOne));
+                    var allManyToOne = {};
+                    $.extend(allManyToOne, oldManyToOne);
+                    
+                    // At this point, allManyToOne includes all old fields. We want to
+                    // see if this schema sync is *adding* fields, in which case we mark
+                    // the field list as dirty. We DO NOT delete many to one reference fields
+                    // because we want to allow a single object type to have different parent
+                    // objects in different load commands.
+                    for (var newFld in schema.schema.meta.hasOne) {
+                        if (!allManyToOne[newFld]) {
+                            // we have a new relationship field ...
+                            fieldsChanged = 1;
+                            var r = schema.schema.meta.hasOne[newFld];
+                            allManyToOne[newFld] = {
+                                "table" : r.type.__hx_schema_name, 
+                                "inverse": r.inverseProperty
+                            };
+                        }
+                    }
                     dirty = 1;
-                    fieldsChanged = 1;
+                    
+                    // XXX: for now, we never delete relationship fields. Eventually we
+                    // might find a way to check and see if the table we are relating to
+                    // is deleted, but first we need to invent a mechanism for table deletion.
+                    manyToOneStr = JSON.stringify(allManyToOne);
                     schemaRec.tableManyToOne = manyToOneStr;
+                    
+                    $.extend(allNewFields, allManyToOne);
                     dirtyMap['manytoone'] = true;
                 } else if (dirtyMap['fields']) {
                     // We are going to migrate all fields. Make sure we don't omit an id
-                    // relationship field.
-                    $.extend(allOldFields, $.parseJSON(schemaRec.tableManyToOne));
+                    // relationship field.    
+                    $.extend(allNewFields, schema.schema.meta.hasOne);
                 }
-                $.extend(allNewFields, schema.schema.meta.hasOne);
+                $.extend(allOldFields, oldManyToOne);
                 
                 var oneToManyStr = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
                 if (oneToManyStr !== schemaRec.tableOneToMany) {

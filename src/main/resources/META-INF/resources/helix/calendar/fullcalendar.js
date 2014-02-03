@@ -1814,6 +1814,13 @@ function _exclEndDay(end, allDay) {
 
 
 function lazySegBind(container, segs, bindHandlers) {
+    // Lazy binding does not work on touch devices now that we have a context event
+    // (taphold).
+    for (var i = 0; i < segs.length; ++i) {
+        var seg = segs[i];
+        bindHandlers(seg.event, seg.element, seg);
+    }
+    /*
 	container.unbind('mouseover').mouseover(function(ev) {
 		var parent=ev.target, e,
 			i, seg;
@@ -1828,7 +1835,7 @@ function lazySegBind(container, segs, bindHandlers) {
 			$(ev.target).trigger(ev);
 		}
 		ev.stopPropagation();
-	});
+	});*/
 }
 
 
@@ -4856,7 +4863,10 @@ function View(element, calendar, viewName) {
 				function(ev) {
 					trigger('eventMouseout', this, event, ev);
 				}
-			);
+			)
+                        .on(Helix.contextEvent, function(ev) {
+                                return trigger('contextClick', this, event, ev);
+                        });
 		// TODO: don't fire eventMouseover/eventMouseout *while* dragging is occuring (on subject element)
 		// TODO: same for resizing
 	}

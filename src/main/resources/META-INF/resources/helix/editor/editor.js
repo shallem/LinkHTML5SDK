@@ -498,6 +498,9 @@
     
     function attachKeyboardHideEvent(editor) {
         $(document).on('keyboardHide', function() {
+            clearTimeout(editor.changeTimeout);
+            editor.changeTimeout = null;
+            updateTextArea(editor, true);
             editor.$toolbarEnabled = false;
             editor.popupOpen = false;
             for (var menuName in editor.menuPopups) {
@@ -608,9 +611,16 @@
         try {
             success = editor.doc.execCommand(command, 0, value || null);
             if (success && (button.type == "font" || button.type == "style" || button.type == 'color')) {
-                if (button.type === "style") {
+                if (button.type === "font") {
+                    editor.currentFont = value;
+                } else if (button.type === "style") {
                     var styleToToggle = 'ui-editor-' + command;
                     editor.$formatFrame.toggleClass(styleToToggle);
+                    // iOS bug - if you change the style after you set the font, sometimes the font is
+                    // lost.
+                    if (editor.currentFont) {
+                        editor.doc.execCommand("fontname", 0, editor.currentFont);
+                    }
                 } else {
                     if (command === "fontname") {
                         editor.$formatFrame.css('font-family', value);
@@ -810,7 +820,7 @@
             }
             editor.changeTimeout = setTimeout(function() {
                 updateTextArea(editor, true);
-            }, 3);
+            }, 3000);
             e.preventDefault();
             e.stopImmediatePropagation();
         });

@@ -529,7 +529,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function() {
-                formElem.onblur.apply(this);
+                if (!formElem.__noblur) {
+                    formElem.onblur.apply(this);
+                }
             });
         }
         // Apply styling to the input text div ...
@@ -541,6 +543,49 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             if (formElem.computedStyleClass) {
                 $(uiInputText).addClass(formElem.computedStyleClass);
             }
+        }
+        
+        // Add in autocomplete.
+        if (formElem.autocomplete && formElem.autocompleteSelect) {
+            if (!formElem.autocompleteThreshold) {
+                formElem.autocompleteThreshold = 2;
+            }
+            // To get this to hover, we must make it a 'positioned' element. position: relative does
+            // nothing on the iPad. position: absolute yields proper hovering.
+            var autoCompleteList = $('<ul/>').css('z-index', 10000)
+                                             .css('width', '100%')
+                                             .css('position', 'absolute')
+                                             .appendTo($fieldContainer).listview({ inset : true });
+            $(inputMarkup).on('input', function() {
+                var text = $(this).val();
+                if (text.length < formElem.autocompleteThreshold) {
+                    autoCompleteList.empty();
+                    autoCompleteList.listview("refresh");
+                } else {
+                    formElem.autocomplete(text, function(LIs) {
+                        // Set __noblur to prevent the user's clicking on an autocomplete list
+                        // item from triggering a blur event, which doesn't make sense because
+                        // the value supplied to the blur event should be the value clicked upon,
+                        // not the value in the input text box.
+                        formElem.__noblur = true;
+                        autoCompleteList.empty();
+                        if (LIs && LIs.length) {
+                            for (var i = 0; i < LIs.length; ++i) {
+                                $("<li/>").append(LIs[i]).on('vclick', function() {
+                                    formElem.autocompleteSelect($(this).text());
+                                    autoCompleteList.empty();
+                                    $(inputMarkup).val('');
+                                    formElem.__noblur = false;
+                                    return false;
+                                }).appendTo(autoCompleteList);
+                            }
+                            autoCompleteList.listview("refresh");
+                        } else {
+                            formElem.__noblur = false;
+                        }
+                    });
+                }
+            });
         }
     } else {
         if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
@@ -776,51 +821,6 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
 }
 
-function __setHref(elem, href) {
-    elem.href = null;
-    if (!Helix.hasTouch) {
-        elem.onclick = function() {
-            window.open(href);
-        };
-    } else {
-        elem.ontouchstart = function() {
-            window.open(href);
-        };
-        /*elem.addEventListener('touchstart', function() {
-            window.open(href);
-        }, false);*/
-    }
-}
-
-function __autoResize(id){
-    var elem = document.getElementById(id);
-    if (elem == null) {
-        // Frame has been removed from the DOM.
-        return;
-    }
-    
-    // Eventually add a way to toggle this off.
-    var allLinks = elem.contentWindow.document.getElementsByTagName("a");
-    for (var i = 0; i < allLinks.length; ++i) {
-        var nxt = allLinks[i];
-        var href = nxt.href;
-        if (href) {
-            __setHref(nxt, href);
-        }
-    }
-}
-
-function __layoutFrames(page, formLayout) {
-    $(page).off('hxLayoutDone.frames').on('hxLayoutDone.frames', function() {
-        if (!formLayout.__layoutFrames) {
-            return;
-        }
-        for (var i = 0; i < formLayout.__layoutFrames.length; ++i) {
-            __autoResize(formLayout.__layoutFrames[i]);
-        }
-    });
-}
-
 function __refreshIFrame(formElem) {
     var frameID = formElem.name;
     var $frame = formElem.DOM.find(PrimeFaces.escapeClientId(frameID));
@@ -840,9 +840,9 @@ function __refreshIFrame(formElem) {
     if (!formElem.noBody) {
         doc.write('<body style="height: 100%;">');
     }
-    if (formElem.isScroller) {
+    /*if (formElem.isScroller) {
         $(doc.body).css('overflow-y', 'scroll');
-    }
+    }*/
     doc.write(formElem.value);
     if (!formElem.noHTML) {
         doc.write('</html>');
@@ -872,22 +872,28 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             console.log("Each IFrame form element must have a name. Cannot specify an IFrame form element without either.");
             return;
         }
+        var extraStyle = '';
+        if (formElem.isScroller) {
+            extraStyle = 'overflow-y: scroll; -webkit-overflow-scrolling: touch;';
+            $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
+        }
+        
         var iFrameMarkup = null;
-        var iFrameStyle = ' style="border:0px;"';
+        var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
+        var iFrameWidth = ' width="' + formElem.computedWidth + '"';
+        var onloadAttr = (formElem.onload ? ('onload="' + formElem.onload + '"') : '');
         
         if (!formElem.height || (formElem.height === 'full')) {
-            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;"' +
-                ' width="' + formElem.computedWidth + '"' +
-                iFrameStyle + '">';
-            if (!formLayout.__layoutFrames || formLayout.__layoutFrames.length == 0) {
-                formLayout.__layoutFrames = [];
-                __layoutFrames(page, formLayout);
-            }
-            formLayout.__layoutFrames.push(frameID)
+            iFrameMarkup = '<iframe id="' + frameID + 
+                '" src="javascript:true;"' +
+                iFrameWidth +
+                onloadAttr +
+                iFrameStyle + '>';
         } else {
-            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + 
-                '" width="' + formElem.computedWidth + '"' +
-                iFrameStyle + '">';
+            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
+                iFrameWidth +
+                onloadAttr +
+                iFrameStyle + '>';
         }
         
         $(iFrameMarkup).appendTo($fieldContainer).hide();
@@ -1115,9 +1121,6 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     subPanelDiv.collapsible({
         collapsed: !subPanelObj.noCollapse,
         mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false))
-    });
-    $(subPanelDiv).on('collapsibleexpand', function(event, ui) {
-        __layoutFrames(page, subPanelObj);
     });
     
     // Determine if the sub-panel is visible based on the 'mode' field.
@@ -1567,7 +1570,6 @@ function __preprocessFormLayout(formLayout) {
         }
     }
     
-    formLayout.__layoutFrames = [];
     formLayout.__tabIndex = 1;
 }
 

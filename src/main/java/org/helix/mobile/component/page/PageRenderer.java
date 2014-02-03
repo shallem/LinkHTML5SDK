@@ -53,6 +53,12 @@ public class PageRenderer extends CoreRenderer {
         //writer.writeAttribute("content", "initial-scale=1.0", null);
         writer.writeAttribute("content", page.getViewport(), null);
         writer.endElement("meta");
+        
+        // Disable built-in iOS telephone/email detection.
+        writer.startElement("meta", null);
+        writer.writeAttribute("name", "format-detection", null);
+        writer.writeAttribute("content", "telephone=no", null);
+        writer.endElement("meta");
 
         writer.startElement("title", null);
         writer.write(page.getTitle());
