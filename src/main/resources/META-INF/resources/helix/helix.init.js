@@ -38,6 +38,24 @@ Helix.Layout = {
     
 };
 
+Helix.postInit = function(fn, thisArg, args) {
+    if (!args) {
+        args = [];
+    }
+    if (!thisArg) {
+        thisArg = window;
+    }
+    if (Helix.ready) {
+        fn.apply(thisArg, args);
+    } else {
+        $(document).on('helixinit', function() {
+            fn.apply(thisArg, args);
+        });
+    }
+};
+
+Helix.ready = false;
+
 (function($) {
     $(document).on('ready', function() {
         /* Update the .val method on textareas to preserve newlines. See
@@ -50,6 +68,8 @@ Helix.Layout = {
         };
 
         $(document).trigger('helixinit');
+        Helix.ready = true;
+        
         $(document).trigger('helixready');
     });
 })(jQuery);
