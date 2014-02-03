@@ -496,7 +496,7 @@
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder === "DESCENDING") {
+                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") == 0) {
                     // Show the descending button, reflecting the CURRENT order.
                     $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
@@ -557,22 +557,52 @@
                     $(sortItem).on(_self.tapEvent, function(evt) {
                         evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
-                        if (newSortField === _self._currentSort) {
-                            if (_self._currentSortOrder === "ASCENDING") {
-                                _self._currentSortOrder = "DESCENDING";
-                            } else {
-                                _self._currentSortOrder = "ASCENDING";
+                        
+                        var found = false;
+                        if (_self._currentSort) {
+                            var curSortFields = _self._currentSort.split(',');
+                            var curSortOrders = _self._currentSortOrder.split(',');
+                            
+                            for (var i = 0; i < curSortFields.length; ++i) {
+                                var sortFld = curSortFields[i];
+                                var sortOrder = null;
+                                if (i == curSortOrders.length) {
+                                    curSortOrders.push(curSortOrders[i - 1]);
+                                }
+                                sortOrder = curSortOrders[i];
+                                
+                                if (sortFld == newSortField) {
+                                    // Reverse the direction.
+                                    if (sortOrder.toUpperCase() == "ASCENDING") {
+                                        curSortOrders[i] = "DESCENDING";
+                                    } else {
+                                        curSortOrders[i] = "ASCENDING";
+                                    }
+                                    found = true;
+                                    break;
+                                }
                             }
-                        } else {
-                               _self._currentSort = newSortField;
-                            _self._currentSortOrder = "ASCENDING";
+                            if (found) {
+                                _self._currentSortOrder = curSortOrders.join(',');
+                            }
                         }
+                        // We don't append sort orders - we just reset the sort order to the
+                        // new field.
+                        if (!found) {
+                            _self._currentSort = newSortField;
+                            _self._currentSortOrder = "DESCENDING"; 
+                        }
+                        
                         if (_self.nElems == 0) {
                             /* Nothing to do. */
                             return false;
                         }
                         if (_self.options.onSortChange) {
-                            _self.options.onSortChange(_self._currentSort, _self._currentSortOrder);
+                            var updatedSorts = _self.options.onSortChange(_self._currentSort, _self._currentSortOrder, newSortField);
+                            if (updatedSorts) {
+                                _self._currentSort = (updatedSorts.sort ? updatedSorts.sort : _self._currentSort);
+                                _self._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : _self._currentSortOrder);
+                            }
                         }
                         _self._updateSortButtons();
                         
@@ -662,8 +692,8 @@
             }
         },
         
-        _resetGlobalFilters: function() {
-            var curCollection = this.unfilteredList;
+        _resetGlobalFilters: function(itemList) {
+            var curCollection = (itemList ? itemList : this.unfilteredList);
             for (var filteredFld in this._filterMap) {
                 curCollection = this.options.doGlobalFilter(curCollection, filteredFld, this._filterMap[filteredFld]);
             }
@@ -913,7 +943,6 @@
         _refreshData: function(oncomplete) {
             var _self = this;
             var orderby = _self._currentSort; 
-            var displayCollection = _self.itemList;
         
             this._clearListRows();
             _self.refreshInProgress = true;
@@ -938,9 +967,16 @@
             }
             
             /* List must be non-empty and it must be a query collection. */
+            var displayCollection = _self.itemList;
             if (!displayCollection || !displayCollection.forEach) {
                 return;            
             }
+            
+            /* Apply any active search terms, then global filters. Note, we must apply 
+             * search first. 
+             */
+            displayCollection = _self._applySearch(displayCollection);
+            displayCollection = _self._resetGlobalFilters(displayCollection);
             
             if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
@@ -990,6 +1026,13 @@
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
         
+        _applySearch: function(itemList) {
+            if (this.__searchText && this.__searchText.trim()) {
+                return this.options.indexedSearch(this.__searchText.trim());
+            }
+            return (itemList ? itemList : this.unfilteredList);
+        },
+        
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();
@@ -1002,11 +1045,6 @@
                     clearTimeout(_self.__searchReadyTimeout);
                 }
                 
-                _self.itemList = _self.options.indexedSearch(_self.__searchText.trim());
-                if (!_self.itemList) {
-                    // The user cleared the search text.
-                    _self.itemList = _self.unfilteredList;
-                }
                 _self._refreshData(function() {
                     _self._resetPaging();
                     _self.$parent.listview( "refresh" );
@@ -1146,6 +1184,7 @@
                 });
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.unfilteredList;
+                    _self.__searchText = "";
                     _self._refreshData(function() {
                         _self._resetPaging();
                         _self.$parent.listview( "refresh" );
@@ -1166,7 +1205,7 @@
             var oidx = 0;
             for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                 var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
-                if (latestDirection == "DESCENDING") {
+                if (latestDirection.toUpperCase() == "DESCENDING") {
                     displayCollection = displayCollection.order(orderbyFields[oidx], false);
                 } else {
                     displayCollection = displayCollection.order(orderbyFields[oidx], true);
@@ -1422,6 +1461,28 @@
             if (this.options.selectAction) {
                 this.options.selectAction(this.selected, this.selectedGroup, this.strings);
             }          
+        },
+        selectNext: function() {
+            if (!this.selectedLI) {
+                this.setSelectedByIndex(0, 0);
+            } else {
+                var nxt = this.selectedLI.next('li[data-index]');
+                if (nxt.length) {
+                    this.setSelected(nxt);
+                    this.selectItem();
+                }
+            }
+        },
+        selectPrev: function() {
+            if (!this.selectedLI) {
+                this.setSelectedByIndex(0, 0);
+            } else {
+                var nxt = this.selectedLI.prev('li[data-index]');
+                if (nxt.length) {
+                    this.setSelected(nxt);
+                    this.selectItem();
+                }
+            }
         },
         holdItem: function() {
             if (!this.selected) {

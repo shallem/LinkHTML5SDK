@@ -246,13 +246,28 @@ Helix.Ajax = {
             }
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
+            var completions = [];
+            
             // Run each item individually and synchronously.
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
                     commandToLaunch = loadCommandOptions.commands[idx].name;
                     commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
                     var itemKey = loadCommandOptions.commands[idx].key;
+                    var completeObj = {
+                        fn: loadCommandOptions.oncomplete,
+                        thisArg: loadCommandOptions
+                    };
+                    loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
+                        completeObj.args = [ finalKey, name, finalObj ];
+                        completions.push(completeObj);
+                        loadCommandOptions.oncomplete = completeObj.fn;
+                    };
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
+                } else {
+                    for (var i = 0; i < nObjsToSync; ++i) {
+                        completions[i].fn.apply(completions[i].thisArg, completions[i].args);
+                    }
                 }
             };
 
