@@ -205,6 +205,38 @@
             Helix.Layout.layoutPage($.mobile.activePage, true);
         },
         
+        showRight: function() {
+            if (!this.__current) {
+                return;
+            }
+            if (this.__current === "left") {
+                this.__current = "right";
+                
+                this.refresh();
+            
+                Helix.Layout.refresh();
+                Helix.Layout.layoutPage($.mobile.activePage, true);
+            } else {
+                /* Do nothing. We are already on the right. */
+            }
+        },
+        
+        showLeft: function() {
+            if (!this.__current) {
+                return;
+            }
+            if (this.__current === "right") {
+                this.__current = "left";
+                
+                this.refresh();
+            
+                Helix.Layout.refresh();
+                Helix.Layout.layoutPage($.mobile.activePage, true);
+            } else {
+                /* Do nothing. We are already on the right. */
+            }
+        },
+        
         isSplitView: function() {
             return (this.__current == null);
         }
