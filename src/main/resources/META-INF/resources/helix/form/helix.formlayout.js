@@ -1719,11 +1719,13 @@ Helix.Layout.createConfirmDialog = function(options) {
             e.preventDefault();
             options.ondismiss();
             $(popup).popup("close");
+            return false;
         });
     } else {
         $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_close"), function(e) {
             e.preventDefault();
             $(popup).popup("close");
+            return false;
         });
     }
     
@@ -1744,11 +1746,13 @@ Helix.Layout.createConfirmDialog = function(options) {
             e.preventDefault();
             options.onconfirm();
             $(popup).popup("close");
+            return false;
         });
     } else {
         $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_open"), function(e) {
             e.preventDefault();
             $(popup).popup("close");
+            return false;
         });
     }
     
