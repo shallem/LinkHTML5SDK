@@ -47,7 +47,7 @@ public class PostConstructApplicationEventListener implements SystemEventListene
     @Override
     public void processEvent(final SystemEvent event) {
         if (StringUtils.isNotBlank(VersionProvider.getVersion())) {
-            LOGGER.log(Level.INFO, "Running on PrimeFaces Extensions {0}", VersionProvider.getVersion());
+            LOGGER.log(Level.INFO, "Running on LinkHTML5SDK {0}", VersionProvider.getVersion());
         }
     }
 }
