@@ -222,6 +222,7 @@
             this._menuContainer.popup("close");
             if (Helix.hasTouch) {
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( 'tap' );
             }
         }
     });

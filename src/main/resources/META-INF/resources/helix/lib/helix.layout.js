@@ -120,7 +120,7 @@ Helix.Layout = {
         }
         
         var children = $(component).children();
-        var remainingHeight = 0;
+        var remainingHeight = offsetPixels;
         for (var i = 0; i < children.length; ++i) {
             if ($(children[i]).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/

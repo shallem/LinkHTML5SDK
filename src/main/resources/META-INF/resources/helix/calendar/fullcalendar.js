@@ -2898,7 +2898,7 @@ setDefaults({
 	allDayText: 'all-day',
 	firstHour: 6,
 	slotMinutes: 30,
-	defaultEventMinutes: 120,
+	defaultEventMinutes: 30,
 	axisFormat: 'h(:mm)tt',
 	timeFormat: {
             // SAH - altered to be more compact and to show A/P for the end time.
@@ -3333,21 +3333,29 @@ function AgendaView(element, calendar, viewName) {
 		var headHeight = dayBody.position().top;
                 var headOffset = headHeight + calendar.contentOffset();
 		var allDayHeight = slotScroller.position().top; // including divider
-		var bodyHeight = Math.min( // total body height, including borders
+		
+                /*
+                var bodyHeight = Math.min( // total body height, including borders
 			//height - headHeight,   // when scrollbars
                         height - headOffset,
 			slotTable.height() + allDayHeight + 1 // when no scrollbars. +1 for bottom border
 		);
                 if (bodyHeight < 400) {
-                    /* SAH - force a minimum height of 400px */
+                    // SAH - force a minimum height of 400px
                     bodyHeight = 400;
-                }
+                }*/
 
-		dayBodyFirstCellStretcher
-			.height(bodyHeight - vsides(dayBodyFirstCell));
+		//dayBodyFirstCellStretcher
+		//	.height(bodyHeight - vsides(dayBodyFirstCell));
 		
+                var oldTop = parseInt(slotLayer.css('top'));
 		slotLayer.css('top', headHeight);
-		slotScroller.height(bodyHeight - allDayHeight - 1);
+                if (oldTop != headHeight) {
+                    var diff = (headHeight - oldTop);
+                    slotScroller.height(slotScroller.height() - diff);
+                }
+                
+		//slotScroller.height(bodyHeight - allDayHeight - 1);
                 
 		// the stylesheet guarantees that the first row has no border.
 		// this allows .height() to work well cross-browser.
