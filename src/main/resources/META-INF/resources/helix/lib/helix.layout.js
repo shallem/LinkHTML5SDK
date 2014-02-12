@@ -457,3 +457,15 @@ Helix.clickEvent = (function() {
 Helix.contextEvent = (function() {
     return (Helix.hasTouch ? 'taphold' : 'contextmenu');
 })();
+
+Helix.browser = (function() {
+    if (navigator.userAgent.indexOf("AppleWebKit") != -1) {
+        // Safari or mobile safari.
+        if (navigator.userAgent.indexOf("Mobile") != -1) {
+            return "iOS";
+        } else {
+            return "MacOS";
+        }
+    }
+    return "Standard";
+})();

@@ -1663,8 +1663,8 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
         var inputElem = $(dialogForm).find("[name='" + formElem.name + "']");
         if (inputElem) {
             if (formElem.type === "htmlarea") {
-                $(inputElem).text(formElem.value);
-                $(inputElem).data("cleditor").refresh();
+                $(inputElem).val(formElem.value);
+                $(inputElem).data("cleditor").updateFrame();
             } else if (formElem.type === "date") {
                 //$(inputElem).datebox('setDate', new Date(parseInt(formElem.value)));
                 var dateValue;
@@ -1677,7 +1677,7 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                 $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue}).trigger('datebox', {'method':'doset'});
             } else if (formElem.type === "text" ||
                        formElem.type === "hidden") {
-                $(inputElem).attr('value', formElem.value);
+                $(inputElem).val(formElem.value);
             }
         }
     }

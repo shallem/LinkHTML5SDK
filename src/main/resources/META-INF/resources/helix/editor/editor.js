@@ -213,6 +213,9 @@
         editor.controls = 
             (options.controls[Helix.deviceType] ? options.controls[Helix.deviceType] : options.controls["default"]);
 
+        // Map whose keys are the current style.
+        editor.currentStyles = {};
+
         // Hide the textarea and associate it with this editor
         var $area = editor.$area = $(area)
         .hide()
@@ -613,6 +616,14 @@
             if (success && (button.type == "font" || button.type == "style" || button.type == 'color')) {
                 if (button.type === "font") {
                     editor.currentFont = value;
+                    editor.$formatFrame.css('font-family', value);
+                    
+                    // When we set the font we must restore all styles. Only on iOS.
+                    /*if (Helix.browser === 'iOS') {
+                        for (var styleKey in editor.currentStyles) {
+                            editor.doc.execCommand(styleKey, 0, null);
+                        }
+                    }*/
                 } else if (button.type === "style") {
                     var styleToToggle = 'ui-editor-' + command;
                     editor.$formatFrame.toggleClass(styleToToggle);
@@ -621,10 +632,14 @@
                     if (editor.currentFont) {
                         editor.doc.execCommand("fontname", 0, editor.currentFont);
                     }
+                    // Track the current style.
+                    if (command in editor.currentStyles) {
+                        delete editor.currentStyles[command];
+                    } else {
+                        editor.currentStyles[command] = true;
+                    }
                 } else {
-                    if (command === "fontname") {
-                        editor.$formatFrame.css('font-family', value);
-                    } else if (command === "forecolor") {
+                    if (command === "forecolor") {
                         editor.$formatFrame.css('color', value);
                     } else if (command === "hilitecolor") {
                         editor.$formatFrame.css('background-color', value);

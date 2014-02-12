@@ -96,6 +96,10 @@
         if (dialog.options.hasForm && formElems) {
             /* Layout the form dynamically. */
             Helix.Utils.layoutForm($(dialog.form), formElems);
+            $(dialog.form).find('input,textarea').on('tap', function(ev) {
+                $(ev.target).focus();
+                return false;
+            });
         }
         $(dialog.$mainDiv).popup( "open", { 
             positionTo : dialog.options.positionTo
