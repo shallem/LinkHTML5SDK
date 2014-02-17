@@ -44,6 +44,8 @@ persistence.search.config = function(persistence, dialect, options) {
         'are': true
     };
 
+    var indexedOnce = false;
+
     var argspec = persistence.argspec;
     persistence.search.options = options;
 
@@ -324,8 +326,8 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We are already indexing ...
                 return;
             }
-            if (ncalls == 3) {
-                // We only do this up to 3 times per index, otherwise the application can
+            if (ncalls == 5) {
+                // We only do this up to 5 times per index, otherwise the application can
                 // be sluggish for far too long.
                 Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
                 return;
@@ -353,13 +355,13 @@ persistence.search.config = function(persistence, dialect, options) {
             var that = this;
             var nxtCall = ++ncalls;
             that.__hx_indexing = true;
-            this.all().filter('__hx_indexed', '=', 0).limit(50).order('rowid', false).include(propList.concat(['rowid'])).newEach({
+            this.all().filter('__hx_indexed', '=', 0).limit(25).order('rowid', false).include(propList.concat(['rowid'])).newEach({
                 startFn: function(ct) {
                     toIndex = ct;
                     if (toIndex <= 0) {
                         that.__hx_indexing = false;
                     } else {
-                        if (nxtCall == 2) {
+                        if (nxtCall == 3) {
                             // Only display if we are going to index more than once.
                             Helix.Utils.statusMessage("Indexing", "Your data is being indexed in the background. The application may be slow while indexing is in progress. This may take a few minutes.", "info");
                         }
@@ -383,7 +385,15 @@ persistence.search.config = function(persistence, dialect, options) {
                         indexObjectList(updateIDs, updateObjs, that, propList, function() {
                             // Now start over ...
                             that.__hx_indexing = false;
-                            that.indexAsync(nxtCall);
+                            if (!indexedOnce) {
+                                indexedOnce = true;
+                                that.indexAsync(nxtCall);
+                            } else {
+                                // When the user has already endured one round of indexing, we don't force them
+                                // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
+                                // and stop.
+                                return;
+                            }
                         }, tx);
                     });
                 }
