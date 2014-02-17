@@ -97,9 +97,27 @@
             this.__current = null;
             this.refresh();
             var _self = this;
-            $( window ).on( "orientationchange", function( event ) {
+            $( document ).on( "orientationchange", function( event ) {
                 _self.refresh();
+                // In case we were viewing the right pane of the split when we
+                // rotated back to a split view with 2 panes.
+                _self._restoreLeftHeaderButton();
             });
+        },
+        
+        _restoreLeftHeaderButton: function() {
+            if (this.options.useHeaderToToggle && this.__pageHeader.length > 0 && this.__restoreMarkup) {
+                // Remove or restore the left button depending on whether or
+                // not there was a left button before we toggled.
+                var curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
+                if (curLeftBtn.length > 0) {
+                    $(curLeftBtn).remove();
+                }
+
+                // Insert or update the left button.
+                $(this.__pageHeader).prepend(this.__restoreMarkup);
+                this.__restoreMarkup = null;
+            }
         },
     
         /**
@@ -140,17 +158,7 @@
                     $(this.__left).show();
                     $(this.__right).hide();
                     
-                    if (this.options.useHeaderToToggle && this.__pageHeader.length > 0 && this.__restoreMarkup) {
-                        // Remove or restore the left button depending on whether or
-                        // not there was a left button before we toggled.
-                        curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
-                        if (curLeftBtn.length > 0) {
-                            $(curLeftBtn).remove();
-                        }
-                        
-                        // Insert or update the left button.
-                        $(this.__pageHeader).prepend(this.__restoreMarkup);
-                    }
+                    this._restoreLeftHeaderButton();
                 } else {
                     $(this.__right).removeClass('hx-split-right-area');
                     $(this.__right).addClass('hx-split-full');

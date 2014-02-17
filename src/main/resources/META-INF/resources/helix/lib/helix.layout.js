@@ -435,6 +435,11 @@ $(document).on('keyboardHide', function(ev) {
     Helix.Layout.layoutPage();
 });
 
+$(document).on('orientationchange', function(ev) {
+    Helix.Layout.refresh();
+    Helix.Layout.layoutPage();
+});
+
 Helix.deviceType = (function() {
     if (window.screen.width <= 500) {
         return "phone";
