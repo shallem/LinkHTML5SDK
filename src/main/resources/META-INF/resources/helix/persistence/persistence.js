@@ -1992,9 +1992,11 @@ persistence.get = function(arg1, arg2) {
      *   of the iteration (startFn, accepting the number of elements as an arg),
      *   and one to execute when the iteration is done (doneFn, also accepting the
      *   number of results as an argument).
+     * @param opaque An optional parameter to supply to all callbacks.
      */
-    QueryCollection.prototype.newEach = function (tx, callbacks) {
+    QueryCollection.prototype.newEach = function (tx, callbacks, opaque) {
         if (tx.doneFn || tx.eachFn || tx.startFn) {
+            opaque = callbacks;
             callbacks = tx;
             tx = null;
         }
@@ -2006,15 +2008,15 @@ persistence.get = function(arg1, arg2) {
               return;
           }
           if (callbacks.startFn) {
-              callbacks.startFn(results.length);
+              callbacks.startFn(results.length, opaque);
           }
           if (callbacks.eachFn) {
             for(var i = 0; i < results.length; i++) {
-                callbacks.eachFn(results[i]);
+                callbacks.eachFn(results[i], opaque);
             }
           }
           if (callbacks.doneFn) {
-            callbacks.doneFn(i);
+            callbacks.doneFn(i, opaque);
           }
         });
     }
