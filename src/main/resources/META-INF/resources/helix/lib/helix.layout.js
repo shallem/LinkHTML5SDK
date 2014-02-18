@@ -51,6 +51,7 @@ Helix.Layout = {
         '.pm-layout-full-height',
         '.hx-layout-full-height',
         '.hx-overlay-full-height',
+        '.hx-layout-recurse',
         '.ui-panel-inner'
     ],
 

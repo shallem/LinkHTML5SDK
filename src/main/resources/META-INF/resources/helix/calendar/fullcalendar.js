@@ -292,9 +292,8 @@ function Calendar(element, options, eventSources) {
 			element.addClass('ui-widget');
 		}
                 var fullheightStyle = '';
-                if (options.fullPage) {
-                    fullheightStyle = 'pm-layout-full-height hx-no-scroll';
-                }
+                fullheightStyle = 'hx-layout-full-height hx-no-scroll';
+                
                 var markup = "<div class='fc-content " + fullheightStyle + "' style='position:relative'/>"
 		content = $(markup)
 			.prependTo(element);
@@ -381,12 +380,10 @@ function Calendar(element, options, eventSources) {
 		header.activateButton(newViewName);
 
                 var fullheightStyle = '';
-                if (options.fullPage) {
-                    if (newViewName === 'month') {
-                        fullheightStyle = 'pm-layout-full-height hx-scroller-nozoom';
-                    } else {
-                        fullheightStyle = 'pm-layout-full-height hx-no-scroll';
-                    }
+                if (newViewName === 'month') {
+                    fullheightStyle = 'pm-layout-full-height hx-scroller-nozoom';
+                } else {
+                    fullheightStyle = 'pm-layout-full-height hx-no-scroll';
                 }
                 var markup = "<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>";
 
