@@ -2816,7 +2816,7 @@ function AgendaWeekView(element, calendar) {
 	function render(date, delta) {
 
 		if (delta) {
-			addDays(date, delta * 7);
+			addDays(date, delta * 7, true); // SAH - added keepTime parameter.
 		}
 
 		var start = addDays(cloneDate(date), -((date.getDay() - opt('firstDay') + 7) % 7));
