@@ -953,7 +953,7 @@ function initHelixDB() {
             overrides,
             oncomplete) {
             Helix.DB.synchronizeObjectFields(tx, allSchemas, obj, null, elemSchema, function(finalObj) {
-                queryCollection.add(finalObj);
+                //queryCollection.add(finalObj);
                 oncomplete();
             }, overrides);
         },
