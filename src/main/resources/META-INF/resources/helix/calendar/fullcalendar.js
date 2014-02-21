@@ -1471,12 +1471,12 @@ function dayDiff(d1, d2) { // d1 - d2
 
 
 function setYMD(date, y, m, d) {
-	if (y !== undefined && y != date.getFullYear()) {
+	if (y !== undefined /*&& y != date.getFullYear()*/) {
 		date.setUTCDate(1);
 		date.setUTCMonth(0);
 		date.setUTCFullYear(y);
 	}
-	if (m !== undefined && m != date.getMonth()) {
+	if (m !== undefined /*&& m != date.getMonth()*/) {
 		date.setUTCDate(1);
 		date.setUTCMonth(m);
 	}
@@ -2816,7 +2816,7 @@ function AgendaWeekView(element, calendar) {
 	function render(date, delta) {
 
 		if (delta) {
-			addDays(date, delta * 7);
+			addDays(date, delta * 7, true); // SAH - added keepTime parameter.
 		}
 
 		var start = addDays(cloneDate(date), -((date.getDay() - opt('firstDay') + 7) % 7));

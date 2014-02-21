@@ -961,7 +961,8 @@ function initHelixDB() {
         synchronizeQueryCollection: function(tx,
             allSchemas,
             newObjectMap, 
-            queryCollection, 
+            parentCollection,
+            compareCollection,
             elemSchema, 
             keyFieldName, 
             oncomplete, 
@@ -972,7 +973,7 @@ function initHelixDB() {
             var syncObjs = [];
             var deleteObjs = [];
             var addObjs = [];
-            queryCollection.newEach(tx, {
+            compareCollection.newEach(tx, {
                 eachFn: function(qryElem) {
                     var qryElemKeyValue = qryElem[keyFieldName];
                     if (newObjectMap[qryElemKeyValue]) {
@@ -1006,7 +1007,7 @@ function initHelixDB() {
                     var doAdds = function() {
                         if (addObjs.length > 0) {
                             var toAdd = addObjs.pop();
-                            Helix.DB.addObjectToQueryCollection(tx, allSchemas, toAdd, elemSchema, queryCollection, overrides, doAdds, k);
+                            Helix.DB.addObjectToQueryCollection(tx, allSchemas, toAdd, elemSchema, parentCollection, overrides, doAdds, k);
                         } else {
                             oncomplete(oncompleteArg);
                         }
@@ -1014,7 +1015,7 @@ function initHelixDB() {
 
                     var removeFn = function(persistentObj) {
                         if (persistentObj) {
-                            queryCollection.remove(persistentObj);
+                            parentCollection.remove(persistentObj);
                             persistence.remove(persistentObj);
                             if (overrides.deleteHook) {
                                 overrides.deleteHook(persistentObj);
@@ -1062,12 +1063,12 @@ function initHelixDB() {
              * cases the user knows that a load only loaded a subset of a data list from
              * the server. This call is used to refine the list for comparison.
              */
-            parentCollection = overrides.refineEntityArray(field, parentCollection);
+            var comparisonCollection = overrides.refineEntityArray(field, parentCollection);
         
             /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
              * efficient way to do this!
              */
-            Helix.DB.synchronizeQueryCollection(tx, allSchemas, elemMap, parentCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
+            Helix.DB.synchronizeQueryCollection(tx, allSchemas, elemMap, parentCollection, comparisonCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
         },
     
         updateOneObject: function(tx, allSchemas, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
