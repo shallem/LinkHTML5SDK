@@ -1471,12 +1471,12 @@ function dayDiff(d1, d2) { // d1 - d2
 
 
 function setYMD(date, y, m, d) {
-	if (y !== undefined && y != date.getFullYear()) {
+	if (y !== undefined /*&& y != date.getFullYear()*/) {
 		date.setUTCDate(1);
 		date.setUTCMonth(0);
 		date.setUTCFullYear(y);
 	}
-	if (m !== undefined && m != date.getMonth()) {
+	if (m !== undefined /*&& m != date.getMonth()*/) {
 		date.setUTCDate(1);
 		date.setUTCMonth(m);
 	}
