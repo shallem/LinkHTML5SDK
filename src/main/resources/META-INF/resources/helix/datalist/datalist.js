@@ -467,6 +467,12 @@
                 if (_self.nElems == 0) {
                     // Make sure emptying and repopulating the list does not trigger a hook event.
                     _self.$parent.empty();
+                    if (_self.options.headerText) {
+                        $('<li />').attr({
+                            'data-role' : 'list-divider'
+                        }).append(_self.options.headerText)
+                        .appendTo(_self.$parent);
+                    }                    
                     _self.$parent.append($('<li />').append(_self.options.emptyMessage));
                 }
                 _self.$parent.listview( "refresh" );
