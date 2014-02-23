@@ -1398,14 +1398,19 @@ function addMonths(d, n, keepTime) { // prevents day overflow/underflow
 function addDays(d, n, keepTime) { // deals with daylight savings
 	if (+d) {
             /* SAH - changed to UTC */
+            if (!keepTime) {
+                // Set the time to mid-day to avoid DST issues
+                d.setUTCHours(12);
+            }
+            
 		var dd = d.getUTCDate() + n,
 			check = cloneDate(d);
 		//check.setHours(9); // set to middle of day
 		//check.setDate(dd);
-		d.setUTCDate(dd);
-		if (!keepTime) {
-			clearTime(d);
-		}
+                d.setUTCDate(dd);
+		//if (!keepTime) {
+		//	clearTime(d);
+		//}
 		//fixDate(d, check);
 	}
 	return d;
@@ -2816,10 +2821,10 @@ function AgendaWeekView(element, calendar) {
 	function render(date, delta) {
 
 		if (delta) {
-			addDays(date, delta * 7, true); // SAH - added keepTime parameter.
+			addDays(date, delta * 7);
 		}
 
-		var start = addDays(cloneDate(date), -((date.getDay() - opt('firstDay') + 7) % 7));
+		var start = addDays(cloneDate(date), -((date.getUTCDay() - opt('firstDay') + 7) % 7));
 		var end = addDays(cloneDate(start), 7);
 
 		var visStart = cloneDate(start);
