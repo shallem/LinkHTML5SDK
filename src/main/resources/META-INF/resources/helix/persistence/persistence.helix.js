@@ -1072,8 +1072,11 @@ function initHelixDB() {
         },
     
         updateOneObject: function(tx, allSchemas, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
-            elemSchema.findBy(tx, keyField, toUpdateKey, function(toUpdateObj) { 
+            elemSchema.findBy(tx, keyField, toUpdateKey, function(toUpdateObj) {
                 Helix.DB.synchronizeObjectFields(tx, allSchemas, updatedObj,toUpdateObj,elemSchema,function(newObj) {
+                    if (overrides.updateHook) {
+                        overrides.updateHook(newObj);
+                    }
                     oncomplete(newObj);
                 }, overrides);
             });

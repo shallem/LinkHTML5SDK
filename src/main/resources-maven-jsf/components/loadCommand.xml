@@ -75,6 +75,12 @@
             <description>Hook that is invoked each time an object is deleted. The object to remove is passed as an argument.</description>
         </attribute>
         <attribute>
+            <name>updateHook</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Hook that is invoked each time an object is updated. The updated object is passed as an argument.</description>
+        </attribute>
+        <attribute>
             <name>cmd</name>
             <required>true</required>
             <type>javax.el.MethodExpression</type>

@@ -210,6 +210,12 @@ public class LoadCommandRenderer extends CoreRenderer {
             }
             writer.append(" 'deleteHook' : " + cmd.getDeleteHook());
         }
+        if (cmd.getUpdateHook() != null) {
+            if (needsComma) {
+                writer.append(",");
+            }
+            writer.append(" 'updateHook' : " + cmd.getUpdateHook());
+        }
         writer.write("}");
         writer.write("};\n");
         
