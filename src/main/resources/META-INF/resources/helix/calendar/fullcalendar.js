@@ -1409,7 +1409,7 @@ function addDays(d, n, keepTime) { // deals with daylight savings
 		//check.setDate(dd);
                 d.setUTCDate(dd);
 		//if (!keepTime) {
-		//	clearTime(d);
+			//clearTime(d);
 		//}
 		//fixDate(d, check);
 	}
@@ -5099,6 +5099,7 @@ function View(element, calendar, viewName) {
 		var cellOffset = cellToCellOffset.apply(null, arguments);
 		var dayOffset = cellOffsetToDayOffset(cellOffset);
 		var date = dayOffsetToDate(dayOffset);
+                clearTime(date);
 		return date;
 	}
 
