@@ -844,7 +844,7 @@
             }
             editor.changeTimeout = setTimeout(function() {
                 updateTextArea(editor, true);
-            }, 1000);
+            }, 500);
             e.preventDefault();
             e.stopImmediatePropagation();
         });
