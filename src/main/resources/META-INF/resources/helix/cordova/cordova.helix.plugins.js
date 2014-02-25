@@ -117,7 +117,7 @@ window.HelixSystem = {
 window.HelixLocalNotifications = {
     scheduleNotification: function(fireDate, uniqueID, description, minutesBefore, success, failure) {
         return cordova.exec(success, failure, "LocalNotificationScheduler", "scheduleNotification", 
-            [fireDate, uniqueID, description, minutesBefore]);
+            [fireDate.getTime(), uniqueID, description, minutesBefore]);
     },
     deleteNotification: function(uniqueID, success, failure) {
         return cordova.exec(success, failure, "LocalNotificationScheduler", "deleteNotification", 
