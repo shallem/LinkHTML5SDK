@@ -475,10 +475,10 @@ function __refreshTextBox(mode, formElem) {
         var selector = 'span' + dataNameAttr + ',p' + dataNameAttr;
         var $span = $(formElem.DOM).find(selector);
         if ($span.is('span')) {
-            $span.html("&nbsp;" + formElem.value);
+            $span.text(formElem.value);
         } else {
             /* Should be a 'p' tag. */
-            $span.html(formElem.value);
+            $span.text(formElem.value);
         }
     }
 }
@@ -592,7 +592,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             var valSpan = $('<span/>').attr({
                 'data-name' : formElem.name,
                 'class' : 'ui-input-text'
-            }).append("&nbsp;" + formElem.value)
+            }).text(formElem.value)
             if (formElem.computedStyle) {
                 valSpan.attr('style', formElem.computedStyle);
             }
@@ -604,7 +604,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             $fieldContainer.append($('<p />').attr({
                 'data-name' : formElem.name,
                 'class' : formElem.computedStyleClass + ' ui-input-text'
-            }).append(formElem.value));
+            }).text(formElem.value));
         }
     }
 }
@@ -688,15 +688,20 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     }
     
     var fieldMarkup = $('<div />').attr({
-        'data-role' : 'fieldcontain'
+        'style' : 'width: auto'
     }).appendTo($fieldContainer);
 
     var formMarkup = $("<form />").appendTo(fieldMarkup);
-    var wrapperMarkup = $('<fieldset/>').attr({
+    var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
+    /*
+     *.attr({
+        'data-role' : 'fieldcontain'
+    })
+     *.attr({
         'data-role' : 'controlgroup',
         'data-type' : 'horizontal',
         'data-mini' : (useMiniLayout ? 'true' : 'false')
-    }).appendTo(formMarkup);
+    })*/
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
@@ -731,19 +736,23 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
             $(inputMarkup).attr('checked', 'true');
         }
     }
-    $(wrapperMarkup).controlgroup({ mini : useMiniLayout });
+    $(wrapperMarkup).controlgroup({ 
+        mini : useMiniLayout,
+        type: "horizontal"
+    });
     $(fieldMarkup).fieldcontain();
 }
 
 function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var fieldMarkup = $('<div />').attr({
-        'data-role' : 'fieldcontain'
+        'style' : 'width: auto'
+        /*'data-role' : 'fieldcontain'*/
     }).appendTo($fieldContainer);
 
     var wrapperMarkup = $('<fieldset/>').attr({
-        'data-role' : 'controlgroup',
+    /*    'data-role' : 'controlgroup',
         'data-type' : 'horizontal',
-        'data-mini' : (useMiniLayout ? 'true' : 'false')
+        'data-mini' : (useMiniLayout ? 'true' : 'false') */
     }).appendTo(fieldMarkup);
 
     if (formElem.fieldTitle) {
@@ -766,7 +775,10 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
         subElem.DOM = inputMarkup;
     }
-    $(wrapperMarkup).controlgroup({ mini : useMiniLayout });
+    $(wrapperMarkup).controlgroup({ 
+        mini : useMiniLayout,
+        type: "horizontal" 
+    });
     $(fieldMarkup).fieldcontain();
     
     // After enhancement, hide any hidden controls
