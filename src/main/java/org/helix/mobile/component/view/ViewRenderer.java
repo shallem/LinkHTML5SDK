@@ -70,6 +70,8 @@ public class ViewRenderer extends CoreRenderer {
             writer.writeAttribute("data-role", "footer", null);
             writer.writeAttribute("data-position", "fixed", null);
             writer.writeAttribute("data-tap-toggle", "false", null);
+            writer.writeAttribute("data-update-page-padding", "false", null);
+            
             super.renderChild(context, parentBar);
             writer.endElement("div");
         }

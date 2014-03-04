@@ -531,11 +531,15 @@ function Calendar(element, options, eventSources) {
 
 
 	function renderEvents(modifiedEventID) { // TODO: remove modifiedEventID hack
-		if (elementVisible()) {
+		// SAH: render events even when the calendar is not visible. This allows
+                // operations like creating a new calendar event to complete in the background,
+                // at which point a re-render is triggered before showing the user the calendar
+                // again. This is a much smoother experience.
+                //if (elementVisible()) {
 			currentView.setEventData(events); // for View.js, TODO: unify with renderEvents
 			currentView.renderEvents(events, modifiedEventID); // actually render the DOM elements
 			currentView.trigger('eventAfterAllRender');
-		}
+		//}
 	}
 
 
