@@ -356,6 +356,10 @@
 
 		    <!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
 		    <include>lib/hook.js</include>
+
+		    <!-- Tab bar handling of the popup keyboard. -->
+		    <include>tabbar/tabbar.js</include>
+
 		    <!-- Right now we are NOT including mousewheel support, but it can be easily added.
 		    <include>lib/mousewheel.js</include> -->
 
