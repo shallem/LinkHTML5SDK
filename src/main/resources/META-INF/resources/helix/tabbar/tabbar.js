@@ -29,8 +29,8 @@
                 return;
             }
             
+            $.mobile.activePage.css('padding-bottom', bottomPadding + 'px');
             fixedFooters.show();
-            $.mobile.activePage.css('padding-bottom', bottomPadding);
         });
         
         $(document).on('keyboardShow', function() {

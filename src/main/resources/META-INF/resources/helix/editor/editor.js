@@ -502,6 +502,12 @@
     
     function attachKeyboardHideEvent(editor) {
         $(document).on('keyboardHide', function() {
+            if (!editor.$main.is(':visible')) {
+                // This handler catches all keyboard hide events - even those that occur on a completely
+                // different jQM page.
+                return;
+            }
+            
             clearTimeout(editor.changeTimeout);
             editor.changeTimeout = null;
             updateTextArea(editor, true);
