@@ -866,7 +866,21 @@ function __refreshIFrame(formElem) {
     $frame.show();
 }
 
-function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
+function __refreshHTMLFrame(formElem) {
+    if ($(formElem.editDOM).is(':visible')) {
+        var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
+        var $editor = $(elem).data('cleditor');
+        if (!formElem.value) {
+            $editor.clear(); 
+        } else {
+            $editor.update(formElem.value);
+        }        
+    } else if ($(formElem.viewDOM).is(':visible')) {
+        __refreshIFrame(formElem);
+    }
+}
+
+function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (formElem.height === 'full') {
         $fieldContainer.addClass('hx-layout-full-height');
     }
@@ -910,6 +924,8 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         
         $(iFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
+    } else {
+        __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }
 }
 
@@ -977,43 +993,55 @@ function __refreshHTMLArea(formElem) {
     }
 }
 
-function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
+function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     var isFullWidth = false;
     if (formElem.width) {
         if (formElem.width === "full") {
             isFullWidth = true;
         }            
     }
-    if (mode) {
-        if (!formElem.name) {
-            /* No field name. We cannot edit this field. */
-            console.log("Cannot layout an HTML area in edit mode without an element name.");
-            return;
-        }
 
-        var editorID = Helix.Utils.getUniqueID();
-        var editorInput = $('<textarea />').attr({
-            'name' : formElem.name,
-            'id' : editorID,
-            'tabIndex' : -1
-        }).val(formElem.value);
-        $fieldContainer.append($('<div />')
-            .append($('<label />').attr({
-                'for' : editorID
-                })
-                .append(formElem.fieldTitle)
-            )
-            .append(editorInput)
-        );
-        $(editorInput).cleditor({
-            'widget' : editorID + "_widget",
-            'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
-            'isFullWidth' : isFullWidth,
-            'height' : (formElem.height ? formElem.height : 350),
-            'page' : page,
-            'tabIndex' : formLayout.__tabIndex++
-        });
+    if (!formElem.name) {
+        /* No field name. We cannot edit this field. */
+        console.log("Cannot layout an HTML area in edit mode without an element name.");
+        return;
+    }
+
+    var editorID = Helix.Utils.getUniqueID();
+    var editorInput = $('<textarea />').attr({
+        'name' : formElem.name,
+        'id' : editorID,
+        'tabIndex' : -1
+    }).val(formElem.value);
+    $fieldContainer.append($('<div />')
+        .append($('<label />').attr({
+            'for' : editorID
+            })
+            .append(formElem.fieldTitle)
+        )
+        .append(editorInput)
+    );
+    $(editorInput).cleditor({
+        'widget' : editorID + "_widget",
+        'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
+        'isFullWidth' : isFullWidth,
+        'height' : (formElem.height ? formElem.height : 350),
+        'page' : page,
+        'tabIndex' : formLayout.__tabIndex++
+    });    
+}
+
+function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
+    if (mode) {
+        __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     } else {
+        var isFullWidth = false;
+        if (formElem.width) {
+            if (formElem.width === "full") {
+                isFullWidth = true;
+            }            
+        }
+        
         var width = "98%";
         if (isFullWidth) {
             width = "100%";

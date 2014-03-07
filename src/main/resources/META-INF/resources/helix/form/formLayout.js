@@ -254,6 +254,7 @@
         
         _serializeTypes : {
             "htmlarea" : true,
+            "htmlframe" : true,
             "text" : true,
             "textarea" : true,
             "pickList" : true,
@@ -274,7 +275,8 @@
             var selector = '[name="' + fieldID + '"]';
             
             var __serializeOneItem = function() {
-                if (fieldType === "htmlarea") {
+                if (fieldType === "htmlarea" ||
+                    fieldType === "htmlframe") {
                     var $editor = $(this).data('cleditor');
                     if ($editor) {
                         $editor.updateTextArea();
@@ -455,7 +457,7 @@
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
                 } else if (fldType === 'htmlframe') {
-                    __refreshIFrame(item);
+                    __refreshHTMLFrame(item);
                 } else if (fldType === 'buttonGroup') {
                     __refreshButtonGroup(item);
                 } else if (fldType === 'pickList') {
