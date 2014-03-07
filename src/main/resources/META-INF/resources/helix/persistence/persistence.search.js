@@ -326,7 +326,7 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We are already indexing ...
                 return;
             }
-            if (ncalls == 5) {
+            if (ncalls == 20) {
                 // We only do this up to 5 times per index, otherwise the application can
                 // be sluggish for far too long.
                 Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
@@ -355,7 +355,7 @@ persistence.search.config = function(persistence, dialect, options) {
             var that = this;
             var nxtCall = ++ncalls;
             that.__hx_indexing = true;
-            this.all().filter('__hx_indexed', '=', 0).limit(25).order('rowid', false).include(propList.concat(['rowid'])).newEach({
+            this.all().filter('__hx_indexed', '=', 0).limit(10).order('rowid', false).include(propList.concat(['rowid'])).newEach({
                 startFn: function(ct) {
                     toIndex = ct;
                     if (toIndex <= 0) {
@@ -387,7 +387,11 @@ persistence.search.config = function(persistence, dialect, options) {
                             that.__hx_indexing = false;
                             if (!indexedOnce) {
                                 indexedOnce = true;
-                                that.indexAsync(nxtCall);
+                                // We space these calls out by 5 seconds, otherwise the app gets stuck and other
+                                // operations cannot proceed.
+                                setTimeout(function() {
+                                    that.indexAsync(nxtCall);
+                                }, 5000);
                             } else {
                                 // When the user has already endured one round of indexing, we don't force them
                                 // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
