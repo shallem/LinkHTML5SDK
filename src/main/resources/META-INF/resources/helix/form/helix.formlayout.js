@@ -836,9 +836,12 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 function __refreshIFrame(formElem) {
     var frameID = formElem.name;
     var $frame = formElem.DOM.find(PrimeFaces.escapeClientId(frameID));
+    $frame.hide();
     
     // Load the iframe document content
     var contentWindow = $frame[0].contentWindow;
+    contentWindow.scrollTo(0, 0);
+    
     var doc = contentWindow.document;
     doc.open();
     if (!formElem.noHTML) {
