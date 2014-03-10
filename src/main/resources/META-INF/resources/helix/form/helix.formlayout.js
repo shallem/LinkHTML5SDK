@@ -859,13 +859,17 @@ function __refreshIFrame(formElem) {
         $(doc.body).css('overflow-y', 'scroll');
     }*/
     doc.write(formElem.value);
-    if (!formElem.noHTML) {
-        doc.write('</html>');
-    }
     if (!formElem.noBody) {
         doc.write('</body>');
     }
+    if (!formElem.noHTML) {
+        doc.write('</html>');
+    }
     doc.close();
+    if (!formElem.isScroller) {
+        $(doc.body).parent().css('overflow', 'hidden');
+    }
+    
     $frame.show();
 }
 

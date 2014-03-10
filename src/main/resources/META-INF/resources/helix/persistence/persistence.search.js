@@ -329,6 +329,7 @@ persistence.search.config = function(persistence, dialect, options) {
             if (ncalls == 20) {
                 // We only do this up to 5 times per index, otherwise the application can
                 // be sluggish for far too long.
+                indexedOnce = true;
                 Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
                 return;
             }
@@ -386,7 +387,6 @@ persistence.search.config = function(persistence, dialect, options) {
                             // Now start over ...
                             that.__hx_indexing = false;
                             if (!indexedOnce) {
-                                indexedOnce = true;
                                 // We space these calls out by 5 seconds, otherwise the app gets stuck and other
                                 // operations cannot proceed.
                                 setTimeout(function() {

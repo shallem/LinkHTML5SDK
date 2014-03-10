@@ -382,6 +382,11 @@ function Calendar(element, options, eventSources) {
                 var fullheightStyle = '';
                 if (newViewName === 'month') {
                     fullheightStyle = 'pm-layout-full-height hx-scroller-nozoom';
+                    if ($.mobile.activePage) {
+                        $.mobile.activePage.off('pageshow.fc').on('pageshow.fc', function() {
+                            $(content).find('.fc-view-month').scrollTop(0);
+                        });
+                    }
                 } else {
                     fullheightStyle = 'pm-layout-full-height hx-no-scroll';
                 }
