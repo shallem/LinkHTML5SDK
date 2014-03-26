@@ -951,10 +951,11 @@ function initHelixDB() {
             elemSchema, 
             queryCollection, 
             overrides,
-            oncomplete) {
+            oncomplete,
+            opaque) {
             Helix.DB.synchronizeObjectFields(tx, allSchemas, obj, null, elemSchema, function(finalObj) {
                 queryCollection.add(finalObj);
-                oncomplete();
+                oncomplete(opaque);
             }, overrides);
         },
     
@@ -1007,7 +1008,7 @@ function initHelixDB() {
                     var doAdds = function() {
                         if (addObjs.length > 0) {
                             var toAdd = addObjs.pop();
-                            Helix.DB.addObjectToQueryCollection(tx, allSchemas, toAdd, elemSchema, parentCollection, overrides, doAdds, k);
+                            Helix.DB.addObjectToQueryCollection(tx, allSchemas, toAdd, elemSchema, parentCollection, overrides, doAdds);
                         } else {
                             oncomplete(oncompleteArg);
                         }
@@ -1084,9 +1085,8 @@ function initHelixDB() {
     
         synchronizeDeltaField: function(tx, allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
-            var uidToEID = {};
             
-            var doAdds = function() {
+            var doAdds = function(uidToEID) {
                 if (deltaObj.adds.length > 0) {
                     var toAdd = deltaObj.adds.pop();
                     var toAddKey = toAdd[keyField];
@@ -1094,10 +1094,10 @@ function initHelixDB() {
                     if (objId) {
                         Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
                             parentCollection.add(pObj);
-                            doAdds();
+                            doAdds(uidToEID);
                         },overrides);
                     } else {
-                        Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds);
+                        Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds,uidToEID);
                     }
                 } else {
                     /* Nothing more to add - we are done. */
@@ -1105,19 +1105,29 @@ function initHelixDB() {
                 }
             };
             
+            var createUIDToEIDMap = function(startIdx, addUniqueIDs, uidToEID) {
+                var toProcess = addUniqueIDs.slice(startIdx, 100);
+                elemSchema.all().filter(keyField, 'in', toProcess).newEach(tx, {
+                    eachFn: function(elem) {
+                        uidToEID[elem[keyField]] = elem.id;
+                    }, 
+                    doneFn: function(ct) {
+                        if (ct == 0) {
+                            doAdds(uidToEID);
+                        } else {
+                            createUIDToEIDMap(startIdx + 100, addUniqueIDs, uidToEID);
+                        }
+                    }
+                })
+            };
+            
             var prepareAdds = function() {
                 var addUniqueIDs = [];
                 for (var i = 0; i < deltaObj.adds.length; ++i) {
                     addUniqueIDs.push(deltaObj.adds[i][keyField]);
                 }
-                elemSchema.all().filter(keyField, 'in', addUniqueIDs).newEach(tx, {
-                    eachFn: function(elem) {
-                        uidToEID[elem[keyField]] = elem.id;
-                    }, 
-                    doneFn: function(ct) {
-                        doAdds();
-                    }
-                })
+                var uidToEID = {};
+                createUIDToEIDMap(0, addUniqueIDs, uidToEID);
             };
 
             var removeFn = function(persistentObj) {
