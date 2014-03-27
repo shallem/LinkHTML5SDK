@@ -292,6 +292,9 @@ Helix.Ajax = {
         if (!loadCommandOptions.onerror) {
             loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
         }
+        if (loadCommandOptions.onstart) {
+            loadCommandOptions.onstart(loadCommandOptions.name);
+        }
         
         // Setup loader options and show the loader.
         Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);

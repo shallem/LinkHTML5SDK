@@ -33,6 +33,12 @@
             <description>String property containing an error message, if one occurs. Return null if no error.</description>
         </attribute>
         <attribute>
+            <name>onstart</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript to execute before the load is launched.</description>
+        </attribute>
+        <attribute>
             <name>oncomplete</name>
             <required>false</required>
             <type>java.lang.String</type>
