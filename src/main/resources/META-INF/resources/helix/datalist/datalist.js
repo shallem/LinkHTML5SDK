@@ -234,7 +234,7 @@
             
             /**
              * List of data to display in the list. Must be a PersistenceJS
-             * QueryCollectin object.
+             * QueryCollection object.
              */
             itemList: null,
             
@@ -275,7 +275,18 @@
              * technique. These strings are separated into an array and then passed
              * through to the rowRenderer function.
              */
-            strings: null
+            strings: null,
+            
+            /*
+             * If true, auto dividers will be used
+             */
+            autodividers: false,
+            
+            /*
+             * Function used to generate the title of each section created by
+             * the auto-divider based on the content of the provided cell.
+             */
+            autodividersSelectorCallback: null
         },
     
         _create: function() {
@@ -307,7 +318,7 @@
             if (this.options.pullToRefresh) {
                 this.$hookDiv = $('<div/>').appendTo(this.$wrapper);
             }
-            
+                        
             /**
              * Append the data list.
              */
@@ -330,9 +341,23 @@
                 this.$parent.attr('data-split-theme', this.options.splitTheme);
             }
 
-            this.$parent.listview();
+            var _self = this;   
+            var ad = this.options.autodividers;
+            var ads = function(elt) { 
+                    var callback = _self.options.autodividersSelectorCallback;
+
+                    if (callback) {
+                       return callback(elt, _self.displayList, _self._currentSort);
+                    } 
+                    
+                    return null;
+                };
+
+            this.$parent.listview({
+                autodividers: ad,
+                autodividersSelector: ads
+            });
             
-            var _self = this;
             if (this.$hookDiv) {
                 this.$hookDiv.hook({
                     reloadPage: false,
@@ -512,7 +537,7 @@
                 }
             }
         },
-        
+                        
         _refreshSortContainer: function(sorts) {
             var _self = this;
             

@@ -239,5 +239,18 @@
             <type>java.lang.String</type>
             <description>Function name to call as the components of the paginator are rendered.</description>
         </attribute>
-    </attributes>
+      <attribute>
+         <name>autodividers</name>
+         <required>false</required>
+         <type>java.lang.Boolean</type>
+         <defaultValue>false</defaultValue>
+         <description>Indicates if jquery auto-dividers ares going to be used in this list</description>
+      </attribute>
+      <attribute>
+         <name>autodividersSelectorCallback</name>
+         <required>false</required>
+         <type>java.lang.String</type>
+         <description>Function to invoke on a row to get the section name in a list with auto dividers.</description>
+      </attribute>
+   </attributes>
 </component>
