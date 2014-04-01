@@ -297,10 +297,12 @@
             }
             
             this.$page = this.$wrapper.closest('.ui-page');
+            var parentId = this.$wrapper.parent().attr('id');
             
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$wrapper)
                 .addClass('hx-full-width')
+                .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
             
