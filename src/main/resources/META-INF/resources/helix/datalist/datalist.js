@@ -290,6 +290,7 @@
         },
     
         _create: function() {
+            var _self = this;
             this.$wrapper = this.element;
             if (this.options.scroll) {
                 this.$wrapper.addClass('pm-layout-full-height');
@@ -329,6 +330,15 @@
             }).appendTo(listWrapper);
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
+            }
+            
+            if (this.options.itemsPerPage) {
+                $(this.$parent).on('swipeleft', function() {
+                    _self.nextPage();
+                });
+                $(this.$parent).on('swiperight', function() {
+                    _self.prevPage();
+                });
             }
             
             /**
@@ -908,7 +918,7 @@
         
             _self.$paginatorDiv.empty().hide();
             
-            var totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;            
+            _self.totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;            
             $.each(this.options.paginatorTemplate.split(" "), function(idx, obj) {
                 if (_self._currentPage == 0 &&
                     obj === '{PreviousPageLink}') {
@@ -916,7 +926,7 @@
                     return;
                 }
                 
-                if (_self._currentPage == (totalPages - 1) &&
+                if (_self._currentPage == (_self.totalPages - 1) &&
                     obj === '{NextPageLink}') {
                     // No next page.
                     return;
@@ -941,8 +951,14 @@
         },
         
         nextPage: function() {
-            this._currentPage++;
             var _self = this;
+            if (_self._currentPage == (_self.totalPages - 1)) {
+                // On the last page already.
+                return;
+            }
+            
+            _self._currentPage++;
+            
             
             var isMini = this.$parent.hasClass('hx-listview-mini'); 
             this._refreshData(function() {

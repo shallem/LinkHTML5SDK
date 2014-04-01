@@ -148,6 +148,13 @@ public class LoadCommandRenderer extends CoreRenderer {
         } else {
             onComplete = null;
         }
+        
+        StringBuilder onStart = new StringBuilder();
+        if (cmd.getOnstart() != null) {
+            onStart.append("function (commandName) { ").append(cmd.getOnstart()).append("}");
+        } else {
+            onStart = null;
+        }
        
         Object v = cmd.getValue();
         JSONSerializer s = new JSONSerializer();
@@ -172,6 +179,9 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'name' : '" + cmd.resolveWidgetVar() + "',");
         if (onComplete != null) {
             writer.write(" 'oncomplete' : " + onComplete.toString() + ",");
+        }
+        if (onStart != null) {
+            writer.write(" 'onstart' : " + onStart.toString() + ",");
         }
         writer.write(" 'schemaFactory' : " + cmd.getName() + "_genSchema,");
         writer.write(" 'loadingOptions' : {");

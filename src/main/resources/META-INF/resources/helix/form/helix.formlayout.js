@@ -914,7 +914,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         var iFrameMarkup = null;
         var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
         var iFrameWidth = ' width="' + formElem.computedWidth + '"';
-        var onloadAttr = (formElem.onload ? ('onload="' + formElem.onload + '"') : '');
+        var onloadAttr = (formElem.onload ? ('onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
         
         if (!formElem.height || (formElem.height === 'full')) {
             iFrameMarkup = '<iframe id="' + frameID + 

@@ -832,6 +832,7 @@
             '<html>' +
             '<head>' +
             '<style> div { width: 100%; } </style>' +
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />' + 
             ((options.docCSSFile === '') ? '' : '<link rel="stylesheet" type="text/css" href="' + options.docCSSFile + '" />') +
             '</head>' +
             '<body style="' + options.bodyStyle + '"></body></html>'
@@ -860,11 +861,14 @@
         // is navigation when the user taps in the iframe. Tapping outside of any text seems to do
         // nothing of value.
         $doc.find('body').on('keydown', function(e) {
-            editor.$frame[0].contentWindow.focus();
+            setTimeout(function() {
+                editor.$frame[0].contentWindow.focus();
+            }, 100);
         });
         $doc.find('body').focus(function(e) {
             editor.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
             editor.$toolbarEnabled = true;
+            return false;
         });
         if (Helix.hasTouch) {
             $doc.find('body').blur(function(e) {

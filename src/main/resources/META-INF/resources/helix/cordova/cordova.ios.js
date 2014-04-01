@@ -975,6 +975,7 @@ function cordova_ios_init() {
                     }
                     execXhr.setRequestHeader('vc', vcHeaderValue);
                     execXhr.setRequestHeader('rc', ++requestCount);
+                    execXhr.setRequestHeader('cdvid', document.cordovaID);
                     if (shouldBundleCommandJson()) {
 			execXhr.setRequestHeader('cmds', iOSExec.nativeFetchMessages());
                     }
