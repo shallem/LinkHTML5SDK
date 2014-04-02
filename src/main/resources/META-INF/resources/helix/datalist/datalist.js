@@ -353,12 +353,11 @@
                 this.$parent.attr('data-split-theme', this.options.splitTheme);
             }
 
-            var _self = this;   
             var ad = this.options.autodividers;
             var ads = function(elt) { 
                     var callback = _self.options.autodividersSelectorCallback;
 
-                    if (callback) {
+                    if (callback && $(elt).is(':visible')) {
                        return callback(elt, _self.displayList, _self._currentSort);
                     } 
                     
@@ -388,16 +387,12 @@
             
             // Other globals.
             this.refreshInProgress = false;
+            this.isLoaded = false;
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
-            if (Helix.hasTouch) {
-                this.contextEvent = 'taphold';
-                this.tapEvent = 'tap';
-            } else {
-                this.contextEvent = 'contextmenu';
-                this.tapEvent = 'click';
-            }
+            this.contextEvent = Helix.contextEvent;
+            this.tapEvent = Helix.clickEvent;
         
             // Default sort.
             this._currentSort = this.options.sortBy;
@@ -451,10 +446,10 @@
             _self.unfilteredList = _self.itemList = list;
         
             /* Hide the list while we are manipulating it. */
-            _self.$wrapper.hide();
             if ((condition !== undefined) &&
                 !condition) {
                 /* The condition is false. Remove this entirely from the DOM. */    
+                _self.$wrapper.hide();
                 return;
             }   
             
@@ -531,11 +526,41 @@
                 if (_self.options.pullToRefresh) {
                     _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
                 }
+                _self.isLoaded = true;
                 if (oncomplete) {
                     oncomplete(_self);            
                 }
             });
         },
+        
+        /**
+         * Called when the data in the list has changed, but the list structure itself
+         * has not.
+         */
+        refreshData: function(list,condition,oncomplete) {
+            var _self = this;
+            
+            /* itemList is the current query collection. Display list is an array
+             * of the currently displayed items.
+             */
+            _self.unfilteredList = _self.itemList = list;
+        
+            /* Hide the list while we are manipulating it. */
+            if ((condition !== undefined) &&
+                !condition) {
+                /* The condition is false. Remove this entirely from the DOM. */    
+                _self.$wrapper.hide();
+                return;
+            }
+            
+            _self._refreshData(function() {
+                _self.$parent.listview( "refresh" );
+                if (oncomplete) {
+                    oncomplete(_self);            
+                }
+            });
+        },
+        
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
@@ -966,7 +991,6 @@
             
             _self._currentPage++;
             
-            
             var isMini = this.$parent.hasClass('hx-listview-mini'); 
             this._refreshData(function() {
                 _self.$parent.listview( "refresh" );
@@ -974,6 +998,8 @@
                 if (isMini) {
                     _self.setMiniView();
                 }
+                _self.selected = null;
+                _self.selectItem();
             });
         },
         
@@ -991,6 +1017,8 @@
                 if (isMini) {
                     _self.setMiniView();
                 }
+                _self.selected = null;
+                _self.selectItem();
             });            
         },
         
@@ -1047,7 +1075,8 @@
             if (_self.options.grouped) {
                 LIs = $(_self.$parent).find('li[data-role=list-divider]');
             } else {
-                LIs = $(_self.$parent).find('li');
+                // Add not selector to make sure we handle auto dividers properly.
+                LIs = $(_self.$parent).find('li:not([data-role=list-divider])');
             }
             displayCollection.each(
                 /* Process each element. */
@@ -1074,6 +1103,11 @@
                 /* Called on start. */
                 function(count) {
                     _self.nElems = count;
+                    if (startIndex >= _self.nElems) {
+                        // Happens if we, for example, delete the last element on the last page.
+                        --_self._currentPage;
+                        startIndex = (_self._currentPage) * _self.options.itemsPerPage;
+                    }
                 },
                 /* Called on done. */
                 function() {
@@ -1081,12 +1115,13 @@
                     if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
                         _self.refreshInProgress = false;
-                        oncomplete();
                         
                         var startIdx = nRendered;
                         for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                             $(LIs[_ridx]).hide();
                         }
+                        
+                        oncomplete();
                     } else {
                         var groupIndex = 0;
                         var __renderGroup = function() {
@@ -1317,6 +1352,7 @@
         },
         _renderSingleRow: function(LIs, rowIndex, itemsPerPage, curRow, oncomplete) {
             var _self = this;
+            var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
             if (_self.options.grouped) {
                 var __renderEmptyGroup = function(dividerLI) {
                     // Hide all elements in this group index.
@@ -1348,7 +1384,6 @@
                 
                 // Attach the group header.
                 var dividerLI;
-                var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
                 if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
                         'data-role' : 'list-divider'
@@ -1367,7 +1402,7 @@
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupLIs, groupRow, 0, rowIndex, groupIndex)) {
+                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
@@ -1396,7 +1431,7 @@
                     return false;
                 }
             } else {
-                if (_self._renderRowMarkup(LIs, curRow, itemsPerPage, rowIndex)) {
+                if (_self._renderRowMarkup(LIs, curRow, arrIdx)) {
                     _self.displayList.push(curRow);
                     oncomplete();
                     return true;
@@ -1406,7 +1441,7 @@
             }  
         },
     
-        _renderRowMarkup: function(LIs, row, itemsPerPage, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -1414,9 +1449,8 @@
             if (_self.options.grouped && groupIndex < LIs.length) {
                 curRowParent = $(LIs[groupIndex]);
             } else if (!_self.options.grouped) {
-                var arrIdx = (itemsPerPage > 0 ? (rowIndex % itemsPerPage) : rowIndex);
-                if (arrIdx < LIs.length) {
-                    curRowParent = $(LIs[arrIdx]);
+                if (rowIndex < LIs.length) {
+                    curRowParent = $(LIs[rowIndex]);
                 }
             } 
             
@@ -1526,12 +1560,12 @@
         setSelectedByIndex: function(idx, groupIdx) {
             var targetElem;
             if (idx && groupIdx) {
-                targetElem = $('li[data-index=' + idx +']').filter('[data-group-index=' + groupIdx + ']');
+                targetElem = $(this.$wrapper).find('li[data-index=' + idx +']').filter('[data-group-index=' + groupIdx + ']');
                 if (targetElem && targetElem.length > 0) {
                     this.setSelected(targetElem);
                 }
             } else {
-                targetElem = $('li[data-index=' + idx +']');
+                targetElem = $(this.$wrapper).find('li[data-index=' + idx +']');
                 if (targetElem && targetElem.length > 0) {
                     this.setSelected(targetElem);
                 }
@@ -1655,7 +1689,11 @@
         },
         selectItem: function() {
             if (!this.selected) {
-                this.setSelectedByIndex(0, 0);
+                if (this.options.grouped) {
+                    this.setSelectedByIndex(0, 0);
+                } else {
+                    this.setSelectedByIndex(0);
+                }
             }
             if (this.options.selectAction) {
                 this.options.selectAction(this.selected, this.selectedGroup, this.strings);
@@ -1733,6 +1771,13 @@
          */
         setRegularView: function() {
            this.$parent.removeClass('hx-listview-mini'); 
+        },
+        
+        /**
+         * Returns true after the first time the list has been loaded and laid out.
+         */
+        getIsLoaded: function() {
+            return this.isLoaded;
         }
     });
 })(jQuery);

@@ -147,7 +147,7 @@
               }
           }
 
-          if(settings.scrollWheelSelected === false && st <= 0) {
+          if(settings.scrollWheelSelected === false && /*SAH: st <= 0*/ st < 0) {
             if(called === false) {
                 methods.reload(el, settings);
                 called = true;
@@ -156,7 +156,7 @@
         },
 
         onSwipe: function(el, settings) {
-            if(st <= 0) {
+            if(/*SAH: st <= 0*/ st < 0) {
                 methods.reload(el, settings);
             }
         },
