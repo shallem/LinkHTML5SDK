@@ -555,6 +555,7 @@
             
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
+                _self._refreshPaginatorContainer();
                 if (oncomplete) {
                     oncomplete(_self);            
                 }
@@ -971,7 +972,8 @@
                     'nextPage' : _self.nextPage,
                     'prevPage' : _self.prevPage,
                     'owner' : _self,
-                    'template' : (_self.options.customPaginatorTemplate ? _self.options.customPaginatorTemplate(obj) : null)
+                    'template' : (_self.options.customPaginatorTemplate ? _self.options.customPaginatorTemplate(obj) : null),
+                    'totalPages' : _self.totalPages
                 });
             });
             _self.$paginatorDiv.show();

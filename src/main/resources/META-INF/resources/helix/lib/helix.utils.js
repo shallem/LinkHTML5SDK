@@ -79,7 +79,7 @@ Helix.Utils =  {
                 }
                 
                 var startItem = 1;
-                var totalPages = Math.floor(params.totalItems / params.itemsPerPage) + 1;
+                var totalPages = params.totalPages;
                 var endItem = params.itemsPerPage;
                 if (params.page >= 0) {
                     startItem = (params.itemsPerPage * params.page) + 1;
@@ -134,6 +134,14 @@ Helix.Utils =  {
             }
         },
         render: function(renderer, obj, params) {
+            // Compute total pages if it is not supplied.
+            if (!params.totalPages) {
+                if ((params.totalItems % params.itemsPerPage) == 0) {
+                    params.totalPages = params.totalItems / params.itemsPerPage;
+                } else {
+                    params.totalPages = Math.floor(params.totalItems / params.itemsPerPage) + 1;
+                }
+            }
             if (Helix.Utils.paginator.renderers[renderer]) {
                 Helix.Utils.paginator.renderers[renderer](obj, params);
             }
