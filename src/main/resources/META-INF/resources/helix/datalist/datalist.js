@@ -286,7 +286,14 @@
              * Function used to generate the title of each section created by
              * the auto-divider based on the content of the provided cell.
              */
-            autodividersSelectorCallback: null
+            autodividersSelectorCallback: null,
+            
+            /*
+             * Suppresses the select action when the user flips between pages and
+             * the page flip causes the first item in the page to be automatically
+             * selected.
+             */
+            noSelectOnPagination: false
         },
     
         _create: function() {
@@ -1006,7 +1013,7 @@
                     _self.setMiniView();
                 }
                 _self.selected = null;
-                _self.selectItem();
+                _self.selectItem(_self.options.noSelectOnPagination);
             });
         },
         
@@ -1025,7 +1032,7 @@
                     _self.setMiniView();
                 }
                 _self.selected = null;
-                _self.selectItem();
+                _self.selectItem(_self.options.noSelectOnPagination);
             });            
         },
         
@@ -1694,7 +1701,7 @@
                 }
             }*/
         },
-        selectItem: function() {
+        selectItem: function(noSelectAction) {
             if (!this.selected) {
                 if (this.options.grouped) {
                     this.setSelectedByIndex(0, 0);
@@ -1702,7 +1709,7 @@
                     this.setSelectedByIndex(0);
                 }
             }
-            if (this.options.selectAction) {
+            if (this.options.selectAction && !noSelectAction) {
                 this.options.selectAction(this.selected, this.selectedGroup, this.strings);
             }          
         },
@@ -1785,6 +1792,13 @@
          */
         getIsLoaded: function() {
             return this.isLoaded;
+        },
+        
+        /**
+         * Update the value of the 'noSelectOnPagination' option.
+         */
+        setNoSelectOnPagination: function(val) {
+            this.options.noSelectOnPagination = val;
         }
     });
 })(jQuery);
