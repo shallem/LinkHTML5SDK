@@ -207,6 +207,14 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",headerText: '" + dlist.getHeaderText() + "'");
         }
         
+        // Auto dividers.
+        writer.write(",autodividers: '" + Boolean.toString(dlist.isAutodividers()) + "'");
+        
+        // Auto dividers selector.
+        if (dlist.getAutodividersSelectorCallback() != null) {
+            writer.write(",autodividersSelectorCallback: function(elt, list, sort) { return " + dlist.getAutodividersSelectorCallback() + "}");
+        }
+        
         // The data list.
         writer.write(",itemList: " + dlist.getItemList());
         
