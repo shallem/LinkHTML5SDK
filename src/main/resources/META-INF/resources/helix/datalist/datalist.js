@@ -966,15 +966,19 @@
             var _self = this;
             var orderby = _self._currentSort; 
         
-            this._clearListRows();
+            //this._clearListRows();
             _self.refreshInProgress = true;
             _self.displayList = [];
         
             if (_self.options.headerText) {
-                $('<li />').attr({
-                    'data-role' : 'list-divider'
-                }).append(_self.options.headerText)
-                .appendTo(_self.$parent);
+                if (!_self._headerLI) {
+                    _self._headerLI = $('<li />').attr({
+                        'data-role' : 'list-divider'
+                    }).append(_self.options.headerText)
+                    .appendTo(_self.$parent);
+                } else {
+                    _self._headerLI.text(_self.options.headerText);
+                }
             }
         
             var startIndex = 0;
@@ -1006,25 +1010,32 @@
 
             var rowIndex = 0;
             var nRendered = 0;
+            var LIs = [];
+            var groupsToRender = [];
+            if (_self.options.grouped) {
+                LIs = $(_self.$parent).find('li[data-role=list-divider]');
+            } else {
+                LIs = $(_self.$parent).find('li');
+            }
             displayCollection.each(
                 /* Process each element. */
                 function(curRow) {
-                    ++rowIndex;
-                    if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
-                        return;
-                    }
-                    if (itemsPerPage > 0 && rowIndex < startIndex) {
-                        return;
-                    }
-                    
-                    if (_self._renderSingleRow(curRow, nRendered, function(finishedIdx) {
-                        if (_self.options.grouped && (finishedIdx == (_self.nElems - 1))) {
-                            /* Call completion when all rows are done rendering. */
-                            _self.refreshInProgress = false;
-                            oncomplete();
+                    if (_self.options.grouped) {
+                        groupsToRender.push(curRow);
+                    } else {
+                        ++rowIndex;
+                        if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
+                            return;
                         }
-                    })) {
-                        ++nRendered;
+                        if (itemsPerPage > 0 && rowIndex < startIndex) {
+                            return;
+                        }
+                        
+                        if (_self._renderSingleRow(LIs, rowIndex - 1, curRow, function() {
+                            // Nothing to do.
+                        })) {
+                            ++nRendered;
+                        }
                     }
                 },
                 /* Called on start. */
@@ -1032,11 +1043,45 @@
                     _self.nElems = count;
                 },
                 /* Called on done. */
-                function(count) {
-                    if (nRendered == 0 || (!_self.options.grouped)) {
+                function() {
+                    var _ridx;
+                    if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
                         _self.refreshInProgress = false;
                         oncomplete();
+                        
+                        for (_ridx = rowIndex; _ridx < LIs.length; ++_ridx) {
+                            $(LIs[_ridx]).hide();
+                        }
+                    } else {
+                        var groupIndex = 0;
+                        var __renderGroup = function() {
+                            if (groupsToRender.length == 0) {
+                                for (_ridx = groupIndex; _ridx < LIs.length; ++_ridx) {
+                                    $(LIs[_ridx]).hide();
+                                }
+                                /* Call completion when all rows are done rendering. */
+                                _self.refreshInProgress = false;
+                                oncomplete();
+                                return;
+                            }
+                            
+                            var nxt = groupsToRender.shift();
+                            ++groupIndex;
+                            if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
+                                return;
+                            }
+                            if (itemsPerPage > 0 && groupIndex < startIndex) {
+                                return;
+                            }
+                            
+                            if (_self._renderSingleRow(LIs, groupIndex - 1, nxt, function() {
+                                __renderGroup();
+                            })) {
+                                ++nRendered;
+                            }
+                        };
+                        __renderGroup();
                     }
                 }
             );
@@ -1235,9 +1280,27 @@
             }
             return displayCollection;
         },
-        _renderSingleRow: function(curRow, rowIndex, oncomplete) {
+        _renderSingleRow: function(LIs, rowIndex, curRow, oncomplete) {
             var _self = this;
             if (_self.options.grouped) {
+                var __renderEmptyGroup = function(dividerLI) {
+                    // Hide all elements in this group index.
+                    _self.$parent.find('li[data-index="' + rowIndex + '"]').hide();
+
+                    // Find the empty element, if it is there. If so, show it.
+                    var $emptyElem = _self.$parent.find('li[data-index="' + rowIndex + '"][data-group-index="-1"]');
+                    if ($emptyElem.length) {
+                        $emptyElem.show();
+                    } else {                                 
+                        $('<li />').attr({
+                            'class' : _self.options.rowStyleClass,
+                            'data-index' : rowIndex,
+                            'data-group-index' : '-1'
+                        }).append(_self.options.emptyGroupMessage)
+                        .insertAfter(dividerLI);
+                    }
+                };
+
                 var rowObject = {
                     'group': curRow, 
                     'rows' : []
@@ -1247,74 +1310,99 @@
                 var groupName = _self.options.groupName(rowObject.group);
                 var groupMembers = _self.options.groupMembers(rowObject.group);
                 var groupIndex = 0;
+                
+                // Attach the group header.
+                var dividerLI;
+                if (rowIndex >= LIs.length) {
+                    dividerLI = $('<li />').attr({
+                        'data-role' : 'list-divider'
+                    }).append(groupName).appendTo(_self.$parent);
+                } else {
+                    dividerLI = LIs[rowIndex];
+                    $(dividerLI).text(groupName).show();
+                }
+                if (_self.options.dividerStyleClass) {
+                    $(dividerLI).addClass(_self.options.dividerStyleClass);
+                }
+                
                 if (groupMembers) {
+                    var groupLIs = _self.$parent.find('li[data-index="' + rowIndex + '"]');
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupRow, rowIndex, groupIndex)) {
+                            if (_self._renderRowMarkup(groupLIs, groupRow, rowIndex, groupIndex)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
                         },
                         /* On start. */
                         function(ct) {
-                            // Attach the group header.
-                            var dividerLI = $('<li />').attr({
-                                'data-role' : 'list-divider'
-                            }).append(groupName).appendTo(_self.$parent);
-                            if (_self.options.dividerStyleClass) {
-                                $(dividerLI).attr('class', _self.options.dividerStyleClass);
-                            }
                             if (ct == 0) {
-                                $('<li />').attr({
-                                    'class' : _self.options.rowStyleClass
-                                }).append(_self.options.emptyGroupMessage)
-                                .insertAfter(dividerLI);
+                                __renderEmptyGroup(dividerLI);                                
                             }
                         },
                         /* On done. */
                         function() {
-                            oncomplete(rowIndex);
+                            oncomplete();
+                            for (var _gidx = groupIndex; _gidx < groupLIs.count; ++_gidx) {
+                                groupLIs[_gidx].hide();
+                            }
                         }
                     );
+                    return true;
+                } else if (groupMembers == null) {
+                    __renderEmptyGroup(dividerLI);
+                    oncomplete();
+                    return true;
                 } else {
-                    $('<li />').attr({
-                        'class' : _self.options.rowStyleClass
-                    }).append(_self.emptyGroupMessage)
-                    .insertAfter(dividerLI);
+                    oncomplete();
+                    return false;
                 }
-                return true;
             } else {
-                if (_self._renderRowMarkup(curRow, rowIndex)) {
+                if (_self._renderRowMarkup(LIs, curRow, rowIndex)) {
                     _self.displayList.push(curRow);
-                    oncomplete(rowIndex);
+                    oncomplete();
                     return true;
                 }
-                oncomplete(rowIndex);
+                oncomplete();
                 return false;
             }  
         },
     
-        _renderRowMarkup: function(row, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
             var _self = this;
+            var curRowParent = null;
+            var curRowFresh = false;
             
-            var curRowParent = $('<li />').attr({
-                'class' : _self.options.rowStyleClass,
-                'data-index' : rowIndex
-            });
+            if (_self.options.grouped && (groupIndex < LIs.length)) {
+                curRowParent = $(LIs[groupIndex]);
+            } else if (!_self.options.grouped && (rowIndex < LIs.length)) {
+                curRowParent = $(LIs[rowIndex]);
+            } else {
+                curRowFresh = true;
+                curRowParent = $('<li />').attr({
+                    'class' : _self.options.rowStyleClass,
+                    'data-index' : rowIndex
+                });
+            }
+            
             if (_self.options.grouped) {
                 curRowParent.attr('data-group-index', groupIndex);
             }
         
             if (_self.options.rowRenderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
-                curRowParent.appendTo(_self.$parent);
+                if (curRowFresh) {
+                    curRowParent.appendTo(_self.$parent);
+                } else {
+                    curRowParent.show();
+                }
             } else {
                 return false;
             }
             
             if (_self.options.itemContextMenu) {
                 if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(row)) {
-                    $(curRowParent).on(this.contextEvent, function(event) {
+                    $(curRowParent).off(this.contextEvent).on(this.contextEvent, function(event) {
                         // This allows the container to have taphold context menus that are not
                         // triggered when this event is triggered.
                         event.stopImmediatePropagation();
@@ -1327,9 +1415,10 @@
                             thisArg: _self
                         });
                     });
-
+                } else if (!curRowFresh) {
+                    $(curRowParent).off(this.contextEvent);
                 }
-            } else if (_self.options.holdAction) {
+            } else if (_self.options.holdAction && curRowFresh) {
                 $(curRowParent).on(_self.contextEvent, function(event) {
                     event.stopImmediatePropagation();
                     event.stopPropagation();
@@ -1340,7 +1429,7 @@
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                 }); 
             } 
-            if (_self.options.selectAction) {
+            if (_self.options.selectAction && curRowFresh) {
                 $(curRowParent).on(_self.tapEvent, function(event) {
                     event.stopImmediatePropagation();
                     event.stopPropagation();
@@ -1429,52 +1518,98 @@
         },
   
         createListRow: function(parentElement,rowComponents) {
-            var mainLink = $('<a />').attr({
+            var isEnhanced = false;
+            if ($(parentElement).hasClass('ui-li')) {
+                // Already enhanced.
+                isEnhanced = true;
+            }
+            
+            var mainLink = null;
+            if (isEnhanced) {
+                mainLink = $(parentElement).find('a');
+            } else {
+                mainLink = $('<a />').attr({
                 'href' : 'javascript:void(0)'
             }).appendTo($(parentElement));
+            }
             
             if (rowComponents.icon) {
                 $(parentElement).attr('data-icon', rowComponents.icon);
+                if (isEnhanced) {
+                    // Manually update the icon itself.
+                    $(parentElement).find('span.ui-icon').removeClass()
+                        .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
+                } 
             }
             
             if (rowComponents.image) {
-                mainLink.append($('<img />').attr({
-                    'src' : rowComponents.image
-                }));
+                if (isEnhanced) {
+                    $(mainLink).find('img').attr('src', rowComponents.image);
+                } else {
+                    mainLink.append($('<img />').attr({
+                        'src' : rowComponents.image
+                    }));
+                }
             }
             if (rowComponents.header) {
                 if( Object.prototype.toString.call(rowComponents.header) == '[object String]' ) {
-                    mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                    if (isEnhanced) {
+                        mainLink.find('h3').text(Helix.Utils.escapeQuotes(rowComponents.header));
+                    } else {
+                        mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                    }
                 } else {
-                    mainLink.append($('<h3 />').append(rowComponents.header));
+                    if (isEnhanced) {
+                        mainLink.find('h3').empty().append(rowComponents.header);
+                    } else {
+                        mainLink.append($('<h3 />').append(rowComponents.header));
+                    }
                 }
             }
             if (rowComponents.subHeader) {
-                mainLink.append($('<p />')
-                .append($('<strong />')
-                .text(rowComponents.subHeader)
-            )
-            );
+                if (isEnhanced) {
+                    mainLink.find('p').text(rowComponents.subHeader);
+                } else {
+                    mainLink.append($('<p />')
+                        .append($('<strong />')
+                        .text(rowComponents.subHeader)));
+                }
             }
             if (rowComponents.body) {
                 if (rowComponents.header || rowComponents.subHeader) {
-                    mainLink.append($('<p />').append(rowComponents.body));
+                    if (isEnhanced) {
+                        mainLink.find('p[data-role="body"]').empty().append(rowComponents.body);
+                    } else {
+                        mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
+                    }
                 } else {
+                    if (isEnhanced) {
+                        mainLink.empty();
+                    } 
                     mainLink.append(rowComponents.body);
                 }
             }
             if (rowComponents.aside) {
-                mainLink.append($('<p />').attr({
-                    'class' : 'ui-li-aside'
-                }).append(rowComponents.aside));
+                if (isEnhanced) {
+                    mainLink.find('p.ui-li-aside').empty().append(rowComponents.aside);
+                } else {
+                    mainLink.append($('<p />').attr({
+                        'class' : 'ui-li-aside'
+                    }).append(rowComponents.aside));
+                }
             }
+            /* XXX: not supported for now. 
             if (rowComponents.splitLink) {
-                $(parentElement).append($('<a />').attr({
-                    'href' : 'javascript:void(0)'
-                }).on(this.tapEvent, function(ev) {
-                    rowComponents.splitLink(ev);
-                }));
-            }
+                if (isEnhanced) {
+                    
+                } else {
+                    $(parentElement).append($('<a />').attr({
+                        'href' : 'javascript:void(0)'
+                    }).on(this.tapEvent, function(ev) {
+                        rowComponents.splitLink(ev);
+                    }));
+                }
+            }*/
         },
         selectItem: function() {
             if (!this.selected) {

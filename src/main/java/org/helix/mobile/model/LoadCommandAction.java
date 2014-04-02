@@ -85,6 +85,8 @@ public class LoadCommandAction {
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
             LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex.getTargetException());
+            
             throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getLocalizedMessage());
         }
         return thisObject;
