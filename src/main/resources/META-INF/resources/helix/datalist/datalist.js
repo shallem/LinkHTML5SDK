@@ -354,6 +354,11 @@
             }
 
             var ad = this.options.autodividers;
+            if (!ad) {
+                ad = false;
+            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() == 'false')) {
+                ad = false;
+            }
             var ads = function(elt) { 
                     var callback = _self.options.autodividersSelectorCallback;
 
