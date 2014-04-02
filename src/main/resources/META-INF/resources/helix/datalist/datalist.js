@@ -920,7 +920,12 @@
         
             _self.$paginatorDiv.empty().hide();
             
-            _self.totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;            
+            if ((_self.nElems % _self.options.itemsPerPage) == 0) {
+                _self.totalPages = _self.nElems / _self.options.itemsPerPage;
+            } else {
+                _self.totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;
+            }
+            
             $.each(this.options.paginatorTemplate.split(" "), function(idx, obj) {
                 if (_self._currentPage == 0 &&
                     obj === '{PreviousPageLink}') {
@@ -1050,15 +1055,16 @@
                     if (_self.options.grouped) {
                         groupsToRender.push(curRow);
                     } else {
-                        ++rowIndex;
                         if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
                             return;
                         }
                         if (itemsPerPage > 0 && rowIndex < startIndex) {
+                            ++rowIndex;
                             return;
                         }
                         
-                        if (_self._renderSingleRow(LIs, rowIndex - 1, curRow, function() {
+                        ++rowIndex;
+                        if (_self._renderSingleRow(LIs, rowIndex - 1, itemsPerPage, curRow, function() {
                             // Nothing to do.
                         })) {
                             ++nRendered;
@@ -1077,7 +1083,8 @@
                         _self.refreshInProgress = false;
                         oncomplete();
                         
-                        for (_ridx = rowIndex; _ridx < LIs.length; ++_ridx) {
+                        var startIdx = nRendered;
+                        for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                             $(LIs[_ridx]).hide();
                         }
                     } else {
@@ -1094,15 +1101,16 @@
                             }
                             
                             var nxt = groupsToRender.shift();
-                            ++groupIndex;
                             if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
                                 return;
                             }
                             if (itemsPerPage > 0 && groupIndex < startIndex) {
+                                ++groupIndex;
                                 return;
                             }
-                            
-                            if (_self._renderSingleRow(LIs, groupIndex - 1, nxt, function() {
+
+                            ++groupIndex;                            
+                            if (_self._renderSingleRow(LIs, groupIndex - 1, itemsPerPage, nxt, function() {
                                 __renderGroup();
                             })) {
                                 ++nRendered;
@@ -1307,7 +1315,7 @@
             }
             return displayCollection;
         },
-        _renderSingleRow: function(LIs, rowIndex, curRow, oncomplete) {
+        _renderSingleRow: function(LIs, rowIndex, itemsPerPage, curRow, oncomplete) {
             var _self = this;
             if (_self.options.grouped) {
                 var __renderEmptyGroup = function(dividerLI) {
@@ -1340,12 +1348,13 @@
                 
                 // Attach the group header.
                 var dividerLI;
-                if (rowIndex >= LIs.length) {
+                var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
+                if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
                         'data-role' : 'list-divider'
                     }).append(groupName).appendTo(_self.$parent);
                 } else {
-                    dividerLI = LIs[rowIndex];
+                    dividerLI = LIs[arrIdx];
                     $(dividerLI).text(groupName).show();
                 }
                 if (_self.options.dividerStyleClass) {
@@ -1353,11 +1362,12 @@
                 }
                 
                 if (groupMembers) {
-                    var groupLIs = _self.$parent.find('li[data-index="' + rowIndex + '"]');
+                    // groupLIs are all LIs from dividerLI to the next divider
+                    var groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupLIs, groupRow, rowIndex, groupIndex)) {
+                            if (_self._renderRowMarkup(groupLIs, groupRow, 0, rowIndex, groupIndex)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
@@ -1371,7 +1381,7 @@
                         /* On done. */
                         function() {
                             oncomplete();
-                            for (var _gidx = groupIndex; _gidx < groupLIs.count; ++_gidx) {
+                            for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
                                 groupLIs[_gidx].hide();
                             }
                         }
@@ -1386,7 +1396,7 @@
                     return false;
                 }
             } else {
-                if (_self._renderRowMarkup(LIs, curRow, rowIndex)) {
+                if (_self._renderRowMarkup(LIs, curRow, itemsPerPage, rowIndex)) {
                     _self.displayList.push(curRow);
                     oncomplete();
                     return true;
@@ -1396,23 +1406,28 @@
             }  
         },
     
-        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, itemsPerPage, rowIndex, groupIndex) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
             
-            if (_self.options.grouped && (groupIndex < LIs.length)) {
+            if (_self.options.grouped && groupIndex < LIs.length) {
                 curRowParent = $(LIs[groupIndex]);
-            } else if (!_self.options.grouped && (rowIndex < LIs.length)) {
-                curRowParent = $(LIs[rowIndex]);
-            } else {
+            } else if (!_self.options.grouped) {
+                var arrIdx = (itemsPerPage > 0 ? (rowIndex % itemsPerPage) : rowIndex);
+                if (arrIdx < LIs.length) {
+                    curRowParent = $(LIs[arrIdx]);
+                }
+            } 
+            
+            if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class' : _self.options.rowStyleClass,
-                    'data-index' : rowIndex
+                    'class' : _self.options.rowStyleClass
                 });
             }
             
+            curRowParent.attr('data-index', rowIndex);
             if (_self.options.grouped) {
                 curRowParent.attr('data-group-index', groupIndex);
             }
