@@ -108,7 +108,7 @@ Helix.Utils =  {
                             'class' : Helix.Utils.paginator.PAGINATOR_PREV_PAGE_ICON_CLASS
                         }).append("&nbsp;")
                     );
-                $(output).on('tap', function(ev) {
+                $(output).on(Helix.clickEvent, function(ev) {
                     ev.stopImmediatePropagation();
                     params.prevPage.apply(params.owner);
                     return false;
@@ -125,7 +125,7 @@ Helix.Utils =  {
                             'class' : Helix.Utils.paginator.PAGINATOR_NEXT_PAGE_ICON_CLASS
                         }).append("&nbsp;")
                     );
-                $(output).on('tap', function(ev) {
+                $(output).on(Helix.clickEvent, function(ev) {
                     ev.stopImmediatePropagation();
                     params.nextPage.apply(params.owner, [ totalPages ]);
                     return false;

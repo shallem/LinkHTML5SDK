@@ -215,6 +215,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",autodividersSelectorCallback: function(elt, list, sort) { return " + dlist.getAutodividersSelectorCallback() + "}");
         }
         
+        // Turn off the select on pagination.
+        if (dlist.isNoSelectOnPagination()) {
+            writer.write(",noSelectOnPagination: true");
+        }
+        
         // The data list.
         writer.write(",itemList: " + dlist.getItemList());
         

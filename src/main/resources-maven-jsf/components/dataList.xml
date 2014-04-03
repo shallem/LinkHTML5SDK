@@ -252,5 +252,12 @@
          <type>java.lang.String</type>
          <description>Function to invoke on a row to get the section name in a list with auto dividers.</description>
       </attribute>
+      <attribute>
+         <name>noSelectOnPagination</name>
+         <required>false</required>
+         <type>java.lang.Boolean</type>
+         <defaultValue>false</defaultValue>
+         <description>Indicates that paginating back or forward should not trigger the first item on the new page to be selected.</description>
+      </attribute>
    </attributes>
 </component>
