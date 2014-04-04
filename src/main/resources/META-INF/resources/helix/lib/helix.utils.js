@@ -179,5 +179,38 @@ Helix.Utils =  {
     },
     endsWith: function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    },
+    sizeIFrameToFit: function(frameID, parentID, sizeContentsToFit) {
+        // Rewrite all links in the message body to open a new tab.
+        var frame = document.getElementById(frameID);
+        if (!frame) {
+            return;
+        }
+        var frameHeight = null;
+        var screenWidth = null;
+        
+        if (parentID) {
+            var parent = document.getElementById(parentID);
+            frameHeight = parent.clientHeight;
+            screenWidth = parent.clientWidth;
+        } else {
+            frameHeight = frame.contentWindow.document.body.scrollHeight;
+            screenWidth = screen.width;
+        }
+
+        // First resize the iframe.
+        var frameWidth = frame.contentWindow.document.body.scrollWidth;
+
+        // Now scale it if the width is greater than the screen width.
+        if (frameWidth > screen.width && sizeContentsToFit) {
+            var scalingFactor = screen.width / frameWidth;
+            $(frame.contentWindow.document.body).closest('html')
+                .css('-webkit-transform-origin', '0 0')
+                .css('-webkit-transform', 'scale(' + scalingFactor + ')');
+            frame.height = (frameHeight * scalingFactor * 1.01) + "px";
+        } else {
+            frame.height= (frameHeight) + "px";
+        }
+        frame.width= (screenWidth) + "px";
     }
 }

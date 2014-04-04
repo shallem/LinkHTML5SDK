@@ -777,9 +777,6 @@
         hgt -= 25;
         
         editor.$frameMaster.height(hgt);
-        //editor.$frame.height(hgt);
-        //$(editor.doc).height(hgt);
-        //$(editor.doc.body).height(hgt);
     }
 
     // refresh - creates the iframe and resizes the controls
@@ -808,15 +805,36 @@
                 $('<div/>').append("Current Text Format").addClass("ui-editor-format").hide().appendTo($main);
         }
 
+        var frameMasterID = Helix.Utils.getUniqueID();
         var $frameMaster = editor.$frameMaster = $('<div/>')
+            .attr('id', frameMasterID)
             .css('overflow-y', 'scroll')
             .css('-webkit-overflow-scrolling', 'touch')
             .appendTo($main);
+            
+        // Set the height/width of the frame master before we load the iFrame.
+        var hgt = options.height;
+        adjustHeight(editor, hgt);
+        
+        // Set the width;
+        // Resize the main div (which includes the toolbar).
+        $main.width(options.width);
+        $frameMaster.width("100%");
+        $formatFrame.width("100%");
+        
         var $frame = null;
         if (editor.$frame) {
             $frame = editor.$frame;
         } else {
-            $frame = editor.$frame = $('<iframe style="margin-bottom: 5px;" src="javascript:true;" tabindex="' + options.tabIndex + '">')
+            var frameID = Helix.Utils.getUniqueID();
+            var iframeMarkup =
+                '<iframe style="margin-bottom: 5px;" src="javascript:true;"' +
+                ' tabindex="' + options.tabIndex + '"' +
+                ' id="' + frameID + '"' +
+                ' onload="Helix.Utils.sizeIFrameToFit(\'' + frameID + '\', \'' + frameMasterID + '\')"' +
+                '>';
+            
+            $frame = editor.$frame = $(iframeMarkup)
                 .hide()
                 .appendTo($frameMaster);
         }
@@ -874,21 +892,9 @@
             $doc.find('body').blur(function(e) {
                 editor.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
                 editor.$toolbarEnabled = false;
-                //updateTextArea(editor);
-                //alert("HELLO");
             });
         }
-   
-        // Set the width;
-        // Resize the main div (which includes the toolbar).
-        $main.width(options.width);
-        $frame.width("100%");
         $doc.width("100%");
-        $formatFrame.width("100%");
-        
-        // Set the height
-        var hgt = options.height;
-        adjustHeight(editor, hgt);
         
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.
