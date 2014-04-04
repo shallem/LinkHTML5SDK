@@ -446,7 +446,7 @@ function __refreshSelectMenu(formElem) {
     $(inputMarkup).selectmenu();
 }
 
-function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer) {
+function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (!formElem.name) {
         /* No field name. We cannot edit this field. */
         console.log("Invalid select menu in form layout. No field name specified.");
@@ -462,7 +462,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer) {
             
         __refreshSelectMenu(formElem, $fieldContainer);
     } else {
-        $fieldContainer.append($('<p />').attr('data-name', formElem.name).append(formElem.value ? formElem.value : ""));
+        __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
 }
 
@@ -1250,7 +1250,8 @@ Helix.Utils.fieldContainers = {
     'text' : true,
     'date' : true,
     'exactdate' : true,
-    'datetime' : true
+    'datetime' : true,
+    'pickList' : true
 };
 
 Helix.Utils.oneContainerLayouts = {
@@ -1665,7 +1666,14 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
                     'class' : 'ui-btn-left',
                     'href' : PrimeFaces.escapeClientId($(page).attr('id'))
                     }).append('Back')
-                )
+                ).append($('<a />').attr({
+                    'data-iconpos' : 'right',
+                    'data-icon' : 'check',
+                    'data-theme' : 'b',
+                    'class' : 'ui-btn-right' 
+                }).on(Helix.clickEvent, function(ev) {
+                    dialogFields.saveButton.onclick(ev);
+                }).append(dialogFields.saveButton.title))
             ).append($('<div />').attr({
                 'data-role' : 'content',
                 'style' : 'overflow-y: auto;',

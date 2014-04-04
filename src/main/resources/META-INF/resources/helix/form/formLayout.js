@@ -446,11 +446,7 @@
                         });
                         $(thisField).selectmenu('refresh');                        
                     } else {
-                        thisField = $(item.DOM).find('[data-name="' + searchName + '"]');
-                        if (value === undefined) {
-                            value = "";
-                        }
-                        $(thisField).html(value);
+                        __refreshTextBox(mode, item);
                     }
                 } else if (fldType === 'checkbox') {
                     __refreshControl(item, false, mode);
