@@ -449,7 +449,7 @@
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
          * and globalFilters with the format described in the options documentation.
          */
-        refreshList: function(list,condition,sortFilterOptions,oncomplete) {
+        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection) {
             var _self = this;
             
             /* itemList is the current query collection. Display list is an array
@@ -525,6 +525,15 @@
                  * list we are actually going to display before we paginate it.
                  */
                 _self._resetPaging();
+                
+                /**
+                 * Reset the selection if directed to do so.
+                 */
+                if (resetSelection) {
+                    _self.selected = null;
+                    _self.selectItem(true);
+                }
+                
                 _self.$wrapper.show();
                 
                 /* It seems that attaching the scrolling classes after showing the list
@@ -1619,75 +1628,107 @@
                 mainLink = $(parentElement).find('a');
             } else {
                 mainLink = $('<a />').attr({
-                'href' : 'javascript:void(0)'
-            }).appendTo($(parentElement));
+                    'href' : 'javascript:void(0)'
+                }).appendTo($(parentElement));
             }
             
             if (rowComponents.icon) {
                 $(parentElement).attr('data-icon', rowComponents.icon);
-                if (isEnhanced) {
+                var iconMarkup = $(parentElement).find('span.ui-icon');
+                if (iconMarkup.length) {
                     // Manually update the icon itself.
-                    $(parentElement).find('span.ui-icon').removeClass()
+                    iconMarkup.removeClass()
                         .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
-                } 
+                }
+            } else {
+                $(parentElement).removeAttr('data-icon');
             }
             
             if (rowComponents.image) {
-                if (isEnhanced) {
-                    $(mainLink).find('img').attr('src', rowComponents.image);
+                var imgMarkup = $(mainLink).find('img[data-role="image"]');
+                if (imgMarkup.length) {
+                    imgMarkup.attr('src', rowComponents.image).show();
                 } else {
                     mainLink.append($('<img />').attr({
-                        'src' : rowComponents.image
+                        'src' : rowComponents.image,
+                        'data-role' : 'image'
                     }));
                 }
+            } else {
+                $(mainLink).find('img[data-role="image"]').hide();
             }
+            
             if (rowComponents.header) {
+                var headerMarkup = mainLink.find('h3[data-role="header"]');
                 if( Object.prototype.toString.call(rowComponents.header) == '[object String]' ) {
-                    if (isEnhanced) {
-                        mainLink.find('h3').text(Helix.Utils.escapeQuotes(rowComponents.header));
+                    if (headerMarkup.length) {
+                        headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
-                        mainLink.append($('<h3 />').text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                        mainLink.append($('<h3 />')
+                            .attr('data-role', 'header')
+                            .text(Helix.Utils.escapeQuotes(rowComponents.header)));
                     }
                 } else {
-                    if (isEnhanced) {
-                        mainLink.find('h3').empty().append(rowComponents.header);
+                    if (headerMarkup.length) {
+                        headerMarkup.empty().append(rowComponents.header);
                     } else {
-                        mainLink.append($('<h3 />').append(rowComponents.header));
+                        mainLink.append($('<h3 />')
+                            .attr('data-role', 'header')
+                            .append(rowComponents.header));
                     }
                 }
+            } else {
+                mainLink.find('h3[data-role="header"]').hide();
             }
+            
             if (rowComponents.subHeader) {
-                if (isEnhanced) {
-                    mainLink.find('p').text(rowComponents.subHeader);
+                var subheaderMarkup = mainLink.find('p[data-role="subheader"]');
+                if (subheaderMarkup.length) {
+                    subheaderMarkup.text(rowComponents.subHeader).show();
                 } else {
                     mainLink.append($('<p />')
+                        .attr('data-role', 'subheader')
                         .append($('<strong />')
                         .text(rowComponents.subHeader)));
                 }
+            } else {
+                mainLink.find('p[data-role="subheader"]').hide();
             }
+            
             if (rowComponents.body) {
+                var bodyMarkup = null;
                 if (rowComponents.header || rowComponents.subHeader) {
-                    if (isEnhanced) {
-                        mainLink.find('p[data-role="body"]').empty().append(rowComponents.body);
+                    bodyMarkup = mainLink.find('p[data-role="body"]');
+                    if (bodyMarkup.length) {
+                        bodyMarkup.empty().append(rowComponents.body).show();
                     } else {
                         mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
                     }
                 } else {
-                    if (isEnhanced) {
+                    bodyMarkup = mainLink.find('[data-role="body"]');
+                    if (bodyMarkup.length) {
                         mainLink.empty();
-                    } 
+                    }
+                    $(rowComponents.body).attr('data-role', 'body');
                     mainLink.append(rowComponents.body);
                 }
+            } else {
+                mainLink.find('[data-role="body"]').hide();
             }
+            
             if (rowComponents.aside) {
-                if (isEnhanced) {
-                    mainLink.find('p.ui-li-aside').empty().append(rowComponents.aside);
+                var asideMarkup = $('p.ui-li-aside');
+                if (asideMarkup.length) {
+                    asideMarkup.empty().append(rowComponents.aside).show();
                 } else {
                     mainLink.append($('<p />').attr({
                         'class' : 'ui-li-aside'
                     }).append(rowComponents.aside));
                 }
+            } else {
+                $('p.ui-li-aside').hide();
             }
+            
             /* XXX: not supported for now. 
             if (rowComponents.splitLink) {
                 if (isEnhanced) {
