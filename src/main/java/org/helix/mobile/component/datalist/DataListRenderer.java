@@ -82,7 +82,7 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("scroll: false,");
         }
-        
+
         /**
          * Settings for grouping.
          */
