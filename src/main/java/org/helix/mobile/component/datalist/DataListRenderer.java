@@ -82,6 +82,10 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("scroll: false,");
         }
+
+        if (!dlist.isShowButtons()) {
+            writer.write("showButtons: false,");
+        } 
         
         /**
          * Settings for grouping.
