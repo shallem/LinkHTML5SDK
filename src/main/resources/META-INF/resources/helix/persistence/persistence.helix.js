@@ -25,6 +25,10 @@ function initHelixDB() {
         
         __schemaVersion: 0,
         
+        __indexingMessageShown: false,
+        
+        __indexingCount: 0,
+        
         reservedFields : {
             "__hx_sorts" : true,
             "__hx_key" : true,

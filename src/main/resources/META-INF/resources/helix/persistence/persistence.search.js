@@ -330,7 +330,11 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We only do this up to 5 times per index, otherwise the application can
                 // be sluggish for far too long.
                 indexedOnce = true;
-                //Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
+                
+                Helix.DB.__indexingCount--;
+                if (Helix.DB.__indexingCount == 0) {
+                    Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
+                }
                 return;
             }
             
@@ -348,6 +352,9 @@ persistence.search.config = function(persistence, dialect, options) {
                 return;
             }
             
+            if (ncalls == 0) {
+                ++Helix.DB.__indexingCount;
+            }
             
             // Run a query to get 100 objects that are not yet indexed.
             var updateIDs = [];
@@ -356,15 +363,23 @@ persistence.search.config = function(persistence, dialect, options) {
             var that = this;
             var nxtCall = ++ncalls;
             that.__hx_indexing = true;
-            this.all().filter('__hx_indexed', '=', 0).limit(5).order('rowid', false).include(propList.concat(['rowid'])).newEach({
+            this.all().filter('__hx_indexed', '=', 0).limit(10).order('rowid', false).include(propList.concat(['rowid'])).newEach({
                 startFn: function(ct) {
                     toIndex = ct;
                     if (toIndex <= 0) {
                         that.__hx_indexing = false;
+                        
+                        --Helix.DB.__indexingCount;
+                        if (Helix.DB.__indexingCount == 0 && nxtCall >= 20) {
+                            Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
+                        }
                     } else {
                         if (nxtCall == 20) {
-                            // Only display if we are going to index many times.
-                            Helix.Utils.statusMessage("Indexing", "Your data is being indexed in the background. The application may be slow while indexing is in progress. This may take a few minutes.", "info");
+                            if (!Helix.DB.__indexingMessageShown) {
+                                Helix.DB.__indexingMessageShown = true;
+                                // Only display if we are going to index many times.
+                                Helix.Utils.statusMessage("Indexing", "Your data is being indexed. The application will be slow while indexing is in progress. A message is displayed when indexing is done.", "info");
+                            }
                         }
                     }
                 },

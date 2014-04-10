@@ -16,6 +16,7 @@
 (function() {
     window.CordovaIOS = navigator.userAgent.match(/\[CORDOVA\]/);
     window.CordovaANDROID = navigator.userAgent.match(/\[CORDOVA-ANDROID\]/);
+    window.CordovaIOS34 = navigator.userAgent.match(/\[CORDOVA-3.4\]/);
     
     if (window.CordovaIOS) {
         cordova_ios_init();
@@ -23,6 +24,9 @@
     } else if (window.CordovaANDROID) {
         cordova_android_init();
         window.CordovaInstalled = true;
+    } else if (window.CordovaIOS34) {
+	cordova_ios_34_init();
+	window.CordovaInstalled = true;
     } else {
         window.CordovaInstalled = false;
     }

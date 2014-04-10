@@ -1808,7 +1808,7 @@ function cordova_android_init() {
 	     * any JS on the client side. For now this is not dynamic - we pre-package all
 	     * plugins.
 	     */
-	    cordova_30_plugins();
+	    cordova_34_plugins();
 	    var moduleList = require("cordova/plugin_list");
 	    handlePluginsObject(pathPrefix, moduleList);
 	    
