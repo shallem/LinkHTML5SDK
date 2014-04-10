@@ -231,11 +231,11 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         writer.write("function " + cmd.getName() + "_load(schemaObj, options, itemKey){ ");
         writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
-        writer.write("if (options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
-        writer.write("if (options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
-        writer.write("loadCommandOptions.onerror = options.onerror;");
+        writer.write("if (options && options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
+        writer.write("if (options && options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
+        writer.write("loadCommandOptions.onerror = (options ? options.onerror : null);");
         writer.write("loadCommandOptions.schema = schemaObj;");
-        writer.write("loadCommandOptions.requestOptions.params = options.params;");
+        writer.write("loadCommandOptions.requestOptions.params = (options ? options.params : null);");
         
         // Setup the widget.
         writer.write("Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);");
@@ -245,6 +245,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
         writer.write("function " + cmd.getName() + "(options, itemKey){ ");
+        writer.write("if (!options) { options = {}; }\n");
         if (onComplete != null) {
             writer.write("if (!options.oncomplete) {\n options.oncomplete = " + onComplete.toString() + "; }\n");
         }

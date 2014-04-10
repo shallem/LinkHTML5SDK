@@ -193,20 +193,20 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
 
         /* Edit */
         var dateDiv = $('<div />').attr({
-            'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : formLayout.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
+            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
         .append($('<label />').attr({
             'for' : formElem.name,
-            'class' : formLayout.titleStyleClass + (useMiniLayout ? ' hx-full-width' : '')
+            'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '') + (useMiniLayout ? ' hx-full-width' : '')
             })
             .append(formElem.fieldTitle)
         );
-        var inputWrapper = $('<div />').attr({ 
+        /*var inputWrapper = $('<div />').attr({ 
             'style' : formElem.computedStyle,
             'class' : formElem.computedStyleClass
-        }).appendTo(dateDiv);
+        }).appendTo(dateDiv);*/
+        var inputWrapper = dateDiv;
         var inputID = Helix.Utils.getUniqueID();
         var dateInput = $('<input />').attr({
             'name': formElem.name,
@@ -227,6 +227,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
+        dateDiv.fieldcontain();
         dateInput.datebox({"mode" : "flipbox", 
             "useNewStyle":false, 
             "defaultValue": defaultValue, 
@@ -249,7 +250,6 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 "minuteStep" : minuteStep
             });
         }
-        dateDiv.fieldcontain();
     } else {
         __refreshDate(mode, formElem);
     }
@@ -414,6 +414,9 @@ function __refreshSelectMenu(formElem) {
         'id' : inputID,
         'tabindex' : formElem.tabIndex
     });
+    if (formElem.selectWidth) {
+        $(inputMarkup).attr('width', formElem.selectWidth);
+    }
 
     var i;
     for (i = 0; i < formElem.options.length; ++i) {
