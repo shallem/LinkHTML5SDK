@@ -293,7 +293,12 @@
              * the page flip causes the first item in the page to be automatically
              * selected.
              */
-            noSelectOnPagination: false
+            noSelectOnPagination: false,
+            
+            /*
+             * Display sort buttons or not
+             */
+            showButtons: true            
         },
     
         _create: function() {
@@ -360,6 +365,13 @@
                 this.$parent.attr('data-split-theme', this.options.splitTheme);
             }
 
+            var sb = true;
+            
+            if (this.options.showButtons === false) {
+                sb = false;
+            }
+            
+            this.showButtons = sb;
             var ad = this.options.autodividers;
             if (!ad) {
                 ad = false;
@@ -1225,7 +1237,7 @@
         
         _prependSearchBox: function() {
             var _self = this;
-            var hasButtons = _self._globalFilterContainer || _self._sortContainer; 
+            var hasButtons = (_self._globalFilterContainer || _self._sortContainer) && _self.showButtons; 
             var useControlGroup = false;
             if (!_self._searchSortDirty) {
                 return;
