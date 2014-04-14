@@ -115,3 +115,13 @@
 .ui-header-fixed {
     position: absolute;
 }
+
+/* Create a little more room in the jQM listview layout. */
+.ui-li-has-arrow .ui-btn-inner a.ui-link-inherit {
+    padding-right: 30px;
+}
+
+/* Move the icon in a datalist over a bit. */
+.ui-li-has-arrow.ui-btn-icon-right .ui-icon  {
+    right: 10px;
+}

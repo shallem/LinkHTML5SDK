@@ -148,7 +148,7 @@
 					diff < 120 && messages.minute ||
 					diff < 3600 && messages.minutes(Math.floor(diff / 60)) ||
 					diff < 7200 && messages.hour ||
-					diff < 86400 && messages.hours(Math.floor(diff / 3600))) ||
+					diff < 86400 && messages.hours(targetTime/*Math.floor(diff / 3600)*/)) ||
 					dayDiff === 1 && messages.yesterday ||
 					dayDiff < 7 && messages.days(dayDiff) ||
 					dayDiff < 8 && messages.week ||
@@ -167,7 +167,12 @@
 		minute: '1 minute ago',
 		minutes: $.prettyDate.template('{0} minutes ago'),
 		hour: '1 hour ago',
-		hours: $.prettyDate.template('{0} hours ago'),
+		hours: function(tgtTime) {
+                    var tgtDate = new Date(tgtTime);
+                    return tgtDate.toLocaleTimeString({hour: '2-digit', minute:'2-digit'});
+                },
+                    
+                    //$.prettyDate.template('{0} hours ago'),
 		yesterday: 'Yesterday',
 		days: $.prettyDate.template('{0} days ago'),
 		week: '1 week ago',
