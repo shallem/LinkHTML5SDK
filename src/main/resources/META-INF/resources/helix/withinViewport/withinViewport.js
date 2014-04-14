@@ -28,6 +28,8 @@
         config.right = settings.right || withinViewport.defaults.right || 0;
         config.bottom = settings.bottom || withinViewport.defaults.bottom || 0;
         config.left = settings.left || withinViewport.defaults.left || 0;
+        
+        return config;
     };
     
     /**
