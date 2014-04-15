@@ -16,6 +16,7 @@
 package org.helix.mobile.component.outputscript;
 
 import java.io.IOException;
+import javax.faces.application.ProjectStage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import org.helix.mobile.component.page.PageRenderer;
@@ -25,6 +26,19 @@ public class OutputScriptRenderer extends CoreRenderer {
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         OutputScript os = (OutputScript) component;
+        
+        if (os.getPhase() != null) {
+            if (os.getPhase().equalsIgnoreCase("DEVELOPMENT") &&
+                    !context.isProjectStage(ProjectStage.Development)) {
+                // Skip
+                return;
+            } else if (os.getPhase().equalsIgnoreCase("PRODUCTION") &&
+                    !context.isProjectStage(ProjectStage.Production)) {
+                // Skip
+                return;
+            }
+        }
+        
         PageRenderer.renderResource(context, 
                 os.getName(), 
                 "javax.faces.resource.Script", 

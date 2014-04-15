@@ -132,7 +132,7 @@ persistence.get = function(arg1, arg2) {
     persistence.nextSchemaSyncHooks = [];
 
     // Enable debugging (display queries using console.log etc)
-    persistence.debug = true;
+    persistence.debug = false;
 
     persistence.subscribeToGlobalPropertyListener = function(coll, entityName, property) {
       var key = entityName + '__' + property;

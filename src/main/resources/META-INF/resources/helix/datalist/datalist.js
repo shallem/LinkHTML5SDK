@@ -283,6 +283,10 @@
             
             this.$page = this.$wrapper.closest('.ui-page');
             var parentId = this.$wrapper.parent().attr('id');
+            if (!parentId) {
+                parentId = Helix.Utils.getUniqueID();
+                this.$wrapper.parent().attr('id', parentId);
+            }
             
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$wrapper)
@@ -594,9 +598,9 @@
                         return true;
                     });
                 }
-                if (_self.options.pullToRefresh) {
+                //if (_self.options.pullToRefresh) {
                     _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
-                }
+                //}
                 _self.isLoaded = true;
                 if (oncomplete) {
                     oncomplete(_self);            

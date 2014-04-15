@@ -256,7 +256,7 @@
 		    <include>cordova/cordova.ios-3.4.js</include>
 		    <!-- <include>cordova/cordova.android.js</include> -->
 		    <include>cordova/cordova-3.4.plugins.js</include>
-		    <include>cordova/cordova-3.4.plugins-list.js</include>
+		    <include>cordova/cordova-3.4.plugin-list.js</include>
 		    <include>cordova/cordova.helix.plugins.js</include>
 		    <include>cordova/cordova-init.js</include>
 		  </includes>

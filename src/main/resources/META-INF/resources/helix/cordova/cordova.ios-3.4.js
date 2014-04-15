@@ -1388,7 +1388,10 @@ function handlePluginsObject(path, moduleList, finishPluginLoading) {
     }
 
     for (var i = 0; i < moduleList.length; i++) {
-        injectScript(path + moduleList[i].file, scriptLoadedCallback);
+        // SAH - no need to inject the scripts because we manually load all plugins.
+        // However, make sure we call the callback to get the oncomplete behavior.
+        //injectScript(path + moduleList[i].file, scriptLoadedCallback);
+        scriptLoadedCallback();
     }
 }
 
@@ -1398,8 +1401,7 @@ function injectPluginScript(pathPrefix, finishPluginLoading) {
     cordova_34_plugins();
     cordova_34_plugins_list();
     var moduleList = require("cordova/plugin_list");
-    handlePluginsObject(pathPrefix, moduleList);
-    finishPluginLoading();
+    handlePluginsObject(pathPrefix, moduleList, finishPluginLoading);
 
     /*injectScript(pluginPath, function() {
         try {

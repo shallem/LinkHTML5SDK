@@ -31,5 +31,11 @@
             <description>Version number.</description>
             <defaultValue>0</defaultValue>
         </attribute>
+        <attribute>
+            <name>phase</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Development phase to which this applies.</description>
+        </attribute>
 	</attributes>
 </component>
