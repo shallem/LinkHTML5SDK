@@ -81,26 +81,6 @@
             emptyGroupMessage: "There are no items to display in this group.",
             
             /**
-             * Items per page, if the list is paginated.
-             */
-            itemsPerPage: null,
-            
-            /**
-             * Paginator format. The default is to show a previous button,
-             * the current page count (e.g., 1 of 3), and a next button. This
-             * only applies if itemsPerPage is non-null.
-             */
-            paginatorTemplate: '{PreviousPageLink} {CurrentPageReport} {NextPageLink}',
-            
-            /**
-             * Optional callback invoked with a single argument that is the component of
-             * the paginator template. If the function returns non-null, a custom template
-             * is used in lieu of the default for that component. This is particularly useful
-             * to customize the text in the {CurrentPageReport} object.
-             */
-            customPaginatorTemplate : null,
-            
-            /**
              * Action to perform if the user taps/clicks on a list item.
              */
             selectAction: null,
@@ -289,13 +269,6 @@
             autodividersSelectorCallback: null,
             
             /*
-             * Suppresses the select action when the user flips between pages and
-             * the page flip causes the first item in the page to be automatically
-             * selected.
-             */
-            noSelectOnPagination: false,
-            
-            /*
              * Display sort buttons or not
              */
             showButtons: true            
@@ -318,14 +291,6 @@
                 .hide();
             this._searchSortDirty = true;
             
-            this.$paginatorDiv = null;
-            if (this.options.itemsPerPage) {
-                this.$paginatorDiv = $('<div/>')
-                    .appendTo(this.$wrapper)
-                    .addClass(Helix.Utils.paginator.PAGINATOR_TOP_CONTAINER_CLASS)
-                    .hide();
-            }
-            
             /**
              * Append the hook div if we have pull to refresh setup.
              */
@@ -344,15 +309,6 @@
             }).appendTo(listWrapper);
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
-            }
-            
-            if (this.options.itemsPerPage) {
-                $(this.$parent).on('swipeleft', function() {
-                    _self.nextPage();
-                });
-                $(this.$parent).on('swiperight', function() {
-                    _self.prevPage();
-                });
             }
             
             /**
@@ -407,8 +363,8 @@
             }
 
             // Pagination setup.
-            this._currentPage = 0;
-            
+            this._resetPaging();
+
             // Other globals.
             this.refreshInProgress = false;
             this.isLoaded = false;
@@ -519,6 +475,10 @@
             _self._prependSearchBox();
             _self._updateSortButtons();
             
+            /**
+             * Display from the beginning of the list.
+             */
+            _self._resetPaging();
             _self._refreshData(function() {
                 var emptyLI = $(_self.$parent).find('li[data-role="empty-message"]');
                 if (_self.nElems == 0) {
@@ -542,11 +502,6 @@
                     $(emptyLI).hide();
                 }
                 _self.$parent.listview( "refresh" );
-                /**
-                 * Must go after the _refreshData call because we need to compute the
-                 * list we are actually going to display before we paginate it.
-                 */
-                _self._resetPaging();
                 
                 /**
                  * Reset the selection if directed to do so.
@@ -565,6 +520,74 @@
                     _self.$listWrapper.removeClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('mh-layout-parent-height');
+                    _self.$listWrapper.scroll(function(ev) {
+                        if (_self.refreshInProgress) {
+                            ev.stopImmediatePropagation();
+                            return false;
+                        }
+                        if (_self.rescrollInProgress) {
+                            ev.stopImmediatePropagation();
+                            return false;
+                        }
+                        
+                        var scrollPos = _self.$listWrapper.scrollTop();
+                        var firstShowing = _self._captureTopLI(ev);
+                        
+                        // We display a scrolling window of items. We always pull in
+                        // page size * 2 items. If we are in the bottom half of the list
+                        // we prepend more to the bottom of the list and remove from the
+                        // top. If we are in the top half of the list we append to the end
+                        // of the list and remove from the front.
+                        var oldDataStart = _self._renderWindowStart, newDataStart;
+                        var preRefreshScrollPosition = scrollPos;
+                        if (_self._lastScrollPos > scrollPos &&
+                            firstShowing < _self._scrollDownThreshold) {
+                            // Scroll is moving down and we are in the 1st third of the 
+                            // list.
+                            if (oldDataStart > 0) {
+                                // SCROLLING UP
+                                // Update the render window to the _itemsPerPage rows with the
+                                // current set of visible rows as the last third of the list.
+                                
+                                // Snapshot what is currently at the top of the scroll window.
+                                newDataStart = _self._updateRenderWindow(firstShowing, 0);
+                                firstShowing += (oldDataStart - newDataStart);
+                                
+                                // Fetch another 50 rows prior to the data window start.
+                                _self._refreshData(function() {
+                                    // Scroll to the right spot so that the element the viewer was
+                                    // viewing is still centered in the screen.                                    
+                                    _self.$parent.listview( "refresh" );
+                                    _self._updateScrollPosition(ev, firstShowing, scrollPos, preRefreshScrollPosition);
+                                });
+                                _self._atDataTop = false;
+                            }
+                        } else if (_self._lastScrollPos < scrollPos &&
+                                   firstShowing > _self._scrollUpThreshold) {
+                            // SCROLLING DOWN
+                            // Update the render window to the _itemsPerPage rows centered
+                            // around the current set of visible rows as the first third of the
+                            // list.
+                            if (!_self._atDataTop) {
+                                newDataStart = _self._updateRenderWindow(firstShowing, 1);
+                                firstShowing -= (newDataStart - oldDataStart);
+                                
+                                // Scroll is moving up and we are in the top third of the list.
+                                // Fetch another 50 rows prior to the data window start.
+                                _self._refreshData(function() {
+                                    // Scroll to the right spot so that the element the viewer was
+                                    // viewing is still centered in the screen.
+                                    _self.$parent.listview( "refresh" );
+                                    _self._updateScrollPosition(ev, firstShowing, scrollPos, preRefreshScrollPosition);
+                                });
+                            }
+                        }
+                        
+                        // Record the last scroll position so that we can determine scroll 
+                        // direction.
+                        _self._lastScrollPos = scrollPos;
+                        return true;
+                    });
                 }
                 if (_self.options.pullToRefresh) {
                     _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
@@ -574,6 +597,25 @@
                     oncomplete(_self);            
                 }
             });
+        },
+        
+        /**
+         * Helpers for infinite scroll.
+         */
+        _captureTopLI: function(ev) {
+            this.rescrollInProgress = true;
+            var $curTop = this.$listWrapper.find('li').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottom' });
+            this.rescrollInProgress = false;
+            return parseInt($($curTop[0]).attr('data-index'));
+        },
+        
+        _updateScrollPosition: function(ev, topIndex, scrollPos, preRefreshScrollPosition) {
+            // Figure out where the old top item has gone.
+            this.rescrollInProgress = true;
+            var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
+            var scrollDelta = $(this.$listWrapper).scrollTop() - preRefreshScrollPosition;
+            $(this.$listWrapper).scrollTop(scrollPos + newTopPos + scrollDelta);
+            this.rescrollInProgress = false;
         },
         
         /**
@@ -598,7 +640,6 @@
             
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
-                _self._refreshPaginatorContainer();
                 if (oncomplete) {
                     oncomplete(_self);            
                 }
@@ -722,8 +763,9 @@
                         $(sortsList).find('li').removeClass('hx-current-sort');
                         $(this).addClass('hx-current-sort');
 
+                        // Display from the beginning of the list.
+                        _self._resetPaging();
                         _self._refreshData(function() {
-                            _self._resetPaging();
                             _self.$parent.listview( "refresh" );
                         });
                         $(_self._sortContainer).popup("close");
@@ -768,8 +810,8 @@
                         'data': filterFld,
                         'action': function(newFilterField) {
                             _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
+                            _self._resetPaging();
                             _self._refreshData(function() {
-                                _self._resetPaging();
                                 _self.$parent.listview( "refresh" );
                             });
                             _self._filterContextMenu.close();
@@ -783,8 +825,8 @@
                 'display' : 'Clear',
                 'action' : function() {
                     _self.itemList = _self.unfilteredList;
+                    _self._resetPaging();
                     _self._refreshData(function() {
-                        _self._resetPaging();
                         _self.$parent.listview( "refresh" );
                     });
                     _self._filterContextMenu.close();
@@ -836,8 +878,8 @@
                     _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue);
                 }
             }
+            _self._resetPaging();
             _self._refreshData(function() {
-                _self._resetPaging();
                 _self.$parent.listview( "refresh" );
             });
         },
@@ -970,8 +1012,8 @@
                 
                 _self._filterMap = {};
                 _self.itemList = _self.unfilteredList;
+                _self._resetPaging();
                 _self._refreshData(function() {
-                    _self._resetPaging();
                     _self.$parent.listview( "refresh" );
                 });
                 $(_self._globalFilterContainer).popup("close");
@@ -981,91 +1023,16 @@
             _self._globalFilterContainer.popup();            
         },
         
-        _refreshPaginatorContainer: function() {
-            var _self = this;
-            if (!_self.options.itemsPerPage) {
-                return;
-            }
-        
-            _self.$paginatorDiv.empty().hide();
-            
-            if ((_self.nElems % _self.options.itemsPerPage) == 0) {
-                _self.totalPages = _self.nElems / _self.options.itemsPerPage;
-            } else {
-                _self.totalPages = Math.floor(_self.nElems / _self.options.itemsPerPage) + 1;
-            }
-            
-            $.each(this.options.paginatorTemplate.split(" "), function(idx, obj) {
-                if (_self._currentPage == 0 &&
-                    obj === '{PreviousPageLink}') {
-                    // No prev page.
-                    return;
-                }
-                
-                if (_self._currentPage == (_self.totalPages - 1) &&
-                    obj === '{NextPageLink}') {
-                    // No next page.
-                    return;
-                }
-                
-                Helix.Utils.paginator.render(obj, _self.$paginatorDiv, {
-                    'page' : _self._currentPage,
-                    'totalItems' : _self.nElems,
-                    'itemsPerPage' : _self.options.itemsPerPage,
-                    'nextPage' : _self.nextPage,
-                    'prevPage' : _self.prevPage,
-                    'owner' : _self,
-                    'template' : (_self.options.customPaginatorTemplate ? _self.options.customPaginatorTemplate(obj) : null),
-                    'totalPages' : _self.totalPages
-                });
-            });
-            _self.$paginatorDiv.show();
-        },
-        
         _resetPaging: function() {
-            this._currentPage = 0;
-            this._refreshPaginatorContainer();
+            this._lastScrollPos = 0;
+            this._renderWindowStart = 0;
+            this._renderWindowDelta = 0;
+            this._itemsPerPage = 50;
+            this._scrollDownThreshold = (this._itemsPerPage / 4);
+            this._scrollUpThreshold = ((this._itemsPerPage * 3) / 4);
+            this._atDataTop = false;            
         },
-        
-        nextPage: function() {
-            var _self = this;
-            if (_self._currentPage == (_self.totalPages - 1)) {
-                // On the last page already.
-                return;
-            }
-            
-            _self._currentPage++;
-            
-            var isMini = this.$parent.hasClass('hx-listview-mini'); 
-            this._refreshData(function() {
-                _self.$parent.listview( "refresh" );
-                _self._refreshPaginatorContainer();
-                if (isMini) {
-                    _self.setMiniView();
-                }
-                _self.selected = null;
-                _self.selectItem(_self.options.noSelectOnPagination);
-            });
-        },
-        
-        prevPage: function() {
-            if (this._currentPage == 0) {
-                return;
-            }
-            this._currentPage--;
-            
-            var isMini = this.$parent.hasClass('hx-listview-mini'); 
-            var _self = this;
-            this._refreshData(function() {
-                _self.$parent.listview( "refresh" );
-                _self._refreshPaginatorContainer();
-                if (isMini) {
-                    _self.setMiniView();
-                }
-                _self.selected = null;
-                _self.selectItem(_self.options.noSelectOnPagination);
-            });            
-        },
+                        
         
         _refreshData: function(oncomplete) {
             var _self = this;
@@ -1086,23 +1053,12 @@
                 }
             }
         
-            var startIndex = 0;
-            var itemsPerPage = 0;
-            if (_self.options.itemsPerPage && _self.options.itemsPerPage > 0) {
-                if (_self._currentPage > 0) {
-                    startIndex = (_self._currentPage) * _self.options.itemsPerPage;
-                }
-                itemsPerPage = _self.options.itemsPerPage;
-                //displayCollection = displayCollection.limit(_self.options.itemsPerPage);
-                /* XXX: Determine if there is a next page. If not, disable the next button. */
-            }
-            
             /* List must be non-empty and it must be a query collection. */
             var displayCollection = _self.itemList;
             if (!displayCollection || !displayCollection.forEach) {
                 return;            
             }
-            
+                        
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
@@ -1112,6 +1068,12 @@
             if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
+
+            /* Apply skip and limit. */
+            if (_self._renderWindowStart > 0) {
+                displayCollection = displayCollection.skip(_self._renderWindowStart);
+            }
+            displayCollection = displayCollection.limit(Math.floor(_self._itemsPerPage * 1.5));
 
             var rowIndex = 0;
             var nRendered = 0;
@@ -1129,16 +1091,12 @@
                     if (_self.options.grouped) {
                         groupsToRender.push(curRow);
                     } else {
-                        if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
-                            return;
-                        }
-                        if (itemsPerPage > 0 && rowIndex < startIndex) {
-                            ++rowIndex;
+                        if (nRendered >= _self._itemsPerPage) {
                             return;
                         }
                         
                         ++rowIndex;
-                        if (_self._renderSingleRow(LIs, rowIndex - 1, itemsPerPage, curRow, function() {
+                        if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
                             // Nothing to do.
                         })) {
                             ++nRendered;
@@ -1148,10 +1106,9 @@
                 /* Called on start. */
                 function(count) {
                     _self.nElems = count;
-                    if (startIndex >= _self.nElems) {
-                        // Happens if we, for example, delete the last element on the last page.
-                        --_self._currentPage;
-                        startIndex = (_self._currentPage) * _self.options.itemsPerPage;
+                    if (count < _self._itemsPerPage) {
+                        // We did not get the full "limit" count of items requested
+                        _self._atDataTop = true;
                     }
                 },
                 /* Called on done. */
@@ -1181,16 +1138,12 @@
                             }
                             
                             var nxt = groupsToRender.shift();
-                            if (itemsPerPage > 0 && nRendered >= itemsPerPage) {
-                                return;
-                            }
-                            if (itemsPerPage > 0 && groupIndex < startIndex) {
-                                ++groupIndex;
+                            if (nRendered >= _self._itemsPerPage) {
                                 return;
                             }
 
                             ++groupIndex;                            
-                            if (_self._renderSingleRow(LIs, groupIndex - 1, itemsPerPage, nxt, function() {
+                            if (_self._renderSingleRow(LIs, groupIndex - 1, _self._itemsPerPage, nxt, function() {
                                 __renderGroup();
                             })) {
                                 ++nRendered;
@@ -1201,6 +1154,28 @@
                 }
             );
         },
+        
+        _updateRenderWindow: function(firstShowingIndex, direction) {
+            var listOffset;
+            var oldWindowStart = this._renderWindowStart, newWindowStart;
+            if (direction == 0) {
+                // Scrolling up to the top of the list. Make this item 3/4 of the way to the end of the list.
+                listOffset = ((this._itemsPerPage * 3) / 4);
+                newWindowStart = oldWindowStart - Math.floor(listOffset - firstShowingIndex);
+            } else {
+                // Scrolling down to the bottom of the list. Make the current window 1/4 of the way into the list.
+                listOffset = ((this._itemsPerPage) / 4);
+                newWindowStart = oldWindowStart + Math.floor(firstShowingIndex - listOffset);
+            }
+            
+            if (newWindowStart < 0) {
+                newWindowStart = 0;
+            }
+            
+            this._renderWindowStart = newWindowStart;
+            return newWindowStart;
+        },
+        
         _clearListRows: function() {
             this.$listWrapper.scrollTop(0);
             var toRemove = this.$parent.find("li").filter(":not(li[data-fixed-header='yes'])");
@@ -1227,8 +1202,8 @@
                     clearTimeout(_self.__searchReadyTimeout);
                 }
                 
+                _self._resetPaging();
                 _self._refreshData(function() {
-                    _self._resetPaging();
                     _self.$parent.listview( "refresh" );
                 });
                 _self.__searchReadyTimeout = null;
@@ -1367,8 +1342,8 @@
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.unfilteredList;
                     _self.__searchText = "";
+                    _self._resetPaging();
                     _self._refreshData(function() {
-                        _self._resetPaging();
                         _self.$parent.listview( "refresh" );
                     });
                 });
