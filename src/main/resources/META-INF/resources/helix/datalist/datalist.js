@@ -531,8 +531,9 @@
                         }
                         
                         var scrollPos = _self.$listWrapper.scrollTop();
-                        var firstShowing = _self._captureTopLI(ev);
-                        
+                        var listHeight = _self.$parent.height();
+                        var firstShowing;
+
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
                         // we prepend more to the bottom of the list and remove from the
@@ -541,7 +542,7 @@
                         var oldDataStart = _self._renderWindowStart, newDataStart;
                         var preRefreshScrollPosition = scrollPos;
                         if (_self._lastScrollPos > scrollPos &&
-                            firstShowing < _self._scrollDownThreshold) {
+                            scrollPos < (listHeight * .25)) {
                             // Scroll is moving down and we are in the 1st third of the 
                             // list.
                             if (oldDataStart > 0) {
@@ -550,8 +551,10 @@
                                 // current set of visible rows as the last third of the list.
                                 
                                 // Snapshot what is currently at the top of the scroll window.
+                                firstShowing = _self._captureTopLI(ev);
                                 newDataStart = _self._updateRenderWindow(firstShowing, 0);
                                 firstShowing += (oldDataStart - newDataStart);
+                                _self._lastUpdateScroll = scrollPos;
                                 
                                 // Fetch another 50 rows prior to the data window start.
                                 _self._refreshData(function() {
@@ -563,14 +566,16 @@
                                 _self._atDataTop = false;
                             }
                         } else if (_self._lastScrollPos < scrollPos &&
-                                   firstShowing > _self._scrollUpThreshold) {
+                                   scrollPos > (listHeight * .75)) {
                             // SCROLLING DOWN
                             // Update the render window to the _itemsPerPage rows centered
                             // around the current set of visible rows as the first third of the
                             // list.
                             if (!_self._atDataTop) {
+                                firstShowing = _self._captureTopLI(ev);
                                 newDataStart = _self._updateRenderWindow(firstShowing, 1);
                                 firstShowing -= (newDataStart - oldDataStart);
+                                _self._lastUpdateScroll = scrollPos;
                                 
                                 // Scroll is moving up and we are in the top third of the list.
                                 // Fetch another 50 rows prior to the data window start.
@@ -614,7 +619,17 @@
             this.rescrollInProgress = true;
             var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
             var scrollDelta = $(this.$listWrapper).scrollTop() - preRefreshScrollPosition;
-            $(this.$listWrapper).scrollTop(scrollPos + newTopPos + scrollDelta);
+            var newScrollPos = scrollPos + newTopPos + scrollDelta;
+            var wrapperHeight = $(this.$listWrapper).height();
+            var listHeight = this.$parent.height();
+            
+            if (newScrollPos < 0) {
+                newScrollPos = 0;
+            } else if (newScrollPos > (listHeight - wrapperHeight)) {
+                newScrollPos = listHeight - wrapperHeight;
+            }
+            
+            $(this.$listWrapper).scrollTop(newScrollPos);
             this.rescrollInProgress = false;
         },
         
@@ -1028,9 +1043,8 @@
             this._renderWindowStart = 0;
             this._renderWindowDelta = 0;
             this._itemsPerPage = 50;
-            this._scrollDownThreshold = (this._itemsPerPage / 4);
-            this._scrollUpThreshold = ((this._itemsPerPage * 3) / 4);
-            this._atDataTop = false;            
+            this._atDataTop = false; 
+            this._lastUpdateScroll = 0;
         },
                         
         
