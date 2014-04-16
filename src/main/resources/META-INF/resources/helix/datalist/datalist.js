@@ -526,10 +526,9 @@
                     _self.$listWrapper.addClass('mh-layout-parent-height');
                     _self.$listWrapper.scroll(function(ev) {
                         if (_self.refreshInProgress) {
-                            ev.stopImmediatePropagation();
-                            return false;
+                            return true;
                         }
-                        if (_self.rescrollInProgress) {
+                        if (_self.scrollCalculationInProgress) {
                             ev.stopImmediatePropagation();
                             return false;
                         }
@@ -537,6 +536,17 @@
                         var scrollPos = _self.$listWrapper.scrollTop();
                         var listHeight = _self.$parent.height();
                         var firstShowing;
+
+                        if (_self.rescrollInProgress) {
+                            // This occurs when the scroll handler is triggered by the scrollTop
+                            // call in datalist.js. Because there is a delay between calling scrollTop
+                            // and the actual scroll (browser dependent), the rescrollInProgress flag
+                            // does not help prevent us undoing the scroll we just did. We catch that
+                            // case here. Return true to allow the scroll to happen.
+                            _self._lastScrollPos = scrollPos;
+                            _self.rescrollInProgress = false;
+                            return true;
+                        }
 
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
@@ -612,17 +622,21 @@
          * Helpers for infinite scroll.
          */
         _captureTopLI: function(ev) {
-            this.rescrollInProgress = true;
+            this.scrollCalculationInProgress = true;
             var $curTop = this.$listWrapper.find('li').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottom' });
-            this.rescrollInProgress = false;
+            this.scrollCalculationInProgress = false;
             return parseInt($($curTop[0]).attr('data-index'));
         },
         
         _updateScrollPosition: function(ev, topIndex, scrollPos, preRefreshScrollPosition) {
             // Figure out where the old top item has gone.
-            this.rescrollInProgress = true;
+            this.scrollCalculationInProgress = true;
             var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
-            var scrollDelta = $(this.$listWrapper).scrollTop() - preRefreshScrollPosition;
+            var curScrollTop = $(this.$listWrapper).scrollTop();
+            if (curScrollTop < 0) {
+                curScrollTop = 0;
+            }
+            var scrollDelta = curScrollTop - preRefreshScrollPosition;
             var newScrollPos = scrollPos + newTopPos + scrollDelta;
             var wrapperHeight = $(this.$listWrapper).height();
             var listHeight = this.$parent.height();
@@ -632,9 +646,10 @@
             } else if (newScrollPos > (listHeight - wrapperHeight)) {
                 newScrollPos = listHeight - wrapperHeight;
             }
+            this.scrollCalculationInProgress = false;
             
+            this.rescrollInProgress = true;
             $(this.$listWrapper).scrollTop(newScrollPos);
-            this.rescrollInProgress = false;
         },
         
         /**
@@ -1049,6 +1064,8 @@
             this._itemsPerPage = 50;
             this._atDataTop = false; 
             this._lastUpdateScroll = 0;
+            this.rescrollInProgress = false;
+            this.scrollCalculationInProgress = false;
         },
                         
         
