@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 (function() {
- window.OfflineSave = {
+    window.OfflineSave = {
         saveDoc: function ( name, lastModified, fullPathDigest, thumbURL, viewURL, editURL, success, fail) {
             return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, fullPathDigest, thumbURL, viewURL, editURL]);
         },
@@ -26,17 +26,13 @@
             return cordova.exec(success, fail, "OfflineSave", "editDoc", [docID, position.x, position.y ]);
         }
     };
-})();
-
-(function() {
- window.OfflinePost = {
+    
+    window.OfflinePost = {
         savePost: function ( url, contentType, postBody, jsonObj, success, fail) {
             return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj]);
         }
     };
-})();
-
-(function() {
+    
     window.HelixPolicy = {
         getPolicy: function ( policy, success, fail ) {
             if (Object.prototype.toString.call(policy) === '[object Array]') {
@@ -46,82 +42,82 @@
             }
         }
     };
-})();
-
-(function() {
- window.DocumentUpload = {
-    getDocument: function(success, fail) {
-        return cordova.exec(success, fail, "DocumentUpload", "getDocument", []);
-    },
-    clearDocument: function(docid, success, fail) {
-        return cordova.exec(success, fail, "DocumentUpload", "clearDocument", [ docid ]);
-    }
- };
-})();
-
-(function() {
-window.HelixServices = {
-    auth: function(client, username, password, success, fail) {
-        return cordova.exec(success, fail, "HelixServices", "auth", [client, username, password]);
-    },
-    refreshApplications: function(success, fail) {
-        return cordova.exec(success, fail, "HelixServices", "refreshApplications", []);
-    },
-    sessionIsActive: function(success) {
-        return cordova.exec(success, null, "HelixServices", "sessionIsActive", []);
-    }
-};
-})();
-
-(function() {
-window.HelixApp = {
-    getRecentClient: function(success,fail) {
-        return cordova.exec(success, fail, "HelixApp", "getRecentClient", []);
-    },
-    getRecentUser: function(success,fail) {
-        return cordova.exec(success, fail, "HelixApp", "getRecentUser", []);
-    },
-    getApplications: function(success, fail) {
-        return cordova.exec(success, fail, "HelixApp", "getApplications", []);
-    },
-    logout: function(success) {
-        return cordova.exec(success, null, "HelixApp", "logout", []);
-    },
-    isOnline: function(success) {
-        return cordova.exec(success, null, "HelixApp", "isOnline", []);
-    },
-    lastError: function(success) {
-        return cordova.exec(success, null, "HelixApp", "lastError", []);
-    },
-    lastInfo: function(success) {
-        return cordova.exec(success, null, "HelixApp", "lastInfo", []);
-    },
-    refreshHome: function(success) {
-        return cordova.exec(success, null, "HelixApp", "refreshHome", []);
-    }
-};
-})();
-
-(function() {
-window.HelixSystem = {
-    suspendSleep: function() {
-        return cordova.exec(null, null, "HelixSystem", "suspendSleep", []);
-    },
-    allowSleep: function() {
-        return cordova.exec(null, null, "HelixSystem", "allowSleep", []);
-    }
-};
-})();
-
-(function() {
-window.HelixLocalNotifications = {
-    scheduleNotification: function(fireDate, uniqueID, description, minutesBefore, success, failure) {
-        return cordova.exec(success, failure, "LocalNotificationScheduler", "scheduleNotification", 
-            [fireDate.getTime(), uniqueID, description, minutesBefore]);
-    },
-    deleteNotification: function(uniqueID, success, failure) {
-        return cordova.exec(success, failure, "LocalNotificationScheduler", "deleteNotification", 
-            [uniqueID]);        
-    }
-}
+    
+    window.DocumentUpload = {
+        getDocument: function(success, fail) {
+            return cordova.exec(success, fail, "DocumentUpload", "getDocument", []);
+        },
+        clearDocument: function(docid, success, fail) {
+            return cordova.exec(success, fail, "DocumentUpload", "clearDocument", [ docid ]);
+        }
+    };
+    
+    window.HelixServices = {
+        auth: function(client, username, password, success, fail) {
+            return cordova.exec(success, fail, "HelixServices", "auth", [client, username, password]);
+        },
+        refreshApplications: function(success, fail) {
+            return cordova.exec(success, fail, "HelixServices", "refreshApplications", []);
+        },
+        sessionIsActive: function(success) {
+            return cordova.exec(success, null, "HelixServices", "sessionIsActive", []);
+        }
+    };
+    
+    window.HelixApp = {
+        getRecentClient: function(success,fail) {
+            return cordova.exec(success, fail, "HelixApp", "getRecentClient", []);
+        },
+        getRecentUser: function(success,fail) {
+            return cordova.exec(success, fail, "HelixApp", "getRecentUser", []);
+        },
+        getApplications: function(success, fail) {
+            return cordova.exec(success, fail, "HelixApp", "getApplications", []);
+        },
+        logout: function(success) {
+            return cordova.exec(success, null, "HelixApp", "logout", []);
+        },
+        isOnline: function(success) {
+            return cordova.exec(success, null, "HelixApp", "isOnline", []);
+        },
+        lastError: function(success) {
+            return cordova.exec(success, null, "HelixApp", "lastError", []);
+        },
+        lastInfo: function(success) {
+            return cordova.exec(success, null, "HelixApp", "lastInfo", []);
+        },
+        refreshHome: function(success) {
+            return cordova.exec(success, null, "HelixApp", "refreshHome", []);
+        }
+    };
+    
+    window.HelixSystem = {
+        suspendSleep: function() {
+            return cordova.exec(null, null, "HelixSystem", "suspendSleep", []);
+        },
+        allowSleep: function() {
+            return cordova.exec(null, null, "HelixSystem", "allowSleep", []);
+        }
+    };
+    
+    window.HelixLocalNotifications = {
+        scheduleNotification: function(fireDate, uniqueID, description, minutesBefore, success, failure) {
+            return cordova.exec(success, failure, "LocalNotificationScheduler", "scheduleNotification", 
+                [fireDate.getTime(), uniqueID, description, minutesBefore]);
+        },
+        deleteNotification: function(uniqueID, success, failure) {
+            return cordova.exec(success, failure, "LocalNotificationScheduler", "deleteNotification", 
+                [uniqueID]);        
+        }
+    };
+    
+    /*
+    window.HelixBulkContacts = {
+        queue: function(contactOpts) {
+            return cordova.exec(null, null, "BulkContacts", "queue", [ contactOpts ]);
+        },
+        saveQueued: function(success, failure) {
+            return cordova.exec(null, null, "BulkContacts", "saveQueued", [ ]);
+        }
+    };*/
 })();

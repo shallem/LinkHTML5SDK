@@ -15,10 +15,12 @@
  */
 
 (function() {
-    if (window.Helix.DB === undefined) {
-        initHelixDB();
-        definePersistenceMigrations()
-    }
-    
-    Helix.DB.initPersistence();
+    $(document).on('cordovaReady', function() {
+        if (window.Helix.DB === undefined) {
+            initHelixDB();
+            definePersistenceMigrations()
+        }
+
+        Helix.DB.initPersistence();
+    });
 })();
