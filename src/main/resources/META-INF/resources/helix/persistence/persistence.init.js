@@ -17,6 +17,7 @@
 (function() {
     $(document).on('cordovaReady', function() {
         if (window.Helix.DB === undefined) {
+            MobileHelixDatabase.install();
             initHelixDB();
             definePersistenceMigrations()
         }

@@ -324,9 +324,3 @@ MobileHelixDatabase.install = function() {
         return db;
     };
 };
-
-(function() {
-    if (window.CordovaInstalled) {
-        MobileHelixDatabase.install();
-    }
-})();

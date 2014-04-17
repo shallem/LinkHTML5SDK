@@ -57,7 +57,7 @@ Helix.postInit = function(fn, thisArg, args) {
 Helix.ready = false;
 
 (function($) {
-    $(document).on('ready', function() {
+    $(document).on('hxPersistenceReady', function() {
         /* Update the .val method on textareas to preserve newlines. See
          * http://api.jquery.com/val/
          */

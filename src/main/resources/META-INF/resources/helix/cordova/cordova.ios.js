@@ -26,7 +26,7 @@
 /* SAH: make this function explicitly invoked. */
 function cordova_ios_init() {
 
-    // file: lib/scripts/require.js
+// file: lib/scripts/require.js
     var require,
     define;
 
