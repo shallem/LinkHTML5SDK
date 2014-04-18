@@ -119,6 +119,7 @@
 /* Create a little more room in the jQM listview layout. */
 .ui-li-has-arrow .ui-btn-inner a.ui-link-inherit {
     padding-right: 30px;
+    padding-left: 80px;
 }
 
 /* Move the icon in a datalist over a bit. */
