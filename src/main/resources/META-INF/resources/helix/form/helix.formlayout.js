@@ -901,6 +901,9 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.computedStyleClass) {
         $fieldContainer.addClass(formElem.computedStyleClass);
     }
+    if (formElem.computedWidth) {
+        $fieldContainer.width(formElem.computedWidth);
+    }
     
     if (!mode) {
         var frameID = formElem.name;
@@ -917,7 +920,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         var iFrameMarkup = null;
         var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
         var iFrameWidth = ' width="' + formElem.computedWidth + '"';
-        var onloadAttr = (formElem.onload ? ('onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
+        var onloadAttr = (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
         
         if (!formElem.height || (formElem.height === 'full')) {
             iFrameMarkup = '<iframe id="' + frameID + 
@@ -1005,8 +1008,8 @@ function __refreshHTMLArea(formElem) {
 
 function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     var isFullWidth = false;
-    if (formElem.width) {
-        if (formElem.width === "full") {
+    if (formElem.computedWidth) {
+        if (formElem.computedWidth === "100%") {
             isFullWidth = true;
         }            
     }
@@ -1033,7 +1036,7 @@ function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLa
     );
     $(editorInput).cleditor({
         'widget' : editorID + "_widget",
-        'width' : (formElem.width ? formElem.width : $(parentDiv).width()),
+        'width' : (formElem.computedWidth ? formElem.computedWidth : $(parentDiv).width()),
         'isFullWidth' : isFullWidth,
         'height' : (formElem.height ? formElem.height : 350),
         'page' : page,
@@ -1046,8 +1049,8 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     } else {
         var isFullWidth = false;
-        if (formElem.width) {
-            if (formElem.width === "full") {
+        if (formElem.computedWidth) {
+            if (formElem.computedWidth === "100%") {
                 isFullWidth = true;
             }            
         }
@@ -1055,8 +1058,8 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         var width = "98%";
         if (isFullWidth) {
             width = "100%";
-        } else if (formElem.width) {
-            width = formElem.width;
+        } else if (formElem.computedWidth) {
+            width = formElem.computedWidth;
         }
         if (!formElem.name) {
             formElem.name = Helix.Utils.getUniqueID();
@@ -1523,7 +1526,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
            
            var imgTag = $('<img/>').attr({
                'src': formElem.src,
-               'width' : formElem.width,
+               'width' : formElem.computedWidth,
                'height' : formElem.height,
                'style' : formElem.computedStyle,
                'alt' : formElem.name,

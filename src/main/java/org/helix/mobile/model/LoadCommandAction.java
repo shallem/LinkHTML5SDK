@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.FacesException;
@@ -76,7 +77,11 @@ public class LoadCommandAction {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
              */
+            Date startTime = new Date();
             loader.invoke(thisObject, new Object[] {});
+            Date endTime = new Date();
+            
+            LOG.log(Level.FINE, "Load completed in {0} seconds.", (endTime.getTime() - startTime.getTime()) / 1000);
         } catch (IllegalAccessException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());
