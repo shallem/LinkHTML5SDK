@@ -114,10 +114,10 @@
     /*
     window.HelixBulkContacts = {
         queue: function(contactOpts) {
-            return cordova.exec(null, null, "BulkContacts", "queue", [ contactOpts ]);
+            return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
         },
         saveQueued: function(success, failure) {
-            return cordova.exec(null, null, "BulkContacts", "saveQueued", [ ]);
+            return cordova.exec(null, null, "HelixBulkContacts", "saveQueued", [ ]);
         }
     };*/
 })();
