@@ -257,8 +257,12 @@
 		    <!-- <include>cordova/cordova.android.js</include> -->
 		    <include>cordova/cordova-3.4.plugins.js</include>
 		    <include>cordova/cordova-3.4.plugin-list.js</include>
-		    <include>cordova/cordova.helix.plugins.js</include>
 		    <include>cordova/cordova-init.js</include>
+
+		    <!-- Must go after cordova-init.js, where we
+		         determine the version/revision of the Cordova
+		         container. -->
+		    <include>cordova/cordova.helix.plugins.js</include>
 		  </includes>
 		  <aggregations>
 		    <aggregation>

@@ -16,12 +16,18 @@
 (function() {
     window.CordovaIOS = navigator.userAgent.match(/\[CORDOVA\]/);
     window.CordovaANDROID = navigator.userAgent.match(/\[CORDOVA-ANDROID\]/);
-    window.CordovaIOS34 = navigator.userAgent.match(/\[CORDOVA-3.4\]/);
+    window.CordovaIOS34 = navigator.userAgent.match(/\[CORDOVA-3\.4\.([^\]]*)\]/);
     
+    window.CordovaVersion = 2;
+    window.CordovaRevision = 0;
     if (window.CordovaIOS ||
         window.CordovaANDROID ||
         window.CordovaIOS34 ) {
         window.CordovaInstalled = true;
+        if (window.CordovaIOS34) {
+            window.CordovaVersion = 3;
+            window.CordovaRevision = parseInt(window.CordovaIOS34[1]);
+        }
     } else {
         window.CordovaInstalled = false;
     }
@@ -35,6 +41,13 @@
             cordova_ios_34_init();
         }
         
-        $(document).trigger('cordovaReady');
+        // If we have it, ask the container to update our online/offline status.
+        if (window.HelixSystem.updateOnlineOffline) {
+            window.HelixSystem.updateOnlineOffline(function() {
+                $(document).trigger('cordovaReady');
+            });
+        } else {
+            $(document).trigger('cordovaReady');
+        }
     });
 })();

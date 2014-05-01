@@ -111,27 +111,24 @@
         }
     };
     
-    window.HelixBulkContacts = {
-        queue: function(contactOpts) {
-            return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
-        },
-        saveQueued: function(success, failure) {
-            return cordova.exec(null, null, "HelixBulkContacts", "saveQueued", [ ]);
-        },
-        exists: function(success, failure, args) {
-            var timeout = setTimeout(function() {
-                // The timeout should be cleared if the plugin exists.
-                // 3 seconds is arbitrary, but should be long enough.
-                failure.apply(window, args);
-            }, 3000);
-            cordova.exec(function() {
-                clearTimeout(timeout);
-                success.apply(window, args);
-            }, function() {
-                clearTimeout(timeout);
-                failure.apply(window, args);
-            }, "HelixBulkContacts", "exists", [ ]);
-            
-        }
-    };
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 1) {
+        window.HelixBulkContacts = {
+            queue: function(contactOpts) {
+                return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
+            },
+            saveQueued: function(success, failure) {
+                return cordova.exec(null, null, "HelixBulkContacts", "saveQueued", [ ]);
+            },
+            exists: function(success, failure, args) {
+                return true;
+            }
+        };
+        
+        $.extend(window.HelixSystem, {
+            updateOnlineOffline: function(success) {
+                return cordova.exec(success, null, "HelixSystem", "updateOnlineOffline", []);
+            }
+        });
+    }
 })();
