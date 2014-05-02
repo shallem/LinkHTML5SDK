@@ -128,6 +128,11 @@ Helix.Ajax = {
         if (Helix.Ajax.forceDeviceOffline) {
             return false;
         }
+        //alert("ONLINE2: " + window.__hxOnLine);
+        if (window.__hxOnLine !== undefined &&
+            window.__hxOnLine == false) {
+            return false;
+        }
         
         return navigator.onLine;
     },
