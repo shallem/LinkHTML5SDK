@@ -17,6 +17,9 @@
 (function() {
     $(document).on('cordovaReady', function() {
         if (window.Helix.DB === undefined) {
+            if (window.CordovaInstalled) {
+                MobileHelixDatabase.install();
+            }
             initHelixDB();
             definePersistenceMigrations()
         }

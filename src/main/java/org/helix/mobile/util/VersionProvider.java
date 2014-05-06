@@ -35,12 +35,15 @@ public final class VersionProvider {
 
 	private static final VersionProvider INSTANCE = new VersionProvider();
 	private String version;
+        private String revision;
 
 	private VersionProvider() {
 		ResourceBundle rb;
 		try {
 			rb = ResourceBundle.getBundle("helix-mobile");
-			version = rb.getString("application.version");
+			String ver = rb.getString("application.version");
+                        revision = rb.getString("revision");
+                        version = ver + "." + revision;
 		} catch (MissingResourceException e) {
 			LOGGER.warning("Resource bundle 'helix-mobile' was not found or error while reading current version.");
 		}

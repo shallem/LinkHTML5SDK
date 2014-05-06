@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="all" name="linksdk">
+
+  <target name="increment-version">
+    <propertyfile file="src/main/resources/helix-mobile.properties">
+      <entry key="revision" operation="+" value="1" type="int"/>
+    </propertyfile>
+  </target>
+
+</project>
