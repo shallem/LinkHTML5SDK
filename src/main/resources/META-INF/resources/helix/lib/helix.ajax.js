@@ -238,6 +238,7 @@ Helix.Ajax = {
                     config.oncomplete(keyMap[config.name], config.name, obj[syncComponent]);
                 }
             }
+            $(document).trigger(loadCommandOptions.name, obj);
         };
         if (Helix.Ajax.isDeviceOnline()) {
             loadCommandOptions.syncOverrides = {};

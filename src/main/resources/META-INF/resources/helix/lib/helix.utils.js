@@ -57,9 +57,10 @@ Helix.Utils =  {
             Helix.Utils.errorGrowl.show([
                 { summary : summary, detail: msg, severity: severity }
                 ]);
-            return;
+        } else {
+            Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
         }
-        Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
+        $(document).trigger(severity, msg);
     },
     paginator: {
         
