@@ -1872,6 +1872,13 @@
          */
         setNoSelectOnPagination: function(val) {
             this.options.noSelectOnPagination = val;
+        },
+        
+        /**
+         * Get the ul element of the list.
+         */
+        getListElement: function() {
+            return this.$parent;
         }
     });
 })(jQuery);

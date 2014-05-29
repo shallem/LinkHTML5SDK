@@ -78,6 +78,7 @@ public class DialogRenderer extends CoreRenderer {
         if (dialog.getBodyContent() != null) {
             writer.write("bodyContent:'" + dialog.getBodyContent() + "',");
         }
+        writer.write("name: '" + dialog.resolveWidgetVar() + "',");
         writer.write("id:'" + clientId + "'");
         writer.write("});\n");
         writer.write("});");

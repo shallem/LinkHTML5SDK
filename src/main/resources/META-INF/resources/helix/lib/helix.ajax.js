@@ -128,6 +128,10 @@ Helix.Ajax = {
         if (Helix.Ajax.forceDeviceOffline) {
             return false;
         }
+        if (Helix.Ajax.forceDeviceOnline) {
+            return true;
+        }
+        
         //alert("ONLINE2: " + window.__hxOnLine);
         if (window.__hxOnLine !== undefined &&
             window.__hxOnLine == false) {
@@ -226,6 +230,7 @@ Helix.Ajax = {
         // Execute the aggregate load.
         var nObjsToSync = loadCommandOptions.commands.length;
         var keyMap = {};
+        
         loadCommandOptions.oncomplete = function(finalKey, name, obj) {
             for (var syncComponent in obj) {
                 if (syncComponent == "__hx_schema") {
@@ -238,7 +243,6 @@ Helix.Ajax = {
                     config.oncomplete(keyMap[config.name], config.name, obj[syncComponent]);
                 }
             }
-            $(document).trigger(loadCommandOptions.name, obj);
         };
         if (Helix.Ajax.isDeviceOnline()) {
             loadCommandOptions.syncOverrides = {};
@@ -374,7 +378,6 @@ Helix.Ajax = {
                         return;
                     }
                     
-                    console.log("AJAX bean load is complete.");
                     Helix.Ajax.loadOptions.pin = true;
                     if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
                         Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {

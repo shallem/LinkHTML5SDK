@@ -57,6 +57,7 @@
     helixDialog = function(parent, options) {
         this.options = options = $.extend({}, $.helixDialog.defaultOptions, options);        
         this.$mainDiv = $(parent);
+        this.name = options.name ? options.name : Helix.Utils.getUniqueID();
 
         this.refresh();
         
@@ -75,7 +76,8 @@
     methods = [
       ["show", show],
       ["hide", hide],
-      ["refresh", refresh]
+      ["refresh", refresh],
+      ["getForm", getForm]
     ];
 
     $.each(methods, function(idx, method) {
@@ -104,6 +106,10 @@
         $(dialog.$mainDiv).popup( "open", { 
             positionTo : dialog.options.positionTo
         });
+    }
+    
+    function getForm(dialog) {
+        return dialog.form;
     }
     
     function hide() {
@@ -162,7 +168,7 @@
             }
         } else {
             dialog.form = $('<form/>').attr({
-                'id' : dialog.options.id + "_form"
+                'id' : dialog.name + "-form"
             });
             $contentDiv.append(dialog.form);
         }
@@ -172,9 +178,10 @@
             'href' : 'javascript:void(0)',
             'data-role' : 'button',
             'data-inline' : 'true',
-            'data-theme' : 'c'
+            'data-theme' : 'c',
+            'id' : dialog.name + '-cancel'
         }).append(dialog.options.dismissTitle)
-            .on('tap', function(ev) {
+            .on(Helix.clickEvent, function(ev) {
                 ev.stopImmediatePropagation();
                 if (dialog.options.onDismiss) {
                     dialog.options.onDismiss.call(dialog);
@@ -190,9 +197,10 @@
             'data-role' : 'button',
             'data-inline' : 'true',
             'data-theme' : 'b',
-            'data-transition' : 'flow'
+            'data-transition' : 'flow',
+            'id' : dialog.name + '-confirm'
         }).append(dialog.options.confirmTitle)
-            .on('tap', function(ev) {
+            .on(Helix.clickEvent, function(ev) {
                 ev.preventDefault();
                 if (dialog.options.hasForm && dialog.form) {
                     dialog.options.onConfirm.call(dialog, $(dialog.form).serialize());
