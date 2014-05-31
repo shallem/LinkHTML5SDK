@@ -189,7 +189,7 @@ Helix.Ajax = {
     },
     
     defaultOnError: function(errorObj) {
-      Helix.Utils.statusMessage("Load Failed", errorObj.msg, "severe");  
+        Helix.Utils.statusMessage("Load Failed", errorObj.msg, "error");  
     },
     
     /**
@@ -449,6 +449,7 @@ Helix.Ajax = {
             }
         });
     },
+    
     ajaxJSONLoad: function(url,key,widgetVar,oncomplete,offlineSave) {
         url = url.replace("{key}", key);
         $.mobile.showPageLoadingMsg();
@@ -478,5 +479,46 @@ Helix.Ajax = {
                 }
             }
         });
+    },
+    
+    ajaxPost: function(params, callbacks) {
+        $(document).trigger('prerequest', params.url);
+        var didSucceed = false;
+        $.ajax({
+            url: params.url,
+            type: 'POST',
+            data: params.body,
+            contentType: 'application/x-www-form-urlencoded',
+            success: function(returnObj,textStatus,jqXHR) {
+                if (returnObj.status == 0) {
+                    didSucceed = true;
+                    if (params.success) {
+                        Helix.Utils.statusMessage("Success", params.success, "info");
+                    }
+              
+                    if (callbacks.success) {
+                        callbacks.success.call(window, returnObj);                    
+                    }
+                } else {
+                    Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                    if (callbacks.error) {
+                        callbacks.error.call(window, returnObj);
+                    }
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                if (callbacks.fatal) {
+                    callbacks.fatal.call(window, textStatus, errorThrown);
+                }
+            },
+            complete: function() {
+                if (callbacks.complete) {
+                    callbacks.complete.call(window);
+                }
+                $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
+            },
+            dataType: 'json'
+        });    
     }
 };

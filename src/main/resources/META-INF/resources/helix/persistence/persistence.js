@@ -466,26 +466,6 @@ persistence.get = function(arg1, arg2) {
               if (meta.fields.hasOwnProperty(field)) {
                   _addField.call(this, session, field);
               }
-            /*(function () {
-              if (meta.fields.hasOwnProperty(field)) {
-                var f = field; // Javascript scopes/closures SUCK
-                persistence.defineProp(that, f, function(val) {
-                    // setterCallback
-                    var oldValue = that._data[f];
-                    if(oldValue !== val || (oldValue && val && oldValue.getTime && val.getTime)) { // Don't mark properties as dirty and trigger events unnecessarily
-                      that._data[f] = val;
-                      that._dirtyProperties[f] = oldValue;
-                      that.triggerEvent('set', that, f, val);
-                      that.triggerEvent('change', that, f, val);
-                      session.propertyChanged(that, f, oldValue, val);
-                    }
-                  }, function() {
-                    // getterCallback
-                    return that._data[f];
-                  });
-                that._data[field] = defaultValue(meta.fields[field]);
-              }
-            }());*/
         }
 
         for ( var it in meta.hasOne) {
@@ -518,15 +498,15 @@ persistence.get = function(arg1, arg2) {
                     // Inverse
                     if(meta.hasOne[ref].inverseProperty) {
                       var newVal = that[ref];
+                      var inverse;
                       if(newVal) {
-                        var inverse = newVal[meta.hasOne[ref].inverseProperty];
+                        inverse = newVal[meta.hasOne[ref].inverseProperty];
                         if(inverse.list && inverse._filter) {
                           inverse.triggerEvent('change', that, ref, val);
                         }
                       }
                       if(oldValueObj) {
-                        console.log("OldValue", oldValueObj);
-                        var inverse = oldValueObj[meta.hasOne[ref].inverseProperty];
+                        inverse = oldValueObj[meta.hasOne[ref].inverseProperty];
                         if(inverse.list && inverse._filter) {
                           inverse.triggerEvent('change', that, ref, val);
                         }

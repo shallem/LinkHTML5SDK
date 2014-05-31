@@ -60,6 +60,9 @@ Helix.Utils =  {
         } else {
             Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
         }
+        if (severity == 'error') {
+            console.log('[ERROR] ' + msg);
+        }
         $(document).trigger(severity, msg);
     },
     paginator: {

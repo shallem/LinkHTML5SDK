@@ -608,12 +608,12 @@
                         return true;
                     });
                 }
-                //if (_self.options.pullToRefresh) {
-                    _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
-                //}
+                _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
                 _self.isLoaded = true;
+                
                 if (oncomplete) {
-                    oncomplete(_self);            
+                    oncomplete(_self);
+                    _self.isDirty = false;
                 }
             });
         },
@@ -675,7 +675,8 @@
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
                 if (oncomplete) {
-                    oncomplete(_self);            
+                    oncomplete(_self);
+                    _self.isDirty = false;
                 }
             });
         },
@@ -1879,6 +1880,21 @@
          */
         getListElement: function() {
             return this.$parent;
+        },
+        
+        /**
+         * Mark the list dirty. The dirty flag persists until the list is refreshed either
+         * with refreshList or refreshData. This flag is primarily used for debugging.
+         */
+        markListDirty: function() {
+            this.isDirty = true;
+        },
+        
+        /**
+         * Return the isDirty flag.
+         */
+        listIsDirty: function() {
+            return this.isDirty;
         }
     });
 })(jQuery);

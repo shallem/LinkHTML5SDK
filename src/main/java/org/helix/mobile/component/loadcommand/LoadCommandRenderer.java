@@ -233,7 +233,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
         writer.write("if (options && options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
         writer.write("if (options && options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
-        writer.write("loadCommandOptions.onerror = (options ? options.onerror : null);");
+        writer.write("loadCommandOptions.onerror = (options ? options.onerror : Helix.Ajax.defaultOnError);");
         writer.write("loadCommandOptions.schema = schemaObj;");
         writer.write("loadCommandOptions.requestOptions.params = (options ? options.params : null);");
         
