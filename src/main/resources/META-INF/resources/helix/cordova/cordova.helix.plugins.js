@@ -119,9 +119,6 @@
             },
             saveQueued: function(success, failure) {
                 return cordova.exec(null, null, "HelixBulkContacts", "saveQueued", [ ]);
-            },
-            exists: function(success, failure, args) {
-                return true;
             }
         };
         
