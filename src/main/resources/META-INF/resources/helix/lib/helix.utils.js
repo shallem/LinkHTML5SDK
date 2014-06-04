@@ -216,5 +216,16 @@ Helix.Utils =  {
             frame.height= (frameHeight) + "px";
         }
         frame.width= (screenWidth) + "px";
+    },
+    isPhone: function() {
+        if (Helix.Utils._isPhone !== undefined) {
+            return Helix.Utils._isPhone;
+        }
+        
+        if (navigator.userAgent.toLowerCase().match(/iphone/)) {
+            Helix.Utils._isPhone = true;
+        }
+        // XXX: need to extend to more phones as we support them.
+        Helix.Utils._isPhone = false;
     }
 }
