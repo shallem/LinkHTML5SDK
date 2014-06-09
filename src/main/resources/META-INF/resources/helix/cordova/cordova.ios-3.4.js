@@ -1176,13 +1176,6 @@ modulemapper.clobbers('cordova', 'cordova');
 modulemapper.clobbers('cordova/exec', 'cordova.exec');
 modulemapper.clobbers('cordova/exec', 'Cordova.exec');
 
-// Call the platform-specific initialization.
-platform.bootstrap && platform.bootstrap();
-
-pluginloader.load(function() {
-    channel.onPluginsReady.fire();
-});
-
 /**
  * Create all cordova objects once native side is ready.
  */
@@ -1191,9 +1184,6 @@ channel.join(function() {
 
     platform.initialize && platform.initialize();
 
-    // Fire event to notify that all objects are created
-    channel.onCordovaReady.fire();
-
     // Fire onDeviceReady event once page has fully loaded, all
     // constructors have run and cordova info has been received from native
     // side.
@@ -1201,8 +1191,29 @@ channel.join(function() {
         require('cordova').fireDocumentEvent('deviceready');
     }, channel.deviceReadyChannelsArray);
 
+    /* SAH - also moving this below the join (next) that requires it. If 
+     * onDOMContentLoaded has fired when we get here, we may miss the join
+     * if this code appears before the join as it originally did.
+     */
+    // Fire event to notify that all objects are created
+    channel.onCordovaReady.fire();
+
 }, platformInitChannelsArray);
 
+/* SAH - on iPad air, b/c we are not using dynamic plugin loading,
+ * the document trigger event is fast enough that if we do not join
+ * the channel waiting for nativeReady and pluginsReady prior to
+ * calling bootstrap and the plugin loader, we may miss those
+ * triggers entirely. Hence, the code below is moved AFTER the
+ * call to channel.join.
+ */
+
+// Call the platform-specific initialization.
+platform.bootstrap && platform.bootstrap();
+
+pluginloader.load(function() {
+    channel.onPluginsReady.fire();
+});
 
 });
 
@@ -1396,7 +1407,7 @@ function handlePluginsObject(path, moduleList, finishPluginLoading) {
 }
 
 function injectPluginScript(pathPrefix, finishPluginLoading) {
-    var pluginPath = pathPrefix + 'cordova_plugins.js';
+    // var pluginPath = pathPrefix + 'cordova_plugins.js';
 
     cordova_34_plugins();
     cordova_34_plugins_list();
@@ -1435,12 +1446,15 @@ function findCordovaPath() {
 // This is an async process, but onDeviceReady is blocked on onPluginsReady.
 // onPluginsReady is fired when there are no plugins to load, or they are all done.
 exports.load = function(callback) {
-    var pathPrefix = findCordovaPath();
+    /* SAH - b/c we are not dynamically loading the plugin list, we don't need
+     * any of this.
+     */
+    /*var pathPrefix = findCordovaPath();
     if (pathPrefix === null) {
         console.log('Could not find cordova.js script tag. Plugin loading may fail.');
         pathPrefix = '';
-    }
-    injectPluginScript(pathPrefix, callback);
+    }*/
+    injectPluginScript(null /*pathPrefix*/, callback);
 };
 
 
