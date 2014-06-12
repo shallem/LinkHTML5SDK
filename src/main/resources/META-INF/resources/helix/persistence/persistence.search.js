@@ -363,7 +363,7 @@ persistence.search.config = function(persistence, dialect, options) {
             var that = this;
             var nxtCall = ++ncalls;
             that.__hx_indexing = true;
-            var nObjects = (__indexFull ? 50 : 10);
+            var nObjects = 10;
             var delaySecs = (__indexFull ? 1 : 3);
             
             this.all().filter('__hx_indexed', '=', 0).limit(nObjects).order('rowid', false).include(propList.concat(['rowid'])).newEach({
@@ -373,7 +373,7 @@ persistence.search.config = function(persistence, dialect, options) {
                         that.__hx_indexing = false;
                         
                         --Helix.DB.__indexingCount;
-                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && (__indexFull || nxtCall >= 20)) {
+                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && ncalls > 0 && (__indexFull || nxtCall >= 20)) {
                             Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
                             Helix.DB.__indexingMessageShown = false;
                         }
