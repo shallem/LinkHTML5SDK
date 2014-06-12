@@ -380,15 +380,19 @@ Helix.Ajax = {
                     
                     Helix.Ajax.loadOptions.pin = true;
                     if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
-                        Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                        if (loadCommandOptions.syncingOptions) {
+                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");                            
+                        }
+                        // Add setTimeout to allow the message to display
+                        setTimeout(Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                            $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
                             Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
                             if (window.CordovaInstalled) {
                                 window.HelixSystem.allowSleep();
                             }
-                            $.mobile.loading( "hide" );
-                        }, itemKey, loadCommandOptions.syncOverrides);
+                        }, itemKey, loadCommandOptions.syncOverrides), 0);
                     } else {
                         loadCommandOptions.oncomplete(itemKey, "success");
                     }

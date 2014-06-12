@@ -188,6 +188,12 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
         writer.write("},");
+        if (cmd.getSyncingMessage() != null) {
+            writer.write(" 'syncingOptions' : {");
+            writer.write(" 'message' : '" + (cmd.getSyncingMessage() != null ? cmd.getSyncingMessage() : "") + "', ");
+            writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
+            writer.write("},");
+        }
         writer.write(" 'requestOptions' : {");
         writer.write(" 'loadKey' : '" + keyVal + "',");
         writer.write(" 'postBack' : '" + url + "',");

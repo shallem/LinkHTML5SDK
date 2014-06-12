@@ -29,6 +29,8 @@ function initHelixDB() {
         
         __indexingCount: 0,
         
+        indexFull: false,
+        
         reservedFields : {
             "__hx_sorts" : true,
             "__hx_key" : true,
@@ -293,7 +295,7 @@ function initHelixDB() {
                     // no fields to index or if async indexing is not enabled.
                     for (var schemaName in window.__pmAllSchemas) { 
                         var indexSchema = window.__pmAllSchemas[schemaName];
-                        indexSchema.indexAsync(0);
+                        indexSchema.indexAsync(0, Helix.DB.indexFull);
                     }
                 });
             });
@@ -1089,38 +1091,52 @@ function initHelixDB() {
     
         synchronizeDeltaField: function(tx, allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
-            
-            var doAdds = function(uidToEID) {
-                if (deltaObj.adds.length > 0) {
-                    var toAdd = deltaObj.adds.pop();
-                    var toAddKey = toAdd[keyField];
-                    var objId = uidToEID[toAddKey];
-                    if (objId) {
-                        Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
-                            parentCollection.add(pObj);
-                            doAdds(uidToEID);
-                        },overrides);
-                    } else {
-                        Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,doAdds,uidToEID);
-                    }
-                } else {
+
+            var nToAdd = deltaObj.adds.length;
+            var nAddsDone = 0;
+            var addDone = function(pObj) {
+                ++nAddsDone;
+                if (nAddsDone == nToAdd) {
                     /* Nothing more to add - we are done. */
                     oncomplete(field);
+                }
+            };
+
+            var doAdds = function(uidToEID) {
+                if (deltaObj.adds.length == 0) {
+                    oncomplete(field);
+                } else {
+                    while (deltaObj.adds.length > 0) {
+                        var toAdd = deltaObj.adds.pop();
+                        var toAddKey = toAdd[keyField];
+
+                        var objId = uidToEID[toAddKey];
+                        if (objId) {
+                            Helix.DB.updateOneObject(tx,allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
+                                parentCollection.add(pObj);
+                                addDone(pObj);
+                            },overrides);
+                        } else {
+                            Helix.DB.addObjectToQueryCollection(tx,allSchemas,toAdd,elemSchema, parentCollection,overrides,addDone,uidToEID);
+                        }                        
+                    }                                     
                 }
             };
             
             var createUIDToEIDMap = function(startIdx, addUniqueIDs, uidToEID) {
                 var toProcess = addUniqueIDs.slice(startIdx, 100);
-                elemSchema.all().filter(keyField, 'in', toProcess).newEach(tx, {
+                //elemSchema.all().filter(keyField, 'in', toProcess).newEach(tx, {
+                elemSchema.all().newEach(tx, {    
                     eachFn: function(elem) {
                         uidToEID[elem[keyField]] = elem.id;
                     }, 
                     doneFn: function(ct) {
-                        if (ct == 0) {
+                        doAdds(uidToEID);
+                        /*if (ct == 0) {
                             doAdds(uidToEID);
                         } else {
                             createUIDToEIDMap(startIdx + 100, addUniqueIDs, uidToEID);
-                        }
+                        }*/
                     }
                 })
             };
@@ -1167,7 +1183,7 @@ function initHelixDB() {
                 if (deltaObj.updates.length > 0) {
                     var updatedObj = deltaObj.updates.pop();
                     var toUpdateKey = updatedObj[keyField];
-                    Helix.DB.updateOneObject(tx,allSchemas,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);
+                    Helix.DB.updateOneObject(tx,allSchemas,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);                    
                 } else {
                     /* Nothing more to sync. Do all removes. */
                     removeFn();
@@ -1320,7 +1336,7 @@ function initHelixDB() {
                     // no fields to index or if async indexing is not enabled.
                     for (var schemaName in allSchemas) { 
                         var indexSchema = allSchemas[schemaName];
-                        indexSchema.indexAsync(0);
+                        indexSchema.indexAsync(0, Helix.DB.indexFull);
                     }
                 });
             };

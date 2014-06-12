@@ -315,7 +315,7 @@ persistence.search.config = function(persistence, dialect, options) {
             return session.uniqueQueryCollection(new SearchQueryCollection(session, Entity.meta.name, query, prefixByDefault));
         };
         
-        Entity.indexAsync = function(ncalls) {
+        Entity.indexAsync = function(ncalls, __indexFull) {
             // Launch asynchronous indexing, if that has been enabled. This will launch
             // a background task (essentially) to index a table in batches of 100 records
             // at a time.
@@ -326,8 +326,8 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We are already indexing ...
                 return;
             }
-            if (ncalls == 40) {
-                // We only do this up to 5 times per index, otherwise the application can
+            if (ncalls == 40 && !__indexFull) {
+                // We only do this up to 40 times per index, otherwise the application can
                 // be sluggish for far too long.
                 indexedOnce = true;
                 
@@ -363,18 +363,22 @@ persistence.search.config = function(persistence, dialect, options) {
             var that = this;
             var nxtCall = ++ncalls;
             that.__hx_indexing = true;
-            this.all().filter('__hx_indexed', '=', 0).limit(10).order('rowid', false).include(propList.concat(['rowid'])).newEach({
+            var nObjects = (__indexFull ? 50 : 10);
+            var delaySecs = (__indexFull ? 1 : 3);
+            
+            this.all().filter('__hx_indexed', '=', 0).limit(nObjects).order('rowid', false).include(propList.concat(['rowid'])).newEach({
                 startFn: function(ct) {
                     toIndex = ct;
                     if (toIndex <= 0) {
                         that.__hx_indexing = false;
                         
                         --Helix.DB.__indexingCount;
-                        if (Helix.DB.__indexingCount == 0 && nxtCall >= 20) {
+                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && (__indexFull || nxtCall >= 20)) {
                             Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
+                            Helix.DB.__indexingMessageShown = false;
                         }
                     } else {
-                        if (nxtCall == 20) {
+                        if (nxtCall == 20 || __indexFull) {
                             if (!Helix.DB.__indexingMessageShown) {
                                 Helix.DB.__indexingMessageShown = true;
                                 // Only display if we are going to index many times.
@@ -405,8 +409,8 @@ persistence.search.config = function(persistence, dialect, options) {
                                 // We space these calls out by 2 seconds, otherwise the app gets stuck and other
                                 // operations cannot proceed.
                                 setTimeout(function() {
-                                    that.indexAsync(nxtCall);
-                                }, 2000);
+                                    that.indexAsync(nxtCall, __indexFull);
+                                }, (delaySecs * 1000));
                             } else {
                                 // When the user has already endured one round of indexing, we don't force them
                                 // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
