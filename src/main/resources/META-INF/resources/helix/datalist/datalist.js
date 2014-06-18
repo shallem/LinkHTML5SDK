@@ -1843,6 +1843,10 @@
             this.options.headerText = txt;
         },
         
+        openItemContextMenu: function() {
+            this.options.itemContextMenu.open();
+        },
+        
         closeItemContextMenu: function() {
             this.options.itemContextMenu.close();
         },

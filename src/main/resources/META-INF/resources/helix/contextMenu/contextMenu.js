@@ -47,7 +47,13 @@
              * a 'this' object, then that specified object is relayed to the callback. Otherwise the context menu
              * object is 'this' in the callback.
              */
-            beforeopen: null
+            beforeopen: null,
+            
+            /**
+             * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
+             * If no name is provided, one is generated. The getName method returns the name.
+             */
+            name: null
         },
 
         _create: function() {
@@ -58,6 +64,10 @@
             } else {
                 this.tapEvent = 'click';
             }
+            if (!this.options.name) {
+                this.options.name = Helix.Utils.getUniqueID();
+            }
+            
             this.optionsList = null;
             this.page = this.element.closest( ".ui-page" );
             this.id = Helix.Utils.getUniqueID();
@@ -100,13 +110,13 @@
             $(this.element).empty();
             this._menuContainer = $('<div/>').attr({
                 'data-role' : 'popup',
-                'id' : this.id,
                 'data-theme' : 'a',
                 'data-history': 'false'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
+                'id' : this.id,
                 'data-theme' : 'b'
             }).appendTo(this._menuContainer);
             for (var i = 0; i < this.options.items.length; ++i) {
@@ -120,7 +130,8 @@
                 } else {
                     var nxtLink = $('<a />').attr({
                         'href' : 'javascript:void(0)',
-                        'data-index' : i
+                        'data-index' : i,
+                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i) 
                     }).append(nxtItem.display);
                     if (nxtItem.data) {
                         nxtLink.attr('data-field', nxtItem.data);
@@ -224,6 +235,10 @@
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( 'tap' );
             }
+        },
+        
+        getName: function() {
+            return this.options.name;
         }
     });
 }( jQuery ));

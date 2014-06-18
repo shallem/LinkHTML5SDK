@@ -504,14 +504,22 @@ Helix.Ajax = {
                         callbacks.success.call(window, returnObj);                    
                     }
                 } else {
-                    Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                    if (params.error) {
+                        Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                    } else {
+                        Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                    }
                     if (callbacks.error) {
                         callbacks.error.call(window, returnObj);
                     }
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                if (params.fatal) {
+                    Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                } else {
+                    Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                }
                 if (callbacks.fatal) {
                     callbacks.fatal.call(window, textStatus, errorThrown);
                 }
