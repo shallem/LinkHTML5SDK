@@ -289,6 +289,13 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
         cordova.exec(function() {
             // Txn is created - run the process function.
             process(tx);
+            
+            // Now commit the txn.
+            cordova.exec(function() {
+                
+            }, function(errMsg) {
+                alert("Error committing a transaction: " + errMsg);
+            }, "MobileHelixStorage", "commitTX", [ tx.db ]);
         }, 
         function(errMsg) {
             alert("Error creating a transaction: " + errMsg);

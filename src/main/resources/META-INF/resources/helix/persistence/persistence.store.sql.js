@@ -254,8 +254,10 @@ function config(persistence, dialect) {
    *            transaction to use
    * @param callback
    *            function to be called when done
+   * @param stopTracking
+   *            indicate that we want to stop tracking the objects we flush
    */
-  persistence.flush = function (tx, callback) {
+  persistence.flush = function (tx, callback, stopTracking) {
     var args = argspec.getArgs(arguments, [
         { name: "tx", optional: true, check: persistence.isTransaction },
         { name: "callback", optional: true, check: argspec.isCallback(), defaultValue: null }
@@ -303,6 +305,14 @@ function config(persistence, dialect) {
           for(var i = 0; i < removeObjArray.length; i++) {
             remove(removeObjArray[i], tx);
           }
+        }
+        
+        // Stop tracking everything we flushed.
+        if (stopTracking) {
+            for (i = 0; i < persistObjArray.length; ++i) {
+                id = persistObjArray[i].id;
+                delete session.trackedObjects[id];            
+            }         
         }
       });
   };
@@ -399,33 +409,18 @@ function config(persistence, dialect) {
           var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
           obj._new = false;
           tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-              if (e.code == 6) {
-                  // Failed due to constraint failure. Try again but try updating the
-                  // object instead of inserting it (because _new is now false ...).
-                  for (var p in meta.fields) {
-                    if(meta.fields.hasOwnProperty(p)) {
-                      obj._dirtyProperties[p] = true;
-                    }
-                  }
-                  /* We actually need to update the ID. Because this object is dirty, all one-to-many
-                   * children become dirty and get updated with the ID of this object. If we don't
-                   * update the ID in the DB, all children get orphaned.
-                   */
-                  propertyPairs.push("id=" + tm.outIdVar('?'));
-                  var schema = Helix.DB.getSchemaForObject(obj);
-                  var sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE " + Helix.DB.getKeyField(schema) + " = ?";
-                  // Add the unique key, which we are using to find the item to update.
-                  values.push(Helix.DB.getKeyField(obj));
-                  tx.executeSql(sql, values, callback, callback);
-              } else {
-                persistence.errorHandler(e.message, e.code);
-                callback(t,e);                  
-              }
+              persistence.errorHandler(e.message, e.code);
+              callback();                  
               return false;
           });
-        } else {
+        } else if (propertyPairs.length > 0) {
           sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
           tx.executeSql(sql, values, callback, callback);
+        } else {
+            // Nothing to do. Just call the callback.
+            if (callback) {
+                callback();
+            }
         }
   }
 
@@ -462,13 +457,36 @@ function config(persistence, dialect) {
         additionalQueries = additionalQueries.concat(persistence.get(obj, p).persistQueries());
       }
     }
-    executeQueriesSeq(tx, additionalQueries, function(obj, callback, properties, values, propertyPairs, qs) {
+    /*executeQueriesSeq(tx, additionalQueries, function(obj, callback, properties, values, propertyPairs, qs) {
         if (!obj._new && properties.length === 0) { // Nothing changed and not new
           if(callback) callback();
           return;
         }
         saveObj(obj, tx, callback, properties, values, propertyPairs, qs);
-      }, obj, callback, properties, values, propertyPairs, qs);
+      }, obj, callback, properties, values, propertyPairs, qs);*/
+
+    // Note that everything we do here is in 1 txn. We don't need to ensure that an object's
+    // one-to-many targets are inserted before the object is inserted. We just need to make
+    // sure that we don't assume the insert is done and invoke the callback until all one-to-many
+    // objects are in the DB.
+    var nQueries = additionalQueries.length + 1; // 1 extra for the insert/update of this object.
+    var nDone = 0;
+    var __callback = function() {
+        ++nDone;
+        if (nQueries == nDone) {
+            callback();
+        }
+    };
+    
+    for (var i = 0; i < additionalQueries.length; ++i) {
+        var queryTuple = additionalQueries[i];
+        tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err) {
+            persistence.errorHandler(err.message, err.code);
+            __callback();
+          });
+    }
+    
+    saveObj(obj, tx, __callback, properties, values, propertyPairs, qs);
   }
 
   persistence.save = save;
