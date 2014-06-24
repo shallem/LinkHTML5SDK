@@ -1477,10 +1477,12 @@ function initHelixDB() {
                         
                         if (dirty) {
                             persistence.schemaSync(function() {
+                                window.__persistenceReady = true;
                                 window.__pmAllTables = allTables;
                                 $(document).trigger('hxPersistenceReady');
                             });
                         } else {
+                            window.__persistenceReady = true;
                             window.__pmAllTables = allTables;
                             $(document).trigger('hxPersistenceReady');
                         }
@@ -1490,6 +1492,8 @@ function initHelixDB() {
         },
     
         initPersistence: function () {
+            window.__persistenceReady = false;
+            
             /* Initialize PersistenceJS for use with WebSQL. Eventually need to add IndexedDB support. */
             persistence.store.websql.config(persistence, 'OfflineAppDB', 'Managed offline DB for app.', 5 * 1024 * 1024);
             
@@ -1497,12 +1501,12 @@ function initHelixDB() {
             persistence.search.config(persistence, persistence.store.websql.sqliteDialect, {
                 indexAsync : true
             });
-        
+
             /* Keep a master list of all widget schemas we have attempted to create. This ensures we
              * don't recreate the schema each time we run a load command.
              */
             this.createdSchemas = {};
-        
+
             /* Initialize PersistenceJS migrations. */
             persistence.transaction(function(tx) {
                 persistence.migrations.init(tx, function() {
@@ -1515,7 +1519,7 @@ function initHelixDB() {
         },
     
         persistenceIsReady: function() {
-            if (!window.__pmAllTables) {
+            if (!window.__persistenceReady) {
                 return false;
             }
         

@@ -281,11 +281,14 @@ MobileHelix_Tx.prototype.executeSql = function(sql, params, successCallback, err
  * @param errorCallback {Function}
  */
 MobileHelixDatabase.prototype.transaction = function(process, errorCallback, successCallback) {
+    var ntries = 0;
     var tx = new MobileHelix_Tx();
     tx.db = this.name;
     tx.successCallback = successCallback;
     tx.errorCallback = errorCallback;
-    try {
+    
+    // Factored out createTx function so that it is easy to retry on failure.
+    var __createTx = function() {
         cordova.exec(function() {
             // Txn is created - run the process function.
             process(tx);
@@ -298,8 +301,21 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
             }, "MobileHelixStorage", "commitTX", [ tx.db ]);
         }, 
         function(errMsg) {
+            if (ntries == 0) {
+                // Wait 1 second and retry; it is possible the DB is just not open yet.
+                setTimeout(function() {
+                    __createTx();
+                }, 1000);
+                ++ntries;
+                return;
+            }
+            
             alert("Error creating a transaction: " + errMsg);
         }, "MobileHelixStorage", "beginTX", [ tx.db ]);
+    };
+    
+    try {
+        __createTx();
     } catch (e) {
         console.log("Transaction error: "+e);
         if (tx.errorCallback) {
@@ -322,12 +338,15 @@ MobileHelixDatabase.install = function() {
      * @param size              Database size in bytes
      * @return                  Database object
      */
-    window.openDatabase = function(name, version, display_name, size) {
-        cordova.exec(null, function(err) {
-            persistence.errorHandler(err);
-        }, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
+    window.openDatabase = function(name, version, display_name, size, callback) {
         var db = new MobileHelixDatabase();
         db.name = name;
+
+        cordova.exec(function() {
+            callback(db);
+        }, function(err) {
+            persistence.errorHandler(err);
+        }, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
         return db;
     };
 };
