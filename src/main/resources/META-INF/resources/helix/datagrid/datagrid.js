@@ -386,10 +386,14 @@
         closeItemContextMenu: function() {
             this.options.itemContextMenu.close();
         },
-        bindEvent : function(target, evname, fn) {
+        bindClick : function(target, fn) {
             var _self = this;
-            $(target).on(evname, function(ev) {
+            $(target).on(Helix.clickEvent, function(ev) {
+                if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
+                    return false;
+                }
                 fn(ev);
+                return false;
             });
         },
         getSelected: function() {

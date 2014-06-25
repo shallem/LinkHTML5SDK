@@ -111,12 +111,13 @@
             this._menuContainer = $('<div/>').attr({
                 'data-role' : 'popup',
                 'data-theme' : 'a',
+                'id' : this.id,
                 'data-history': 'false'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
-                'id' : this.id,
+                'id' : this.id + "-ul",
                 'data-theme' : 'b'
             }).appendTo(this._menuContainer);
             for (var i = 0; i < this.options.items.length; ++i) {
