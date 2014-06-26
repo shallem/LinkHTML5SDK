@@ -271,7 +271,13 @@
             /*
              * Display sort buttons or not
              */
-            showButtons: true            
+            showButtons: true,
+            
+            /*
+             * Number of rows to display in a single view of the list. The list automatically
+             * paginates as the user scrolls.
+             */
+            itemsPerPage: 50
         },
     
         _create: function() {
@@ -1062,7 +1068,7 @@
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
             this._renderWindowDelta = 0;
-            this._itemsPerPage = 50;
+            this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false; 
             this._lastUpdateScroll = 0;
             this.rescrollInProgress = false;

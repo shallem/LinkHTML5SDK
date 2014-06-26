@@ -247,6 +247,14 @@
         
         isSplitView: function() {
             return (this.__current == null);
+        },
+        
+        getLeft: function() {
+            return $(this.__left);
+        },
+        
+        getRight: function() {
+            return $(this.__right);
         }
     });
 }( jQuery ));
