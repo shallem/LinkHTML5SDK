@@ -759,20 +759,7 @@ persistence.search.config = function(persistence, dialect, options) {
         persistence.executeQueriesSeq(tx, queries, callback);
     }
   
-    persistence.flushHooks.push(function(session, tx, callback) {
-        var queries = [];
-        if (!persistence.search.options.indexAsync) {
-            // This is synchronous indexing, which means it happens when an object is flushed.
-            // When you have lots of data to index this is a bad idea because the user cannot
-            // proceed while indexing is in progress.
-            // 
-            // When handleInserts is done it will call handleDeletes, which will in turn push the
-            // queries on to the execute list and invoke the callback with pushQueries
-            //  handleInserts(queries, session, tx, callback);
-        } else {
-            handleDeletes(queries, tx, callback);
-        }
-    });
+    /* SAH - we don't support synchronous indexing. */
 };
 
 if(typeof exports === 'object') {
