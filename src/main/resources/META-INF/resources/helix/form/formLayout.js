@@ -132,6 +132,7 @@
     
         __computeOneHidden: function(formElem, valuesMap) {
             var fldName = this._stripNamespace(formElem.name);
+            var oldHidden = formElem.hidden;
             if (valuesMap && fldName in valuesMap) {
                 formElem.value = valuesMap[fldName];
             }
@@ -153,6 +154,12 @@
             } else {
                 formElem.hidden = false;
             }
+            if (oldHidden != formElem.hidden) {
+                // Hidden changed.
+                return true;
+            }
+            // Hidden did not change.
+            return false;
         },
     
         _computeHidden : function(valuesMap) {
@@ -523,14 +530,20 @@
                     } else {
                         item.buttons = newValue;
                     }
+                    // Value changed.
+                    return true;
                 }
             }
+            // Value did not change.
+            return false;
         },
         
         __refreshOneValue: function(mode, item, valuesMap) {
-            this.__computeOneHidden(item, valuesMap);
-            this.__copyOneValue(item, valuesMap);
-            this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+            var hiddenChanged = this.__computeOneHidden(item, valuesMap);
+            var valueChanged = this.__copyOneValue(item, valuesMap);
+            if (hiddenChanged || valueChanged) {
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);                
+            }
         },
         
         refreshValues: function(valuesMap) {
