@@ -396,20 +396,21 @@ function initPersistence(persistence) {
      *        has two argument, the first is the item value, the second a
      *        callback function
      * @param callback the function to call when the forEach has ended
+     * @param opaque argument to pass to fn and callback
      */
-        persistence.asyncParForEach = function(array, fn, callback) {
+        persistence.asyncParForEach = function(array, fn, callback, opaque) {
             var completed = 0;
             var arLength = array.length;
             if(arLength === 0) {
-                callback();
+                callback(undefined, undefined, opaque);
             }
             for(var i = 0; i < arLength; i++) {
                 fn(array[i], function(result, err) {
                     completed++;
                     if(completed === arLength) {
-                        callback(result, err);
+                        callback(result, err, opaque);
                     }
-                });
+                }, opaque);
             }
         };
 

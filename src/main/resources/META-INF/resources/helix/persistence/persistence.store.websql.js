@@ -75,7 +75,8 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
             for ( var i = 0; i < result.rows.length; i++) {
               results.push(result.rows.item(i));
             }
-            successFn(results, result);
+            //successFn(results, result);
+            successFn(results);
           }
         }, 
         function(t, e) {

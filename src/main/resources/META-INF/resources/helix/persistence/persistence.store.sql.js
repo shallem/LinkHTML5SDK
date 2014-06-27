@@ -324,12 +324,12 @@ function config(persistence, dialect) {
         if(callback) {
             persistence.asyncParForEach(removeObjArray, function(obj, callback) {
                 remove(obj, tx, callback);
-            }, function(result, err) {
+            }, function(result, err, _persistArr) {
                 if (err) return callback(result, err);
-                persistence.asyncParForEach(persistObjArray, function(obj, callback) {
+                persistence.asyncParForEach(_persistArr, function(obj, callback) {
                     save(obj, tx, callback);
                 }, callback);
-            });
+            }, persistObjArray);
         } else { // More efficient
             for(var i = 0; i < persistObjArray.length; i++) {
                 save(persistObjArray[i], tx);
