@@ -114,11 +114,11 @@
     if (window.CordovaVersion >= 3 &&
         window.CordovaRevision >= 1) {
         window.HelixBulkContacts = {
-            queue: function(contactOpts) {
-                return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
+            queue: function(contactsToQueue, done) {
+                return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
             },
             saveQueued: function(success, failure) {
-                return cordova.exec(null, null, "HelixBulkContacts", "saveQueued", [ ]);
+                return cordova.exec(success, failure, "HelixBulkContacts", "saveQueued", [ ]);
             }
         };
         
