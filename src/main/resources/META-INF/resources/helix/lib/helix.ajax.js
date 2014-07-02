@@ -89,6 +89,17 @@ $(document).ready(function() {
 });
 
 /**
+ * Capture offline/online transitions driven by the Cordova container.
+ */
+$(document).on('__hxOnline', function() {
+    window.__hxOnLine = true;
+});
+
+$(document).on('__hxOffline', function() {
+    window.__hxOnLine = false;
+});
+
+/**
 * Execute an AJAX load from a backing bean. This command is specifically used to
 * load a JSON-serialized object using the new PrimeFaces "ClientData" annotations.
 * These objects, once loaded, are synchronized to local storage. If the browser
@@ -133,9 +144,8 @@ Helix.Ajax = {
         }
         
         //alert("ONLINE2: " + window.__hxOnLine);
-        if (window.__hxOnLine !== undefined &&
-            window.__hxOnLine == false) {
-            return false;
+        if (window.__hxOnLine !== undefined) {
+            return window.__hxOnLine;
         }
         
         return navigator.onLine;
