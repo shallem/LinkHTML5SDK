@@ -328,7 +328,18 @@ function config(persistence, dialect) {
                 if (err) return callback(result, err);
                 persistence.asyncParForEach(_persistArr, function(obj, callback) {
                     save(obj, tx, callback);
-                }, callback);
+                }, function() {
+                    if (stopTracking === true ||
+                        stopTracking === undefined) {
+                        for (i = 0; i < _persistArr.length; ++i) {
+                            id = _persistArr[i].id;
+                            delete session.trackedObjects[id];            
+                        }         
+                    }
+                    
+                    callback();
+                });
+                return true;
             }, persistObjArray);
         } else { // More efficient
             for(var i = 0; i < persistObjArray.length; i++) {
@@ -337,15 +348,15 @@ function config(persistence, dialect) {
             for(var i = 0; i < removeObjArray.length; i++) {
                 remove(removeObjArray[i], tx);
             }
-        }
-
-        // Stop tracking everything we flushed.
-        if (stopTracking === true ||
-            stopTracking === undefined) {
-            for (i = 0; i < persistObjArray.length; ++i) {
-                id = persistObjArray[i].id;
-                delete session.trackedObjects[id];            
-            }         
+        
+            // Stop tracking everything we flushed.
+            if (stopTracking === true ||
+                stopTracking === undefined) {
+                for (i = 0; i < persistObjArray.length; ++i) {
+                    id = persistObjArray[i].id;
+                    delete session.trackedObjects[id];            
+                }         
+            }
         }
     };
 
