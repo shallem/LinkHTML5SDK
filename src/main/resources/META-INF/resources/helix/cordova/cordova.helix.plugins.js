@@ -114,8 +114,8 @@
     if (window.CordovaVersion >= 3 &&
         window.CordovaRevision >= 1) {
         window.HelixBulkContacts = {
-            queue: function(contactsToQueue, done) {
-                return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
+            queue: function(contactOpts) {
+                return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
             },
             saveQueued: function(success, failure) {
                 return cordova.exec(success, failure, "HelixBulkContacts", "saveQueued", [ ]);
@@ -127,5 +127,12 @@
                 return cordova.exec(success, null, "HelixSystem", "updateOnlineOffline", []);
             }
         });
+    }
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 2) {
+        window.HelixBulkContacts.queue = function(contactsToQueue, done) {
+            return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
+        };
     }
 })();

@@ -45,9 +45,12 @@ var defaults = {
 	
 	// time formats
 	titleFormat: {
-		month: 'MMMM yyyy',
-		week: "MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
-		day: 'dddd, MMM d, yyyy'
+		// month: 'MMMM yyyy',
+                month: "MMMM '&#39;'yy",
+		//week: "MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
+                week: "MMM d[ yy]{ '&#8212;'[ MMM] d '&#39;'yy}",
+		//day: 'dddd, MMM d, yyyy'
+                day: "MMM d, '&#39;'yy"
 	},
 	columnFormat: {
 		month: 'ddd',
@@ -830,7 +833,7 @@ function Header(calendar, options) {
 				var prevButton;
 				$.each(this.split(','), function(j, buttonName) {
 					if (buttonName == 'title') {
-						e.append("<span class='fc-header-title'><h2>&nbsp;</h2></span>");
+						e.append("<span class='fc-header-title'><h3>&nbsp;</h3></span>");
 						if (prevButton) {
 							prevButton.addClass(tm + '-corner-right');
 						}
@@ -905,7 +908,7 @@ function Header(calendar, options) {
 	
 	
 	function updateTitle(html) {
-		element.find('h2')
+		element.find('h3')
 			.html(html);
 	}
 	

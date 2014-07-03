@@ -187,8 +187,8 @@
                             'data-theme' : theme,
                             'data-icon' : 'back'
                         }).append(this.options.headerToggleText).on(this.__clickEvent, function(ev) {
-                            ev.preventDefault();
                             __self.toggle();
+                            return false;
                         }).button());
                     }
                 }

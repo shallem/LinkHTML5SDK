@@ -64,6 +64,12 @@
             } else {
                 this.tapEvent = 'click';
             }
+            if (Helix.deviceType === 'phone') {
+                this._maxHeight = 250;
+            } else {
+                this._maxHeight = 500;
+            }
+            
             if (!this.options.name) {
                 this.options.name = Helix.Utils.getUniqueID();
             }
@@ -107,13 +113,22 @@
         },
 
         refresh: function() {
+            var _self = this;
+            
             $(this.element).empty();
             this._menuContainer = $('<div/>').attr({
                 'data-role' : 'popup',
                 'data-theme' : 'a',
                 'id' : this.id,
-                'data-history': 'false'
+                'data-history': 'false',
+                'style' : 'max-height: ' + this._maxHeight + 'px; overflow-y: scroll'
             }).appendTo(this.element);
+            if (Helix.hasTouch) {
+                $(this._menuContainer).on('touchstart touchend', function() {
+                    // Prevent these events from reaching whatever is below the menu.
+                    return !_self.active;
+                });
+            }
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
@@ -148,29 +163,57 @@
                 this.optionsList.append(nxtLI);
             }
 
-            var _self = this;
             this.optionsList.on(_self.tapEvent, 'a', function(evt) {
+                if (!_self.active) {
+                    return true;
+                }
                 evt.stopImmediatePropagation();
-                evt.stopPropagation();
-                evt.preventDefault();
-
+                
                 var cbData = $(evt.target).attr('data-field');
                 var cbIndex = $(evt.target).attr('data-index');
 
                 var item = _self.options.items[cbIndex];
                 if (item.action) {
-                    if (_self._thisArg) {
-                        item.action.call(_self._thisArg, cbData, evt);
+                    var __runAction = function() {
+                        if (_self._thisArg) {
+                            item.action.call(_self._thisArg, cbData, evt);
+                        } else {
+                            item.action.call(_self, cbData, evt);
+                        }
+                        _self.close();
+                    };
+                    if (Helix.hasTouch) {
+                        // See if the user scrolls before we see touchend. If they do,
+                        // then do not fire the event.
+                        var scrollTop =  $(_self._menuContainer).scrollTop();
+                        $(evt.target).off('touchend').on('touchend', function(evt2) {
+                            var cbIndex2 = $(evt2.target).attr('data-index');
+                            if (cbIndex == cbIndex2 &&
+                                Math.abs(scrollTop - $(_self._menuContainer).scrollTop()) < 10) {
+                                __runAction();
+                                return false;
+                            }
+                            return true;
+                        });
+                        setTimeout(function() {
+                            $(evt.target).off('touchend');
+                        }, 2500);
+                        return true;
                     } else {
-                        item.action.call(_self, cbData, evt);
+                        _runAction();
+                        return false;
                     }
                 }
-                _self.close();
+                return false;
             });
 
             if (Helix.hasTouch) {
                 // Prevent touch events from propagating.
                 this.optionsList.on('tap', function(ev) {
+                    if (!_self.active) {
+                        return true;
+                    }
+                    
                     ev.preventDefault();
                     ev.stopPropagation();
                     ev.stopImmediatePropagation();
