@@ -200,7 +200,7 @@
                         }, 2500);
                         return true;
                     } else {
-                        _runAction();
+                        __runAction();
                         return false;
                     }
                 }
@@ -241,8 +241,8 @@
             }
             
             this._menuContainer.popup("open", obj);
+            this.active = true;
             if (Helix.hasTouch) {
-                this.active = true;
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
             }
