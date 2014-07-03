@@ -165,7 +165,8 @@ public class JSONSerializer {
     private void iterateOverObjectField(JsonGenerator jg,
             Object obj,
             Set<String> visitedClasses,
-            Method getter) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, NoSuchMethodException {
+            Method getter) throws IllegalAccessException, IllegalArgumentException, 
+                                  InvocationTargetException, IOException, NoSuchMethodException {
         /* Extract the field name. */
         String nxtFieldName = this.extractFieldName(getter.getName());
 
@@ -183,10 +184,12 @@ public class JSONSerializer {
     private boolean serializeObjectFields(JsonGenerator jg,
             Object obj,
             Set<String> visitedClasses,
-            String fieldName) throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException {
+            String fieldName) throws IOException, IllegalAccessException, 
+                                     IllegalArgumentException, InvocationTargetException, 
+                                     NoSuchMethodException {
         Class<?> c = obj.getClass();
         
-        if (this.isSimpleType(c)) {
+        if (isSimpleType(c)) {
             if (fieldName != null) {
                 jg.writeFieldName(fieldName);
             }
@@ -264,7 +267,8 @@ public class JSONSerializer {
                 jg.writeEndObject();
                 return true;
             } else {
-                throw new IOException("Cannot serialize an object with no ClientData fields " + obj.getClass().getName());
+                throw new IOException("Cannot serialize an object with no ClientData fields in " +
+                        obj.getClass().getName());
             }
         }
     }
@@ -276,7 +280,8 @@ public class JSONSerializer {
         JsonGenerator jg = jsonF.createJsonGenerator(outputString);
         
         if (!serializeObjectForSchema(jg, cls, visitedClasses, null, null)) {
-            throw new IOException("Attempting to generate schema for an object with no client data.");
+            throw new IOException("Attempting to generate schema for an object with no client data in "
+                    + cls.getName());
         }
 
         jg.close();
@@ -291,11 +296,12 @@ public class JSONSerializer {
             String alternateName) throws IOException {
         if (fieldName != null &&
                 fieldName.equals("id")) {
-            throw new IOException("Object " + c.getName() + " uses the field name 'id', which is reserved for use by PersistenceJS.");
+            throw new IOException("Class " + c.getName() + " uses the field name 'id', " +
+                    "which is reserved for use by PersistenceJS.");
         }
         
         /* Serialize the genericized version of this return type. */
-        if (this.isSimpleType(c)) {
+        if (isSimpleType(c)) {
             if (fieldName != null) {
                 jg.writeFieldName(fieldName);
             }
@@ -309,8 +315,11 @@ public class JSONSerializer {
             } else {
                 jg.writeStartArray();
             }
-            if (this.isSimpleType(componentType)) {
-                throw new IOException("Arrays of simple types (e.g., strings, ints, etc.) are currently not supported. Wrap your String in a class of its own and add a ClientData getter so that the wrapper class can become its own table on the client.");
+            if (isSimpleType(componentType)) {
+                throw new IOException("Arrays of simple types (e.g., strings, ints, " +
+                        "etc.) are currently not supported. Wrap your String in a class " +
+                        "of its own and add a ClientData getter so that the wrapper " +
+                        "class can become its own table on the client. Class: " + c.getName());
             }
             
             if (!this.serializeObjectForSchema(jg,
@@ -318,7 +327,9 @@ public class JSONSerializer {
                     visitedClasses,
                     null,
                     alternateName)) {
-                throw new IOException("Array types returned by ClientData methods must be object types with at least one ClientData field. Class " + componentType.getName() + " does not comply.");
+                throw new IOException("Array types returned by ClientData methods " +
+                        "must be object types with at least one ClientData field. " +
+                        "Class " + componentType.getName() + " does not comply.");
             }
             jg.writeEndArray();
             return true;
@@ -335,13 +346,17 @@ public class JSONSerializer {
                         /* The object neither has any fields marked as ClientData nor
                          * does it have a toString method - this is not legal.
                         */
-                        throw new IOException("Object types must either have fields marked ClientData or have a toString method.");
+                        throw new IOException("Object types must either have fields " +
+                                "marked ClientData or have a toString method in class " + 
+                                c.getName());
                     }
                     return true;
                 } catch (NoSuchMethodException ex) {
-                    throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
+                    throw new IOException("Invalid contents of DeltaObject. " +
+                            "Missing getAdds method in class " + c.getName());
                 } catch (SecurityException  ex) {
-                    throw new IOException("Invalid contents of DeltaObject. Missing getAdds method.");
+                    throw new IOException("Invalid contents of DeltaObject. " + ""
+                            + "Missing getAdds method in class " + c.getName());
                 }
             }
             
@@ -523,28 +538,28 @@ public class JSONSerializer {
         }
     }
     
-    private boolean isNumberType(Class<?> returnType) {
+    private static boolean isNumberType(Class<?> returnType) {
         if (returnType.getSuperclass().equals(java.lang.Number.class)) {
             return true;
         }
         return false;
     }
 
-    private boolean isString(Class<?> returnType) {
+    private static boolean isString(Class<?> returnType) {
         if (returnType.equals(java.lang.String.class)) {
             return true;
         }
         return false;
     }
 
-    private boolean isBoolean(Class<?> returnType) {
+    private static boolean isBoolean(Class<?> returnType) {
         if (returnType.equals(java.lang.Boolean.class)) {
             return true;
         }
         return false;
     }
 
-    private boolean isSimpleType(Class<?> objType) {
+    private static boolean isSimpleType(Class<?> objType) {
         return objType.isPrimitive()
                 || isNumberType(objType)
                 || isString(objType)
