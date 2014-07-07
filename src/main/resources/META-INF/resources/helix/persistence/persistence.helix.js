@@ -293,10 +293,10 @@ function initHelixDB() {
 
                     // Launch async indexing ... these calls do nothing if there are
                     // no fields to index or if async indexing is not enabled.
-                    for (var schemaName in window.__pmAllSchemas) { 
+                    /*for (var schemaName in window.__pmAllSchemas) { 
                         var indexSchema = window.__pmAllSchemas[schemaName];
                         indexSchema.indexAsync(0, Helix.DB.indexFull);
-                    }
+                    }*/
                 });
             });
         

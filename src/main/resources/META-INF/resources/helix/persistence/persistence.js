@@ -82,7 +82,8 @@ function initPersistence(persistence) {
                 setterCallback(value);
             });
             scope.__defineGetter__(field, function () {
-                return getterCallback();
+                //return getterCallback();
+                return getterCallback.apply(this);
             });
         } else {
             Object.defineProperty(scope, field, {
@@ -634,11 +635,12 @@ function initPersistence(persistence) {
                                 }*/
                             }, function() {
                                 // getterCallback
-                                if (that._data[coll]) {
-                                    return that._data[coll];
+                                if (this._data[coll]) {
+                                    return this._data[coll];
                                 } else {
-                                    var queryColl = session.uniqueQueryCollection(new persistence.DbQueryCollection(session, meta.hasMany[coll].type.meta.name).filter(meta.hasMany[coll].inverseProperty, '=', that));
-                                    that._data[coll] = queryColl;
+                                    var queryColl = 
+                                        session.uniqueQueryCollection(new persistence.DbQueryCollection(session, meta.hasMany[coll].type.meta.name).filter(meta.hasMany[coll].inverseProperty, '=', this));
+                                    this._data[coll] = queryColl;
                                     return queryColl;
                                 }
                             });

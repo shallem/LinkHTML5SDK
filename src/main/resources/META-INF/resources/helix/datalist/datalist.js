@@ -422,6 +422,21 @@
             return sortFilterOptions.globalFilters;
         },
         
+        _handleEmpty: function() {
+            var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
+            if (this.nElems == 0) {                    
+                if (emptyLI.length) {
+                    $(emptyLI).show();
+                } else if (this.options.emptyMessage) {
+                    this.$parent.append($('<li />')
+                        .attr('data-role', 'empty-message')
+                        .append(this.options.emptyMessage));                        
+                }
+            } else if (emptyLI.length) {
+                $(emptyLI).hide();
+            }
+        },
+        
         /**
          * sortFilterOptions can either be a Mobile Helix enhanced PersistenceJS
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
@@ -490,27 +505,7 @@
              */
             _self._resetPaging();
             _self._refreshData(function() {
-                var emptyLI = $(_self.$parent).find('li[data-role="empty-message"]');
-                if (_self.nElems == 0) {
-                    // Make sure emptying and repopulating the list does not trigger a hook event.
-                    //_self.$parent.empty();
-                    /*if (_self.options.headerText) {
-                        $('<li />').attr({
-                            'data-role' : 'list-divider'
-                        }).append(_self.options.headerText)
-                        .appendTo(_self.$parent);
-                    }*/ 
-                    
-                    if (emptyLI.length) {
-                        $(emptyLI).show();
-                    } else if (_self.options.emptyMessage) {
-                        _self.$parent.append($('<li />')
-                            .attr('data-role', 'empty-message')
-                            .append(_self.options.emptyMessage));                        
-                    }
-                } else if (emptyLI.length) {
-                    $(emptyLI).hide();
-                }
+                _self._handleEmpty();
                 _self.$parent.listview( "refresh" );
                 
                 /**
@@ -680,6 +675,7 @@
             
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
+                _self._handleEmpty();
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
@@ -1493,7 +1489,7 @@
                     return false;
                 }
             } else {
-                if (_self._renderRowMarkup(LIs, curRow, arrIdx)) {
+                if (_self._renderRowMarkup(LIs, curRow, _self.displayList.length)) {
                     _self.displayList.push(curRow);
                     oncomplete();
                     return true;

@@ -124,7 +124,7 @@
                 'style' : 'max-height: ' + this._maxHeight + 'px; overflow-y: scroll'
             }).appendTo(this.element);
             if (Helix.hasTouch) {
-                $(this._menuContainer).on('touchstart touchend', function() {
+                $(this._menuContainer).on('touchstart touchend tap vclick click', function() {
                     // Prevent these events from reaching whatever is below the menu.
                     return !_self.active;
                 });
@@ -209,7 +209,7 @@
 
             if (Helix.hasTouch) {
                 // Prevent touch events from propagating.
-                this.optionsList.on('tap', function(ev) {
+                /*this.optionsList.on('tap vclick', function(ev) {
                     if (!_self.active) {
                         return true;
                     }
@@ -218,7 +218,7 @@
                     ev.stopPropagation();
                     ev.stopImmediatePropagation();
                     return false;
-                });
+                });*/
             }
 
             this.optionsList.listview();
