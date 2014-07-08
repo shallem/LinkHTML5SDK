@@ -1558,8 +1558,9 @@
                     event.stopPropagation();
                     event.preventDefault();
                     
-                    _self.setSelected(event.target);
-                    _self.selectItem();
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem();                    
+                    }
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                 }); 
             } 
@@ -1573,8 +1574,9 @@
                         return false;
                     }
 
-                    _self.setSelected(event.target);
-                    _self.selectItem();
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem();
+                    }
                     return false;
                 });
             }
@@ -1584,6 +1586,12 @@
     
         setSelected: function(targetElem) {
             var enclosingLI = $(targetElem).closest("li[data-index]");
+            if (this.selectedLI &&
+                (this.selectedIndex == enclosingLI.attr('data-index'))) {
+                // Selection did not change.
+                return false;
+            }
+            
             if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }
@@ -1598,6 +1606,7 @@
             } else {
                 this.selected = this.displayList[this.selectedIndex];
             }
+            return true;
         },
         getSelected: function() {
             return this.selected;

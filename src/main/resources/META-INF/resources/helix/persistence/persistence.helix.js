@@ -1122,21 +1122,23 @@ function initHelixDB() {
             };
             
             var createUIDToEIDMap = function(startIdx, addUniqueIDs, uidToEID) {
-                var toProcess = addUniqueIDs.slice(startIdx, 100);
-                //elemSchema.all().filter(keyField, 'in', toProcess).newEach(tx, {
-                elemSchema.all().newEach({    
-                    eachFn: function(elem) {
-                        uidToEID[elem[keyField]] = elem.id;
-                    }, 
-                    doneFn: function(ct) {
-                        doAdds(uidToEID);
-                        /*if (ct == 0) {
+                if (deltaObj.adds.length == 0) {
+                    doAdds(null);
+                } else {
+                    elemSchema.all().newEach({    
+                        eachFn: function(elem) {
+                            uidToEID[elem[keyField]] = elem.id;
+                        }, 
+                        doneFn: function(ct) {
                             doAdds(uidToEID);
-                        } else {
-                            createUIDToEIDMap(startIdx + 100, addUniqueIDs, uidToEID);
-                        }*/
-                    }
-                })
+                            /*if (ct == 0) {
+                                doAdds(uidToEID);
+                            } else {
+                                createUIDToEIDMap(startIdx + 100, addUniqueIDs, uidToEID);
+                            }*/
+                        }
+                    });
+                }
             };
             
             var prepareAdds = function() {
@@ -1204,7 +1206,7 @@ function initHelixDB() {
             var setter = Object.getOwnPropertyDescriptor(persistentObj, objLocalField).set;
             objSchema.findBy(keyField, obj[keyField], function(dbObj) {
                 Helix.DB.synchronizeObjectFields(allSchemas, obj,dbObj,objSchema,function(newObj) {
-                    setter(newObj);
+                    setter.call(persistentObj, newObj);
                     oncomplete(objLocalField);
                 }, overrides);
             });
@@ -1258,7 +1260,7 @@ function initHelixDB() {
                 /* Use the setter to make sure the object is marked as dirty appropriately. */
                 var setter = Object.getOwnPropertyDescriptor(persistentObj, field).set;
                 if (!overrides.syncFields(setter, obj, field, persistentObj)) {
-                    setter(obj[field]);
+                    setter.call(persistentObj, obj[field]);
                 }
             }
             
