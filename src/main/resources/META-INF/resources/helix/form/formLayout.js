@@ -371,7 +371,18 @@
         
         clear: function() {
             this.__clearValues(this.options.items);
-            this.refreshValues({});
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                if (nxtItem.type === "subPanel") {
+                    for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                        var subitem = nxtItem.items[subidx];
+                        this.__updateValue(mode,this._stripNamespace(subitem.name),subitem,{});
+                    }
+                } else{
+                    this.__updateValue(mode,this._stripNamespace(nxtItem.name),nxtItem,{});
+                }
+            }
         },
         
         __updateValue: function(mode, name, item, valuesMap) {
@@ -550,7 +561,14 @@
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                this.__refreshOneValue(mode, nxtItem, valuesMap);
+                if (nxtItem.type === "subPanel") {
+                    for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                        var subitem = nxtItem.items[subidx];
+                        this.__refreshOneValue(mode,subitem,valuesMap);
+                    }
+                } else{
+                    this.__refreshOneValue(mode, nxtItem, valuesMap);
+                }
             }
         },
         

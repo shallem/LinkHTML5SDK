@@ -932,7 +932,7 @@ function initHelixDB() {
                 
                 try {
                     var getter = Object.getOwnPropertyDescriptor(persistentObj, fld).get;
-                    var subObj = getter();
+                    var subObj = getter.call(persistentObj);
                     if (subObj && subObj.forEach) {
                         toCascade.push(subObj);
                     }
@@ -1092,11 +1092,13 @@ function initHelixDB() {
 
             var nToAdd = deltaObj.adds.length;
             var nAddsDone = 0;
+            var allAdds = [];
             var addDone = function(pObj) {
                 ++nAddsDone;
+                allAdds.push(pObj);
                 if (nAddsDone == nToAdd) {
                     /* Nothing more to add - we are done. */
-                    oncomplete(field);
+                    oncomplete(field, allAdds);
                 }
             };
 
@@ -1195,8 +1197,8 @@ function initHelixDB() {
         },
     
         synchronizeDeltaObject: function(allSchemas, deltaObj, parentCollection, elemSchema, oncomplete, overrides) {
-            Helix.DB.synchronizeDeltaField(allSchemas, deltaObj, parentCollection, elemSchema, null, function() {
-                oncomplete(parentCollection);
+            Helix.DB.synchronizeDeltaField(allSchemas, deltaObj, parentCollection, elemSchema, null, function(fld, allAdds) {
+                oncomplete(allAdds);
             }, overrides);
         },
     

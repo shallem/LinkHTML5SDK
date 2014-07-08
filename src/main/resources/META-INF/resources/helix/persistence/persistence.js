@@ -330,6 +330,15 @@ function initPersistence(persistence) {
                 return this.trackedObjects[obj.id];
             }
         };
+        
+        persistence.canonical = function(obj) {
+            if(!obj) return null;
+            if (!this.trackedObjects[obj.id]) {
+                return obj;
+            } else {
+                return this.trackedObjects[obj.id];
+            }
+        };
 
         /**
          * Marks the object to be removed (on next flush)
@@ -457,7 +466,7 @@ function initPersistence(persistence) {
                     }
                 }, function() {
                     // getterCallback
-                    return this._data[f];
+                    return persistence.canonical(this)._data[f];
                 });
                 this._data[field] = defaultValue(meta.fields[field]);
             };
@@ -525,13 +534,14 @@ function initPersistence(persistence) {
                                 that._dirtyProperties[ref] = oldValue;
                             }, function() {
                                 // getterCallback
-                                if (!this._data[ref]) {
+                                var that = persistence.canonical(this);
+                                if (!that._data[ref]) {
                                     return null;
-                                } else if(this._data_obj[ref] !== undefined) {
-                                    return this._data_obj[ref];
-                                } else if(this._data[ref] && session.trackedObjects[this._data[ref]]) {
-                                    this._data_obj[ref] = session.trackedObjects[this._data[ref]];
-                                    return this._data_obj[ref];
+                                } else if(that._data_obj[ref] !== undefined) {
+                                    return that._data_obj[ref];
+                                } else if(that._data[ref] && session.trackedObjects[that._data[ref]]) {
+                                    that._data_obj[ref] = session.trackedObjects[that._data[ref]];
+                                    return that._data_obj[ref];
                                 } else {
                                     throw new Error("Property '" + ref + "' of '" + meta.name + "' with id: " + this._data[ref] + " not fetched, either prefetch it or fetch it manually.");
                                 }
@@ -552,8 +562,9 @@ function initPersistence(persistence) {
                                     throw new Error("A query collection field cannot be set. Manipulate the contents of the query collection through the collection API.");
                                 }, function() {
                                     // getterCallback
-                                    if (this._data[coll]) {
-                                        return this._data[coll];
+                                    var that = persistence.canonical(this);
+                                    if (that._data[coll]) {
+                                        return that._data[coll];
                                     } else {
                                         var rel = meta.hasMany[coll];
                                         var inverseMeta = rel.type.meta;
@@ -562,14 +573,14 @@ function initPersistence(persistence) {
                                         var inverse = inv.mixin ? inv.mixin.meta.name : inverseMeta.name;
 
                                         var queryColl = new persistence.ManyToManyDbQueryCollection(session, inverseMeta.name);
-                                        queryColl.initManyToMany(this, coll);
+                                        queryColl.initManyToMany(that, coll);
                                         queryColl._manyToManyFetch = {
                                             table: rel.tableName,
                                             prop: direct + '_' + coll,
                                             inverseProp: inverse + '_' + rel.inverseProperty,
-                                            id: this.id
+                                            id: that.id
                                         };
-                                        this._data[coll] = queryColl;
+                                        that._data[coll] = queryColl;
                                         return session.uniqueQueryCollection(queryColl);
                                     }
                                 });
@@ -581,12 +592,13 @@ function initPersistence(persistence) {
                                     throw new Error("A query collection field cannot be set. Manipulate the contents of the query collection through the collection API.");
                                 }, function() {
                                     // getterCallback
-                                    if (this._data[coll]) {
-                                        return this._data[coll];
+                                    var that = persistence.canonical(this);
+                                    if (that._data[coll]) {
+                                        return that._data[coll];
                                     } else {
                                         var queryColl = 
-                                        session.uniqueQueryCollection(new persistence.DbQueryCollection(session, meta.hasMany[coll].type.meta.name).filter(meta.hasMany[coll].inverseProperty, '=', this));
-                                        this._data[coll] = queryColl;
+                                            session.uniqueQueryCollection(new persistence.DbQueryCollection(session, meta.hasMany[coll].type.meta.name).filter(meta.hasMany[coll].inverseProperty, '=', that));
+                                        that._data[coll] = queryColl;
                                         return queryColl;
                                     }
                                 });

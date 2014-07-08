@@ -1074,7 +1074,6 @@
         
         _refreshData: function(oncomplete) {
             var _self = this;
-            var orderby = _self._currentSort; 
         
             //this._clearListRows();
             _self.refreshInProgress = true;
@@ -1100,9 +1099,23 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            displayCollection = _self._applySearch(displayCollection);
-            displayCollection = _self._resetGlobalFilters(displayCollection);
+            var __completion = function(displayCollection) {
+                _self._sortAndRenderData(displayCollection, oncomplete);
+            };
             
+            if (this.__searchText && this.__searchText.trim()) {
+                this.options.indexedSearch(this.__searchText.trim(), __completion);
+                //displayCollection = _self._applySearch(displayCollection);
+            } else {
+                __completion(displayCollection);
+            }
+        },
+        
+        _sortAndRenderData: function(displayCollection, oncomplete) {
+            var _self = this;
+            var orderby = _self._currentSort; 
+            displayCollection = _self._resetGlobalFilters(displayCollection);
+
             if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
@@ -1132,7 +1145,7 @@
                         if (nRendered >= _self._itemsPerPage) {
                             return;
                         }
-                        
+
                         ++rowIndex;
                         if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
                             // Nothing to do.
@@ -1155,12 +1168,12 @@
                     if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
                         _self.refreshInProgress = false;
-                        
+
                         var startIdx = nRendered;
                         for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                             $(LIs[_ridx]).hide();
                         }
-                        
+
                         oncomplete();
                     } else {
                         var groupIndex = 0;
@@ -1174,7 +1187,7 @@
                                 oncomplete();
                                 return;
                             }
-                            
+
                             var nxt = groupsToRender.shift();
                             if (nRendered >= _self._itemsPerPage) {
                                 return;
@@ -1190,7 +1203,7 @@
                         __renderGroup();
                     }
                 }
-            );
+            );  
         },
         
         _updateRenderWindow: function(firstShowingIndex, direction) {
@@ -1219,13 +1232,6 @@
             var toRemove = this.$parent.find("li").filter(":not(li[data-fixed-header='yes'])");
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
-        },
-        
-        _applySearch: function(itemList) {
-            if (this.__searchText && this.__searchText.trim()) {
-                return this.options.indexedSearch(this.__searchText.trim());
-            }
-            return (itemList ? itemList : this.unfilteredList);
         },
         
         _doSearch: function() {
@@ -1383,7 +1389,9 @@
                     _self._resetPaging();
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
+                        _self.$listWrapper.scrollTop(0);
                     });
+                    return false;
                 });
             }
             
@@ -1586,26 +1594,28 @@
     
         setSelected: function(targetElem) {
             var enclosingLI = $(targetElem).closest("li[data-index]");
-            if (this.selectedLI &&
-                (this.selectedIndex == enclosingLI.attr('data-index'))) {
-                // Selection did not change.
-                return false;
+            var enclosingIndex = $(enclosingLI).attr('data-index');
+            var enclosingGroupIndex;
+            var nxtSelection;
+            if (this.options.grouped) {
+                enclosingGroupIndex = $(enclosingLI).attr('data-group-index');
+                nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+            } else {
+                nxtSelection = this.displayList[enclosingIndex];
             }
             
             if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }
+            if (this.options.grouped) {
+                this.selectedGroupRow = enclosingGroupIndex;
+                this.selectedGroup = this.displayList[enclosingIndex].group;
+            }
             this.selectedLI = enclosingLI;
             this.selectedLI.addClass('ui-btn-active');
-        
-            this.selectedIndex = $(enclosingLI).attr('data-index');
-            if (this.options.grouped) {
-                this.selectedGroupRow = $(enclosingLI).attr('data-group-index');
-                this.selected = this.displayList[this.selectedIndex].rows[this.selectedGroupRow];
-                this.selectedGroup = this.displayList[this.selectedIndex].group;
-            } else {
-                this.selected = this.displayList[this.selectedIndex];
-            }
+            this.selectedIndex = enclosingIndex;
+            this.selected = nxtSelection;
+            
             return true;
         },
         getSelected: function() {
