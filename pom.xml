@@ -290,7 +290,7 @@
 		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <!-- <include>calendar/fullcalendar.js</include> -->
+		    <include>calendar/fullcalendar.js</include>
 
 		    <include>colorpicker/spectrum.js</include>
 

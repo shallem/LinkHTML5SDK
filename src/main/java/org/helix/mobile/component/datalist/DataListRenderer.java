@@ -136,6 +136,12 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getSelectAction() != null) {
             writer.append(",selectAction: function(row,group,strings) {" + dlist.getSelectAction() + "}");
         }
+        if (dlist.getSwipeLeftAction() != null) {
+            writer.append(",swipeLeftAction: function(row) {" + dlist.getSwipeLeftAction() + "}");
+        }
+        if (dlist.getSwipeRightAction() != null) {
+            writer.append(",swipeRightAction: function(row) {" + dlist.getSwipeRightAction() + "}");
+        }
         if (dlist.getHoldAction() != null) {
             writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");
         }

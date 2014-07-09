@@ -86,6 +86,16 @@
             selectAction: null,
             
             /**
+             * Action to perform if the user swipes an item left.
+             */
+            swipeLeftAction: null,
+            
+            /**
+             * Action to perform if the user swipes an item right.
+             */
+            swipeRightAction: null,
+            
+            /**
              * Context menu to display if the user tap-holds (for touch devices)
              * or double clicks (for non-touch devices) on a list item. When 
              * both this option and holdAction are specified, this option takes
@@ -387,6 +397,7 @@
             // Default sort.
             this._currentSort = this.options.sortBy;
             this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._currentSortCase = '';
             this._updateSortButtons();
         
             if (this.options.strings) {
@@ -731,11 +742,14 @@
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
             for (var sortFld in sorts) {
-                if (sorts[sortFld] !== "[none]") {
+                var nxtSort = sorts[sortFld];
+                if (nxtSort.display !== "[none]") {
                     var sortItem = $('<li />').append($('<a />').attr({ 
                         'href' : 'javascript:void(0)',
-                        'data-field': sortFld
-                    }).append(sorts[sortFld]));
+                        'data-field': sortFld,
+                        'data-direction' : nxtSort.direction,
+                        'data-case' : nxtSort.usecase
+                    }).append(nxtSort.display));
                     $(sortsList).append(sortItem);
                     
                     /* Highlight the current sort. */
@@ -747,6 +761,8 @@
                     $(sortItem).on(_self.tapEvent, function(evt) {
                         evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
+                        var defDirection = $(evt.target).attr('data-direction');
+                        var caseSensitive = $(evt.target).attr('data-case');
                         
                         var found = false;
                         if (_self._currentSort) {
@@ -780,7 +796,8 @@
                         // new field.
                         if (!found) {
                             _self._currentSort = newSortField;
-                            _self._currentSortOrder = "DESCENDING"; 
+                            _self._currentSortOrder = defDirection; 
+                            _self._currentSortCase = caseSensitive;
                         }
                         
                         if (_self.nElems == 0) {
@@ -792,6 +809,7 @@
                             if (updatedSorts) {
                                 _self._currentSort = (updatedSorts.sort ? updatedSorts.sort : _self._currentSort);
                                 _self._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : _self._currentSortOrder);
+                                _self._currentSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : _self._currentSortCase);
                             }
                         }
                         _self._updateSortButtons();
@@ -1401,17 +1419,20 @@
         _applyOrdering: function(displayCollection) {
             var orderby = this._currentSort; 
             var direction = this._currentSortOrder;
+            var usecase = this._currentSortCase;
         
             var orderbyFields = orderby.split(",");
             var directionVals = direction.split(",");
+            var caseVals = usecase.split(",");
 
             var oidx = 0;
             for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                 var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
+                var nxtCase = (caseVals[oidx] === 'true' ? true : false);
                 if (latestDirection.toUpperCase() == "DESCENDING") {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], false);
+                    displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                 } else {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], true);
+                    displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
                 }
             }
             return displayCollection;
@@ -1585,6 +1606,24 @@
                     if (_self.setSelected(event.target)) {
                         _self.selectItem();
                     }
+                    return false;
+                });
+            }
+            if (_self.options.swipeLeftAction && curRowFresh) {
+                $(curRowParent).on('swipeleft', function(event) {
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeLeftAction(_self.selected);
+                    return false;
+                });
+            }
+            if (_self.options.swipeRightAction && curRowFresh) {
+                $(curRowParent).on('swiperight', function(event) {
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeRightAction(_self.selected);
                     return false;
                 });
             }

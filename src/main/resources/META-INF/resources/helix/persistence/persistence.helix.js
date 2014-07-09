@@ -1104,7 +1104,7 @@ function initHelixDB() {
 
             var doAdds = function(uidToEID) {
                 if (deltaObj.adds.length == 0) {
-                    oncomplete(field);
+                    oncomplete(field, allAdds);
                 } else {
                     while (deltaObj.adds.length > 0) {
                         var toAdd = deltaObj.adds.pop();
@@ -1322,10 +1322,7 @@ function initHelixDB() {
          */
         synchronizeObject: function(obj,objSchema,callback,opaque,overrides) {
             var allSchemas = {};
-            var syncDone = function(finalObj, opaque) {
-                /* Store the schema in the final obj. */
-                finalObj.__hx_schema = objSchema;
-            
+            var syncDone = function(finalObj, opaque) {            
                 /* We get here when the synchronize is done. */
                 persistence.flush(function() {
                     /* This will either send an object to the callback. */
@@ -1393,6 +1390,8 @@ function initHelixDB() {
                 var keyField = Helix.DB.getKeyField(objSchema);
                 objSchema.findBy(keyField, obj[keyField], function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj) {
+                        /* Store the schema in the final obj. */
+                        finalObj.__hx_schema = objSchema;
                         syncDone(finalObj, opaque);
                     }, overrides);
                 });

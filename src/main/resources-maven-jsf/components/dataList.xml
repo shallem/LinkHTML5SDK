@@ -34,6 +34,18 @@
             <description>JavaScript expression to invoke when the user taps a list item.</description>
         </attribute>
         <attribute>
+            <name>swipeLeftAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function accepting a list row as an argument to be invoked on swipe left.</description>
+        </attribute>
+        <attribute>
+            <name>swipeRightAction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function accepting a list row as an argument to be invoked on swipe right.</description>
+        </attribute>
+        <attribute>
             <name>itemContextMenu</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -552,9 +552,14 @@
         __refreshOneValue: function(mode, item, valuesMap) {
             var hiddenChanged = this.__computeOneHidden(item, valuesMap);
             var valueChanged = this.__copyOneValue(item, valuesMap);
-            if (hiddenChanged || valueChanged) {
-                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);                
+            var visibilityChanged = 
+                (mode == 0 && item.mode === 'edit') || (mode == 1 && item.mode === 'view') || (item.type === 'controlset');
+            
+            if (hiddenChanged || valueChanged || visibilityChanged) {
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                return true;
             }
+            return false;
         },
         
         refreshValues: function(valuesMap) {
@@ -562,9 +567,11 @@
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
                 if (nxtItem.type === "subPanel") {
-                    for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
-                        var subitem = nxtItem.items[subidx];
-                        this.__refreshOneValue(mode,subitem,valuesMap);
+                    if (!this.__refreshOneValue(mode,nxtItem,valuesMap)) {
+                        for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                            var subitem = nxtItem.items[subidx];
+                            this.__refreshOneValue(mode,subitem,valuesMap);
+                        }                        
                     }
                 } else{
                     this.__refreshOneValue(mode, nxtItem, valuesMap);

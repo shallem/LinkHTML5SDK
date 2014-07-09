@@ -2437,8 +2437,10 @@ function initPersistence(persistence) {
                     var aVal = persistence.get(a, col);
                     var bVal = persistence.get(b, col);
                     if (!sens) {
-                        aVal = aVal.toLowerCase();
-                        bVal = bVal.toLowerCase();
+                        if (Helix.Utils.isString(aVal)) {
+                            aVal = aVal.toLowerCase();
+                            bVal = bVal.toLowerCase();                            
+                        }
                     }
                     if(aVal < bVal) {
                         return asc ? -1 : 1;
