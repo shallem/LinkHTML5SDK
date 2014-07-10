@@ -1752,7 +1752,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         return;
     }
     
-    var popupId = Helix.Utils.getUniqueID();
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
@@ -1768,7 +1768,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'c',
-        'id' : popupId + "_close"
+        'id' : popupId + "-cancel"
     });
     if (options.dismissText) {
         $(closebtn).append(options.dismissText);
@@ -1776,14 +1776,14 @@ Helix.Layout.createConfirmDialog = function(options) {
         $(closebtn).append("Dismiss");
     }
     if (options.ondismiss) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_close"), function(e) {
+        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
             e.preventDefault();
             options.ondismiss();
             $(popup).popup("close");
             return false;
         });
     } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_close"), function(e) {
+        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
             e.preventDefault();
             $(popup).popup("close");
             return false;
@@ -1795,7 +1795,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'b',
-        'id' : popupId + "_open"
+        'id' : popupId + "-confirm"
     });
     if (options.confirmText) {
         $(confirmbtn).append(options.confirmText);
@@ -1803,14 +1803,14 @@ Helix.Layout.createConfirmDialog = function(options) {
         $(confirmbtn).append("Confirm");
     }
     if (options.onconfirm) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_open"), function(e) {
+        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
             e.preventDefault();
             options.onconfirm();
             $(popup).popup("close");
             return false;
         });
     } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "_open"), function(e) {
+        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
             e.preventDefault();
             $(popup).popup("close");
             return false;

@@ -86,6 +86,16 @@
             selectAction: null,
             
             /**
+             * Action to perform if the user swipes an item left.
+             */
+            swipeLeftAction: null,
+            
+            /**
+             * Action to perform if the user swipes an item right.
+             */
+            swipeRightAction: null,
+            
+            /**
              * Context menu to display if the user tap-holds (for touch devices)
              * or double clicks (for non-touch devices) on a list item. When 
              * both this option and holdAction are specified, this option takes
@@ -271,7 +281,13 @@
             /*
              * Display sort buttons or not
              */
-            showButtons: true            
+            showButtons: true,
+            
+            /*
+             * Number of rows to display in a single view of the list. The list automatically
+             * paginates as the user scrolls.
+             */
+            itemsPerPage: 50
         },
     
         _create: function() {
@@ -381,6 +397,7 @@
             // Default sort.
             this._currentSort = this.options.sortBy;
             this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._currentSortCase = '';
             this._updateSortButtons();
         
             if (this.options.strings) {
@@ -414,6 +431,21 @@
             }
             
             return sortFilterOptions.globalFilters;
+        },
+        
+        _handleEmpty: function() {
+            var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
+            if (this.nElems == 0) {                    
+                if (emptyLI.length) {
+                    $(emptyLI).show();
+                } else if (this.options.emptyMessage) {
+                    this.$parent.append($('<li />')
+                        .attr('data-role', 'empty-message')
+                        .append(this.options.emptyMessage));                        
+                }
+            } else if (emptyLI.length) {
+                $(emptyLI).hide();
+            }
         },
         
         /**
@@ -484,27 +516,7 @@
              */
             _self._resetPaging();
             _self._refreshData(function() {
-                var emptyLI = $(_self.$parent).find('li[data-role="empty-message"]');
-                if (_self.nElems == 0) {
-                    // Make sure emptying and repopulating the list does not trigger a hook event.
-                    //_self.$parent.empty();
-                    /*if (_self.options.headerText) {
-                        $('<li />').attr({
-                            'data-role' : 'list-divider'
-                        }).append(_self.options.headerText)
-                        .appendTo(_self.$parent);
-                    }*/ 
-                    
-                    if (emptyLI.length) {
-                        $(emptyLI).show();
-                    } else if (_self.options.emptyMessage) {
-                        _self.$parent.append($('<li />')
-                            .attr('data-role', 'empty-message')
-                            .append(_self.options.emptyMessage));                        
-                    }
-                } else if (emptyLI.length) {
-                    $(emptyLI).hide();
-                }
+                _self._handleEmpty();
                 _self.$parent.listview( "refresh" );
                 
                 /**
@@ -608,12 +620,12 @@
                         return true;
                     });
                 }
-                //if (_self.options.pullToRefresh) {
-                    _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
-                //}
+                _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
                 _self.isLoaded = true;
+                
                 if (oncomplete) {
-                    oncomplete(_self);            
+                    oncomplete(_self);
+                    _self.isDirty = false;
                 }
             });
         },
@@ -674,8 +686,10 @@
             
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
+                _self._handleEmpty();
                 if (oncomplete) {
-                    oncomplete(_self);            
+                    oncomplete(_self);
+                    _self.isDirty = false;
                 }
             });
         },
@@ -728,11 +742,14 @@
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
             for (var sortFld in sorts) {
-                if (sorts[sortFld] !== "[none]") {
+                var nxtSort = sorts[sortFld];
+                if (nxtSort.display !== "[none]") {
                     var sortItem = $('<li />').append($('<a />').attr({ 
                         'href' : 'javascript:void(0)',
-                        'data-field': sortFld
-                    }).append(sorts[sortFld]));
+                        'data-field': sortFld,
+                        'data-direction' : nxtSort.direction,
+                        'data-case' : nxtSort.usecase
+                    }).append(nxtSort.display));
                     $(sortsList).append(sortItem);
                     
                     /* Highlight the current sort. */
@@ -744,6 +761,8 @@
                     $(sortItem).on(_self.tapEvent, function(evt) {
                         evt.stopImmediatePropagation();                       
                         var newSortField = $(evt.target).attr('data-field');
+                        var defDirection = $(evt.target).attr('data-direction');
+                        var caseSensitive = $(evt.target).attr('data-case');
                         
                         var found = false;
                         if (_self._currentSort) {
@@ -777,7 +796,8 @@
                         // new field.
                         if (!found) {
                             _self._currentSort = newSortField;
-                            _self._currentSortOrder = "DESCENDING"; 
+                            _self._currentSortOrder = defDirection; 
+                            _self._currentSortCase = caseSensitive;
                         }
                         
                         if (_self.nElems == 0) {
@@ -789,6 +809,7 @@
                             if (updatedSorts) {
                                 _self._currentSort = (updatedSorts.sort ? updatedSorts.sort : _self._currentSort);
                                 _self._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : _self._currentSortOrder);
+                                _self._currentSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : _self._currentSortCase);
                             }
                         }
                         _self._updateSortButtons();
@@ -1061,7 +1082,7 @@
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
             this._renderWindowDelta = 0;
-            this._itemsPerPage = 50;
+            this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false; 
             this._lastUpdateScroll = 0;
             this.rescrollInProgress = false;
@@ -1071,7 +1092,6 @@
         
         _refreshData: function(oncomplete) {
             var _self = this;
-            var orderby = _self._currentSort; 
         
             //this._clearListRows();
             _self.refreshInProgress = true;
@@ -1097,9 +1117,23 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            displayCollection = _self._applySearch(displayCollection);
-            displayCollection = _self._resetGlobalFilters(displayCollection);
+            var __completion = function(displayCollection) {
+                _self._sortAndRenderData(displayCollection, oncomplete);
+            };
             
+            if (this.__searchText && this.__searchText.trim()) {
+                this.options.indexedSearch(this.__searchText.trim(), __completion);
+                //displayCollection = _self._applySearch(displayCollection);
+            } else {
+                __completion(displayCollection);
+            }
+        },
+        
+        _sortAndRenderData: function(displayCollection, oncomplete) {
+            var _self = this;
+            var orderby = _self._currentSort; 
+            displayCollection = _self._resetGlobalFilters(displayCollection);
+
             if (orderby /*&& !_self.__searchText*/) {
                 displayCollection = _self._applyOrdering(displayCollection);
             }
@@ -1129,7 +1163,7 @@
                         if (nRendered >= _self._itemsPerPage) {
                             return;
                         }
-                        
+
                         ++rowIndex;
                         if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
                             // Nothing to do.
@@ -1152,12 +1186,12 @@
                     if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
                         _self.refreshInProgress = false;
-                        
+
                         var startIdx = nRendered;
                         for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                             $(LIs[_ridx]).hide();
                         }
-                        
+
                         oncomplete();
                     } else {
                         var groupIndex = 0;
@@ -1171,7 +1205,7 @@
                                 oncomplete();
                                 return;
                             }
-                            
+
                             var nxt = groupsToRender.shift();
                             if (nRendered >= _self._itemsPerPage) {
                                 return;
@@ -1187,7 +1221,7 @@
                         __renderGroup();
                     }
                 }
-            );
+            );  
         },
         
         _updateRenderWindow: function(firstShowingIndex, direction) {
@@ -1216,13 +1250,6 @@
             var toRemove = this.$parent.find("li").filter(":not(li[data-fixed-header='yes'])");
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
-        },
-        
-        _applySearch: function(itemList) {
-            if (this.__searchText && this.__searchText.trim()) {
-                return this.options.indexedSearch(this.__searchText.trim());
-            }
-            return (itemList ? itemList : this.unfilteredList);
         },
         
         _doSearch: function() {
@@ -1380,7 +1407,9 @@
                     _self._resetPaging();
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
+                        _self.$listWrapper.scrollTop(0);
                     });
+                    return false;
                 });
             }
             
@@ -1390,17 +1419,20 @@
         _applyOrdering: function(displayCollection) {
             var orderby = this._currentSort; 
             var direction = this._currentSortOrder;
+            var usecase = this._currentSortCase;
         
             var orderbyFields = orderby.split(",");
             var directionVals = direction.split(",");
+            var caseVals = usecase.split(",");
 
             var oidx = 0;
             for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                 var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
+                var nxtCase = (caseVals[oidx] === 'true' ? true : false);
                 if (latestDirection.toUpperCase() == "DESCENDING") {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], false);
+                    displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                 } else {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], true);
+                    displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
                 }
             }
             return displayCollection;
@@ -1486,7 +1518,7 @@
                     return false;
                 }
             } else {
-                if (_self._renderRowMarkup(LIs, curRow, arrIdx)) {
+                if (_self._renderRowMarkup(LIs, curRow, _self.displayList.length)) {
                     _self.displayList.push(curRow);
                     oncomplete();
                     return true;
@@ -1555,8 +1587,9 @@
                     event.stopPropagation();
                     event.preventDefault();
                     
-                    _self.setSelected(event.target);
-                    _self.selectItem();
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem();                    
+                    }
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
                 }); 
             } 
@@ -1570,8 +1603,27 @@
                         return false;
                     }
 
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem();
+                    }
+                    return false;
+                });
+            }
+            if (_self.options.swipeLeftAction && curRowFresh) {
+                $(curRowParent).on('swipeleft', function(event) {
+                    event.stopImmediatePropagation();
+
                     _self.setSelected(event.target);
-                    _self.selectItem();
+                    _self.options.swipeLeftAction(_self.selected);
+                    return false;
+                });
+            }
+            if (_self.options.swipeRightAction && curRowFresh) {
+                $(curRowParent).on('swiperight', function(event) {
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeRightAction(_self.selected);
                     return false;
                 });
             }
@@ -1581,20 +1633,29 @@
     
         setSelected: function(targetElem) {
             var enclosingLI = $(targetElem).closest("li[data-index]");
+            var enclosingIndex = $(enclosingLI).attr('data-index');
+            var enclosingGroupIndex;
+            var nxtSelection;
+            if (this.options.grouped) {
+                enclosingGroupIndex = $(enclosingLI).attr('data-group-index');
+                nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+            } else {
+                nxtSelection = this.displayList[enclosingIndex];
+            }
+            
             if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }
+            if (this.options.grouped) {
+                this.selectedGroupRow = enclosingGroupIndex;
+                this.selectedGroup = this.displayList[enclosingIndex].group;
+            }
             this.selectedLI = enclosingLI;
             this.selectedLI.addClass('ui-btn-active');
-        
-            this.selectedIndex = $(enclosingLI).attr('data-index');
-            if (this.options.grouped) {
-                this.selectedGroupRow = $(enclosingLI).attr('data-group-index');
-                this.selected = this.displayList[this.selectedIndex].rows[this.selectedGroupRow];
-                this.selectedGroup = this.displayList[this.selectedIndex].group;
-            } else {
-                this.selected = this.displayList[this.selectedIndex];
-            }
+            this.selectedIndex = enclosingIndex;
+            this.selected = nxtSelection;
+            
+            return true;
         },
         getSelected: function() {
             return this.selected;
@@ -1842,6 +1903,10 @@
             this.options.headerText = txt;
         },
         
+        openItemContextMenu: function() {
+            this.options.itemContextMenu.open();
+        },
+        
         closeItemContextMenu: function() {
             this.options.itemContextMenu.close();
         },
@@ -1872,6 +1937,28 @@
          */
         setNoSelectOnPagination: function(val) {
             this.options.noSelectOnPagination = val;
+        },
+        
+        /**
+         * Get the ul element of the list.
+         */
+        getListElement: function() {
+            return this.$parent;
+        },
+        
+        /**
+         * Mark the list dirty. The dirty flag persists until the list is refreshed either
+         * with refreshList or refreshData. This flag is primarily used for debugging.
+         */
+        markListDirty: function() {
+            this.isDirty = true;
+        },
+        
+        /**
+         * Return the isDirty flag.
+         */
+        listIsDirty: function() {
+            return this.isDirty;
         }
     });
 })(jQuery);

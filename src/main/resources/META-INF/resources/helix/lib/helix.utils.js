@@ -57,9 +57,13 @@ Helix.Utils =  {
             Helix.Utils.errorGrowl.show([
                 { summary : summary, detail: msg, severity: severity }
                 ]);
-            return;
+        } else {
+            Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
         }
-        Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
+        if (severity == 'error') {
+            console.log('[ERROR] ' + msg);
+        }
+        $(document).trigger(severity, msg);
     },
     paginator: {
         
@@ -212,5 +216,17 @@ Helix.Utils =  {
             frame.height= (frameHeight) + "px";
         }
         frame.width= (screenWidth) + "px";
+    },
+    isPhone: function() {
+        if (Helix.Utils._isPhone === undefined) {
+            if (navigator.userAgent.toLowerCase().match(/iphone/)) {
+                Helix.Utils._isPhone = true;
+            } else {
+                // XXX: need to extend to more phones as we support them.
+                Helix.Utils._isPhone = false;
+            }
+        }
+        
+        return Helix.Utils._isPhone;
     }
 }

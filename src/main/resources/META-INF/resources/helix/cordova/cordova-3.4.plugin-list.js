@@ -361,13 +361,13 @@ module.exports = [
             "navigator.globalization"
         ]
     },
-    {
+    /*{
         "file": "plugins/org.apache.cordova.inappbrowser/www/inappbrowser.js",
         "id": "org.apache.cordova.inappbrowser.inappbrowser",
         "clobbers": [
             "window.open"
         ]
-    },
+    }, SAH - HANDLE window.open in the container code - not with Cordova*/
     {
         "file": "plugins/org.apache.cordova.media/www/MediaError.js",
         "id": "org.apache.cordova.media.MediaError",

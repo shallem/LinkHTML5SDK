@@ -56,6 +56,7 @@ public class ContextMenuRenderer extends CoreRenderer {
         if (menu.getBeforeOpen() != null) {
             writer.write(",beforeopen: " + menu.getBeforeOpen());
         }
+        writer.write(",name: '" + menu.getClientId(context) + "'");
         
         writer.write("}).data('helix-helixContextMenu');");
         writer.write("});");

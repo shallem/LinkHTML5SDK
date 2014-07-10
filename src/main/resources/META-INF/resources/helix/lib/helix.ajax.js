@@ -89,6 +89,17 @@ $(document).ready(function() {
 });
 
 /**
+ * Capture offline/online transitions driven by the Cordova container.
+ */
+$(document).on('__hxOnline', function() {
+    window.__hxOnLine = true;
+});
+
+$(document).on('__hxOffline', function() {
+    window.__hxOnLine = false;
+});
+
+/**
 * Execute an AJAX load from a backing bean. This command is specifically used to
 * load a JSON-serialized object using the new PrimeFaces "ClientData" annotations.
 * These objects, once loaded, are synchronized to local storage. If the browser
@@ -128,10 +139,13 @@ Helix.Ajax = {
         if (Helix.Ajax.forceDeviceOffline) {
             return false;
         }
+        if (Helix.Ajax.forceDeviceOnline) {
+            return true;
+        }
+        
         //alert("ONLINE2: " + window.__hxOnLine);
-        if (window.__hxOnLine !== undefined &&
-            window.__hxOnLine == false) {
-            return false;
+        if (window.__hxOnLine !== undefined) {
+            return window.__hxOnLine;
         }
         
         return navigator.onLine;
@@ -185,7 +199,7 @@ Helix.Ajax = {
     },
     
     defaultOnError: function(errorObj) {
-      Helix.Utils.statusMessage("Load Failed", errorObj.msg, "severe");  
+        Helix.Utils.statusMessage("Load Failed", errorObj.msg, "error");  
     },
     
     /**
@@ -226,6 +240,7 @@ Helix.Ajax = {
         // Execute the aggregate load.
         var nObjsToSync = loadCommandOptions.commands.length;
         var keyMap = {};
+        
         loadCommandOptions.oncomplete = function(finalKey, name, obj) {
             for (var syncComponent in obj) {
                 if (syncComponent == "__hx_schema") {
@@ -373,18 +388,21 @@ Helix.Ajax = {
                         return;
                     }
                     
-                    console.log("AJAX bean load is complete.");
                     Helix.Ajax.loadOptions.pin = true;
                     if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
-                        Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                        if (loadCommandOptions.syncingOptions) {
+                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");                            
+                        }
+                        // Add setTimeout to allow the message to display
+                        setTimeout(Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                            $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
                             Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
                             if (window.CordovaInstalled) {
                                 window.HelixSystem.allowSleep();
                             }
-                            $.mobile.loading( "hide" );
-                        }, itemKey, loadCommandOptions.syncOverrides);
+                        }, itemKey, loadCommandOptions.syncOverrides), 0);
                     } else {
                         loadCommandOptions.oncomplete(itemKey, "success");
                     }
@@ -445,6 +463,7 @@ Helix.Ajax = {
             }
         });
     },
+    
     ajaxJSONLoad: function(url,key,widgetVar,oncomplete,offlineSave) {
         url = url.replace("{key}", key);
         $.mobile.showPageLoadingMsg();
@@ -474,5 +493,54 @@ Helix.Ajax = {
                 }
             }
         });
+    },
+    
+    ajaxPost: function(params, callbacks) {
+        $(document).trigger('prerequest', params.url);
+        var didSucceed = false;
+        $.ajax({
+            url: params.url,
+            type: 'POST',
+            data: params.body,
+            contentType: 'application/x-www-form-urlencoded',
+            success: function(returnObj,textStatus,jqXHR) {
+                if (returnObj.status == 0) {
+                    didSucceed = true;
+                    if (params.success) {
+                        Helix.Utils.statusMessage("Success", params.success, "info");
+                    }
+              
+                    if (callbacks.success) {
+                        callbacks.success.call(window, returnObj);                    
+                    }
+                } else {
+                    if (params.error) {
+                        Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                    } else {
+                        Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                    }
+                    if (callbacks.error) {
+                        callbacks.error.call(window, returnObj);
+                    }
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (params.fatal) {
+                    Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                } else {
+                    Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                }
+                if (callbacks.fatal) {
+                    callbacks.fatal.call(window, textStatus, errorThrown);
+                }
+            },
+            complete: function() {
+                if (callbacks.complete) {
+                    callbacks.complete.call(window);
+                }
+                $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
+            },
+            dataType: 'json'
+        });    
     }
 };

@@ -17,7 +17,7 @@ if(!persistence.store) {
 persistence.store.websql = {};
 
 
-persistence.store.websql.config = function(persistence, dbname, description, size) {
+persistence.store.websql.config = function(persistence, dbname, description, size, callback) {
   var conn = null;
 
   /**
@@ -44,24 +44,16 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
   // window object does not exist on Qt Declarative UI (http://doc.trolltech.org/4.7-snapshot/declarativeui.html)
   if (window && window.openDatabase) {
     persistence.db.implementation = "html5";
-  } else if (window && window.google && google.gears) {
-    persistence.db.implementation = "gears";
-  } else {
-    try {
-      if (openDatabaseSync) {
-        // TODO: find a browser that implements openDatabaseSync and check out if
-        //       it is attached to the window or some other object
-        persistence.db.implementation = "html5-sync";
-      }
-    } catch(e) {
-    }
+  }else {
+    alert("This browser does not support web SQL. We currently do not support any other HTML5 offline storage standards.");
+    throw new Error("WebSQL is not available.");
   }
 
   persistence.db.html5 = {};
 
-  persistence.db.html5.connect = function (dbname, description, size) {
+  persistence.db.html5.connect = function (dbname, description, size, callback) {
     var that = {};
-    var conn = openDatabase(dbname, '1.0', description, size);
+    var conn = openDatabase(dbname, '1.0', description, size, callback);
 
     that.transaction = function (fn) {
       return conn.transaction(function (sqlt) {
@@ -83,7 +75,8 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
             for ( var i = 0; i < result.rows.length; i++) {
               results.push(result.rows.item(i));
             }
-            successFn(results, result);
+            //successFn(results, result);
+            successFn(results);
           }
         }, 
         function(t, e) {
@@ -93,87 +86,8 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
     return that;
   };
 
-  persistence.db.html5Sync = {};
-
-  persistence.db.html5Sync.connect = function (dbname, description, size) {
-    var that = {};
-    var conn = openDatabaseSync(dbname, '1.0', description, size);
-
-    that.transaction = function (fn) {
-      return conn.transaction(function (sqlt) {
-          return fn(persistence.db.html5Sync.transaction(sqlt));
-        });
-    };
-    return that;
-  };
-
-  persistence.db.html5Sync.transaction = function (t) {
-    var that = {};
-    that.executeSql = function (query, args, successFn, errorFn) {
-      if (args == null) args = [];
-
-      if(persistence.debug) {
-        console.log(query, args);
-      }
-
-      var result = t.executeSql(query, args);
-      if (result) {
-        if (successFn) {
-          var results = [];
-          for ( var i = 0; i < result.rows.length; i++) {
-            results.push(result.rows.item(i));
-          }
-          successFn(results);
-        }
-      }
-    };
-    return that;
-  };
-
-  persistence.db.gears = {};
-
-  persistence.db.gears.connect = function (dbname) {
-    var that = {};
-    var conn = google.gears.factory.create('beta.database');
-    conn.open(dbname);
-
-    that.transaction = function (fn) {
-      fn(persistence.db.gears.transaction(conn));
-    };
-    return that;
-  };
-
-  persistence.db.gears.transaction = function (conn) {
-    var that = {};
-    that.executeSql = function (query, args, successFn, errorFn) {
-      if(persistence.debug) {
-        console.log(query, args);
-      }
-      var rs = conn.execute(query, args);
-      if (successFn) {
-        var results = [];
-        while (rs.isValidRow()) {
-          var result = {};
-          for ( var i = 0; i < rs.fieldCount(); i++) {
-            result[rs.fieldName(i)] = rs.field(i);
-          }
-          results.push(result);
-          rs.next();
-        }
-        successFn(results);
-      }
-    };
-    return that;
-  };
-
-  persistence.db.connect = function (dbname, description, size) {
-    if (persistence.db.implementation == "html5") {
-      return persistence.db.html5.connect(dbname, description, size);
-    } else if (persistence.db.implementation == "html5-sync") {
-      return persistence.db.html5Sync.connect(dbname, description, size);
-    } else if (persistence.db.implementation == "gears") {
-      return persistence.db.gears.connect(dbname);
-    }
+  persistence.db.connect = function (dbname, description, size, callback) {
+    return persistence.db.html5.connect(dbname, description, size, callback);
   };
 
   ///////////////////////// SQLite dialect
@@ -208,7 +122,7 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
   persistence.store.sql.config(persistence, persistence.store.websql.sqliteDialect);
 
   // Make the connection
-  conn = persistence.db.connect(dbname, description, size);
+  conn = persistence.db.connect(dbname, description, size, callback);
   if(!conn) {
     throw new Error("No supported database found in this browser.");
   }

@@ -29,6 +29,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.helix.mobile.util.EnumDataTypes;
@@ -77,6 +79,7 @@ import static org.helix.mobile.util.EnumDataTypes.SHORT;
  * @author shallem
  */
 public class JSONSerializer {
+    private static final Logger LOG = Logger.getLogger(JSONSerializer.class.getName());
 
     private static final String TYPE_FIELD_NAME = "__hx_type";
     private static final String SCHEMA_TYPE_FIELD_NAME = "__hx_schema_type";
@@ -169,6 +172,7 @@ public class JSONSerializer {
                                   InvocationTargetException, IOException, NoSuchMethodException {
         /* Extract the field name. */
         String nxtFieldName = this.extractFieldName(getter.getName());
+        LOG.log(Level.FINE, "Serializing {0}", nxtFieldName);
 
         /* Finally, handle arbitrary object types. Either these objects
          * encapsulate other objects (as evidenced by having ClientData-
@@ -377,7 +381,7 @@ public class JSONSerializer {
                     jg.writeFieldName(fieldName);
                 }
                 
-                Map<String, String> sortFields = new TreeMap<String, String>();
+                Map<String, ClientSort> sortFields = new TreeMap<String, ClientSort>();
                 Map<String, String> filterFields = new TreeMap<String, String>();
                 List<String> indexFields = new LinkedList<String>();
                 Map<String, GlobalFilterField> globalFilterFields = new TreeMap<String, GlobalFilterField>();
@@ -422,7 +426,7 @@ public class JSONSerializer {
                                 m.getAnnotation(org.helix.mobile.model.ClientSort.class);
                         if (sortAnnot != null) {
                             ClientSort cSortAnnot = (ClientSort)sortAnnot;
-                            sortFields.put(nxtFieldName, cSortAnnot.displayName());
+                            sortFields.put(nxtFieldName, cSortAnnot);
                         }
                         
                         /* Determine if this field is a filter field. */
@@ -488,9 +492,13 @@ public class JSONSerializer {
                 jg.writeString(keyField);
 
                 jg.writeObjectFieldStart(SORTS_FIELD_NAME);
-                for (Entry<String, String> e : sortFields.entrySet()) {
+                for (Entry<String, ClientSort> e : sortFields.entrySet()) {
                     jg.writeFieldName(e.getKey());
-                    jg.writeString(e.getValue());
+                    jg.writeStartObject();
+                    jg.writeStringField("display", e.getValue().displayName());
+                    jg.writeStringField("direction", e.getValue().defaultOrder());
+                    jg.writeStringField("usecase", e.getValue().caseSensitive());
+                    jg.writeEndObject();
                 }
                 jg.writeEndObject();
                 

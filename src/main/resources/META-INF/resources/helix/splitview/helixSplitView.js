@@ -187,8 +187,8 @@
                             'data-theme' : theme,
                             'data-icon' : 'back'
                         }).append(this.options.headerToggleText).on(this.__clickEvent, function(ev) {
-                            ev.preventDefault();
                             __self.toggle();
+                            return false;
                         }).button());
                     }
                 }
@@ -247,6 +247,14 @@
         
         isSplitView: function() {
             return (this.__current == null);
+        },
+        
+        getLeft: function() {
+            return $(this.__left);
+        },
+        
+        getRight: function() {
+            return $(this.__right);
         }
     });
 }( jQuery ));

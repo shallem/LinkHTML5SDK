@@ -33,10 +33,8 @@
     }
     
     $(document).on('ready', function() {
-        if (window.CordovaIOS) {
-            cordova_ios_init();
-        } else if (window.CordovaANDROID) {
-            cordova_android_init();
+        if (window.CordovaIOS || window.CordovaANDROID) {
+            alert("This version of the Link client app is no longer supported. Go to the app store and upgrade to v9.7+");
         } else if (window.CordovaIOS34) {
             cordova_ios_34_init();
         }

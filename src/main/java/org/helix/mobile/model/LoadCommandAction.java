@@ -103,7 +103,11 @@ public class LoadCommandAction {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
              */
+            Date startTime = new Date();
             gotten = getter.invoke(thisObject, new Object[] {});
+            Date endTime = new Date();
+            
+            LOG.log(Level.FINE, "Get completed in {0} seconds.", (endTime.getTime() - startTime.getTime()) / 1000);
         } catch (IllegalAccessException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getMessage());

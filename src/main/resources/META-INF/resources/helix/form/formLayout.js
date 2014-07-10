@@ -132,6 +132,7 @@
     
         __computeOneHidden: function(formElem, valuesMap) {
             var fldName = this._stripNamespace(formElem.name);
+            var oldHidden = formElem.hidden;
             if (valuesMap && fldName in valuesMap) {
                 formElem.value = valuesMap[fldName];
             }
@@ -153,6 +154,12 @@
             } else {
                 formElem.hidden = false;
             }
+            if (oldHidden != formElem.hidden) {
+                // Hidden changed.
+                return true;
+            }
+            // Hidden did not change.
+            return false;
         },
     
         _computeHidden : function(valuesMap) {
@@ -364,7 +371,18 @@
         
         clear: function() {
             this.__clearValues(this.options.items);
-            this.refreshValues({});
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                if (nxtItem.type === "subPanel") {
+                    for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                        var subitem = nxtItem.items[subidx];
+                        this.__updateValue(mode,this._stripNamespace(subitem.name),subitem,{});
+                    }
+                } else{
+                    this.__updateValue(mode,this._stripNamespace(nxtItem.name),nxtItem,{});
+                }
+            }
         },
         
         __updateValue: function(mode, name, item, valuesMap) {
@@ -523,21 +541,41 @@
                     } else {
                         item.buttons = newValue;
                     }
+                    // Value changed.
+                    return true;
                 }
             }
+            // Value did not change.
+            return false;
         },
         
         __refreshOneValue: function(mode, item, valuesMap) {
-            this.__computeOneHidden(item, valuesMap);
-            this.__copyOneValue(item, valuesMap);
-            this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+            var hiddenChanged = this.__computeOneHidden(item, valuesMap);
+            var valueChanged = this.__copyOneValue(item, valuesMap);
+            var visibilityChanged = 
+                (mode == 0 && item.mode === 'edit') || (mode == 1 && item.mode === 'view') || (item.type === 'controlset');
+            
+            if (hiddenChanged || valueChanged || visibilityChanged) {
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                return true;
+            }
+            return false;
         },
         
         refreshValues: function(valuesMap) {
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                this.__refreshOneValue(mode, nxtItem, valuesMap);
+                if (nxtItem.type === "subPanel") {
+                    if (!this.__refreshOneValue(mode,nxtItem,valuesMap)) {
+                        for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                            var subitem = nxtItem.items[subidx];
+                            this.__refreshOneValue(mode,subitem,valuesMap);
+                        }                        
+                    }
+                } else{
+                    this.__refreshOneValue(mode, nxtItem, valuesMap);
+                }
             }
         },
         

@@ -188,6 +188,12 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
         writer.write("},");
+        if (cmd.getSyncingMessage() != null) {
+            writer.write(" 'syncingOptions' : {");
+            writer.write(" 'message' : '" + (cmd.getSyncingMessage() != null ? cmd.getSyncingMessage() : "") + "', ");
+            writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
+            writer.write("},");
+        }
         writer.write(" 'requestOptions' : {");
         writer.write(" 'loadKey' : '" + keyVal + "',");
         writer.write(" 'postBack' : '" + url + "',");
@@ -233,7 +239,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
         writer.write("if (options && options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
         writer.write("if (options && options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
-        writer.write("loadCommandOptions.onerror = (options ? options.onerror : null);");
+        writer.write("loadCommandOptions.onerror = (options ? options.onerror : Helix.Ajax.defaultOnError);");
         writer.write("loadCommandOptions.schema = schemaObj;");
         writer.write("loadCommandOptions.requestOptions.params = (options ? options.params : null);");
         

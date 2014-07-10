@@ -39,6 +39,12 @@
             <description>Message to display when executing this load command.</description>
         </attribute>
         <attribute>
+            <name>syncingMessage</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Message to display when syncing data to the local disk.</description>
+        </attribute>
+        <attribute>
             <name>loadingTheme</name>
             <required>false</required>
             <type>java.lang.String</type>
