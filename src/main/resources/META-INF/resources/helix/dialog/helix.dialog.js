@@ -131,6 +131,8 @@
     
         encodeHeader(this, this.$mainDiv);
         encodeContent(this, this.$mainDiv);
+        
+        this.$mainDiv.trigger('pagecreate');
     }
 
     function encodeHeader(dialog,$mainDiv) {

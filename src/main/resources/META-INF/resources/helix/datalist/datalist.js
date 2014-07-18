@@ -154,6 +154,12 @@
              */
             sortOrder: "ASCENDING",
             
+            
+            /**
+             * By default we do not sort case sensitive.
+             */
+            sortCaseSensitive: false,
+            
             /**
              * Callback to execute when the sort order changes. The first argument
              * is the new sort field. The second is either ASCENDING or DESCENDING
@@ -481,7 +487,11 @@
                 // add it. (EG. It can happen if the default sort uses a combination
                 // of fields).
                 if ((this.options.sortBy) && (sorts[this.options.sortBy] === undefined)) {
-                   sorts[this.options.sortBy] = "Default";
+                   sorts[this.options.sortBy] = {
+                        display : "Default",
+                        direction : this.options.sortOrder.toUpperCase(),
+                        usecase : this.options.sortCaseSensitive
+                   };
                 }
                 
                 _self._refreshSortContainer(sorts);
