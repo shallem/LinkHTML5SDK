@@ -226,7 +226,7 @@
         },
 
         open: function(obj) {
-            this._thisArg = obj.thisArg;
+            this._thisArg = (obj ? obj.thisArg : null);
             if (this.options.beforeopen) {
                 if (this._thisArg) {
                     this.options.beforeopen.call(this._thisArg);
@@ -235,7 +235,11 @@
                 }
             }
             
-            this._menuContainer.popup("open", obj);
+            if (obj) {
+                this._menuContainer.popup("open", obj);
+            } else {
+                this._menuContainer.popup("open");
+            }
             this.active = true;
             if (Helix.hasTouch) {
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );

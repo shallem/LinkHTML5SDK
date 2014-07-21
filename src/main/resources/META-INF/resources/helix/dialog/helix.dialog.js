@@ -59,9 +59,7 @@
         this.$mainDiv = $(parent);
         this.name = options.name ? options.name : Helix.Utils.getUniqueID();
 
-        this.refresh();
-        
-        this.$mainDiv.popup();
+        this.refresh(true);
     }
     
     //===============
@@ -116,23 +114,31 @@
         $(this.$mainDiv).popup( "close" );
     }
     
-    function refresh() {
+    function refresh(isCreate) {
         this.$mainDiv.empty();
-        
-        if (this.options.hasForm) {
-            this.$mainDiv.attr('data-theme', 'a');
-            this.$mainDiv.append($('<div/>').attr({
-                'style' : 'padding: 10px 20px;'
-            }));
-        } else {
-            this.$mainDiv.attr('data-theme', 'c');
-            this.$mainDiv.attr('data-overlay-theme', 'a');
-        }
-    
+            
         encodeHeader(this, this.$mainDiv);
         encodeContent(this, this.$mainDiv);
         
-        this.$mainDiv.trigger('pagecreate');
+        if (!isCreate) {
+            this.$mainDiv.popup('refresh');
+        } else {
+            if (this.options.hasForm) {
+                this.$mainDiv.popup({
+                    theme: 'a',
+                    corners: true
+                });
+                this.$mainDiv.append($('<div/>').attr({
+                    'style' : 'padding: 10px 20px;'
+                }));
+            } else {
+                this.$mainDiv.popup({
+                    theme: 'a',
+                    overlayTheme: 'c',
+                    corners: true
+                });
+            }
+        }
     }
 
     function encodeHeader(dialog,$mainDiv) {
@@ -140,11 +146,13 @@
         if (dialog.options.hasForm) {
             $mainDiv.append($('<h3/>').append(dialog.options.title));
         } else {
+            // Apply classes manually because jQM enhancement of headers/footers only happens
+            // on page create
             $mainDiv.append($('<div/>').attr({
-                'data-role' : 'header',
-                'data-theme' : 'a',
-                'class' : dialog.titleStyleClass + ' ui-corner-top'
-            }).append($('<h1/>').append(dialog.options.title)));            
+                'class' : (dialog.titleStyleClass ? dialog.titleStyleClass : '') + ' ui-corner-top ui-header ui-bar-a'
+            }).append($('<h1/>').attr({
+                'class' : 'ui-title'
+            }).append(dialog.options.title)));            
         }
     }
     
@@ -152,9 +160,11 @@
         var dialogContentClass = dialog.options.contentStyleClass;
         if (dialog.options.hasForm) {
             dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content";
+        } else {
+            dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content ui-body-d";
         }
         var $contentDiv = $('<div/>').attr({
-            'class' : dialogContentClass,
+            'class' : (dialogContentClass ? dialogContentClass : ''),
             'id' : dialog.options.id + "_content"
         });
         
@@ -163,7 +173,9 @@
             $contentDiv.attr('data-theme', 'd');
         
             if (dialog.options.bodyHeader) {
-                $contentDiv.append($('<h3/>').append(dialog.options.bodyHeader));
+                $contentDiv.append($('<h3/>').attr({
+                    'class' : 'ui-title'
+                }).append(dialog.options.bodyHeader));
             }
             if (dialog.options.bodyContent) {
                 $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
