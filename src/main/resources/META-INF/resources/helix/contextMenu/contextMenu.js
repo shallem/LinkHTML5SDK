@@ -123,12 +123,6 @@
                 'data-history': 'false',
                 'style' : 'max-height: ' + this._maxHeight + 'px; overflow-y: scroll'
             }).appendTo(this.element);
-            if (Helix.hasTouch) {
-                $(this._menuContainer).on('touchstart touchend tap vclick click', function() {
-                    // Prevent these events from reaching whatever is below the menu.
-                    return !_self.active;
-                });
-            }
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
@@ -208,17 +202,18 @@
             });
 
             if (Helix.hasTouch) {
-                // Prevent touch events from propagating.
-                /*this.optionsList.on('tap vclick', function(ev) {
-                    if (!_self.active) {
-                        return true;
-                    }
-                    
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    ev.stopImmediatePropagation();
+                // Prevent jQM touch events from propagating beyond the list items. Otherwise
+                // if tapping a list item closes the list and puts something underneath the list
+                // the tap will fall through.
+                this.optionsList.on('tap vclick click', 'li', function(evt) {
+                    evt.stopImmediatePropagation();
                     return false;
-                });*/
+                });
+                $(this._menuContainer).on('touchstart touchend tap vclick click', function(evt) {
+                    // Prevent these events from reaching whatever is below the menu.
+                    evt.stopImmediatePropagation();
+                    return false;
+                });
             }
 
             this.optionsList.listview();
@@ -231,7 +226,7 @@
         },
 
         open: function(obj) {
-            this._thisArg = obj.thisArg;
+            this._thisArg = (obj ? obj.thisArg : null);
             if (this.options.beforeopen) {
                 if (this._thisArg) {
                     this.options.beforeopen.call(this._thisArg);
@@ -240,7 +235,11 @@
                 }
             }
             
-            this._menuContainer.popup("open", obj);
+            if (obj) {
+                this._menuContainer.popup("open", obj);
+            } else {
+                this._menuContainer.popup("open");
+            }
             this.active = true;
             if (Helix.hasTouch) {
                 $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
