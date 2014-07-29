@@ -72,15 +72,15 @@ Helix.ready = false;
         
         $(document).trigger('helixready');
     });
-    
-    $(document).on('ready', function() {
-       window.onerror = function (desc,page,line,chr) { 
-           var msg = 'Captured javascript error "' + desc + '" on page "' + page + '" line "' + line + '"';
-           alert(msg);
-           if (Helix && Helix.errorHook) {
-               Helix.errorHook(msg);
-           }
-       };
-    });
+
 })(jQuery);
 
+$(document).on('ready', function() {
+    window.onerror = function (desc,page,line,chr) { 
+        var msg = 'Captured javascript error "' + desc + '" on page "' + page + '" line "' + line + '"';
+        alert(msg);
+        if (Helix && Helix.errorHook) {
+            Helix.errorHook(msg);
+        }
+    };
+});

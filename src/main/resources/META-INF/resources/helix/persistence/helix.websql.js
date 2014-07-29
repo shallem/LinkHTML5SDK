@@ -87,12 +87,14 @@ function completeQuery(query, data) {
                     }
                 } catch (ex) {
                     console.log("executeSql error calling user success callback: "+ex);
+                    throw ex;
                 }
 
                 tx.queryComplete(query.id);
             }
         } catch (e) {
             console.log("executeSql error: "+e);
+            throw e;
         }
     }
 }
