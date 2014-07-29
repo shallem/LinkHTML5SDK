@@ -343,7 +343,9 @@ MobileHelixDatabase.install = function() {
         db.name = name;
 
         cordova.exec(function() {
-            callback(db);
+            if (callback) {
+                callback(db);            
+            }
         }, function(err) {
             persistence.errorHandler(err);
         }, "MobileHelixStorage", "openDatabase", [name, version, display_name, size]);
