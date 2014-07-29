@@ -72,5 +72,11 @@ Helix.ready = false;
         
         $(document).trigger('helixready');
     });
+    
+    $(document).on('ready', function() {
+       window.onerror = function (desc,page,line,chr) { 
+           alert('Captured javascript error "' + desc + '" on page "' + page + '" line "' + line + '"');
+       };
+    });
 })(jQuery);
 
