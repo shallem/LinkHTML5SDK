@@ -250,7 +250,7 @@ Helix.Ajax = {
                 var config = Helix.Ajax.loadCommands[syncComponent];
                 window[config.name] = obj[syncComponent];
                 if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent]);
+                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent], true);
                 }
             }
         };

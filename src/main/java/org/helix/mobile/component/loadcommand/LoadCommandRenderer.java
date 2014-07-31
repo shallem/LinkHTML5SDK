@@ -144,7 +144,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         StringBuilder onComplete = new StringBuilder();
         if (cmd.getOncomplete() != null) {
-            onComplete.append("function (itemKey, commandName, obj) {").append(cmd.getOncomplete()).append("}");
+            onComplete.append("function (itemKey, commandName, obj, isAggregate) {").append(cmd.getOncomplete()).append("}");
         } else {
             onComplete = null;
         }
