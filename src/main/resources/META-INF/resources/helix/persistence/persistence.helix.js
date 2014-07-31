@@ -960,7 +960,7 @@ function initHelixDB() {
             opaque) {
             Helix.DB.synchronizeObjectFields(allSchemas, obj, null, elemSchema, function(finalObj) {
                 queryCollection.add(finalObj);
-                oncomplete(opaque);
+                oncomplete(finalObj, opaque);
             }, overrides);
         },
     
