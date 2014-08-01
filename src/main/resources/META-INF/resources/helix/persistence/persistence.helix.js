@@ -1127,7 +1127,7 @@ function initHelixDB() {
                 if (deltaObj.adds.length == 0) {
                     doAdds(null);
                 } else {
-                    elemSchema.all().newEach({    
+                    elemSchema.all().include([keyField]).newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
                         }, 
