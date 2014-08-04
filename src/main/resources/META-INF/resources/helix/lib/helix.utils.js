@@ -63,7 +63,6 @@ Helix.Utils =  {
         if (severity == 'error') {
             console.log('[ERROR] ' + msg);
         }
-        $(document).trigger(severity, msg);
     },
     paginator: {
         
