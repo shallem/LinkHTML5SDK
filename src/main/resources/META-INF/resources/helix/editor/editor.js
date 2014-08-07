@@ -573,7 +573,7 @@
     
     function update(editor, val) {
         editor.$area.val(val);
-        updateFrame(editor);
+        refresh(editor);
     }
 
     // disable - enables or disables the editor
@@ -806,11 +806,16 @@
         }
 
         var frameMasterID = Helix.Utils.getUniqueID();
-        var $frameMaster = editor.$frameMaster = $('<div/>')
-            .attr('id', frameMasterID)
-            .css('overflow-y', 'scroll')
-            .css('-webkit-overflow-scrolling', 'touch')
-            .appendTo($main);
+        var $frameMaster = null;
+        if (editor.$frameMaster) {
+            $frameMaster = editor.$frameMaster;
+        } else {
+            $frameMaster = editor.$frameMaster = $('<div/>')
+                .attr('id', frameMasterID)
+                .css('overflow-y', 'scroll')
+                .css('-webkit-overflow-scrolling', 'touch')
+                .appendTo($main);
+        }
             
         // Set the height/width of the frame master before we load the iFrame.
         var hgt = options.height;

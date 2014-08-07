@@ -231,7 +231,7 @@
             this.options.currentMode = 'view';
             
             if (this.rendered) {
-                this.refreshValues(valuesMap ? valuesMap : {});
+                this.refreshValues(valuesMap ? valuesMap : {}, true);
             } else {
                 this.refresh(valuesMap ? valuesMap : {});
             }
@@ -245,7 +245,7 @@
             this.options.currentMode = 'edit';
             
             if (this.rendered) {
-                this.refreshValues(valuesMap ? valuesMap : {});
+                this.refreshValues(valuesMap ? valuesMap : {}, true);
             } else {
                 this.refresh(valuesMap ? valuesMap : {});
             }
@@ -549,11 +549,14 @@
             return false;
         },
         
-        __refreshOneValue: function(mode, item, valuesMap) {
+        __refreshOneValue: function(mode, item, valuesMap, modeChanged) {
             var hiddenChanged = this.__computeOneHidden(item, valuesMap);
             var valueChanged = this.__copyOneValue(item, valuesMap);
             var visibilityChanged = 
-                (mode == 0 && item.mode === 'edit') || (mode == 1 && item.mode === 'view') || (item.type === 'controlset');
+                (mode == 0 && item.mode === 'edit') || 
+                (mode == 1 && item.mode === 'view') || 
+                (item.type === 'controlset') ||
+                modeChanged;
             
             if (hiddenChanged || valueChanged || visibilityChanged) {
                 this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
@@ -562,7 +565,7 @@
             return false;
         },
         
-        refreshValues: function(valuesMap) {
+        refreshValues: function(valuesMap, modeChanged) {
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
@@ -570,11 +573,11 @@
                     if (!this.__refreshOneValue(mode,nxtItem,valuesMap)) {
                         for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                             var subitem = nxtItem.items[subidx];
-                            this.__refreshOneValue(mode,subitem,valuesMap);
+                            this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
                         }                        
                     }
                 } else{
-                    this.__refreshOneValue(mode, nxtItem, valuesMap);
+                    this.__refreshOneValue(mode, nxtItem, valuesMap,modeChanged);
                 }
             }
         },

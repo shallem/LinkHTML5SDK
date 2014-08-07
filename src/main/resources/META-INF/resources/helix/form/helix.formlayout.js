@@ -537,6 +537,21 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 }
             });
         }
+        if (formElem.onspace) {
+            $(inputMarkup).on("keydown", function (e) {
+                if (e.which == 32) {
+                    formElem.onspace.apply(this);
+                }
+            });
+        }
+        if (formElem.onenter) {
+            $(inputMarkup).on("keydown", function (e) {
+                if (e.which == 13) {
+                    formElem.onenter.apply(this);
+                }
+            });
+        }
+        
         // Apply styling to the input text div ...
         if (formElem.computedStyle || formElem.computedStyleClass) {
             var uiInputText = textContainer.find('div.ui-input-text');

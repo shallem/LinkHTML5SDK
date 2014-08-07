@@ -219,6 +219,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getOnblur() != null) {
             writer.write(",'onblur' : function() {" + ffield.getOnblur() + "; }");
         }
+        if (ffield.getOnspace() != null) {
+            writer.write(",'onspace' : function() {" + ffield.getOnspace() + "; }");
+        }
+        if (ffield.getOnenter() != null) {
+            writer.write(",'onenter' : function() {" + ffield.getOnenter() + "; }");
+        }
         
         writer.write("}");
     }
