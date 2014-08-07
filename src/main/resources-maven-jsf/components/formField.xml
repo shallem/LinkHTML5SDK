@@ -55,6 +55,18 @@
             <description>JavaScript function to execute when focus leaves this input element. Currently only implemented for type text.</description>
         </attribute>
         <attribute>
+            <name>onspace</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript function to execute space is pressed in this input element. Currently only implemented for type text.</description>
+        </attribute>
+        <attribute>
+            <name>onenter</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript function to execute etner is pressed in this input element. Currently only implemented for type text.</description>
+        </attribute>
+        <attribute>
             <name>condition</name>
             <required>false</required>
             <type>java.lang.String</type>
