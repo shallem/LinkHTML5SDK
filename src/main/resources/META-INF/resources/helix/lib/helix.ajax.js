@@ -498,49 +498,91 @@ Helix.Ajax = {
     ajaxPost: function(params, callbacks) {
         $(document).trigger('prerequest', params.url);
         var didSucceed = false;
-        $.ajax({
-            url: params.url,
-            type: 'POST',
-            data: params.body,
-            contentType: 'application/x-www-form-urlencoded',
-            success: function(returnObj,textStatus,jqXHR) {
-                if (returnObj.status == 0) {
-                    didSucceed = true;
-                    if (params.success) {
-                        Helix.Utils.statusMessage("Success", params.success, "info");
-                    }
-              
-                    if (callbacks.success) {
-                        callbacks.success.call(window, returnObj);                    
-                    }
-                } else {
-                    if (params.error) {
-                        Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+        if (Helix.Ajax.isDeviceOnline()) {
+            $.ajax({
+                url: params.url,
+                type: 'POST',
+                data: params.body,
+                contentType: 'application/x-www-form-urlencoded',
+                success: function(returnObj,textStatus,jqXHR) {
+                    if (returnObj.status == 0) {
+                        didSucceed = true;
+                        if (params.success) {
+                            Helix.Utils.statusMessage("Success", params.success, "info");
+                        }
+
+                        if (callbacks.success) {
+                            callbacks.success.call(window, returnObj);                    
+                        }
                     } else {
-                        Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                        if (params.error) {
+                            Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                        } else {
+                            Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                        }
+                        if (callbacks.error) {
+                            callbacks.error.call(window, returnObj);
+                        }
                     }
-                    if (callbacks.error) {
-                        callbacks.error.call(window, returnObj);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (params.fatal) {
+                        Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                    } else {
+                        Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                    }
+                    if (callbacks.fatal) {
+                        callbacks.fatal.call(window, textStatus, errorThrown);
+                    }
+                },
+                complete: function() {
+                    if (callbacks.complete) {
+                        callbacks.complete.call(window);
+                    }
+                    $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
+                },
+                dataType: 'json'
+            });                
+        } else {
+            // Queue a post for the next time the container is online.
+            if (!window.CordovaInstalled) {
+                alert("This device is offline and the browser does not support JavaScript extensions. Please try save this contact when you are online.");
+            } else {
+                // Collect the data we will need to continue this offline draft. Not always used or applicable.
+                var refreshValues = null;
+                if (params.form) {
+                    refreshValues = params.form.getValues();
+                    if (params.type) {
+                        refreshValues['__type'] = params.type;
                     }
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                if (params.fatal) {
-                    Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
-                } else {
-                    Helix.Utils.statusMessage("Error", errorThrown, "severe");
-                }
-                if (callbacks.fatal) {
-                    callbacks.fatal.call(window, textStatus, errorThrown);
-                }
-            },
-            complete: function() {
-                if (callbacks.complete) {
-                    callbacks.complete.call(window);
-                }
-                $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
-            },
-            dataType: 'json'
-        });    
+
+                window.OfflinePost.savePost(params.url, 
+                    'application/x-www-form-urlencoded', 
+                    params.body, 
+                    refreshValues ? JSON.stringify(refreshValues) : '', 
+                    function() {
+                        if (params.offlineSuccess) {
+                            Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
+                        } else {
+                            Helix.Utils.statusMessage("Action Queued", 
+                                "This action will be completed the next time you login to Link online.", "info");                    
+                        }
+                        if (callbacks.complete) {
+                            callbacks.complete.call(window);
+                        }
+                    }, 
+                    function(msg) {
+                        if (callbacks.fatal) {
+                            callbacks.fatal.call(window, "Action Save Error", msg);
+                        }
+                        if (callbacks.complete) {
+                            callbacks.complete.call(window);
+                        }
+                    }
+                );
+            }
+            Helix.Ajax.hideLoader();
+        }
     }
 };
