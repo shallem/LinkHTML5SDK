@@ -1414,6 +1414,7 @@
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.unfilteredList;
                     _self.__searchText = "";
+                    _self.$searchBox.val(_self.__searchText);
                     _self._resetPaging();
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
