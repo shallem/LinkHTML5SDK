@@ -560,33 +560,44 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                              .css('position', 'absolute')
                                              .appendTo($fieldContainer).listview({ inset : true });
             $(inputMarkup).on('input', function() {
+                if (formElem.__autocompleteTimeout) {
+                    clearTimeout(formElem.__autocompleteTimeout);
+                }
+                
                 var text = $(this).val();
                 if (text.length < formElem.autocompleteThreshold) {
                     autoCompleteList.empty();
                     autoCompleteList.listview("refresh");
                 } else {
-                    formElem.autocomplete(text, function(LIs) {
-                        // Set __noblur to prevent the user's clicking on an autocomplete list
-                        // item from triggering a blur event, which doesn't make sense because
-                        // the value supplied to the blur event should be the value clicked upon,
-                        // not the value in the input text box.
-                        formElem.__noblur = true;
-                        autoCompleteList.empty();
-                        if (LIs && LIs.length) {
-                            for (var i = 0; i < LIs.length; ++i) {
-                                $("<li/>").append(LIs[i]).on('vclick', function() {
-                                    formElem.autocompleteSelect($(this).text());
-                                    autoCompleteList.empty();
-                                    $(inputMarkup).val('');
-                                    formElem.__noblur = false;
-                                    return false;
-                                }).appendTo(autoCompleteList);
+                    var __doAutocomplete = function() {
+                        formElem.autocomplete(text, function(LIs) {
+                            // Set __noblur to prevent the user's clicking on an autocomplete list
+                            // item from triggering a blur event, which doesn't make sense because
+                            // the value supplied to the blur event should be the value clicked upon,
+                            // not the value in the input text box.
+                            formElem.__noblur = true;
+                            autoCompleteList.empty();
+                            if (LIs && LIs.length) {
+                                for (var i = 0; i < LIs.length; ++i) {
+                                    $("<li/>").append(LIs[i]).on('vclick', function() {
+                                        formElem.autocompleteSelect($(this).text());
+                                        autoCompleteList.empty();
+                                        $(inputMarkup).val('');
+                                        formElem.__noblur = false;
+                                        return false;
+                                    }).appendTo(autoCompleteList);
+                                }
+                                autoCompleteList.listview("refresh");
+                            } else {
+                                formElem.__noblur = false;
                             }
-                            autoCompleteList.listview("refresh");
-                        } else {
-                            formElem.__noblur = false;
-                        }
-                    });
+                        });
+                    };
+                    
+                    // Wait 1 second for the user to pause typing before we do anything.
+                    formElem.__autocompleteTimeout = setTimeout(function() {
+                        __doAutocomplete();
+                    }, 1500);                    
                 }
             });
         }
