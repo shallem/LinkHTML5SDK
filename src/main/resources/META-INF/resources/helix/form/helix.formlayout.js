@@ -907,7 +907,7 @@ function __refreshHTMLFrame(formElem) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         var $editor = $(elem).data('cleditor');
         if (!formElem.value) {
-            $editor.clear(); 
+            $editor.update(''); 
         } else {
             $editor.update(formElem.value);
         }        
