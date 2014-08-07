@@ -286,7 +286,9 @@ Helix.Ajax = {
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 } else {
                     for (var i = 0; i < nObjsToSync; ++i) {
-                        completions[i].fn.apply(completions[i].thisArg, completions[i].args);
+                        if (completions[i].fn) {
+                            completions[i].fn.apply(completions[i].thisArg, completions[i].args);                        
+                        }
                     }
                 }
             };
