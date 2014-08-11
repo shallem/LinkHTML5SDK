@@ -290,6 +290,11 @@
             showButtons: true,
             
             /*
+             * If true, shows an arrow icon on the right hand side of each list item
+             */
+            showDataIcon: true,
+
+            /*
              * Number of rows to display in a single view of the list. The list automatically
              * paginates as the user scrolls.
              */
@@ -345,6 +350,11 @@
             }
             if (this.options.splitTheme) {
                 this.$parent.attr('data-split-theme', this.options.splitTheme);
+            }
+
+            if (this.options.showDataIcon === false) {
+                this.showDataIcon = false;
+                this.$parent.attr('data-icon', false);
             }
 
             var sb = true;
