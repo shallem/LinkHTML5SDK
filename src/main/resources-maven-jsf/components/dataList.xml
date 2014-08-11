@@ -278,5 +278,12 @@
          <defaultValue>true</defaultValue>
          <description>Indicates that sort buttons are displayed.</description>
       </attribute>      
+      <attribute>
+         <name>showDataIcon</name>
+         <required>false</required>
+         <type>java.lang.Boolean</type>
+         <defaultValue>true</defaultValue>
+         <description>Indicates that the arrow icon (right side) is displayed in list items.</description>
+      </attribute>      
    </attributes>
 </component>

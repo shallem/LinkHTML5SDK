@@ -146,7 +146,7 @@
                 } else  {
                     var fn = window[formElem.condition];
                     if(typeof fn === 'function') {
-                        formElem.hidden = !(fn.call(this, (valuesMap ? valuesMap : null)));
+                        formElem.hidden = !(fn.call(this, (valuesMap ? valuesMap : null), fldName));
                     } else {
                         formElem.hidden = true;
                     }
