@@ -981,7 +981,9 @@ function __refreshButtonGroup(formElem) {
         if (!formButton.iconPos && formButton.iconPos !== 'none') {
             formButton.iconPos = 'bottom';
         }
-        if (!formButton.computedStyleClass && formButton.iconPos !== 'none') {
+        if (!formButton.computedStyleClass && 
+            formButton.iconClass &&
+            formButton.iconPos !== 'none') {
             formButton.computedStyleClass = 'iconbutton';
         }
         if (!formButton.theme) {
@@ -1014,7 +1016,7 @@ function __refreshButtonGroup(formElem) {
         $buttonBarLink.appendTo($buttonBar);
         $buttonBarLink.button();
     }
-    $buttonBar.controlgroup({ type: "horizontal" });
+    $buttonBar.controlgroup({ type: (formElem.orientation ? formElem.orientation : "horizontal") });
 }
 
 function __refreshHTMLArea(formElem) {
