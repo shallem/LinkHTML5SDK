@@ -1843,6 +1843,10 @@
                 $('p.ui-li-aside').hide();
             }
             
+            if (rowComponents.key) {
+                $(parentElement).attr('data-key', rowComponents.key);
+            }
+            
             /* XXX: not supported for now. 
             if (rowComponents.splitLink) {
                 if (isEnhanced) {
