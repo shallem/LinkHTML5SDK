@@ -299,7 +299,8 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
             cordova.exec(function() {
                 
             }, function(errMsg) {
-                alert("Error committing a transaction: " + errMsg);
+                console.log("Error committing a transaction: " + errMsg);
+                //alert("Error committing a transaction: " + errMsg);
             }, "MobileHelixStorage", "commitTX", [ tx.db ]);
         }, 
         function(errMsg) {
@@ -312,7 +313,8 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
                 return;
             }
             
-            alert("Error creating a transaction: " + errMsg);
+            //alert("Error creating a transaction: " + errMsg);
+            console.log("Error creating a transaction: " + errMsg);
         }, "MobileHelixStorage", "beginTX", [ tx.db ]);
     };
     
