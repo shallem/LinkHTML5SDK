@@ -114,10 +114,9 @@
 		[
 			'ready',
 			'setmedia', // Fires when the media is set
-			'flashreset', // Similar to the ready event if the Flash solution is set to display:none and then shown again or if it's reloaded for another reason by the browser. For example, using CSS position:fixed on Firefox for the full screen feature.
 			'resize', // Occurs when the size changes through a full/restore screen operation or if the size/sizeFull options are changed.
 			'repeat', // Occurs when the repeat status changes. Usually through clicks on the repeat button of the interface.
-			'click', // Occurs when the user clicks on one of the following: poster image, html video, flash video.
+			'click', // Occurs when the user clicks on one of the following: poster image, html video, cordova video.
 			'error', // Event error code in event.jPlayer.error.type. See $.jPlayer.error
 			'warning', // Event warning code in event.jPlayer.warning.type. See $.jPlayer.warning
 
@@ -471,13 +470,10 @@
 	$.jPlayer.prototype = {
 		count: 0, // Static Variable: Change it via prototype.
 		version: { // Static Object
-			script: "2.6.0",
-			needFlash: "2.6.0",
-			flash: "unknown"
+			script: "2.6.0"
 		},
 		options: { // Instanced in $.jPlayer() constructor
-			swfPath: "js", // Path to Jplayer.swf. Can be relative, absolute or server root relative.
-			solution: "html, flash", // Valid solutions: html, flash. Order defines priority. 1st is highest,
+			solution: "html, cordova", // Valid solutions: html, cordova. Order defines priority. 1st is highest,
 			supplied: "mp3", // Defines which formats jPlayer will try and support and the priority by the order. 1st is highest,
 			preload: 'metadata',  // HTML5 Spec values: none, metadata, auto.
 			volume: 0.8, // The volume. Number 0 to 1.
@@ -688,93 +684,93 @@
 		},
 		solution: { // Static Object: Defines the solutions built in jPlayer.
 			html: true,
-			flash: true
+			cordova: true
 		},
 		// 'MPEG-4 support' : canPlayType('video/mp4; codecs="mp4v.20.8"')
 		format: { // Static Object
 			mp3: {
 				codec: 'audio/mpeg; codecs="mp3"',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'audio'
 			},
 			m4a: { // AAC / MP4
 				codec: 'audio/mp4; codecs="mp4a.40.2"',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'audio'
 			},
 			m3u8a: { // AAC / MP4 / Apple HLS
 				codec: 'application/vnd.apple.mpegurl; codecs="mp4a.40.2"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'audio'
 			},
 			m3ua: { // M3U
 				codec: 'audio/mpegurl',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'audio'
 			},
 			oga: { // OGG
 				codec: 'audio/ogg; codecs="vorbis, opus"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'audio'
 			},
 			flac: { // FLAC
 				codec: 'audio/x-flac',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'audio'
 			},
 			wav: { // PCM
 				codec: 'audio/wav; codecs="1"',
-				flashCanPlay: false,
+				cordovaCanPlay: true,
 				media: 'audio'
 			},
 			webma: { // WEBM
 				codec: 'audio/webm; codecs="vorbis"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'audio'
 			},
 			fla: { // FLV / F4A
 				codec: 'audio/x-flv',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'audio'
 			},
 			rtmpa: { // RTMP AUDIO
 				codec: 'audio/rtmp; codecs="rtmp"',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'audio'
 			},
 			m4v: { // H.264 / MP4
 				codec: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'video'
 			},
 			m3u8v: { // H.264 / AAC / MP4 / Apple HLS
 				codec: 'application/vnd.apple.mpegurl; codecs="avc1.42E01E, mp4a.40.2"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'video'
 			},
 			m3uv: { // M3U
 				codec: 'audio/mpegurl',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'video'
 			},
 			ogv: { // OGG
 				codec: 'video/ogg; codecs="theora, vorbis"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'video'
 			},
 			webmv: { // WEBM
 				codec: 'video/webm; codecs="vorbis, vp8"',
-				flashCanPlay: false,
+				cordovaCanPlay: false,
 				media: 'video'
 			},
 			flv: { // FLV / F4V
 				codec: 'video/x-flv',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'video'
 			},
 			rtmpv: { // RTMP VIDEO
 				codec: 'video/rtmp; codecs="rtmp"',
-				flashCanPlay: true,
+				cordovaCanPlay: true,
 				media: 'video'
 			}
 		},
@@ -818,8 +814,8 @@
 			this.html = {}; // In _init()'s this.desired code and setmedia(): Accessed via this[solution], where solution from this.solutions array.
 			this.html.audio = {};
 			this.html.video = {};
-			this.flash = {}; // In _init()'s this.desired code and setmedia(): Accessed via this[solution], where solution from this.solutions array.
-			
+			this.cordova = {};
+                        
 			this.css = {};
 			this.css.cs = {}; // Holds the css selector strings
 			this.css.jq = {}; // Holds jQuery selectors. ie., $(css.cs.method)
@@ -881,11 +877,6 @@
 			this.internal.video = $.extend({}, {
 				id: this.options.idPrefix + "_video_" + this.count,
 				jq: undefined
-			});
-			this.internal.flash = $.extend({}, {
-				id: this.options.idPrefix + "_flash_" + this.count,
-				jq: undefined,
-				swf: this.options.swfPath + (this.options.swfPath.toLowerCase().slice(-4) !== ".swf" ? (this.options.swfPath && this.options.swfPath.slice(-1) !== "/" ? "/" : "") + "Jplayer.swf" : "")
 			});
 			this.internal.poster = $.extend({}, {
 				id: this.options.idPrefix + "_poster_" + this.count,
@@ -964,16 +955,16 @@
 				this.html.video.available = !!this.htmlElement.video.canPlayType && this._testCanPlayType(this.htmlElement.video); // Test is for IE9 on Win Server 2008.
 			}
 
-			this.flash.available = this._checkForFlash(10.1);
+			this.cordova.available = window.CordovaInstalled;
 
 			this.html.canPlay = {};
-			this.flash.canPlay = {};
+			this.cordova.canPlay = {};
 			$.each(this.formats, function(priority, format) {
 				self.html.canPlay[format] = self.html[self.format[format].media].available && "" !== self.htmlElement[self.format[format].media].canPlayType(self.format[format].codec);
-				self.flash.canPlay[format] = self.format[format].flashCanPlay && self.flash.available;
+				self.cordova.canPlay[format] = self.format[format].cordovaCanPlay && self.cordova.available;
 			});
 			this.html.desired = false;
-			this.flash.desired = false;
+			this.cordova.desired = false;
 			$.each(this.solutions, function(solutionPriority, solution) {
 				if(solutionPriority === 0) {
 					self[solution].desired = true;
@@ -994,19 +985,19 @@
 			});
 			// This is what jPlayer will support, based on solution and supplied.
 			this.html.support = {};
-			this.flash.support = {};
+			this.cordova.support = {};
 			$.each(this.formats, function(priority, format) {
 				self.html.support[format] = self.html.canPlay[format] && self.html.desired;
-				self.flash.support[format] = self.flash.canPlay[format] && self.flash.desired;
+				self.cordova.support[format] = self.cordova.canPlay[format] && self.cordova.desired;
 			});
 			// If jPlayer is supporting any format in a solution, then the solution is used.
 			this.html.used = false;
-			this.flash.used = false;
+			this.cordova.used = false;
 			$.each(this.solutions, function(solutionPriority, solution) {
 				$.each(self.formats, function(formatPriority, format) {
 					if(self[solution].support[format]) {
 						self[solution].used = true;
-						return false;
+                                                return false;
 					}
 				});
 			});
@@ -1019,7 +1010,7 @@
 			this._cssSelectorAncestor(this.options.cssSelectorAncestor);
 			
 			// If neither html nor flash are being used by this browser, then media playback is not possible. Trigger an error event.
-			if(!(this.html.used || this.flash.used)) {
+			if(!(this.html.used || this.cordova.used)) {
 				this._error( {
 					type: $.jPlayer.error.NO_SOLUTION, 
 					context: "{solution:'" + this.options.solution + "', supplied:'" + this.options.supplied + "'}",
@@ -1035,57 +1026,13 @@
 				}
 			}
 
-			// Add the flash solution if it is being used.
-			if(this.flash.used) {
-				var htmlObj,
-				flashVars = 'jQuery=' + encodeURI(this.options.noConflict) + '&id=' + encodeURI(this.internal.self.id) + '&vol=' + this.options.volume + '&muted=' + this.options.muted;
+			// Add the cordova solution if it is being used.
+			if(this.cordova.used) {
 
-				// Code influenced by SWFObject 2.2: http://code.google.com/p/swfobject/
-				// Non IE browsers have an initial Flash size of 1 by 1 otherwise the wmode affected the Flash ready event. 
-
-				if($.jPlayer.browser.msie && (Number($.jPlayer.browser.version) < 9 || $.jPlayer.browser.documentMode < 9)) {
-					var objStr = '<object id="' + this.internal.flash.id + '" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="0" height="0" tabindex="-1"></object>';
-
-					var paramStr = [
-						'<param name="movie" value="' + this.internal.flash.swf + '" />',
-						'<param name="FlashVars" value="' + flashVars + '" />',
-						'<param name="allowScriptAccess" value="always" />',
-						'<param name="bgcolor" value="' + this.options.backgroundColor + '" />',
-						'<param name="wmode" value="' + this.options.wmode + '" />'
-					];
-
-					htmlObj = document.createElement(objStr);
-					for(var i=0; i < paramStr.length; i++) {
-						htmlObj.appendChild(document.createElement(paramStr[i]));
-					}
-				} else {
-					var createParam = function(el, n, v) {
-						var p = document.createElement("param");
-						p.setAttribute("name", n);	
-						p.setAttribute("value", v);
-						el.appendChild(p);
-					};
-
-					htmlObj = document.createElement("object");
-					htmlObj.setAttribute("id", this.internal.flash.id);
-					htmlObj.setAttribute("name", this.internal.flash.id);
-					htmlObj.setAttribute("data", this.internal.flash.swf);
-					htmlObj.setAttribute("type", "application/x-shockwave-flash");
-					htmlObj.setAttribute("width", "1"); // Non-zero
-					htmlObj.setAttribute("height", "1"); // Non-zero
-					htmlObj.setAttribute("tabindex", "-1");
-					createParam(htmlObj, "flashvars", flashVars);
-					createParam(htmlObj, "allowscriptaccess", "always");
-					createParam(htmlObj, "bgcolor", this.options.backgroundColor);
-					createParam(htmlObj, "wmode", this.options.wmode);
-				}
-
-				this.element.append(htmlObj);
-				this.internal.flash.jq = $(htmlObj);
 			}
 
 			// Setup playbackRate ability before using _addHtmlEventListeners()
-			if(this.html.used && !this.flash.used) { // If only HTML
+			if(this.html.used && !this.cordova.used) { // If only HTML
 				// Using the audio element capabilities for playbackRate. ie., Assuming video element is the same.
 				this.status.playbackRateEnabled = this._testPlaybackRate('audio');
 			} else {
@@ -1125,15 +1072,6 @@
 				this._emulateHtmlBridge();
 			}
 
-			if(this.html.used && !this.flash.used) { // If only HTML, then emulate flash ready() call after 100ms.
-				setTimeout( function() {
-					self.internal.ready = true;
-					self.version.flash = "n/a";
-					self._trigger($.jPlayer.event.repeat); // Trigger the repeat event so its handler can initialize itself with the loop option.
-					self._trigger($.jPlayer.event.ready);
-				}, 100);
-			}
-
 			// Initialize the interface components with the options.
 			this._updateNativeVideoControls();
 			// The other controls are now setup in _cssSelectorAncestor()
@@ -1142,6 +1080,14 @@
 			}
 
 			$.jPlayer.prototype.count++; // Change static variable via prototype.
+                        
+                        // Trigger the ready event.
+                        setTimeout( function() {
+                                self.internal.ready = true;
+                                self.version.flash = "n/a";
+                                self._trigger($.jPlayer.event.repeat); // Trigger the repeat event so its handler can initialize itself with the loop option.
+                                self._trigger($.jPlayer.event.ready);
+                        }, 0);
 		},
 		destroy: function() {
 			// MJP: The background change remains. Would need to store the original to restore it correctly.
@@ -1427,7 +1373,8 @@
 			}
 
 			ct = media.currentTime;
-			cpa = (this.status.duration > 0) ? 100 * ct / this.status.duration : 0;
+                        
+                        cpa = (this.status.duration > 0) ? 100 * ct / this.status.duration : 0;
 			if((typeof media.seekable === "object") && (media.seekable.length > 0)) {
 				sp = (this.status.duration > 0) ? 100 * media.seekable.end(media.seekable.length-1) / this.status.duration : 100;
 				cpr = (this.status.duration > 0) ? 100 * media.currentTime / media.seekable.end(media.seekable.length-1) : 0; // Duration conditional for iOS duration bug. ie., seekable.end is a NaN in that case.
@@ -1457,7 +1404,8 @@
 			this.status.playbackRate = media.playbackRate;
 			this.status.ended = media.ended;
 		},
-		_resetStatus: function() {
+
+                _resetStatus: function() {
 			this.status = $.extend({}, this.status, $.jPlayer.prototype.status); // Maintains the status properties that persist through a reset.
 		},
 		_trigger: function(eventType, error, warning) { // eventType always valid as called using $.jPlayer.event.eventType
@@ -1467,7 +1415,6 @@
 			event.jPlayer.options = $.extend(true, {}, this.options); // Deep copy
 			event.jPlayer.status = $.extend(true, {}, this.status); // Deep copy
 			event.jPlayer.html = $.extend(true, {}, this.html); // Deep copy
-			event.jPlayer.flash = $.extend(true, {}, this.flash); // Deep copy
 			if(error) {
 				event.jPlayer.error = $.extend({}, error);
 			}
@@ -1475,139 +1422,6 @@
 				event.jPlayer.warning = $.extend({}, warning);
 			}
 			this.element.trigger(event);
-		},
-		jPlayerFlashEvent: function(eventType, status) { // Called from Flash
-			if(eventType === $.jPlayer.event.ready) {
-				if(!this.internal.ready) {
-					this.internal.ready = true;
-					this.internal.flash.jq.css({'width':'0px', 'height':'0px'}); // Once Flash generates the ready event, minimise to zero as it is not affected by wmode anymore.
-
-					this.version.flash = status.version;
-					if(this.version.needFlash !== this.version.flash) {
-						this._error( {
-							type: $.jPlayer.error.VERSION,
-							context: this.version.flash,
-							message: $.jPlayer.errorMsg.VERSION + this.version.flash,
-							hint: $.jPlayer.errorHint.VERSION
-						});
-					}
-					this._trigger($.jPlayer.event.repeat); // Trigger the repeat event so its handler can initialize itself with the loop option.
-					this._trigger(eventType);
-				} else {
-					// This condition occurs if the Flash is hidden and then shown again.
-					// Firefox also reloads the Flash if the CSS position changes. position:fixed is used for full screen.
-
-					// Only do this if the Flash is the solution being used at the moment. Affects Media players where both solution may be being used.
-					if(this.flash.gate) {
-
-						// Send the current status to the Flash now that it is ready (available) again.
-						if(this.status.srcSet) {
-
-							// Need to read original status before issuing the setMedia command.
-							var	currentTime = this.status.currentTime,
-								paused = this.status.paused; 
-
-							this.setMedia(this.status.media);
-							this.volumeWorker(this.options.volume);
-							if(currentTime > 0) {
-								if(paused) {
-									this.pause(currentTime);
-								} else {
-									this.play(currentTime);
-								}
-							}
-						}
-						this._trigger($.jPlayer.event.flashreset);
-					}
-				}
-			}
-			if(this.flash.gate) {
-				switch(eventType) {
-					case $.jPlayer.event.progress:
-						this._getFlashStatus(status);
-						this._updateInterface();
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.timeupdate:
-						this._getFlashStatus(status);
-						this._updateInterface();
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.play:
-						this._seeked();
-						this._updateButtons(true);
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.pause:
-						this._updateButtons(false);
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.ended:
-						this._updateButtons(false);
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.click:
-						this._trigger(eventType); // This could be dealt with by the default
-						break;
-					case $.jPlayer.event.error:
-						this.status.waitForLoad = true; // Allows the load operation to try again.
-						this.status.waitForPlay = true; // Reset since a play was captured.
-						if(this.status.video) {
-							this.internal.flash.jq.css({'width':'0px', 'height':'0px'});
-						}
-						if(this._validString(this.status.media.poster)) {
-							this.internal.poster.jq.show();
-						}
-						if(this.css.jq.videoPlay.length && this.status.video) {
-							this.css.jq.videoPlay.show();
-						}
-						if(this.status.video) { // Set up for another try. Execute before error event.
-							this._flash_setVideo(this.status.media);
-						} else {
-							this._flash_setAudio(this.status.media);
-						}
-						this._updateButtons(false);
-						this._error( {
-							type: $.jPlayer.error.URL,
-							context:status.src,
-							message: $.jPlayer.errorMsg.URL,
-							hint: $.jPlayer.errorHint.URL
-						});
-						break;
-					case $.jPlayer.event.seeking:
-						this._seeking();
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.seeked:
-						this._seeked();
-						this._trigger(eventType);
-						break;
-					case $.jPlayer.event.ready:
-						// The ready event is handled outside the switch statement.
-						// Captured here otherwise 2 ready events would be generated if the ready event handler used setMedia.
-						break;
-					default:
-						this._trigger(eventType);
-				}
-			}
-			return false;
-		},
-		_getFlashStatus: function(status) {
-			this.status.seekPercent = status.seekPercent;
-			this.status.currentPercentRelative = status.currentPercentRelative;
-			this.status.currentPercentAbsolute = status.currentPercentAbsolute;
-			this.status.currentTime = status.currentTime;
-			this.status.duration = status.duration;
-			this.status.remaining = status.duration - status.currentTime;
-
-			this.status.videoWidth = status.videoWidth;
-			this.status.videoHeight = status.videoHeight;
-
-			// The Flash does not generate this information in this release
-			this.status.readyState = 4; // status.readyState;
-			this.status.networkState = 0; // status.networkState;
-			this.status.playbackRate = 1; // status.playbackRate;
-			this.status.ended = false; // status.ended;
 		},
 		_updateButtons: function(playing) {
 			if(playing === undefined) {
@@ -1702,11 +1516,11 @@
 		_resetGate: function() {
 			this.html.audio.gate = false;
 			this.html.video.gate = false;
-			this.flash.gate = false;
+			this.cordova.gate = false;
 		},
 		_resetActive: function() {
 			this.html.active = false;
-			this.flash.active = false;
+			this.cordova.active = false;
 		},
 		_escapeHtml: function(s) {
 			return s.split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');
@@ -1760,10 +1574,6 @@
 								self.html.video.gate = true;
 								self._html_setVideo(media);
 								self.html.active = true;
-							} else {
-								self.flash.gate = true;
-								self._flash_setVideo(media);
-								self.flash.active = true;
 							}
 							if(self.css.jq.videoPlay.length) {
 								self.css.jq.videoPlay.show();
@@ -1780,9 +1590,9 @@
 									self.androidFix.setMedia = true;
 								}
 							} else {
-								self.flash.gate = true;
-								self._flash_setAudio(media);
-								self.flash.active = true;
+                                                                self.cordova.gate = true;
+								self._cordova_setAudio(media);
+								self.cordova.active = true;
 							}
 							if(self.css.jq.videoPlay.length) {
 								self.css.jq.videoPlay.hide();
@@ -1849,8 +1659,8 @@
 
 			if(this.html.active) {
 				this._html_resetMedia();
-			} else if(this.flash.active) {
-				this._flash_resetMedia();
+			} else if(this.cordova.active) {
+				this._cordova_resetMedia();
 			}
 		},
 		clearMedia: function() {
@@ -1858,8 +1668,8 @@
 
 			if(this.html.active) {
 				this._html_clearMedia();
-			} else if(this.flash.active) {
-				this._flash_clearMedia();
+			} else if(this.cordova.active) {
+				this._cordova_clearMedia();
 			}
 
 			this._resetGate();
@@ -1869,8 +1679,8 @@
 			if(this.status.srcSet) {
 				if(this.html.active) {
 					this._html_load();
-				} else if(this.flash.active) {
-					this._flash_load();
+				} else if(this.cordova.active) {
+					this._cordova_load();
 				}
 			} else {
 				this._urlNotSetError("load");
@@ -1887,8 +1697,8 @@
 				this.focus();
 				if(this.html.active) {
 					this._html_play(time);
-				} else if(this.flash.active) {
-					this._flash_play(time);
+				} else if(this.cordova.active) {
+					this._cordova_play(time);
 				}
 			} else {
 				this._urlNotSetError("play");
@@ -1902,8 +1712,8 @@
 			if(this.status.srcSet) {
 				if(this.html.active) {
 					this._html_pause(time);
-				} else if(this.flash.active) {
-					this._flash_pause(time);
+				} else if(this.cordova.active) {
+					this._cordova_pause(time);
 				}
 			} else {
 				this._urlNotSetError("pause");
@@ -1940,8 +1750,8 @@
 			if(this.status.srcSet) {
 				if(this.html.active) {
 					this._html_pause(0);
-				} else if(this.flash.active) {
-					this._flash_pause(0);
+				} else if(this.cordova.active) {
+					this._cordova_pause(0);
 				}
 			} else {
 				this._urlNotSetError("stop");
@@ -1950,11 +1760,11 @@
 		playHead: function(p) {
 			p = this._limitValue(p, 0, 100);
 			if(this.status.srcSet) {
-				if(this.html.active) {
-					this._html_playHead(p);
-				} else if(this.flash.active) {
-					this._flash_playHead(p);
-				}
+                            if(this.html.active) {
+                                    this._html_playHead(p);
+                            } else if(this.cordova.active) {
+                                    this._cordova_playHead(p);
+                            }
 			} else {
 				this._urlNotSetError("playHead");
 			}
@@ -1973,8 +1783,8 @@
 			if(this.html.used) {
 				this._html_setProperty('muted', muted);
 			}
-			if(this.flash.used) {
-				this._flash_mute(muted);
+			if(this.cordova.used) {
+				this._cordova_mute(muted);
 			}
 
 			// The HTML solution generates this event from the media element itself.
@@ -2025,8 +1835,8 @@
 			if(this.html.used) {
 				this._html_setProperty('volume', v);
 			}
-			if(this.flash.used) {
-				this._flash_volume(v);
+			if(this.cordova.used) {
+				this._cordova_volume(v);
 			}
 
 			// The HTML solution generates this event from the media element itself.
@@ -2135,6 +1945,7 @@
 							e.preventDefault();
 							self[fn](e);
 							$(this).blur();
+                                                        return false;
 						};
 						this.css.jq[fn].bind("click.jPlayer", handler); // Using jPlayer namespace
 					}
@@ -2485,11 +2296,8 @@
 			this.internal.poster.jq.css({'width': this.status.width, 'height': this.status.height});
 
 			// Video html or flash resized if necessary at this time, or if native video controls being used.
-			if(!this.status.waitForPlay && this.html.active && this.status.video || this.html.video.available && this.html.used && this.status.nativeVideoControls) {
+			if(!this.status.waitForPlay && this.status.video || this.html.video.available && this.html.used && this.status.nativeVideoControls) {
 				this.internal.video.jq.css({'width': this.status.width, 'height': this.status.height});
-			}
-			else if(!this.status.waitForPlay && this.flash.active && this.status.video) {
-				this.internal.flash.jq.css({'width': this.status.width, 'height': this.status.height});
 			}
 		},
 		_updateAutohide: function() {
@@ -2794,163 +2602,135 @@
 				this.htmlElement.video[property] = value;
 			}
 		},
-		_flash_setAudio: function(media) {
-			var self = this;
-			try {
-				// Always finds a format due to checks in setMedia()
-				$.each(this.formats, function(priority, format) {
-					if(self.flash.support[format] && media[format]) {
-						switch (format) {
-							case "m4a" :
-							case "fla" :
-								self._getMovie().fl_setAudio_m4a(media[format]);
-								break;
-							case "mp3" :
-								self._getMovie().fl_setAudio_mp3(media[format]);
-								break;
-							case "rtmpa":
-								self._getMovie().fl_setAudio_rtmp(media[format]);
-								break;
-						}
-						self.status.src = media[format];
-						self.status.format[format] = true;
-						self.status.formatType = format;
-						return false;
-					}
-				});
+		_cordova_setAudio: function(media) {
+                    var self = this;
+                    $.each(this.formats, function(priority, format) {
+                        if(self.cordova.support[format] && media[format]) {
+                                self.status.src = media[format];
+                                self.status.format[format] = true;
+                                self.status.formatType = format;
+                                return false;
+                        }
+                    });
+                    this._cordova_load();
+                    if(this.options.preload === 'auto') {
+                        this.status.waitForLoad = false;
+                    }
+		},
+		_cordova_resetMedia: function() {
+			if (this.internal.mediaObj) {
+                            this.internal.mediaObj.stop();                        
+                        }
+                        this.internal.mediaObj = null;
+                        if (this.cordova.updateInterval) {
+                            clearInterval(this.cordova.updateInterval);
+                        }
+		},
+		_cordova_clearMedia: function() {
+			this._cordova_resetMedia();
+		},
+		_cordova_load: function() {
+                    this.internal.mediaObj = new Media(this.status.src, function() {
+                    
+                        }, function(msg) {
+                            Helix.Utils.statusMessage("Error Loading Media", msg, "fatal");
+                        });
+                    this.status.waitForLoad = false;
+		},
+                _getCordovaStatus: function(duration, ct) {
+			var cpa = 0, sp = 0, cpr = 0;
 
-				if(this.options.preload === 'auto') {
-					this._flash_load();
-					this.status.waitForLoad = false;
-				}
-			} catch(err) { this._flashError(err); }
-		},
-		_flash_setVideo: function(media) {
-			var self = this;
-			try {
-				// Always finds a format due to checks in setMedia()
-				$.each(this.formats, function(priority, format) {
-					if(self.flash.support[format] && media[format]) {
-						switch (format) {
-							case "m4v" :
-							case "flv" :
-								self._getMovie().fl_setVideo_m4v(media[format]);
-								break;
-							case "rtmpv":
-								self._getMovie().fl_setVideo_rtmp(media[format]);
-								break;		
-						}
-						self.status.src = media[format];
-						self.status.format[format] = true;
-						self.status.formatType = format;
-						return false;
-					}
-				});
+                        if (ct < -0) {
+                            this.status.ended = 0;
+                            this.status.seekPercent = 0;
+                            this.status.currentPercentRelative = 0;
+                            this.status.currentPercentAbsolute = 0;
+                            this.status.currentTime = 0;
 
-				if(this.options.preload === 'auto') {
-					this._flash_load();
-					this.status.waitForLoad = false;
-				}
-			} catch(err) { this._flashError(err); }
-		},
-		_flash_resetMedia: function() {
-			this.internal.flash.jq.css({'width':'0px', 'height':'0px'}); // Must do via CSS as setting attr() to zero causes a jQuery error in IE.
-			this._flash_pause(NaN);
-		},
-		_flash_clearMedia: function() {
-			try {
-				this._getMovie().fl_clearMedia();
-			} catch(err) { this._flashError(err); }
-		},
-		_flash_load: function() {
-			try {
-				this._getMovie().fl_load();
-			} catch(err) { this._flashError(err); }
-			this.status.waitForLoad = false;
-		},
-		_flash_play: function(time) {
-			try {
-				this._getMovie().fl_play(time);
-			} catch(err) { this._flashError(err); }
-			this.status.waitForLoad = false;
-			this._flash_checkWaitForPlay();
-		},
-		_flash_pause: function(time) {
-			try {
-				this._getMovie().fl_pause(time);
-			} catch(err) { this._flashError(err); }
-			if(time > 0) { // Avoids a setMedia() followed by stop() or pause(0) hiding the video play button.
-				this.status.waitForLoad = false;
-				this._flash_checkWaitForPlay();
-			}
-		},
-		_flash_playHead: function(p) {
-			try {
-				this._getMovie().fl_play_head(p);
-			} catch(err) { this._flashError(err); }
-			if(!this.status.waitForLoad) {
-				this._flash_checkWaitForPlay();
-			}
-		},
-		_flash_checkWaitForPlay: function() {
-			if(this.status.waitForPlay) {
-				this.status.waitForPlay = false;
-				if(this.css.jq.videoPlay.length) {
-					this.css.jq.videoPlay.hide();
-				}
-				if(this.status.video) {
-					this.internal.poster.jq.hide();
-					this.internal.flash.jq.css({'width': this.status.width, 'height': this.status.height});
-				}
-			}
-		},
-		_flash_volume: function(v) {
-			try {
-				this._getMovie().fl_volume(v);
-			} catch(err) { this._flashError(err); }
-		},
-		_flash_mute: function(m) {
-			try {
-				this._getMovie().fl_mute(m);
-			} catch(err) { this._flashError(err); }
-		},
-		_getMovie: function() {
-			return document[this.internal.flash.id];
-		},
-		_getFlashPluginVersion: function() {
+                            this.status.remaining = 0;
+                            return;
+                        }
 
-			// _getFlashPluginVersion() code influenced by:
-			// - FlashReplace 1.01: http://code.google.com/p/flashreplace/
-			// - SWFObject 2.2: http://code.google.com/p/swfobject/
+                        this.status.duration = duration;
+                        cpa = (this.status.duration > 0) ? 100 * ct / this.status.duration : 0;
+                        sp = 100;
+                        cpr = cpa;
 
-			var version = 0,
-				flash;
-			if(window.ActiveXObject) {
-				try {
-					flash = new ActiveXObject("ShockwaveFlash.ShockwaveFlash");
-					if (flash) { // flash will return null when ActiveX is disabled
-						var v = flash.GetVariable("$version");
-						if(v) {
-							v = v.split(" ")[1].split(",");
-							version = parseInt(v[0], 10) + "." + parseInt(v[1], 10);
-						}
-					}
-				} catch(e) {}
-			}
-			else if(navigator.plugins && navigator.mimeTypes.length > 0) {
-				flash = navigator.plugins["Shockwave Flash"];
-				if(flash) {
-					version = navigator.plugins["Shockwave Flash"].description.replace(/.*\s(\d+\.\d+).*/, "$1");
-				}
-			}
-			return version * 1; // Converts to a number
+			this.status.seekPercent = sp;
+			this.status.currentPercentRelative = cpr;
+			this.status.currentPercentAbsolute = cpa;
+			this.status.currentTime = ct;
+
+			this.status.remaining = this.status.duration - this.status.currentTime;
+			this.status.ended = false;
 		},
-		_checkForFlash: function (version) {
-			var flashOk = false;
-			if(this._getFlashPluginVersion() >= version) {
-				flashOk = true;
-			}
-			return flashOk;
+		_cordova_play: function(time) {
+                    this.internal.mediaObj.play();
+                    this._updateButtons(true);
+                    
+                    var _self = this;
+                    this.cordova.updateInterval = setInterval(function() {
+                        if (!_self.internal.mediaObj) {
+                            clearInterval(_self.cordova.updateInterval);
+                        } else {
+                            _self.internal.mediaObj.getCurrentPosition(function(pos) {
+                                _self._getCordovaStatus(_self.internal.mediaObj.getDuration(), pos);
+                                if (pos < 0) {
+                                    _self._updateButtons(false);
+                                    clearInterval(_self.cordova.updateInterval);
+                                } else {
+                                    _self.status.currentTime = pos;
+                                }
+                                _self._updateInterface();
+                            });
+                        }
+                    }, 1000);
+		},
+		_cordova_pause: function(time) {
+                    this.internal.mediaObj.pause();
+                    if (time == 0) {
+                       this._getCordovaStatus(this.internal.mediaObj.getDuration(), 0);
+                       this._updateInterface();
+                       this.internal.mediaObj.seekTo(time * 1000);
+                    }
+                    this._updateButtons(false);
+                    clearInterval(this.cordova.updateInterval);
+		},
+		_cordova_playHead: function(p) {
+                    var dur = this.internal.mediaObj.getDuration();
+                    var seekSecs = Math.floor((p / 100) * dur);
+                    // seekTo takes msecs as a parameter
+                    this.internal.mediaObj.seekTo(seekSecs * 1000);
+                    this._getCordovaStatus(dur, seekSecs)
+                    this._updateInterface();
+                    this._updateButtons(true);
+		},
+		_cordova_checkWaitForPlay: function() {
+                    if(this.status.waitForPlay) {
+                            this.status.waitForPlay = false;
+                            if(this.css.jq.videoPlay.length) {
+                                    this.css.jq.videoPlay.hide();
+                            }
+                            if(this.status.video) {
+                                    this.internal.poster.jq.hide();
+                            }
+                    }
+		},
+		_cordova_volume: function(v) {
+                    this.internal.mediaObj.setVolume(v);
+		},
+		_cordova_mute: function(m) {
+                    this.internal.mediaObj.setVolume(0.0);
+		},
+		_getCordovaPluginVersion: function() {
+                    return parseFloat(window.CordovaVersion + "." + window.CordovaRevision);
+		},
+		_checkForCordova: function (version) {
+                    var cdvOk = false;
+                    if(this._getCordovaPluginVersion() >= version) {
+                            cdvOk = true;
+                    }
+                    return cdvOk;
 		},
 		_validString: function(url) {
 			return (url && typeof url === "string"); // Empty strings return false
@@ -2965,23 +2745,6 @@
 				message: $.jPlayer.errorMsg.URL_NOT_SET,
 				hint: $.jPlayer.errorHint.URL_NOT_SET
 			});
-		},
-		_flashError: function(error) {
-			var errorType;
-			if(!this.internal.ready) {
-				errorType = "FLASH";
-			} else {
-				errorType = "FLASH_DISABLED";
-			}
-			this._error( {
-				type: $.jPlayer.error[errorType],
-				context: this.internal.flash.swf,
-				message: $.jPlayer.errorMsg[errorType] + error.message,
-				hint: $.jPlayer.errorHint[errorType]
-			});
-			// Allow the audio player to recover if display:none and then shown again, or with position:fixed on Firefox.
-			// This really only affects audio in a media player, as an audio player could easily move the jPlayer element away from such issues.
-			this.internal.flash.jq.css({'width':'1px', 'height':'1px'});
 		},
 		_error: function(error) {
 			this._trigger($.jPlayer.event.error, error);
@@ -3061,8 +2824,6 @@
 	};
 
 	$.jPlayer.error = {
-		FLASH: "e_flash",
-		FLASH_DISABLED: "e_flash_disabled",
 		NO_SOLUTION: "e_no_solution",
 		NO_SUPPORT: "e_no_support",
 		URL: "e_url",
@@ -3071,8 +2832,6 @@
 	};
 
 	$.jPlayer.errorMsg = {
-		FLASH: "jPlayer's Flash fallback is not configured correctly, or a command was issued before the jPlayer Ready event. Details: ", // Used in: _flashError()
-		FLASH_DISABLED: "jPlayer's Flash fallback has been disabled by the browser due to the CSS rules you have used. Details: ", // Used in: _flashError()
 		NO_SOLUTION: "No solution can be found by jPlayer in this browser. Neither HTML nor Flash can be used.", // Used in: _init()
 		NO_SUPPORT: "It is not possible to play any media format provided in setMedia() on this browser using your current options.", // Used in: setMedia()
 		URL: "Media URL could not be loaded.", // Used in: jPlayerFlashEvent() and _addHtmlEventListeners()
@@ -3081,8 +2840,6 @@
 	};
 
 	$.jPlayer.errorHint = {
-		FLASH: "Check your swfPath option and that Jplayer.swf is there.",
-		FLASH_DISABLED: "Check that you have not display:none; the jPlayer entity or any ancestor.",
 		NO_SOLUTION: "Review the jPlayer options: support and supplied.",
 		NO_SUPPORT: "Video or audio formats defined in the supplied option are missing.",
 		URL: "Check media URL is valid.",
