@@ -1289,7 +1289,7 @@
                     _self.$parent.listview( "refresh" );
                 });
                 _self.__searchReadyTimeout = null;
-            }, 1000);
+            }, 3000);
         },
         
         _prependSearchBox: function() {
