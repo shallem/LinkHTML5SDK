@@ -209,11 +209,9 @@ persistence.search.config = function(persistence, dialect, options) {
         if(query) {
             var indexTbl = entityName + '_Index';
             var indexPropsTbl = entityName + '_IndexFields';
-            var indexEIDTbl = entityName + '_IndexEIDs';
-            var joinSQL = '`' + indexTbl + '`,`' + indexPropsTbl + '`,`' + indexEIDTbl + '`'; 
-            var joinWhereSQL = '`' + indexTbl +'`.`prop` = `' + indexPropsTbl + '`.`ROWID` AND `' + indexTbl + '`.`entityId` = `' + indexEIDTbl + '`.ROWID';
+            var joinSQL = '`' + indexTbl + '`,`' + indexPropsTbl + '`';
+            var joinWhereSQL = '`' + indexTbl +'`.`prop` = `' + indexPropsTbl + '`.`ROWID` AND `' + indexTbl + '`.`entityId` = `root`.ROWID';
             this._additionalJoinSqls.push(', ' + joinSQL);
-            this._additionalWhereSqls.push('`root`.id = `' + entityName + '_IndexEIDs`.`entityId`');
             this._additionalWhereSqls.push(joinWhereSQL);
             this._additionalWhereSqls.push('(' + searchPhraseParser(query, indexTbl, indexPropsTbl, prefixByDefault).join(' AND ') + ')');
             this._additionalGroupSqls.push(' GROUP BY (`' + entityName + '_Index`.`entityId`)');
@@ -315,7 +313,7 @@ persistence.search.config = function(persistence, dialect, options) {
             return session.uniqueQueryCollection(new SearchQueryCollection(session, Entity.meta.name, query, prefixByDefault));
         };
         
-        Entity.indexAsync = function(ncalls, __indexFull) {
+        Entity.indexAsync = function(ncalls, __indexFull, __indexParams) {
             // Launch asynchronous indexing, if that has been enabled. This will launch
             // a background task (essentially) to index a table in batches of 100 records
             // at a time.
@@ -357,28 +355,32 @@ persistence.search.config = function(persistence, dialect, options) {
             }
             
             // Run a query to get 100 objects that are not yet indexed.
-            var updateIDs = [];
-            var updateObjs = [];
-            var toIndex = 0;
-            var that = this;
-            var nxtCall = ++ncalls;
-            that.__hx_indexing = true;
-            var nObjects = 10;
-            var delaySecs = (__indexFull ? 1 : 3);
+            if (!__indexParams) {
+                __indexParams = {};
+                __indexParams.deleteDone = false;
+            }
+            __indexParams.updateIDs = [];
+            __indexParams.updateObjs = [];
+            __indexParams.nxtCall = ++ncalls;
+            __indexParams.delaySecs = (__indexFull ? 1 : 3);
+            __indexParams.toIndex = 0;
             
+            var that = this;
+            that.__hx_indexing = true;
+            var nObjects = 20;         
             this.all().filter('__hx_indexed', '=', 0).limit(nObjects).order('rowid', false).include(propList.concat(['rowid'])).newEach({
-                startFn: function(ct) {
-                    toIndex = ct;
-                    if (toIndex <= 0) {
+                startFn: function(ct, params) {
+                    params.toIndex = ct;
+                    if (params.toIndex <= 0) {
                         that.__hx_indexing = false;
                         
                         --Helix.DB.__indexingCount;
-                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && ncalls > 0 && (__indexFull || nxtCall >= 20)) {
+                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && ncalls > 0 && (__indexFull || params.nxtCall >= 20)) {
                             Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
                             Helix.DB.__indexingMessageShown = false;
                         }
                     } else {
-                        if (nxtCall == 20 || __indexFull) {
+                        if (params.nxtCall == 20 || __indexFull) {
                             if (!Helix.DB.__indexingMessageShown) {
                                 Helix.DB.__indexingMessageShown = true;
                                 // Only display if we are going to index many times.
@@ -387,38 +389,75 @@ persistence.search.config = function(persistence, dialect, options) {
                         }
                     }
                 },
-                eachFn: function(elem) {
-                    updateIDs.push(elem.id);
-                    updateObjs.push(elem);
+                eachFn: function(elem, params) {
+                    params.updateIDs.push(elem._data['rowid']);
+                    params.updateObjs.push(elem);
                 },
-                doneFn: function (ct) {
+                doneFn: function (ct, params) {
                     if (ct == 0) {
                         return;
                     }
+                    
                     var propList = [];
                     for (var prop in that.meta.textIndex) {
                         if (prop !== '__hx_generated') {
                             propList.push(prop);
                         }
                     }
-                    indexObjectList(updateIDs, updateObjs, that, propList, function() {
-                        // Now start over ...
-                        that.__hx_indexing = false;
-                        if (!indexedOnce) {
-                            // We space these calls out by 2 seconds, otherwise the app gets stuck and other
-                            // operations cannot proceed.
-                            setTimeout(function() {
-                                that.indexAsync(nxtCall, __indexFull);
-                            }, (delaySecs * 1000));
+                    
+                    
+                    var __doIndex = function(params) {
+                        indexObjectList(params.updateIDs, params.updateObjs, that, params.propMap, function() {
+                            // Now start over ...
+                            that.__hx_indexing = false;
+                            if (!indexedOnce) {
+                                // We space these calls out by 2 seconds, otherwise the app gets stuck and other
+                                // operations cannot proceed.
+                                that.indexAsync(params.nxtCall, __indexFull, params);
+                            } else {
+                                // When the user has already endured one round of indexing, we don't force them
+                                // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
+                                // and stop.
+                                return;
+                            }
+                        });
+                    };
+                    
+                    var __getProps = function(params) {
+                        if (params.propMap) {
+                            __doIndex(params);
                         } else {
-                            // When the user has already endured one round of indexing, we don't force them
-                            // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
-                            // and stop.
-                            return;
-                        }
-                    });
+                            getPropNameMap(that, propList, function(propMap) {
+                                params.propMap = propMap;
+                                __doIndex(params);
+                            });
+                        }                        
+                    };
+                    
+                    var __doDelete = function(params) {
+                        if (!params.deleteDone) {
+                            // Delete all existing index entries from the DB where the
+                            // entity from which that entry was derived is now being re-indexed.
+                            var indexTbl = that.meta.name + '_Index';
+                            var deleteQry = 'DELETE FROM `' + indexTbl + 
+                                '` WHERE entityId IN (SELECT ROWID FROM `' + 
+                                    that.meta.name + '` WHERE __hx_indexed=0)';
+                            persistence.transaction(function(tx) {
+                                tx.executeSql(deleteQry, null, function() {
+                                    params.deleteDone = true;
+                                    __getProps(params);
+                                }, function(t, e) {
+                                    persistence.errorHandler(e.message, e.code);
+                                });
+                            });
+                        } else {
+                            __getProps(params);
+                        }                
+                    };
+                    
+                    __doDelete(params);
                 }
-            });
+            }, (__indexParams ? __indexParams : {}));
         }
     });
 
@@ -435,11 +474,7 @@ persistence.search.config = function(persistence, dialect, options) {
           
                 queries.push([dialect.createTable(entityName + '_IndexFields', [['propName', 'VARCHAR(100)']]), null]);
                 queries.push([dialect.createIndex(entityName + '_IndexFields', ['propName']), null]);
-                persistence.generatedTables[entityName + '_IndexFields'] = true;
-                
-                queries.push([dialect.createTable(entityName + '_IndexEIDs', [['entityId', 'VARCHAR(32)']]), null]);
-                queries.push([dialect.createIndex(entityName + '_IndexEIDs', ['entityId']), null]);
-                persistence.generatedTables[entityName + '_IndexEIDs'] = true;
+                persistence.generatedTables[entityName + '_IndexFields'] = true;                
             }
         }
         queries.reverse();
@@ -447,23 +482,19 @@ persistence.search.config = function(persistence, dialect, options) {
         return queries;
     });
   
-    function indexObject(obj, propMap, eIDMap, insertRows) {
-        if (obj.id in eIDMap) {
-            var id = eIDMap[obj.id];
-            for (var prop in propMap) {
-                var propID = propMap[prop];
-                var rawText = obj[prop];
-                var occurrences = searchTokenizer(rawText);
-                var insertValues = null;
-                for(var word in occurrences) {
-                    if(occurrences.hasOwnProperty(word)) {
-                        insertValues = id + "," + propID + "," + "'" + _real_escape_string(word.substring(1)) + "'," + occurrences[word];
-                        insertRows.push(insertValues);
-                    }
+    function indexObject(obj, propMap, insertRows) {
+        var id = obj._data['rowid'];
+        for (var prop in propMap) {
+            var propID = propMap[prop];
+            var rawText = obj[prop];
+            var occurrences = searchTokenizer(rawText);
+            var insertValues = null;
+            for(var word in occurrences) {
+                if(occurrences.hasOwnProperty(word)) {
+                    insertValues = id + "," + propID + "," + "'" + _real_escape_string(word.substring(1)) + "'," + occurrences[word];
+                    insertRows.push(insertValues);
                 }
             }
-        } else {
-            alert("Could not find index EID in the database. The database is likely corrupt. Please delete the app cache and reload the app.");
         }
     }
 
@@ -517,53 +548,6 @@ persistence.search.config = function(persistence, dialect, options) {
         return ret;
     }
 
-    function getEIDMap(entity, updateIDs, oncomplete) {
-        var eIDMap = {};
-        var eidTbl = entity.meta.name + '_IndexEIDs';
-        var updateVec = makeStringVector(updateIDs);
-        
-        // Convert all of the entity IDs into integral IDs
-        persistence.transaction(function(tx) {
-            tx.executeSql('SELECT entityId, ROWID FROM `' + eidTbl + '` WHERE entityId IN (' + updateVec + ')', null, function(r, orig) {
-                for (var x = 0; x < r.length; ++x) {
-                    var nxtROW = r[x];
-                    eIDMap[nxtROW.entityId] = nxtROW.rowid;
-                }
-
-                // See if we are missing row IDs.
-                if (Object.keys(eIDMap).length != updateIDs.length) {
-                    // Create a single insert for all EIDs that have no ROWID
-                    var valuesList = null;
-                    for (x = 0; x < updateIDs.length; ++x) {
-                        var nxtEID = updateIDs[x];
-                        if (nxtEID in eIDMap) {
-                            continue;
-                        } else {
-                            if (!valuesList) {
-                                valuesList = "SELECT '" + nxtEID + "'";
-                            } else {
-                                valuesList = valuesList + " UNION SELECT '" + nxtEID + "'";
-                            }
-                        }
-                    }
-
-                    persistence.transaction(function(tx) {
-                        tx.executeSql('INSERT INTO `' + eidTbl + '` ' + valuesList, null, function(r, orig) {
-                            // Rinse and repeat.
-                            getEIDMap(entity, updateIDs, oncomplete);
-                        }, function(t, e) {
-                            persistence.errorHandler(e.message, e.code);
-                        });
-                    });
-                } else {
-                    oncomplete(eIDMap);
-                }
-            }, function(t, e) {
-                persistence.errorHandler(e.message, e.code);
-            });
-        });
-    }
-
     function getPropNameMap(entity, propArray, oncomplete) {
         var propertyVec = makeStringVector(propArray);
         var propMap = {};
@@ -611,133 +595,59 @@ persistence.search.config = function(persistence, dialect, options) {
         });
     }
 
-    function indexObjectList(updateIDs, updateObjs, entity, propArray, oncomplete, tx) {
-        // Step 1 - get a map from EIDs to ROWIDs in the EID table.
-        getEIDMap(entity, updateIDs, function(eIDMap) {
-            // Step 2 - get a map from property names to property IDs.
-            getPropNameMap(entity, propArray, function(propMap) {
-                // Step 3 - do the indexing.
-                var indexRows = [];
-                var indexQueries = [];
-                var i;
-                
-                // Delete all existing index entries in one large delete.
-                var indexTbl = entity.meta.name + '_Index';
-                var deleteIDs = [];
-                for (i = 0; i < updateIDs.length; ++i) {
-                    deleteIDs.push(eIDMap[updateIDs[i]]);
-                }
-                var deleteVec = makeIntVector(deleteIDs);
-                indexQueries.push(['DELETE FROM `' + indexTbl + '` WHERE `entityId` IN (' + deleteVec + ')', null]);
-            
-                for (i = 0; i < updateObjs.length; ++i) {
-                    var elem = updateObjs[i];
-                    indexObject(elem, propMap, eIDMap, indexRows);
-                }
-                
-                // Turn the rows list into blocks of 50 inserts
-                var maxRows = 0;
-                var nxtInsert = null;
-                for(var k = 0; k < indexRows.length; ++k) {
-                    if (!nxtInsert) {
-                        nxtInsert = "SELECT ";
-                    } else {
-                        nxtInsert = nxtInsert + " UNION SELECT ";
-                    }
-                    nxtInsert = nxtInsert + indexRows[k];
-                    ++maxRows;
-                    if (maxRows == 100) {
-                        indexQueries.push(['INSERT INTO `' + indexTbl + '` ' + nxtInsert, null]);
-                        nxtInsert = null;
-                        maxRows = 0;
-                    }
-                }
-                if (nxtInsert) {
-                    indexQueries.push(['INSERT INTO `' + indexTbl + '` ' + nxtInsert, null]);
-                }
+    function indexObjectList(updateIDs, updateObjs, entity, propMap, oncomplete, tx) {
+        // Do the indexing.
+        var indexRows = [];
+        var indexQueries = [];
+        var i;
+        var indexTbl = entity.meta.name + '_Index';
 
-                // Run the queries against the DB.
-                indexQueries.reverse();
-                persistence.transaction(function(tx) {
-                    persistence.executeQueriesSeq(tx, indexQueries, function() {
-                        // Now mark everything we just indexed as indexed. Do it with a single SQL statement.
-                        var updateQueries = [];
-                        var updateVec = makeStringVector(updateIDs);
-                        updateQueries.push(["UPDATE `" + elem._type + "` SET __hx_indexed=1 WHERE id IN (" + updateVec + ")", null]);
-                        persistence.transaction(function(tx) {
-                            persistence.executeQueriesSeq(tx, updateQueries, function() {
-                                // Mark the object as indexed, but do not use the setter because
-                                // we don't want to mark the object as dirty on account of this update.
-                                for (var z = 0; z < updateObjs.length; ++z) {
-                                    var obj = updateObjs[z];
-                                    if (obj) {
-                                        obj._data['__hx_indexed'] = true;
-                                    }
-                                }
-                                oncomplete();
-                            });
-                        });
-                    });
-                });
-            });
+        for (i = 0; i < updateObjs.length; ++i) {
+            var elem = updateObjs[i];
+            indexObject(elem, propMap, indexRows);
+        }
+
+        // Turn the rows list into blocks of 50 inserts
+        var maxRows = 0;
+        var nxtInsert = null;
+        for(var k = 0; k < indexRows.length; ++k) {
+            if (!nxtInsert) {
+                nxtInsert = "SELECT ";
+            } else {
+                nxtInsert = nxtInsert + " UNION SELECT ";
+            }
+            nxtInsert = nxtInsert + indexRows[k];
+            ++maxRows;
+            if (maxRows == 100) {
+                indexQueries.push(['INSERT INTO `' + indexTbl + '` ' + nxtInsert, null]);
+                nxtInsert = null;
+                maxRows = 0;
+            }
+        }
+        if (nxtInsert) {
+            indexQueries.push(['INSERT INTO `' + indexTbl + '` ' + nxtInsert, null]);
+        }
+        
+        var updateVec = makeIntVector(updateIDs);
+        indexQueries.push(["UPDATE `" + elem._type + "` SET __hx_indexed=1 WHERE rowid IN (" + updateVec + ")", null])
+
+        // Run the queries against the DB. The UPDATE goes last, and we only finish all statements in the array on
+        // success.
+        indexQueries.reverse();
+        persistence.transaction(function(tx) {
+            persistence.executeQueriesSeq(tx, indexQueries, function() {
+                // Mark the object as indexed, but do not use the setter because
+                // we don't want to mark the object as dirty on account of this update.
+                for (var z = 0; z < updateObjs.length; ++z) {
+                    var obj = updateObjs[z];
+                    if (obj) {
+                        obj._data['__hx_indexed'] = true;
+                    }
+                }
+                oncomplete();
+            }, 100);
         });
     }
-  
-    /*function handleInserts(queries, session, tx, callback) {
-        var oncomplete = function(queries, tx, callback) {
-            handleDeletes(queries, tx, callback);
-        };
-        
-        var worklist = [];
-        var objlist = [];
-        for (var id in session.getTrackedObjects()) {
-            if (session.getTrackedObjects().hasOwnProperty(id)) {
-                worklist.push(id);
-                objlist.push(session.getTrackedObjects()[id]);
-            }
-        }
-        // Make sure we are going to index this row.
-        var meta = session.define(obj._type).meta;
-        var propList = [];
-        if(meta.textIndex) {
-            for ( var p in obj._dirtyProperties) {
-                if (obj._dirtyProperties.hasOwnProperty(p) && p in meta.textIndex) {
-                    propList.push(p);
-                }
-            }
-        }
-        
-        if (propList.length == 0) {
-            // Nothing to do ...
-            processOne(worklist, session, queries, tx, callback);
-            return;
-        }
-        
-        indexObjectList(worklist, objlist, session.define(obj._type), propArray, oncomplete, tx)
-        
-        var processOne = function(worklist, session, queries, tx, callback) {
-            if (worklist.length == 0) {
-                oncomplete(queries, tx, callback);
-                return;
-            }
-            
-            var id = worklist.pop();
-            // See if we have the entityId in our mapping.
-            var obj = session.getTrackedObjects()[id];
-            
-            
-            if (propList.length == 0) {
-                // Nothing to do ...
-                processOne(worklist, session, queries, tx, callback);
-                return;
-            }
-            
-            indexObject(session, obj, propList, queries, tx, function() {
-                processOne(worklist, session, queries, tx, callback);
-            });
-        }
-        processOne(worklist, session, queries, tx, callback);
-    }*/
   
     function handleDeletes(queries, tx, callback) {
         for (var id in persistence.getObjectsToRemove()) {
@@ -745,8 +655,7 @@ persistence.search.config = function(persistence, dialect, options) {
                 var obj = persistence.getObjectsToRemove()[id];
                 var meta = persistence.getEntityMeta()[obj._type];
                 if(meta.textIndex) {
-                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '_IndexEIDs` WHERE `entityId`=?)', [id]]);
-                    queries.push(['DELETE FROM `' + obj._type + '_IndexEIDs` WHERE `entityId`=?', [id]]);
+                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `id`=?)', [id]]);
                 }
             }
         }

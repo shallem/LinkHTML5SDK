@@ -127,7 +127,6 @@ function initPersistence(persistence) {
         // Per-session data
         persistence.trackedObjects = {};
         persistence.objectsToRemove = {};
-        persistence.objectsRemoved = []; // {id: ..., type: ...}
         persistence.globalPropertyListeners = {}; // EntityType__prop -> QueryColleciton obj
         persistence.queryCollectionCache = {}; // entityName -> uniqueString -> QueryCollection
 
@@ -145,7 +144,7 @@ function initPersistence(persistence) {
         persistence.nextSchemaSyncHooks = [];
 
         // Enable debugging (display queries using console.log etc)
-        persistence.debug = false;
+        persistence.debug = true; // XXX
 
         persistence.subscribeToGlobalPropertyListener = function(coll, entityName, property) {
             var key = entityName + '__' + property;
@@ -240,7 +239,6 @@ function initPersistence(persistence) {
         function Session(conn) {
             this.trackedObjects = {};
             this.objectsToRemove = {};
-            this.objectsRemoved = [];
             this.globalPropertyListeners = {}; // EntityType__prop -> QueryColleciton obj
             this.queryCollectionCache = {}; // entityName -> uniqueString -> QueryCollection
             this.conn = conn;
@@ -348,10 +346,6 @@ function initPersistence(persistence) {
             if (!this.objectsToRemove[obj.id]) {
                 this.objectsToRemove[obj.id] = obj;
             }
-            this.objectsRemoved.push({
-                id: obj.id,
-                entity: obj._type
-            });
             // SAH - turn off event triggering.
             // this.objectRemoved(obj);
             return this;
@@ -364,12 +358,11 @@ function initPersistence(persistence) {
         persistence.clean = function () {
             this.trackedObjects = {};
             this.objectsToRemove = {};
-            this.objectsRemoved = [];
             this.globalPropertyListeners = {};
             this.queryCollectionCache = {};
         };
 
-        /**
+    /**
      * asynchronous sequential version of Array.prototype.forEach
      * @param array the array to iterate over
      * @param fn the function to apply to each item in the array, function
@@ -382,7 +375,8 @@ function initPersistence(persistence) {
             function processOne() {
                 var item = array.pop();
                 fn(item, function(result, err) {
-                    if(array.length > 0) {
+                    // stop if we hit an error.
+                    if(!err & array.length > 0) {
                         processOne();
                     } else {
                         callback(result, err);
@@ -631,6 +625,15 @@ function initPersistence(persistence) {
             /* SAH - ignore a named field until its value is reset. */
             Entity.prototype.ignoreField = function(fld) {
                 this._ignoreProperties[fld] = true;
+            };
+
+            /* SAH - mark an object as already in the DB. Used to enhance the sync speed. See updateOneObject in 
+             * persistence.helix.js. Requires the DB id so that we can correlate this object against what we have
+             * in the DB.
+             */
+            Entity.prototype.markPersistent = function(id) {
+                this._new = false;
+                this.id = id;
             };
 
             Entity.prototype.toJSON = function() {
@@ -2561,6 +2564,12 @@ function initPersistence(persistence) {
             return function(obj) {
                 return obj && obj.apply;
             };
+        }
+        
+        argspec.isMap = function() {
+            return function(obj) {
+                return obj && Object.prototype.toString.call(obj) == "[object Object]";
+            }
         }
     }());
 

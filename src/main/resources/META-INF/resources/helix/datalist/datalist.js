@@ -81,6 +81,11 @@
             emptyGroupMessage: "There are no items to display in this group.",
             
             /**
+             * Message to display when a search returns no results.
+             */
+            emptySearchMessage: "The search did not return any results from the local database.",
+            
+            /**
              * Action to perform if the user taps/clicks on a list item.
              */
             selectAction: null,
@@ -449,15 +454,15 @@
             return sortFilterOptions.globalFilters;
         },
         
-        _handleEmpty: function() {
+        _handleEmpty: function(msg) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
             if (this.nElems == 0) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
-                } else if (this.options.emptyMessage) {
+                } else if (msg) {
                     this.$parent.append($('<li />')
                         .attr('data-role', 'empty-message')
-                        .append(this.options.emptyMessage));                        
+                        .append(msg));                        
                 }
             } else if (emptyLI.length) {
                 $(emptyLI).hide();
@@ -475,7 +480,7 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.unfilteredList = _self.itemList = list;
+            _self.originalList = _self.unfilteredList = _self.itemList = list;
         
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -536,7 +541,6 @@
              */
             _self._resetPaging();
             _self._refreshData(function() {
-                _self._handleEmpty();
                 _self.$parent.listview( "refresh" );
                 
                 /**
@@ -557,10 +561,10 @@
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('mh-layout-parent-height');
                     _self.$listWrapper.scroll(function(ev) {
-                        if (_self.refreshInProgress) {
+                        /*if (_self.refreshInProgress) {
                             return true;
-                        }
-                        if (_self.scrollCalculationInProgress) {
+                        }*/
+                        if (_self.refreshInProgress || _self.scrollCalculationInProgress) {
                             ev.stopImmediatePropagation();
                             return false;
                         }
@@ -595,6 +599,7 @@
                                 // SCROLLING UP
                                 // Update the render window to the _itemsPerPage rows with the
                                 // current set of visible rows as the last third of the list.
+                                _self.scrollCalculationInProgress = true;
                                 
                                 // Snapshot what is currently at the top of the scroll window.
                                 firstShowing = _self._captureTopLI(ev);
@@ -607,6 +612,8 @@
                                     // Scroll to the right spot so that the element the viewer was
                                     // viewing is still centered in the screen.                                    
                                     _self.$parent.listview( "refresh" );
+                                    
+                                    _self.scrollCalculationInProgress = false;
                                     _self._updateScrollPosition(ev, firstShowing, scrollPos, preRefreshScrollPosition);
                                 });
                                 _self._atDataTop = false;
@@ -623,14 +630,18 @@
                                 firstShowing -= (newDataStart - oldDataStart);
                                 _self._lastUpdateScroll = scrollPos;
                                 
+                                _self.scrollCalculationInProgress = true;
+                                
                                 // Scroll is moving up and we are in the top third of the list.
                                 // Fetch another 50 rows prior to the data window start.
                                 _self._refreshData(function() {
                                     // Scroll to the right spot so that the element the viewer was
                                     // viewing is still centered in the screen.
                                     _self.$parent.listview( "refresh" );
-                                    _self._updateScrollPosition(ev, firstShowing, scrollPos, preRefreshScrollPosition);
-                                });
+            
+                                    _self.scrollCalculationInProgress = false;
+                                    _self._updateScrollPosition(ev, firstShowing - 1, scrollPos, preRefreshScrollPosition);
+                                }, true /* Do not recompute the qry collection */);
                             }
                         }
                         
@@ -662,7 +673,6 @@
         
         _updateScrollPosition: function(ev, topIndex, scrollPos, preRefreshScrollPosition) {
             // Figure out where the old top item has gone.
-            this.scrollCalculationInProgress = true;
             var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
             var curScrollTop = $(this.$listWrapper).scrollTop();
             if (curScrollTop < 0) {
@@ -678,7 +688,6 @@
             } else if (newScrollPos > (listHeight - wrapperHeight)) {
                 newScrollPos = listHeight - wrapperHeight;
             }
-            this.scrollCalculationInProgress = false;
             
             this.rescrollInProgress = true;
             $(this.$listWrapper).scrollTop(newScrollPos);
@@ -694,7 +703,7 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.unfilteredList = _self.itemList = list;
+            _self.originalList = _self.unfilteredList = _self.itemList = list;
         
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -706,7 +715,6 @@
             
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
-                _self._handleEmpty();
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
@@ -842,6 +850,7 @@
                         _self._resetPaging();
                         _self._refreshData(function() {
                             _self.$parent.listview( "refresh" );
+                            _self.$listWrapper.scrollTop(0);
                         });
                         $(_self._sortContainer).popup("close");
                         return false;
@@ -884,10 +893,11 @@
                         'display': filters[filterFld],
                         'data': filterFld,
                         'action': function(newFilterField) {
-                            _self.itemList = _self.options.doThisFilter(_self.unfilteredList, newFilterField, _self.selected);
+                            _self.itemList = _self.options.doThisFilter(_self.itemList, newFilterField, _self.selected);
                             _self._resetPaging();
                             _self._refreshData(function() {
                                 _self.$parent.listview( "refresh" );
+                                _self.$listWrapper.scrollTop(0);
                             });
                             _self._filterContextMenu.close();
                         }
@@ -903,6 +913,7 @@
                     _self._resetPaging();
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
+                        _self.$listWrapper.scrollTop(0);
                     });
                     _self._filterContextMenu.close();
                 }
@@ -1090,6 +1101,7 @@
                 _self._resetPaging();
                 _self._refreshData(function() {
                     _self.$parent.listview( "refresh" );
+                    _self.$listWrapper.scrollTop(0);
                 });
                 $(_self._globalFilterContainer).popup("close");
             });
@@ -1113,6 +1125,15 @@
         _refreshData: function(oncomplete) {
             var _self = this;
         
+            if (_self.__refreshInProgress) {
+                // Do not list refreshed interleave. Finish one, then do the next one.
+                $(_self.$wrapper).on('refreshdone', function(evt) {
+                    _self._refreshData(evt.data);
+                    return false;
+                }, oncomplete);
+                return;
+            }
+        
             //this._clearListRows();
             _self.refreshInProgress = true;
             _self.displayList = [];
@@ -1130,26 +1151,35 @@
         
             /* List must be non-empty and it must be a query collection. */
             var displayCollection = _self.itemList;
-            if (!displayCollection || !displayCollection.forEach) {
+            if (!displayCollection || !displayCollection.newEach) {
                 return;            
             }
                         
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
+            var emptyMsg = _self.options.emptyMessage;
             var __completion = function(displayCollection) {
-                _self._sortAndRenderData(displayCollection, oncomplete);
+                _self._sortAndRenderData(displayCollection, function(oncomplete) {
+                    oncomplete();
+                    $(_self.$wrapper).trigger('refreshdone');
+                }, emptyMsg, oncomplete);
             };
             
-            if (this.__searchText && this.__searchText.trim()) {
-                this.options.indexedSearch(this.__searchText.trim(), __completion);
+            if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
+                emptyMsg = this.options.emptySearchMessage;
+                this.__searchTextDirty = false;
+                this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
+                    _self.unfilteredList = _self.itemList = displayCollection;
+                    __completion(_self.itemList);
+                });
                 //displayCollection = _self._applySearch(displayCollection);
             } else {
                 __completion(displayCollection);
             }
         },
         
-        _sortAndRenderData: function(displayCollection, oncomplete) {
+        _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque) {
             var _self = this;
             var orderby = _self._currentSort; 
             displayCollection = _self._resetGlobalFilters(displayCollection);
@@ -1174,9 +1204,9 @@
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li:not([data-role=list-divider])');
             }
-            displayCollection.each(
+            displayCollection.newEach({
                 /* Process each element. */
-                function(curRow) {
+                eachFn: function(curRow) {
                     if (_self.options.grouped) {
                         groupsToRender.push(curRow);
                     } else {
@@ -1193,7 +1223,7 @@
                     }
                 },
                 /* Called on start. */
-                function(count) {
+                startFn: function(count) {
                     _self.nElems = count;
                     if (count < _self._itemsPerPage) {
                         // We did not get the full "limit" count of items requested
@@ -1201,7 +1231,7 @@
                     }
                 },
                 /* Called on done. */
-                function() {
+                doneFn: function(count) {
                     var _ridx;
                     if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
@@ -1212,7 +1242,10 @@
                             $(LIs[_ridx]).hide();
                         }
 
-                        oncomplete();
+                        if (count == 0) {
+                            _self._handleEmpty(emptyMsg);
+                        }
+                        oncomplete(opaque);
                     } else {
                         var groupIndex = 0;
                         var __renderGroup = function() {
@@ -1222,7 +1255,10 @@
                                 }
                                 /* Call completion when all rows are done rendering. */
                                 _self.refreshInProgress = false;
-                                oncomplete();
+                                oncomplete(opaque);
+                                if (groupIndex == 0) {
+                                    _self._handleEmpty(emptyMsg);
+                                }
                                 return;
                             }
 
@@ -1241,7 +1277,7 @@
                         __renderGroup();
                     }
                 }
-            );  
+            });  
         },
         
         _updateRenderWindow: function(firstShowingIndex, direction) {
@@ -1285,11 +1321,12 @@
                 }
                 
                 _self._resetPaging();
+                _self.__searchTextDirty = true;
                 _self._refreshData(function() {
                     _self.$parent.listview( "refresh" );
                 });
                 _self.__searchReadyTimeout = null;
-            }, 3000);
+            }, 1000);
         },
         
         _prependSearchBox: function() {
@@ -1422,7 +1459,7 @@
                     _self._doSearch();
                 });
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
-                    _self.itemList = _self.unfilteredList;
+                    _self.itemList = _self.originalList;
                     _self.__searchText = "";
                     _self.$searchBox.val(_self.__searchText);
                     _self._resetPaging();
