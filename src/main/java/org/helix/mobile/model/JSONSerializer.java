@@ -172,7 +172,7 @@ public class JSONSerializer {
                                   InvocationTargetException, IOException, NoSuchMethodException {
         /* Extract the field name. */
         String nxtFieldName = this.extractFieldName(getter.getName());
-        LOG.log(Level.FINE, "Serializing {0}", nxtFieldName);
+        LOG.log(Level.FINEST, "Serializing {0}", nxtFieldName);
 
         /* Finally, handle arbitrary object types. Either these objects
          * encapsulate other objects (as evidenced by having ClientData-
