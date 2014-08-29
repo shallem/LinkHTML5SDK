@@ -227,16 +227,16 @@ public class JSONSerializer {
                 jg.writeFieldName(TYPE_FIELD_NAME);
                 jg.writeNumber(1001);
 
-                Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
+                Method m = c.getMethod("getAdds", new Class<?>[]{});
                 Class<?> returnType = m.getReturnType();
                 jg.writeFieldName(SCHEMA_TYPE_FIELD_NAME);
                 jg.writeString(returnType.getComponentType().getName());
                 this.iterateOverObjectField(jg, obj, visitedClasses, m);
                 
-                m = c.getDeclaredMethod("getDeletes", new Class<?>[]{});
+                m = c.getMethod("getDeletes", new Class<?>[]{});
                 this.iterateOverObjectField(jg, obj, visitedClasses, m);
                 
-                m = c.getDeclaredMethod("getUpdates", new Class<?>[]{});
+                m = c.getMethod("getUpdates", new Class<?>[]{});
                 this.iterateOverObjectField(jg, obj, visitedClasses, m);
                 
                 jg.writeEndObject();
@@ -323,7 +323,8 @@ public class JSONSerializer {
                 throw new IOException("Arrays of simple types (e.g., strings, ints, " +
                         "etc.) are currently not supported. Wrap your String in a class " +
                         "of its own and add a ClientData getter so that the wrapper " +
-                        "class can become its own table on the client. Class: " + c.getName());
+                        "class can become its own table on the client. Class: " + c.getName() + 
+                        ", field: " + fieldName);
             }
             
             if (!this.serializeObjectForSchema(jg,
@@ -343,7 +344,7 @@ public class JSONSerializer {
              */
             if (this.isDeltaObject(c)) {
                 try {
-                    Method m = c.getDeclaredMethod("getAdds", new Class<?>[]{});
+                    Method m = c.getMethod("getAdds", new Class<?>[]{});
                     Class<?> returnType = m.getReturnType();
                     if (!this.serializeObjectForSchema(jg, returnType, 
                             visitedClasses, fieldName, alternateName)) {
@@ -534,15 +535,15 @@ public class JSONSerializer {
         /* Check the format of the method name. */
         if (!methodName.startsWith("get")
                 && !methodName.startsWith("is")) {
-            throw new IOException("All methods annotated with the ClientData annotation should have the form get<field name>.");
+            throw new IOException("All methods annotated with the ClientData annotation should have the form get<field name>: " + methodName);
         }
         if (methodName.startsWith("get")
                 && methodName.length() < 4) {
-            throw new IOException("All getters annotated with the ClientData annotation should have the form get<field name>.");
+            throw new IOException("All getters annotated with the ClientData annotation should have the form get<field name>: "  + methodName);
         }
         if (methodName.startsWith("is")
                 && methodName.length() < 3) {
-            throw new IOException("All getters annotated with the ClientData annotation should have the form is<field name>.");
+            throw new IOException("All getters annotated with the ClientData annotation should have the form is<field name>: " + methodName);
         }
     }
     
@@ -707,14 +708,15 @@ public class JSONSerializer {
     }
 
     private boolean isDeltaObject(Class<?> c) {
-        boolean isDelta = false;
-        for (Class<?> ifaces : c.getInterfaces()) {
-            if (ifaces.equals(org.helix.mobile.model.DeltaObject.class)) {
-                isDelta = true;
-                break;
+        while (c != null) {
+            for (Class<?> ifaces : c.getInterfaces()) {
+                if (ifaces.equals(org.helix.mobile.model.DeltaObject.class)) {
+                    return true;
+                }
             }
+            c = c.getSuperclass();
         }
-        return isDelta;
+        return false;
     }
     
     private boolean isAggregateObject(Class<?> c) {

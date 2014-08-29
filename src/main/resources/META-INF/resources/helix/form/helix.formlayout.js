@@ -188,7 +188,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
     if (mode) {
         var defaultValue = Date.now();
         if (formElem.value) {
-            defaultValue = formElem.value;
+            defaultValue = Number(formElem.value);
         }
 
         /* Edit */
