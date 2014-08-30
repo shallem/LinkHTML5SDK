@@ -245,6 +245,12 @@
 						$(this).trigger('change');
                                                 if (Helix.Utils.isString(p.value)) {
                                                     w.theDate = w._makeDate(p.value);
+                                                } else if (typeof p.value === 'number') {
+                                                    if (p.value > 0) {
+                                                        w.theDate = new Date(p.value);                                                    
+                                                    } else {
+                                                        w.theDate = null;
+                                                    }
                                                 } else {
                                                     w.theDate = p.value;
                                                 }
