@@ -118,6 +118,14 @@ function __getTZSelect(tabIndex, name, id, curTime) {
 }
 
 function __refreshDate(mode, formElem) {
+    if (formElem.value) {
+        if (Helix.Utils.isString(formElem.value) && toLowerCase(formElem.value) === 'now') {
+            formElem.value = new Date();
+        } else if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
+            formElem.value = new Date(Number(formElem.value));
+        }
+    }
+    
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         $(thisField).trigger('datebox', { method: 'set', value : formElem.value });
@@ -133,10 +141,6 @@ function __refreshDate(mode, formElem) {
         var selector = 'span' + dataNameAttr + ',div' + dataNameAttr;
         $(formElem.DOM).find(selector).remove();
         if (formElem.value) {
-            if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
-                formElem.value = new Date(Number(formElem.value));
-            }
-
             var dateMarkup;
             if (formElem.type === 'date' ||
                 formElem.type === 'exactdate') {
@@ -767,7 +771,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     }
     $(wrapperMarkup).controlgroup({ 
         mini : useMiniLayout,
-        type: "horizontal"
+        type: (formElem.direction ? formElem.direction : "horizontal")
     });
     $(fieldMarkup).fieldcontain();
 }
@@ -1378,7 +1382,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     
     if (supportedModes !== 'view' &&
         formElem.mode !== 'view') {
-        if (formElem.type in Helix.Utils.oneContainerLayouts) {
+        if ((formElem.type in Helix.Utils.oneContainerLayouts) &&
+                $viewFieldContainer) {
             formElem.editDOM = $editFieldContainer = $viewFieldContainer;
             oneContainer = true;
         } else {

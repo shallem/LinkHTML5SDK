@@ -450,14 +450,10 @@ function initPersistence(persistence) {
                 persistence.defineProp(this, f, function(val) {
                     // setterCallback
                     // SAH - make sure we are tracking this object now that it is dirty.
-                    var that = session.add(this);
-                    var oldValue = that._data[f];
-                    if(oldValue !== val || (oldValue && val && oldValue.getTime && val.getTime)) { 
-                        // Don't mark properties as dirty and trigger events unnecessarily
-                        that._data[f] = val;
-                        that._dirtyProperties[f] = oldValue;
-                        that._ignoreProperties[f] = false;
-                    }
+                    var that = session.add(this);       
+                    that._data[f] = val;
+                    that._dirtyProperties[f] = true;
+                    that._ignoreProperties[f] = false;
                 }, function() {
                     // getterCallback
                     return persistence.canonical(this)._data[f];
@@ -511,7 +507,6 @@ function initPersistence(persistence) {
                             persistence.defineProp(entity, ref, function(val) {
                                 // setterCallback
                                 var that = session.add(this);
-                                var oldValue = that._data[ref];
                                 if (val == null) {
                                     that._data[ref] = null;
                                     that._data_obj[ref] = undefined;
@@ -525,7 +520,7 @@ function initPersistence(persistence) {
                                 } else { // let's assume it's an id
                                     that._data[ref] = val;
                                 }
-                                that._dirtyProperties[ref] = oldValue;
+                                that._dirtyProperties[ref] = true;
                             }, function() {
                                 // getterCallback
                                 var that = persistence.canonical(this);

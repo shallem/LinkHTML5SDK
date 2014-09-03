@@ -364,11 +364,11 @@ persistence.search.config = function(persistence, dialect, options) {
             __indexParams.nxtCall = ++ncalls;
             __indexParams.delaySecs = (__indexFull ? 1 : 3);
             __indexParams.toIndex = 0;
+            __indexParams.nObjects = 20;
             
             var that = this;
             that.__hx_indexing = true;
-            var nObjects = 20;         
-            this.all().filter('__hx_indexed', '=', 0).limit(nObjects).order('rowid', false).include(propList.concat(['rowid'])).newEach({
+            this.all().filter('__hx_indexed', '=', 0).limit(__indexParams.nObjects).order('rowid', false).include(propList.concat(['rowid'])).newEach({
                 startFn: function(ct, params) {
                     params.toIndex = ct;
                     if (params.toIndex <= 0) {
@@ -380,7 +380,8 @@ persistence.search.config = function(persistence, dialect, options) {
                             Helix.DB.__indexingMessageShown = false;
                         }
                     } else {
-                        if (params.nxtCall == 20 || __indexFull) {
+                        // Only show a message if we are indexing a lot of data - at least 100 records where nObjects is 20
+                        if (params.nxtCall == 5) {
                             if (!Helix.DB.__indexingMessageShown) {
                                 Helix.DB.__indexingMessageShown = true;
                                 // Only display if we are going to index many times.
@@ -410,9 +411,8 @@ persistence.search.config = function(persistence, dialect, options) {
                         indexObjectList(params.updateIDs, params.updateObjs, that, params.propMap, function() {
                             // Now start over ...
                             that.__hx_indexing = false;
-                            if (!indexedOnce) {
-                                // We space these calls out by 2 seconds, otherwise the app gets stuck and other
-                                // operations cannot proceed.
+                            if (!indexedOnce && ct == params.nObjects) {
+                                // Checking that ct == nObjects ensures that we only recurse if we really need to.
                                 that.indexAsync(params.nxtCall, __indexFull, params);
                             } else {
                                 // When the user has already endured one round of indexing, we don't force them

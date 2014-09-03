@@ -268,7 +268,9 @@
             "hidden" : true,
             "checkbox" : true,
             "tzSelector" : true,
-            "radio" : true
+            "radio" : true,
+            "date" : true,
+            "datetime" : true
         },
         
         _groupedTypes: {
@@ -280,6 +282,7 @@
             var strippedFieldID = this._stripNamespace(fieldID);
             var fieldType = nxtItem.type;
             var selector = '[name="' + fieldID + '"]';
+            var _self = this;
             
             var __serializeOneItem = function() {
                 if (fieldType === "htmlarea" ||
@@ -317,6 +320,13 @@
                     toSerialize.push({
                             name : strippedFieldID,
                             value: selected.val()
+                    });
+                } else if (fieldType === "date" ||
+                           fieldType === "datetime") {
+                    var timeVal = _self._getDateTimeValue(nxtItem.DOM, this, nxtItem.name);
+                    toSerialize.push({
+                        name: strippedFieldID,
+                        value: timeVal
                     });
                 } else {
                     toSerialize.push({
@@ -637,6 +647,23 @@
             this.__refreshOneValue(mode, item, valuesObj);
         },
         
+        _getDateTimeValue: function(parentDOM, fld, searchName) {
+            var dateObj = $(fld).datebox("get");
+            if (!dateObj) {
+                return 0;
+            }
+            
+            var timeElem = $(parentDOM).find('[name="' + searchName + '_time"]');
+            if (timeElem.length > 0) {
+                var timeObj = timeElem.data('mobile-datebox');
+                dateObj.clone().set({
+                    hour : timeObj.theDate.getHours(),
+                    minute: timeObj.theDate.getMinutes()
+                });           
+            }
+            return dateObj.getTime();
+        },
+        
         getValue: function(name) {
             var fld = this._fieldMap[name];
             if (!fld) {
@@ -680,16 +707,11 @@
             if (fldType === 'date' ||
                 fldType === 'exactdate' ||
                 fldType === 'datetime') {
-                var dateObj = thisField.data('mobile-datebox');
-                var timeElem = $(this.element).find('[name="' + searchName + '_time"]');
-                if (timeElem.length > 0) {
-                    var timeObj = timeElem.data('mobile-datebox');
-                    dateObj.theDate.set({
-                        hour : timeObj.theDate.getHours(),
-                        minute: timeObj.theDate.getMinutes()
-                    });           
+                var timeVal = this._getDateTimeValue(fld.DOM, thisField, searchName);
+                if (timeVal > 0) {
+                    return new Date(timeVal);
                 }
-                return dateObj.theDate;
+                return null;
             } else if (fldType === 'tzSelector' ||
                        fldType === 'pickList') {
                 var selected = $(thisField).find('option:selected');

@@ -236,5 +236,11 @@
             <type>java.lang.String</type>
             <description>Mode in which to edit a sub-panel. The default is to use the same mode as the parent panel.</description>
         </attribute>
+        <attribute>
+            <name>direction</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Orientation of the component (either horizontal or vertical). Only used by some components.</description>
+        </attribute>
     </attributes>
 </component>
