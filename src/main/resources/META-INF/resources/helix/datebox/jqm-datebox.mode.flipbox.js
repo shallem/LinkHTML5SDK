@@ -333,7 +333,9 @@
                         e.preventDefault();
                         e.stopPropagation();
                         g.tmp = g.target.parent().parent();
-                        w._offset(g.tmp.jqmData('field'), (parseInt((g.start - g.end) / g.target.innerHeight(),10) * g.tmp.jqmData('amount')));
+                        //w._offset(g.tmp.jqmData('field'), (parseInt((g.start - g.end) / g.target.innerHeight(),10) * g.tmp.jqmData('amount')));
+                        var _amt = g.tmp.jqmData('amount');
+                        w._offset(g.tmp.jqmData('field'), (Math.round((g.start - g.end) / g.target.innerHeight()) * _amt));
                     }
                     g.start = false;
                     g.end = false;

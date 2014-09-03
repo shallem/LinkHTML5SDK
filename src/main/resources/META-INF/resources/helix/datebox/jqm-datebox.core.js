@@ -930,6 +930,7 @@
                 w.theDate.adj(ok,amount);
             }
             if ( update === true ) {
+                w._doBuild();
                 w.refresh();
             }
             if ( o.useImmediate ) {
@@ -1145,6 +1146,14 @@
                 this.d.headerText = "Error";
                 this.d.intHTML = $("<div class='ui-body-e'><h2 style='text-align:center'>There is no mode by that name loaded / mode not given</h2></div>");
             }
+        },
+        _doBuild: function() {
+            var o = this.options;
+            if ( typeof this._build[o.mode] === 'undefined' ) {
+                this._build['default'].apply(this,[]);
+            } else {
+                this._build[o.mode].apply(this,[]);
+            }  
         },
         _applyCoords: function(e) {
             var w = e.widget,

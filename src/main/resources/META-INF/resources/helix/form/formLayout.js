@@ -653,10 +653,11 @@
                 return 0;
             }
             
+            dateObj = dateObj.clone();
             var timeElem = $(parentDOM).find('[name="' + searchName + '_time"]');
             if (timeElem.length > 0) {
                 var timeObj = timeElem.data('mobile-datebox');
-                dateObj.clone().set({
+                dateObj.set({
                     hour : timeObj.theDate.getHours(),
                     minute: timeObj.theDate.getMinutes()
                 });           
