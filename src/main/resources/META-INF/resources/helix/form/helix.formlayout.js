@@ -119,7 +119,7 @@ function __getTZSelect(tabIndex, name, id, curTime) {
 
 function __refreshDate(mode, formElem) {
     if (formElem.value) {
-        if (Helix.Utils.isString(formElem.value) && toLowerCase(formElem.value) === 'now') {
+        if (Helix.Utils.isString(formElem.value) && formElem.value.toLowerCase() === 'now') {
             formElem.value = new Date();
         } else if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
             formElem.value = new Date(Number(formElem.value));
@@ -767,6 +767,13 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         }
         if (subElem.defaultValue === formElem.defaultValue) {
             $(inputMarkup).attr('checked', 'true');
+        }
+        if (formElem.onchange) {
+            $(inputMarkup).change(function() {
+                if ($(this).attr('checked') !== 'true') {
+                    formElem.onchange($(this).attr('data-value'));
+                }
+            });
         }
     }
     $(wrapperMarkup).controlgroup({ 
