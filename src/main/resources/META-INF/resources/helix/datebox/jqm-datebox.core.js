@@ -1112,7 +1112,9 @@
                 w.d.input.removeClass('ui-focus');
             })
             .change(function() {
-                w.theDate = w._makeDate(w.d.input.val());
+                if (w.d.input.val()) {
+                    w.theDate = w._makeDate(w.d.input.val());                
+                }
                 w.refresh();
             })
             .attr("readonly", o.lockInput)
