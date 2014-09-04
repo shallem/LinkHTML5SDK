@@ -118,23 +118,42 @@ function __getTZSelect(tabIndex, name, id, curTime) {
 }
 
 function __refreshDate(mode, formElem) {
+    var displayDate = null;
+    var dateDisplayStr = '';
+    var timeDisplayStr = '';
     if (formElem.value) {
         if (Helix.Utils.isString(formElem.value) && formElem.value.toLowerCase() === 'now') {
             formElem.value = new Date();
+            if (!mode) {
+                displayDate = formElem.value;
+            }
         } else if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
-            formElem.value = new Date(Number(formElem.value));
+            if (isNaN(formElem.value)) {
+                // Keep formElem.value as is - a string to parse.
+                if (!mode) {
+                    displayDate = Date.parse(formElem.value);
+                }
+            } else {
+                formElem.value = Number(formElem.value);
+                if (!mode) {
+                    displayDate = new Date(formElem.value);
+                }
+            }
         }
     }
-    
+    if (displayDate) {
+        // View mode
+        dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
+        timeDisplayStr = displayDate.toString('h:mm tt');
+    }
+
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         $(thisField).trigger('datebox', { method: 'set', value : formElem.value });
-        $(thisField).trigger('datebox', { method: 'doset' });
 
         var timeElem = $(formElem.DOM).find('[name="' + formElem.name + '_time"]');
         if (timeElem.length > 0) {
             $(timeElem).trigger('datebox', { method: 'set', value: formElem.value });
-            $(timeElem).trigger('datebox', { method: 'doset' });
         }
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
@@ -145,12 +164,11 @@ function __refreshDate(mode, formElem) {
             if (formElem.type === 'date' ||
                 formElem.type === 'exactdate') {
                 if (formElem.type === 'date') {
-                    var dateValue = new Date(Number(formElem.value));
                     dateMarkup = $('<a />').attr({
-                        'title': dateValue.toISOString()
+                        'title': displayDate.toISOString()
                     }).prettyDate();
                 } else {
-                    dateMarkup = $('<a />').append(formElem.value.toLocaleDateString());
+                    dateMarkup = $('<a />').append(dateDisplayStr);
                 }
                 if (formElem.fieldTitle) {
                     formElem.DOM.append($('<span/>').attr({
@@ -164,7 +182,7 @@ function __refreshDate(mode, formElem) {
                     }).append($(dateMarkup).text()));
                 }
             } else {
-                var dateSpan = $('<span/>').attr('data-name', formElem.name).append("&nbsp;" + formElem.value.toLocaleString());
+                var dateSpan = $('<span/>').attr('data-name', formElem.name).append("&nbsp;" + dateDisplayStr + "&nbsp;" + timeDisplayStr);
                 if (formElem.computedStyle) {
                     dateSpan.attr('style', formElem.computedStyle);
                 }
@@ -246,7 +264,6 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             }
             timeInput.datebox({"mode" : "timeflipbox", 
                 "overrideTimeFormat" : 12, 
-                "overrideTimeOutput" : "%l:%M %p", 
                 "defaultValue": defaultValue,
                 "openCallback" : (formElem.onfocus ? formElem.onfocus : false),
                 "closeCallback" : (formElem.onchange ? formElem.onchange : false),
@@ -1775,7 +1792,7 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                     dateValue = parseInt(formElem.value);
                     dateValue = new Date(dateValue);
                 }
-                $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue}).trigger('datebox', {'method':'doset'});
+                $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue});
             } else if (formElem.type === "text" ||
                        formElem.type === "hidden") {
                 $(inputElem).val(formElem.value);

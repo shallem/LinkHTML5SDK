@@ -97,21 +97,21 @@
                     durationLabel: ['Days', 'Hours', 'Minutes', 'Seconds'],
                     durationDays: ['Day', 'Days'],
                     timeFormat: 24,
-                    headerFormat: '%A, %B %-d, %Y',
+                    headerFormat: 'ddd, MMM d, yyyy',
                     tooltip: 'Open Date Picker',
                     nextMonth: 'Next Month',
                     prevMonth: 'Previous Month',
                     dateFieldOrder: ['m', 'd', 'y'],
                     timeFieldOrder: ['h', 'i', 'a'],
                     slideFieldOrder: ['y', 'm', 'd'],
-                    dateFormat: '%Y-%m-%d',
+                    dateFormat: 'yyyy-MM-dd',
                     useArabicIndic: false,
                     isRTL: false,
                     calStartDay: 0,
                     clearButton: 'Clear',
                     durationOrder: ['d', 'h', 'i', 's'],
                     meridiem: ['AM', 'PM'],
-                    timeOutput: '%k:%M', //{ '12': '%l:%M %p', '24': '%k:%M' },
+                    timeOutput: 'h:mm tt', //{ '12': '%l:%M %p', '24': '%k:%M' },
                     durationFormat: '%Dd %DA, %Dl:%DM:%DS'
                 }
             }
@@ -292,25 +292,9 @@
                         w.open();
                         break;
                     case 'set':
-                        if (p.value === undefined) {
-                            p.value = new Date();
-                        } else if (p.value === null || p.value == 0) {
-                            p.value = '';
-                            w.theDate = null;
-                        } else if (Helix.Utils.isString(p.value)) {
-                            w.theDate = w._makeDate(p.value);
-                        } else if (typeof p.value === 'number') {
-                            if (p.value > 0) {
-                                w.theDate = new Date(p.value);                                                    
-                            } else {
-                                p.value = '';
-                                w.theDate = null;
-                            }
-                        } else {
-                            w.theDate = p.value;
-                        }
-                        $(this).val(p.value);
-                        $(this).trigger('change');
+                        w.theDate = w._makeDate(p.value);
+                        $(this).val(w._formatter(w.__fmt(), w.theDate));
+                        w.refresh();
                         break;
                     case 'doset':
                         if ( $.isFunction(w['_'+w.options.mode+'DoSet']) ) {
@@ -318,7 +302,7 @@
                         } else {
                             $(this).trigger('datebox', {
                                 'method':'set', 
-                                'value':w.theDate ? w._formatter(w.__fmt(), w.theDate) : '', 
+                                'value':w.theDate, 
                                 'date':w.theDate
                                 });
                         }
@@ -444,268 +428,31 @@
             }
             return new this._date(date.getFullYear(), date.getMonth(), date.getDate(), arr[0], arr[1], arr[2], 0);
         },
-        _makeDate: function (str) {
-            // Date Parser
-            str = $.trim(((this.__('useArabicIndic') === true)?this._dRep(str, -1):str));
-            var w = this,
-            o = this.options,
-            adv = w.__fmt(),
-            exp_input = null,
-            exp_names = [],
-            exp_format = null,
-            exp_temp = null,
-            date = new w._date(),
-            d = {
-                year: -1, 
-                mont: -1, 
-                date: -1, 
-                hour: -1, 
-                mins: -1, 
-                secs: -1, 
-                week: false, 
-                wtyp: 4, 
-                wday: false, 
-                yday: false, 
-                meri: 0
-            },
-            i;
-			
-            if ( typeof o.mode === 'undefined' ) {
-                return date;
+        _makeDate: function(obj) {
+            if (obj === undefined ||
+                obj === null) {
+                return new this._date();
             }
-            if ( typeof w._parser[o.mode] !== 'undefined' ) {
-                return w._parser[o.mode].apply(w,[str]);
-            }
-			
-            if ( o.mode === 'durationbox' ) {
-                adv = adv.replace(/%D([a-z])/gi, function(match, oper) {
-                    switch (oper) {
-                        case 'd':
-                        case 'l':
-                        case 'M':
-                        case 'S':
-                            return '(' + match + '|' +'[0-9]+' + ')';
-                        default:
-                            return '.+?';
-                    }
-                });
-				
-                adv = new RegExp('^' + adv + '$');
-                exp_input = adv.exec(str);
-                exp_format = adv.exec(w.__fmt());
-				
-                if ( exp_input === null || exp_input.length !== exp_format.length ) {
-                    if ( typeof o.defaultValue === "number" && o.defaultValue > 0 ) {
-                        return new w._date(o.defaultValue);
-                    //return new w._date((w.initDate.getEpoch() + parseInt(o.defaultValue,10))*1000);
-                    } 
-                    return new w._date(w.initDate.getTime());
-                } 
-				
-                exp_temp = w.initDate.getEpoch();
-                for ( i=0; i<exp_input.length; i++ ) { //0y 1m 2d 3h 4i 5s
-                    if ( exp_format[i].match(/^%Dd$/i) )   {
-                        exp_temp = exp_temp + (parseInt(exp_input[i],10)*60*60*24);
-                    }
-                    if ( exp_format[i].match(/^%Dl$/i) )   {
-                        exp_temp = exp_temp + (parseInt(exp_input[i],10)*60*60);
-                    }
-                    if ( exp_format[i].match(/^%DM$/i) )   {
-                        exp_temp = exp_temp + (parseInt(exp_input[i],10)*60);
-                    }
-                    if ( exp_format[i].match(/^%DS$/i) )   {
-                        exp_temp = exp_temp + (parseInt(exp_input[i],10));
-                    }
+            // 3 cases: string, number, and a date object
+            if (Helix.Utils.isString(obj)) {
+                if (obj) {
+                    return Date.parse(obj);                
+                } else {
+                    // Empty string.
+                    return new this._date();
                 }
-                return new w._date((exp_temp*1000));
-            }
-			
-            adv = adv.replace(/%(0|-)*([a-z])/gi, function(match, pad, oper) {
-                exp_names.push(oper);
-                switch (oper) {
-                    case 'p':
-                    case 'P':
-                    case 'b':
-                    case 'B':
-                        return '(' + match + '|' +'.+?' + ')';
-                    case 'H':
-                    case 'k':
-                    case 'I':
-                    case 'l':
-                    case 'm':
-                    case 'M':
-                    case 'S':
-                    case 'V':
-                    case 'U':
-                    case 'u':
-                    case 'W':
-                    case 'd':
-                        return '(' + match + '|' + (( pad === '-' ) ? '[0-9]{1,2}' : '[0-9]{2}') + ')';
-                    case 'j':
-                        return '(' + match + '|' + '[0-9]{3}' + ')';
-                    case 's':
-                        return '(' + match + '|' + '[0-9]+' + ')';
-                    case 'g':
-                    case 'y':
-                        return '(' + match + '|' + '[0-9]{2}' + ')';
-                    case 'E':
-                    case 'G':
-                    case 'Y':
-                        return '(' + match + '|' + '[0-9]{1,4}' + ')';
-                    default:
-                        exp_names.pop();
-                        return '.+?';	
+            } else if (typeof obj === 'number') {
+                if (obj > 0) {
+                    return new this._date(obj);                
+                } else  {
+                    return null;
                 }
-            });
-			
-            adv = new RegExp('^' + adv + '$');
-            exp_input = adv.exec(str);
-            exp_format = adv.exec(w.__fmt());
-			
-            if ( exp_input === null || exp_input.length !== exp_format.length ) {
-                if ( o.defaultValue !== false ) {
-                    if (Object.prototype.toString.call(o.defaultValue) === "[object Date]") {
-                        /* we already have a date. No more parsing needed. */
-                        date = o.defaultValue;
-                    } else {
-                        switch ( typeof o.defaultValue ) {
-                            case 'object':
-                                if ( o.defaultValue.length === 3 ) {
-                                    date =  w._pa(o.defaultValue,((o.mode === 'timebox' || o.mode === 'timeflipbox') ? date : false));
-                                }
-                                break;
-                            case 'number':
-                                date =  new w._date(o.defaultValue);
-                                break;
-                            case 'string':
-                                if ( o.mode === 'timebox' || o.mode === 'timeflipbox' ) {
-                                    exp_temp = o.defaultValue.split(':');
-                                    if ( exp_temp.length === 3 ) {
-                                        date = w._pa([exp_temp[0],exp_temp[1],exp_temp[2]], date);
-                                    }
-                                } else {
-                                    exp_temp = o.defaultValue.split('-');
-                                    if ( exp_temp.length === 3 ) {
-                                        date = w._pa([exp_temp[0],exp_temp[1]-1,exp_temp[2]], false);
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                }
-                if ( isNaN(date.getDate()) ) {
-                    date = new w._date();
-                }
+                            
+            } else if (Object.prototype.toString.call(obj) === '[object Date]') {
+                return obj.clone();
             } else {
-                for ( i=1; i<exp_input.length; i++ ) {
-                    switch ( exp_names[i-1] ) {
-                        case 's':
-                            return new w._date(parseInt(exp_input[i],10) * 1000);
-                        case 'Y':
-                        case 'G':
-                            d.year = parseInt(exp_input[i],10);
-                            break;
-                        case 'E':
-                            d.year = parseInt(exp_input[i],10) - 543;
-                            break;
-                        case 'y':
-                        case 'g':
-                            if ( o.afterToday === true || parseInt(exp_input[i],10) < 38 ) {
-                                d.year = parseInt('20' + exp_input[i],10);
-                            } else {
-                                d.year = parseInt('19' + exp_input[i],10);
-                            }
-                            break;
-                        case 'm':
-                            d.mont = parseInt(exp_input[i],10)-1;
-                            break;
-                        case 'd':
-                            d.date = parseInt(exp_input[i],10);
-                            break;
-                        case 'H':
-                        case 'k':
-                        case 'I':
-                        case 'l':
-                            d.hour = parseInt(exp_input[i],10);
-                            break;
-                        case 'M':
-                            d.mins = parseInt(exp_input[i],10);
-                            break;
-                        case 'S':
-                            d.secs = parseInt(exp_input[i],10);
-                            break;
-                        case 'u':
-                            d.wday = parseInt(exp_input[i],10)-1;
-                            break;
-                        case 'w':
-                            d.wday = parseInt(exp_input[i],10);
-                            break;
-                        case 'j':
-                            d.yday = parseInt(exp_input[i],10);
-                            break;
-                        case 'V':
-                            d.week = parseInt(exp_input[i],10);
-                            d.wtyp = 4;
-                            break;
-                        case 'U':
-                            d.week = parseInt(exp_input[i],10);
-                            d.wtyp = 0;
-                            break;
-                        case 'W':
-                            d.week = parseInt(exp_input[i],10);
-                            d.wtyp = 1;
-                            break;
-                        case 'p':
-                        case 'P':
-                            d.meri = (( exp_input[i].toLowerCase() === w.__('meridiem')[0].toLowerCase() )? -1:1);
-                            break;
-                        case 'b':
-                            exp_temp = $.inArray(exp_input[i], w.__('monthsOfYearShort'));
-                            if ( exp_temp > -1 ) {
-                                d.mont = exp_temp;
-                            }
-                            break;
-                        case 'B':
-                            exp_temp = $.inArray(exp_input[i], w.__('monthsOfYear'));
-                            if ( exp_temp > -1 ) {
-                                d.mont = exp_temp;
-                            }
-                            break;
-                    }
-                }
-                if ( d.meri !== 0 ) {
-                    if ( d.meri === -1 && d.hour === 12 ) {
-                        d.hour = 0;
-                    }
-                    if ( d.meri === 1 && d.hour !== 12 ) {
-                        d.hour = d.hour + 12;
-                    }
-                }
-				
-                date = new w._date(w._n(d.year,1),w._n(d.mont,1),w._n(d.date,1),w._n(d.hour,0),w._n(d.mins,0),w._n(d.secs,0),0);
-				
-                if ( d.year < 100 && d.year !== -1 ) {
-                    date.setFullYear(d.year);
-                }
-				
-                if ( ( d.mont > -1 && d.date > -1 ) || ( d.hour > -1 && d.mins > -1 && d.secs > -1 ) ) {
-                    return date;
-                }
-				
-                if ( d.week !== false ) {
-                    date.setWeek(d.wtyp, d.week);
-                    if ( d.date > -1 ) {
-                        date.setDate(d.date);
-                    } 
-                }
-                if ( d.yday !== false ) {
-                    date.dbset(1,0).dbset(2,1).adj(2,(d.yday-1));
-                }
-                if ( d.wday !== false ) {
-                    date.adj(2,(d.wday - date.getDay()));
-                }
+                return null;
             }
-            return date;
         },
         _customformat: {
             'default': function(oper, date) {
@@ -713,141 +460,10 @@
             }
         },
         _formatter: function(format, date) {
-            var w = this,
-            o = this.options, tmp,
-            dur = {
-                part: [0,0,0,0], 
-                tp: 0
-            };
-				
-            if ( o.mode === 'durationbox' ) {
-                dur.tp = this.theDate.getEpoch() - this.initDate.getEpoch();
-                dur.part[0] = parseInt( dur.tp / (60*60*24),10);
-                dur.tp -=(dur.part[0]*60*60*24); // Days
-                dur.part[1] = parseInt( dur.tp / (60*60),10);
-                dur.tp -= (dur.part[1]*60*60); // Hours
-                dur.part[2] = parseInt( dur.tp / (60),10);
-                dur.tp -= (dur.part[2]*60); // Minutes
-                dur.part[3] = dur.tp; // Seconds
-			
-                if ( ! format.match(/%Dd/) ) {
-                    dur.part[1] += (dur.part[0]*24);
-                }
-                if ( ! format.match(/%Dl/) ) {
-                    dur.part[2] += (dur.part[1]*60);
-                }
-                if ( ! format.match(/%DM/) ) {
-                    dur.part[3] += (dur.part[2]*60);
-                }
+            if (!date) {
+                return '';
             }
-				
-            format = format.replace(/%(D|X|0|-)*([1-9a-zA-Z])/g, function(match, pad, oper) {
-                if ( pad === 'X' ) {
-                    if ( typeof w._customformat[o.mode] !== 'undefined' ) {
-                        return w._customformat[o.mode](oper, date);
-                    }
-                    return match;
-                }
-                if ( pad === 'D' ) {
-                    switch ( oper ) {
-                        case 'd':
-                            return dur.part[0];
-                        case 'l':
-                            return w._zPad(dur.part[1]);
-                        case 'M':
-                            return w._zPad(dur.part[2]);
-                        case 'S':
-                            return w._zPad(dur.part[3]);
-                        case 'A':
-                            return ((dur.part[0] > 1)?w.__('durationDays')[1]:w.__('durationDays')[0]);
-                        default:
-                            return match;
-                    }
-                }
-                switch ( oper ) {
-                    case '%': // Literal %
-                        return '%';
-                    case 'a': // Short Day
-                        return w.__('daysOfWeekShort')[date.getDay()];
-                    case 'A': // Full Day of week
-                        return w.__('daysOfWeek')[date.getDay()];
-                    case 'b': // Short month
-                        return w.__('monthsOfYearShort')[date.getMonth()];
-                    case 'B': // Full month
-                        return w.__('monthsOfYear')[date.getMonth()];
-                    case 'C': // Century
-                        return date.getFullYear().toString().substr(0,2);
-                    case 'd': // Day of month
-                        return (( pad === '-' ) ? date.getDate() : w._zPad(date.getDate()));
-                    case 'H': // Hour (01..23)
-                    case 'k':
-                        return (( pad === '-' ) ? date.getHours() : w._zPad(date.getHours()));
-                    case 'I': // Hour (01..12)
-                    case 'l':
-                        return (( pad === '-' ) ? ((date.getHours() === 0 || date.getHours() === 12)?12:((date.getHours()<12)?date.getHours():(date.getHours()-12))) : w._zPad(((date.getHours() === 0 || date.getHours() === 12)?12:((date.getHours()<12)?date.getHours():date.getHours()-12))));
-                    case 'm': // Month
-                        return (( pad === '-' ) ? date.getMonth()+1 : w._zPad(date.getMonth()+1));
-                    case 'M': // Minutes
-                        return (( pad === '-' ) ? date.getMinutes() : w._zPad(date.getMinutes()));
-                    case 'p': // AM/PM (ucase)
-                        return ((date.getHours() < 12)?w.__('meridiem')[0].toUpperCase():w.__('meridiem')[1].toUpperCase());
-                    case 'P': // AM/PM (lcase)
-                        return ((date.getHours() < 12)?w.__('meridiem')[0].toLowerCase():w.__('meridiem')[1].toLowerCase());
-                    case 's': // Unix Seconds
-                        return date.getEpoch();
-                    case 'S': // Seconds
-                        return (( pad === '-' ) ? date.getSeconds() : w._zPad(date.getSeconds()));
-                    case 'u': // Day of week (1-7)
-                        return (( pad === '-' ) ? date.getDay() + 1 : w._zPad(date.getDay() + 1));
-                    case 'w': // Day of week
-                        return date.getDay();
-                    case 'y': // Year (2 digit)
-                        return date.getFullYear().toString().substr(2,2);
-                    case 'Y': // Year (4 digit)
-                        return date.getFullYear();
-                    case 'E': // BE (Buddist Era, 4 Digit)
-                        return date.getFullYear() + 543;
-                    case 'V':
-                        return (( pad === '-' ) ? date.getWeek(4) : w._zPad(date.getWeek(4)));
-                    case 'U':
-                        return (( pad === '-' ) ? date.getWeek(0) : w._zPad(date.getWeek(0)));
-                    case 'W':
-                        return (( pad === '-' ) ? date.getWeek(1) : w._zPad(date.getWeek(1)));
-                    case 'o': // Ordinals
-                        if ( typeof w._ord[o.useLang] !== 'undefined' ) {
-                            return w._ord[o.useLang](date.getDate());
-                        }
-                        return w._ord['default'](date.getDate());
-                    case 'j':
-                        tmp = new Date(date.getFullYear(),0,1);
-                        tmp = Math.ceil((date - tmp) / 86400000)+1;
-                        return (( tmp < 100 ) ? (( tmp < 10 )? '00' : '0') : '' ) + String(tmp);
-                    case 'G':
-                        if ( date.getWeek(4) === 1 && date.getMonth() > 0 ) {
-                            return date.getFullYear() + 1;
-                        } 
-                        if ( date.getWeek(4) > 51 && date.getMonth() < 11 ) {
-                            return date.getFullYear() - 1;
-                        }
-                        return date.getFullYear();
-                    case 'g':
-                        if ( date.getWeek(4) === 1 && date.getMonth() > 0 ) {
-                            return parseInt(date.getFullYear().toString().substr(2,2),10) + 1;
-                        }
-                        if ( date.getWeek(4) > 51 && date.getMonth() < 11 ) {
-                            return parseInt(date.getFullYear().toString().substr(2,2),10) - 1;
-                        }
-                        return date.getFullYear().toString().substr(2,2);
-                    default:
-                        return match;
-                }
-            });
-		
-            if ( w.__('useArabicIndic') === true ) {
-                format = w._dRep(format);
-            }
-		
-            return format;
+            return date.toString(format);
         },
         _btwn: function(value, low, high) {
             return ( value > low && value < high );
@@ -1012,16 +628,7 @@
             w._enhanceDate();
 			
             w.initDate = new w._date();
-            if (o.defaultValue !== undefined &&
-                o.defaultValue != null) {
-                if (o.defaultValue == 0) {
-                    w.theDate = null;
-                } else {
-                    w.theDate = w._makeDate(o.defaultValue);
-                }
-            } else {
-                w.theDate = new w._date();
-            }
+            w.theDate = w._makeDate(o.defaultValue);
             w.initDone = false;
 			
             if ( o.useButton === true && o.useInline === false && o.useNewStyle === false ) {
@@ -1112,9 +719,7 @@
                 w.d.input.removeClass('ui-focus');
             })
             .change(function() {
-                if (w.d.input.val()) {
-                    w.theDate = w._makeDate(w.d.input.val());                
-                }
+                w.theDate = w._makeDate(w.d.input.val());                
                 w.refresh();
             })
             .attr("readonly", o.lockInput)
@@ -1142,13 +747,14 @@
                 w.open();
             }
 			
-            if (o.defaultValue != null &&
-                o.defaultValue !== undefined) {
+            if (w.theDate != null) {
                 w.d.input.trigger('datebox', {
                     'method':'set', 
-                    'value':w.theDate ? w._formatter(w.__fmt(),w.theDate) : 0, 
+                    'value':w.theDate, 
                     'date':w.theDate
                     });
+            } else {
+                w.d.input.val('');
             }
                         
             //Throw dateboxinit event
