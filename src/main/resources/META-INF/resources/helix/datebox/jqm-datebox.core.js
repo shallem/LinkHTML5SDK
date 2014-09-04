@@ -294,22 +294,23 @@
                     case 'set':
                         if (p.value === undefined) {
                             p.value = new Date();
-                        } else if (p.value === null) {
+                        } else if (p.value === null || p.value == 0) {
                             p.value = '';
-                        }
-                        $(this).val(p.value);
-                        $(this).trigger('change');
-                        if (Helix.Utils.isString(p.value)) {
+                            w.theDate = null;
+                        } else if (Helix.Utils.isString(p.value)) {
                             w.theDate = w._makeDate(p.value);
                         } else if (typeof p.value === 'number') {
                             if (p.value > 0) {
                                 w.theDate = new Date(p.value);                                                    
                             } else {
+                                p.value = '';
                                 w.theDate = null;
                             }
                         } else {
                             w.theDate = p.value;
                         }
+                        $(this).val(p.value);
+                        $(this).trigger('change');
                         break;
                     case 'doset':
                         if ( $.isFunction(w['_'+w.options.mode+'DoSet']) ) {
@@ -1011,7 +1012,16 @@
             w._enhanceDate();
 			
             w.initDate = new w._date();
-            w.theDate = (o.defaultValue) ? w._makeDate(o.defaultValue) : new w._date();
+            if (o.defaultValue !== undefined &&
+                o.defaultValue != null) {
+                if (o.defaultValue == 0) {
+                    w.theDate = null;
+                } else {
+                    w.theDate = w._makeDate(o.defaultValue);
+                }
+            } else {
+                w.theDate = new w._date();
+            }
             w.initDone = false;
 			
             if ( o.useButton === true && o.useInline === false && o.useNewStyle === false ) {
@@ -1130,7 +1140,8 @@
                 w.open();
             }
 			
-            if (o.defaultValue) {
+            if (o.defaultValue != null &&
+                o.defaultValue !== undefined) {
                 w.d.input.trigger('datebox', {
                     'method':'set', 
                     'value':w.theDate ? w._formatter(w.__fmt(),w.theDate) : 0, 
