@@ -721,7 +721,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     }
     
     var fieldMarkup = $('<div />').attr({
-        'style' : 'width: auto'
+        'style' : 'width: ' + (formElem.computedWidth ? formElem.computedWidth : 'auto')
     }).appendTo($fieldContainer);
 
     var formMarkup = $("<form />").appendTo(fieldMarkup);
