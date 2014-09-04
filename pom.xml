@@ -312,7 +312,12 @@
 		    <include>lib/hints.js</include>
 
 		    <!-- Date arithmetic and manipulation. -->
+		    <!-- Culture files should come first. Right now we
+		         can only include 1 culture file. Need to make
+		         that more flexible down the road ... -->
+		    <include>datelib/en-US.js</include>
 		    <include>datelib/core.js</include>
+		    <include>datelib/parser.js</include>
 
 		    <!-- Persistence. -->
 		    <include>persistence/helix.websql.js</include>

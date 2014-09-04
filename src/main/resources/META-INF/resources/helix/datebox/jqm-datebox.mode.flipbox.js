@@ -46,12 +46,18 @@
     });
     $.extend( $.mobile.datebox.prototype._build, {
         'timeflipbox': function() {
-            this._build.flipbox.apply(this);
+            // Fix the date. It will be NaN b/c the parent doesn't know how to parse 3:51 PM
+            var timeStr = this.d.input.val();
+            var timeDate = Date.parseExact(timeStr, this.__('timeOutput'));
+            this._build.common.apply(this, [ timeDate ]);
         },
         'flipbox': function () {
+            var iDate = this._makeDate(this.d.input.val());
+            this._build.common.apply(this, [ iDate ]);
+        },
+        'common' : function(iDate) {
             var w = this,
             o = this.options, i, y, hRow, tmp, testDate,
-            iDate = this._makeDate(this.d.input.val()),
             uid = 'ui-datebox-',
             flipBase = $("<div class='ui-overlay-shadow'><ul></ul></div>"),
             ctrl = $("<div>", {
@@ -241,7 +247,7 @@
                         if ( w.dateOK === true ) {
                             w.d.input.trigger('datebox', {
                                 'method':'set', 
-                                'value':w._formatter(w.__fmt(),w.theDate), 
+                                'value':w.theDate, 
                                 'date':w.theDate
                                 });
                             w.d.input.trigger('datebox', {

@@ -2039,6 +2039,8 @@ function getSkinCss(event, opt) {
 		opt('eventTextColor');
         var isHatched =
                 event.isHatched;
+        var isTask =
+                event.isTask;
 	var statements = [];
 	if (backgroundColor) {
 		statements.push('background-color:' + backgroundColor);
@@ -2057,6 +2059,12 @@ function getSkinCss(event, opt) {
             }
             // Otherwise it is hard to read the text on the hatched background.
             statements.push('font-weight: bold');
+        }
+        if (isTask) {
+            statements.push('background-position: right');
+            statements.push('background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAATCAYAAACdkl3yAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAL1JREFUeNqslFENwzAMRJ0hCBRDGIRBGYQyKIRJIzAIHYOUSSF4qZRoVy9xk64n+aO1/OKzlTgRoT8UYnCMJ62ggzEIyB3siFM3WfNK9jEm2ZeHboLKMTVCrjVL6ZsIfrTMhRUk5Fwv6MeSBRqT3dHaUrZkgVCPPUsWaCnAapZuFogLMG3Jw6HmsGswtPTCOmtrJRgXZtm0foTdVW5T5+R72VznfdvUXegknQp6Q6s9QVBLPc+I1oRPy0eAAQCdtE1fKGL+dgAAAABJRU5ErkJggg==)');
+            statements.push('background-size: 10px 10px');
+            statements.push('background-repeat: no-repeat');
         }
 	return statements.join(';');
 }

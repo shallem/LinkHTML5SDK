@@ -606,7 +606,7 @@
             if (!item.readOnly) {
                 var fldType = item.type;
                 if (fldType !== 'buttonGroup') {
-                    item.value = null;
+                    item.value = (item.defaultValue ? item.defaultValue : null);
                 } else {
                     item.buttons = null;
                 }
