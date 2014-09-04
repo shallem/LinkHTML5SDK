@@ -1051,10 +1051,33 @@ function initHelixDB() {
             });
         },
 
-        synchronizeArrayField: function(allSchemas, objArray, parentCollection, elemSchema, field, oncomplete, overrides) {
+        synchronizeArrayField: function(allSchemas, objArray, parentObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             /* Synchronize the query collection. First, we create a map from keys to objects
              * from the new objects in obj[arrLocalField].
              */
+            
+            /* Refine the query collection using a user-configured call. By default this is
+             * an identity call (i.e, it just returns parentCollection). However, in some
+             * cases the user knows that a load only loaded a subset of a data list from
+             * the server. This call is used to refine the list for comparison.
+             */
+            var comparisonCollection = overrides.refineEntityArray(field, parentCollection);
+            
+            /* Handle the special case where the object array has 0 elements. In this case,
+             * we just issue a delete. But we do NOT flush the session.
+             */
+            if (objArray.length == 0) {
+                if (!parentObj._new) {
+                    // We only need to destroy all child objects in an array relationship if
+                    // the parent object is not new. If it is new, comparisonCollection will
+                    // always be empty.
+                    comparisonCollection.destroyAll();                
+                }
+                oncomplete(field);
+                return;
+            }
+            
+            
             var elemKeyField = Helix.DB.getKeyField(elemSchema);
             var elemMap = {};
             
@@ -1063,28 +1086,27 @@ function initHelixDB() {
                 elemMap[curElem[elemKeyField]] = curElem;
             }
         
-            /* Refine the query collection using a user-configured call. By default this is
-             * an identity call (i.e, it just returns parentCollection). However, in some
-             * cases the user knows that a load only loaded a subset of a data list from
-             * the server. This call is used to refine the list for comparison.
-             */
-            var comparisonCollection = overrides.refineEntityArray(field, parentCollection);
-        
             /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
              * efficient way to do this!
              */
             Helix.DB.synchronizeQueryCollection(allSchemas, elemMap, parentCollection, comparisonCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
         },
     
-        updateOneObject: function(allSchemas, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
-            elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) {
-                Helix.DB.synchronizeObjectFields(allSchemas, updatedObj,toUpdateObj,elemSchema,function(newObj) {
-                    if (overrides.updateHook) {
-                        overrides.updateHook(newObj);
-                    }
-                    oncomplete(newObj);
-                }, overrides);
-            });
+        updateOneObject: function(allSchemas, persistentObjID, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
+            // To truly "update" an object we would need to actually retrieve that object, then, one by one, update
+            // each field of that object. This is incredibly inefficient. Instead, we use the entity ID of this object
+            // from the DB to add it to the session and mark all properties in the object dirty (except those that the
+            // sync override tells us not to override ...). Then we update the object.
+            //elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) {
+            var toUpdateObj = new elemSchema();
+            toUpdateObj.markPersistent(persistentObjID);
+            Helix.DB.synchronizeObjectFields(allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj) {
+                if (overrides.updateHook) {
+                    overrides.updateHook(newObj);
+                }
+                oncomplete(newObj);
+            }, overrides);
+            //});
         },
     
         synchronizeDeltaField: function(allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
@@ -1112,7 +1134,7 @@ function initHelixDB() {
 
                         var objId = uidToEID[toAddKey];
                         if (objId) {
-                            Helix.DB.updateOneObject(allSchemas,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
+                            Helix.DB.updateOneObject(allSchemas,objId,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
                                 parentCollection.add(pObj);
                                 addDone(pObj);
                             },overrides);
@@ -1122,22 +1144,32 @@ function initHelixDB() {
                     }                                     
                 }
             };
+
+            var syncFn = function(uidToEID) {
+                if (deltaObj.updates.length > 0) {
+                    var updatedObj = deltaObj.updates.pop();
+                    var toUpdateKey = updatedObj[keyField];
+                    var objId = uidToEID[toUpdateKey];
+                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);                    
+                } else {
+                    /* Nothing more to sync. Do all removes. */
+                    doAdds(uidToEID);
+                }
+            };
             
-            var createUIDToEIDMap = function(startIdx, addUniqueIDs, uidToEID) {
-                if (deltaObj.adds.length == 0) {
+            var createUIDToEIDMap = function() {
+                var uidToEID = {};
+                if (deltaObj.adds.length == 0 &&
+                    deltaObj.updates.length == 0) {
+                    // Skip to the finish line ...
                     doAdds(null);
                 } else {
                     elemSchema.all().include([keyField]).newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
                         }, 
-                        doneFn: function(ct) {
-                            doAdds(uidToEID);
-                            /*if (ct == 0) {
-                                doAdds(uidToEID);
-                            } else {
-                                createUIDToEIDMap(startIdx + 100, addUniqueIDs, uidToEID);
-                            }*/
+                        doneFn: function() {
+                            syncFn(uidToEID);
                         }
                     });
                 }
@@ -1148,10 +1180,9 @@ function initHelixDB() {
                 for (var i = 0; i < deltaObj.adds.length; ++i) {
                     addUniqueIDs.push(deltaObj.adds[i][keyField]);
                 }
-                var uidToEID = {};
-                createUIDToEIDMap(0, addUniqueIDs, uidToEID);
+                createUIDToEIDMap();
             };
-
+            
             var removeFn = function(persistentObj) {
                 if (persistentObj) {
                     parentCollection.remove(persistentObj);
@@ -1176,24 +1207,16 @@ function initHelixDB() {
                         }
                     });
                 } else {
-                    /* Nothing more to remove. Add in any new objects. */
-                    prepareAdds();
+                    /* Make sure all deletes are in the DB. */
+                    persistence.flush(function() {
+                        /* Nothing more to remove. Add in any new objects. */
+                        prepareAdds();                
+                    });
                 }
             };
 
-            var syncFn = function() {
-                if (deltaObj.updates.length > 0) {
-                    var updatedObj = deltaObj.updates.pop();
-                    var toUpdateKey = updatedObj[keyField];
-                    Helix.DB.updateOneObject(allSchemas,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);                    
-                } else {
-                    /* Nothing more to sync. Do all removes. */
-                    removeFn();
-                }
-            };
-
-            /* Handle modifications first. */
-            syncFn();
+            /* Handle deletes, then sync. Then we handle modifications and adds. */
+            removeFn();
         },
     
         synchronizeDeltaObject: function(allSchemas, deltaObj, parentCollection, elemSchema, oncomplete, overrides) {
@@ -1292,7 +1315,7 @@ function initHelixDB() {
                     /* Synchronize the array field - since this is not a delta object, we assume the returned
                      * object has all fields that should be in this data table.
                      */
-                    Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
+                    Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type == 1001) {
                         Helix.DB.synchronizeDeltaField(allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
@@ -1308,7 +1331,7 @@ function initHelixDB() {
         },
 
         synchronizeArray: function(allSchemas, obj,objSchema,persistentObj,callback,overrides) {
-            Helix.DB.synchronizeArrayField(allSchemas, obj, persistentObj, objSchema, null, function() {
+            Helix.DB.synchronizeArrayField(allSchemas, obj, null, persistentObj, objSchema, null, function() {
                 callback(persistentObj);
             }, overrides);
         },

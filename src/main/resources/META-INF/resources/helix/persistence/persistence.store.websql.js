@@ -60,7 +60,7 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
           return fn(persistence.db.html5.transaction(sqlt));
         });
     };
-    return that;
+    return that;    
   };
 
   persistence.db.html5.transaction = function (t) {

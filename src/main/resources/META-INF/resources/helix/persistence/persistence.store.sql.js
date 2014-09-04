@@ -565,17 +565,25 @@ function config(persistence, dialect) {
    * @param tx the transaction to execute the queries on
    * @param queries an array of [query, args] tuples
    * @param callback the function to call when all queries have been executed
+   * @param delay Small delay to introduce in between statements; optional.
    */
-    function executeQueriesSeq (tx, queries, callback) {
+    function executeQueriesSeq (tx, queries, callback, delay) {
         // queries.reverse();
         var callbackArgs = [];
-        for ( var i = 3; i < arguments.length; i++) {
+        for ( var i = 4; i < arguments.length; i++) {
             callbackArgs.push(arguments[i]);
         }
         persistence.asyncForEach(queries, function(queryTuple, callback) {
-            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err) {
-                console.log(err.message);
-                callback(_, err);
+            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, query) {
+                var msg = err.message + ' when executing query ' + query;
+                console.log(msg);
+                if(delay) {
+                    setTimeout(function() {
+                        callback(_, msg);
+                    }, delay);
+                } else {
+                    callback(_, msg);
+                }
             });
         }, function(result, err) {
             if (err && callback) {
@@ -875,7 +883,15 @@ function config(persistence, dialect) {
     /**
    * Asynchronous call to remove all the items in the collection.
    * Note: does not only remove the items from the collection, but
-   * the items themselves.
+   * the items themselves. Also NOTE, this DOES NOT flush the current
+   * session to the DB. The reason is that this can have unintended consequences (e.g.,
+   * deleting data that is not truly stale). The users controls flushing ...
+   * However, this does mean that the user cannot delete an unflushed object as we also
+   * do not do the extra DB query to determine the 'id' of all objects that are slated
+   * for deletion. Again, it is up to the user to simply be careful. Don't manipulate objects
+   * in the session then call destroyAll with unflushed changes that are included in the
+   * destroy.
+   * 
    * @param tx transaction to use
    * @param callback function to be called when clearing has completed
    */
@@ -933,22 +949,146 @@ function config(persistence, dialect) {
         var whereSql = "WHERE "
         + [ this._filter.sql(meta, null, args) ].concat(additionalWhereSqls).join(' AND ');
 
-        var selectSql = "SELECT id FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
+        // var selectSql = "SELECT id FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
         var deleteSql = "DELETE FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
         var args2 = args.slice(0);
 
-        session.flush(tx, function () {
-            tx.executeSql(selectSql, args, function(results) {
-                for(var i = 0; i < results.length; i++) {
-                    delete session.trackedObjects[results[i].id];
-                    session.objectsRemoved.push({
-                        id: results[i].id, 
-                        entity: entityName
-                    });
-                }
-                tx.executeSql(deleteSql, args2, callback, callback);
+        tx.executeSql(deleteSql, args2, callback, callback);
+        
+        /* SAH: NOTE; we are not clearing out all removed objects from the session. This means
+         * we could have a tracked object that is not in the DB. If that object were subsequently
+         * updated and flushed, we would hit an error b/c the object is gone in the underlying DB.
+         * However, next to the option of an extra query on each call to destroyAll, this choice gives
+         * better control of performance to the library user.  
+         */
+/*
+        tx.executeSql(selectSql, args, function(results) {
+            for(var i = 0; i < results.length; i++) {
+                delete session.trackedObjects[results[i].id];
+                session.objectsRemoved.push({
+                    id: results[i].id, 
+                    entity: entityName
+                });
+            }
+            tx.executeSql(deleteSql, args2, callback, callback);
+        }, callback); */
+    };
+
+    /**
+   * Asynchronous call to update all the items in the collection. NOTE: this does NOT
+   * flush all items in the DB.
+   * 
+   * @param tx transaction to use
+   * @param fieldMap map from field names to values to update
+   * @param callback function to be called when updating has completed
+   */
+    persistence.DbQueryCollection.prototype.updateAll = function (tx, fieldMap, callback) {
+        var args = argspec.getArgs(arguments, [
+        {
+            name: 'tx', 
+            optional: true, 
+            check: persistence.isTransaction, 
+            defaultValue: null
+        },
+        {
+            name: 'fieldMap',
+            optional: false,
+            check: argspec.isMap()
+        },
+        {
+            name: 'callback', 
+            optional: true, 
+            check: argspec.isCallback(), 
+            defaultValue: function(){}
+        }
+        ]);
+        tx = args.tx;
+        callback = args.callback;
+        fieldMap = args.fieldMap;
+
+        var that = this;
+        var session = this._session;
+        if(!tx) { // no transaction supplied
+            session.transaction(function(tx) {
+                that.updateAll(tx, fieldMap, callback);
+            });
+            return;
+        }
+
+        var entityName = this._entityName;
+        var meta = persistence.getMeta(entityName);
+        var tm = persistence.typeMapper;
+
+        // handles mixin case -- this logic is generic and could be in persistence.
+        if (meta.isMixin) {
+            persistence.asyncForEach(meta.mixedIns, function(realMeta, next) {
+                var query = that.clone();
+                query._entityName = realMeta.name;
+                query.updateAll(tx, callback);
             }, callback);
-        });
+            return;
+        }
+        var joinSql = '';
+        var mtm = this._manyToManyFetch;
+        if(mtm) {
+            joinSql += "LEFT JOIN `" + mtm.table + "` AS mtm ON mtm.`" + mtm.inverseProp + "` = `root`.`id` ";
+            additionalWhereSqls.push("mtm.`" + mtm.prop + "` = " + tm.outId(mtm.id));
+        }
+
+        joinSql += this._additionalJoinSqls.join(' ');
+
+        // update params
+        var updateArgs = [];
+        var propertyPairs = [];
+        var setSql = '';
+        for (var fldName in fieldMap) {
+            if (setSql) {
+                setSql = setSql + ', ';
+            }
+            
+            var type = meta.fields[fldName];
+            var val = fieldMap[fldName];
+            updateArgs.push(tm.entityValToDbVal(val, type));
+            propertyPairs.push("`" + fldName + "` = " + tm.outVar("?", type));
+        }
+        
+        var additionalWhereSqls = this._additionalWhereSqls.slice(0);
+
+        var whereSql = "WHERE "
+        + [ this._filter.sql(meta, null, []) ].concat(additionalWhereSqls).join(' AND ');
+
+        var selectSql = "SELECT root.id FROM `" + entityName + "` as root " + joinSql + ' ' + whereSql;
+        var updateSql = "UPDATE `" + entityName + "`" + " SET " + propertyPairs.join(',') + ' ';
+        
+        tx.executeSql(selectSql, [], function(results) {
+            // Take these objects out of the tracked objects list so that we do
+            // not mistakenly use a cached copy of them with a wrong value in it.
+            var idsToUpdate = [];
+            for(var i = 0; i < results.length; i++) {
+                var nxtId = results[i].id;
+                idsToUpdate.push(nxtId);
+                delete session.trackedObjects[nxtId];
+            }
+            // Update them all.
+            i = 0;
+            while ((i * 25) < idsToUpdate.length) {
+                // Update in batches of 25
+                var startIdx = i * 25;
+                var endIdx = startIdx + 24;
+                var nxtIdArr = idsToUpdate.slice(startIdx, endIdx >= idsToUpdate.length ? idsToUpdate.length : endIdx);
+                var idList = '';
+                for (var j = 0; j < nxtIdArr.length; ++j) {
+                    if (idList) {
+                        idList = idList + ',';
+                    }
+                    idList = idList + "'" + nxtIdArr[j] + "'";
+                }
+                
+                var nxtUpdateSql = updateSql + ' WHERE id IN (' +  idList + ')';
+                tx.executeSql(nxtUpdateSql, updateArgs, callback, callback);
+                ++i;
+            }
+        }, callback);
     };
 
     /**

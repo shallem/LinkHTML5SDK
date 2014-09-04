@@ -308,6 +308,9 @@
 		    <!-- URL parsing. -->
 		    <include>lib/purl.js</include>
 
+		    <!-- Hints. -->
+		    <include>lib/hints.js</include>
+
 		    <!-- Date arithmetic and manipulation. -->
 		    <include>datelib/core.js</include>
 
