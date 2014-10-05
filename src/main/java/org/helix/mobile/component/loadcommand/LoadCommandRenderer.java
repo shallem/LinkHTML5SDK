@@ -186,6 +186,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'schemaFactory' : " + cmd.getName() + "_genSchema,");
         writer.write(" 'loadingOptions' : {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
+        writer.write(" 'color' : '"  + (cmd.getLoadingColor() != null ? cmd.getLoadingColor() : "") + "', ");
+        writer.write(" 'async' : " + (cmd.isLoadingAsync()) + ", ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
         writer.write("},");
         if (cmd.getSyncingMessage() != null) {

@@ -57,6 +57,19 @@
             <description>Message to display when syncing data to the local disk.</description>
         </attribute>
         <attribute>
+            <name>loadingColor</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Valid HTML color used to create an animation from black to the target color in the header bar (if present).</description>
+        </attribute>
+        <attribute>
+            <name>loadingAsync</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <description>Indicates if the sync'ing action should be communicated to the user asynchronously rather than with a loader that blocks the entire UI.</description>
+            <defaultValue>true</defaultValue>
+        </attribute>
+        <attribute>
             <name>loadingTheme</name>
             <required>false</required>
             <type>java.lang.String</type>
