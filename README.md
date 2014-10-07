@@ -89,6 +89,7 @@ in the SDK is working.
 Can I see a Demo?
 =================
 
-We are almost there ... we do intend to create a showcase with code
-samples but we haven't quite gotten to it yet. In the interim, if you
-want to see a demo of the SDK in action please contact Mobile Helix.
+YES! We now have a demo app in the /demo folder. This is a great way to
+get started with the SDK. Take a look at the README.md file in the /demo
+folder for more information and a pointer to some explanatory slides.
+
