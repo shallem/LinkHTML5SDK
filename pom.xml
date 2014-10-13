@@ -375,6 +375,9 @@
 		    <!-- Audio/video with jPlayer v2.6 -->
 		    <include>jplayer/jquery.jplayer.js</include>
 
+		    <!-- Color animation -->
+		    <include>animate-colors/jquery.animate-colors.js</include>
+
 		    <!-- Right now we are NOT including mousewheel support, but it can be easily added.
 		    <include>lib/mousewheel.js</include> -->
 

@@ -1810,13 +1810,13 @@
             }
             
             if (rowComponents.header) {
-                var headerMarkup = mainLink.find('h3[data-role="header"]');
+                var headerMarkup = mainLink.find('h3[data-role="itemheader"]');
                 if( Object.prototype.toString.call(rowComponents.header) == '[object String]' ) {
                     if (headerMarkup.length) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
                         mainLink.append($('<h3 />')
-                            .attr('data-role', 'header')
+                            .attr('data-role', 'itemheader')
                             .text(Helix.Utils.escapeQuotes(rowComponents.header)));
                     }
                 } else {
@@ -1824,12 +1824,12 @@
                         headerMarkup.empty().append(rowComponents.header);
                     } else {
                         mainLink.append($('<h3 />')
-                            .attr('data-role', 'header')
+                            .attr('data-role', 'itemheader')
                             .append(rowComponents.header));
                     }
                 }
             } else {
-                mainLink.find('h3[data-role="header"]').hide();
+                mainLink.find('h3[data-role="itemheader"]').hide();
             }
             
             if (rowComponents.subHeader) {

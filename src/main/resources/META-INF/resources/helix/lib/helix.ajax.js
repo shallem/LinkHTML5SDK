@@ -55,7 +55,30 @@
  * Show a loader pre-request.
  */
 $(document).bind('prerequest', function() {
-    $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+    if (!Helix.Ajax.loadOptions.async) {
+        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+    } else {
+        if (!Helix.Ajax.loadOptions.color) {
+            Helix.Ajax.loadOptions.color = "#FF8000";
+        }
+        
+        var header = $.mobile.activePage.find('[data-role="header"]');
+        var origBG = $(header).css('background');
+        var animateColor = function(doReverse) {
+            $(header).animate({ 
+                'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+            }, {
+                duration: 1200,
+                complete: function() {
+                    if (Helix.Ajax.loadCt >  0) {
+                        animateColor(!doReverse);
+                    } else {
+                        $(header).css('background', origBG);
+                    }
+            }});
+        }
+        animateColor(false);
+    }
     if (window.CordovaInstalled) {
         window.HelixSystem.suspendSleep();
     }
@@ -67,8 +90,10 @@ $(document).bind('prerequest', function() {
  */
 $(document).bind('postrequest', function() {
     if (!Helix.Ajax.loadOptions.pin) {
-        /* Hide the loader. */
-        $.mobile.loading( "hide" );
+        if (!Helix.Ajax.loadOptions.async) {
+            /* Hide the loader. */
+            $.mobile.loading( "hide" );            
+        }
         if (window.CordovaInstalled) {
             window.HelixSystem.allowSleep();
         }
@@ -183,17 +208,26 @@ Helix.Ajax = {
         if (!loadingOptions.theme) {
             loadingOptions.theme = "a";
         }
-        if (loadingOptions.message) {
-            Helix.Ajax.loadOptions= {
-                text: loadingOptions.message, 
-                textVisible: true,
-                theme: loadingOptions.theme,
-                textonly: false
-            };
+        if (!loadingOptions.async) {
+            if (loadingOptions.message) {
+                Helix.Ajax.loadOptions= {
+                    aync: false,
+                    text: loadingOptions.message, 
+                    textVisible: true,
+                    theme: loadingOptions.theme,
+                    textonly: false
+                };
+            } else {
+                Helix.Ajax.loadOptions = {
+                    async: false,
+                    textVisible: false,
+                    theme: loadingOptions.theme
+                };
+            }
         } else {
             Helix.Ajax.loadOptions = {
-                textVisible: false,
-                theme: loadingOptions.theme
+                async : true,
+                color : loadingOptions.color
             };
         }
     },

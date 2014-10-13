@@ -1067,7 +1067,7 @@ function initHelixDB() {
              * we just issue a delete. But we do NOT flush the session.
              */
             if (objArray.length == 0) {
-                if (!parentObj._new) {
+                if (!parentObj || !parentObj._new) {
                     // We only need to destroy all child objects in an array relationship if
                     // the parent object is not new. If it is new, comparisonCollection will
                     // always be empty.

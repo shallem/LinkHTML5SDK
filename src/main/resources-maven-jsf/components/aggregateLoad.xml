@@ -45,6 +45,12 @@
             <description>Message to display when syncing data to the local disk.</description>
         </attribute>
         <attribute>
+            <name>loadingColor</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Valid HTML color used to create an animation from black to the target color in the header bar (if present).</description>
+        </attribute>
+        <attribute>
             <name>loadingTheme</name>
             <required>false</required>
             <type>java.lang.String</type>
