@@ -58,6 +58,11 @@
       <artifactId>jackson-core-asl</artifactId>
       <version>1.9.11</version>
     </dependency>
+    <dependency>
+      <groupId>org.helix</groupId>
+      <artifactId>LinkSDKSerializer</artifactId>
+      <version>1.0.0</version>
+    </dependency>
 
   </dependencies>
 
@@ -416,6 +421,11 @@
       <id>prime-repo</id>
       <name>PrimeFaces Maven Repository</name>
       <url>http://repository.primefaces.org</url>
+    </repository>
+    <repository>
+      <id>project.local</id>
+      <name>project</name>
+      <url>file:${project.basedir}/repo</url>
     </repository>
   </repositories>
 

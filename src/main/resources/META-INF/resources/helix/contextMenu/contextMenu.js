@@ -158,54 +158,18 @@
             }
 
             this.optionsList.on(_self.tapEvent, 'a', function(evt) {
-                if (!_self.active) {
-                    return true;
-                }
-                evt.stopImmediatePropagation();
-                
-                var cbData = $(evt.target).attr('data-field');
-                var cbIndex = $(evt.target).attr('data-index');
-
-                var item = _self.options.items[cbIndex];
-                if (item.action) {
-                    var __runAction = function() {
-                        if (_self._thisArg) {
-                            item.action.call(_self._thisArg, cbData, evt);
-                        } else {
-                            item.action.call(_self, cbData, evt);
-                        }
-                        _self.close();
-                    };
-                    if (Helix.hasTouch) {
-                        // See if the user scrolls before we see touchend. If they do,
-                        // then do not fire the event.
-                        var scrollTop =  $(_self._menuContainer).scrollTop();
-                        $(evt.target).off('touchend').on('touchend', function(evt2) {
-                            var cbIndex2 = $(evt2.target).attr('data-index');
-                            if (cbIndex == cbIndex2 &&
-                                Math.abs(scrollTop - $(_self._menuContainer).scrollTop()) < 10) {
-                                __runAction();
-                                return false;
-                            }
-                            return true;
-                        });
-                        setTimeout(function() {
-                            $(evt.target).off('touchend');
-                        }, 2500);
-                        return true;
-                    } else {
-                        __runAction();
-                        return false;
-                    }
-                }
-                return false;
+                return _self._handleClick(evt);
+            });
+            
+            this.optionsList.on('vclick', 'a', function(evt) {
+                return _self._handleClick(evt);
             });
 
             if (Helix.hasTouch) {
                 // Prevent jQM touch events from propagating beyond the list items. Otherwise
                 // if tapping a list item closes the list and puts something underneath the list
                 // the tap will fall through.
-                this.optionsList.on('tap vclick click', 'li', function(evt) {
+                this.optionsList.on('tap click', 'li', function(evt) {
                     evt.stopImmediatePropagation();
                     return false;
                 });
@@ -224,8 +188,51 @@
                 }
             });
         },
+        
+        _handleClick : function(evt) {
+            if (!this.active) {
+                return true;
+            }
+            evt.stopImmediatePropagation();
 
-        open: function(obj) {
+            var cbData = $(evt.target).attr('data-field');
+            var cbIndex = $(evt.target).attr('data-index');
+
+            var item = this.options.items[cbIndex];
+            if (item.action) {
+                var __runAction = function () {
+                    if (this._thisArg) {
+                        item.action.call(this._thisArg, cbData, evt);
+                    } else {
+                        item.action.call(this, cbData, evt);
+                    }
+                    this.close();
+                };
+                if (Helix.hasTouch) {
+                    // See if the user scrolls before we see touchend. If they do,
+                    // then do not fire the event.
+                    var scrollTop = $(this._menuContainer).scrollTop();
+                    $(evt.target).off('touchend').on('touchend', function (evt2) {
+                        var cbIndex2 = $(evt2.target).attr('data-index');
+                        if (cbIndex == cbIndex2 &&
+                                Math.abs(scrollTop - $(this._menuContainer).scrollTop()) < 10) {
+                            __runAction();
+                            return false;
+                        }
+                        return true;
+                    });
+                    setTimeout(function () {
+                        $(evt.target).off('touchend');
+                    }, 2500);
+                    return true;
+                } else {
+                    __runAction();
+                    return false;
+                }
+            }
+            return false;
+        },
+        open: function (obj) {
             this._thisArg = (obj ? obj.thisArg : null);
             if (this.options.beforeopen) {
                 if (this._thisArg) {
@@ -234,7 +241,7 @@
                     this.options.beforeopen.call(this);
                 }
             }
-            
+
             if (obj) {
                 this._menuContainer.popup("open", obj);
             } else {
@@ -242,46 +249,40 @@
             }
             this.active = true;
             if (Helix.hasTouch) {
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( this.tapEvent, $.proxy( this, "_stopAndClose" ) );
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on( 'tap', $.proxy( this, "_stop" ) );
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on(this.tapEvent, $.proxy(this, "_stopAndClose"));
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on('tap', $.proxy(this, "_stop"));
             }
-            
+
         },
-        
-        hideGroup: function(grp) {
+        hideGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').hide();
             this.optionsList.listview("refresh");
         },
-        
-        showGroup: function(grp) {
+        showGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').show();
             this.optionsList.listview("refresh");
         },
-
-        _stopAndClose: function(ev) {
+        _stopAndClose: function (ev) {
             ev.preventDefault();
             ev.stopImmediatePropagation();
             this.close();
             return false;
         },
-
-        _stop: function(ev) {
+        _stop: function (ev) {
             ev.preventDefault();
             ev.stopImmediatePropagation();
             return false;
         },
-
-        close: function() {
+        close: function () {
             this.active = false;
             this._menuContainer.popup("close");
             if (Helix.hasTouch) {
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( this.tapEvent );
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off( 'tap' );
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off(this.tapEvent);
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off('tap');
             }
         },
-        
-        getName: function() {
+        getName: function () {
             return this.options.name;
         }
     });
-}( jQuery ));
+}(jQuery));

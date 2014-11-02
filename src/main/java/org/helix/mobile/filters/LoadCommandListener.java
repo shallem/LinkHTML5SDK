@@ -25,7 +25,6 @@ import javax.faces.event.PhaseId;
 import javax.faces.event.PhaseListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.helix.mobile.model.LoadCommandAction;
 
 /**
  *
@@ -63,7 +62,7 @@ public class LoadCommandListener implements PhaseListener {
                     //lca.doLoad();
             Object thisObj = fc.getApplication().evaluateExpressionGet(fc, "#{" + lca.getBeanName() + "}", lca.getBeanClass());
             try {
-                lca.doLoad(thisObj);
+//                lca.doLoad(thisObj);
                 String jsonToReturn = lca.getAndSerialize(thisObj);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");

@@ -384,6 +384,14 @@ Helix.Ajax = {
             name: "__hxLoadKey",  
             value: loadCommandOptions.requestOptions.loadKey
         });
+        loadCommandOptions.requestOptions.params.push({
+            name: "__hxLoadMethod",  
+            value: loadCommandOptions.requestOptions.loadMethod
+        });
+        loadCommandOptions.requestOptions.params.push({
+            name: "__hxGetMethod",  
+            value: loadCommandOptions.requestOptions.getMethod
+        });
 
         if (!Helix.Ajax.isDeviceOnline()) {
             // Use the key to sync from the local DB.
