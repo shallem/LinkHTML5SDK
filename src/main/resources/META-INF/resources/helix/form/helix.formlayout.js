@@ -884,7 +884,7 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     $buttonLink.appendTo($fieldContainer);
     $buttonLink.buttonMarkup({ mini : useMiniLayout });
     if (formElem.onclick) {
-        $buttonLink.on('tap', function(ev) {
+        $buttonLink.on('vclick', function(ev) {
             formElem.onclick.call(this, ev);
         });
     }

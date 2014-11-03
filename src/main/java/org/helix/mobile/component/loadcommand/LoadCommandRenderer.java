@@ -26,8 +26,9 @@ import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import javax.servlet.http.HttpServletRequest;
 import org.helix.mobile.model.JSONSerializer;
-import org.helix.mobile.model.LoadCommandAction;
+import org.helix.mobile.filters.LoadCommandAction;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class LoadCommandRenderer extends CoreRenderer {
@@ -44,10 +45,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         this.encodeScript(context, cmd);
     }
     
-    protected String saveLoadCommand(FacesContext context,
-            String beanName,
-            Class c, 
-            Constructor ctor, 
+    public static String generateLoadCommandKey(Class c, 
             Method loadMethod, 
             Method getMethod) throws IOException {
         String key = null;
@@ -66,13 +64,16 @@ public class LoadCommandRenderer extends CoreRenderer {
             throw new IOException("Could not generate key for load command.");
         }
         
-        context.getExternalContext().getApplicationMap().put(key, new LoadCommandAction(key, beanName, c, ctor, loadMethod, getMethod));
+        //context.getExternalContext().getApplicationMap().put(key, new LoadCommandAction(key, beanName, c, ctor, loadMethod, getMethod));
         return key;
     }
     
     protected String resolveCommand(FacesContext context,
+            String loadCommandName,
             ValueExpression valE,
-            javax.el.MethodExpression commandExpr) throws IOException {
+            javax.el.MethodExpression commandExpr,
+            StringBuilder loadMethodName,
+            StringBuilder getMethodNameRet) throws IOException {
         Matcher m = commandPattern.matcher(commandExpr.getExpressionString());
         if (m.matches()) {
             String beanName = m.group(1);
@@ -83,18 +84,22 @@ public class LoadCommandRenderer extends CoreRenderer {
                 Class<?> c = bean.getClass();
                 Method loadMethod = null;
                 try {
-                    loadMethod = c.getMethod(methodName, new Class[]{});
+                    loadMethod = c.getMethod(methodName, new Class[]{ HttpServletRequest.class });
                 } catch (Exception e) {
                     
                 }
                 if (loadMethod == null) {
-                    throw new IOException(methodName + " must refer to a 0 argument method of the bean of type " + c.getName());
+                    throw new IOException(methodName + " used as the load method for command " + loadCommandName + 
+                            " must refer to a 1 argument method whose argument is an HttpServletRequest of the bean of type " + c.getName());
                 }
+                loadMethodName.append(methodName);
                 
                 Method getMethod = null;
-                Matcher getM = commandPattern.matcher(valE.getExpressionString());
+                String valStr = valE.getExpressionString();
+                Matcher getM = commandPattern.matcher(valStr);
+                String getMethodName;
                 if (getM.matches()) {
-                    String getMethodName = getM.group(2);
+                    getMethodName = getM.group(2);
                     
                     /* Convert getMethodName to a getter by capitalizing the first letter and prefixing
                      * with "get".
@@ -109,23 +114,22 @@ public class LoadCommandRenderer extends CoreRenderer {
                     throw new IOException("Failed to parse value expression: " + valE.getExpressionString());
                 }
                 if (getMethod == null) {
-                    throw new IOException("Failed to find method corresponding to value attribute for class " + c.getName());
+                    throw new IOException("Failed to find method " + valStr + " corresponding to value attribute for class " + c.getName());
                 }
-                
+                getMethodNameRet.append(getMethodName);
                 
                 Object thisObject = null;
                 Constructor constr = null;
                 try {
-                    constr = c.getConstructor(new Class[]{});
-                    thisObject = constr.newInstance(new Object[]{});
+                    constr = c.getConstructor(new Class[]{ HttpServletRequest.class });
                 } catch(Exception e) {
                     
                 }
-                if (thisObject == null) {
-                    throw new IOException(c.getName() + " must have a 0 argument constructor.");
+                if (constr == null) {
+                    throw new IOException(c.getName() + " must have a 1 argument constructor whose argument is an HttpServletRequest.");
                 }
                 
-                return this.saveLoadCommand(context, beanName, c, constr, loadMethod, getMethod);
+                return generateLoadCommandKey(c, loadMethod, getMethod);
             } else {
                 throw new IOException(beanName + " must refer to a JSF request-scoped bean.");
             }
@@ -139,8 +143,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         String clientId = cmd.getClientId();
         
         String url = context.getExternalContext().getRequestContextPath() + 
-                context.getExternalContext().getRequestServletPath() +
-                "/index.xhtml";
+                //context.getExternalContext().getRequestServletPath() +
+                "/__hxload/index.xhtml";
         
         StringBuilder onComplete = new StringBuilder();
         if (cmd.getOncomplete() != null) {
@@ -170,7 +174,10 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         // NOTE: must call this AFTER we call cmd.getValue above to create the request-scoped
         // bean. Otherwise this method will throw a null pointer exception.
-        String keyVal = this.resolveCommand(context, cmd.getValueExpression("value"), cmd.getCmd());
+        StringBuilder loadMethod = new StringBuilder();
+        StringBuilder getMethod = new StringBuilder();
+        String keyVal = this.resolveCommand(context, cmd.getName(), cmd.getValueExpression("value"), cmd.getCmd(),
+                loadMethod, getMethod);
         
         writer.write("\n");
         startScript(writer, clientId);
@@ -198,6 +205,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         }
         writer.write(" 'requestOptions' : {");
         writer.write(" 'loadKey' : '" + keyVal + "',");
+        writer.write(" 'loadMethod' : '" + loadMethod.toString() + "',");
+        writer.write(" 'getMethod' : '" + getMethod.toString() + "',");
         writer.write(" 'postBack' : '" + url + "',");
         writer.write("},");
         writer.write(" 'syncOverrides' : {");

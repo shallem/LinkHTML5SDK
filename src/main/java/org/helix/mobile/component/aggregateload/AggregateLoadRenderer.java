@@ -41,8 +41,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         String clientId = cmd.getClientId();
         
         String url = context.getExternalContext().getRequestContextPath() + 
-                context.getExternalContext().getRequestServletPath() +
-                "/index.xhtml";
+                //context.getExternalContext().getRequestServletPath() +
+                "/__hxload/index.xhtml";
        
         Object v = cmd.getValue();
         JSONSerializer s = new JSONSerializer();
@@ -62,7 +62,11 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         
         // NOTE: must call this AFTER we call cmd.getValue above to create the request-scoped
         // bean. Otherwise this method will throw a null pointer exception.
-        String keyVal = this.resolveCommand(context, cmd.getValueExpression("value"), cmd.getCmd());
+        StringBuilder loadMethodName = new StringBuilder();
+        StringBuilder getMethodNameRet = new StringBuilder();
+        String keyVal = this.resolveCommand(context, cmd.getName(),
+                cmd.getValueExpression("value"), cmd.getCmd(),
+                loadMethodName, getMethodNameRet);
         
         writer.write("\n");
         startScript(writer, clientId);
@@ -85,6 +89,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         }
         writer.write(" 'requestOptions' : {");
         writer.write(" 'loadKey' : '" + keyVal + "',");
+        writer.write(" 'loadMethod' : '" + loadMethodName.toString() + "',");
+        writer.write(" 'getMethod' : '" + getMethodNameRet.toString() + "',");
         writer.write(" 'postBack' : '" + url + "',");
         writer.write(" 'params' : options.params ");
         writer.write("},");

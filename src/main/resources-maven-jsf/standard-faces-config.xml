@@ -9,10 +9,6 @@
         </after>
     </ordering>
   
-    <lifecycle>
-        <phase-listener>org.helix.mobile.filters.LoadCommandListener</phase-listener>
-    </lifecycle>
-  
     <application>
         <resource-handler>org.helix.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
         <system-event-listener>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helix.mobile.model;
+package org.helix.mobile.filters;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.FacesException;
+import javax.servlet.http.HttpServletRequest;
+import org.helix.mobile.model.JSONSerializer;
 
 /**
  *
@@ -60,7 +62,7 @@ public class LoadCommandAction {
         }
     }
     
-    public Object doLoad(Object thisObject) throws FacesException {
+    public Object doLoad(Object thisObject, HttpServletRequest req) throws FacesException {
         /*Object thisObject = null;
         try {
             thisObject = ctor.newInstance(new Object[]{});
@@ -78,7 +80,7 @@ public class LoadCommandAction {
              * exceptions are not caught. This is intentional.
              */
             Date startTime = new Date();
-            loader.invoke(thisObject, new Object[] {});
+            loader.invoke(thisObject, new Object[] { req });
             Date endTime = new Date();
             
             LOG.log(Level.FINE, "Load completed in {0} seconds.", (endTime.getTime() - startTime.getTime()) / 1000);
@@ -149,5 +151,9 @@ public class LoadCommandAction {
 
     public Class getBeanClass() {
         return beanClass;
+    }
+    
+    public Constructor getCTOR() {
+        return this.ctor;
     }
 }

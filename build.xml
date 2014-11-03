@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="all" name="linksdk">
+  <dirname property="build.basedir" file="${ant.file.linksdk}"/>
+
+  <property name="rootdir" location="${build.basedir}/.."/>
+  <property name="MasterRepo" location="${rootdir}/Master"/>
+  <import file="${MasterRepo}/AntScripts/macro-defs.xml"/>
 
   <target name="increment-version">
     <propertyfile file="src/main/resources/helix-mobile.properties">
       <entry key="revision" operation="+" value="1" type="int"/>
     </propertyfile>
+  </target>
+
+  <target name="prepare">
+    <delete dir="${build.basedir}/repo"/>
+    <mkdir dir="${build.basedir}/repo"/>
+    <execute-mvn dir="${build.basedir}" failonerror="true">
+      <arg value="deploy:deploy-file"/>
+      <arg value="-Durl=file:///${build.basedir}/repo"/>
+      <arg value="-Dfile=${rootdir}/LinkPublicAppServer/LinkSDKSerializer/dist/LinkSDKSerializer.jar"/>
+      <arg value="-DgroupId=org.helix"/>
+      <arg value="-DartifactId=LinkSDKSerializer"/>
+      <arg value="-Dversion=1.0.0"/>
+      <arg value="-Dpackaging=jar"/>
+    </execute-mvn>
   </target>
 
 </project>
