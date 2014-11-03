@@ -90,7 +90,7 @@ public class LoadCommandRenderer extends CoreRenderer {
                 }
                 if (loadMethod == null) {
                     throw new IOException(methodName + " used as the load method for command " + loadCommandName + 
-                            " must refer to a 0 argument method of the bean of type " + c.getName());
+                            " must refer to a 1 argument method whose argument is an HttpServletRequest of the bean of type " + c.getName());
                 }
                 loadMethodName.append(methodName);
                 

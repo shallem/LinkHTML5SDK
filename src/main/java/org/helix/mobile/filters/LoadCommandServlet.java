@@ -22,7 +22,6 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -73,6 +72,9 @@ public class LoadCommandServlet extends HttpServlet {
             } catch (InvocationTargetException ite) {
                 LOG.log(Level.SEVERE, "Failed to instantiate load command class.", ite);
                 err = "Error instantiating load command class: " + ite.getMessage();
+            } catch (Exception ex) {
+                LOG.log(Level.SEVERE, "Failed to run load command with unexpected exception", ex);
+                err = "Unexepcted server error. Please contact your administrator.";
             }
             
             if (err != null) {
@@ -108,7 +110,7 @@ public class LoadCommandServlet extends HttpServlet {
 
         }
         if (loadMethod == null) {
-            throw new IOException(loadMethodName + " must refer to a 0 argument method of the bean of type " + this.loadCommandClass.getName());
+            throw new IOException(loadMethodName + " must refer to a 1 argument method of the bean of type " + this.loadCommandClass.getName());
         }
         
         Method getMethod = null;
@@ -128,7 +130,7 @@ public class LoadCommandServlet extends HttpServlet {
 
         }
         if (constr == null) {
-            throw new IOException(this.loadCommandClass.getName() + " must have a 0 argument constructor.");
+            throw new IOException(this.loadCommandClass.getName() + " must have a 1 argument constructor.");
         }
                 
         LoadCommandAction lca = new LoadCommandAction(loadKey, null, this.loadCommandClass, 

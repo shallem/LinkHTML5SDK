@@ -198,15 +198,16 @@
             var cbData = $(evt.target).attr('data-field');
             var cbIndex = $(evt.target).attr('data-index');
 
+            var _self = this;
             var item = this.options.items[cbIndex];
             if (item.action) {
                 var __runAction = function () {
-                    if (this._thisArg) {
-                        item.action.call(this._thisArg, cbData, evt);
+                    if (_self._thisArg) {
+                        item.action.call(_self._thisArg, cbData, evt);
                     } else {
-                        item.action.call(this, cbData, evt);
+                        item.action.call(_self, cbData, evt);
                     }
-                    this.close();
+                    _self.close();
                 };
                 if (Helix.hasTouch) {
                     // See if the user scrolls before we see touchend. If they do,
@@ -215,7 +216,8 @@
                     $(evt.target).off('touchend').on('touchend', function (evt2) {
                         var cbIndex2 = $(evt2.target).attr('data-index');
                         if (cbIndex == cbIndex2 &&
-                                Math.abs(scrollTop - $(this._menuContainer).scrollTop()) < 10) {
+                                Math.abs(scrollTop - $(_self._menuContainer).scrollTop()) < 10) {
+                            evt2.stopImmediatePropagation();
                             __runAction();
                             return false;
                         }
