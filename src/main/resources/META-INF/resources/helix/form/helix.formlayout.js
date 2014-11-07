@@ -614,6 +614,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             formElem.__noblur = true;
                             autoCompleteList.empty();
                             if (LIs && LIs.length) {
+                                $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
+                                    autoCompleteList.empty();
+                                    formElem.__noblur = false;
+                                    return false;
+                                }).appendTo(autoCompleteList);
                                 for (var i = 0; i < LIs.length; ++i) {
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
                                         formElem.autocompleteSelect($(this).text());
