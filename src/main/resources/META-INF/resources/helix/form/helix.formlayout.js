@@ -216,7 +216,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         /* Edit */
         var dateDiv = $('<div />').attr({
             'style' : formLayout.computedFieldStyle,
-            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
+            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
         .append($('<label />').attr({
             'for' : formElem.name,
@@ -315,7 +315,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         var dateDiv = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : formLayout.computedFieldStyleClass
+            'class' : formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
@@ -395,7 +395,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
+            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID
@@ -536,7 +536,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
+            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
@@ -866,19 +866,27 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (!formElem.fieldTitle) {
         formElem.fieldTitle = "";
     }
+    if (!formElem.id) {
+        formElem.id = Helix.Utils.getUniqueID();
+    }
     if (formElem.iconClass) {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
             'data-iconpos' : 'bottom',
             'data-icon' : formElem.iconClass,
-            'data-iconshadow' : true,
-            'class' : 'iconbutton'
+            'data-iconshadow' : formElem.iconShadow ? 'true' : 'false',
+            'data-corners' : formElem.iconCorners ? 'true' : 'false',
+            'data-shadow' : formElem.shadow ? 'true' : 'false',
+            'class' : 'iconbutton',
+            'id': formElem.id
         }).append(formElem.fieldTitle).button();            
     } else {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
             'data-inline' : true,
-            'data-theme' : 'b'
+            'data-shadow' : formElem.shadow ? 'true' : 'false',
+            'data-theme' : formElem.theme ? formElem.theme : 'b',
+            'id': formElem.id
         }).append(formElem.fieldTitle).button();
     }
     if (formElem.href) {
@@ -1251,6 +1259,19 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
 }
 
 function __preprocessFormElement(formLayout, formElem) {
+    formElem.computedFieldStyleClass = '';
+    if (formElem.fieldStyleClass) {
+        if (!Helix.Utils.isString(formElem.fieldStyleClass)) {
+            formElem.computedFieldStyleClass = 
+                (formElem.fieldStyleClass[Helix.deviceType] ?  formElem.fieldStyleClass[Helix.deviceType] : formElem.fieldStyleClass['default']);
+        } else {
+            formElem.computedFieldStyleClass = formElem.fieldStyleClass;
+        }
+        if (formElem.computedFieldStyleClass) {
+            formElem.computedFieldStyleClass = ' ' + formElem.computedFieldStyleClass;
+        }
+    }    
+    
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
             formElem.computedStyleClass = 
@@ -1377,8 +1398,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         .css('-webkit-user-select', 'none')
         .attr('id', containerID + "_view")
         .appendTo(parentDiv);
-        if (formLayout.computedFieldStyleClass) {
-            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass);
+        if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
+            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
         }
         if (formLayout.computedFieldStyle) {
             $viewFieldContainer.attr('style', formLayout.computedFieldStyle);

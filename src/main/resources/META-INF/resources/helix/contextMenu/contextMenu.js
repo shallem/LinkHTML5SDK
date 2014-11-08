@@ -53,7 +53,18 @@
              * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
              * If no name is provided, one is generated. The getName method returns the name.
              */
-            name: null
+            name: null,
+            
+            /**
+             * Optional theme. Used to provide a color swatch for the menu. Defaults to jquery mobile theme 'b'.
+             */
+            theme: 'b',
+            
+            /**
+             * Optional divider theme. Used to provide a color swatch for dividers in the menu. Default to jquery mobile
+             * theme 'a'.
+             */
+            dividerTheme: 'a'
         },
 
         _create: function() {
@@ -127,7 +138,7 @@
                 'data-role' : 'listview',
                 'data-inset' : 'true',
                 'id' : this.id + "-ul",
-                'data-theme' : 'b'
+                'data-theme' : this.options.theme
             }).appendTo(this._menuContainer);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
@@ -135,7 +146,7 @@
 
                 if (nxtItem.isDivider) {
                     nxtLI.attr('data-role', 'divider');
-                    nxtLI.attr('data-theme', 'a');
+                    nxtLI.attr('data-theme', this.options.dividerTheme);
                     nxtLI.append(nxtItem.display);
                 } else {
                     var nxtLink = $('<a />').attr({
