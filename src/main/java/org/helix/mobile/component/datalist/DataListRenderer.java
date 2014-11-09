@@ -82,6 +82,11 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("scroll: false,");
         }
+        if (dlist.isMultiSelect()) {
+            writer.write("multiSelect: true,");
+        } else {
+            writer.write("multiSelect: false,");
+        }
 
         if (!dlist.isShowButtons()) {
             writer.write("showButtons: false,");

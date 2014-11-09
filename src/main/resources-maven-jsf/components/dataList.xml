@@ -284,6 +284,14 @@
          <type>java.lang.Boolean</type>
          <defaultValue>true</defaultValue>
          <description>Indicates that the arrow icon (right side) is displayed in list items.</description>
-      </attribute>      
+      </attribute>
+      <attribute>
+         <name>multiSelect</name>
+         <required>false</required>
+         <type>java.lang.Boolean</type>
+         <defaultValue>false</defaultValue>
+         <description>Enable multi select of list items.</description>
+      </attribute>
+            
    </attributes>
 </component>

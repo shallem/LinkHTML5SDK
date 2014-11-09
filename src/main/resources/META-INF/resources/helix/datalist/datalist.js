@@ -298,6 +298,11 @@
              * If true, shows an arrow icon on the right hand side of each list item
              */
             showDataIcon: true,
+            
+            /*
+             * Enables multi select.
+             */
+            multiSelect: false,
 
             /*
              * Number of rows to display in a single view of the list. The list automatically
@@ -327,6 +332,12 @@
                 .hide();
             this._searchSortDirty = true;
             
+            this.$clearSelectionDiv = $('<div/>')
+                .appendTo(this.$wrapper)
+                .addClass('hx-full-width')
+                .attr('id', parentId + '_clear_sel')
+                .hide();
+            
             /**
              * Append the hook div if we have pull to refresh setup.
              */
@@ -345,6 +356,9 @@
             }).appendTo(listWrapper);
             if (this.options.inset) {
                 this.$parent.attr('data-inset', true);
+            }
+            if (this.options.multiSelect) {
+                this.$parent.addClass('hxMultiSelect');
             }
             
             /**
@@ -535,6 +549,9 @@
             /* Generate the actual data for the current page. */
             _self._prependSearchBox();
             _self._updateSortButtons();
+            
+            /* generate a clear selection button for multi select */
+            _self._prependClearSelection();
             
             /**
              * Display from the beginning of the list.
@@ -1473,6 +1490,25 @@
             
             _self.$searchSortDiv.show();
         },
+        
+        _prependClearSelection: function() {
+            if (!this.options.multiSelect) {
+                return;
+            }
+            var _self = this;
+            _self.$clearSelectionDiv.empty();
+            _self.$clearSelectionDiv.append($('<a/>').append("Clear").buttonMarkup({
+                mini: true,
+                corners: false,
+                shadow: false,
+                icon: 'check',
+                iconpos: 'left',
+                inline: true
+            }).on(_self.tapEvent, function() {
+                _self.clearAllMultiSelect();
+            }));
+        },
+        
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection) {
             var orderby = this._currentSort; 
@@ -1607,6 +1643,7 @@
             }
             
             curRowParent.attr('data-index', rowIndex);
+            curRowParent.attr('data-selected', '0');
             if (_self.options.grouped) {
                 curRowParent.attr('data-group-index', groupIndex);
             }
@@ -1660,10 +1697,16 @@
                     if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
                         return false;
                     }
-
-                    if (_self.setSelected(event.target)) {
-                        _self.selectItem();
+                    
+                    if (_self.options.multiSelect && event.offsetX < 30) {
+                        $(event.target).toggleClass("hx-selected");
+                        _self.$clearSelectionDiv.show();
+                    } else {
+                        if (_self.setSelected(event.target)) {
+                            _self.selectItem();
+                        }
                     }
+
                     return false;
                 });
             }
@@ -1718,7 +1761,6 @@
         getSelected: function() {
             return this.selected;
         },
-        
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
@@ -1765,6 +1807,29 @@
             if (rowComponents.updateFn) {
                 rowComponents.updateFn.call(this, parentElement);
             }
+        },
+        
+        getAllMultiSelectItems: function() {
+            var ret = [];
+            $(this.element).find('li.hx-selected').each(function() {
+                var enclosingLI = this;
+                var enclosingIndex = $(enclosingLI).attr('data-index');
+                var enclosingGroupIndex;
+                var nxtSelection;
+                if (this.options.grouped) {
+                    enclosingGroupIndex = $(enclosingLI).attr('data-group-index');
+                    nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+                } else {
+                    nxtSelection = this.displayList[enclosingIndex];
+                }
+                ret.push(nxtSelection);
+            });
+            return ret;
+        },
+        
+        clearAllMultiSelect: function() {
+            $(this.element).find('li.hx-selected').removeClass('hx-selected');
+            this.$clearSelectionDiv.hide();
         },
   
         createListRow: function(parentElement,rowComponents) {
