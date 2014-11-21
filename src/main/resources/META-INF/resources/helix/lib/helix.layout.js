@@ -147,9 +147,16 @@ Helix.Layout = {
         /* If there are no elements to recurse over, set the last child of this element to full the 
          * rest of the screen.
          */
-        if (childrenToRecurse.length == 0) {
-            var $fullHeightChild = $(children[children.length - 1]);
-            $fullHeightChild.height(maxHeight - remainingHeight);
+        if (childrenToRecurse.length === 0) {
+            var $fullHeightChild = null;
+            for (var j = children.length - 1; j >= 0; --j) {
+                if (!$(children[j]).is('.hx-full-height-skip')) {
+                    $fullHeightChild = $(children[j]);
+                }
+            }
+            if ($fullHeightChild) {
+                $fullHeightChild.height(maxHeight - remainingHeight);
+            }
         } else {
             childrenToRecurse.each(function() {
                 if ($(this).is('.hx-overlay-full-height')) {
@@ -293,87 +300,26 @@ Helix.Layout = {
                 prenderers[i].call(this);
             }
         }
+    },
+    
+    setMiniViewMode: function() {
+        $('.ui-page').addClass('hx-mini-mode');
+        $('.ui-page').removeClass('hx-full-mode');
+        
+        if ($('.ui-footer').is(':visible')) {
+            
+        } else {
+            $('.ui-page').addClass('hx-no-footer');
+        }
+        Helix.Layout.layoutPage();
+    },
+    
+    setRegularViewMode: function() {
+        $('.ui-page').addClass('hx-full-mode');
+        $('.ui-page').removeClass('hx-mini-mode');
+        $('.ui-page').removeClass('hx-no-footer');
     }
 };
-
-/**
- * Prior to any AJAX request, track the height of the items we are updating with that
- * request. When the response is received, we set a timeout handler that we try 3 times 
- * at 200ms intervals to wait for the height to update after the DOM is updated. When 
- * the height has updated, we refresh the scrollers to ensure that the scroller covers
- * the full scrolling area. The 3 retries prevent us from infinitely trying and 
- * retrying in the event that the downloaded update has the exact same height as the 
- * current html.
- */
-$(document).bind('prerequest', function(ev, cfg) {
-    if (cfg && cfg.update) {
-        var updatedIDs = cfg.update.split(" ");
-        for (var i = 0; i < updatedIDs.length; ++i) {
-            /* Escape colons because primefaces use the colon character in its naming scheme ... */
-            var updateSel = PrimeFaces.escapeClientId(updatedIDs[i]);
-            
-            /* 
-             * Clean up all scrollers that may be deleted when this item is updated.
-             *
-            $(updateSel).find(Helix.Layout.scrollerSel).each(function(index, element) {
-                var scrollerID = $(this).attr('id');
-                Helix.Layout.deleteScroller(scrollerID);
-            });*/
-        }
-    }
-});
-
-$(document).bind('postrequest', function(ev, xhr) {
-    if (!xhr.responseXML) {
-        return;
-    }
-    
-    var responseXML = xhr.responseXML;
-    var xmlDoc = $(responseXML.documentElement),
-    updates = xmlDoc.find('update'),
-    nUpdated = 0;
-    
-    if (!updates) {
-        return;
-    }
-    for(var i=0; i < updates.length; i++) {
-        var updateID = updates.eq(i).attr('id');
-        
-        /* Escape colons because primefaces use the colon character in its naming scheme ... */
-        var updateSel = PrimeFaces.escapeClientId(updateID);
-
-        if ($(updateSel).length == 0) {
-            /* This update selector is not in the DOM ...*/
-            continue;
-        }
-        ++nUpdated;
-
-        /* Determine if the item we have updated has children that are scrollers. If
-         * so, make sure we create those scrollers from scratch. Otherwise we may end
-         * up with bogus scrollers added by the pageshow event that are then overwritten
-         * by an AJAX update that happens when the page is first loading.
-         *
-        $(updateSel).find(Helix.Layout.scrollerSel).each(function() {
-            var scrollerID = $(this).attr('id');
-            Helix.Layout.deleteScroller(scrollerID);
-        });*/
-        
-        /*
-         * Trigger JQM enhancement and our own enhancement on the updated markup.
-         */
-        $(updateSel).trigger("create");
-        
-        /*
-         * Trigger our own enhancement event.
-         */
-        $(document).trigger('pmcreate', updateSel);
-    }
-    
-    if (nUpdated > 0) {
-        /* Reset the full screen layout of the page. */
-        Helix.Layout.layoutPage();
-    }
-});
 
 /**
  * In general, apps should use the pagebeforeshow event to layout the DOM. When

@@ -1,0 +1,65 @@
+/**
+ * Mobile Helix note:
+ *
+ * These styles are extracted from the PrimeFaces project. All credit should go
+ * where credit is due. We only include those styles from PrimeFaces that are
+ * required for components that are included in the Link SDK. This code is licensed
+ * under the same terms as the primefaces - the Apache 2.0 license. For more information
+ * go to primefaces.org/license.html.
+ */
+
+/* ie6 */
+* html .ui-hx-undo {
+	position:absolute; 
+}
+* html .ui-hx-undo-item {
+	padding-bottom:0;
+}
+* html .ui-hx-undo-icon-close {
+	top:7px;
+	right:7px;
+}
+
+.ui-hx-undo {
+	position:fixed;
+	bottom:30px;
+	left:20px;
+	width:220px;
+}
+.ui-hx-undo-item-container {
+	position:relative;
+	margin:0 0 10px 0;
+	opacity:0.65;
+	filter:alpha(opacity=65);
+}
+.ui-hx-undo-item {
+	display:block;
+	padding:10px 15px;
+        width: 200px;
+}
+
+.ui-hx-undo-title {
+	font-weight:normal;
+	padding:0 0 7px 0;
+	display:block;
+}
+
+.ui-hx-undo-message {
+    padding:0 0 5px 10px;
+    width:160px;
+    display: inline-block;
+}
+
+.ui-hx-undo .ui-icon-back {
+    top: 50%;
+    margin-top: -9px;
+    padding-left: 20px;
+}
+
+/* SAH: Added to make the background of the hx-undo black. The original PrimeFaces
+ * styles for doing so were not obvious to me.
+ */
+ .ui-hx-undo-item-container {
+    background-color: grey;
+    color: white;
+ }

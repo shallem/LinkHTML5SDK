@@ -271,6 +271,12 @@
             pullToRefresh: null,
             
             /**
+             * When supplied, a function to call when the user pushes down on the bottom
+             * of the list. This would generally be used to fetch more items.
+             */
+            pushToRefresh: null,
+            
+            /**
              * Comma-separated list of localizable strings. These can be supplied
              * when a server generates this markup using a server-side localization
              * technique. These strings are separated into an array and then passed
@@ -362,6 +368,14 @@
             }
             
             /**
+             * Append the post hook div if we have push to refresh setup.
+             */
+            this.$pushDiv = null;
+            if (this.options.pushToRefresh) {
+                this.$pushDiv = $('<div/>').appendTo(this.$wrapper).addClass('hx-full-height-skip');
+            }
+            
+            /**
              * Split icons, if appropriate.
              */
             if (this.options.splitIcon) {
@@ -415,6 +429,19 @@
                         }
                     }
                 });            
+            }
+            if (this.$pushDiv) {
+                this.$pushDiv.hook({
+                    reloadPage: false,
+                    scrollTarget: listWrapper,
+                    isPull: false,
+                    reloadEl: function() {
+                        if (!_self.refreshInProgress) {
+                            _self.options.pushToRefresh.call(this);
+                            _self._clearGlobalFilterMenu();
+                        }
+                    }
+                });
             }
 
             // Pagination setup.
@@ -470,7 +497,7 @@
         
         _handleEmpty: function(msg) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
-            if (this.nElems == 0) {                    
+            if (this.nElems === 0) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
                 } else if (msg) {
@@ -742,7 +769,7 @@
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") == 0) {
+                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") === 0) {
                     // Show the descending button, reflecting the CURRENT order.
                     $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
@@ -817,14 +844,14 @@
                             for (var i = 0; i < curSortFields.length; ++i) {
                                 var sortFld = curSortFields[i];
                                 var sortOrder = null;
-                                if (i == curSortOrders.length) {
+                                if (i === curSortOrders.length) {
                                     curSortOrders.push(curSortOrders[i - 1]);
                                 }
                                 sortOrder = curSortOrders[i];
                                 
-                                if (sortFld == newSortField) {
+                                if (sortFld === newSortField) {
                                     // Reverse the direction.
-                                    if (sortOrder.toUpperCase() == "ASCENDING") {
+                                    if (sortOrder.toUpperCase() === "ASCENDING") {
                                         curSortOrders[i] = "DESCENDING";
                                     } else {
                                         curSortOrders[i] = "ASCENDING";
@@ -845,7 +872,7 @@
                             _self._currentSortCase = caseSensitive;
                         }
                         
-                        if (_self.nElems == 0) {
+                        if (_self.nElems === 0) {
                             /* Nothing to do. */
                             return false;
                         }
@@ -1034,7 +1061,7 @@
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
                 var filterItem = null;
-                if (filterObj.values.length == 1) {
+                if (filterObj.values.length === 1) {
                     filterItem = $('<li />').append($('<a />').attr({ 
                         'href' : 'javascript:void(0)',
                         'data-field': fldName,
@@ -1259,14 +1286,14 @@
                             $(LIs[_ridx]).hide();
                         }
 
-                        if (count == 0) {
+                        if (count === 0) {
                             _self._handleEmpty(emptyMsg);
                         }
                         oncomplete(opaque);
                     } else {
                         var groupIndex = 0;
                         var __renderGroup = function() {
-                            if (groupsToRender.length == 0) {
+                            if (groupsToRender.length === 0) {
                                 for (_ridx = groupIndex; _ridx < LIs.length; ++_ridx) {
                                     $(LIs[_ridx]).hide();
                                 }
@@ -1300,7 +1327,7 @@
         _updateRenderWindow: function(firstShowingIndex, direction) {
             var listOffset;
             var oldWindowStart = this._renderWindowStart, newWindowStart;
-            if (direction == 0) {
+            if (direction === 0) {
                 // Scrolling up to the top of the list. Make this item 3/4 of the way to the end of the list.
                 listOffset = ((this._itemsPerPage * 3) / 4);
                 newWindowStart = oldWindowStart - Math.floor(listOffset - firstShowingIndex);
@@ -1523,7 +1550,7 @@
             for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                 var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
                 var nxtCase = (caseVals[oidx] === 'true' ? true : false);
-                if (latestDirection.toUpperCase() == "DESCENDING") {
+                if (latestDirection.toUpperCase() === 'DESCENDING') {
                     displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                 } else {
                     displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
@@ -1590,7 +1617,7 @@
                         },
                         /* On start. */
                         function(ct) {
-                            if (ct == 0) {
+                            if (ct === 0) {
                                 __renderEmptyGroup(dividerLI);                                
                             }
                         },
@@ -1603,7 +1630,7 @@
                         }
                     );
                     return true;
-                } else if (groupMembers == null) {
+                } else if (groupMembers === null) {
                     __renderEmptyGroup(dividerLI);
                     oncomplete();
                     return true;
@@ -1679,13 +1706,12 @@
             } else if (_self.options.holdAction && curRowFresh) {
                 $(curRowParent).on(_self.contextEvent, function(event) {
                     event.stopImmediatePropagation();
-                    event.stopPropagation();
-                    event.preventDefault();
                     
                     if (_self.setSelected(event.target)) {
                         _self.selectItem();                    
                     }
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    return false;
                 }); 
             } 
             if (_self.options.selectAction && curRowFresh) {
@@ -1698,9 +1724,21 @@
                         return false;
                     }
                     
-                    if (_self.options.multiSelect && event.offsetX < 30) {
+                    if (_self.options.multiSelect && event.clientX < 30) {
                         $(event.target).toggleClass("hx-selected");
-                        _self.$clearSelectionDiv.show();
+                        
+                        // Check to see if we have anything selected - if yes, show the clear button;
+                        // if not, hide it. Re-layout the page if we make a change.
+                        var selectedElems = _self.getAllMultiSelectElements();
+                        if (selectedElems.length === 0) {
+                            _self.$clearSelectionDiv.hide();
+                            Helix.Layout.layoutPage();
+                        } else {
+                            if (!_self.$clearSelectionDiv.is(':visible')) {
+                                _self.$clearSelectionDiv.show();
+                                Helix.Layout.layoutPage();
+                            }                            
+                        }
                     } else {
                         if (_self.setSelected(event.target)) {
                             _self.selectItem();
@@ -1809,18 +1847,23 @@
             }
         },
         
+        getAllMultiSelectElements: function() {
+            return $(this.element).find('li.hx-selected');
+        },
+        
         getAllMultiSelectItems: function() {
             var ret = [];
+            var _self = this;
             $(this.element).find('li.hx-selected').each(function() {
                 var enclosingLI = this;
                 var enclosingIndex = $(enclosingLI).attr('data-index');
                 var enclosingGroupIndex;
                 var nxtSelection;
-                if (this.options.grouped) {
+                if (_self.options.grouped) {
                     enclosingGroupIndex = $(enclosingLI).attr('data-group-index');
-                    nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+                    nxtSelection = _self.displayList[enclosingIndex].rows[enclosingGroupIndex];
                 } else {
-                    nxtSelection = this.displayList[enclosingIndex];
+                    nxtSelection = _self.displayList[enclosingIndex];
                 }
                 ret.push(nxtSelection);
             });
@@ -1830,6 +1873,7 @@
         clearAllMultiSelect: function() {
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
             this.$clearSelectionDiv.hide();
+            Helix.Layout.layoutPage();
         },
   
         createListRow: function(parentElement,rowComponents) {
@@ -1876,7 +1920,7 @@
             
             if (rowComponents.header) {
                 var headerMarkup = mainLink.find('h3[data-role="itemheader"]');
-                if( Object.prototype.toString.call(rowComponents.header) == '[object String]' ) {
+                if( Object.prototype.toString.call(rowComponents.header) === '[object String]' ) {
                     if (headerMarkup.length) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
@@ -2036,20 +2080,6 @@
         
         closeItemContextMenu: function() {
             this.options.itemContextMenu.close();
-        },
-        
-        /* Puts the list in compact mode. Mostly this just adds the hx-listview-mini
-         * style to the ul tag, which other parts of the code (or the user's code) can
-         * use to render a more compact style using CSS.
-         */
-        setMiniView: function() {
-           this.$parent.addClass('hx-listview-mini'); 
-        },
-        
-        /* Puts the list in regular mode by removing hx-listview-mini.
-         */
-        setRegularView: function() {
-           this.$parent.removeClass('hx-listview-mini'); 
         },
         
         /**

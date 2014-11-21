@@ -159,25 +159,6 @@
     top: 15%;
 }
 
-/**
- * On small screens, turn the iconButton into a much more compact button.
- */
-@media all and (max-width: 500px) {
-    .iconbutton {
-        width: 40px;
-        height: 32px;    
-    }
-
-    .iconbutton .ui-btn-inner {
-        padding: 0.4em 0 30px;
-    }
-
-    .iconbutton .ui-btn-inner .ui-icon {
-        left: 0;
-        top: 15%;
-    }   
-}
-
 .ui-controlgroup-controls {
     width: 100%;
 }
@@ -347,11 +328,60 @@ li {
     -webkit-transform: translate3d(0,0,0);
 }
 
-.hx-listview-mini.hxMultiSelect li.ui-btn, .hx-listview.hxMultiSelect li.ui-btn {
+.ui-header.hx-text-left .ui-title {
+    text-align: left;
+    margin-left: 64px;
+}
+
+/* bars vertical offset is too low in the header */
+.ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars {
+    top: 0%;
+}
+
+/**
+ * Large screen styles.
+ */
+@media all and (min-width: 501px) {
+    .hx-phone-only {
+        display: none !important;
+    }
+}
+
+/**
+ * Small screen styles.
+ */
+@media all and (max-width: 500px) {
+    .iconbutton {
+        width: 40px;
+        height: 32px;    
+    }
+
+    .iconbutton .ui-btn-inner {
+        padding: 0.4em 0 30px;
+    }
+
+    .iconbutton .ui-btn-inner .ui-icon {
+        top: 15%;
+    }   
+    
+    .ui-header.hx-text-left .ui-title {
+        text-align: left;
+        margin-left: 44px;
+    }
+    
+    .hx-tablet-only {
+        display: none !important;
+    }
+}
+
+/**
+ * bullets on multi select lista
+ */
+.hx-listview.hxMultiSelect li.ui-btn {
     padding: 0 0 0 30px;
 }
 
-.hx-listview-mini.hxMultiSelect li.ui-btn:before, .hx-listview.hxMultiSelect li.ui-btn:before{
+.hx-listview.hxMultiSelect li.ui-btn:before{
     /*fill it with a blank space*/
     content:"\00a0";
 
@@ -374,7 +404,7 @@ li {
     margin-top: -8px;
 }
 
-.hx-listview-mini.hxMultiSelect li.hx-selected:after, .hx-listview.hxMultiSelect li.hx-selected:after{
+.hx-listview.hxMultiSelect li.hx-selected:after{
     /*Add another block-level blank space*/
     content:"\00a0";
     display:block;
@@ -397,4 +427,63 @@ li {
     -webkit-transform: rotate(45deg);
     -moz-transform: rotate(45deg);
     -o-transform: rotate(45deg);
+}
+
+/**
+ * mini view mode
+ */
+.hx-mini-mode .ui-li .ui-btn-inner a.ui-link-inherit {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.hx-mini-mode .ui-li-heading {
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+.hx-mini-mode .hx-full-mode-only {
+    display: none;
+}
+
+.ui-page.hx-no-footer {
+    padding-bottom: 0px;
+}
+
+/**
+ * Split screen styles.
+ */
+.hx-split-left .hx-split-left-hide {
+    display: none;
+}
+
+.hx-split-right .hx-split-right-hide {
+    display: none;
+}
+
+.hx-split-left .hx-split-full-hide {
+    display: none;
+}
+
+.hx-split-right .hx-split-full-hide {
+    display: none;
+}
+
+.hx-split-both .hx-split-both-hide {
+    display: none;
+}
+
+.hx-mini-fieldcontain {
+    max-width: 90% !important;
+}
+
+/**
+ * iconbutton fixes for icon position.
+ */
+.iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
+    top: 25%;
+}
+
+.iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
+    top: 25%;
 }

@@ -78,6 +78,9 @@ public class TabBarRenderer extends CoreRenderer {
         
         writer.startElement("div", page);
         writer.writeAttribute("data-role", "navbar", null);
+        if (bar.isFullModeOnly()) {
+            writer.writeAttribute("class", "hx-full-mode-only", null);
+        }
         
         writer.startElement("ul", page);
         for (Tab t : tabs) {

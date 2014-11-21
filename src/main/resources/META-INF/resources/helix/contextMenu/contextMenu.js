@@ -163,6 +163,9 @@
                     if (nxtItem.group) {
                         nxtLI.attr('data-group', nxtItem.group);
                     }
+                    if (nxtItem.styleClass) {
+                        nxtLI.addClass(nxtItem.styleClass);
+                    }
                     nxtLI.append(nxtLink);
                 }
                 this.optionsList.append(nxtLI);

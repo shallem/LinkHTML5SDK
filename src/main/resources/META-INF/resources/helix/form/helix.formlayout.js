@@ -511,6 +511,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
     if (!formElem.value) {
         formElem.value = "";
     }
+    if (formElem.computedWidth) {
+        $fieldContainer.width(formElem.computedWidth);
+    }
     
     if (mode) {
         /* Edit */
@@ -861,14 +864,14 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     }
 }
 
-function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
-    var $buttonLink;
+function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     if (!formElem.fieldTitle) {
         formElem.fieldTitle = "";
     }
     if (!formElem.id) {
         formElem.id = Helix.Utils.getUniqueID();
     }
+    var $buttonLink;
     if (formElem.iconClass) {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
@@ -887,20 +890,25 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             'data-shadow' : formElem.shadow ? 'true' : 'false',
             'data-theme' : formElem.theme ? formElem.theme : 'b',
             'id': formElem.id
-        }).append(formElem.fieldTitle).button();
+        }).append(formElem.fieldTitle);
     }
     if (formElem.href) {
         $buttonLink.attr('href', formElem.href);
     } else {
         $buttonLink.attr('href', 'javascript:void(0);');
     }
-    $buttonLink.appendTo($fieldContainer);
     $buttonLink.buttonMarkup({ mini : useMiniLayout });
+    $buttonLink.appendTo($parent);
     if (formElem.onclick) {
         $buttonLink.on('vclick', function(ev) {
-            formElem.onclick.call(this, ev);
+            return formElem.onclick.call(this, ev);
         });
     }
+    return $buttonLink;
+}
+
+function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    __makeButtonMarkup(formElem, useMiniLayout, $fieldContainer);
 }
 
 function __refreshIFrame(formElem) {
@@ -923,7 +931,12 @@ function __refreshIFrame(formElem) {
         doc.write('</head>');
     }
     if (!formElem.noBody) {
-        doc.write('<body style="height: 100%;">');
+        if (!formElem.bodyStyle) {
+            formElem.bodyStyle = '';
+        } else {
+            formElem.bodyStyle = ' ' + formElem.bodyStyle;
+        }
+        doc.write('<body style="height: 100%;' + formElem.bodyStyle + '">');
     }
     /*if (formElem.isScroller) {
         $(doc.body).css('overflow-y', 'scroll');
@@ -1019,45 +1032,12 @@ function __refreshButtonGroup(formElem) {
     var formButtonIdx;
     for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
         formButton = formElem.buttons[formButtonIdx];
-        if (!formButton.iconPos && formButton.iconPos !== 'none') {
-            formButton.iconPos = 'bottom';
-        }
-        if (!formButton.computedStyleClass && 
-            formButton.iconClass &&
-            formButton.iconPos !== 'none') {
-            formButton.computedStyleClass = 'iconbutton';
-        }
-        if (!formButton.theme) {
-            formButton.theme = 'b';
-        }
-        if (!formButton.iconClass) {
-            formButton.iconClass = '';
-        }
-        var $buttonBarLink = $('<a />').attr({
-            'data-iconpos' : formButton.iconPos,
-            'data-icon' : formButton.iconClass,
-            'data-iconshadow' : false,
-            'data-theme' : formButton.theme,
-            'class' : formButton.computedStyleClass
-        });
-        if (formButton.mini) {
-            $buttonBarLink.attr('data-mini', 'true');
-        }
-        if (formButton.fieldTitle) {
-            $buttonBarLink.append(formButton.fieldTitle);
-        } 
-        if (formButton.href) {
-            $buttonBarLink.attr('href', formButton.href);
-        } else {
-            $buttonBarLink.attr('href', 'javascript:void(0);');
-        }
-        if (formButton.onclick) {
-            $buttonBarLink.on('tap', formButton.onclick);
-        }
-        $buttonBarLink.appendTo($buttonBar);
-        $buttonBarLink.button();
+        __makeButtonMarkup(formButton, formButton.mini, $buttonBar);
     }
-    $buttonBar.controlgroup({ type: (formElem.orientation ? formElem.orientation : "horizontal") });
+    $buttonBar.controlgroup({ 
+        type: (formElem.orientation ? formElem.orientation : "horizontal"),
+        shadow: (formElem.shadow ? true : false)
+    });
 }
 
 function __refreshHTMLArea(formElem) {
@@ -1153,7 +1133,7 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
 
 function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var $buttonBar = $('<div />').attr({
-        'class' : 'buttonBarMaster buttonbar'
+        'class' : 'buttonBarMaster buttonbar ' + formElem.computedStyleClass
     }).appendTo($fieldContainer);
     if (formElem.name) {
         $buttonBar.attr('id', formElem.name);
@@ -1272,6 +1252,7 @@ function __preprocessFormElement(formLayout, formElem) {
         }
     }    
     
+    formElem.computedStyleClass = '';
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
             formElem.computedStyleClass = 

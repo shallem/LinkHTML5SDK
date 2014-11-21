@@ -64,7 +64,14 @@
              * A string that is used for the text in the toggle button when useHeaderToToggle is set to true.
              * The default is 'Close'.
              */
-            headerToggleText: "Close"
+            headerToggleText: "Close",
+            
+            /**
+             * As an alternative to the auto toggle button, specify a selector that will get one of the following
+             * styles: hx-split-both, hx-split-left, hx-split-right depending on the state of the split view. The
+             * contents of that selector should be buttons that are turned on/off using CSS based on these styles.
+             */
+            buttonBarSelector: null
         },
 
         _create: function() {
@@ -75,7 +82,8 @@
             this.__left = $(this.element).children()[0];
             this.__right = $(this.element).children()[1];
             
-            if (this.options.useHeaderToToggle) {
+            if (!this.options.buttonBarSelector && 
+                    this.options.useHeaderToToggle) {
                 // Get the enclosing page.
                 this.__page = $(this.element).closest('[data-role="page"]');
             
@@ -131,20 +139,25 @@
             var curLeftBtn = null;
             var __self = this;
             if (curWidth > this.options.splitThreshold) {
+                // Show left AND right on large screens
                 var leftWidth = Math.floor((this.options.leftWidth / 100) * curWidth);
                 var rightWidth = Math.floor((this.options.rightWidth / 100) * curWidth) - this.options.splitPadding;
                
                 $(this.element).addClass('hx-split-master');
             
-                $(this.__left).addClass('hx-split-left-area').addClass('pm-layout-full-height');
+                $(this.__left).addClass('hx-split-left-area').addClass('hx-layout-full-height');
                 $(this.__left).width(leftWidth);
-                $(this.__right).addClass('hx-split-right-area').addClass('pm-layout-full-height');
+                $(this.__right).addClass('hx-split-right-area').addClass('hx-layout-full-height');
                 $(this.__right).width(rightWidth);
                 
                 $(this.__left).show();
                 $(this.__right).show();
                 
                 this.__current = null;
+                
+                if (this.options.buttonBarSelector) {
+                    $(this.options.buttonBarSelector).addClass('hx-split-both');
+                }
             } else {
                 if (!this.__current) {
                     this.__current = "left";
@@ -158,7 +171,12 @@
                     $(this.__left).show();
                     $(this.__right).hide();
                     
-                    this._restoreLeftHeaderButton();
+                    if (this.options.buttonBarSelector) {
+                        $(this.options.buttonBarSelector).addClass('hx-split-left');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-right');
+                    } else {
+                        this._restoreLeftHeaderButton();
+                    }
                 } else {
                     $(this.__right).removeClass('hx-split-right-area');
                     $(this.__right).addClass('hx-split-full');
@@ -167,7 +185,10 @@
                     $(this.__right).show();
                     $(this.__left).hide();
                     
-                    if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
+                    if (this.options.buttonBarSelector) {
+                        $(this.options.buttonBarSelector).addClass('hx-split-right');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-left');
+                    } else if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
                         // Capture the current left button so that we can restore it.
                         var theme;
                         curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
@@ -246,7 +267,15 @@
         },
         
         isSplitView: function() {
-            return (this.__current == null);
+            return (this.__current === null);
+        },
+        
+        isSplitRight: function() {
+            return (this.__current !== null && this.__current === "right");
+        },
+        
+        isSplitLeft:  function() {
+            return (this.__current !== null && this.__current === "left");
         },
         
         getLeft: function() {

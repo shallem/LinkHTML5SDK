@@ -54,5 +54,11 @@
             <type>java.lang.String</type>
             <description>Name of a function to call when the split view is refreshed. Passed a single argument which is a string, either 'full' or 'split.'</description>
         </attribute>
+        <attribute>
+            <name>buttonBarSelector</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional CSS selector for a button bar that has buttons that vary based on which part of the split view is showing.</description>
+        </attribute>
     </attributes>
 </component>

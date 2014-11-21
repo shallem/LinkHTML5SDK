@@ -49,5 +49,11 @@
             <defaultValue>b</defaultValue>
             <description>jQuery Mobile theme to apply to the overlay.</description>
         </attribute>
+        <attribute>
+            <name>beforeOpen</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript function to call prior to opening the overlay panel.</description>
+        </attribute>
     </attributes>
 </component>
