@@ -92,31 +92,29 @@
     
         bindEvents: function(message, doAction, undoAction, lifetime) {
             var _self = this;
+            var _timeout = this.setRemovalTimeout(doAction, lifetime);
 
             //remove message on click of close icon
             if (!Helix.hasTouch) {
-                message.on('click', function(ev) {
+                message.on('click', _timeout, function(ev) {
                     _self.removeAll();
                     undoAction.call(_self);
-                    clearTimeout(message.data('timeout'));
+                    clearTimeout(ev.data);
                     ev.stopImmediatePropagation();
                     return false;
                 });
             } else {
-                message.on('tap', function(ev) {
+                message.on('tap', _timeout, function(ev) {
                     _self.removeAll();
                     undoAction.call(_self);
-                    clearTimeout(message.data('timeout'));
+                    clearTimeout(ev.data);
                     ev.stopImmediatePropagation();
                     return false;
                 });
             }
-
-            //hide the message after given time if not sticky
-            this.setRemovalTimeout(message, doAction, lifetime);
         },
     
-        setRemovalTimeout: function(message, doAction, lifetime) {
+        setRemovalTimeout: function(doAction, lifetime) {
             var _self = this;
 
             var timeout = setTimeout(function() {
@@ -124,7 +122,7 @@
                 doAction.call(_self);
             }, lifetime);
 
-            message.data('timeout', timeout);
+            return timeout;
         }
     });
 }( jQuery ));

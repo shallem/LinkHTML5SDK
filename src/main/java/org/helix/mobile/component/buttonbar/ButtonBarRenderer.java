@@ -40,8 +40,10 @@ public class ButtonBarRenderer extends CoreRenderer {
 
             if (child.isRendered()) {
                 if (idx == childButtons.size()) {
-                    IconButton ib = (IconButton) child;
-                    ib.setCorner(isLeft ? "right" : "left");
+                    if (child instanceof IconButton) {
+                        IconButton ib = (IconButton) child;
+                        ib.setCorner(isLeft ? "right" : "left");
+                    }
                 }
 
                 child.encodeAll(context);

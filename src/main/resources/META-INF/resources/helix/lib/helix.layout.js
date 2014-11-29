@@ -152,6 +152,7 @@ Helix.Layout = {
             for (var j = children.length - 1; j >= 0; --j) {
                 if (!$(children[j]).is('.hx-full-height-skip')) {
                     $fullHeightChild = $(children[j]);
+                    break;
                 }
             }
             if ($fullHeightChild) {

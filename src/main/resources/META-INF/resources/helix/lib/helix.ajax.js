@@ -73,10 +73,10 @@ $(document).bind('prerequest', function() {
                     if (Helix.Ajax.loadCt >  0) {
                         animateColor(!doReverse);
                     } else {
-                        $(header).css('background', origBG);
+                        $(header).css('background', '');
                     }
             }});
-        }
+        };
         animateColor(false);
     }
     if (window.CordovaInstalled) {
@@ -540,6 +540,9 @@ Helix.Ajax = {
     },
     
     ajaxPost: function(params, callbacks) {
+        Helix.Ajax.loadOptions = {
+            async: (params.async !== undefined) ? params.async : true
+        };
         $(document).trigger('prerequest', params.url);
         var didSucceed = false;
         if (Helix.Ajax.isDeviceOnline()) {
@@ -549,7 +552,7 @@ Helix.Ajax = {
                 data: params.body,
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
-                    if (returnObj.status == 0) {
+                    if (returnObj.status === 0) {
                         didSucceed = true;
                         if (params.success) {
                             Helix.Utils.statusMessage("Success", params.success, "info");

@@ -605,29 +605,34 @@
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('mh-layout-parent-height');
                     _self.$listWrapper.scroll(function(ev) {
-                        /*if (_self.refreshInProgress) {
-                            return true;
-                        }*/
-                        if (_self.refreshInProgress || _self.scrollCalculationInProgress) {
-                            ev.stopImmediatePropagation();
-                            return false;
-                        }
-                        
                         var scrollPos = _self.$listWrapper.scrollTop();
-                        var listHeight = _self.$parent.height();
-                        var firstShowing;
-
                         if (_self.rescrollInProgress) {
+                            if (_self._lastRescrollDirection === "UP" && scrollPos < _self._lastRescrollThreshold) {
+                                // We are scrolling up and the scroll position is still less than 1/4 of the list.
+                                return true;
+                            } else if (_self._lastRescrollDirection === "DOWN" && scrollPos > _self._lastRescrollThreshold) {
+                                // We are scrolling down and the scroll position is still greater than 3/4 of the list.
+                                return true;
+                            }
+                                
                             // This occurs when the scroll handler is triggered by the scrollTop
                             // call in datalist.js. Because there is a delay between calling scrollTop
                             // and the actual scroll (browser dependent), the rescrollInProgress flag
                             // does not help prevent us undoing the scroll we just did. We catch that
                             // case here. Return true to allow the scroll to happen.
-                            _self._lastScrollPos = scrollPos;
                             _self.rescrollInProgress = false;
                             return true;
                         }
+                        
+                        if (_self.scrollCalculationInProgress) {
+                            // We are already moving the list. Don't do it again ...
+                            _self._lastScrollPos = scrollPos;
+                            return true;
+                        }
 
+                        var listHeight = _self.$parent.height();
+                        var firstShowing;
+                        
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
                         // we prepend more to the bottom of the list and remove from the
@@ -635,30 +640,41 @@
                         // of the list and remove from the front.
                         var oldDataStart = _self._renderWindowStart, newDataStart;
                         var preRefreshScrollPosition = scrollPos;
+                        var curScrollTop = 0;
                         if (_self._lastScrollPos > scrollPos &&
                             scrollPos < (listHeight * .25)) {
                             // Scroll is moving down and we are in the 1st third of the 
                             // list.
                             if (oldDataStart > 0) {
+                                console.log("RESCROLLING UP");
+                                _self._lastRescrollDirection = "UP";
+                                _self._lastRescrollThreshold = listHeight * .25;
+                                
                                 // SCROLLING UP
                                 // Update the render window to the _itemsPerPage rows with the
                                 // current set of visible rows as the last third of the list.
                                 _self.scrollCalculationInProgress = true;
                                 
                                 // Snapshot what is currently at the top of the scroll window.
-                                firstShowing = _self._captureTopLI(ev);
+                                firstShowing = _self._captureTopLI(ev, _self._itemsPerPage * .25);
                                 newDataStart = _self._updateRenderWindow(firstShowing, 0);
                                 firstShowing += (oldDataStart - newDataStart);
                                 _self._lastUpdateScroll = scrollPos;
                                 
                                 // Fetch another 50 rows prior to the data window start.
+                                curScrollTop = $(_self.$listWrapper).scrollTop();
+                                $.mobile.loading('show', {});
+                                _self.$parent.hide();
                                 _self._refreshData(function() {
+                                    _self.$parent.show();
+                                    $.mobile.loading('hide', {});
+                                    
                                     // Scroll to the right spot so that the element the viewer was
                                     // viewing is still centered in the screen.                                    
                                     _self.$parent.listview( "refresh" );
                                     
+                                    _self._updateScrollPosition(ev, firstShowing, curScrollTop, preRefreshScrollPosition);
                                     _self.scrollCalculationInProgress = false;
-                                    _self._updateScrollPosition(ev, firstShowing, scrollPos, preRefreshScrollPosition);
                                 });
                                 _self._atDataTop = false;
                             }
@@ -669,28 +685,36 @@
                             // around the current set of visible rows as the first third of the
                             // list.
                             if (!_self._atDataTop) {
-                                firstShowing = _self._captureTopLI(ev);
+                                console.log("RESCROLLING DOWN");
+                                _self._lastRescrollDirection = "DOWN";
+                                _self._lastRescrollThreshold = listHeight * .75;
+                                
+                                _self.scrollCalculationInProgress = true;
+                                firstShowing = _self._captureTopLI(ev, _self._itemsPerPage * .75);
                                 newDataStart = _self._updateRenderWindow(firstShowing, 1);
                                 firstShowing -= (newDataStart - oldDataStart);
                                 _self._lastUpdateScroll = scrollPos;
                                 
-                                _self.scrollCalculationInProgress = true;
-                                
+                                       
                                 // Scroll is moving up and we are in the top third of the list.
                                 // Fetch another 50 rows prior to the data window start.
+                                curScrollTop = $(_self.$listWrapper).scrollTop();
+                                $.mobile.loading('show', {});
+                                _self.$parent.hide();
                                 _self._refreshData(function() {
+                                    _self.$parent.show();
+                                    $.mobile.loading('hide', {});
+                                    
                                     // Scroll to the right spot so that the element the viewer was
                                     // viewing is still centered in the screen.
                                     _self.$parent.listview( "refresh" );
             
+                                    _self._updateScrollPosition(ev, firstShowing - 1, curScrollTop, preRefreshScrollPosition);
                                     _self.scrollCalculationInProgress = false;
-                                    _self._updateScrollPosition(ev, firstShowing - 1, scrollPos, preRefreshScrollPosition);
                                 }, true /* Do not recompute the qry collection */);
                             }
                         }
                         
-                        // Record the last scroll position so that we can determine scroll 
-                        // direction.
                         _self._lastScrollPos = scrollPos;
                         return true;
                     });
@@ -708,32 +732,51 @@
         /**
          * Helpers for infinite scroll.
          */
-        _captureTopLI: function(ev) {
-            this.scrollCalculationInProgress = true;
-            var $curTop = this.$listWrapper.find('li').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottom' });
-            this.scrollCalculationInProgress = false;
+        _captureTopLI: function(ev, estimate) {
+            // The estimate is just the number of items on the page * the proportion of the page that has scrolled by.
+            // Start at an LI that is 10 index positions below estimate and see if we can find the element.
+            var $startLI = null;
+            var startIdx = estimate - 10;
+            if (startIdx < 0) {
+                startIdx = 0;
+            }
+            while ((!$startLI || $startLI.length === 0) && (startIdx < this._itemsPerPage)) {
+                $startLI = this.$listWrapper.find('li[data-index="' + (startIdx).toString() + '"]');
+                ++startIdx;
+            }
+            
+            
+            var $curTop = null;
+            while (startIdx < this._itemsPerPage) {
+                $curTop = this.$listWrapper.find('li[data-index="' + startIdx.toString() + '"]').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottom' });    
+                if ($curTop && $curTop.length) {
+                    break;
+                }
+                ++startIdx;
+            }
+            
+            if (!$curTop) {
+                // This should NEVER happen ... but we don't want to crash if it does.
+                return estimate;
+            }
+            
             return parseInt($($curTop[0]).attr('data-index'));
         },
         
-        _updateScrollPosition: function(ev, topIndex, scrollPos, preRefreshScrollPosition) {
+        _updateScrollPosition: function(ev, topIndex, curScrollTop, preRefreshScrollPosition) {
             // Figure out where the old top item has gone.
+            this.rescrollInProgress = true;
+            
             var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
-            var curScrollTop = $(this.$listWrapper).scrollTop();
             if (curScrollTop < 0) {
                 curScrollTop = 0;
             }
             var scrollDelta = curScrollTop - preRefreshScrollPosition;
-            var newScrollPos = scrollPos + newTopPos + scrollDelta;
-            var wrapperHeight = $(this.$listWrapper).height();
-            var listHeight = this.$parent.height();
-            
-            if (newScrollPos < 0) {
-                newScrollPos = 0;
-            } else if (newScrollPos > (listHeight - wrapperHeight)) {
-                newScrollPos = listHeight - wrapperHeight;
-            }
-            
-            this.rescrollInProgress = true;
+            var newScrollPos = Math.floor(newTopPos + scrollDelta);
+
+            // Make the scroll target integral.
+            console.log("TIDX:" + topIndex + ", NEW SCROLL: " + newScrollPos);
+            this._lastScrollPos = newScrollPos;
             $(this.$listWrapper).scrollTop(newScrollPos);
         },
         
@@ -1236,7 +1279,7 @@
             if (_self._renderWindowStart > 0) {
                 displayCollection = displayCollection.skip(_self._renderWindowStart);
             }
-            displayCollection = displayCollection.limit(Math.floor(_self._itemsPerPage * 1.5));
+            displayCollection = displayCollection.limit(_self._itemsPerPage);
 
             var rowIndex = 0;
             var nRendered = 0;
@@ -1279,8 +1322,6 @@
                     var _ridx;
                     if (!_self.options.grouped) {
                         /* We did not render any rows. Call completion. */
-                        _self.refreshInProgress = false;
-
                         var startIdx = nRendered;
                         for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                             $(LIs[_ridx]).hide();
@@ -1289,6 +1330,8 @@
                         if (count === 0) {
                             _self._handleEmpty(emptyMsg);
                         }
+                        
+                         _self.refreshInProgress = false;
                         oncomplete(opaque);
                     } else {
                         var groupIndex = 0;
@@ -1328,12 +1371,14 @@
             var listOffset;
             var oldWindowStart = this._renderWindowStart, newWindowStart;
             if (direction === 0) {
-                // Scrolling up to the top of the list. Make this item 3/4 of the way to the end of the list.
-                listOffset = ((this._itemsPerPage * 3) / 4);
+                // Scrolling up to the top of the list. Make this item 2/3 of the way to the end of the list. If we 
+                // place the item right at the cusp, then scrolling down at all triggers another refresh.
+                listOffset = ((this._itemsPerPage * 2) / 3);
                 newWindowStart = oldWindowStart - Math.floor(listOffset - firstShowingIndex);
             } else {
-                // Scrolling down to the bottom of the list. Make the current window 1/4 of the way into the list.
-                listOffset = ((this._itemsPerPage) / 4);
+                // Scrolling down to the bottom of the list. Make the current window 1/3 of the way into the list. If we
+                // place the item right at the cusp then scrolling up at all triggers a refresh.
+                listOffset = ((this._itemsPerPage) / 3);
                 newWindowStart = oldWindowStart + Math.floor(firstShowingIndex - listOffset);
             }
             
