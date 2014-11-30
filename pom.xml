@@ -348,7 +348,7 @@
 		    <include>panelgroup/panelgroup.js</include>
 
 		    <!-- Data list. -->
-		    <!-- <include>datalist/datalist.js</include> -->
+		    <include>datalist/datalist.js</include>
 
 		    <!-- Context menu -->
 		    <include>contextMenu/contextMenu.js</include>

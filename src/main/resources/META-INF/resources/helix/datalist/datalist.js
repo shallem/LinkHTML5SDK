@@ -1769,7 +1769,7 @@
                         return false;
                     }
                     
-                    if (_self.options.multiSelect && event.clientX < 30) {
+                    if (_self.options.multiSelect && event.clientX < 35) {
                         $(event.target).toggleClass("hx-selected");
                         
                         // Check to see if we have anything selected - if yes, show the clear button;
