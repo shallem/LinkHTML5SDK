@@ -139,6 +139,10 @@ function __refreshDate(mode, formElem) {
                     displayDate = new Date(formElem.value);
                 }
             }
+        } else {
+            if (!mode) {
+                displayDate = formElem.value;
+            }
         }
     }
     if (displayDate) {
