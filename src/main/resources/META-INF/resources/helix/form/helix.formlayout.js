@@ -596,8 +596,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
-                                             .css('width', '100%')
+                                             .css('width', '90%')
                                              .css('position', 'absolute')
+                                             .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                                             .css('overflow-y', 'scroll')
+                                             .css('display', 'none')
                                              .appendTo($fieldContainer).listview({ inset : true });
             $(inputMarkup).on('input', function() {
                 if (formElem.__autocompleteTimeout) {
@@ -607,6 +610,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 var text = $(this).val();
                 if (text.length < formElem.autocompleteThreshold) {
                     autoCompleteList.empty();
+                    autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
                     var __doAutocomplete = function() {
@@ -620,6 +624,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             if (LIs && LIs.length) {
                                 $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
                                     autoCompleteList.empty();
+                                    autoCompleteList.hide();
                                     formElem.__noblur = false;
                                     return false;
                                 }).appendTo(autoCompleteList);
@@ -627,11 +632,13 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
                                         formElem.autocompleteSelect($(this).text());
                                         autoCompleteList.empty();
+                                        autoCompleteList.hide();
                                         $(inputMarkup).val('');
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
                                 }
+                                autoCompleteList.show();
                                 autoCompleteList.listview("refresh");
                             } else {
                                 formElem.__noblur = false;

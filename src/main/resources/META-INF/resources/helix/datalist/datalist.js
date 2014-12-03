@@ -1,4 +1,4 @@
-/*
+fhandleempty/*
  * Copyright 2013 Mobile Helix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -495,9 +495,9 @@
             return sortFilterOptions.globalFilters;
         },
         
-        _handleEmpty: function(msg) {
+        _handleEmpty: function(nelems, msg) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
-            if (this.nElems === 0) {                    
+            if (nelems === 0) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
                 } else if (msg) {
@@ -508,6 +508,54 @@
             } else if (emptyLI.length) {
                 $(emptyLI).hide();
             }
+        },
+        
+        /**
+         * Called during scrolling to prefetch a new set of data.
+         * 
+         * @param direction - should be 1 for scrolling down, -1 for scrolling up.
+         */
+        _prefetchPage: function(direction) {
+            var displayCollection = this.unfilteredList;
+            displayCollection = this._resetGlobalFilters(displayCollection);
+
+            if (this._currentSort /*&& !_self.__searchText*/) {
+                displayCollection = this._applyOrdering(displayCollection);
+            }
+
+            /* Apply skip and limit. */
+            this._nextRenderWindow = (this._renderWindowStart + (direction * this._itemsPerPage)) - direction;
+            if (this._nextRenderWindow > 0) {
+                displayCollection = displayCollection.skip(this._nextRenderWindow);
+            } else if (this._nextRenderWindow < 0) {
+                this._nextRenderWindow = 0;
+            }
+            displayCollection = displayCollection.limit(this._itemsPerPage);
+            
+            var _prefetchedItems = [];
+            if (direction < 0) {
+                this._prefetchPrev = _prefetchedItems;
+                this._prefetchPrevDone = false;
+            } else {
+                this._prefetchNext = _prefetchedItems;
+                this._prefetchNextDone = false;
+            }
+            
+            var _self = this;
+            displayCollection.newEach({
+                eachFn: function(row) {
+                    _prefetchedItems.push(row);
+                },
+                doneFn: function() {
+                    if (direction < 0) {
+                        _self._prefetchPrevDone = true;
+                        _self.$listWrapper.trigger('prefetchPrev');
+                    } else {
+                        _self._prefetchNextDone = true;
+                        _self.$listWrapper.trigger('prefetchNext');
+                    }
+                }
+            });
         },
         
         /**
@@ -606,30 +654,6 @@
                     _self.$listWrapper.addClass('mh-layout-parent-height');
                     _self.$listWrapper.scroll(function(ev) {
                         var scrollPos = _self.$listWrapper.scrollTop();
-                        if (_self.rescrollInProgress) {
-                            if (_self._lastRescrollDirection === "UP" && scrollPos < _self._lastRescrollThreshold) {
-                                // We are scrolling up and the scroll position is still less than 1/4 of the list.
-                                return true;
-                            } else if (_self._lastRescrollDirection === "DOWN" && scrollPos > _self._lastRescrollThreshold) {
-                                // We are scrolling down and the scroll position is still greater than 3/4 of the list.
-                                return true;
-                            }
-                                
-                            // This occurs when the scroll handler is triggered by the scrollTop
-                            // call in datalist.js. Because there is a delay between calling scrollTop
-                            // and the actual scroll (browser dependent), the rescrollInProgress flag
-                            // does not help prevent us undoing the scroll we just did. We catch that
-                            // case here. Return true to allow the scroll to happen.
-                            _self.rescrollInProgress = false;
-                            return true;
-                        }
-                        
-                        if (_self.scrollCalculationInProgress) {
-                            // We are already moving the list. Don't do it again ...
-                            _self._lastScrollPos = scrollPos;
-                            return true;
-                        }
-
                         var listHeight = _self.$parent.height();
                         var firstShowing;
                         
@@ -638,85 +662,82 @@
                         // we prepend more to the bottom of the list and remove from the
                         // top. If we are in the top half of the list we append to the end
                         // of the list and remove from the front.
-                        var oldDataStart = _self._renderWindowStart, newDataStart;
-                        var preRefreshScrollPosition = scrollPos;
-                        var curScrollTop = 0;
-                        if (_self._lastScrollPos > scrollPos &&
-                            scrollPos < (listHeight * .25)) {
-                            // Scroll is moving down and we are in the 1st third of the 
-                            // list.
-                            if (oldDataStart > 0) {
-                                console.log("RESCROLLING UP");
-                                _self._lastRescrollDirection = "UP";
-                                _self._lastRescrollThreshold = listHeight * .25;
-                                
-                                // SCROLLING UP
-                                // Update the render window to the _itemsPerPage rows with the
-                                // current set of visible rows as the last third of the list.
-                                _self.scrollCalculationInProgress = true;
-                                
-                                // Snapshot what is currently at the top of the scroll window.
-                                firstShowing = _self._captureTopLI(ev, _self._itemsPerPage * .25);
-                                newDataStart = _self._updateRenderWindow(firstShowing, 0);
-                                firstShowing += (oldDataStart - newDataStart);
-                                _self._lastUpdateScroll = scrollPos;
-                                
-                                // Fetch another 50 rows prior to the data window start.
-                                curScrollTop = $(_self.$listWrapper).scrollTop();
-                                $.mobile.loading('show', {});
-                                _self.$parent.hide();
-                                _self._refreshData(function() {
-                                    _self.$parent.show();
-                                    $.mobile.loading('hide', {});
+                        var _refreshListOnScroll = function(oncomplete) {
+                            $.mobile.loading('show', {});
+                            _self.$parent.hide();
+                            _self._refreshData(function() {
+                                _self.$parent.show();
+                                $.mobile.loading('hide', {});
                                     
-                                    // Scroll to the right spot so that the element the viewer was
-                                    // viewing is still centered in the screen.                                    
-                                    _self.$parent.listview( "refresh" );
-                                    
-                                    _self._updateScrollPosition(ev, firstShowing, curScrollTop, preRefreshScrollPosition);
-                                    _self.scrollCalculationInProgress = false;
-                                });
+                                _self.$parent.listview( "refresh" );
+                                
+                                _self._prefetchPrev = null;
+                                _self._prefetchPrevDone = false;
+                                _self._prefetchNext = null;
+                                _self._prefetchNextDone = false;
+                                
+                                oncomplete();
+                            });
+                        };
+                       
+                       
+                        if (_self._lastScrollPos > scrollPos && _self._renderWindowStart > 0) {
+                            // We are scrolling up ...
+                            
+                            // If we are in the bottom half of the list, prefetch a page if we haven't already.
+                            if ((scrollPos < (listHeight * .5)) &&
+                                    (!_self._prefetchPrev)) {
+                                _self._prefetchPage(-1);
+                            }
+                            if ((scrollPos < (listHeight * .25)) &&
+                                    _self._firstElemVisible()) {
+                                var _refreshUpDone = function() {
+                                    _self._lastScrollPos = _self.$parent.height();
+                                    _self.$listWrapper.scrollTop(_self.$parent.height());
+                                    _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
+                                };
+                                
+                                // At or very near the bottom of the list ...
+                                _self._prefetchedItems = _self._prefetchPrev;
+                                if (_self._prefetchPrevDone) {
+                                    _refreshListOnScroll(_refreshUpDone);
+                                } else {
+                                    _self.$listWrapper.on('prefetchPrev', function() {
+                                        _refreshListOnScroll(_refreshUpDone);
+                                        _self.$listWrapper.off('prefetchPrev');
+                                    });
+                                }
                                 _self._atDataTop = false;
+                                return;
                             }
-                        } else if (_self._lastScrollPos < scrollPos &&
-                                   scrollPos > (listHeight * .75)) {
-                            // SCROLLING DOWN
-                            // Update the render window to the _itemsPerPage rows centered
-                            // around the current set of visible rows as the first third of the
-                            // list.
-                            if (!_self._atDataTop) {
-                                console.log("RESCROLLING DOWN");
-                                _self._lastRescrollDirection = "DOWN";
-                                _self._lastRescrollThreshold = listHeight * .75;
-                                
-                                _self.scrollCalculationInProgress = true;
-                                firstShowing = _self._captureTopLI(ev, _self._itemsPerPage * .75);
-                                newDataStart = _self._updateRenderWindow(firstShowing, 1);
-                                firstShowing -= (newDataStart - oldDataStart);
-                                _self._lastUpdateScroll = scrollPos;
-                                
-                                       
-                                // Scroll is moving up and we are in the top third of the list.
-                                // Fetch another 50 rows prior to the data window start.
-                                curScrollTop = $(_self.$listWrapper).scrollTop();
-                                $.mobile.loading('show', {});
-                                _self.$parent.hide();
-                                _self._refreshData(function() {
-                                    _self.$parent.show();
-                                    $.mobile.loading('hide', {});
-                                    
-                                    // Scroll to the right spot so that the element the viewer was
-                                    // viewing is still centered in the screen.
-                                    _self.$parent.listview( "refresh" );
-            
-                                    _self._updateScrollPosition(ev, firstShowing - 1, curScrollTop, preRefreshScrollPosition);
-                                    _self.scrollCalculationInProgress = false;
-                                }, true /* Do not recompute the qry collection */);
+                        } else if (_self._lastScrollPos < scrollPos && !_self._atDataTop) {
+                            // Scrolling down.
+                            if ((scrollPos > (listHeight * .5)) &&
+                                    (!_self._prefetchNext)) {
+                                _self._prefetchPage(1);
                             }
-                        }
-                        
+                            if ((scrollPos > (listHeight * .75)) &&
+                                    _self._lastElemVisible()) {
+                                var _refreshDownDone = function() {
+                                    _self._lastScrollPos = 0;
+                                    _self.$listWrapper.scrollTop(0);
+                                    _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                                }; 
+                                
+                                // At or near the top of the list.
+                                _self._prefetchedItems = _self._prefetchNext;
+                                if (_self._prefetchNextDone) {
+                                    _refreshListOnScroll(_refreshDownDone);
+                                } else {
+                                    _self.$listWrapper.on('prefetchNext', function() {
+                                        _refreshListOnScroll(_refreshDownDone);
+                                        _self.$listWrapper.off('prefetchNext');
+                                    });
+                                }
+                                return;
+                            }
+                        }                        
                         _self._lastScrollPos = scrollPos;
-                        return true;
                     });
                 }
                 _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
@@ -732,52 +753,15 @@
         /**
          * Helpers for infinite scroll.
          */
-        _captureTopLI: function(ev, estimate) {
-            // The estimate is just the number of items on the page * the proportion of the page that has scrolled by.
-            // Start at an LI that is 10 index positions below estimate and see if we can find the element.
-            var $startLI = null;
-            var startIdx = estimate - 10;
-            if (startIdx < 0) {
-                startIdx = 0;
-            }
-            while ((!$startLI || $startLI.length === 0) && (startIdx < this._itemsPerPage)) {
-                $startLI = this.$listWrapper.find('li[data-index="' + (startIdx).toString() + '"]');
-                ++startIdx;
-            }
-            
-            
-            var $curTop = null;
-            while (startIdx < this._itemsPerPage) {
-                $curTop = this.$listWrapper.find('li[data-index="' + startIdx.toString() + '"]').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottom' });    
-                if ($curTop && $curTop.length) {
-                    break;
-                }
-                ++startIdx;
-            }
-            
-            if (!$curTop) {
-                // This should NEVER happen ... but we don't want to crash if it does.
-                return estimate;
-            }
-            
-            return parseInt($($curTop[0]).attr('data-index'));
+        
+        _firstElemVisible : function() {
+            var $in = this.$listWrapper.find('li.ui-first-child').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'topvisible bottom' });
+            return ($in.length > 0);
         },
         
-        _updateScrollPosition: function(ev, topIndex, curScrollTop, preRefreshScrollPosition) {
-            // Figure out where the old top item has gone.
-            this.rescrollInProgress = true;
-            
-            var newTopPos = this.$parent.find('li[data-index="' + topIndex + '"]').position().top;
-            if (curScrollTop < 0) {
-                curScrollTop = 0;
-            }
-            var scrollDelta = curScrollTop - preRefreshScrollPosition;
-            var newScrollPos = Math.floor(newTopPos + scrollDelta);
-
-            // Make the scroll target integral.
-            console.log("TIDX:" + topIndex + ", NEW SCROLL: " + newScrollPos);
-            this._lastScrollPos = newScrollPos;
-            $(this.$listWrapper).scrollTop(newScrollPos);
+        _lastElemVisible : function() {
+            var $in = this.$listWrapper.find('li.ui-last-child').withinViewport({ 'container' : this.$listWrapper[0], 'sides' : 'top bottomvisible' });
+            return ($in.length > 0);
         },
         
         /**
@@ -1268,19 +1252,6 @@
         
         _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque) {
             var _self = this;
-            var orderby = _self._currentSort; 
-            displayCollection = _self._resetGlobalFilters(displayCollection);
-
-            if (orderby /*&& !_self.__searchText*/) {
-                displayCollection = _self._applyOrdering(displayCollection);
-            }
-
-            /* Apply skip and limit. */
-            if (_self._renderWindowStart > 0) {
-                displayCollection = displayCollection.skip(_self._renderWindowStart);
-            }
-            displayCollection = displayCollection.limit(_self._itemsPerPage);
-
             var rowIndex = 0;
             var nRendered = 0;
             var LIs = [];
@@ -1290,104 +1261,111 @@
             } else {
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li:not([data-role=list-divider])');
-            }
-            displayCollection.newEach({
-                /* Process each element. */
-                eachFn: function(curRow) {
-                    if (_self.options.grouped) {
-                        groupsToRender.push(curRow);
-                    } else {
-                        if (nRendered >= _self._itemsPerPage) {
-                            return;
-                        }
-
-                        ++rowIndex;
-                        if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
-                            // Nothing to do.
-                        })) {
-                            ++nRendered;
-                        }
+            }            
+            
+            /* Functions used in processing each item. */
+            var __processRow = function(curRow) {
+                if (_self.options.grouped) {
+                    groupsToRender.push(curRow);
+                } else {
+                    if (nRendered >= _self._itemsPerPage) {
+                        return;
                     }
-                },
-                /* Called on start. */
-                startFn: function(count) {
-                    _self.nElems = count;
-                    if (count < _self._itemsPerPage) {
-                        // We did not get the full "limit" count of items requested
-                        _self._atDataTop = true;
-                    }
-                },
-                /* Called on done. */
-                doneFn: function(count) {
-                    var _ridx;
-                    if (!_self.options.grouped) {
-                        /* We did not render any rows. Call completion. */
-                        var startIdx = nRendered;
-                        for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
-                            $(LIs[_ridx]).hide();
-                        }
 
-                        if (count === 0) {
-                            _self._handleEmpty(emptyMsg);
-                        }
-                        
-                         _self.refreshInProgress = false;
-                        oncomplete(opaque);
-                    } else {
-                        var groupIndex = 0;
-                        var __renderGroup = function() {
-                            if (groupsToRender.length === 0) {
-                                for (_ridx = groupIndex; _ridx < LIs.length; ++_ridx) {
-                                    $(LIs[_ridx]).hide();
-                                }
-                                /* Call completion when all rows are done rendering. */
-                                _self.refreshInProgress = false;
-                                oncomplete(opaque);
-                                if (groupIndex == 0) {
-                                    _self._handleEmpty(emptyMsg);
-                                }
-                                return;
-                            }
-
-                            var nxt = groupsToRender.shift();
-                            if (nRendered >= _self._itemsPerPage) {
-                                return;
-                            }
-
-                            ++groupIndex;                            
-                            if (_self._renderSingleRow(LIs, groupIndex - 1, _self._itemsPerPage, nxt, function() {
-                                __renderGroup();
-                            })) {
-                                ++nRendered;
-                            }
-                        };
-                        __renderGroup();
+                    ++rowIndex;
+                    if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
+                        // Nothing to do.
+                    })) {
+                        ++nRendered;
                     }
                 }
-            });  
-        },
-        
-        _updateRenderWindow: function(firstShowingIndex, direction) {
-            var listOffset;
-            var oldWindowStart = this._renderWindowStart, newWindowStart;
-            if (direction === 0) {
-                // Scrolling up to the top of the list. Make this item 2/3 of the way to the end of the list. If we 
-                // place the item right at the cusp, then scrolling down at all triggers another refresh.
-                listOffset = ((this._itemsPerPage * 2) / 3);
-                newWindowStart = oldWindowStart - Math.floor(listOffset - firstShowingIndex);
+            };
+            
+            var __processStart = function(count) {
+                _self.nElems = count;
+                if (count < _self._itemsPerPage) {
+                    // We did not get the full "limit" count of items requested
+                    _self._atDataTop = true;
+                }
+            };
+            
+            var __renderGroup = function(groupIndex) {
+                if (groupsToRender.length === 0) {
+                    for (var _ridx = groupIndex; _ridx < LIs.length; ++_ridx) {
+                        $(LIs[_ridx]).hide();
+                    }
+                    /* Call completion when all rows are done rendering. */
+                    _self.refreshInProgress = false;
+                    oncomplete(opaque);
+                    _self._handleEmpty(nRendered, emptyMsg);
+                    return;
+                }
+
+                var nxt = groupsToRender.shift();
+                if (nRendered >= _self._itemsPerPage) {
+                    return;
+                }
+
+                if (_self._renderSingleRow(LIs, groupIndex, _self._itemsPerPage, nxt, function() {
+                    __renderGroup(groupIndex + 1);
+                })) {
+                    ++nRendered;
+                }
+            };
+            
+            var __processDone = function(count) {
+                var _ridx;
+                if (!_self.options.grouped) {
+                    /* We did not render any rows. Call completion. */
+                    var startIdx = nRendered;
+                    for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
+                        $(LIs[_ridx]).hide();
+                    }
+
+                    _self._handleEmpty(nRendered, emptyMsg);
+                     _self.refreshInProgress = false;
+                    oncomplete(opaque);
+                } else {
+                    __renderGroup(0);
+                }
+            };
+            
+            if (_self._prefetchedItems && _self._prefetchedItems.length) {
+                __processStart(_self._prefetchedItems.length);
+                for (var i = 0; i < _self._prefetchedItems.length; ++i) {
+                    __processRow(_self._prefetchedItems[i]);
+                }
+                __processDone(_self._prefetchedItems.length);
+                _self._prefetchedItems = [];
             } else {
-                // Scrolling down to the bottom of the list. Make the current window 1/3 of the way into the list. If we
-                // place the item right at the cusp then scrolling up at all triggers a refresh.
-                listOffset = ((this._itemsPerPage) / 3);
-                newWindowStart = oldWindowStart + Math.floor(firstShowingIndex - listOffset);
-            }
-            
-            if (newWindowStart < 0) {
-                newWindowStart = 0;
-            }
-            
-            this._renderWindowStart = newWindowStart;
-            return newWindowStart;
+                var orderby = _self._currentSort; 
+                displayCollection = _self._resetGlobalFilters(displayCollection);
+
+                if (orderby /*&& !_self.__searchText*/) {
+                    displayCollection = _self._applyOrdering(displayCollection);
+                }
+
+                /* Apply skip and limit. */
+                if (_self._renderWindowStart > 0) {
+                    displayCollection = displayCollection.skip(_self._renderWindowStart);
+                }
+                displayCollection = displayCollection.limit(_self._itemsPerPage);
+
+                displayCollection.newEach({
+                    /* Process each element. */
+                    eachFn: function(curRow) {
+                        __processRow(curRow);
+                    },
+                    /* Called on start. */
+                    startFn: function(count) {
+                        __processStart(count);
+                    },
+                    /* Called on done. */
+                    doneFn: function(count) {
+                        __processDone(count);
+                    }
+                });    
+            } 
         },
         
         _clearListRows: function() {

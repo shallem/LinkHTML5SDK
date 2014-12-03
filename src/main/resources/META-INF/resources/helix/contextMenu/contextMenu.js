@@ -131,8 +131,7 @@
                 'data-role' : 'popup',
                 'data-theme' : 'a',
                 'id' : this.id,
-                'data-history': 'false',
-                'style' : 'max-height: ' + this._maxHeight + 'px; overflow-y: scroll'
+                'data-history': 'false'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
@@ -167,17 +166,12 @@
                         nxtLI.addClass(nxtItem.styleClass);
                     }
                     nxtLI.append(nxtLink);
+                    nxtLink.on(_self.tapEvent + ' vclick', function(evt) {
+                        return _self._handleClick(evt);
+                    });
                 }
                 this.optionsList.append(nxtLI);
             }
-
-            this.optionsList.on(_self.tapEvent, 'a', function(evt) {
-                return _self._handleClick(evt);
-            });
-            
-            this.optionsList.on('vclick', 'a', function(evt) {
-                return _self._handleClick(evt);
-            });
 
             if (Helix.hasTouch) {
                 // Prevent jQM touch events from propagating beyond the list items. Otherwise

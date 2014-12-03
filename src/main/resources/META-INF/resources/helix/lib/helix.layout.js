@@ -172,6 +172,8 @@ Helix.Layout = {
         var height = $(window).height();
         var width = $(window).width();
 
+        console.log("WINDOW WIDTH: " + width + ", HEIGHT: " + height);
+
         /* In our mobile framework we never let pages scroll. Elements inside can scroll
          * using the scrollingDiv. jQuery Mobile lays out headers and footers by attaching
          * an appropriately sized padding to the page. This means that to prevent any
@@ -327,6 +329,7 @@ Helix.Layout = {
  * the page load is done, they should call this function.
  */
 Helix.Layout.layoutPage = function(page, noTrigger) {
+    console.log("LAYOUT PAGE");
     if (!page) {
         page = $.mobile.activePage;
         if (!page) {
