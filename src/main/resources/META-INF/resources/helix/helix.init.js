@@ -78,6 +78,7 @@ Helix.ready = false;
 $(document).on('ready', function() {
     window.onerror = function (desc,page,line,chr) { 
         var msg = 'Captured javascript error "' + desc + '" on page "' + page + '" line "' + line + '"';
+        console.log('[ERROR] ' + msg);
         Helix.Utils.statusMessage('Javascript Error', msg, 'severe');
         if (Helix && Helix.errorHook) {
             Helix.errorHook(msg);

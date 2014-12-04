@@ -1,4 +1,4 @@
-fhandleempty/*
+/*
  * Copyright 2013 Mobile Helix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
