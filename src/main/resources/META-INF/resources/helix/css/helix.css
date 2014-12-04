@@ -20,15 +20,15 @@
 .hx-split-left-area {
     float: left;
     background-color: white;
-    border: 1px solid black;
-    border-radius: 10px 10px 0px 0px;
+    border: 1px solid grey;
+    border-radius: 0px 0px 0px 0px;
 }
 
 .hx-split-right-area {
     float: right;
     background-color: white;
-    border: 1px solid black;
-    border-radius: 10px 10px 0px 0px;
+    border: 1px solid grey;
+    border-radius: 0px 0px 0px 0px;
 }   
 
 .hx-split-full {
@@ -57,7 +57,7 @@
     height: 100%;
 }
 
-.pm-scroller-horizontal {
+.hx-scroller-horizontal,.pm-scroller-horizontal {
     display: inline-block;
     height: auto;
 }
@@ -116,16 +116,25 @@
 
 .iconbutton {
     width: 60px;
-    height: 64px;    
+    height: 60px;    
+}
+
+.iconbutton {
+    background: transparent;
+    border: none;
 }
 
 .iconbutton .ui-btn-inner {
     text-overflow: none;
-    padding: 0.6em 0 45px;
+    background: transparent;
+}
+
+.iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+    padding: 0.6em 0 45px;   
 }
 
 .iconbutton .ui-btn-inner .ui-btn-text {
-    font-size: x-small;
+    display: none;
 }
 
 .iconbutton .ui-btn-inner .ui-icon {
@@ -139,34 +148,22 @@
 }
 
 /**
- * On small screens, turn the iconButton into a much more compact button.
+ * Header styles.
  */
-@media all and (max-width: 500px) {
-    .iconbutton {
-        width: 40px;
-        height: 45px;    
-    }
-
-    .iconbutton .ui-btn-inner {
-        padding: 0.4em 0 25px;
-    }
-
-    .iconbutton .ui-btn-inner .ui-btn-text {
-        font-size: x-small;
-    }
-
-    .iconbutton .ui-btn-inner .ui-icon {
-        left: 0;
-        top: 10%;
-    }
-
-    .iconbutton .ui-btn-text {
-        display: none;
-    }    
+.ui-header .iconbutton {
+    height: 32px; 
 }
 
-.ui-controlgroup-controls {
-    width: 100%;
+.ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+    padding: 0.6em 0 30px;   
+}
+
+.ui-header .iconbutton .ui-btn-inner .ui-icon {
+    top: 15%;
+}
+
+.ui-header .ui-controlgroup:not(.ui-btn-right) .ui-controlgroup-controls a {
+    padding-top: 3px;
 }
 
 .ui-layout-unit .ui-layout-unit-content {
@@ -269,9 +266,15 @@ a {
 
 /* Special styles for mini forms (on phones, or because jQM can be rather bulbous). */
 .hx-mini-fieldcontain {
-    padding: .2em;
+    padding: .2em 0em;
     margin-bottom: .1em;
     margin-top: .5em;
+    margin-right: 0em;
+}
+
+.hx-form-container {
+    padding-right: 0px;
+    margin-right: 0px;
 }
 
 .hx-fieldview {
@@ -332,4 +335,170 @@ a {
 li {
     -webkit-backface-visibility: hidden;
     -webkit-transform: translate3d(0,0,0);
+}
+
+.ui-header.hx-text-left .ui-title {
+    text-align: left;
+    margin-left: 64px;
+}
+
+/* bars vertical offset is too low in the header */
+.ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars {
+    top: 0%;
+}
+
+/**
+ * Large screen styles.
+ */
+@media all and (min-width: 501px) {
+    .hx-phone-only {
+        display: none !important;
+    }
+}
+
+/**
+ * bullets on multi select lista
+ */
+.hx-listview.hxMultiSelect li.ui-btn {
+    padding: 0 0 0 30px;
+}
+
+.hx-listview.hxMultiSelect li.ui-btn:before{
+    /*fill it with a blank space*/
+    content:"\00a0";
+
+    /*make it a block element*/
+    display: block;
+
+    /*adding an 8px round border to a 0x0 element creates an 8px circle*/
+    border: solid 9px #a8a8a8;
+    border-radius: 9px;
+    -moz-border-radius: 9px;
+    -webkit-border-radius: 9px;
+    height: 0;
+    width: 0;
+
+    /*Now position it on the left of the list item, and center it vertically
+    (so that it will work with multiple line list-items)*/
+    position: absolute;
+    left: 7px;
+    top: 40%;
+    margin-top: -8px;
+}
+
+.hx-listview.hxMultiSelect li.hx-selected:after{
+    /*Add another block-level blank space*/
+    content:"\00a0";
+    display:block;
+
+    /*Make it a small rectangle so the border will create an L-shape*/
+    width: 3px;
+    height: 6px;
+
+    /*Add a white border on the bottom and left, creating that 'L' */
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+
+    /*Position it on top of the circle*/
+    position:absolute;
+    left: 14px;
+    top: 40%;
+    margin-top: -4px;
+
+    /*Rotate the L 45 degrees to turn it into a checkmark*/
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+}
+
+/**
+ * mini view mode
+ */
+
+/* Do not make popup menus have no padding ... they become unusable b/c each list item is too small to touch. */
+.hx-mini-mode *:not(.ui-popup) > ul .ui-li .ui-btn-inner a.ui-link-inherit {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.hx-mini-mode .ui-li-heading {
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+.hx-mini-mode .hx-full-mode-only {
+    display: none;
+}
+
+.ui-page.hx-no-footer {
+    padding-bottom: 0px;
+}
+
+/**
+ * Split screen styles.
+ */
+.hx-split-left .hx-split-left-hide {
+    display: none;
+}
+
+.hx-split-right .hx-split-right-hide {
+    display: none;
+}
+
+.hx-split-left .hx-split-full-hide {
+    display: none;
+}
+
+.hx-split-right .hx-split-full-hide {
+    display: none;
+}
+
+.hx-split-both .hx-split-both-hide {
+    display: none;
+}
+
+.hx-mini-fieldcontain {
+    max-width: 90% !important;
+}
+
+/**
+ * iconbutton fixes for icon position.
+ */
+.iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
+    top: 25%;
+}
+
+.iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
+    top: 25%;
+}
+
+/**
+ * Small screen style overrides.
+ */
+@media all and (max-width: 500px) {
+    .iconbutton {
+        width: 40px;
+        height: 32px;    
+    }
+
+    .iconbutton .ui-btn-inner {
+        padding: 0.4em 0 30px;
+    }
+
+    .iconbutton .ui-btn-inner .ui-icon {
+        top: 15%;
+    }
+    
+    .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
+        top: 5%;
+    }
+    
+    .ui-header.hx-text-left .ui-title {
+        text-align: left;
+        margin-left: 44px;
+    }
+    
+    .hx-tablet-only {
+        display: none !important;
+    }
 }

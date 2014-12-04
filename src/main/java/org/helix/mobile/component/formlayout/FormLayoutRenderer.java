@@ -77,6 +77,11 @@ public class FormLayoutRenderer extends CoreRenderer {
         } else {
             writer.write(", 'titleStyleClass' : null");
         }
+        
+        if (layout.getMaxWidth() != null) {
+            writer.write(", 'width' : '" + layout.getMaxWidth() + "'");
+        }
+        
         writer.write(",modes : '" + layout.getModes() + "'");
         writer.write(",currentMode: '" + layout.getCurrentMode() + "'");
         writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));

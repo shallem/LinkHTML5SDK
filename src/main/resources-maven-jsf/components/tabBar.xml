@@ -11,6 +11,11 @@
     <rendererClass>org.helix.mobile.component.tabbar.TabBarRenderer</rendererClass>
     <parent>javax.faces.component.UIOutput</parent>
     <attributes>
-	
+	<attribute>
+            <name>fullModeOnly</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>true</defaultValue>
+        </attribute>
     </attributes>
 </component>

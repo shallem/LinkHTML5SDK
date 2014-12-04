@@ -64,6 +64,23 @@ Helix.Utils =  {
             console.log('[ERROR] ' + msg);
         }
     },
+
+    undoMessage: function(msg, doAction, undoAction, lifetime) {
+        if (!lifetime) {
+            lifetime = 4000;
+        }
+        if (Helix.Utils.undoBox) {
+            Helix.Utils.undoBox.show(msg, doAction, undoAction, lifetime);
+        } else {
+            Helix.Utils.undoBox = $('<div/>').helixUndo({
+                msg : msg,
+                doAction: doAction,
+                undoAction: undoAction,
+                life: lifetime
+            }).data('helix-helixUndo');
+        }
+    },
+    
     paginator: {
         
         PAGINATOR_PREV_PAGE_LINK_CLASS : "ui-paginator-prev ui-state-default ui-corner-all",

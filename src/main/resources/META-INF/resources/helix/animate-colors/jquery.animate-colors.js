@@ -72,6 +72,10 @@
 
 	// Calculate an in-between color. Returns "#aabbcc"-like string.
 	function calculateColor(begin, end, pos) {
+                if (!begin || !end) {
+                    return 'rgba(0,0,0,0)';
+                }
+            
 		var color = 'rgb' + ($.support['rgba'] ? 'a' : '') + '('
 				+ parseInt((begin[0] + pos * (end[0] - begin[0])), 10) + ','
 				+ parseInt((begin[1] + pos * (end[1] - begin[1])), 10) + ','

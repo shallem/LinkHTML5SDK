@@ -207,8 +207,12 @@ public class FormFieldRenderer extends CoreRenderer {
             }
         } else if (ffield.getType().equals("subPanel")) {
             writer.write(", 'items': [");
+            int idx = 0;
             for (UIComponent c : ffield.getChildren()) {
                 c.encodeAll(context);
+                if (++idx < ffield.getChildren().size()) {
+                    writer.write(",");
+                }
             }
             writer.write("]");
         }

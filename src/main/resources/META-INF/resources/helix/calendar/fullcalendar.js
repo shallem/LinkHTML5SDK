@@ -23,8 +23,10 @@ var defaults = {
 	header: {
 		left: 'title',
 		center: '',
-		right: 'today prev,next'
+		right: 'today prev,next',
+                selector: ''
 	},
+        headerSelector: null,
 	weekends: true,
 	weekNumbers: false,
 	weekNumberCalculation: 'iso',
@@ -595,6 +597,10 @@ function Calendar(element, options, eventSources) {
 
 	function updateTitle() {
 		header.updateTitle(currentView.title);
+                if (options.header.selector === 'title' && options.headerSelector) {
+                    $(options.headerSelector).html(currentView.title);
+                }
+
 	}
 
 
@@ -811,7 +817,7 @@ function Header(calendar, options) {
 						.append(renderSection('left'))
 						.append(renderSection('center'))
 						.append(renderSection('right'))
-				);
+				);                        
 			return element;
 		}
 	}

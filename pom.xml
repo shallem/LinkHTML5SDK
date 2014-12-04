@@ -243,6 +243,9 @@
 		    <include>primefaces-styles/primefaces-growl.css</include>
 		    <include>primefaces-styles/primefaces-core.css</include>
 
+		    <!-- Undo styles. -->
+		    <include>undo/helix-undo.css</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>
@@ -383,8 +386,8 @@
 		    <!-- Color animation -->
 		    <include>animate-colors/jquery.animate-colors.js</include>
 
-		    <!-- Right now we are NOT including mousewheel support, but it can be easily added.
-		    <include>lib/mousewheel.js</include> -->
+		    <!-- Undo. -->
+		    <include>undo/undo.js</include>
 
 		  </includes>
 		  <aggregations>

@@ -28,7 +28,7 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Width of this field. Default to 90% screen width. Otherwise specify as a percentage.</description>
-            <defaultValue>auto</defaultValue>
+            <defaultValue></defaultValue>
         </attribute>
         <attribute>
             <name>height</name>

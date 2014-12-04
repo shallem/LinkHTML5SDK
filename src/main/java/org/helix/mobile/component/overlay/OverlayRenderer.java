@@ -44,8 +44,31 @@ public class OverlayRenderer extends CoreRenderer {
         }
         
         writer.endElement("div");
+        encodeScript(context, overlay);
     }
-    
+
+    protected void encodeScript(FacesContext context, Overlay overlay) throws IOException {
+        ResponseWriter writer = context.getResponseWriter();
+        String clientId = overlay.getClientId(context);
+
+        startScript(writer, clientId);
+
+        writer.write("(function($) {\n");
+        
+        writer.write("$(document).on('helixinit', function() {");
+        
+        if (overlay.getBeforeOpen() != null) {
+            writer.write("$(PrimeFaces.escapeClientId('" + clientId + "')).on('panelbeforeopen', function( event, ui ) {");
+            writer.write(overlay.getBeforeOpen() + ".call(window);");
+            writer.write("});" );
+        }
+        
+        writer.write("});\n");
+        
+        writer.write("})(jQuery);\n");
+
+        endScript(writer);
+    }
     
 
     @Override

@@ -41,6 +41,9 @@ public class ContextMenuItemRenderer extends CoreRenderer {
         if (item.getGroup() != null) {
             writer.write(",'group' : '" + item.getGroup() + "'");
         }
+        if (item.getStyleClass() != null) {
+            writer.write(",'styleClass' : '" + item.getStyleClass() + "'");
+        }
         writer.write("}");
     }
     

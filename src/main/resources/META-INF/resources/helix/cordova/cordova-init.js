@@ -40,7 +40,7 @@
         }
         
         // If we have it, ask the container to update our online/offline status.
-        if (window.HelixSystem.updateOnlineOffline) {
+        if (window.CordovaInstalled && window.HelixSystem.updateOnlineOffline) {
             window.HelixSystem.updateOnlineOffline(function() {
                 $(document).trigger('cordovaReady');
             });

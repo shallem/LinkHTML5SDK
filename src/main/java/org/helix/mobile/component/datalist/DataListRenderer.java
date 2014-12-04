@@ -82,6 +82,11 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("scroll: false,");
         }
+        if (dlist.isMultiSelect()) {
+            writer.write("multiSelect: true,");
+        } else {
+            writer.write("multiSelect: false,");
+        }
 
         if (!dlist.isShowButtons()) {
             writer.write("showButtons: false,");
@@ -209,6 +214,11 @@ public class DataListRenderer extends CoreRenderer {
         // Pull to refresh.
         if (dlist.getPullToRefresh() != null) {
             writer.write(",pullToRefresh: " + dlist.getPullToRefresh());
+        }
+        
+        // Push to get more
+        if (dlist.getPushToRefresh() != null) {
+            writer.write(",pushToRefresh: " + dlist.getPushToRefresh());
         }
         
         // Custom paginator template.

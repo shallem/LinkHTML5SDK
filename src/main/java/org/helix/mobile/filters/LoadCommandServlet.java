@@ -33,24 +33,24 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class LoadCommandServlet extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(LoadCommandServlet.class.getName());
-    
+
     private HashMap<String, LoadCommandAction> commandMap;
     private Class loadCommandClass;
     private String loadCommandClassName;
-    
+
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         String loadKey = req.getParameter("__hxLoadKey");
         LoadCommandAction lca;
         if (loadKey != null) {
             lca = commandMap.get(loadKey);
-            
+
             if (lca == null) {
-                lca = this.resolveLoadCommand(loadKey, 
-                        req.getParameter("__hxLoadMethod"), 
-                        req.getParameter("__hxGetMethod"));   
+                lca = this.resolveLoadCommand(loadKey,
+                        req.getParameter("__hxLoadMethod"),
+                        req.getParameter("__hxGetMethod"));
             }
-            
+
             String err = null;
             try {
                 Object thisObj = lca.getCTOR().newInstance(req);
@@ -74,9 +74,9 @@ public class LoadCommandServlet extends HttpServlet {
                 err = "Error instantiating load command class: " + ite.getMessage();
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Failed to run load command with unexpected exception", ex);
-                err = "Unexepcted server error. Please contact your administrator.";
+                err = "Unexpected server error. Please contact your administrator.";
             }
-            
+
             if (err != null) {
                 try {
                     res.getWriter().write("{ \"error\" : \"" + err + "\" }");
@@ -86,7 +86,7 @@ public class LoadCommandServlet extends HttpServlet {
                 }
             }
         } else {
-            
+
         }
     }
 
@@ -97,12 +97,12 @@ public class LoadCommandServlet extends HttpServlet {
             try {
                 this.loadCommandClass = Class.forName(this.loadCommandClassName, true, Thread.currentThread().getContextClassLoader());
             } catch (ClassNotFoundException ex) {
-                Logger.getLogger(LoadCommandServlet.class.getName()).log(Level.SEVERE, 
+                Logger.getLogger(LoadCommandServlet.class.getName()).log(Level.SEVERE,
                         "Failed to lookup load command class. Check the name in your web.xml.", ex);
                 throw new IOException("Failed to lookup load command class: " + this.loadCommandClassName);
             }
         }
-        
+
         Method loadMethod = null;
         try {
             loadMethod = this.loadCommandClass.getMethod(loadMethodName, new Class[]{ HttpServletRequest.class });
@@ -112,17 +112,17 @@ public class LoadCommandServlet extends HttpServlet {
         if (loadMethod == null) {
             throw new IOException(loadMethodName + " must refer to a 1 argument method of the bean of type " + this.loadCommandClass.getName());
         }
-        
+
         Method getMethod = null;
         try {
             getMethod = this.loadCommandClass.getMethod(getMethodName, new Class[]{});
         } catch(Exception e) {
-                        
+
         }
         if (getMethod == null) {
             throw new IOException("Failed to find method " + getMethodName + " corresponding to value attribute for class " + this.loadCommandClass.getName());
         }
-                
+
         Constructor constr = null;
         try {
             constr = this.loadCommandClass.getConstructor(new Class[]{ HttpServletRequest.class });
@@ -132,13 +132,13 @@ public class LoadCommandServlet extends HttpServlet {
         if (constr == null) {
             throw new IOException(this.loadCommandClass.getName() + " must have a 1 argument constructor.");
         }
-                
-        LoadCommandAction lca = new LoadCommandAction(loadKey, null, this.loadCommandClass, 
+
+        LoadCommandAction lca = new LoadCommandAction(loadKey, null, this.loadCommandClass,
                 constr, loadMethod, getMethod);
         this.commandMap.put(loadKey, lca);
         return lca;
     }
-    
+
     @Override
     public void init() throws ServletException {
         this.loadCommandClassName = this.getServletConfig().getInitParameter("className");
