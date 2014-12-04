@@ -1837,12 +1837,12 @@
         setSelectedByIndex: function(idx, groupIdx) {
             var targetElem;
             if (idx && groupIdx) {
-                targetElem = $(this.$wrapper).find('li[data-index=' + idx +']').filter('[data-group-index=' + groupIdx + ']');
+                targetElem = $(this.$wrapper).find('li[data-index="' + idx +'"]').filter('[data-group-index="' + groupIdx + '"]');
                 if (targetElem && targetElem.length > 0) {
                     this.setSelected(targetElem);
                 }
             } else {
-                targetElem = $(this.$wrapper).find('li[data-index=' + idx +']');
+                targetElem = $(this.$wrapper).find('li[data-index="' + idx +'"]');
                 if (targetElem && targetElem.length > 0) {
                     this.setSelected(targetElem);
                 }
