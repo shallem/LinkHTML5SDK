@@ -46,6 +46,12 @@
             <description>Indicates if a horizontal separator should be placed in between form fields.</description>
         </attribute>
         <attribute>
+            <name>maxWidth</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Maximum width of the entire form.</description>
+        </attribute>
+        <attribute>
             <name>fieldStyle</name>
             <required>false</required>
             <type>java.lang.String</type>

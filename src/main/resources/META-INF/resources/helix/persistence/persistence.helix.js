@@ -1527,7 +1527,7 @@ function initHelixDB() {
             persistence.search.config(persistence, persistence.store.websql.sqliteDialect, {
                 indexAsync : true
             });
-
+            
             /* Keep a master list of all widget schemas we have attempted to create. This ensures we
              * don't recreate the schema each time we run a load command.
              */

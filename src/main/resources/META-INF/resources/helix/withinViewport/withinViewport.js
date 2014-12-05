@@ -54,6 +54,11 @@
         isWithin = {
             // Element is below the top edge of the viewport
             top: function _isWithin_top() {
+                return elemOffset[1] + elem.offsetHeight >= scrollOffset[1] + config.top;
+            },
+            
+            // Element's bottom is below the top of the scroll view.
+            topvisible: function _isWithin_top() {
                 return elemOffset[1] >= scrollOffset[1] + config.top;
             },
 
@@ -64,11 +69,18 @@
                 return elemOffset[0] + elem.offsetWidth <= container.clientWidth + scrollOffset[0] - config.right;
             },
 
-            // Element is above the bottom edge of the viewport
+            // Element's bottom is above the bottom edge of the viewport
             bottom: function _isWithin_bottom() {
                 var container = (config.container === document.body) ? window : config.container;
 
                 return elemOffset[1] + elem.offsetHeight <= scrollOffset[1] + container.clientHeight - config.bottom;
+            },
+            
+            // Element's top is above the bottom edge of the viewport.
+            bottomvisible: function _isWithin_bottomVisible() {
+                var container = (config.container === document.body) ? window : config.container;
+
+                return elemOffset[1] <= scrollOffset[1] + container.clientHeight - config.bottom;
             },
 
             // Element is to the right of the left edge of the viewport
@@ -81,26 +93,31 @@
             }
         };
 
+        /* SAH - this calculation was originally not right. The offsetTop property is the offset from
+         * the offsetParent node in the DOM. If node A and its parent B have the same offsetParent then
+         * the elemOffset from the container should actually be A.offsetTop - B.offsetTop (b/c both are relative
+         * to the same element).
+         */
         elemOffset = (function _elemOffset() {
             var el = elem,
                 x = 0,
-                y = 0;
+                y = 0,
+                parent = null;
 
-            if (el.parentNode) {
-                x = el.offsetLeft;
-                y = el.offsetTop;
-
-                el = el.parentNode;
-                while (el) {
-                    if (el == config.container) {
-                        break;
-                    }
-
-                    x += el.offsetLeft;
-                    y += el.offsetTop;
-
-                    el = el.parentNode;
+            while (el) {
+                if (el === config.container) {
+                    break;
                 }
+
+                x += el.offsetLeft;
+                parent = el.parentNode;
+
+                if (parent.offsetParent === el.offsetParent) {
+                    y += (el.offsetTop - parent.offsetTop);
+                } else {
+                    y += el.offsetTop;
+                }
+                el = el.parentNode;
             }
 
             return [x, y];

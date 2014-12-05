@@ -38,6 +38,12 @@
             <description>Named group for menu items to make it easy to show/hide items in context.</description>
         </attribute>
         <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>CSS style to apply to the enclosing LI of the menu item.</description>
+        </attribute>
+        <attribute>
             <name>id</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -46,6 +46,7 @@
                                     dynamic: true, // if false Hook elements already there
                                     textRequired: false, // will input loader text if true
                                     scrollWheelSelected: false, // will use scroll wheel events
+                                    isPull: true, // Detect pull above the target element, not push below
                                     swipeDistance: 50, // swipe distance for loader to show on touch devices
                                     loaderClass: 'hook-loader',
                                     spinnerClass: 'hook-spinner',
@@ -140,14 +141,21 @@
         onScroll: function(el, settings, delta) {
           st = settings.scrollTarget.scrollTop();
 
-          if(settings.scrollWheelSelected === true && (delta >= 150 && st <= 0)) {
+          if(settings.isPull && settings.scrollWheelSelected === true && (delta >= 150 && st <= 0)) {
               if(called === false) {
                   methods.reload(el, settings);
                   called = true;
               }
           }
 
-          if(settings.scrollWheelSelected === false && /*SAH: st <= 0*/ st < 0) {
+          if(settings.isPull && settings.scrollWheelSelected === false && /*SAH: st <= 0*/ st < 0) {
+            if(called === false) {
+                methods.reload(el, settings);
+                called = true;
+            }
+          }
+          
+          if(!settings.isPull && settings.scrollWheelSelected === false && /*SAH: st <= 0*/ st > settings.scrollTarget.height()) {
             if(called === false) {
                 methods.reload(el, settings);
                 called = true;

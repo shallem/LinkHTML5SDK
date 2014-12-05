@@ -92,11 +92,11 @@
     /**
      * Call this function to show the dialog.
      */
-    function show(dialog,formElems) {
+    function show(dialog,formElems,callbackThis) {
         if (dialog.options.hasForm && formElems) {
             /* Layout the form dynamically. */
             Helix.Utils.layoutForm($(dialog.form), formElems);
-            $(dialog.form).find('input,textarea').on('tap', function(ev) {
+            $(dialog.form).find('input,textarea').on(Helix.clickEvent, function(ev) {
                 $(ev.target).focus();
                 return false;
             });
@@ -104,6 +104,10 @@
         $(dialog.$mainDiv).popup( "open", { 
             positionTo : dialog.options.positionTo
         });
+        
+        if (callbackThis) {
+            this._callbackThis = callbackThis;
+        }
     }
     
     function getForm(dialog) {
@@ -157,6 +161,7 @@
     }
     
     function encodeContent(dialog,$mainDiv) {
+        var _self = dialog;
         var dialogContentClass = dialog.options.contentStyleClass;
         if (dialog.options.hasForm) {
             dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content";
@@ -217,9 +222,9 @@
             .on(Helix.clickEvent, function(ev) {
                 ev.preventDefault();
                 if (dialog.options.hasForm && dialog.form) {
-                    dialog.options.onConfirm.call(dialog, $(dialog.form).serialize());
+                    dialog.options.onConfirm.call(_self._callbackThis ? _self._callbackThis: dialog, $(dialog.form).serialize());
                 } else {
-                    dialog.options.onConfirm.call(dialog);
+                    dialog.options.onConfirm.call(_self._callbackThis ? _self._callbackThis: dialog, dialog);
                 }
                 $(dialog.$mainDiv).popup( "close" );
                 return false;

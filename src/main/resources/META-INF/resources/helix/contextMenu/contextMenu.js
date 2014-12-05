@@ -53,7 +53,18 @@
              * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
              * If no name is provided, one is generated. The getName method returns the name.
              */
-            name: null
+            name: null,
+            
+            /**
+             * Optional theme. Used to provide a color swatch for the menu. Defaults to jquery mobile theme 'b'.
+             */
+            theme: 'b',
+            
+            /**
+             * Optional divider theme. Used to provide a color swatch for dividers in the menu. Default to jquery mobile
+             * theme 'a'.
+             */
+            dividerTheme: 'a'
         },
 
         _create: function() {
@@ -120,14 +131,13 @@
                 'data-role' : 'popup',
                 'data-theme' : 'a',
                 'id' : this.id,
-                'data-history': 'false',
-                'style' : 'max-height: ' + this._maxHeight + 'px; overflow-y: scroll'
+                'data-history': 'false'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
                 'id' : this.id + "-ul",
-                'data-theme' : 'b'
+                'data-theme' : this.options.theme
             }).appendTo(this._menuContainer);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
@@ -135,7 +145,7 @@
 
                 if (nxtItem.isDivider) {
                     nxtLI.attr('data-role', 'divider');
-                    nxtLI.attr('data-theme', 'a');
+                    nxtLI.attr('data-theme', this.options.dividerTheme);
                     nxtLI.append(nxtItem.display);
                 } else {
                     var nxtLink = $('<a />').attr({
@@ -152,18 +162,16 @@
                     if (nxtItem.group) {
                         nxtLI.attr('data-group', nxtItem.group);
                     }
+                    if (nxtItem.styleClass) {
+                        nxtLI.addClass(nxtItem.styleClass);
+                    }
                     nxtLI.append(nxtLink);
+                    nxtLink.on(_self.tapEvent + ' vclick', function(evt) {
+                        return _self._handleClick(evt);
+                    });
                 }
                 this.optionsList.append(nxtLI);
             }
-
-            this.optionsList.on(_self.tapEvent, 'a', function(evt) {
-                return _self._handleClick(evt);
-            });
-            
-            this.optionsList.on('vclick', 'a', function(evt) {
-                return _self._handleClick(evt);
-            });
 
             if (Helix.hasTouch) {
                 // Prevent jQM touch events from propagating beyond the list items. Otherwise

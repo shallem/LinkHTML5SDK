@@ -139,6 +139,10 @@ function __refreshDate(mode, formElem) {
                     displayDate = new Date(formElem.value);
                 }
             }
+        } else {
+            if (!mode) {
+                displayDate = formElem.value;
+            }
         }
     }
     if (displayDate) {
@@ -216,7 +220,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         /* Edit */
         var dateDiv = $('<div />').attr({
             'style' : formLayout.computedFieldStyle,
-            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
+            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
         .append($('<label />').attr({
             'for' : formElem.name,
@@ -315,11 +319,11 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         var dateDiv = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : formLayout.computedFieldStyleClass
+            'class' : formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
-            'style' : 'vertical-align: middle' + labelWidthOverride,
+            'style' : 'padding-top: 0.5em;' + labelWidthOverride,
             'class' : 'ui-input-text ' + formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
@@ -369,7 +373,7 @@ function __refreshTextArea(mode, formElem) {
     }
 }
 
-function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
+function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (!formElem.value) {
         formElem.value = "";
     }
@@ -395,7 +399,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer) {
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID
@@ -536,7 +540,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-mini-fieldcontain ' + formLayout.computedFieldStyleClass
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
@@ -560,14 +564,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
         if (formElem.onspace) {
             $(inputMarkup).on("keydown", function (e) {
-                if (e.which == 32) {
+                if (e.which === 32) {
                     formElem.onspace.apply(this);
                 }
             });
         }
         if (formElem.onenter) {
             $(inputMarkup).on("keydown", function (e) {
-                if (e.which == 13) {
+                if (e.which === 13) {
                     formElem.onenter.apply(this);
                 }
             });
@@ -592,8 +596,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
-                                             .css('width', '100%')
+                                             .css('width', '90%')
                                              .css('position', 'absolute')
+                                             .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                                             .css('overflow-y', 'scroll')
+                                             .css('display', 'none')
                                              .appendTo($fieldContainer).listview({ inset : true });
             $(inputMarkup).on('input', function() {
                 if (formElem.__autocompleteTimeout) {
@@ -603,6 +610,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 var text = $(this).val();
                 if (text.length < formElem.autocompleteThreshold) {
                     autoCompleteList.empty();
+                    autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
                     var __doAutocomplete = function() {
@@ -616,6 +624,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             if (LIs && LIs.length) {
                                 $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
                                     autoCompleteList.empty();
+                                    autoCompleteList.hide();
                                     formElem.__noblur = false;
                                     return false;
                                 }).appendTo(autoCompleteList);
@@ -623,11 +632,13 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
                                         formElem.autocompleteSelect($(this).text());
                                         autoCompleteList.empty();
+                                        autoCompleteList.hide();
                                         $(inputMarkup).val('');
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
                                 }
+                                autoCompleteList.show();
                                 autoCompleteList.listview("refresh");
                             } else {
                                 formElem.__noblur = false;
@@ -643,7 +654,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             });
         }
     } else {
-        if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
+        if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
             var valSpan = $('<span/>').attr({
                 'data-name' : formElem.name,
                 'class' : 'ui-input-text'
@@ -656,10 +667,16 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             }
             $fieldContainer.append(valSpan);
         } else {
-            $fieldContainer.append($('<p />').attr({
-                'data-name' : formElem.name,
-                'class' : formElem.computedStyleClass + ' ui-input-text'
-            }).text(formElem.value));
+            var textElem = $('<p />').attr({
+                'data-name' : formElem.name
+            }).text(formElem.value);
+            if (formElem.computedStyle) {
+                $fieldContainer.attr('style', formElem.computedStyle);
+            }
+            if (formElem.computedStyleClass) {
+                $fieldContainer.addClass(formElem.computedStyleClass);
+            }
+            $fieldContainer.append(textElem);
         }
     }
 }
@@ -742,9 +759,10 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         return;
     }
     
-    var fieldMarkup = $('<div />').attr({
-        'style' : 'width: ' + (formElem.computedWidth ? formElem.computedWidth : 'auto')
-    }).appendTo($fieldContainer);
+    var fieldMarkup = $('<div />').appendTo($fieldContainer);
+    if (formElem.computedWidth) {
+        fieldMarkup.css('width', formElem.computedWidth);
+    }
 
     var formMarkup = $("<form />").appendTo(fieldMarkup);
     var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
@@ -861,38 +879,51 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     }
 }
 
-function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
-    var $buttonLink;
+function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     if (!formElem.fieldTitle) {
         formElem.fieldTitle = "";
     }
+    if (!formElem.id) {
+        formElem.id = Helix.Utils.getUniqueID();
+    }
+    var $buttonLink;
     if (formElem.iconClass) {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
             'data-iconpos' : 'bottom',
             'data-icon' : formElem.iconClass,
-            'data-iconshadow' : true,
-            'class' : 'iconbutton'
+            'data-iconshadow' : formElem.iconShadow ? 'true' : 'false',
+            'data-corners' : formElem.iconCorners ? 'true' : 'false',
+            'data-shadow' : formElem.shadow ? 'true' : 'false',
+            'class' : 'iconbutton',
+            'id': formElem.id
         }).append(formElem.fieldTitle).button();            
     } else {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
             'data-inline' : true,
-            'data-theme' : 'b'
-        }).append(formElem.fieldTitle).button();
+            'data-shadow' : formElem.shadow ? 'true' : 'false',
+            'data-theme' : formElem.theme ? formElem.theme : 'b',
+            'id': formElem.id
+        }).append(formElem.fieldTitle);
     }
     if (formElem.href) {
         $buttonLink.attr('href', formElem.href);
     } else {
         $buttonLink.attr('href', 'javascript:void(0);');
     }
-    $buttonLink.appendTo($fieldContainer);
     $buttonLink.buttonMarkup({ mini : useMiniLayout });
+    $buttonLink.appendTo($parent);
     if (formElem.onclick) {
         $buttonLink.on('vclick', function(ev) {
-            formElem.onclick.call(this, ev);
+            return formElem.onclick.call(this, ev);
         });
     }
+    return $buttonLink;
+}
+
+function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    __makeButtonMarkup(formElem, useMiniLayout, $fieldContainer);
 }
 
 function __refreshIFrame(formElem) {
@@ -915,7 +946,12 @@ function __refreshIFrame(formElem) {
         doc.write('</head>');
     }
     if (!formElem.noBody) {
-        doc.write('<body style="height: 100%;">');
+        if (!formElem.bodyStyle) {
+            formElem.bodyStyle = '';
+        } else {
+            formElem.bodyStyle = ' ' + formElem.bodyStyle;
+        }
+        doc.write('<body style="height: 100%;' + formElem.bodyStyle + '">');
     }
     /*if (formElem.isScroller) {
         $(doc.body).css('overflow-y', 'scroll');
@@ -1011,45 +1047,12 @@ function __refreshButtonGroup(formElem) {
     var formButtonIdx;
     for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
         formButton = formElem.buttons[formButtonIdx];
-        if (!formButton.iconPos && formButton.iconPos !== 'none') {
-            formButton.iconPos = 'bottom';
-        }
-        if (!formButton.computedStyleClass && 
-            formButton.iconClass &&
-            formButton.iconPos !== 'none') {
-            formButton.computedStyleClass = 'iconbutton';
-        }
-        if (!formButton.theme) {
-            formButton.theme = 'b';
-        }
-        if (!formButton.iconClass) {
-            formButton.iconClass = '';
-        }
-        var $buttonBarLink = $('<a />').attr({
-            'data-iconpos' : formButton.iconPos,
-            'data-icon' : formButton.iconClass,
-            'data-iconshadow' : false,
-            'data-theme' : formButton.theme,
-            'class' : formButton.computedStyleClass
-        });
-        if (formButton.mini) {
-            $buttonBarLink.attr('data-mini', 'true');
-        }
-        if (formButton.fieldTitle) {
-            $buttonBarLink.append(formButton.fieldTitle);
-        } 
-        if (formButton.href) {
-            $buttonBarLink.attr('href', formButton.href);
-        } else {
-            $buttonBarLink.attr('href', 'javascript:void(0);');
-        }
-        if (formButton.onclick) {
-            $buttonBarLink.on('tap', formButton.onclick);
-        }
-        $buttonBarLink.appendTo($buttonBar);
-        $buttonBarLink.button();
+        __makeButtonMarkup(formButton, formButton.mini, $buttonBar);
     }
-    $buttonBar.controlgroup({ type: (formElem.orientation ? formElem.orientation : "horizontal") });
+    $buttonBar.controlgroup({ 
+        type: (formElem.orientation ? formElem.orientation : "horizontal"),
+        shadow: (formElem.shadow ? true : false)
+    });
 }
 
 function __refreshHTMLArea(formElem) {
@@ -1089,7 +1092,8 @@ function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }).val(formElem.value);
     $fieldContainer.append($('<div />')
         .append($('<label />').attr({
-            'for' : editorID
+            'for' : editorID,
+            'class' : formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
         )
@@ -1145,7 +1149,7 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
 
 function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var $buttonBar = $('<div />').attr({
-        'class' : 'buttonBarMaster buttonbar'
+        'class' : 'buttonBarMaster buttonbar ' + formElem.computedStyleClass
     }).appendTo($fieldContainer);
     if (formElem.name) {
         $buttonBar.attr('id', formElem.name);
@@ -1155,7 +1159,7 @@ function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMin
 
 function __refreshHorizontalScroll(formElem) {
     var hscroll = $(formElem.DOM).find('div[data-name="' + formElem.name + '"]');
-    $(hscroll).empty();
+    $(hscroll).empty(); 
     if (formElem.value) {
         $(hscroll).append(formElem.value);
     }
@@ -1163,9 +1167,12 @@ function __refreshHorizontalScroll(formElem) {
 
 function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var hscroll = $('<div />').attr({
-        'class' : 'hx-horizontal-scroller-nozoom hx-full-width',
+        'class' : 'hx-horizontal-scroller-nozoom hx-full-width ' + formElem.computedStyleClass,
         'data-name' : formElem.name
     }).appendTo($fieldContainer);
+    if (formElem.computedStyle) {
+        hscroll.attr('style', formElem.computedStyle);
+    }
     if (formElem.value) {
         hscroll.append(formElem.value);
     }
@@ -1251,6 +1258,20 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
 }
 
 function __preprocessFormElement(formLayout, formElem) {
+    formElem.computedFieldStyleClass = '';
+    if (formElem.fieldStyleClass) {
+        if (!Helix.Utils.isString(formElem.fieldStyleClass)) {
+            formElem.computedFieldStyleClass = 
+                (formElem.fieldStyleClass[Helix.deviceType] ?  formElem.fieldStyleClass[Helix.deviceType] : formElem.fieldStyleClass['default']);
+        } else {
+            formElem.computedFieldStyleClass = formElem.fieldStyleClass;
+        }
+        if (formElem.computedFieldStyleClass) {
+            formElem.computedFieldStyleClass = ' ' + formElem.computedFieldStyleClass;
+        }
+    }    
+    
+    formElem.computedStyleClass = '';
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
             formElem.computedStyleClass = 
@@ -1275,10 +1296,10 @@ function __preprocessFormElement(formLayout, formElem) {
             /* Mapping from device type to width. */
             formElem.computedWidth = (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
         } else {
-            formElem.computedWidth = (formElem.width === 'full' ? "100%" : formElem.width);
+            formElem.computedWidth = (formElem.width === 'full' ? '100%' : formElem.width);
         }
     } else {
-        formElem.computedWidth = '90%';
+        formElem.computedWidth = '';
     }
     if (!formElem.computedStyle) {
         formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
@@ -1340,7 +1361,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         return;
     }
     
-    if (formElem.type == 'separator') {
+    if (formElem.type === 'separator') {
         if (formElem.mode === 'all') {
             formElem.viewDOM = $('<hr />').appendTo(parentDiv);
             formElem.editDOM = $('<hr />').appendTo(parentDiv);
@@ -1376,12 +1397,16 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         .css("clear", "both")
         .css('-webkit-user-select', 'none')
         .attr('id', containerID + "_view")
+        .addClass('hx-form-container')
         .appendTo(parentDiv);
-        if (formLayout.computedFieldStyleClass) {
-            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass);
+        if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
+            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
         }
         if (formLayout.computedFieldStyle) {
             $viewFieldContainer.attr('style', formLayout.computedFieldStyle);
+        }
+        if (formLayout.computedWidth) {
+            $viewFieldContainer.width(formLayout.computedWidth);
         }
         if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
             if (formElem.titleStyleClass) {
@@ -1418,8 +1443,12 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         } else {
             /* Edit mode. */
             formElem.editDOM = $editFieldContainer = $('<div />').attr({
-                'id' : containerID + "_edit"
+                'id' : containerID + "_edit",
+                'class' : 'hx-form-container'
             }).appendTo(parentDiv);            
+            if (formLayout.computedWidth) {
+                $editFieldContainer.width(formLayout.computedWidth);
+            }
         }
     }
     if (currentMode === 'view') {
@@ -1684,6 +1713,20 @@ function __preprocessFormLayout(formLayout) {
         } else {
             formLayout.computedFieldStyle = formLayout.fieldStyle + ";";
         }
+    }
+    
+    formLayout.computedWidth = '';
+    if (formLayout.width) {
+        if (!Helix.Utils.isString(formLayout.width)) {
+            /* Mapping from device type to width. */
+            formLayout.computedWidth = (formLayout.width[Helix.deviceType] ?  formLayout.width[Helix.deviceType] : formLayout.width['default']);
+        } else {
+            formLayout.computedWidth = (formLayout.width === 'full' ? "100%" : formLayout.width);
+        }
+    }    
+    
+    if (!formLayout.titleStyleClass) {
+        formLayout.titleStyleClass = '';
     }
     
     formLayout.__tabIndex = 1;
