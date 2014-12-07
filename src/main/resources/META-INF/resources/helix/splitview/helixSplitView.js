@@ -89,6 +89,8 @@
             
                 // Get the header element in the enclosing page, if it exists.
                 this.__pageHeader = $(this.__page).find('[data-role="header"]')
+            } else {
+                this.__pageHeader = [];
             }
             
             if (!this.__left || !this.__right) {
