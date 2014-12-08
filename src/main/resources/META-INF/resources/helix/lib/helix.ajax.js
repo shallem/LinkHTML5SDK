@@ -477,11 +477,22 @@ Helix.Ajax = {
             statusCode: {
                 200: function(data, textStatus, jqXHR) {
                     // Show success message.
-                    if (successMsg) {
-                        Helix.Utils.statusMessage(statusTitle, successMsg, "info");
-                    }
-                    if (actions && actions.success) {
-                        actions.success(data, textStatus, jqXHR);
+                    if (data.status === 0) {
+                        if (successMsg) {
+                            Helix.Utils.statusMessage(statusTitle, successMsg, "info");
+                        }
+                        if (actions && actions.success) {
+                            actions.success(data, textStatus, jqXHR);
+                        }
+                    } else {
+                        if (errorMsg) {
+                            Helix.Utils.statusMessage("Error", errorMsg + ": " + data.msg, "severe");
+                        } else {
+                            Helix.Utils.statusMessage("Error", data.msg, "severe");
+                        }
+                        if (actions && actions.error) {
+                            actions.error.call(window, data);
+                        }                        
                     }
                 },
                 999: function() {
