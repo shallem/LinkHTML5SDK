@@ -1378,6 +1378,10 @@
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();
+            if (_self.__searchText.length < 2) {
+                // We do not do 1 letter searches ...
+                return;
+            }
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
             }
@@ -1393,7 +1397,7 @@
                     _self.$parent.listview( "refresh" );
                 });
                 _self.__searchReadyTimeout = null;
-            }, 1000);
+            }, 3000);
         },
         
         _prependSearchBox: function() {
@@ -1523,6 +1527,7 @@
                     this.$searchBox.val(this.__searchText);
                 }
                 this.$searchBox.on('input', function() {
+                    
                     _self._doSearch();
                 });
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
