@@ -49,6 +49,9 @@
             // Fix the date. It will be NaN b/c the parent doesn't know how to parse 3:51 PM
             var timeStr = this.d.input.val();
             var timeDate = Date.parseExact(timeStr, this.__('timeOutput'));
+            if (!this.theDate) {
+                this.theDate = timeDate;
+            }
             this._build.common.apply(this, [ timeDate ]);
         },
         'flipbox': function () {
