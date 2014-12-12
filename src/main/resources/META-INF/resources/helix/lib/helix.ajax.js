@@ -320,7 +320,7 @@ Helix.Ajax = {
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 } else {
                     for (var i = 0; i < nObjsToSync; ++i) {
-                        if (completions[i].fn) {
+                        if (completions.length > i && completions[i].fn) {
                             completions[i].fn.apply(completions[i].thisArg, completions[i].args);                        
                         }
                     }
