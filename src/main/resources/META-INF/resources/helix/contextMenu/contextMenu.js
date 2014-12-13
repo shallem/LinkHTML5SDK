@@ -71,12 +71,12 @@
             this.active = false;
 
             if (Helix.hasTouch) {
-                this.tapEvent = 'touchstart';
+                this.tapEvent = 'touchstart click vclick';
             } else {
                 this.tapEvent = 'click';
             }
             if (Helix.deviceType === 'phone') {
-                this._maxHeight = 250;
+                this._maxHeight = 300;
             } else {
                 this._maxHeight = 500;
             }
@@ -166,7 +166,7 @@
                         nxtLI.addClass(nxtItem.styleClass);
                     }
                     nxtLI.append(nxtLink);
-                    nxtLink.on(_self.tapEvent + ' vclick', function(evt) {
+                    nxtLink.on(_self.tapEvent, function(evt) {
                         return _self._handleClick(evt);
                     });
                 }
@@ -177,7 +177,7 @@
                 // Prevent jQM touch events from propagating beyond the list items. Otherwise
                 // if tapping a list item closes the list and puts something underneath the list
                 // the tap will fall through.
-                this.optionsList.on('tap click', 'li', function(evt) {
+                this.optionsList.on('touchstart touchend tap vclick click', 'li', function(evt) {
                     evt.stopImmediatePropagation();
                     return false;
                 });
@@ -223,7 +223,7 @@
                     var scrollTop = $(this._menuContainer).scrollTop();
                     $(evt.target).off('touchend').on('touchend', function (evt2) {
                         var cbIndex2 = $(evt2.target).attr('data-index');
-                        if (cbIndex == cbIndex2 &&
+                        if (cbIndex === cbIndex2 &&
                                 Math.abs(scrollTop - $(_self._menuContainer).scrollTop()) < 10) {
                             evt2.stopImmediatePropagation();
                             __runAction();
