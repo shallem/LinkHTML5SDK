@@ -450,6 +450,7 @@
             // Other globals.
             this.refreshInProgress = false;
             this.isLoaded = false;
+            this.selected = null;
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
