@@ -37,7 +37,7 @@ public class HeaderRenderer extends CoreRenderer {
         writer.writeAttribute("data-role", "header", null);
         writer.writeAttribute("data-backbtn", "false", null);
         writer.writeAttribute("data-transition", "none", null);
-        
+
         if(header.getStyle() != null) {
             writer.writeAttribute("style", header.getStyle(), null);
         }
@@ -57,9 +57,10 @@ public class HeaderRenderer extends CoreRenderer {
         }
 
         if(left != null) {
+            left.getAttributes().put("styleClass", "ui-btn-left");
             left.encodeAll(context);
         }
-            
+
         if(title != null) {
              writer.startElement("h1", header);
              writer.writeText(title, null);
@@ -68,7 +69,7 @@ public class HeaderRenderer extends CoreRenderer {
             /* If there is no title, render any children. */
             this.renderChildren(context, component);
         }
-        
+
         if(right != null) {
             right.getAttributes().put("styleClass", "ui-btn-right");
             right.encodeAll(context);

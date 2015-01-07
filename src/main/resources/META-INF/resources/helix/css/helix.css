@@ -162,7 +162,7 @@
     top: 15%;
 }
 
-.ui-header .ui-controlgroup:not(.ui-btn-right) .ui-controlgroup-controls a {
+.ui-header .ui-controlgroup:not(.ui-btn-right) .ui-controlgroup:not(.ui-btn-left) .ui-controlgroup-controls a {
     padding-top: 3px;
 }
 
