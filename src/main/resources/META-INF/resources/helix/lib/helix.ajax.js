@@ -249,7 +249,7 @@ Helix.Ajax = {
         var nSchemasReady = 0;
         var schemaDone = function(schema, cfg) {
             cfg.schema = schema;
-            if (nSchemasReady == nObjsToSync) {
+            if (nSchemasReady === nObjsToSync) {
                 Helix.Ajax._executeAggregateLoad(loadCommandOptions);
             }
         };
@@ -277,7 +277,7 @@ Helix.Ajax = {
         
         loadCommandOptions.oncomplete = function(finalKey, name, obj) {
             for (var syncComponent in obj) {
-                if (syncComponent == "__hx_schema") {
+                if (syncComponent === "__hx_schema") {
                     continue;
                 }
                 
@@ -377,7 +377,7 @@ Helix.Ajax = {
         }
         if (!loadCommandOptions.requestOptions.params.push) {
             // the request options are not an array ...
-            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS)
+            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
             return;
         }
         loadCommandOptions.requestOptions.params.push({
@@ -425,8 +425,13 @@ Helix.Ajax = {
                     var responseObj = data;
                     if (responseObj.error) {
                         var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                        if (responseObj.error) {
+                        if (responseObj.error.msg) {
+                            error.msg = responseObj.error.msg;
+                        } else if (Helix.Utils.isString(responseObj.error)) {
                             error.msg = responseObj.error;
+                        }
+                        if (responseObj.error.status) {
+                            error.code = responseObj.error.status;
                         }
                         loadCommandOptions.onerror(error);
                         return;

@@ -202,6 +202,12 @@
             <description>Enables free text search. Supply a function that accepts two arguments, the search query and a query collection, and returns a filtered query collection.</description>
         </attribute>
         <attribute>
+            <name>indexedSearchText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Provide explanatory text to place in the search bix when it is first rendered.</description>
+        </attribute>
+        <attribute>
             <name>scrollContents</name>
             <required>false</required>
             <type>java.lang.Boolean</type>

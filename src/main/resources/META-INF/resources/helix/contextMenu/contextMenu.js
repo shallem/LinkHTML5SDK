@@ -91,6 +91,32 @@
             this.refresh();
         },
         
+        // showItem, status = true or false
+        showItem: function(itemIndex, status) {
+            if (itemIndex >= this.options.items.length) {
+                return false;
+            }
+            
+            var selected = this.options.items[itemIndex];
+            var items = this.optionsList.find('[data-index="' + itemIndex + '"]');
+
+            if (items.length === 0) {
+                return false;
+            }
+            var target = items[0];
+
+            if (status === true) {
+                // show item
+                $(target).closest('li').show();
+            } else {
+                // hide item
+                $(target).closest('li').hide();
+            }
+
+            selected.enabled = status;
+            return true;
+        },
+        
         // status = true or false
         enableItem: function(itemIndex, status) {
             if (itemIndex >= this.options.items.length) {
@@ -100,7 +126,7 @@
             var selected = this.options.items[itemIndex];
             var items = this.optionsList.find('[data-index="' + itemIndex + '"]');
 
-            if (items.length == 0) {
+            if (items.length === 0) {
                 return false;
             }
             var target = items[0];
