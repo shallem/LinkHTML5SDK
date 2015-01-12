@@ -45,5 +45,12 @@
             <type>java.lang.String</type>
             <description>Theme to use for the button. If this button is in a header, it will inherit the theme from its parent.</description>
         </attribute>
+        <attribute>
+            <name>align</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Indicate if a button is left or right aligned in the context of a button bar.</description>
+            <defaultValue>left</defaultValue>
+        </attribute>
     </attributes>
 </component>
