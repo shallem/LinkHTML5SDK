@@ -36,7 +36,7 @@
             <name>align</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Indicate if a button is left or right aligned.</description>
+            <description>Indicate if a button is left or right aligned in the context of a button bar.</description>
             <defaultValue>left</defaultValue>
         </attribute>
         <attribute>

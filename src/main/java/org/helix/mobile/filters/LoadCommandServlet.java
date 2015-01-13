@@ -74,7 +74,7 @@ public class LoadCommandServlet extends HttpServlet {
                 err = "Error instantiating load command class: " + ite.getMessage();
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "Failed to run load command with unexpected exception", ex);
-                err = "Unexpected server error. Please contact your administrator.";
+                err = (ex.getMessage() != null ? ex.getMessage() : "Unexpected error. Please contact your administrator.");
             }
 
             if (err != null) {
