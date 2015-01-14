@@ -2083,7 +2083,10 @@
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
-                var nxt = this.selectedLI.next('li[data-index]');
+                var nxt = this.selectedLI;
+                do {
+                    nxt = nxt.next();
+                } while (nxt.is('li') && !nxt.is('li[data-index]'));
                 if (nxt.length) {
                     this.setSelected(nxt);
                     this.selectItem();
@@ -2094,9 +2097,12 @@
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
-                var nxt = this.selectedLI.prev('li[data-index]');
-                if (nxt.length) {
-                    this.setSelected(nxt);
+                var prev = this.selectedLI;
+                do {
+                    prev = prev.prev();
+                } while (prev.is('li') && !prev.is('li[data-index]'));
+                if (prev.length) {
+                    this.setSelected(prev);
                     this.selectItem();
                 }
             }
