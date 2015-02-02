@@ -535,8 +535,13 @@ function initHelixDB() {
             persistence.defineMigration(oldVersion + 1, {
                 up: function() {
                     var allNewIndices = {};
+                    var keyChanged = false;
+                    if (oldKey && newKey) {
+                        this.removeIndex(tableName, oldKey);
+                        keyChanged = true;
+                    }
                     if (fieldsChanged) {
-                        this.updateColumns(allNewFields, allOldFields, tableName);              
+                        this.updateColumns(allNewFields, allOldFields, tableName, keyChanged, newKey);              
                     }
                     if (oldSorts && newSorts) {
                         Helix.DB.migrateIndexes.call(this, tableName, oldSorts, newSorts, allNewIndices);
@@ -551,8 +556,7 @@ function initHelixDB() {
                         Helix.DB.migrateIndexes.call(this, tableName, oldTextIndex, newTextIndex, allNewIndices);
                     }
                     if (oldKey && newKey) {
-                        this.removeIndex(tableName, oldKey);
-                        this.addIndex(tableName, newKey);
+                        this.addIndex(tableName, newKey, true);
                     }
                     
                 }
@@ -1118,14 +1122,14 @@ function initHelixDB() {
             var addDone = function(pObj) {
                 ++nAddsDone;
                 allAdds.push(pObj);
-                if (nAddsDone == nToAdd) {
+                if (nAddsDone === nToAdd) {
                     /* Nothing more to add - we are done. */
                     oncomplete(field, allAdds);
                 }
             };
 
             var doAdds = function(uidToEID) {
-                if (deltaObj.adds.length == 0) {
+                if (deltaObj.adds.length === 0) {
                     oncomplete(field, allAdds);
                 } else {
                     while (deltaObj.adds.length > 0) {
@@ -1159,8 +1163,8 @@ function initHelixDB() {
             
             var createUIDToEIDMap = function() {
                 var uidToEID = {};
-                if (deltaObj.adds.length == 0 &&
-                    deltaObj.updates.length == 0) {
+                if (deltaObj.adds.length === 0 &&
+                    deltaObj.updates.length === 0) {
                     // Skip to the finish line ...
                     doAdds(null);
                 } else {
@@ -1201,12 +1205,16 @@ function initHelixDB() {
                             }
                         },
                         startFn: function(ct) {
-                            if (ct == 0) {
+                            if (ct === 0) {
                                 removeFn();
                             }
                         }
                     });
                 } else {
+                    if (deltaObj.deleteSpec) {
+                        elemSchema.all().filter(deltaObj.deleteSpec.field, deltaObj.deleteSpec.op, deltaObj.deleteSpec.value).destroyAll();   
+                    }
+                
                     /* Make sure all deletes are in the DB. */
                     persistence.flush(function() {
                         /* Nothing more to remove. Add in any new objects. */
@@ -1317,7 +1325,7 @@ function initHelixDB() {
                      */
                     Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
-                    if (fieldVal.__hx_type == 1001) {
+                    if (fieldVal.__hx_type === 1001) {
                         Helix.DB.synchronizeDeltaField(allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
                     } else {
                         var keyField = Helix.DB.getKeyField(fieldSchema);
@@ -1380,33 +1388,45 @@ function initHelixDB() {
                 Helix.DB.synchronizeArray(allSchemas, obj,objSchema,objSchema.all(),function(finalObj) {
                     syncDone(finalObj, opaque);
                 },overrides);
-            } else if (obj.__hx_type == 1001) {
+            } else if (obj.__hx_type === 1001) {
                 Helix.DB.synchronizeDeltaObject(allSchemas, obj,objSchema.all(),objSchema,function(finalObj) {
                     syncDone(finalObj, opaque);
                 },overrides);
-            } else if (obj.__hx_type == 1003) {
+            } else if (obj.__hx_type === 1003) {
                 // This is an aggregate load command. Each object field represents a distinct object that
                 // should be synchronized independently of the others.
                 var toSync = Object.keys(obj).slice(0);
                 var resultObj = {};
+                var paramObj = {};
                 
                 /* Serialize synchronization of each component so that we never have >1 flush in progress. */
                 var syncComponent = function() {
-                    if (toSync.length == 0) {
+                    if (toSync.length === 0) {
+                        opaque.params = paramObj;
                         syncDone(resultObj, opaque);
                         return;
                     }
                     
                     var nxt = toSync.pop();
-                    if (nxt == "__hx_type") {
+                    if (nxt === "__hx_type") {
                         syncComponent();
                         return;
                     }
+                    
+                    var syncObject = null;
+                    var paramObject = null;
+                    if (obj[nxt].__hx_type === 1004) {
+                        syncObject = obj[nxt].sync;
+                        paramObject = obj[nxt].param;
+                    } else {
+                        syncObject = obj[nxt];
+                    }
                     var loadCommandConfig = overrides.schemaMap[nxt];
-                    Helix.DB.synchronizeObject(obj[nxt], loadCommandConfig.schema, function(finalObj, objName) {
-                        resultObj[objName] = finalObj;
+                    Helix.DB.synchronizeObject(syncObject, loadCommandConfig.schema, function(finalObj, o) {
+                        resultObj[o.name] = finalObj;
+                        paramObj[o.name] = o.param;
                         syncComponent();
-                    }, nxt, loadCommandConfig.syncOverrides);
+                    }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
                 };
                 syncComponent();
             } else {

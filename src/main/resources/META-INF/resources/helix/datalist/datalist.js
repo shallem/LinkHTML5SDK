@@ -406,18 +406,18 @@
             var ad = this.options.autodividers;
             if (!ad) {
                 ad = false;
-            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() == 'false')) {
+            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() === 'false')) {
                 ad = false;
             }
             var ads = function(elt) { 
-                    var callback = _self.options.autodividersSelectorCallback;
+                var callback = _self.options.autodividersSelectorCallback;
 
-                    if (callback && $(elt).is(':visible')) {
-                       return callback(elt, _self.displayList, _self._currentSort);
-                    } 
-                    
-                    return null;
-                };
+                if (callback && $(elt).is(':visible')) {
+                   return callback(elt, _self.displayList, _self._currentSort);
+                } 
+
+                return null;
+            };
 
             this.$parent.listview({
                 autodividers: ad,

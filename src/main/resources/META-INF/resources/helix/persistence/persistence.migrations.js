@@ -173,11 +173,11 @@ function definePersistenceMigrations() {
     }
     
     Migration.prototype.dropTable = function(tableName) {
-        var sql = 'DROP TABLE `' + tableName + '`';
+        var sql = 'DROP TABLE IF EXISTS `' + tableName + '`';
         this.executeSql(sql);
     }
     
-    Migration.prototype.updateColumns = function(allColumns, allOldColumns, tableName) {
+    Migration.prototype.updateColumns = function(allColumns, allOldColumns, tableName, keyChanged, newKeyCol) {
         this.action(function(arr){
             var columnsSql = [];
             var selectColumns = [];
@@ -205,18 +205,23 @@ function definePersistenceMigrations() {
 
             arr.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
             arr.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
-            arr.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
+            if (!keyChanged || (keyChanged && (newKeyCol in allOldColumns))) {
+                // If the unique ID field of a table changed to a new field, then all old data in that table is invalidated
+                // If we allow this insert to proceed, we will assign null as the unique key for all columns which is both logically invalid
+                // and a violation of the table constraint.
+                arr.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
+            }
             arr.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
         });
     }
     
     Migration.prototype.addIndex = function(tableName, columnName, unique) {
-        var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX `' + tableName + '_' + columnName + '` ON `' + tableName + '` (' + columnName + ')';
+        var sql = 'CREATE ' + (unique === true ? 'UNIQUE' : '') + ' INDEX IF NOT EXISTS `' + tableName + '_' + columnName + '` ON `' + tableName + '` (' + columnName + ')';
         this.executeSql(sql);
     }
     
     Migration.prototype.removeIndex = function(tableName, columnName) {
-        var sql = 'DROP INDEX `' + tableName + '_' + columnName + '`';
+        var sql = 'DROP INDEX IF EXISTS `' + tableName + '_' + columnName + '`';
         this.executeSql(sql);
     }
     
@@ -227,7 +232,7 @@ function definePersistenceMigrations() {
     }
     
     Migration.prototype.action = function(callback) {
-        this.actions.unshift(callback);
+        this.actions.push(callback);
     }
     
     var ColumnsHelper = function() {

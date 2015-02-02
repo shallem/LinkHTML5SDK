@@ -1457,13 +1457,13 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.DOM = $editFieldContainer;
     }
     
-    if (formElem.type == "text") {
+    if (formElem.type === "text") {
         renderFn = __appendTextBox;
-    } else if (formElem.type == 'textarea') {
+    } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
-    } else if (formElem.type == 'pickList') {
+    } else if (formElem.type === 'pickList') {
         renderFn = __appendSelectMenu;
-    } else if (formElem.type == 'checkbox') {
+    } else if (formElem.type === 'checkbox') {
         renderFn = __appendCheckBox;
     } else if (formElem.type === 'controlset') {
         renderFn = __appendControlSet;
