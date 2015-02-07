@@ -874,6 +874,10 @@
                 });
             }
             return validationErrors;
+        },
+        
+        addItem: function(item) {
+            this.options.items.push(item);
         }
     });
 }( jQuery ));

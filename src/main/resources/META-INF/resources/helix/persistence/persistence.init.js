@@ -21,7 +21,7 @@
                 MobileHelixDatabase.install();
             }
             initHelixDB();
-            definePersistenceMigrations()
+            definePersistenceMigrations();
         }
 
         Helix.DB.initPersistence();

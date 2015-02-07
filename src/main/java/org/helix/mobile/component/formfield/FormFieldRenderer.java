@@ -122,6 +122,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.isReadOnly()) {
             writer.write(", 'readOnly' : true");
         }
+        if (ffield.isDisabled()) {
+            writer.write(", 'inputDisabled' : true");
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

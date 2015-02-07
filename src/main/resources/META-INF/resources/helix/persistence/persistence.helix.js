@@ -222,9 +222,11 @@ function initHelixDB() {
             /* First, check to see if the schema was created in a recursive call. */
             if (this.createdSchemas[name]) {
                 // We have already created all schemas associated with this widget.
-                var oncompleteArgs = [ this.createdSchemas[name] ];
-                oncompleteArgs = oncompleteArgs.concat(opaque);
-                oncomplete.apply(this, oncompleteArgs);
+                if (oncomplete) {
+                    var oncompleteArgs = [ this.createdSchemas[name] ];
+                    oncompleteArgs = oncompleteArgs.concat(opaque);
+                    oncomplete.apply(this, oncompleteArgs);
+                }
                 return;
             }
             /* Next, check to see if this specific schema is already available from a previous call to
@@ -239,9 +241,11 @@ function initHelixDB() {
         
             if (window.__pmAllSchemas[schemaNameToCheck]) {
                 // We have already created all schemas associated with this widget.
-                oncompleteArgs = [ window.__pmAllSchemas[schemaNameToCheck] ];
-                oncompleteArgs = oncompleteArgs.concat(opaque);
-                oncomplete.apply(this, oncompleteArgs);
+                if (oncomplete) {
+                    oncompleteArgs = [ window.__pmAllSchemas[schemaNameToCheck] ];
+                    oncompleteArgs = oncompleteArgs.concat(opaque);
+                    oncomplete.apply(this, oncompleteArgs);
+                }
                 return;
             }
         
@@ -287,16 +291,11 @@ function initHelixDB() {
                         persistence.clean();
                     }
                     
-                    var oncompleteArgs = [ s ];
-                    oncompleteArgs = oncompleteArgs.concat(opaque);
-                    oncomplete.apply(this, oncompleteArgs);
-
-                    // Launch async indexing ... these calls do nothing if there are
-                    // no fields to index or if async indexing is not enabled.
-                    /*for (var schemaName in window.__pmAllSchemas) { 
-                        var indexSchema = window.__pmAllSchemas[schemaName];
-                        indexSchema.indexAsync(0, Helix.DB.indexFull);
-                    }*/
+                    if (oncomplete) {
+                        var oncompleteArgs = [ s ];
+                        oncompleteArgs = oncompleteArgs.concat(opaque);
+                        oncomplete.apply(this, oncompleteArgs);
+                    }
                 });
             });
         
@@ -904,7 +903,7 @@ function initHelixDB() {
         cascadingRemove: function(persistentObj, oncomplete, overrides) {
             var toCascade = [];
             var recurseDown = function() {
-                if (toCascade.length == 0) {
+                if (toCascade.length === 0) {
                     //persistence.remove(persistentObj);
                     oncomplete(persistentObj, "remove");
                     return;
@@ -923,7 +922,7 @@ function initHelixDB() {
             // recurseDown above.
             var fields = Object.keys(persistentObj._data).slice(0);
             var collect = function() {
-                if (fields.length == 0) {
+                if (fields.length === 0) {
                     recurseDown();
                     return;
                 }

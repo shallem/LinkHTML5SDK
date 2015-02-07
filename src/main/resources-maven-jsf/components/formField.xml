@@ -242,5 +242,12 @@
             <type>java.lang.String</type>
             <description>Orientation of the component (either horizontal or vertical). Only used by some components.</description>
         </attribute>
+        <attribute>
+            <name>disabled</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field is disabled.</description>
+        </attribute>
     </attributes>
 </component>
