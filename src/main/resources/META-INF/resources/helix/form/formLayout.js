@@ -817,61 +817,72 @@
             }
         },
         
+        _validateItem: function(nxtItem, validationErrors) {
+            var fieldType = nxtItem.type;
+            var fieldID = nxtItem.name;
+            var strippedFieldID = this._stripNamespace(fieldID);
+            if (!(fieldType in this._serializeTypes)) {
+                /* All other types are unserializable. */
+                return;
+            }
+
+            var validator = null;
+            // Determine the validator function.
+            if (nxtItem.validator) {
+                if (Helix.Utils.isString(nxtItem.validator)) {
+                    if (nxtItem.validator === 'notempty') {
+                        validator = this._checkNonEmpty;
+                    } else if (nxtItem.validator === 'notpast') {
+                        validator = this._checkNotPast;
+                    }
+                } else {
+                    validator = nxtItem.validator;
+                }
+            } else {
+                return;
+            }
+
+            $(this.element).find('[name="' + fieldID + '"]').each(function() {
+                var toValidate = "";
+                if (fieldType === "htmlarea") {
+                    var $editor = $(this).data('cleditor');
+                    if ($editor) {
+                        $editor.updateTextArea();
+                    }
+                    toValidate = $(this).val();
+                } else if (fieldType === "checkbox") {
+                    if ($(this).is(":checked")) {
+                        toValidate = true;
+                    } else {
+                        toValidate = false;
+                    }
+                } else if (fieldType === "pickList" ||
+                           fieldType === "tzSelector") {
+                    var selected = $(this).find('option:selected');
+                    toValidate = selected.val();
+                } else {
+                    toValidate = $(this).val();
+                }
+                if (!validator.call(this, toValidate)) {
+                    // Validation failed.
+                    validationErrors[strippedFieldID] = nxtItem;
+                }
+            });            
+        },
+        
         validate: function() {
             var idx = 0;
             var validationErrors = {};
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                var fieldID = nxtItem.name;
-                var strippedFieldID = this._stripNamespace(fieldID);
-                var fieldType = nxtItem.type;
-                if (!(fieldType in this._serializeTypes)) {
-                    /* All other types are unserializable. */
-                    continue;
-                }
-                
-                var validator = null;
-                // Determine the validator function.
-                if (nxtItem.validator) {
-                    if (Helix.Utils.isString(nxtItem.validator)) {
-                        if (nxtItem.validator === 'notempty') {
-                            validator = this._checkNonEmpty;
-                        } else if (nxtItem.validator === 'notpast') {
-                            validator = this._checkNotPast;
-                        }
-                    } else {
-                        validator = nxtItem.validator;
+                if (nxtItem.type === 'subPanel') {
+                    // Go through the items.
+                    for (var j = 0; j < nxtItem.items.length; ++j) {
+                        this._validateItem(nxtItem.items[j], validationErrors);
                     }
                 } else {
-                    continue;
-                }
-                
-                $(this.element).find('[name="' + fieldID + '"]').each(function() {
-                    var toValidate = "";
-                    if (fieldType === "htmlarea") {
-                        var $editor = $(this).data('cleditor');
-                        if ($editor) {
-                            $editor.updateTextArea();
-                        }
-                        toValidate = $(this).val();
-                    } else if (fieldType === "checkbox") {
-                        if ($(this).is(":checked")) {
-                            toValidate = true;
-                        } else {
-                            toValidate = false;
-                        }
-                    } else if (fieldType === "pickList" ||
-                               fieldType === "tzSelector") {
-                        var selected = $(this).find('option:selected');
-                        toValidate = selected.val();
-                    } else {
-                        toValidate = $(this).val();
-                    }
-                    if (!validator.call(this, toValidate)) {
-                        // Validation failed.
-                        validationErrors[strippedFieldID] = nxtItem;
-                    }
-                });
+                    this._validateItem(nxtItem, validationErrors);
+                }                
             }
             return validationErrors;
         },

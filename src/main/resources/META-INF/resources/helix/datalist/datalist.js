@@ -1516,7 +1516,7 @@
                     if (useControlGroup) {
                         widthStyle = '60%';
                     } else {
-                        widthStyle = '80%';
+                        widthStyle = '75%';
                     }
                 }
                 var $searchDiv = $('<div/>').attr({
