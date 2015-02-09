@@ -631,7 +631,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     formElem.__noblur = false;
                                     return false;
                                 }).appendTo(autoCompleteList);
-                                for (var i = 0; i < LIs.length; ++i) {
+                                // We cap out the list length at 20 b/c otherwise we might crash the app ...
+                                var i;
+                                for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
                                         formElem.autocompleteSelect.call(_self, $(this).text());
                                         autoCompleteList.empty();
@@ -641,6 +643,12 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                         return false;
                                     }).appendTo(autoCompleteList);
                                 }
+                                if (i < LIs.length) {
+                                    // We cut off the autocomplete list.
+                                    $("<li/>").append("The search returned >20 results.");
+                                }
+                                
+                                
                                 autoCompleteList.show();
                                 autoCompleteList.listview("refresh");
                             } else {
@@ -766,6 +774,9 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     if (formElem.computedWidth) {
         fieldMarkup.css('width', formElem.computedWidth);
     }
+    if (useMiniLayout) {
+        $(fieldMarkup).addClass('hx-mini-fieldcontain');
+    }
 
     var formMarkup = $("<form />").appendTo(fieldMarkup);
     var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
@@ -831,6 +842,10 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         'style' : 'width: auto'
         /*'data-role' : 'fieldcontain'*/
     }).appendTo($fieldContainer);
+
+    if (useMiniLayout) {
+        $(fieldMarkup).addClass('hx-mini-fieldcontain');
+    }
 
     var wrapperMarkup = $('<fieldset/>').attr({
     /*    'data-role' : 'controlgroup',

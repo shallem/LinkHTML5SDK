@@ -873,7 +873,7 @@ function initHelixDB() {
         cascadingRemoveQueryCollection: function(queryCollection, oncomplete, overrides) {
             var toDelete = [];
             var cascade = function() {
-                if (toDelete.length == 0) {
+                if (toDelete.length === 0) {
                     oncomplete();
                     return;
                 }
@@ -882,7 +882,7 @@ function initHelixDB() {
                 Helix.DB.cascadingRemove(elem, function() {
                     queryCollection.remove(elem);
                     persistence.remove(elem);
-                    if (overrides.deleteHook) {
+                    if (overrides && overrides.deleteHook) {
                         overrides.deleteHook(elem);
                     }
                     cascade();
@@ -1025,7 +1025,7 @@ function initHelixDB() {
                         if (persistentObj) {
                             parentCollection.remove(persistentObj);
                             persistence.remove(persistentObj);
-                            if (overrides.deleteHook) {
+                            if (overrides && overrides.deleteHook) {
                                 overrides.deleteHook(persistentObj);
                             }
                         }
@@ -1190,7 +1190,7 @@ function initHelixDB() {
                 if (persistentObj) {
                     parentCollection.remove(persistentObj);
                     persistence.remove(persistentObj);
-                    if (overrides.deleteHook){
+                    if (overrides && overrides.deleteHook){
                         overrides.deleteHook(persistentObj);
                     }
                 }

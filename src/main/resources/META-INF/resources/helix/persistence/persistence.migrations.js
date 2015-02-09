@@ -187,7 +187,7 @@ function definePersistenceMigrations() {
                     columnsSql.push(col + " " + colTarget);
                 } else {
                     // This is a relationship column.
-                    columnsSql.push(col + " VARCHAR(32)");
+                    columnsSql.push("`" + col + "` VARCHAR(32)");
                 }
                 
                 if (col in allOldColumns) {

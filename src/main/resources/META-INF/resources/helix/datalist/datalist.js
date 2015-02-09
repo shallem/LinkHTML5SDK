@@ -669,7 +669,7 @@
                         // we prepend more to the bottom of the list and remove from the
                         // top. If we are in the top half of the list we append to the end
                         // of the list and remove from the front.
-                        var _refreshListOnScroll = function(oncomplete) {
+                        var _refreshListOnScroll = function(oncomplete, doRescroll) {
                             $.mobile.loading('show', {});
                             _self.$parent.hide();
                             _self._refreshData(function() {
@@ -683,7 +683,7 @@
                                 _self._prefetchNext = null;
                                 _self._prefetchNextDone = false;
                                 
-                                oncomplete();
+                                oncomplete(doRescroll);
                             });
                         };
                        
@@ -725,19 +725,25 @@
                             }
                             if ((scrollPos > (listHeight * .75)) &&
                                     _self._lastElemVisible()) {
-                                var _refreshDownDone = function() {
-                                    _self._lastScrollPos = 0;
-                                    _self.$listWrapper.scrollTop(0);
-                                    _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                                var _refreshDownDone = function(_rescroll) {
+                                    if (_rescroll) {
+                                        _self._lastScrollPos = 0;
+                                        _self.$listWrapper.scrollTop(0);
+                                        _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                                    } else {
+                                        _self._atDataTop = true;
+                                        _self.$listWrapper.scrollTop(_self._lastScrollPos);
+                                    }
                                 }; 
                                 
                                 // At or near the top of the list.
                                 _self._prefetchedItems = _self._prefetchNext;
+                                var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
                                 if (_self._prefetchNextDone) {
-                                    _refreshListOnScroll(_refreshDownDone);
+                                    _refreshListOnScroll(_refreshDownDone, doRescroll);
                                 } else {
                                     _self.$listWrapper.on('prefetchNext', function() {
-                                        _refreshListOnScroll(_refreshDownDone);
+                                        _refreshListOnScroll(_refreshDownDone, doRescroll);
                                         _self.$listWrapper.off('prefetchNext');
                                     });
                                 }
@@ -1346,7 +1352,7 @@
                 }
             };
             
-            if (_self._prefetchedItems && _self._prefetchedItems.length) {
+            if (_self._prefetchedItems && _self._prefetchedItems.length > 20) {
                 __processStart(_self._prefetchedItems.length);
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
@@ -1366,7 +1372,7 @@
                     displayCollection = displayCollection.skip(_self._renderWindowStart);
                 }
                 displayCollection = displayCollection.limit(_self._itemsPerPage);
-
+                
                 displayCollection.newEach({
                     /* Process each element. */
                     eachFn: function(curRow) {
@@ -1374,11 +1380,21 @@
                     },
                     /* Called on start. */
                     startFn: function(count) {
+                        if (_self.prefetchedItems) {
+                            count = count + _self.prefetchedItems.length;
+                        }
                         __processStart(count);
                     },
                     /* Called on done. */
                     doneFn: function(count) {
+                        if (_self.prefetchedItems) {
+                            for (var i = 0; i < _self._prefetchedItems.length; ++i) {
+                                __processRow(_self._prefetchedItems[i]);
+                                ++count;
+                            }
+                        }
                         __processDone(count);
+                        _self._prefetchedItems = [];
                     }
                 });    
             } 
