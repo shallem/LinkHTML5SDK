@@ -643,7 +643,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                         formElem.autocompleteSelect.call(_self, $(this).text());
                                         autoCompleteList.empty();
                                         autoCompleteList.hide();
-                                        $(inputMarkup).val('');
+                                        //$(inputMarkup).val('');
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
