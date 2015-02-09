@@ -640,10 +640,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                 var i;
                                 for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
-                                        formElem.autocompleteSelect.call(_self, $(this).text());
+                                        var ret = formElem.autocompleteSelect.call(_self, $(this).text());
                                         autoCompleteList.empty();
                                         autoCompleteList.hide();
-                                        $(inputMarkup).val('');
+                                        if (ret === true) {
+                                            
+                                        } else {
+                                            $(inputMarkup).val('');
+                                        }
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
