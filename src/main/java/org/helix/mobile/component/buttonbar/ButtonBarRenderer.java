@@ -21,6 +21,7 @@ import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import org.helix.mobile.component.button.Button;
 import org.helix.mobile.component.iconbutton.IconButton;
 import org.primefaces.renderkit.CoreRenderer;
 
@@ -68,7 +69,7 @@ public class ButtonBarRenderer extends CoreRenderer {
         if (buttonBar.getStyle() != null) {
             writer.writeAttribute("style", buttonBar.getStyle(), null);
         }
-        String styleClass = "buttonBarMaster";
+        String styleClass = "hx-button-bar";
         if (buttonBar.getStyleClass() != null) {
             styleClass = styleClass + " " + buttonBar.getStyleClass();
         }
@@ -81,6 +82,12 @@ public class ButtonBarRenderer extends CoreRenderer {
         for (UIComponent child : buttonBar.getChildren()) {
             if (child instanceof IconButton) {
                 IconButton ib = (IconButton) child;
+                if (ib.getAlign().equals("right")) {
+                    rightButtons.add(child);
+                    continue;
+                }
+            } else if (child instanceof Button) {
+                Button ib = (Button) child;
                 if (ib.getAlign().equals("right")) {
                     rightButtons.add(child);
                     continue;

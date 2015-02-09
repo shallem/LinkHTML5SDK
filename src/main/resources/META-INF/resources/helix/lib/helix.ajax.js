@@ -249,7 +249,7 @@ Helix.Ajax = {
         var nSchemasReady = 0;
         var schemaDone = function(schema, cfg) {
             cfg.schema = schema;
-            if (nSchemasReady == nObjsToSync) {
+            if (nSchemasReady === nObjsToSync) {
                 Helix.Ajax._executeAggregateLoad(loadCommandOptions);
             }
         };
@@ -275,16 +275,16 @@ Helix.Ajax = {
         var nObjsToSync = loadCommandOptions.commands.length;
         var keyMap = {};
         
-        loadCommandOptions.oncomplete = function(finalKey, name, obj) {
+        loadCommandOptions.oncomplete = function(finalKey, name, obj, param) {
             for (var syncComponent in obj) {
-                if (syncComponent == "__hx_schema") {
+                if (syncComponent === "__hx_schema") {
                     continue;
                 }
                 
                 var config = Helix.Ajax.loadCommands[syncComponent];
                 window[config.name] = obj[syncComponent];
                 if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent], true);
+                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent], true, param[syncComponent]);
                 }
             }
         };
@@ -377,7 +377,7 @@ Helix.Ajax = {
         }
         if (!loadCommandOptions.requestOptions.params.push) {
             // the request options are not an array ...
-            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS)
+            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
             return;
         }
         loadCommandOptions.requestOptions.params.push({
@@ -400,7 +400,7 @@ Helix.Ajax = {
                     window[loadCommandOptions.name] = widget;
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, widget);
                 },loadCommandOptions.syncOverrides);
-            } else if (itemKey == null) {
+            } else if (itemKey === null) {
                 /* An explicit null means load all objects. */
                 Helix.DB.loadAllObjects(loadCommandOptions.schema, function(widgetList) {
                     window[loadCommandOptions.name] = widgetList;
@@ -408,7 +408,7 @@ Helix.Ajax = {
                 });
             } else {
                 /* itemKey is undefined. Nothing we can do when we are offline. */
-                loadCommandOptions.onerror(Helix.Ajax.ERROR_OFFLINE_ACCESS)
+                loadCommandOptions.onerror(Helix.Ajax.ERROR_OFFLINE_ACCESS);
             }
             return;
         }
@@ -425,28 +425,44 @@ Helix.Ajax = {
                     var responseObj = data;
                     if (responseObj.error) {
                         var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                        if (responseObj.error) {
+                        if (responseObj.error.msg) {
+                            error.msg = responseObj.error.msg;
+                        } else if (Helix.Utils.isString(responseObj.error)) {
                             error.msg = responseObj.error;
+                        }
+                        if (responseObj.error.status) {
+                            error.code = responseObj.error.status;
                         }
                         loadCommandOptions.onerror(error);
                         return;
                     }
                     
                     Helix.Ajax.loadOptions.pin = true;
-                    if (loadCommandOptions.schema || responseObj.__hx_type == 1003) {
+                    
+                    var syncObject = null;
+                    var paramObject = null;
+                    if (responseObj.__hx_type === 1004) {
+                        syncObject = responseObj.sync;
+                        paramObject = responseObj.param;
+                    } else {
+                        syncObject = responseObj;
+                    }
+                    
+                    if (loadCommandOptions.schema || syncObject.__hx_type === 1003) {
                         if (loadCommandOptions.syncingOptions) {
                             Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");                            
                         }
                         // Add setTimeout to allow the message to display
-                        setTimeout(Helix.DB.synchronizeObject(responseObj, loadCommandOptions.schema, function(finalObj, finalKey) {
+                        setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+                            var finalKey = o.key;
                             $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
                             Helix.Ajax.loadOptions.pin = false;
-                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj);
+                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
                             if (window.CordovaInstalled) {
                                 window.HelixSystem.allowSleep();
                             }
-                        }, itemKey, loadCommandOptions.syncOverrides), 0);
+                        }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
                     } else {
                         loadCommandOptions.oncomplete(itemKey, "success");
                     }
@@ -590,7 +606,7 @@ Helix.Ajax = {
                         Helix.Utils.statusMessage("Error", errorThrown, "severe");
                     }
                     if (callbacks.fatal) {
-                        callbacks.fatal.call(window, textStatus, errorThrown);
+                        callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
                     }
                 },
                 complete: function() {
@@ -603,7 +619,9 @@ Helix.Ajax = {
             });                
         } else {
             // Queue a post for the next time the container is online.
-            if (!window.CordovaInstalled) {
+            if (params.disableOffline) {
+                Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
+            } else if (!window.CordovaInstalled) {
                 alert("This device is offline and the browser does not support JavaScript extensions. Please try save this contact when you are online.");
             } else {
                 // Collect the data we will need to continue this offline draft. Not always used or applicable.

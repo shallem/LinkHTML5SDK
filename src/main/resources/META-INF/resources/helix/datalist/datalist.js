@@ -128,11 +128,17 @@
             holdAction: null,
             
             /**
-             * Function that accepts a query collection and the contents of
-             * the search box and returns a filtered query collection. If null,
-             * no search box is shown.
+             * Function that accepts a query collection, the contents of
+             * the search box, and the current query collection and returns 
+             * a filtered query collection. If null, no search box is shown.
              */
             indexedSearch: null,
+            
+            /**
+             * Text to display in the search box when it is first rendered. Useful
+             * to provide an explanation for the search functionality.
+             */
+            indexedSearchText: '',
             
             /**
              * List of fields to allow the user to selectively sort by. This option
@@ -400,18 +406,18 @@
             var ad = this.options.autodividers;
             if (!ad) {
                 ad = false;
-            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() == 'false')) {
+            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() === 'false')) {
                 ad = false;
             }
             var ads = function(elt) { 
-                    var callback = _self.options.autodividersSelectorCallback;
+                var callback = _self.options.autodividersSelectorCallback;
 
-                    if (callback && $(elt).is(':visible')) {
-                       return callback(elt, _self.displayList, _self._currentSort);
-                    } 
-                    
-                    return null;
-                };
+                if (callback && $(elt).is(':visible')) {
+                   return callback(elt, _self.displayList, _self._currentSort);
+                } 
+
+                return null;
+            };
 
             this.$parent.listview({
                 autodividers: ad,
@@ -663,7 +669,7 @@
                         // we prepend more to the bottom of the list and remove from the
                         // top. If we are in the top half of the list we append to the end
                         // of the list and remove from the front.
-                        var _refreshListOnScroll = function(oncomplete) {
+                        var _refreshListOnScroll = function(oncomplete, doRescroll) {
                             $.mobile.loading('show', {});
                             _self.$parent.hide();
                             _self._refreshData(function() {
@@ -677,7 +683,7 @@
                                 _self._prefetchNext = null;
                                 _self._prefetchNextDone = false;
                                 
-                                oncomplete();
+                                oncomplete(doRescroll);
                             });
                         };
                        
@@ -719,19 +725,25 @@
                             }
                             if ((scrollPos > (listHeight * .75)) &&
                                     _self._lastElemVisible()) {
-                                var _refreshDownDone = function() {
-                                    _self._lastScrollPos = 0;
-                                    _self.$listWrapper.scrollTop(0);
-                                    _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                                var _refreshDownDone = function(_rescroll) {
+                                    if (_rescroll) {
+                                        _self._lastScrollPos = 0;
+                                        _self.$listWrapper.scrollTop(0);
+                                        _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                                    } else {
+                                        _self._atDataTop = true;
+                                        _self.$listWrapper.scrollTop(_self._lastScrollPos);
+                                    }
                                 }; 
                                 
                                 // At or near the top of the list.
                                 _self._prefetchedItems = _self._prefetchNext;
+                                var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
                                 if (_self._prefetchNextDone) {
-                                    _refreshListOnScroll(_refreshDownDone);
+                                    _refreshListOnScroll(_refreshDownDone, doRescroll);
                                 } else {
                                     _self.$listWrapper.on('prefetchNext', function() {
-                                        _refreshListOnScroll(_refreshDownDone);
+                                        _refreshListOnScroll(_refreshDownDone, doRescroll);
                                         _self.$listWrapper.off('prefetchNext');
                                     });
                                 }
@@ -769,13 +781,18 @@
          * Called when the data in the list has changed, but the list structure itself
          * has not.
          */
-        refreshData: function(list,condition,oncomplete) {
+        refreshData: function(list,condition,oncomplete,renderWindowStart) {
             var _self = this;
             
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
             _self.originalList = _self.unfilteredList = _self.itemList = list;
+            
+            /* force the search to be re-applied because the underlying data has changed */
+            if (_self.__searchText) {
+                _self.__searchTextDirty = true;
+            }
         
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -785,6 +802,10 @@
                 return;
             }
             
+            _self._resetPaging();
+            if (renderWindowStart) {
+                _self.setRenderWindowStart(renderWindowStart);
+            }
             _self._refreshData(function() {
                 _self.$parent.listview( "refresh" );
                 if (oncomplete) {
@@ -1244,7 +1265,7 @@
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
                     _self.unfilteredList = _self.itemList = displayCollection;
                     __completion(_self.itemList);
-                });
+                }, _self.originalList);
                 //displayCollection = _self._applySearch(displayCollection);
             } else {
                 __completion(displayCollection);
@@ -1331,7 +1352,7 @@
                 }
             };
             
-            if (_self._prefetchedItems && _self._prefetchedItems.length) {
+            if (_self._prefetchedItems && _self._prefetchedItems.length > 20) {
                 __processStart(_self._prefetchedItems.length);
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
@@ -1351,7 +1372,7 @@
                     displayCollection = displayCollection.skip(_self._renderWindowStart);
                 }
                 displayCollection = displayCollection.limit(_self._itemsPerPage);
-
+                
                 displayCollection.newEach({
                     /* Process each element. */
                     eachFn: function(curRow) {
@@ -1359,11 +1380,21 @@
                     },
                     /* Called on start. */
                     startFn: function(count) {
+                        if (_self.prefetchedItems) {
+                            count = count + _self.prefetchedItems.length;
+                        }
                         __processStart(count);
                     },
                     /* Called on done. */
                     doneFn: function(count) {
+                        if (_self.prefetchedItems) {
+                            for (var i = 0; i < _self._prefetchedItems.length; ++i) {
+                                __processRow(_self._prefetchedItems[i]);
+                                ++count;
+                            }
+                        }
                         __processDone(count);
+                        _self._prefetchedItems = [];
                     }
                 });    
             } 
@@ -1501,7 +1532,7 @@
                     if (useControlGroup) {
                         widthStyle = '60%';
                     } else {
-                        widthStyle = '80%';
+                        widthStyle = '75%';
                     }
                 }
                 var $searchDiv = $('<div/>').attr({
@@ -1512,9 +1543,9 @@
                     'type' : 'search',
                     'name' : 'search',
                     'id' : sboxID,
-                    'value' : '',
                     'data-role' : 'none',
-                    'data-mini' : true
+                    'data-mini' : true,
+                    'value': this.options.indexedSearchText
                 }).appendTo($searchDiv);
                 if (widthStyle) {
                     $searchDiv.css('width', widthStyle);
@@ -1527,10 +1558,16 @@
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
-                this.$searchBox.on('input', function() {
-                    
+                this.$searchBox.on('input', function() {                   
                     _self._doSearch();
                 });
+                if (this.options.indexedSearchText) {
+                    this.$searchBox.on('focus', function() {
+                        _self.$searchBox.val('');
+                        _self.$searchBox.off('focus');
+                    });    
+                }
+                
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
                     _self.itemList = _self.originalList;
                     _self.__searchText = "";
@@ -1932,6 +1969,17 @@
             } else {
                 $(parentElement).removeAttr('data-icon');
             }
+
+            var oldPfx = $(mainLink).find('[data-role="prefix"]');
+            if (rowComponents.prefix) {
+                if (oldPfx.length) {
+                    oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
+                } else {
+                    mainLink.append(rowComponents.prefix.attr('data-role', 'prefix'));
+                }
+            } else {
+                oldPfx.remove();
+            }
             
             if (rowComponents.image) {
                 var imgMarkup = $(mainLink).find('img[data-role="image"]');
@@ -2051,7 +2099,10 @@
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
-                var nxt = this.selectedLI.next('li[data-index]');
+                var nxt = this.selectedLI;
+                do {
+                    nxt = nxt.next();
+                } while (nxt.is('li') && !nxt.is('li[data-index]'));
                 if (nxt.length) {
                     this.setSelected(nxt);
                     this.selectItem();
@@ -2062,9 +2113,12 @@
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
-                var nxt = this.selectedLI.prev('li[data-index]');
-                if (nxt.length) {
-                    this.setSelected(nxt);
+                var prev = this.selectedLI;
+                do {
+                    prev = prev.prev();
+                } while (prev.is('li') && !prev.is('li[data-index]'));
+                if (prev.length) {
+                    this.setSelected(prev);
                     this.selectItem();
                 }
             }
@@ -2095,8 +2149,48 @@
         /**
          * Refresh the scroller surrounding the datalist contents.
          */
-        refreshScroller: function() {
-            //Helix.Layout.updateScrollers(this.$wrapper);
+        scrollToStart: function() {
+            this.$listWrapper.scrollTop(0);
+        },
+        
+        /**
+         * Set the scroll position of the list element.
+         * 
+         * @param {int} pos
+         * @returns {undefined}
+         */
+        setScrollPosition: function(pos) {
+            this.$listWrapper.scrollTop(pos);
+        },
+        
+        /**
+         * Return the current scroll position of the list element. This is particularly useful when you want
+         * to later restore the scroll position using setScrollPosition.
+         * 
+         * @returns {int}
+         */
+        getScrollPosition: function() {
+            return this.$listWrapper.scrollTop();
+        },
+        
+        /**
+         * In a paginated list, return the index of the first data element that is visible. In non-paginated lists this is always 0.
+         * 
+         * @returns {int}
+         */
+        getRenderWindowStart: function() {
+            return this._renderWindowStart;
+        },
+        
+        /**
+         * In a paginated list, set the start of the render window, which determines which element is visible at the very top of the list.
+         * Note that this function does not refresh the list ... it is intended to be called prior to a call to refreshData/refreshList.
+         * 
+         * @param {int} start
+         * @returns {undefined}
+         */
+        setRenderWindowStart: function(start) {
+            this._renderWindowStart = start;
         },
         
         setHeaderText: function(txt) {
@@ -2130,6 +2224,16 @@
          */
         getListElement: function() {
             return this.$parent;
+        },
+        
+        /**
+         * Clear the contents of the indexedSearch text box.
+         * 
+         * @returns {undefined}
+         */
+        clearSearchText: function() {
+            this.$searchBox.val('');  
+            this.__searchText = '';
         },
         
         /**

@@ -88,6 +88,12 @@
             <description>String width attribute applied to the outer div of the entire layout.</description>
         </attribute>
         <attribute>
+            <name>height</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>String height attribute applied to the outer div of the entire layout.</description>
+        </attribute>
+        <attribute>
             <name>fullScreen</name>
             <required>false</required>
             <type>java.lang.Boolean</type>

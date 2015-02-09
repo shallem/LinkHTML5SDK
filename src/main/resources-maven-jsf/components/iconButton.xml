@@ -36,7 +36,7 @@
             <name>align</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Indicate if a button is left or right aligned.</description>
+            <description>Indicate if a button is left or right aligned in the context of a button bar.</description>
             <defaultValue>left</defaultValue>
         </attribute>
         <attribute>
@@ -86,6 +86,13 @@
             <type>java.lang.String</type>
             <defaultValue></defaultValue>
             <description>Name of a standard jQM icon to use. This will render a standard jQM button.</description>
+        </attribute>
+        <attribute>
+            <name>iconPos</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>bottom</defaultValue>
+            <description>Standard jQuery Mobile icon position to be used for this button.</description>
         </attribute>
         <attribute>
             <name>styleClass</name>

@@ -472,6 +472,25 @@ li {
     top: 25%;
 }
 
+/* Styles for headers with multiple buttons on each side of the header text */
+.ui-header .hx-button-bar h1 {
+    display: inline-block;
+}
+
+.ui-header .hx-button-bar {
+    margin: 0;
+    float: left;
+}
+
+.ui-header .hx-button-bar .ui-controlgroup-controls {
+    display: block;
+}
+
+.ui-header.hx-text-left .ui-title {
+    text-align: left;
+    margin-left: 80px;
+}
+
 /**
  * Small screen style overrides.
  */

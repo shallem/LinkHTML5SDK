@@ -165,6 +165,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getIndexedSearch() != null) {
             writer.write(",indexedSearch: " + dlist.getIndexedSearch());
         }
+        if (dlist.getIndexedSearchText() != null) {
+            writer.write(",indexedSearchText: '" + dlist.getIndexedSearchText() + "'");
+        }
 
         // Default field to sort by.
         if (dlist.getSortBy() != null) {

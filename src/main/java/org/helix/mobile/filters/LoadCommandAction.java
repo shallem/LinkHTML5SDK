@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.FacesException;
 import javax.servlet.http.HttpServletRequest;
+import org.helix.mobile.model.ClientWSResponse;
 import org.helix.mobile.model.JSONSerializer;
 
 /**
@@ -36,6 +37,7 @@ public class LoadCommandAction {
     private Constructor ctor;
     private Method loader;
     private Method getter;
+    private Method errorGetter;
     private Method postConstruct;
     private String beanName;
     private String key;
@@ -57,7 +59,8 @@ public class LoadCommandAction {
         for (Method m : c.getMethods()) {
             if (m.getAnnotation(javax.annotation.PostConstruct.class) != null) {
                 this.postConstruct = m;
-                break;
+            } else if (m.getName().equals("getLastError")) {
+                this.errorGetter = m;
             }
         }
     }
@@ -102,6 +105,15 @@ public class LoadCommandAction {
     public String getAndSerialize(Object thisObject) throws IOException {
         Object gotten = null;
         try {
+            /* First check to see if an error occurred. If so, return an error object. */
+            if (this.errorGetter != null) {
+                ClientWSResponse resp = (ClientWSResponse)this.errorGetter.invoke(thisObject, new Object[] {});
+                if (resp != null) {
+                    return "{ \"error\" : " + resp.toJSON() + "}";
+                }
+            }
+            
+            
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
              */
@@ -119,6 +131,9 @@ public class LoadCommandAction {
         } catch (InvocationTargetException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getMessage());
+        } catch (NoSuchMethodException nme) {
+            LOG.log(Level.SEVERE, null, nme);
+            throw new FacesException("Failed to invoke loader: " + nme.getMessage());
         }
         if (gotten != null) {
             JSONSerializer s = new JSONSerializer();

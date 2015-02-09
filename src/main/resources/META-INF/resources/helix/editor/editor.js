@@ -32,7 +32,7 @@
                     font: "font",
                     formats: "bullets numbering | outdent indent | alignleft center alignright justify" +
                     " | rule", /* image link unlink*/
-                    actions : "undo redo" /* removeformat */,
+                    actions : "undo redo showformat" /* removeformat */,
                     color : "color highlight"
                 },
                 "phone" : {
@@ -40,7 +40,7 @@
                     //font: "font size color highlight",
                     font: "font",
                     formats: "bullets numbering | outdent indent | alignleft center alignright justify",
-                    actions : "undo redo" /* removeformat */,
+                    actions : "undo redo showformat" /* removeformat */,
                     color : "color highlight"
                 }
             }
@@ -61,7 +61,8 @@
             bodyStyle:    // style to assign to document body contained within the editor
             "font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word; margin: 0px;",
             // -webkit-transform: translate3d(0,0,0)
-            tabIndex: -1
+            tabIndex: -1,
+            showFormat: false
         },
 
         // Define all usable toolbar buttons - the init string property is
@@ -93,7 +94,8 @@
         "justify,,justifyfull|" +
         "undo,,|" +
         "redo,,|" +
-        "rule,Insert Horizontal Rule,inserthorizontalrule|" +
+        "showformat,Show Format,|" +
+                    "rule,Insert Horizontal Rule,inserthorizontalrule|" +
         "link,Insert Hyperlink,createlink|" +
         "unlink,Remove Hyperlink,|" +
         "cut,,|" +
@@ -228,7 +230,7 @@
         // Capture the page for this item.
         if (!options.page) {
             options.page = $(area).closest('div[data-role="page"]');
-            if (options.page.length == 0) {
+            if (options.page.length === 0) {
                 options.page = $.mobile.activePage;
             }
         }
@@ -620,7 +622,7 @@
         var success = true, description;
         try {
             success = editor.doc.execCommand(command, 0, value || null);
-            if (success && (button.type == "font" || button.type == "style" || button.type == 'color')) {
+            if (success && (button.type === "font" || button.type === "style" || button.type === 'color')) {
                 if (button.type === "font") {
                     editor.currentFont = value;
                     editor.$formatFrame.css('font-family', value);
@@ -773,10 +775,15 @@
         editor.$main.height(hgt);
         
         // Update hgt to account for the toolbar and the format frame.
-        hgt -= editor.$toolbar.outerHeight(true);        
-        hgt -= 25;
+        var adjustedHeight = hgt;
+        adjustedHeight -= editor.$toolbar.outerHeight(true);        
+        adjustedHeight -= 25;
         
-        editor.$frameMaster.height(hgt);
+        if (!isNaN(adjustedHeight)) {
+            editor.$frameMaster.height(adjustedHeight);
+        } else {
+            editor.$frameMaster.height(hgt);
+        }
     }
 
     // refresh - creates the iframe and resizes the controls
@@ -904,7 +911,6 @@
         // NOTE: we require that the browser supports iFrame design mode. Otherwise
         // this plugin will fail.
         $frame.show();
-        $formatFrame.show();
 
         // Switch the iframe into design mode if enabled
         disable(editor, editor.disabled);

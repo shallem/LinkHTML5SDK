@@ -75,7 +75,7 @@
       ["show", show],
       ["hide", hide],
       ["refresh", refresh],
-      ["getForm", getForm]
+      ["getForm", getForm, true]
     ];
 
     $.each(methods, function(idx, method) {
@@ -198,6 +198,8 @@
             'data-role' : 'button',
             'data-inline' : 'true',
             'data-theme' : 'c',
+            'data-corners' : 'false',
+            'data-shadow' : 'true',
             'id' : dialog.name + '-cancel'
         }).append(dialog.options.dismissTitle)
             .on(Helix.clickEvent, function(ev) {
@@ -217,6 +219,8 @@
             'data-inline' : 'true',
             'data-theme' : 'b',
             'data-transition' : 'flow',
+            'data-corners' : 'false',
+            'data-shadow' : 'true',
             'id' : dialog.name + '-confirm'
         }).append(dialog.options.confirmTitle)
             .on(Helix.clickEvent, function(ev) {
