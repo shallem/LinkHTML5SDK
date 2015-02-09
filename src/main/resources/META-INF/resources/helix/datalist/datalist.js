@@ -2232,7 +2232,9 @@
          * @returns {undefined}
          */
         clearSearchText: function() {
-            this.$searchBox.val('');  
+            if (this.$searchBox) {
+                this.$searchBox.val('');
+            }
             this.__searchText = '';
         },
         

@@ -472,6 +472,11 @@ function __refreshSelectMenu(formElem) {
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
     $(inputMarkup).selectmenu();
+    if (formElem.onchange) {
+        $(inputMarkup).change(function() {
+            formElem.onchange.call(this);
+        });
+    }
 }
 
 function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
