@@ -34,14 +34,14 @@ import org.helix.mobile.model.JSONSerializer;
 public class LoadCommandAction {
     private static final Logger LOG = Logger.getLogger(LoadCommandAction.class.getName());
     
-    private Constructor ctor;
-    private Method loader;
-    private Method getter;
+    private final Constructor ctor;
+    private final Method loader;
+    private final Method getter;
     private Method errorGetter;
     private Method postConstruct;
-    private String beanName;
-    private String key;
-    private Class beanClass;
+    private final String beanName;
+    private final String key;
+    private final Class beanClass;
     
     public LoadCommandAction(String key,
             String beanName,
