@@ -790,7 +790,14 @@ function initHelixDB() {
         },
     
         getSchemaForObject: function(obj) {
-            return obj.__hx_schema;
+            if (obj.__hx_schema) {
+                return obj.__hx_schema;
+            } else if (obj._type) {
+                return Helix.DB.getSchemaForTable(obj._type);
+            } else if (obj._entityName) {
+                return Helix.DB.getSchemaForTable(obj._entityName);
+            }
+            return null;
         },
         
         getSchemaNameForObject : function(obj) {
@@ -848,8 +855,10 @@ function initHelixDB() {
         },
         
         getSchemaForField: function(persistentObj, fieldName) {
-            if (fieldName in persistentObj.__hx_schema.__pm_subSchemas) {
+            if (persistentObj.__hx_schema && fieldName in persistentObj.__hx_schema.__pm_subSchemas) {
                 return persistentObj.__hx_schema.__pm_subSchemas[fieldName];
+            } else if (persistentObj[fieldName]._entityName) {
+                return Helix.DB.getSchemaForTable(persistentObj[fieldName]._entityName);
             }
             return null;
         },
