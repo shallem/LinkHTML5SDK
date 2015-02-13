@@ -159,7 +159,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         } else {
             onStart = null;
         }
-       
+        
         Object v = cmd.getValue();
         JSONSerializer s = new JSONSerializer();
         if (v == null) {
@@ -189,6 +189,9 @@ public class LoadCommandRenderer extends CoreRenderer {
         }
         if (onStart != null) {
             writer.write(" 'onstart' : " + onStart.toString() + ",");
+        }
+        if (cmd.getOnerror() != null) {
+            writer.write(" 'onerror' : " + cmd.getOnerror() + ",");
         }
         writer.write(" 'schemaFactory' : " + cmd.getName() + "_genSchema,");
         writer.write(" 'loadingOptions' : {");

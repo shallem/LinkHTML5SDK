@@ -283,8 +283,20 @@ Helix.Ajax = {
                 
                 var config = Helix.Ajax.loadCommands[syncComponent];
                 window[config.name] = obj[syncComponent];
-                if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, obj[syncComponent], true, param[syncComponent]);
+                var componentObj = obj[syncComponent];
+                if (componentObj.error) {
+                    if (config.onerror) {
+                        var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                        if (componentObj.error.msg) {
+                            error.msg = componentObj.error.msg;
+                        }
+                        if (componentObj.error.status) {
+                            error.code = componentObj.error.status;
+                        }
+                        config.onerror(error);
+                    }
+                } else if (config.oncomplete) {
+                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param[syncComponent]);
                 }
             }
         };

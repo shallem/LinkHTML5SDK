@@ -52,7 +52,7 @@ function initHelixDB() {
             // Check to see if this is a schema forward ref. If so, return null and 
             // let the caller fill in the actual schema after all peer fields have been
             // processed.
-            if (schemaTemplate.__hx_schema_type == 1002) {
+            if (schemaTemplate.__hx_schema_type === 1002) {
                 return null;
             }
 
@@ -66,7 +66,7 @@ function initHelixDB() {
                 var subSchema = schemaTemplate[schemaField];
                 if (Object.prototype.toString.call(subSchema) === '[object Array]') {
                     var elemSchema = this.generatePersistenceFields(subSchema[0],schemaField,allVisited,recursiveFields,allSchemas);
-                    if (elemSchema != null) {
+                    if (elemSchema !== null) {
                         subSchemas[schemaField] = elemSchema;
                         oneToMany.push({
                             "field" : schemaField, 
@@ -82,7 +82,7 @@ function initHelixDB() {
                 } else if (Object.prototype.toString.call(subSchema) === '[object Object]') {
                     // This is a dependent object, which we assume is stored in another field.
                     var fieldSchema = this.generatePersistenceFields(subSchema,schemaField,allVisited,recursiveFields,allSchemas);
-                    if (fieldSchema != null) {
+                    if (fieldSchema !== null) {
                         subSchemas[schemaField] = fieldSchema;
                         manyToOne.push({
                             "field" : schemaField, 
@@ -1421,20 +1421,25 @@ function initHelixDB() {
                         return;
                     }
                     
-                    var syncObject = null;
-                    var paramObject = null;
-                    if (obj[nxt].__hx_type === 1004) {
-                        syncObject = obj[nxt].sync;
-                        paramObject = obj[nxt].param;
-                    } else {
-                        syncObject = obj[nxt];
-                    }
-                    var loadCommandConfig = overrides.schemaMap[nxt];
-                    Helix.DB.synchronizeObject(syncObject, loadCommandConfig.schema, function(finalObj, o) {
-                        resultObj[o.name] = finalObj;
-                        paramObj[o.name] = o.param;
+                    if (obj[nxt].error) {
+                        resultObj[nxt] = obj[nxt];
                         syncComponent();
-                    }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
+                    } else {
+                        var syncObject = null;
+                        var paramObject = null;
+                        if (obj[nxt].__hx_type === 1004) {
+                            syncObject = obj[nxt].sync;
+                            paramObject = obj[nxt].param;
+                        } else {
+                            syncObject = obj[nxt];
+                        }
+                        var loadCommandConfig = overrides.schemaMap[nxt];
+                        Helix.DB.synchronizeObject(syncObject, loadCommandConfig.schema, function(finalObj, o) {
+                            resultObj[o.name] = finalObj;
+                            paramObj[o.name] = o.param;
+                            syncComponent();
+                        }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
+                    }
                 };
                 syncComponent();
             } else {
