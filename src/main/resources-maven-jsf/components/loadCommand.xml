@@ -45,6 +45,12 @@
             <description>Javascript to execute when the load is complete.</description>
         </attribute>
         <attribute>
+            <name>onerror</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript to execute when the load fails with a server side error. Accepts an object with fields status (error code) and msg (error message).</description>
+        </attribute>
+        <attribute>
             <name>loadingMessage</name>
             <required>false</required>
             <type>java.lang.String</type>

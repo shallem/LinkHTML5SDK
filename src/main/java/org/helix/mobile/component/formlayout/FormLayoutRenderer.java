@@ -81,6 +81,9 @@ public class FormLayoutRenderer extends CoreRenderer {
         if (layout.getMaxWidth() != null) {
             writer.write(", 'width' : '" + layout.getMaxWidth() + "'");
         }
+        if (layout.getHeight() != null) {
+            writer.write(", 'height' : '" + layout.getHeight() + "'");
+        }
         
         writer.write(",modes : '" + layout.getModes() + "'");
         writer.write(",currentMode: '" + layout.getCurrentMode() + "'");

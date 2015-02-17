@@ -26,7 +26,11 @@ public class IconButtonRenderer extends CoreRenderer {
         writer.writeAttribute("id", clientId, "id");
         writer.writeAttribute("name", clientId, "name");
         writer.writeAttribute("data-role", "button", null);
-        writer.writeAttribute("data-iconpos", "bottom", null);
+        if (button.getIconPos() != null) {
+            writer.writeAttribute("data-iconpos", button.getIconPos(), null);            
+        } else {        
+            writer.writeAttribute("data-iconpos", "bottom", null);
+        }
         if (button.getImage() != null) {
             writer.writeAttribute("data-icon", button.getImage(), null);
         } else if (button.getIcon() != null) {

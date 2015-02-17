@@ -472,6 +472,11 @@ function __refreshSelectMenu(formElem) {
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
     $(inputMarkup).selectmenu();
+    if (formElem.onchange) {
+        $(inputMarkup).change(function() {
+            formElem.onchange.call(this);
+        });
+    }
 }
 
 function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
@@ -511,7 +516,7 @@ function __refreshTextBox(mode, formElem) {
     }
 }
 
-function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout, isPassword) {
     if (!formElem.value) {
         formElem.value = "";
     }
@@ -551,7 +556,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         .append(inputMarkup);
         $fieldContainer.append(textContainer);
         textContainer.fieldcontain();
-        $(inputMarkup).textinput();
+        $(inputMarkup).textinput({
+            disabled: formElem.inputDisabled ? true : false
+        });
         if (formElem.fieldTitleType === 'button') {
             $(formElem.fieldTitle).button();
         }
@@ -608,13 +615,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 }
                 
                 var text = $(this).val();
+                var _self = $(this);
                 if (text.length < formElem.autocompleteThreshold) {
                     autoCompleteList.empty();
                     autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
                     var __doAutocomplete = function() {
-                        formElem.autocomplete(text, function(LIs) {
+                        formElem.autocomplete.call(formElem, text, function(LIs) {
                             // Set __noblur to prevent the user's clicking on an autocomplete list
                             // item from triggering a blur event, which doesn't make sense because
                             // the value supplied to the blur event should be the value clicked upon,
@@ -628,16 +636,28 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     formElem.__noblur = false;
                                     return false;
                                 }).appendTo(autoCompleteList);
-                                for (var i = 0; i < LIs.length; ++i) {
+                                // We cap out the list length at 20 b/c otherwise we might crash the app ...
+                                var i;
+                                for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                     $("<li/>").append(LIs[i]).on('vclick', function() {
-                                        formElem.autocompleteSelect($(this).text());
+                                        var ret = formElem.autocompleteSelect.call(_self, $(this).text());
                                         autoCompleteList.empty();
                                         autoCompleteList.hide();
-                                        $(inputMarkup).val('');
+                                        if (ret === true) {
+                                            
+                                        } else {
+                                            $(inputMarkup).val('');
+                                        }
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
                                 }
+                                if (i < LIs.length) {
+                                    // We cut off the autocomplete list.
+                                    $("<li/>").append("The search returned >20 results.");
+                                }
+                                
+                                
                                 autoCompleteList.show();
                                 autoCompleteList.listview("refresh");
                             } else {
@@ -763,6 +783,9 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     if (formElem.computedWidth) {
         fieldMarkup.css('width', formElem.computedWidth);
     }
+    if (useMiniLayout) {
+        $(fieldMarkup).addClass('hx-mini-fieldcontain');
+    }
 
     var formMarkup = $("<form />").appendTo(fieldMarkup);
     var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
@@ -828,6 +851,10 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         'style' : 'width: auto'
         /*'data-role' : 'fieldcontain'*/
     }).appendTo($fieldContainer);
+
+    if (useMiniLayout) {
+        $(fieldMarkup).addClass('hx-mini-fieldcontain');
+    }
 
     var wrapperMarkup = $('<fieldset/>').attr({
     /*    'data-role' : 'controlgroup',
@@ -904,6 +931,7 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
             'data-inline' : true,
             'data-shadow' : formElem.shadow ? 'true' : 'false',
             'data-theme' : formElem.theme ? formElem.theme : 'b',
+            'data-corners' : formElem.iconCorners ? 'true' : 'false',
             'id': formElem.id
         }).append(formElem.fieldTitle);
     }
@@ -1077,6 +1105,9 @@ function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLa
             isFullWidth = true;
         }            
     }
+    if (formElem.height) {
+        $fieldContainer.height(formElem.height);
+    }
 
     if (!formElem.name) {
         /* No field name. We cannot edit this field. */
@@ -1090,7 +1121,7 @@ function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'id' : editorID,
         'tabIndex' : -1
     }).val(formElem.value);
-    $fieldContainer.append($('<div />')
+    $fieldContainer.append($('<div />').height(formElem.height ? formElem.height : '100%')
         .append($('<label />').attr({
             'for' : editorID,
             'class' : formLayout.titleStyleClass
@@ -1457,13 +1488,13 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.DOM = $editFieldContainer;
     }
     
-    if (formElem.type == "text") {
+    if (formElem.type === 'text') {
         renderFn = __appendTextBox;
-    } else if (formElem.type == 'textarea') {
+    } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
-    } else if (formElem.type == 'pickList') {
+    } else if (formElem.type === 'pickList') {
         renderFn = __appendSelectMenu;
-    } else if (formElem.type == 'checkbox') {
+    } else if (formElem.type === 'checkbox') {
         renderFn = __appendCheckBox;
     } else if (formElem.type === 'controlset') {
         renderFn = __appendControlSet;
@@ -1749,6 +1780,9 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     var formElem;
     var elemIdx;
     var formElements = formLayout.items;
+    if (formLayout.height) {
+        $(parentDiv).height(formLayout.height);
+    }
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);

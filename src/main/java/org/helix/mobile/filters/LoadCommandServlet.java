@@ -26,6 +26,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.helix.mobile.model.JSONSerializer;
 
 /**
  *
@@ -79,7 +80,8 @@ public class LoadCommandServlet extends HttpServlet {
 
             if (err != null) {
                 try {
-                    res.getWriter().write("{ \"error\" : \"" + err + "\" }");
+                    JSONSerializer s = new JSONSerializer();
+                    res.getWriter().write(s.serializeError(err));
                     res.flushBuffer();
                 } catch (IOException ex) {
                     Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ex);

@@ -40,6 +40,13 @@
             <description>Standard jQuery Mobile icon to be used for this button.</description>
         </attribute>
         <attribute>
+            <name>iconPos</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>bottom</defaultValue>
+            <description>Standard jQuery Mobile icon position to be used for this button.</description>
+        </attribute>
+        <attribute>
             <name>theme</name>
             <required>false</required>
             <type>java.lang.String</type>
