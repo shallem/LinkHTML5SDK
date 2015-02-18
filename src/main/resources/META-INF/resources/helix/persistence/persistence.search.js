@@ -324,15 +324,12 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We are already indexing ...
                 return;
             }
-            if (ncalls == 40 && !__indexFull) {
+            if (ncalls === 40 && !__indexFull) {
                 // We only do this up to 40 times per index, otherwise the application can
                 // be sluggish for far too long.
                 indexedOnce = true;
                 
                 Helix.DB.__indexingCount--;
-                if (Helix.DB.__indexingCount == 0) {
-                    Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
-                }
                 return;
             }
             
@@ -375,19 +372,6 @@ persistence.search.config = function(persistence, dialect, options) {
                         that.__hx_indexing = false;
                         
                         --Helix.DB.__indexingCount;
-                        if (Helix.DB.__indexingCount == 0 && Helix.DB.__indexingMessageShown && ncalls > 0 && (__indexFull || params.nxtCall >= 20)) {
-                            Helix.Utils.statusMessage("Indexing", "Background indexing is complete.", "info");
-                            Helix.DB.__indexingMessageShown = false;
-                        }
-                    } else {
-                        // Only show a message if we are indexing a lot of data - at least 100 records where nObjects is 20
-                        if (params.nxtCall == 5) {
-                            if (!Helix.DB.__indexingMessageShown) {
-                                Helix.DB.__indexingMessageShown = true;
-                                // Only display if we are going to index many times.
-                                Helix.Utils.statusMessage("Indexing", "Your data is being indexed. The application will be slow while indexing is in progress. A message is displayed when indexing is done.", "info");
-                            }
-                        }
                     }
                 },
                 eachFn: function(elem, params) {
