@@ -1220,7 +1220,10 @@ function initHelixDB() {
                     });
                 } else {
                     if (deltaObj.deleteSpec) {
-                        elemSchema.all().filter(deltaObj.deleteSpec.field, deltaObj.deleteSpec.op, deltaObj.deleteSpec.value).destroyAll();   
+                        for (var i = 0; i < deltaObj.deleteSpec.length; ++i) {
+                            var nxt = deltaObj.deleteSpec[i];
+                            elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll();   
+                        }
                     }
                 
                     /* Make sure all deletes are in the DB. */

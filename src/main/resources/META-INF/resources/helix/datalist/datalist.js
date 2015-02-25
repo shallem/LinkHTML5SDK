@@ -1279,10 +1279,10 @@
             var LIs = [];
             var groupsToRender = [];
             if (_self.options.grouped) {
-                LIs = $(_self.$parent).find('li[data-role=list-divider]');
+                LIs = $(_self.$parent).find('li[data-role="list-divider"]');
             } else {
                 // Add not selector to make sure we handle auto dividers properly.
-                LIs = $(_self.$parent).find('li:not([data-role=list-divider])');
+                LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
             
             /* Functions used in processing each item. */

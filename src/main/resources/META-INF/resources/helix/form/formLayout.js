@@ -889,6 +889,10 @@
         
         addItem: function(item) {
             this.options.items.push(item);
+        },
+        
+        getItems: function() {
+            return this.options.items;
         }
     });
 }( jQuery ));
