@@ -87,9 +87,7 @@ public class LoadCommandServlet extends HttpServlet {
                     Logger.getLogger(LoadCommandListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        } else {
-
-        }
+        } 
     }
 
     private LoadCommandAction resolveLoadCommand(String loadKey,

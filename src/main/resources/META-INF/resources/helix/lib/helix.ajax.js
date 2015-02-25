@@ -16,7 +16,7 @@
 
 /**
  * Ajax functions.
- * 
+ *
  * @author Seth Hallem
  */
 
@@ -37,7 +37,7 @@
          */
         var origComplete;
         if (ext) {
-            origComplete = ext.oncomplete;        
+            origComplete = ext.oncomplete;
         } else {
             ext = {};
         }
@@ -61,11 +61,11 @@ $(document).bind('prerequest', function() {
         if (!Helix.Ajax.loadOptions.color) {
             Helix.Ajax.loadOptions.color = "#FF8000";
         }
-        
+
         var header = $.mobile.activePage.find('[data-role="header"]');
         var origBG = $(header).css('background');
         var animateColor = function(doReverse) {
-            $(header).animate({ 
+            $(header).animate({
                 'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
             }, {
                 duration: 1200,
@@ -92,7 +92,7 @@ $(document).bind('postrequest', function() {
     if (!Helix.Ajax.loadOptions.pin) {
         if (!Helix.Ajax.loadOptions.async) {
             /* Hide the loader. */
-            $.mobile.loading( "hide" );            
+            $.mobile.loading( "hide" );
         }
         if (window.CordovaInstalled) {
             window.HelixSystem.allowSleep();
@@ -109,7 +109,7 @@ $(document).bind('postrequest', function() {
  */
 $(document).ready(function() {
     if (Helix.Ajax.loadCt > 0) {
-        $.mobile.loading( 'show', Helix.Ajax.loadOptions);    
+        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
     }
 });
 
@@ -151,15 +151,15 @@ Helix.Ajax = {
     loadOptions: {
         pin : false
     },
-    
+
     /**
      * Global map that maintains all config for each load command. This allows us to
      * easily create aggregate load commands.
      */
     loadCommands: {
-        
+
     },
-    
+
     isDeviceOnline : function() {
         if (Helix.Ajax.forceDeviceOffline) {
             return false;
@@ -167,18 +167,18 @@ Helix.Ajax = {
         if (Helix.Ajax.forceDeviceOnline) {
             return true;
         }
-        
+
         //alert("ONLINE2: " + window.__hxOnLine);
         if (window.__hxOnLine !== undefined) {
             return window.__hxOnLine;
         }
-        
+
         return navigator.onLine;
     },
-    
+
     /**
      * Show a loader with a text message.
-     * 
+     *
      * @param msg Text message to show.
      * @param theme jQuery Mobile theme (optional, defaults to "a")
      */
@@ -187,20 +187,20 @@ Helix.Ajax = {
             theme = "a";
         }
         $.mobile.loading('show', {
-            text: msg, 
+            text: msg,
             textVisible: true,
             theme: theme,
             textonly: false
         });
     },
-    
+
     /**
      * Helper companion to showLoader. Hides the loader.
      */
     hideLoader: function() {
         $.mobile.loading('hide');
     },
-    
+
     /*
      * Helper used to set loader options.
      */
@@ -212,7 +212,7 @@ Helix.Ajax = {
             if (loadingOptions.message) {
                 Helix.Ajax.loadOptions= {
                     aync: false,
-                    text: loadingOptions.message, 
+                    text: loadingOptions.message,
                     textVisible: true,
                     theme: loadingOptions.theme,
                     textonly: false
@@ -231,14 +231,14 @@ Helix.Ajax = {
             };
         }
     },
-    
+
     defaultOnError: function(errorObj) {
-        Helix.Utils.statusMessage("Load Failed", errorObj.msg, "error");  
+        Helix.Utils.statusMessage("Load Failed", errorObj.msg, "error");
     },
-    
+
     /**
      * Used to run a single load command that turns the results of multiple other load commands.
-     * 
+     *
      * @param loadCommandOptions Parameters for this load command, including request options, loading
      * options, and commands - an array of objects each of which has a 'name' and an optional 'key' field.
      * The name is the name of the load command. The key is the itemKey used to synchronize this particular
@@ -253,7 +253,7 @@ Helix.Ajax = {
                 Helix.Ajax._executeAggregateLoad(loadCommandOptions);
             }
         };
-        
+
         // Make sure we have schema objects for each load command.
         for (var i = 0; i < nObjsToSync; ++i) {
             var commandToLaunch = loadCommandOptions.commands[i].name;
@@ -269,18 +269,18 @@ Helix.Ajax = {
             }
         }
     },
-    
+
     _executeAggregateLoad: function(loadCommandOptions) {
         // Execute the aggregate load.
         var nObjsToSync = loadCommandOptions.commands.length;
         var keyMap = {};
-        
+
         loadCommandOptions.oncomplete = function(finalKey, name, obj, param) {
             for (var syncComponent in obj) {
                 if (syncComponent === "__hx_schema") {
                     continue;
                 }
-                
+
                 var config = Helix.Ajax.loadCommands[syncComponent];
                 window[config.name] = obj[syncComponent];
                 var componentObj = obj[syncComponent];
@@ -306,14 +306,14 @@ Helix.Ajax = {
             for (var i = 0; i < nObjsToSync; ++i) {
                 var commandToLaunch = loadCommandOptions.commands[i].name;
                 keyMap[commandToLaunch] = loadCommandOptions.commands[i].key;
-                
+
                 var commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
                 loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
             }
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
-            
+
             // Run each item individually and synchronously.
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
@@ -333,7 +333,7 @@ Helix.Ajax = {
                 } else {
                     for (var i = 0; i < nObjsToSync; ++i) {
                         if (completions.length > i && completions[i].fn) {
-                            completions[i].fn.apply(completions[i].thisArg, completions[i].args);                        
+                            completions[i].fn.apply(completions[i].thisArg, completions[i].args);
                         }
                     }
                 }
@@ -342,7 +342,7 @@ Helix.Ajax = {
             syncComplete(0);
         }
     },
-    
+
     synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
         var origOncomplete = loadCommandOptions.oncomplete;
         loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
@@ -354,8 +354,8 @@ Helix.Ajax = {
         };
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
-    
-    ajaxBeanLoad : function(loadCommandOptions,itemKey,nRetries) {        
+
+    ajaxBeanLoad : function(loadCommandOptions,itemKey,nRetries) {
         // Set a default error handler if we do not have one.
         if (!loadCommandOptions.onerror) {
             loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
@@ -363,11 +363,11 @@ Helix.Ajax = {
         if (loadCommandOptions.onstart) {
             loadCommandOptions.onstart(loadCommandOptions.name);
         }
-        
+
         // Setup loader options and show the loader.
         Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
         //$.mobile.loading( 'show', Helix.Ajax.loadOptions);
-        
+
         // Make sure the DB is ready. If not, wait 5 seconds.
         if (!Helix.DB.persistenceIsReady()) {
             if (!nRetries) {
@@ -383,7 +383,7 @@ Helix.Ajax = {
             }, 1000);
             return;
         }
-        
+
         if (!loadCommandOptions.requestOptions.params) {
             loadCommandOptions.requestOptions.params = [];
         }
@@ -393,15 +393,15 @@ Helix.Ajax = {
             return;
         }
         loadCommandOptions.requestOptions.params.push({
-            name: "__hxLoadKey",  
+            name: "__hxLoadKey",
             value: loadCommandOptions.requestOptions.loadKey
         });
         loadCommandOptions.requestOptions.params.push({
-            name: "__hxLoadMethod",  
+            name: "__hxLoadMethod",
             value: loadCommandOptions.requestOptions.loadMethod
         });
         loadCommandOptions.requestOptions.params.push({
-            name: "__hxGetMethod",  
+            name: "__hxGetMethod",
             value: loadCommandOptions.requestOptions.getMethod
         });
 
@@ -444,13 +444,15 @@ Helix.Ajax = {
                         }
                         if (responseObj.error.status) {
                             error.code = responseObj.error.status;
-                        }
+                        } else {
+                           error.code = -1;
+                        }                       
                         loadCommandOptions.onerror(error);
                         return;
                     }
-                    
+
                     Helix.Ajax.loadOptions.pin = true;
-                    
+
                     var syncObject = null;
                     var paramObject = null;
                     if (responseObj.__hx_type === 1004) {
@@ -459,10 +461,10 @@ Helix.Ajax = {
                     } else {
                         syncObject = responseObj;
                     }
-                    
+
                     if (loadCommandOptions.schema || syncObject.__hx_type === 1003) {
                         if (loadCommandOptions.syncingOptions) {
-                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");                            
+                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
                         }
                         // Add setTimeout to allow the message to display
                         setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
@@ -490,7 +492,7 @@ Helix.Ajax = {
             });
         }, 0);
     },
-    
+
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
         $(document).trigger('prerequest');
         if (actions && actions.beforeSubmit) {
@@ -520,7 +522,7 @@ Helix.Ajax = {
                         }
                         if (actions && actions.error) {
                             actions.error.call(window, data);
-                        }                        
+                        }
                     }
                 },
                 999: function() {
@@ -546,7 +548,7 @@ Helix.Ajax = {
             }
         });
     },
-    
+
     ajaxJSONLoad: function(url,key,widgetVar,oncomplete,offlineSave) {
         url = url.replace("{key}", key);
         $.mobile.showPageLoadingMsg();
@@ -560,7 +562,7 @@ Helix.Ajax = {
                     jqXHR.__mh_failed = true;
                     return;
                 }
-                
+
                 window[widgetVar] = data;
                 if (offlineSave) {
                 // Save non-array types in the key-value store.
@@ -577,7 +579,7 @@ Helix.Ajax = {
             }
         });
     },
-    
+
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
             async: (params.async !== undefined) ? params.async : true
@@ -598,7 +600,7 @@ Helix.Ajax = {
                         }
 
                         if (callbacks.success) {
-                            callbacks.success.call(window, returnObj);                    
+                            callbacks.success.call(window, returnObj);
                         }
                     } else {
                         if (params.error) {
@@ -628,7 +630,7 @@ Helix.Ajax = {
                     $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
                 },
                 dataType: 'json'
-            });                
+            });
         } else {
             // Queue a post for the next time the container is online.
             if (params.disableOffline) {
@@ -645,16 +647,16 @@ Helix.Ajax = {
                     }
                 }
 
-                window.OfflinePost.savePost(params.url, 
-                    'application/x-www-form-urlencoded', 
-                    params.body, 
-                    refreshValues ? JSON.stringify(refreshValues) : '', 
+                window.OfflinePost.savePost(params.url,
+                    'application/x-www-form-urlencoded',
+                    params.body,
+                    refreshValues ? JSON.stringify(refreshValues) : '',
                     function() {
                         if (params.offlineSuccess) {
                             Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
                         } else {
-                            Helix.Utils.statusMessage("Action Queued", 
-                                "This action will be completed the next time you login to Link online.", "info");                    
+                            Helix.Utils.statusMessage("Action Queued",
+                                "This action will be completed the next time you login to Link online.", "info");
                         }
                         if (callbacks.offlineSuccess) {
                             callbacks.offlineSuccess.call(window);
@@ -662,7 +664,7 @@ Helix.Ajax = {
                         if (callbacks.complete) {
                             callbacks.complete.call(window);
                         }
-                    }, 
+                    },
                     function(msg) {
                         if (callbacks.fatal) {
                             callbacks.fatal.call(window, "Action Save Error", msg);
