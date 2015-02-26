@@ -21,7 +21,7 @@
       <arg value="-Dfile=${rootdir}/LinkPublicAppServer/LinkSDKSerializer/dist/LinkSDKSerializer.jar"/>
       <arg value="-DgroupId=org.helix"/>
       <arg value="-DartifactId=LinkSDKSerializer"/>
-      <arg value="-Dversion=1.0.4"/>
+      <arg value="-Dversion=1.0.5"/>
       <arg value="-Dpackaging=jar"/>
     </execute-mvn>
   </target>

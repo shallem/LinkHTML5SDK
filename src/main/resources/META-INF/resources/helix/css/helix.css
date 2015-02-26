@@ -491,6 +491,11 @@ li {
     margin-left: 80px;
 }
 
+.ui-growl-message p {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
 /**
  * Small screen style overrides.
  */
