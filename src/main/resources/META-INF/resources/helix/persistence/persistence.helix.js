@@ -786,7 +786,7 @@ function initHelixDB() {
      * Extract the key field from the schema.
      */
         getKeyField: function(schema) {
-            return schema.__hx_key
+            return schema.__hx_key;
         },
     
         getSchemaForObject: function(obj) {
@@ -1302,9 +1302,12 @@ function initHelixDB() {
             while (scalarFields.length > 0) {
                 field = scalarFields.pop();
                 /* Use the setter to make sure the object is marked as dirty appropriately. */
-                var setter = Object.getOwnPropertyDescriptor(persistentObj, field).set;
-                if (!overrides.syncFields(setter, obj, field, persistentObj)) {
-                    setter.call(persistentObj, obj[field]);
+                var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
+                if (prop) {
+                    var setter = prop.set;
+                    if (!overrides.syncFields(setter, obj, field, persistentObj)) {
+                        setter.call(persistentObj, obj[field]);
+                    }
                 }
             }
             
