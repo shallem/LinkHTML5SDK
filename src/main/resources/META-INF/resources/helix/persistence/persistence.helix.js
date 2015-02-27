@@ -786,7 +786,7 @@ function initHelixDB() {
      * Extract the key field from the schema.
      */
         getKeyField: function(schema) {
-            return schema.__hx_key
+            return schema.__hx_key;
         },
     
         getSchemaForObject: function(obj) {
