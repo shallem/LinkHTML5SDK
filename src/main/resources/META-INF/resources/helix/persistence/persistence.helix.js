@@ -1162,7 +1162,10 @@ function initHelixDB() {
                     var updatedObj = deltaObj.updates.pop();
                     var toUpdateKey = updatedObj[keyField];
                     var objId = uidToEID[toUpdateKey];
-                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,syncFn,overrides);                    
+                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                        syncFn(uidToEID);
+                        //syncFn(pObj);
+                    },overrides);                    
                 } else {
                     /* Nothing more to sync. Do all removes. */
                     doAdds(uidToEID);

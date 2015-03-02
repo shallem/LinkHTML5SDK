@@ -1751,7 +1751,12 @@ function initPersistence(persistence) {
 
         PropertyFilter.prototype.makeFit = function(o) {
             if(this.operator === '=') {
-                persistence.set(o, this.property, this.value);
+                if (this.value && this.value.id) {
+                    // This case happens when we are trying to make an object fit in a one-to-many relationship.
+                    persistence.set(o, this.property, this.value.id);
+                } else {
+                    persistence.set(o, this.property, this.value);
+                }
             } else {
                 throw new Error("Sorry, can't perform makeFit for other filters than =");
             }
