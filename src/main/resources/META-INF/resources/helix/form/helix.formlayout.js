@@ -956,7 +956,7 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 
 function __refreshIFrame(formElem) {
     var frameID = formElem.name;
-    var $frame = formElem.DOM.find(PrimeFaces.escapeClientId(frameID));
+    var $frame = (formElem.$frame ? formElem.$frame : formElem.DOM.find(PrimeFaces.escapeClientId(frameID)));
     $frame.hide();
     
     // Load the iframe document content
@@ -991,6 +991,13 @@ function __refreshIFrame(formElem) {
     if (!formElem.noHTML) {
         doc.write('</html>');
     }
+    if (formElem.onload) {
+        doc.body.onload = function() {
+            setTimeout(function() {
+                window[formElem.onload].call(window, frameID);            
+            }, 250);
+        };
+    }
     doc.close();
     if (!formElem.isScroller) {
         $(doc.body).parent().css('overflow', 'hidden');
@@ -1009,6 +1016,11 @@ function __refreshHTMLFrame(formElem) {
             $editor.update(formElem.value);
         }        
     } else if ($(formElem.viewDOM).is(':visible')) {
+        // Reset onload, otherwise it is not called.
+        /*if (formElem.onload) {
+            formElem.$frame.remove();
+            formElem.$frame = $(formElem.frameMarkup).appendTo($(formElem.viewDOM));
+        }*/
         __refreshIFrame(formElem);
     }
 }
@@ -1043,7 +1055,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         var iFrameMarkup = null;
         var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
         var iFrameWidth = ' width="' + formElem.computedWidth + '"';
-        var onloadAttr = (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
+        var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
         
         if (!formElem.height || (formElem.height === 'full')) {
             iFrameMarkup = '<iframe id="' + frameID + 
@@ -1058,7 +1070,8 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
                 iFrameStyle + '>';
         }
         
-        $(iFrameMarkup).appendTo($fieldContainer).hide();
+        formElem.frameMarkup = iFrameMarkup;
+        formElem.$frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
     } else {
         __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);

@@ -462,6 +462,7 @@
             //this.contextEvent = 'taphold';
             this.contextEvent = Helix.contextEvent;
             this.tapEvent = Helix.clickEvent;
+            this._cancelNextTap = false;
         
             // Default sort.
             this._currentSort = this.options.sortBy;
@@ -1774,9 +1775,10 @@
                     event.stopImmediatePropagation();
                     
                     if (_self.setSelected(event.target)) {
-                        _self.selectItem();                    
+                        _self.selectItem(true);                    
                     }
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self._cancelNextTap = true;
                     return false;
                 }); 
             } 
@@ -1787,6 +1789,10 @@
                     event.preventDefault();
                     
                     if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
+                        return false;
+                    }
+                    if (_self._cancelNextTap) {
+                        _self._cancelNextTap = false;
                         return false;
                     }
                     
