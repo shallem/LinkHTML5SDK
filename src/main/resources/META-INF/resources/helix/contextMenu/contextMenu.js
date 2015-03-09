@@ -71,9 +71,11 @@
             this.active = false;
 
             if (Helix.hasTouch) {
-                this.tapEvent = 'touchstart click vclick';
+                this.tapEvent = 'touchstart';
+                this.stopEvent = 'tap touchend click vclick';
             } else {
                 this.tapEvent = 'click';
+                this.stopEvent = '';
             }
             if (Helix.deviceType === 'phone') {
                 this._maxHeight = 300;
@@ -222,7 +224,6 @@
                 }
             });
         },
-        
         _handleClick : function(evt) {
             if (!this.active) {
                 return true;
@@ -270,6 +271,8 @@
         },
         open: function (obj) {
             this._thisArg = (obj ? obj.thisArg : null);
+            this.active = true;
+
             if (this.options.beforeopen) {
                 if (this._thisArg) {
                     this.options.beforeopen.call(this._thisArg);
@@ -278,17 +281,16 @@
                 }
             }
 
+            $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on(this.tapEvent, $.proxy(this, "_stopAndClose"));
+            if (this.stopEvent) {
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on(this.stopEvent, $.proxy(this, "_stop"));
+            }
+
             if (obj) {
                 this._menuContainer.popup("open", obj);
             } else {
                 this._menuContainer.popup("open");
             }
-            this.active = true;
-            if (Helix.hasTouch) {
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on(this.tapEvent, $.proxy(this, "_stopAndClose"));
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on('tap', $.proxy(this, "_stop"));
-            }
-
         },
         hideGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').hide();
@@ -312,9 +314,9 @@
         close: function () {
             this.active = false;
             this._menuContainer.popup("close");
-            if (Helix.hasTouch) {
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off(this.tapEvent);
-                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off('tap');
+            $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off(this.tapEvent);
+            if (this.stopEvent) {
+                $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).off(this.stopEvent);
             }
         },
         getName: function () {
