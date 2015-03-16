@@ -1879,6 +1879,20 @@
             }
         },
         
+        removeElement: function(idx) {
+            if (idx === this.getSelectedRow()) {
+                this.clearSelected();
+            }
+            
+            var row = this.$parent.find("[data-index="+idx+"]");
+            
+            if (row) {
+                row.remove();
+                this.$parent.listview( "refresh" );
+                this.isDirty = true;
+            }
+        },
+
         getSelectedLI: function() {
             return this.selectedLI;
         },
