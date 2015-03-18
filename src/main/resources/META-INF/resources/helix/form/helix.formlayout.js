@@ -662,6 +662,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                 autoCompleteList.listview("refresh");
                             } else {
                                 formElem.__noblur = false;
+                                autoCompleteList.empty();
+                                autoCompleteList.hide();
                             }
                         });
                     };

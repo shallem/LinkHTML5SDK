@@ -1995,10 +1995,11 @@
                 if (oldPfx.length) {
                     oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
                 } else {
-                    mainLink.append(rowComponents.prefix.attr('data-role', 'prefix'));
+                    mainLink.append($('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix')));
+                    mainLink = $('<div/>').appendTo(mainLink);
                 }
             } else {
-                oldPfx.remove();
+                oldPfx.closest('div').next().remove();
             }
             
             if (rowComponents.image) {
