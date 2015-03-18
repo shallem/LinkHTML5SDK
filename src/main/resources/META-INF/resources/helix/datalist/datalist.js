@@ -534,6 +534,7 @@
             /* Apply skip and limit. */
             this._nextRenderWindow = (this._renderWindowStart + (direction * this._itemsPerPage)) - direction;
             if (this._nextRenderWindow > 0) {
+                //console.log("SKIPPING: " + this._nextRenderWindow);
                 displayCollection = displayCollection.skip(this._nextRenderWindow);
             } else if (this._nextRenderWindow < 0) {
                 this._nextRenderWindow = 0;
@@ -663,7 +664,24 @@
                     _self.$listWrapper.scroll(function(ev) {
                         var scrollPos = _self.$listWrapper.scrollTop();
                         var listHeight = _self.$parent.height();
-                        var firstShowing;
+                        if (_self._scrollTopInProgress) {
+                            // Still going down ...
+                            if (scrollPos > _self._lastScrollPos) {
+                                return;
+                            }
+                            _self._lastScrollPos = scrollPos;
+                            _self._scrollTopInProgress = false;
+                        }
+                        if (_self._scrollBottomInProgress) {
+                            // Still going up ...
+                            if (scrollPos < _self._lastScrollPos) {
+                                return;
+                            }
+                            _self._lastScrollPos = scrollPos;
+                            _self._scrollBottomInProgress = false;
+                        }
+                        
+                        //console.log("SCROLL: " + scrollPos);
                         
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
@@ -688,7 +706,7 @@
                             });
                         };
                        
-                       
+                        //console.log("RENDER: " + _self._renderWindowStart + ", ATTOP: " + _self._atDataTop);
                         if (_self._lastScrollPos > scrollPos && _self._renderWindowStart > 0) {
                             // We are scrolling up ...
                             
@@ -700,7 +718,7 @@
                             if ((scrollPos < (listHeight * .25)) &&
                                     _self._firstElemVisible()) {
                                 var _refreshUpDone = function() {
-                                    _self._lastScrollPos = _self.$parent.height();
+                                    _self._scrollBottomInProgress = true;
                                     _self.$listWrapper.scrollTop(_self.$parent.height());
                                     _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
                                 };
@@ -719,6 +737,7 @@
                                 return;
                             }
                         } else if (_self._lastScrollPos < scrollPos && !_self._atDataTop) {
+                            //console.log("HEIGHT: " + listHeight + ", LAST: " + _self._lastElemVisible());
                             // Scrolling down.
                             if ((scrollPos > (listHeight * .5)) &&
                                     (!_self._prefetchNext)) {
@@ -728,7 +747,7 @@
                                     _self._lastElemVisible()) {
                                 var _refreshDownDone = function(_rescroll) {
                                     if (_rescroll) {
-                                        _self._lastScrollPos = 0;
+                                        _self._scrollTopInProgress = true;
                                         _self.$listWrapper.scrollTop(0);
                                         _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
                                     } else {
@@ -740,9 +759,12 @@
                                 // At or near the top of the list.
                                 _self._prefetchedItems = _self._prefetchNext;
                                 var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
+                                //console.log("A");
                                 if (_self._prefetchNextDone) {
+                                    //console.log("B");
                                     _refreshListOnScroll(_refreshDownDone, doRescroll);
                                 } else {
+                                    //console.log("C");
                                     _self.$listWrapper.on('prefetchNext', function() {
                                         _refreshListOnScroll(_refreshDownDone, doRescroll);
                                         _self.$listWrapper.off('prefetchNext');
