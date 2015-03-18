@@ -103,10 +103,12 @@
                 var formElem = itemsList[idx];
                 this._typeMap[formElem.name] = formElem.type;
                 this._fieldMap[formElem.name] = formElem;
+                formElem.parentForm = this;
                 if (this.options.namespace) {
                     if (formElem.id) {
                         formElem.id = this.options.namespace + "_" + formElem.id;
                     }
+                    formElem.originalName = formElem.name;
                     formElem.name = this.options.namespace + "_" + formElem.name;
                 }
                 if (formElem.type === 'controlset') {
