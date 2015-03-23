@@ -90,7 +90,11 @@ public class DataListRenderer extends CoreRenderer {
 
         if (!dlist.isShowButtons()) {
             writer.write("showButtons: false,");
-        } 
+        }
+        
+        if (dlist.getButtonPos() != null) {
+            writer.write("buttonPos: '" + dlist.getButtonPos() + "',");
+        }
 
         if (!dlist.isShowDataIcon()) {
             writer.write("showDataIcon: false,");
@@ -167,6 +171,9 @@ public class DataListRenderer extends CoreRenderer {
         }
         if (dlist.getIndexedSearchText() != null) {
             writer.write(",indexedSearchText: '" + dlist.getIndexedSearchText() + "'");
+        }
+        if (dlist.getIndexedSearchType() != null) {
+            writer.write(",indexedSearchType: '" + dlist.getIndexedSearchType() + "'");
         }
 
         // Default field to sort by.
