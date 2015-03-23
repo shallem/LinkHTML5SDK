@@ -355,7 +355,8 @@
                 var nxtItem = this.options.items[idx];
                 var fieldType = nxtItem.type;
                 var strippedFieldID = this._stripNamespace(nxtItem.name);
-                if (strippedFieldID in excludeFields) {
+                if (excludeFields &&
+                        (strippedFieldID in excludeFields)) {
                     continue;
                 }
                 

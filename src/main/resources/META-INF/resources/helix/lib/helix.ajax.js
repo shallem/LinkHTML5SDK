@@ -201,6 +201,11 @@ Helix.Ajax = {
         $.mobile.loading('hide');
     },
 
+    refreshLoader: function() {
+        Helix.Ajax.hideLoader();
+        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+    },
+
     /*
      * Helper used to set loader options.
      */
@@ -274,8 +279,9 @@ Helix.Ajax = {
         // Execute the aggregate load.
         var nObjsToSync = loadCommandOptions.commands.length;
         var keyMap = {};
+        var globalOnComplete = loadCommandOptions.oncomplete;
 
-        loadCommandOptions.oncomplete = function(finalKey, name, obj, param) {
+        loadCommandOptions.oncomplete = function(finalKey, name, obj, isAggregate, param) {
             for (var syncComponent in obj) {
                 if (syncComponent === "__hx_schema") {
                     continue;
@@ -298,6 +304,9 @@ Helix.Ajax = {
                 } else if (config.oncomplete) {
                     config.oncomplete(keyMap[config.name], config.name, componentObj, true, param[syncComponent]);
                 }
+            }
+            if (globalOnComplete) {
+                globalOnComplete(finalKey, name, obj, true, param); // The 'true' means this is an aggregate load
             }
         };
         if (Helix.Ajax.isDeviceOnline()) {
@@ -385,7 +394,11 @@ Helix.Ajax = {
         }
 
         if (!loadCommandOptions.requestOptions.params) {
-            loadCommandOptions.requestOptions.params = [];
+            if (loadCommandOptions.params) {
+                loadCommandOptions.requestOptions.params = loadCommandOptions.params;
+            } else {
+                loadCommandOptions.requestOptions.params = [];            
+            }
         }
         if (!loadCommandOptions.requestOptions.params.push) {
             // the request options are not an array ...
@@ -462,21 +475,35 @@ Helix.Ajax = {
                         syncObject = responseObj;
                     }
 
-                    if (loadCommandOptions.schema || syncObject.__hx_type === 1003) {
+                    if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
                         if (loadCommandOptions.syncingOptions) {
                             Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
                         }
-                        // Add setTimeout to allow the message to display
-                        setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
-                            var finalKey = o.key;
-                            $.mobile.loading( "hide" );
-                            window[loadCommandOptions.name] = finalObj;
+                        if (syncObject) {
+                            // Add setTimeout to allow the message to display
+                            setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+                                var finalKey = o.key;
+                                $.mobile.loading( "hide" );
+                                window[loadCommandOptions.name] = finalObj;
+                                Helix.Ajax.loadOptions.pin = false;
+                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                                if (window.CordovaInstalled) {
+                                    window.HelixSystem.allowSleep();
+                                }
+                            }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+                        } else {
                             Helix.Ajax.loadOptions.pin = false;
-                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                            loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
                             if (window.CordovaInstalled) {
                                 window.HelixSystem.allowSleep();
                             }
-                        }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+                        }
+                    } else if (paramObject) {
+                        Helix.Ajax.loadOptions.pin = false;
+                        loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
+                        if (window.CordovaInstalled) {
+                            window.HelixSystem.allowSleep();
+                        }
                     } else {
                         loadCommandOptions.oncomplete(itemKey, "success");
                     }
