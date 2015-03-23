@@ -23,6 +23,7 @@ import javax.faces.context.ResponseWriter;
 import org.helix.mobile.component.loadcommand.*;
 import org.helix.mobile.model.AggregateObject;
 import org.helix.mobile.model.JSONSerializer;
+import org.helix.mobile.model.ParamObject;
 
 public class AggregateLoadRenderer extends LoadCommandRenderer {
     
@@ -45,13 +46,13 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
                 "/__hxload/index.xhtml";
        
         Object v = cmd.getValue();
-        JSONSerializer s = new JSONSerializer();
         if (v == null) {
             throw new FacesException("AggregateLoad '" + 
                     cmd.getName() + 
                     "': The value getter cannot ever return null. Return an empty object of the proper return type if no data is available.");
         }
-        if (!(v instanceof AggregateObject)) {
+        if (!(v instanceof AggregateObject) &&
+                !(v instanceof ParamObject)) {
             throw new FacesException("AggregateLoad '" + 
                     cmd.getName() + 
                     "': An aggregate load command must return an instance of AggregateObject.");
@@ -73,9 +74,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         writer.write(widgetName + " = null;");
    
         writer.write("function " + cmd.getName() + "(options){ ");
-        writer.write("var loadCommandOptions = {");
+        writer.write("var loadCommandOptions = $.extend({");
         writer.write(" 'name' : '" + cmd.resolveWidgetVar() + "',");
-        writer.write(" 'onerror' : options.onerror,");
         writer.write(" 'loadingOptions' : {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "', ");
@@ -91,15 +91,9 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         writer.write(" 'loadKey' : '" + keyVal + "',");
         writer.write(" 'loadMethod' : '" + loadMethodName.toString() + "',");
         writer.write(" 'getMethod' : '" + getMethodNameRet.toString() + "',");
-        writer.write(" 'postBack' : '" + url + "',");
-        writer.write(" 'params' : options.params ");
-        writer.write("},");
-        writer.write(" 'commands' : options.commands");
-        writer.write("};\n");
-        
-        // Overrides.
-        writer.write("if (options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
-        writer.write("if (options.syncingOptions !== undefined) { loadCommandOptions.syncingOptions = options.syncingOptions; }");
+        writer.write(" 'postBack' : '" + url + "'");
+        writer.write("}");
+        writer.write("}, options);\n");
         
         // Setup the widget.
         writer.write("Helix.Ajax.ajaxAggregateLoad(loadCommandOptions);");
