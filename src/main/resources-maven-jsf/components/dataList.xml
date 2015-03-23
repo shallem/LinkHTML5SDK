@@ -208,6 +208,12 @@
             <description>Provide explanatory text to place in the search bix when it is first rendered.</description>
         </attribute>
         <attribute>
+            <name>indexedSearchType</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Set to search to have a stylized search box. All other settings yield a plain text box.</description>
+        </attribute>
+        <attribute>
             <name>scrollContents</name>
             <required>false</required>
             <type>java.lang.Boolean</type>
@@ -290,6 +296,13 @@
          <defaultValue>true</defaultValue>
          <description>Indicates that sort buttons are displayed.</description>
       </attribute>      
+      <attribute>
+          <name>buttonPos</name>
+          <required>false</required>
+          <type>java.lang.String</type>
+          <defaultValue>left</defaultValue>
+          <description>Set to left to render sort and filter buttons on the left. Set to right to render them on the right.</description>
+      </attribute>
       <attribute>
          <name>showDataIcon</name>
          <required>false</required>

@@ -347,13 +347,17 @@
             }
         },
         
-        serialize: function() {
+        serialize: function(excludeFields) {
             var toSerialize = [];
             var i;
             var subItem;
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
                 var fieldType = nxtItem.type;
+                var strippedFieldID = this._stripNamespace(nxtItem.name);
+                if (strippedFieldID in excludeFields) {
+                    continue;
+                }
                 
                 if (fieldType in this._groupedTypes) {
                     // Process sub items.
