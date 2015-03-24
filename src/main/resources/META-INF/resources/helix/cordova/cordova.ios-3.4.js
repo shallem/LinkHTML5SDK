@@ -985,7 +985,8 @@ define("cordova/exec", function(require, exports, module) {
         // Also, if there is already a command in the queue, then we've already
         // poked the native side, so there is no reason to do so again.
         if (!isInContextOfEvalJs && commandQueue.length == 1) {
-            switch (bridgeMode) {
+            var nxtBridge = window.__bridgeModeOverride || bridgeMode;
+            switch (nxtBridge) {
                 case jsToNativeModes.XHR_NO_PAYLOAD:
                 case jsToNativeModes.XHR_WITH_PAYLOAD:
                 case jsToNativeModes.XHR_OPTIONAL_PAYLOAD:
@@ -1026,7 +1027,7 @@ define("cordova/exec", function(require, exports, module) {
                     execHashIframe.contentWindow.location.hash = hashValue;
                     break;
                 default:
-                    execIframe = execIframe || createExecIframe();
+                    execIframe = window.__execIframeOverride || execIframe || createExecIframe();
                     // Check if they've removed it from the DOM, and put it back if so.
                     if (!execIframe.contentWindow) {
                         execIframe = createExecIframe();
