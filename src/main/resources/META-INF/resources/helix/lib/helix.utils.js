@@ -200,7 +200,7 @@ Helix.Utils =  {
     endsWith: function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     },
-    sizeIFrameToFit: function(frameID, parentID, sizeContentsToFit) {
+    sizeIFrameToFit: function(frameID, parentID, sizeContentsToFit, clearOnLoad) {
         // Rewrite all links in the message body to open a new tab.
         var frame = document.getElementById(frameID);
         if (!frame) {
@@ -232,6 +232,9 @@ Helix.Utils =  {
             frame.height= (frameHeight) + "px";
         }
         frame.width= (screenWidth) + "px";
+        if (clearOnLoad) {
+            frame.onload = null;
+        }
     },
     isPhone: function() {
         if (Helix.Utils._isPhone === undefined) {

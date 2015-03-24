@@ -843,7 +843,7 @@
                 '<iframe style="margin-bottom: 5px;" src="javascript:true;"' +
                 ' tabindex="' + options.tabIndex + '"' +
                 ' id="' + frameID + '"' +
-                ' onload="Helix.Utils.sizeIFrameToFit(\'' + frameID + '\', \'' + frameMasterID + '\')"' +
+                ' onload="Helix.Utils.sizeIFrameToFit(\'' + frameID + '\', \'' + frameMasterID + '\', false, true)"' +
                 '>';
             
             $frame = editor.$frame = $(iframeMarkup)
