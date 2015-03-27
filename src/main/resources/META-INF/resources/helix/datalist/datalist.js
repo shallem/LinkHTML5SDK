@@ -1371,8 +1371,13 @@
                 emptyMsg = this.options.emptySearchMessage;
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
-                    _self.unfilteredList = _self.itemList = displayCollection;
-                    __completion(_self.itemList);
+                    if ($.isFunction(displayCollection)) {
+                        _self.refreshInProgress = false;
+                        displayCollection.call(_self);
+                    } else {
+                        _self.unfilteredList = _self.itemList = displayCollection;
+                        __completion(_self.itemList);                
+                    }
                 }, _self.originalList);
             } else {
                 __completion(displayCollection);

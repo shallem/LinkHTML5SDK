@@ -512,7 +512,6 @@
             
             clearTimeout(editor.changeTimeout);
             editor.changeTimeout = null;
-            updateTextArea(editor, true);
             editor.$toolbarEnabled = false;
             editor.popupOpen = false;
             for (var menuName in editor.menuPopups) {
@@ -874,17 +873,12 @@
 
         // Update the textarea when the iframe changes. But wait until the typist has stopped
         // before we do this update.
-        $doc.find('body').on('keyup', function(e) {
-            if (editor.changeTimeout) {
-                clearTimeout(editor.changeTimeout);
-                editor.changeTimeout = null;
+        editor.changeInterval = setInterval(function() {
+            if (editor.$main.is(':visible')) {
+                updateTextArea(editor);
             }
-            editor.changeTimeout = setTimeout(function() {
-                updateTextArea(editor, true);
-            }, 500);
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        });
+        }, 500);
+
         // This code resolves the case where after the iOS select menu appears the iframe seems
         // to lose focus. Thereafter if the user tries to type nothing happens. This is very 
         // glitchy from the user's perspective. This helps. The only remaining glitchy behavior
@@ -1089,23 +1083,12 @@
             return;
         }
 
-
         var code = editor.$area.val(),
         options = editor.options,
-        updateFrameCallback = options.updateFrame,
         $body = $(editor.doc.body);
 
-        // Check for textarea change to avoid unnecessary firing
-        // of potentially heavy updateFrame callbacks.
-        if (updateFrameCallback) {
-            var sum = checksum(code);
-            if (checkForChange && editor.areaChecksum == sum)
-                return;
-            editor.areaChecksum = sum;
-        }
-
         // Convert the textarea source code into iframe html
-        var html = updateFrameCallback ? updateFrameCallback(code) : code;
+        var html = code;
         if (!html) {
             html = "<br>";
         } else {
@@ -1118,43 +1101,18 @@
             editor.frameChecksum = checksum(html);
 
         // Update the iframe and trigger the change event
-        if (html != $body.html()) {
+        if (html !== $body.html()) {
             $body.html(html);
-            $(editor).triggerHandler(CHANGE);
         }
 
     }
 
     // updateTextArea - updates the textarea with the iframe contents
-    function updateTextArea(editor, checkForChange) {
+    function updateTextArea(editor) {
+        var html = $(editor.doc.documentElement).html();
 
-        var html = $(editor.doc.documentElement).html(),
-        options = editor.options,
-        updateTextAreaCallback = options.updateTextArea,
-        $area = editor.$area;
-
-        // Check for iframe change to avoid unnecessary firing
-        // of potentially heavy updateTextArea callbacks.
-        if (updateTextAreaCallback) {
-            var sum = checksum(html);
-            if (checkForChange && editor.frameChecksum == sum)
-                return;
-            editor.frameChecksum = sum;
-        }
-
-        // Convert the iframe html into textarea source code
-        var code = updateTextAreaCallback ? updateTextAreaCallback(html) : html;
-
-        // Update the textarea checksum
-        if (options.updateFrame)
-            editor.areaChecksum = checksum(code);
-
-        // Update the textarea and trigger the change event
-        if (code != $area.val()) {
-            $area.val(code);
-            $(editor).triggerHandler(CHANGE);
-        }
-
+        // Make this function lean and fast ...
+        editor.$area.val(html);
     }
 
     function selectAll() {
@@ -1179,5 +1137,8 @@
         /* Stop listening ... */
         $(this.page).off("hxLayoutDone." + this.name);
         $(document).off("orientationchange." + this.name);
+        
+        /* Clear the save interval. */
+        clearInterval(editor.changeInterval);
     }
 })(jQuery);
