@@ -210,11 +210,6 @@ Helix.Layout = {
             $(this).css('width', width);
         });
         
-        /* Fixed position panels need to have a padding at the top equal to the header height.
-         * Otherwise the top of the panel slides under the header.
-         */
-        $('.ui-panel-fixed').css('padding-top', Helix.Layout.headerHeight + 'px');
-        
         return contentHeight;
     },
     
