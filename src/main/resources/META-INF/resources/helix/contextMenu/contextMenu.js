@@ -242,7 +242,11 @@
                     } else {
                         item.action.call(_self, cbData, evt);
                     }
-                    _self.close();
+                    // Do this asynchronously so that the screen overlay is still there until
+                    // after touch end has completely made its way through the DOM.
+                    setTimeout(function() {
+                        _self.close();
+                    }, 0);
                 };
                 if (Helix.hasTouch) {
                     // See if the user scrolls before we see touchend. If they do,

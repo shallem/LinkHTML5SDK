@@ -439,7 +439,7 @@
                     reloadPage: false,
                     scrollTarget: listWrapper,
                     reloadEl: function() {
-                        if (!_self.refreshInProgress) {
+                        if (!_self.refreshInProgress && _self._renderWindowStart == 0) {
                             _self.options.pullToRefresh.call(this);
                             _self._clearGlobalFilterMenu();
                         }
@@ -592,6 +592,7 @@
                 $.mobile.loading('hide', {});
 
                 _self.$parent.listview( "refresh" );
+                _self.clearSelected();
 
                 _self._prefetchPrev = null;
                 _self._prefetchPrevDone = false;
@@ -604,30 +605,34 @@
         
         _rescrollList : function(rescrollTarget) {
             var _self = this;
-            if (_self._fingerOn) {
-                _self.$listWrapper.on('doScroll', function() {
-                    _self._lastScrollPos = rescrollTarget;
-                    _self.$listWrapper.scrollTop(rescrollTarget);
-                    _self.$listWrapper.off('doScroll');
-                });
-            } else {
-                _self._lastScrollPos = rescrollTarget;
-                _self.$listWrapper.scrollTop(rescrollTarget);
-            }
+            _self._lastScrollPos = rescrollTarget;
+            _self.$listWrapper.scrollTop(rescrollTarget);
         },
         
-        _doScrollUp: function(listHeight) {
+        _doScrollUp: function(doForce) {
             var _self = this;
+            var __finishDoScrollUp = function() {
+                var listWHeight = _self.$listWrapper.height();
+                if (listWHeight === 0) {
+                    // Wait some more.
+                    setTimeout(__finishDoScrollUp, 100);
+                } else {
+                    var listHeight = _self.$parent.height() - listWHeight;
+                    _self._rescrollList(listHeight);
+                }
+            };
+            
             var _refreshUpDone = function() {
                 _self._refreshInProgress = false;
                 _self._rescrollInProgress = true;
-
-                _self._rescrollList(listHeight);
                 _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
+
+                // Added this to try to make sure the DOM height is correct ...
+                setTimeout(__finishDoScrollUp, 0);
             };
 
             // If we are in the bottom half of the list, prefetch a page if we haven't already.
-            if (_self._fingerOn) {
+            if (_self._fingerOn && !doForce) {
                 // Do not refresh the list while someone's finger is still on it - we can't tell if their intention
                 // is to have it refreshed or to keep scrolling. Also we want to make it possible to scroll carefully to the
                 // top element in the list and not have the list refresh every time you do that ...
@@ -648,7 +653,7 @@
             }
         },
         
-        _doScrollDown: function() {
+        _doScrollDown: function(doForce) {
             var _self = this;
             var _refreshDownDone = function(_rescroll) {
                 _self._refreshInProgress = false;
@@ -662,7 +667,7 @@
                 }
             }; 
 
-            if (_self._fingerOn) {
+            if (_self._fingerOn && !doForce) {
                 // Do not refresh the list while someone's finger is still on it - we can't tell if their intention
                 // is to have it refreshed or to keep scrolling. Also we want to make it possible to scroll carefully to the
                 // bottom element in the list and not have the list refresh every time you do that ...
@@ -797,6 +802,9 @@
                         if (_self._refreshInProgress) {
                             return;
                         }
+                        if (!_self.$parent.is(':visible')) {
+                            return;
+                        }
                         if (scrollPos < 0 || scrollPos > listHeight) {
                             if (scrollPos > listHeight) {
                                 _self._inBounce = 1; // Down
@@ -806,11 +814,17 @@
                         } else if (_self._inBounce !== 0) {
                             _self._refreshInProgress = true;
                             if (_self._inBounce > 0 && !_self._atDataTop) {
-                                _self._fingerOn = false;
-                                _self._doScrollDown();
+                                if (_self._fingerOn) {
+                                    _self._doScrollDown(true);
+                                } else {
+                                    _self._doScrollDown();
+                                }
                             } else if (_self._inBounce < 0 && _self._renderWindowStart > 0) {
-                                _self._fingerOn = false;
-                                _self._doScrollUp(listHeight);
+                                if (_self._fingerOn) {
+                                    _self._doScrollUp(true);
+                                } else {
+                                    _self._doScrollUp();
+                                }
                             } else {
                                 _self._refreshInProgress = false;
                             }
@@ -838,7 +852,7 @@
                                     _self._prefetchPage(-1);
                                 }                            
                                 if (_self._firstElemVisible()) {
-                                    _self._doScrollUp(listHeight);
+                                    _self._doScrollUp();
                                     return;
                                 }
                             }
@@ -1371,8 +1385,13 @@
                 emptyMsg = this.options.emptySearchMessage;
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
-                    _self.unfilteredList = _self.itemList = displayCollection;
-                    __completion(_self.itemList);
+                    if ($.isFunction(displayCollection)) {
+                        _self.refreshInProgress = false;
+                        displayCollection.call(_self);
+                    } else {
+                        _self.unfilteredList = _self.itemList = displayCollection;
+                        __completion(_self.itemList);                
+                    }
                 }, _self.originalList);
             } else {
                 __completion(displayCollection);
