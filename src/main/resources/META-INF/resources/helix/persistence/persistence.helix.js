@@ -1207,7 +1207,7 @@ function initHelixDB() {
                     }
                 }
 
-                if (deltaObj.deletes.length > 0) {
+                if (deltaObj.deletes && deltaObj.deletes.length > 0) {
                     var toDeleteKey = deltaObj.deletes.pop();
                     parentCollection.filter(keyField, "=", toDeleteKey).newEach({
                         eachFn: function(elem) { 
@@ -1221,14 +1221,12 @@ function initHelixDB() {
                             }
                         }
                     });
+                } else if (deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) {
+                    var nxt = deltaObj.deleteSpec.pop();
+                    elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
+                        removeFn();
+                    });
                 } else {
-                    if (deltaObj.deleteSpec) {
-                        for (var i = 0; i < deltaObj.deleteSpec.length; ++i) {
-                            var nxt = deltaObj.deleteSpec[i];
-                            elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll();   
-                        }
-                    }
-                
                     /* Make sure all deletes are in the DB. */
                     persistence.flush(function() {
                         /* Nothing more to remove. Add in any new objects. */
