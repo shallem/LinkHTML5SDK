@@ -251,28 +251,36 @@ Helix.Ajax = {
      */
     ajaxAggregateLoad : function(loadCommandOptions) {
         var nObjsToSync = loadCommandOptions.commands.length;
-        var nSchemasReady = 0;
-        var schemaDone = function(schema, cfg) {
-            cfg.schema = schema;
-            if (nSchemasReady === nObjsToSync) {
-                Helix.Ajax._executeAggregateLoad(loadCommandOptions);
-            }
-        };
 
         // Make sure we have schema objects for each load command.
+        var schemaFactories = [];
         for (var i = 0; i < nObjsToSync; ++i) {
             var commandToLaunch = loadCommandOptions.commands[i].name;
             var commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
             if (!commandConfig.schema) {
-                commandConfig.schemaFactory(function(schema, cfg) {
-                    ++nSchemasReady;
-                    schemaDone(schema, cfg);
-                }, [commandConfig]);
-            } else {
-                ++nSchemasReady;
-                schemaDone(commandConfig.schema, commandConfig);
+                schemaFactories.push(commandConfig);
             }
         }
+        
+        // If all schemas are already generated, we can just proceed here.
+        if (schemaFactories.length === 0) {
+            Helix.Ajax._executeAggregateLoad(loadCommandOptions);
+            return;
+        }
+        
+        // Only sync 1 schema at a time. We never want multiple threads in schemaSync at the same time.
+        var __doSchema = function() {
+            if (schemaFactories.length === 0) {
+                Helix.Ajax._executeAggregateLoad(loadCommandOptions);
+                return;
+            }
+            var nxtConfig = schemaFactories.pop();
+            nxtConfig.schemaFactory(function(schema, cfg) {
+                cfg.schema = schema;
+                __doSchema();
+            }, [nxtConfig], (schemaFactories.length > 0 ? true : false) /* No schema sync unless this is the last item. */);
+        };
+        __doSchema();
     },
 
     _executeAggregateLoad: function(loadCommandOptions) {
