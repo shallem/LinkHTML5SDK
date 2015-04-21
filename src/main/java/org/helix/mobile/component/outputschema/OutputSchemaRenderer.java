@@ -61,12 +61,14 @@ public class OutputSchemaRenderer extends CoreRenderer {
         
         writer.write("\n");
         startScript(writer, clientId);
-        writer.write("$(document).on('hxPersistenceReady', function () {");
+        writer.write("$(document).on('hxGenerateSchemas', function (ev, schemasDone) {");
         writer.write("Helix.DB.generatePersistenceSchema(");
         writer.write(schema);
         writer.write(", '");
         writer.write(os.getName());
-        writer.write("',null,null);");
+        writer.write("',function(schema, a) { a.push('");
+        writer.write(os.getName());
+        writer.write("'); },[ schemasDone ],0,true);");
         writer.write("});");
         endScript(writer);
     }
