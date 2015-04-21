@@ -202,7 +202,7 @@ function initHelixDB() {
             return objSchema;
         },
 
-        generatePersistenceSchema: function(schemaTemplate,name,oncomplete,opaque,nRetries) {
+        generatePersistenceSchema: function(schemaTemplate,name,oncomplete,opaque,nRetries,noSync) {
             if (!Helix.DB.persistenceIsReady()) {
                 $(document).on('hxPersistenceReady', function() {
                     Helix.DB.generatePersistenceSchema(schemaTemplate,name,oncomplete,opaque,nRetries+1);
@@ -216,9 +216,6 @@ function initHelixDB() {
             var recursiveFields = [];
             var allSchemas = [];
 
-            if (!window.__pmAllSchemas) {
-                window.__pmAllSchemas = {};
-            }
             /* First, check to see if the schema was created in a recursive call. */
             if (this.createdSchemas[name]) {
                 // We have already created all schemas associated with this widget.
@@ -278,26 +275,34 @@ function initHelixDB() {
                 dirty = true;
             }
             
-            // Flush all schemas.
-            persistence.schemaSync(function(tx) {
-                // Flush all master DB changes.
-                persistence.flush(function() {
-                    if (dirty) {
-                        // Clean out Persistence JS' cache of all tracked objects and cached
-                        // query collections. Otherwise we can end up with stale objects/queries
-                        // that refer to a field list that is out of sync with the flushed schema
-                        // changes that we just completed. NOTE that everything we do here should
-                        // happen before we are manipulating data from a particular table.
-                        persistence.clean();
-                    }
-                    
-                    if (oncomplete) {
-                        var oncompleteArgs = [ s ];
-                        oncompleteArgs = oncompleteArgs.concat(opaque);
-                        oncomplete.apply(this, oncompleteArgs);
-                    }
+            if (noSync) {
+                if (oncomplete) {
+                    var oncompleteArgs = [ s ];
+                    oncompleteArgs = oncompleteArgs.concat(opaque);
+                    oncomplete.apply(this, oncompleteArgs);
+                }                
+            } else {
+                // Flush all schemas.
+                persistence.schemaSync(function(tx) {
+                    // Flush all master DB changes.
+                    persistence.flush(function() {
+                        if (dirty) {
+                            // Clean out Persistence JS' cache of all tracked objects and cached
+                            // query collections. Otherwise we can end up with stale objects/queries
+                            // that refer to a field list that is out of sync with the flushed schema
+                            // changes that we just completed. NOTE that everything we do here should
+                            // happen before we are manipulating data from a particular table.
+                            persistence.clean();
+                        }
+
+                        if (oncomplete) {
+                            var oncompleteArgs = [ s ];
+                            oncompleteArgs = oncompleteArgs.concat(opaque);
+                            oncomplete.apply(this, oncompleteArgs);
+                        }
+                    });
                 });
-            });
+            }
         
             // We are done with this schema ...
             this.createdSchemas[name] = s;
@@ -1522,9 +1527,7 @@ function initHelixDB() {
                         allTables[elem.tableName] = elem;
                     }, 
                     doneFn: function(ct) {
-                        var dirty = 0;
-                        if (masterDBVer == 0 && ct > 0) {
-                            dirty = 1;
+                        if (masterDBVer === 0 && ct > 0) {
                             persistence.schemaSyncHooks.push(function() {
                                 var queries = [];
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN masterDBVer TEXT" , null]);
@@ -1532,8 +1535,7 @@ function initHelixDB() {
                                 return queries.reverse();
                             });
                         }
-                        if (masterDBVer != Helix.DB.__masterDBVer) {
-                            dirty = 1;
+                        if (masterDBVer !== Helix.DB.__masterDBVer) {
                             persistence.nextSchemaSyncHooks.push(function() {
                                 var queries = [];
                                 queries.push(["UPDATE MasterDB SET masterDBVer=?", [ Helix.DB.__masterDBVer ]]);
@@ -1541,17 +1543,29 @@ function initHelixDB() {
                             });
                         }
                         
-                        if (dirty) {
-                            persistence.schemaSync(function() {
-                                window.__persistenceReady = true;
-                                window.__pmAllTables = allTables;
-                                $(document).trigger('hxPersistenceReady');
-                            });
-                        } else {
+                        persistence.schemaSync(function() {
+                            var schemasDone = [];
+                            // Must make persistence ready PRIOR to triggering hxGenerateSchemas, which calls generatePersistenceSchema for
+                            // SDK schemas.
                             window.__persistenceReady = true;
                             window.__pmAllTables = allTables;
-                            $(document).trigger('hxPersistenceReady');
-                        }
+                            if (!window.__pmAllSchemas) {
+                                window.__pmAllSchemas = {};
+                            }
+                            $(document).trigger('hxGenerateSchemas', [ schemasDone ]);
+                            
+                            if (schemasDone.length > 0) {
+                                persistence.schemaSync(function() {
+                                    // Flush any MasterDB changes triggered by SDK generated schemas.
+                                    persistence.flush(function() {
+                                        persistence.clean();
+                                        $(document).trigger('hxPersistenceReady');                                
+                                    });                                    
+                                });
+                            } else {
+                                $(document).trigger('hxPersistenceReady');                            
+                            }
+                        });
                     }
                 })
             });
