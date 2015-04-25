@@ -1604,7 +1604,7 @@
                         'data-role' : 'none',
                         'data-icon' : 'arrow-u',
                         'data-iconpos' : 'notext',
-                        'data-theme' : 'b',
+                        'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
@@ -1620,7 +1620,7 @@
                         'data-role' : 'none',
                         'data-icon' : 'arrow-d',
                         'data-iconpos' : 'notext',
-                        'data-theme' : 'b',
+                        'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
@@ -1641,7 +1641,7 @@
                         'data-role' : 'none',
                         'data-icon' : 'filter',
                         'data-iconpos' : 'notext',
-                        'data-theme' : 'b',
+                        'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false')
                     }).button()
                     .appendTo($sortDiv)
@@ -1662,7 +1662,7 @@
             };
             
             var _attachSearchBox = function() {
-                                var styleClass = 'hx-display-inline';
+                var styleClass = 'hx-display-inline';
                 var widthStyle = null;
                 if (!hasButtons) {
                     styleClass = styleClass + ' hx-full-width';
