@@ -529,7 +529,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
 
         if (!formElem.dataType) {
-            formElem.dataType = "text";
+            formElem.dataType = formElem.type;
         }
 
         var inputID = Helix.Utils.getUniqueID();
@@ -1382,6 +1382,7 @@ Helix.Utils.noTitleLayouts = {
 
 Helix.Utils.fieldContainers = {
     'text' : true,
+    'search' : true,
     'date' : true,
     'exactdate' : true,
     'datetime' : true,
@@ -1503,7 +1504,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.DOM = $editFieldContainer;
     }
     
-    if (formElem.type === 'text') {
+    if ((formElem.type === 'text')  || (formElem.type === 'search')) {
         renderFn = __appendTextBox;
     } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
@@ -1890,7 +1891,7 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                     dateValue = new Date(dateValue);
                 }
                 $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue});
-            } else if (formElem.type === "text" ||
+            } else if (formElem.type === "text" || formElem.type === "search" || 
                        formElem.type === "hidden") {
                 $(inputElem).val(formElem.value);
             }
