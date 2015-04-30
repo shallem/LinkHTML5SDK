@@ -608,6 +608,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                              .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
                                              .css('overflow-y', 'scroll')
                                              .css('display', 'none')
+                                             .css('background-color', '#f9f9f9')
                                              .appendTo($fieldContainer).listview({ inset : true });
             $(inputMarkup).on('input', function() {
                 if (formElem.__autocompleteTimeout) {
