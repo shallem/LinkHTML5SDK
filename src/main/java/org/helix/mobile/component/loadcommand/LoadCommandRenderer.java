@@ -275,12 +275,12 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         writer.write("}\n");
         
-        writer.write("function " + cmd.getName() + "_genSchema(callback,args) {");
+        writer.write("function " + cmd.getName() + "_genSchema(callback,args,noSync) {");
         writer.write("Helix.DB.generatePersistenceSchema(");
         writer.write(schema);
         writer.write(", '");
         writer.write(cmd.resolveWidgetVar());
-        writer.write("',callback,args);");
+        writer.write("',callback,args,0,noSync);");
         writer.write("}");
         endScript(writer);
     }

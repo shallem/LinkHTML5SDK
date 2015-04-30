@@ -5,6 +5,14 @@
  * be used until the Link DB is in a ready state.
  */
 
+$(document).on('hxGenerateSchemas', function (ev, schemasDone) {
+    Helix.DB.createSchemaForTable('HelixHints', {
+        isShown: "INT",
+        hintTag: "TEXT"
+    });
+    schemasDone.push('HelixHints');
+});
+
 /**
  * Init the HelixHints infrastructure. The input params are a list of hint objects, each of which
  * has a unique ID and a message, and a completion function. This function is asynchronous b/c
@@ -21,44 +29,39 @@ function HelixHints(hints, oncomplete) {
     }
     
     // Sync to the DB.
-    this._schema = persistence.define('HelixHints', {
-        isShown: "INT",
-        hintTag: "TEXT"
-    });
+    this._schema = Helix.DB.getSchemaForTable('HelixHints');
     var _self = this;
-    persistence.schemaSync(function(tx) {   
-        _self._schema.all().newEach({
-            eachFn: function(row) {
-                var hintObj = _self._hints[row.hintTag];
-                if (hintObj) {
-                    hintObj.dbObj = row;
-                    hintObj.isShown = (row.isShown ? true : false);
-                } else {
-                    persistence.remove(row);
-                }
-            },
-            doneFn: function() {
-                var didAdd = false;
-                for (var hintKey in _self._hints) {
-                    var hintObj = _self._hints[hintKey];
-                    if (!hintObj.dbObj) {
-                        hintObj.dbObj = new _self._schema({
-                            isShown : 0,
-                            hintTag: hintKey
-                        });
-                        persistence.add(hintObj.dbObj);
-                        didAdd = true;
-                    }
-                }
-                if (didAdd) {
-                    persistence.flush(function() {
-                        oncomplete();
+    _self._schema.all().newEach({
+        eachFn: function(row) {
+            var hintObj = _self._hints[row.hintTag];
+            if (hintObj) {
+                hintObj.dbObj = row;
+                hintObj.isShown = (row.isShown ? true : false);
+            } else {
+                persistence.remove(row);
+            }
+        },
+        doneFn: function() {
+            var didAdd = false;
+            for (var hintKey in _self._hints) {
+                var hintObj = _self._hints[hintKey];
+                if (!hintObj.dbObj) {
+                    hintObj.dbObj = new _self._schema({
+                        isShown : 0,
+                        hintTag: hintKey
                     });
-                } else {
-                    oncomplete();
+                    persistence.add(hintObj.dbObj);
+                    didAdd = true;
                 }
             }
-        });
+            if (didAdd) {
+                persistence.flush(function() {
+                    oncomplete();
+                });
+            } else {
+                oncomplete();
+            }
+        }
     });
 }
 

@@ -98,6 +98,10 @@
             }
         },
         
+        _destroy: function() {
+            $(this.element).empty();
+        },
+        
         _processItems: function(itemsList) {
             for (var idx = 0; idx < itemsList.length; ++idx) {
                 var formElem = itemsList[idx];
