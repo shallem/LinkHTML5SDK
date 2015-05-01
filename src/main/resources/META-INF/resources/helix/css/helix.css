@@ -207,7 +207,29 @@
     margin: 0px !important;
 }
 
+/* Remove clutter in the display of buttons in horizontal groups */
+.ui-controlgroup-horizontal .ui-btn {
+  border-right-width: 0;
+  border-left-width: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;    
+}
 
+.ui-controlgroup-horizontal .ui-btn.ui-last-child {
+    border-right-width: 0;  
+}
+
+/* Remove clutter in the display of buttons in vertical groups */
+.ui-controlgroup-vertical .ui-btn {	
+  border-right-width: 0;
+  border-left-width: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;   
+}
+
+.ui-controlgroup-vertical .ui-btn.ui-last-child { 
+    border-bottom-width: 0; 
+}
 
 .hx-listview li:not(.ui-btn-active) {
     background-color: white;
