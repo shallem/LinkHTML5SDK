@@ -269,6 +269,7 @@
             "htmlarea" : true,
             "htmlframe" : true,
             "text" : true,
+            "search" : true,
             "textarea" : true,
             "pickList" : true,
             "hidden" : true,
@@ -497,7 +498,7 @@
                     __refreshButtonGroup(item);
                 } else if (fldType === 'pickList') {
                     __refreshSelectMenu(item);
-                } else if (fldType === 'text') {
+                } else if ((fldType === 'text') || (fldType === 'search')) {
                     __refreshTextBox(mode, item);
                 } else if (fldType === 'textarea') {
                     __refreshTextArea(mode, item);
