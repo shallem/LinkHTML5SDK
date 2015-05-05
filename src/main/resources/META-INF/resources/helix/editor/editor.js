@@ -776,7 +776,7 @@
         // Update hgt to account for the toolbar and the format frame.
         var adjustedHeight = hgt;
         adjustedHeight -= editor.$toolbar.outerHeight(true);        
-        adjustedHeight -= 25;
+        // XXX: we are now hiding the format frame; adjustedHeight -= 25;
         
         if (!isNaN(adjustedHeight)) {
             editor.$frameMaster.height(adjustedHeight);
@@ -842,7 +842,8 @@
                 '<iframe style="margin-bottom: 5px;" src="javascript:true;"' +
                 ' tabindex="' + options.tabIndex + '"' +
                 ' id="' + frameID + '"' +
-                ' onload="Helix.Utils.sizeIFrameToFit(\'' + frameID + '\', \'' + frameMasterID + '\', false, true)"' +
+                //' onload="Helix.Utils.sizeIFrameToFit(\'' + frameID + '\', \'' + frameMasterID + '\', false, true)"' +
+                ' width="100%" height="100%"' +
                 '>';
             
             $frame = editor.$frame = $(iframeMarkup)

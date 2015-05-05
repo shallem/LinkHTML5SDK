@@ -628,4 +628,13 @@ and (max-device-width : 480px) {
 /* Make the body of the month view scroll. */
 .fc-view-month {
     overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fc-slot-scroller {
+    position:absolute;
+    width:100%;
+    overflow-x:hidden;
+    overflow-y:scroll;
+    -webkit-overflow-scrolling: touch;
 }
