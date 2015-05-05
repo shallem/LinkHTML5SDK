@@ -467,7 +467,10 @@ Helix.Ajax = {
                             error.code = responseObj.error.status;
                         } else {
                            error.code = -1;
-                        }                       
+                        }                   
+                        if (responseObj.error.objects) {
+                           error.objects =  responseObj.error.objects;
+                        }
                         loadCommandOptions.onerror(error);
                         return;
                     }
