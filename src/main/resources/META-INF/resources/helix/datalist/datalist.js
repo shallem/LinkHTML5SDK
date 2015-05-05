@@ -1255,7 +1255,11 @@
                                     .attr({
                                         'name' : selectID,
                                         'id': selectID,
-                                        'data-field' : fldName
+                                        'data-field' : fldName,
+                                        'data-corners' : "false",
+                                        'data-native-menu': "false",
+                                        'data-theme': "a",
+                                        'data-overlay-theme' : "a"
                                     })
                                     .appendTo(filtersList);
                     for (var i = 0; i < filterObj.values.length; ++i) {
@@ -1297,7 +1301,9 @@
             /* Always have a "Clear" option. */
             $('<li />').append($('<a />').attr({ 
                 'href' : 'javascript:void(0)',
-                'data-field': '__clear'
+                'data-field': '__clear',
+                'data-theme': 'b',
+                'data-mini' : 'true'
             }).append("Clear"))
               .appendTo(filtersList)
               .on(_self.tapEvent, function(evt) {
@@ -1683,7 +1689,7 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
-                    'data-clear-btn': true,
+                    //'data-clear-btn': true,
                     'value': this.options.indexedSearchText
                 }).appendTo($searchDiv);
                 if (widthStyle) {
