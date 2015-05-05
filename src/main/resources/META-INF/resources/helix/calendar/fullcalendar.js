@@ -2924,7 +2924,7 @@ function AgendaDayView(element, calendar) {
 setDefaults({
 	allDaySlot: true,
 	allDayText: 'all-day',
-	firstHour: 6,
+	firstHour: 7,
 	slotMinutes: 30,
 	defaultEventMinutes: 30,
 	axisFormat: 'h(:mm)tt',
@@ -3153,7 +3153,7 @@ function AgendaView(element, calendar, viewName) {
 		}
 		
 		slotScroller =
-			$("<div style='position:absolute;width:100%;overflow-x:hidden;overflow-y:scroll'/>")
+			$("<div class='fc-slot-scroller'/>")
 				.appendTo(slotLayer);
 				
 		slotContainer =

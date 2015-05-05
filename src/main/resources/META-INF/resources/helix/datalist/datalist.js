@@ -1667,11 +1667,7 @@
                 if (!hasButtons) {
                     styleClass = styleClass + ' hx-full-width';
                 } else {
-                    if (useControlGroup) {
-                        widthStyle = '60%';
-                    } else {
-                        widthStyle = '75%';
-                    }
+                    widthStyle='60%';
                 }
                 var $searchDiv = $('<div/>').attr({
                     'class' : styleClass
