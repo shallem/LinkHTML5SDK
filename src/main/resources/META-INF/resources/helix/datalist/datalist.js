@@ -431,7 +431,9 @@
 
             this.$parent.listview({
                 autodividers: ad,
-                autodividersSelector: ads
+                autodividersSelector: ads,
+                dividerTheme: 'd',
+                headerTheme: 'd'
             });
             
             if (this.$hookDiv) {
