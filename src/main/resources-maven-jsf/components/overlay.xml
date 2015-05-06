@@ -53,7 +53,13 @@
             <name>beforeOpen</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Javascript function to call prior to opening the overlay panel.</description>
+            <description>Javascript function name to call prior to opening the overlay panel.</description>
+        </attribute>
+        <attribute>
+            <name>afterClose</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Javascript function name to call prior to opening the overlay panel.</description>
         </attribute>
     </attributes>
 </component>

@@ -339,7 +339,9 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
-        tzSelect.selectmenu();
+        tzSelect.selectmenu({
+            corners: false
+        });
         dateDiv.fieldcontain();
         if (formElem.computedStyle || formElem.computedStyleClass) {
             var uiSelect = $(dateDiv).find('div.ui-select');
@@ -630,37 +632,43 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             // not the value in the input text box.
                             formElem.__noblur = true;
                             autoCompleteList.empty();
-                            if (LIs && LIs.length) {
-                                $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
-                                    autoCompleteList.empty();
-                                    autoCompleteList.hide();
-                                    formElem.__noblur = false;
-                                    return false;
-                                }).appendTo(autoCompleteList);
-                                // We cap out the list length at 20 b/c otherwise we might crash the app ...
-                                var i;
-                                for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                    $("<li/>").append(LIs[i]).on('vclick', function() {
-                                        var ret = formElem.autocompleteSelect.call(_self, $(this).text());
+                            if (LIs && LIs.length && _self.is(':focus')) {
+                                if (LIs.length === 1 && LIs[0] === _self.val()) {
+                                    // This is a special case where the user typed the full text. Do not present a list with one
+                                    // item that is exactly the same as the input text.
+                                    formElem.__noblur = false;                                
+                                } else {
+                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
                                         autoCompleteList.empty();
                                         autoCompleteList.hide();
-                                        if (ret === true) {
-                                            
-                                        } else {
-                                            $(inputMarkup).val('');
-                                        }
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
+                                    // We cap out the list length at 20 b/c otherwise we might crash the app ...
+                                    var i;
+                                    for (i = 0; i < Math.min(20, LIs.length); ++i) {
+                                        $("<li/>").append(LIs[i]).on('vclick', function() {
+                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text());
+                                            autoCompleteList.empty();
+                                            autoCompleteList.hide();
+                                            if (ret === true) {
+
+                                            } else {
+                                                $(inputMarkup).val('');
+                                            }
+                                            formElem.__noblur = false;
+                                            return false;
+                                        }).appendTo(autoCompleteList);
+                                    }
+                                    if (i < LIs.length) {
+                                        // We cut off the autocomplete list.
+                                        $("<li/>").append("The search returned >20 results.");
+                                    }
+
+
+                                    autoCompleteList.show();
+                                    autoCompleteList.listview("refresh");
                                 }
-                                if (i < LIs.length) {
-                                    // We cut off the autocomplete list.
-                                    $("<li/>").append("The search returned >20 results.");
-                                }
-                                
-                                
-                                autoCompleteList.show();
-                                autoCompleteList.listview("refresh");
                             } else {
                                 formElem.__noblur = false;
                                 autoCompleteList.empty();
