@@ -102,7 +102,7 @@ var defaults = {
          * dstOffset is the daylight savings time offset. The default is to offset based on the browser
          * locale.
          */
-        tzOffset : -((new Date()).getTimezoneOffset() / 60.0),
+        tzOffset : -((new Date((new Date()).getUTCFullYear(), 1, 1)).getTimezoneOffset() / 60.0),
         dstOffset : -((new Date((new Date()).getUTCFullYear(), 6, 1)).getTimezoneOffset() / 60.0),
         
         /* SAH - when the user clicks on the calendar, treat all clicks like slot clicks even if the user
@@ -2059,7 +2059,8 @@ function getSkinCss(event, opt) {
 	}
         if (isHatched) {
             // From http://www.patternify.com/
-            statements.push('background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAJElEQVQIW2NkYGD4D8SMQAwHMA6KBLIKuASKNphR6IIgc/8DAACiBQXgDbYOAAAAAElFTkSuQmCC) repeat');
+            //statements.push('background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAJElEQVQIW2NkYGD4D8SMQAwHMA6KBLIKuASKNphR6IIgc/8DAACiBQXgDbYOAAAAAElFTkSuQmCC) repeat');
+            statements.push('background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKlxaX/GWF8EKe7t5sRLADjgNiMyByQAAC0tw5hFPGZDgAAAABJRU5ErkJggg==) repeat');
             if (!backgroundColor) {
                 statements.push('background-color: white');
             }
