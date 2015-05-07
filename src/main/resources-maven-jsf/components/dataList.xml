@@ -202,6 +202,12 @@
             <description>Enables free text search. Supply a function that accepts two arguments, the search query and a query collection, and returns a filtered query collection.</description>
         </attribute>
         <attribute>
+            <name>onSearchClear</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function name to invoke on search clear. This function accepts no arguments, but the datalist is the this variable.</description>
+        </attribute>
+        <attribute>
             <name>indexedSearchText</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -317,6 +323,6 @@
          <defaultValue>false</defaultValue>
          <description>Enable multi select of list items.</description>
       </attribute>
-            
+
    </attributes>
 </component>
