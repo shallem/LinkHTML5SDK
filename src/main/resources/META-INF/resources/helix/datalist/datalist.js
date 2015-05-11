@@ -342,7 +342,7 @@
             var _self = this;
             this.$wrapper = this.element;
             if (this.options.scroll) {
-                this.$wrapper.addClass('pm-layout-full-height');
+                this.$wrapper.addClass('hx-full-height');
             }
             
             this.$page = this.$wrapper.closest('.ui-page');
@@ -352,31 +352,35 @@
                 this.$wrapper.parent().attr('id', parentId);
             }
             
+            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical');
+            this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
-                .appendTo(this.$wrapper)
+                .appendTo(this.$headerSection)
                 .addClass('hx-full-width')
                 .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
             
             this.$clearSelectionDiv = $('<div/>')
-                .appendTo(this.$wrapper)
+                .appendTo(this.$headerSection)
                 .addClass('hx-full-width')
                 .attr('id', parentId + '_clear_sel')
                 .hide();
+            
+                        
+            /**
+             * Append the data list.
+             */
+            var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
             
             /**
              * Append the hook div if we have pull to refresh setup.
              */
             this.$hookDiv = null;
             if (this.options.pullToRefresh) {
-                this.$hookDiv = $('<div/>').appendTo(this.$wrapper);
+                this.$hookDiv = $('<div/>').appendTo(listWrapper);
             }
-                        
-            /**
-             * Append the data list.
-             */
-            var listWrapper = this.$listWrapper = $('<div/>').appendTo(this.$wrapper);
+            
             this.$parent = $('<ul/>').attr({
                 'data-role' : 'listview',
                 'class' : 'hx-listview'
@@ -393,7 +397,7 @@
              */
             this.$pushDiv = null;
             if (this.options.pushToRefresh) {
-                this.$pushDiv = $('<div/>').appendTo(this.$wrapper).addClass('hx-full-height-skip');
+                this.$pushDiv = $('<div/>').appendTo(listWrapper).addClass('hx-full-height-skip');
             }
             
             /**
@@ -790,7 +794,7 @@
                 if (_self.options.scroll) {
                     _self.$listWrapper.removeClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
-                    _self.$listWrapper.addClass('mh-layout-parent-height');
+                    _self.$listWrapper.addClass('hx-full-height');
 
                     _self.$listWrapper.on('touchstart', function() {
                         _self._fingerOn = true;
@@ -1782,6 +1786,7 @@
                 inline: true
             }).on(_self.tapEvent, function() {
                 _self.clearAllMultiSelect();
+                return false;
             }));
         },
         
