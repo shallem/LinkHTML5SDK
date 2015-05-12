@@ -76,7 +76,7 @@
 
         _create: function() {
             // Setup styling of the parent element.
-            $(this.element).addClass('pm-layout-full-height');
+            $(this.element).addClass('hx-full-height');
         
             // Get the left/right.
             this.__left = $(this.element).children()[0];
@@ -147,9 +147,9 @@
                
                 $(this.element).addClass('hx-split-master');
             
-                $(this.__left).addClass('hx-split-left-area').addClass('hx-layout-full-height');
+                $(this.__left).addClass('hx-split-left-area').addClass('hx-full-height');
                 $(this.__left).width(leftWidth);
-                $(this.__right).addClass('hx-split-right-area').addClass('hx-layout-full-height');
+                $(this.__right).addClass('hx-split-right-area').addClass('hx-full-height');
                 $(this.__right).width(rightWidth);
                 
                 $(this.__left).show();
@@ -168,7 +168,6 @@
                 if (this.__current === "left") {
                     $(this.__left).removeClass('hx-split-left-area');
                     $(this.__left).addClass('hx-split-full');
-                    $(this.__left).addClass('pm-layout-full-height');
                     $(this.__left).css('width', '');
                     $(this.__left).show();
                     $(this.__right).hide();
@@ -182,7 +181,6 @@
                 } else {
                     $(this.__right).removeClass('hx-split-right-area');
                     $(this.__right).addClass('hx-split-full');
-                    $(this.__right).addClass('pm-layout-full-height');
                     $(this.__right).css('width', '');
                     $(this.__right).show();
                     $(this.__left).hide();

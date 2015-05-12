@@ -122,6 +122,7 @@ Helix.Layout = {
         
         var children = $(component).children();
         var remainingHeight = offsetPixels;
+        var $fullHeightChild = null;
         for (var i = 0; i < children.length; ++i) {
             if ($(children[i]).is("style,script")) {
                 // Skip style and script tags - see note at http://api.jquery.com/height/
@@ -134,12 +135,18 @@ Helix.Layout = {
             if (!$(children[i]).is(":visible")) {
                 continue;
             }
-
-            var child_i_height = $(children[i]).outerHeight(true);
-            totHeight += child_i_height;
-            if (i < (children.length - 1)) {
-                remainingHeight += child_i_height;
+            if ($(children[i]).is('.hx-full-height-skip')) {
+                continue;
             }
+
+            $fullHeightChild = $(children[i]);
+            var child_i_height = $($fullHeightChild).outerHeight(true);
+            totHeight += child_i_height;
+            remainingHeight += child_i_height;
+        }
+        if ($fullHeightChild) {
+            totHeight -= $fullHeightChild.outerHeight(true);
+            remainingHeight -= $fullHeightChild.outerHeight(true);
         }
         
         var childrenToRecurse = $(component).children(fullHeightSelector);
@@ -148,15 +155,14 @@ Helix.Layout = {
          * rest of the screen.
          */
         if (childrenToRecurse.length === 0) {
-            var $fullHeightChild = null;
-            for (var j = children.length - 1; j >= 0; --j) {
-                if (!$(children[j]).is('.hx-full-height-skip')) {
-                    $fullHeightChild = $(children[j]);
-                    break;
-                }
-            }
             if ($fullHeightChild) {
-                $fullHeightChild.height(maxHeight - remainingHeight);
+                var minHeight = $fullHeightChild.css('min-height');
+                var newHeight = maxHeight - remainingHeight;
+                if (minHeight && newHeight < minHeight) {
+                    // never resize to less than the min height.
+                } else if (newHeight > 0) {
+                    $fullHeightChild.height(newHeight);
+                }
             }
         } else {
             childrenToRecurse.each(function() {

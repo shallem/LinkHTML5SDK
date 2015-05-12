@@ -21,40 +21,9 @@
  */
 
 /**
- * Override the existing AJAX request handler to add a new pre-request trigger.
- */
-(function() {
-    if (!PrimeFaces || !PrimeFaces.ajax) {
-        return;
-    }
-    PrimeFaces.ajax.origRequest = PrimeFaces.ajax.AjaxRequest;
-    PrimeFaces.ajax.AjaxRequest = function(cfg, ext) {
-        $(document).trigger('prerequest', cfg);
-
-        /**
-         * Override the existing AJAX oncomplete handler to add a new post-request trigger.
-         * This allows us to trigger the event after ALL updates and callbacks are done.
-         */
-        var origComplete;
-        if (ext) {
-            origComplete = ext.oncomplete;
-        } else {
-            ext = {};
-        }
-        ext.oncomplete = function(xhr, status, args) {
-            if (origComplete) {
-                origComplete.call(this, xhr, status, args);
-            }
-            $(document).trigger('postrequest', xhr);
-        };
-        PrimeFaces.ajax.origRequest.call(this, cfg, ext);
-    }
-})();
-
-/**
  * Show a loader pre-request.
  */
-$(document).bind('prerequest', function() {
+$(document).on('prerequest', function(ev, url, suspendSleep) {
     if (!Helix.Ajax.loadOptions.async) {
         $.mobile.loading( 'show', Helix.Ajax.loadOptions);
     } else {
@@ -79,7 +48,7 @@ $(document).bind('prerequest', function() {
         };
         animateColor(false);
     }
-    if (window.CordovaInstalled) {
+    if (window.CordovaInstalled && suspendSleep) {
         window.HelixSystem.suspendSleep();
     }
     Helix.Ajax.loadCt++;
@@ -88,13 +57,13 @@ $(document).bind('prerequest', function() {
 /**
  * Hide the loader post-request.
  */
-$(document).bind('postrequest', function() {
+$(document).on('postrequest', function(ev, url, resumeSleep) {
     if (!Helix.Ajax.loadOptions.pin) {
         if (!Helix.Ajax.loadOptions.async) {
             /* Hide the loader. */
             $.mobile.loading( "hide" );
         }
-        if (window.CordovaInstalled) {
+        if (window.CordovaInstalled && resumeSleep) {
             window.HelixSystem.allowSleep();
         }
     }
@@ -446,7 +415,7 @@ Helix.Ajax = {
             return;
         }
 
-        $(document).trigger('prerequest');
+        $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, true ]);
         /* Give the browser a change to handle the event and show the loader. */
         setTimeout(function() {
             $.ajax({
@@ -522,14 +491,14 @@ Helix.Ajax = {
                     loadCommandOptions.onerror(error);
                 },
                 complete: function(xhr) {
-                    $(document).trigger('postrequest', xhr);
+                    $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
                 }
             });
         }, 0);
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
-        $(document).trigger('prerequest');
+        $(document).trigger('prerequest', [ url, false ]);
         if (actions && actions.beforeSubmit) {
             actions.beforeSubmit();
         }
@@ -579,7 +548,7 @@ Helix.Ajax = {
                 }
             },
             complete: function(xhr) {
-                $(document).trigger('postrequest', xhr);
+                $(document).trigger('postrequest', [ url, false ]);
             }
         });
     },
@@ -619,7 +588,7 @@ Helix.Ajax = {
         Helix.Ajax.loadOptions = {
             async: (params.async !== undefined) ? params.async : true
         };
-        $(document).trigger('prerequest', params.url);
+        $(document).trigger('prerequest', [ params.url, false ]);
         var didSucceed = false;
         if (Helix.Ajax.isDeviceOnline()) {
             $.ajax({
@@ -662,7 +631,7 @@ Helix.Ajax = {
                     if (callbacks.complete) {
                         callbacks.complete.call(window);
                     }
-                    $(document).trigger('postrequest', [{ 'url': params.url, 'success' : didSucceed }]);
+                    $(document).trigger('postrequest', [ params.url, false ]);
                 },
                 dataType: 'json'
             });

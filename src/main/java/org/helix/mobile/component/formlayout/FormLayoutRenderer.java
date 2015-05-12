@@ -35,7 +35,7 @@ public class FormLayoutRenderer extends CoreRenderer {
             writer.writeAttribute("style", "width: " + layout.getWidth() + ";", "width");
         }
         if (layout.isFullScreen()) {
-            writer.writeAttribute("class", "hx-layout-parent-height", "class");
+            writer.writeAttribute("class", "hx-layout-full-height", "class");
         }
         
         writer.endElement("div");
