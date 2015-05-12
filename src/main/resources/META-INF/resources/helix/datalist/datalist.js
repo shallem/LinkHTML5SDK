@@ -144,6 +144,11 @@
              * Type of box - is it a 'search' box or a 'filter' box.
              */
             indexedSearchType: 'search',
+
+            /**
+             * Called when the search is cleared.
+             */
+            onSearchClear: null,
             
             /**
              * List of fields to allow the user to selectively sort by. This option
@@ -337,7 +342,7 @@
             var _self = this;
             this.$wrapper = this.element;
             if (this.options.scroll) {
-                this.$wrapper.addClass('pm-layout-full-height');
+                this.$wrapper.addClass('hx-full-height');
             }
             
             this.$page = this.$wrapper.closest('.ui-page');
@@ -347,31 +352,35 @@
                 this.$wrapper.parent().attr('id', parentId);
             }
             
+            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical');
+            this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
-                .appendTo(this.$wrapper)
+                .appendTo(this.$headerSection)
                 .addClass('hx-full-width')
                 .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
             
             this.$clearSelectionDiv = $('<div/>')
-                .appendTo(this.$wrapper)
+                .appendTo(this.$headerSection)
                 .addClass('hx-full-width')
                 .attr('id', parentId + '_clear_sel')
                 .hide();
+            
+                        
+            /**
+             * Append the data list.
+             */
+            var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
             
             /**
              * Append the hook div if we have pull to refresh setup.
              */
             this.$hookDiv = null;
             if (this.options.pullToRefresh) {
-                this.$hookDiv = $('<div/>').appendTo(this.$wrapper);
+                this.$hookDiv = $('<div/>').appendTo(listWrapper);
             }
-                        
-            /**
-             * Append the data list.
-             */
-            var listWrapper = this.$listWrapper = $('<div/>').appendTo(this.$wrapper);
+            
             this.$parent = $('<ul/>').attr({
                 'data-role' : 'listview',
                 'class' : 'hx-listview'
@@ -388,7 +397,7 @@
              */
             this.$pushDiv = null;
             if (this.options.pushToRefresh) {
-                this.$pushDiv = $('<div/>').appendTo(this.$wrapper).addClass('hx-full-height-skip');
+                this.$pushDiv = $('<div/>').appendTo(listWrapper).addClass('hx-full-height-skip');
             }
             
             /**
@@ -785,7 +794,7 @@
                 if (_self.options.scroll) {
                     _self.$listWrapper.removeClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
-                    _self.$listWrapper.addClass('mh-layout-parent-height');
+                    _self.$listWrapper.addClass('hx-full-height');
 
                     _self.$listWrapper.on('touchstart', function() {
                         _self._fingerOn = true;
@@ -1381,28 +1390,38 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            var emptyMsg = _self.options.emptyMessage;
-            var __completion = function(displayCollection) {
-                _self._sortAndRenderData(displayCollection, function(finalCompletion) {
-                    finalCompletion();
-                    $(_self.$wrapper).trigger('refreshdone');
-                }, emptyMsg, oncomplete, noPaginate, extraItems);
-            };
-            
             if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
-                emptyMsg = this.options.emptySearchMessage;
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
-                    if ($.isFunction(displayCollection)) {
-                        _self.refreshInProgress = false;
-                        displayCollection.call(_self);
-                    } else {
-                        _self.unfilteredList = _self.itemList = displayCollection;
-                        __completion(_self.itemList);                
-                    }
+                    _self.indexedSearchDone(displayCollection, oncomplete);
                 }, _self.originalList);
             } else {
-                __completion(displayCollection);
+                this._sortAndRenderData(displayCollection, function(finalCompletion) {
+                    finalCompletion();
+                    $(_self.$wrapper).trigger('refreshdone');
+                }, this.options.emptyMessage, oncomplete, noPaginate, extraItems);
+            }
+        },
+        
+        indexedSearchDone: function(displayCollection, oncomplete) {
+            var _self = this;
+            this.displayList = [];
+            if (!oncomplete) {
+                oncomplete = function() {
+                    _self.$parent.listview( "refresh" );
+                    _self.scrollToStart();
+                };
+            }
+            
+            if ($.isFunction(displayCollection)) {
+                this.refreshInProgress = false;
+                displayCollection.call(this);
+            } else {
+                this.unfilteredList = this.itemList = displayCollection;
+                this._sortAndRenderData(displayCollection, function(finalCompletion) {
+                    finalCompletion();
+                    $(_self.$wrapper).trigger('refreshdone');
+                }, this.options.emptySearchMessage, oncomplete, true);
             }
         },
         
@@ -1722,6 +1741,9 @@
                     _self.clearSearchText();
                     _self._resetPaging();
                     _self.$searchBox.blur();
+                    if (_self.options.onSearchClear) {
+                        _self.options.onSearchClear.call(_self);
+                    }
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
                         _self.scrollToStart();
@@ -1764,6 +1786,7 @@
                 inline: true
             }).on(_self.tapEvent, function() {
                 _self.clearAllMultiSelect();
+                return false;
             }));
         },
         
@@ -2441,6 +2464,13 @@
          */
         listIsDirty: function() {
             return this.isDirty;
+        },
+        
+        /**
+         * Return the list header.
+         */
+        getListHeader: function() {
+            return this.$searchSortDiv;
         }
     });
 })(jQuery);

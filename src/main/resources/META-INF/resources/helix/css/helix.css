@@ -37,6 +37,10 @@
     background-color: white;
 }
 
+.hx-full-height {
+    height: 100%;
+}
+
 /**
  * List views will leak out of the split view if we don't 
  * override JQM's default -15px margin.
@@ -297,6 +301,7 @@ a {
 .hx-form-container {
     padding-right: 0px;
     margin-right: 0px;
+    overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
 }
 
 .hx-fieldview {
@@ -348,6 +353,22 @@ a {
 
 .hx-no-vscroll {
     overflow-y: hidden;
+}
+
+.hx-main-content {
+    height: 100%;
+}
+
+.hx-flex-vertical {
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: column;
+    -webkit-flex-flow: column;
+}
+
+.hx-flex-fill {
+    flex: 2;
+    -webkit-flex: 2;
 }
 
 /* On iOS, scrolling blocks can show a very distracting flicker. According to this site:
