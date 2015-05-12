@@ -97,6 +97,13 @@
         },
         allowSleep: function() {
             return cordova.exec(null, null, "HelixSystem", "allowSleep", []);
+        },
+        notifyParent: function(eventName, eventArg) {
+            if (eventArg === undefined) {
+                eventArg = nil;
+            }
+            
+            return cordova.exec(null, null, "HelixSystem", "notifyParent", [ eventName, eventArg ])
         }
     };
     
