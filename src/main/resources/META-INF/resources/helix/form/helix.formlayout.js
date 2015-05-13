@@ -339,7 +339,9 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
-        tzSelect.selectmenu();
+        tzSelect.selectmenu({
+            corners: false
+        });
         dateDiv.fieldcontain();
         if (formElem.computedStyle || formElem.computedStyleClass) {
             var uiSelect = $(dateDiv).find('div.ui-select');
@@ -630,37 +632,43 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             // not the value in the input text box.
                             formElem.__noblur = true;
                             autoCompleteList.empty();
-                            if (LIs && LIs.length) {
-                                $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
-                                    autoCompleteList.empty();
-                                    autoCompleteList.hide();
-                                    formElem.__noblur = false;
-                                    return false;
-                                }).appendTo(autoCompleteList);
-                                // We cap out the list length at 20 b/c otherwise we might crash the app ...
-                                var i;
-                                for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                    $("<li/>").append(LIs[i]).on('vclick', function() {
-                                        var ret = formElem.autocompleteSelect.call(_self, $(this).text());
+                            if (LIs && LIs.length && _self.is(':focus')) {
+                                if (LIs.length === 1 && LIs[0] === _self.val()) {
+                                    // This is a special case where the user typed the full text. Do not present a list with one
+                                    // item that is exactly the same as the input text.
+                                    formElem.__noblur = false;                                
+                                } else {
+                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
                                         autoCompleteList.empty();
                                         autoCompleteList.hide();
-                                        if (ret === true) {
-                                            
-                                        } else {
-                                            $(inputMarkup).val('');
-                                        }
                                         formElem.__noblur = false;
                                         return false;
                                     }).appendTo(autoCompleteList);
+                                    // We cap out the list length at 20 b/c otherwise we might crash the app ...
+                                    var i;
+                                    for (i = 0; i < Math.min(20, LIs.length); ++i) {
+                                        $("<li/>").append(LIs[i]).on('vclick', function() {
+                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text());
+                                            autoCompleteList.empty();
+                                            autoCompleteList.hide();
+                                            if (ret === true) {
+
+                                            } else {
+                                                $(inputMarkup).val('');
+                                            }
+                                            formElem.__noblur = false;
+                                            return false;
+                                        }).appendTo(autoCompleteList);
+                                    }
+                                    if (i < LIs.length) {
+                                        // We cut off the autocomplete list.
+                                        $("<li/>").append("The search returned >20 results.");
+                                    }
+
+
+                                    autoCompleteList.show();
+                                    autoCompleteList.listview("refresh");
                                 }
-                                if (i < LIs.length) {
-                                    // We cut off the autocomplete list.
-                                    $("<li/>").append("The search returned >20 results.");
-                                }
-                                
-                                
-                                autoCompleteList.show();
-                                autoCompleteList.listview("refresh");
                             } else {
                                 formElem.__noblur = false;
                                 autoCompleteList.empty();
@@ -1012,11 +1020,10 @@ function __refreshIFrame(formElem) {
 function __refreshHTMLFrame(formElem) {
     if ($(formElem.editDOM).is(':visible')) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
-        var $editor = $(elem).data('cleditor');
         if (!formElem.value) {
-            $editor.update(''); 
+            $(elem).editor('update', ''); 
         } else {
-            $editor.update(formElem.value);
+            $(elem).editor('update', formElem.value);
         }        
     } else if ($(formElem.viewDOM).is(':visible')) {
         // Reset onload, otherwise it is not called.
@@ -1077,7 +1084,7 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         formElem.$frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
     } else {
-        __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
+        __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }
 }
 
@@ -1102,11 +1109,10 @@ function __refreshButtonGroup(formElem) {
 function __refreshHTMLArea(formElem) {
     if ($(formElem.editDOM).is(':visible')) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
-        var $editor = $(elem).data('cleditor');
         if (!formElem.value) {
-            $editor.clear(); 
+            $(elem).editor('update', ''); 
         } else {
-            $editor.update(formElem.value);
+            $(elem).editor('update', formElem.value);
         }        
     } else if ($(formElem.viewDOM).is(':visible')) {
         var viewContainer = $(formElem.viewDOM).find('div[data-name="' + formElem.name + '"]').empty();
@@ -1114,15 +1120,15 @@ function __refreshHTMLArea(formElem) {
     }
 }
 
-function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
-    var isFullWidth = false;
+function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (formElem.computedWidth) {
         if (formElem.computedWidth === "100%") {
-            isFullWidth = true;
+            $fieldContainer.addClass('hx-full-width');
         }            
     }
     if (formElem.height) {
         $fieldContainer.height(formElem.height);
+        $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
     }
 
     if (!formElem.name) {
@@ -1132,33 +1138,29 @@ function __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
 
     var editorID = Helix.Utils.getUniqueID();
-    var editorInput = $('<textarea />').attr({
+    var editorDiv = $('<div />').attr({
         'name' : formElem.name,
         'id' : editorID,
-        'tabIndex' : -1
-    }).val(formElem.value);
-    $fieldContainer.append($('<div />').height(formElem.height ? formElem.height : '100%')
+        'tabIndex' : -1,
+        'class' : 'hx-full-height'
+    });
+    $fieldContainer.append(editorDiv
         .append($('<label />').attr({
             'for' : editorID,
             'class' : formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
         )
-        .append(editorInput)
     );
-    $(editorInput).cleditor({
-        'widget' : editorID + "_widget",
-        'width' : (formElem.computedWidth ? formElem.computedWidth : $(parentDiv).width()),
-        'isFullWidth' : isFullWidth,
-        'height' : (formElem.height ? formElem.height : 350),
-        'page' : page,
+    editorDiv.editor({
         'tabIndex' : formLayout.__tabIndex++
-    });    
+    });
+    $(editorDiv).editor('update', formElem.value);   
 }
 
 function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (mode) {
-        __appendCLEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
+        __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     } else {
         var isFullWidth = false;
         if (formElem.computedWidth) {
@@ -1562,7 +1564,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         )
         .appendTo(parentDiv);
         separateElements = false;
-    } else if (formElem.type == 'hidden') {
+    } else if (formElem.type === 'hidden') {
         if ($editFieldContainer) {
             /* Edit. */
             if (!formElem.name) {
@@ -1575,6 +1577,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                     'type': 'hidden',
                     'value': formElem.value
             }));
+            $editFieldContainer.hide();
         }
         separateElements = false;
     } else if (formElem.type == 'upload') {
@@ -1734,7 +1737,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             // Hide the HR.
             $(formElem.SEPARATOR).hide();
         }
-    } else if (formElem.DOM) {
+    } else if (formElem.DOM && formElem.type !== 'hidden') {
         $(formElem.DOM).show();
         if (formElem.SEPARATOR) {
             $(formElem.SEPARATOR).show();
@@ -1880,8 +1883,7 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
         var inputElem = $(dialogForm).find("[name='" + formElem.name + "']");
         if (inputElem) {
             if (formElem.type === "htmlarea") {
-                $(inputElem).val(formElem.value);
-                $(inputElem).data("cleditor").updateFrame();
+                $(inputElem).editor('update', formElem.value);
             } else if (formElem.type === "date") {
                 //$(inputElem).datebox('setDate', new Date(parseInt(formElem.value)));
                 var dateValue;

@@ -294,13 +294,9 @@
             var __serializeOneItem = function() {
                 if (fieldType === "htmlarea" ||
                     fieldType === "htmlframe") {
-                    var $editor = $(this).data('cleditor');
-                    if ($editor) {
-                        $editor.updateTextArea();
-                    }
                     toSerialize.push({
                         name: strippedFieldID,
-                        value: $(this).val()
+                        value: $(this).editor('getHTML')
                     });
                 } else if (fieldType === "checkbox") {
                     if ($(this).is(":checked")) {
@@ -456,7 +452,7 @@
                         }
                     }
                     return;
-                } else {
+                } else if (fldType !== 'hidden') {
                     $(item.DOM).show();
                     if (item.SEPARATOR) {
                         // Show the HR.
@@ -575,8 +571,8 @@
             var hiddenChanged = this.__computeOneHidden(item, valuesMap);
             var valueChanged = this.__copyOneValue(item, valuesMap);
             var visibilityChanged = 
-                (mode == 0 && item.mode === 'edit') || 
-                (mode == 1 && item.mode === 'view') || 
+                (mode === 0 && item.mode === 'edit') || 
+                (mode === 1 && item.mode === 'view') || 
                 (item.type === 'controlset') ||
                 modeChanged;
             
@@ -820,12 +816,6 @@
                     /* Other types don't require an explicit save. */
                     continue;
                 }
-                $(this.element).find('textarea[name="' + fieldID + '"]').each(function() {
-                    var $editor = $(this).data('cleditor');
-                    if ($editor) {
-                        $editor.updateTextArea();
-                    }
-                });
             }
         },
         
@@ -857,11 +847,7 @@
             $(this.element).find('[name="' + fieldID + '"]').each(function() {
                 var toValidate = "";
                 if (fieldType === "htmlarea") {
-                    var $editor = $(this).data('cleditor');
-                    if ($editor) {
-                        $editor.updateTextArea();
-                    }
-                    toValidate = $(this).val();
+                    toValidate = $(this).editor('getHTML');
                 } else if (fieldType === "checkbox") {
                     if ($(this).is(":checked")) {
                         toValidate = true;

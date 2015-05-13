@@ -12,7 +12,12 @@ provides transparent data security, authentication, and key
 management, all of which must be implemented by the particular
 application if it runs in a standard browser without Link.
 
-The best place to start with the SDK is in the doc/ directory. The
+Full documentation is in the /doc directory.
+
+A small demo application is in the /demo directory and is a great way to 
+get started with building off-line first HTML5 web apps.
+
+Full SDK documentation is in the /doc directory.
 file LinkSDKMasterDocumentation provides an overview of the SDK and
 documents a subset of the capabilities available in the SDK. We are
 still in Alpha, so the documentation is lagging a bit behind the
@@ -84,6 +89,7 @@ in the SDK is working.
 Can I see a Demo?
 =================
 
-We are almost there ... we do intend to create a showcase with code
-samples but we haven't quite gotten to it yet. In the interim, if you
-want to see a demo of the SDK in action please contact Mobile Helix.
+YES! We now have a demo app in the /demo folder. This is a great way to
+get started with the SDK. Take a look at the README.md file in the /demo
+folder for more information and a pointer to some explanatory slides.
+
