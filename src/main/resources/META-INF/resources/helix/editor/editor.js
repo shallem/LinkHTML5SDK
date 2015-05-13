@@ -190,11 +190,15 @@
             });
             
             $(document).on('selectionchange', function() {
-                _self._lastInputRange = window.getSelection().getRangeAt(0);
+                if (window.getSelection().rangeCount > 0) {
+                    _self._lastInputRange = window.getSelection().getRangeAt(0);
+                }
             });
             
             $(this.$editFrame).on('input', function() {
-                _self._lastInputRange = window.getSelection().getRangeAt(0);
+                if (window.getSelection().rangeCount > 0) {
+                    _self._lastInputRange = window.getSelection().getRangeAt(0);
+                }
             });
             
             $(this.$editFrame).on('blur', function() {
