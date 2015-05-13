@@ -387,7 +387,7 @@
                 corners: false
             }).on(Helix.clickEvent, function(ev) {
                 $('input[data-command="' + buttonName + '"]').spectrum("set", restoreColor);
-                _self.executeAction(buttonName, restoreColor);
+                _self._executeAction(buttonName, restoreColor);
                 _self.menuPopups[menuName].popup('close');
                 return false;
             });
