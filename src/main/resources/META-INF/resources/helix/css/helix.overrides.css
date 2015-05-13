@@ -126,3 +126,7 @@
 .ui-li-has-arrow.ui-btn-icon-right .ui-icon  {
     right: 10px;
 }   
+
+.ui-input-search {
+    border-radius: 0.2em;
+}
