@@ -175,6 +175,7 @@
                     if (this.options.buttonBarSelector) {
                         $(this.options.buttonBarSelector).addClass('hx-split-left');
                         $(this.options.buttonBarSelector).removeClass('hx-split-right');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-both');
                     } else {
                         this._restoreLeftHeaderButton();
                     }
@@ -188,6 +189,7 @@
                     if (this.options.buttonBarSelector) {
                         $(this.options.buttonBarSelector).addClass('hx-split-right');
                         $(this.options.buttonBarSelector).removeClass('hx-split-left');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-both');
                     } else if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
                         // Capture the current left button so that we can restore it.
                         var theme;
