@@ -12,7 +12,7 @@
             {
                 styles: "bold italic underline strikethrough subscript superscript",
                 font: "font size color highlight",
-                formats: "bullets numbering | outdent indent | alignleft center alignright justify | rule",
+                formats: "bullets numbering", // | outdent indent | alignleft center alignright justify | rule",
                 actions : "undo redo"
             }
             ,
