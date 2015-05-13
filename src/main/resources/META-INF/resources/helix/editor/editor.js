@@ -39,6 +39,9 @@
         _create: function() {
             var editor = this;
 
+            // Init members.
+            this._lastCreatedSpan = null;
+
             // Map whose keys are the current style.
             editor.name = $(this.element).attr('id');
 
@@ -181,11 +184,6 @@
             });
             $(this.$editFrame).on('keypress', function(ev) {
                 var typed = String.fromCharCode(ev.keyCode);
-                if (_self.styleChanges.length) {
-                    _self._executeStyleActions(typed);
-                    _self.styleChanges = [];
-                    return false;
-                }
                 return true;
             });
             
@@ -198,6 +196,15 @@
             $(this.$editFrame).on('input', function() {
                 if (window.getSelection().rangeCount > 0) {
                     _self._lastInputRange = window.getSelection().getRangeAt(0);
+                }
+                if (_self.styleChanges.length) {
+                    var newTextNode = null;
+                    if (_self._lastInputRange && _self._lastInputRange.startContainer) {
+                        newTextNode = _self._lastInputRange.startContainer.splitText(_self._lastInputRange.startContainer.length - 1);
+                    }
+                    
+                    _self._executeStyleActions(newTextNode);
+                    _self.styleChanges = [];
                 }
             });
             
@@ -294,6 +301,7 @@
                                     if (!_self._executeAction.apply(_self, ev.data)) {
                                         _self._queueStyleAction.apply(_self, ev.data);                                    
                                     }
+                                    return false;
                         });
                         break;
                 }
@@ -424,9 +432,9 @@
             }
         },
         
-        _executeStyleActions: function(nxtKey) {
+        _executeStyleActions: function(txtToSurround) {
             var isCollapsed = this._lastInputRange.collapsed;
-            var $newSpan = this._insertSpan(nxtKey);
+            var $newSpan = this._insertSpan(txtToSurround);
             for (var i = 0; i < this.styleChanges.length; ++i) {
                 var actionName = this.styleChanges[i][0];
                 var param = this.styleChanges[i][1];
@@ -478,16 +486,10 @@
             this._setCaretPosition(range);
         },
         
-        _insertSpan: function(nxtKey) {
+        _insertSpan: function(txtToSurround) {
             var _self = this;
             var isCollapsed = _self._lastInputRange.collapsed;
             var newElement = document.createElement('span');
-            if (nxtKey !== undefined && nxtKey != null && nxtKey.length) {
-                if (nxtKey === ' ') {
-                    nxtKey = '&nbsp;';
-                }
-                $(newElement).html(nxtKey);
-            }
             this.$editFrame.focus();
             if(_self._lastInputRange) {
                 if (!isCollapsed) {
@@ -501,15 +503,16 @@
                     if ($parentSpan.length) {
                         $(newElement).insertAfter($parentSpan);
                     } else {
-                        _self._lastInputRange.insertNode(newElement);                    
+                        _self._lastInputRange.insertNode(newElement);
                     }
-                    // Move the selection inside of the new element.
-                    this._selectElementContents(newElement);
+                    if (txtToSurround !== undefined && txtToSurround !== null) {
+                        $(newElement).append(txtToSurround);
+                    }
+                    _self._selectElementContents(newElement);
                 }
             } else {
-                _self.$editFrame.append($(newElement));
-                // Move the selection inside of the new element.
-                this._selectElementContents(newElement);
+                _self.$editFrame.wrapInner($(newElement));
+                _self._selectElementContents(newElement);
             }
             return $(newElement);
         },

@@ -1843,7 +1843,11 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
                 'data-role' : 'content',
                 'style' : 'overflow-y: auto;',
                 'class' : 'hx-main-content'
-                }).append($('<form />'))
+                }).append($('<form />').attr({
+                    'width': '100%',
+                    'height': '100%',
+                    'class': 'hx-layout-full-height'
+                }))
             ),
             'fields' : dialogFields
         };
@@ -1856,7 +1860,9 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
         var dialogForm = $(dialogObj.page).find('form'); 
         $(dialogForm).empty();
         $(dialogForm).data("DIALOG", dialogFields);
-        $(dialogForm).width($.mobile.activePage.width());
+        $(dialogForm).width('100%');
+        $(dialogForm).height('100%');
+        $(dialogForm).addClass('hx-layout-full-height');
         dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
         dialogFields.mode = true; /* Edit mode. */
         dialogFields.separateElements = false; /* Do not separate elements. */
