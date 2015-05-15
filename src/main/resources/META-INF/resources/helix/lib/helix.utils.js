@@ -247,5 +247,8 @@ Helix.Utils =  {
         }
         
         return Helix.Utils._isPhone;
+    },
+    escapeClientId : function(id) {
+        return "#" + id.replace(/:/g,"\\:");
     }
 }
