@@ -1017,20 +1017,16 @@ function __refreshIFrame(formElem) {
     $frame.show();
 }
 
-function __refreshHTMLFrame(formElem) {
-    if ($(formElem.editDOM).is(':visible')) {
+function __refreshHTMLFrame(formElem, mode) {
+    if ($(formElem.editDOM).is(':visible') || mode === 1) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
             $(elem).editor('update', ''); 
         } else {
             $(elem).editor('update', formElem.value);
         }        
-    } else if ($(formElem.viewDOM).is(':visible')) {
+    } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
-        /*if (formElem.onload) {
-            formElem.$frame.remove();
-            formElem.$frame = $(formElem.frameMarkup).appendTo($(formElem.viewDOM));
-        }*/
         __refreshIFrame(formElem);
     }
 }
