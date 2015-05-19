@@ -24,29 +24,31 @@
  * Show a loader pre-request.
  */
 $(document).on('prerequest', function(ev, url, suspendSleep) {
-    if (!Helix.Ajax.loadOptions.async) {
-        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
-    } else {
-        if (!Helix.Ajax.loadOptions.color) {
-            Helix.Ajax.loadOptions.color = "#FF8000";
-        }
+    if (!Helix.Ajax.loadOptions.silent) {
+        if (!Helix.Ajax.loadOptions.async) {
+            $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        } else {
+            if (!Helix.Ajax.loadOptions.color) {
+                Helix.Ajax.loadOptions.color = "#FF8000";
+            }
 
-        var header = $.mobile.activePage.find('[data-role="header"]');
-        var origBG = $(header).css('background');
-        var animateColor = function(doReverse) {
-            $(header).animate({
-                'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
-            }, {
-                duration: 1200,
-                complete: function() {
-                    if (Helix.Ajax.loadCt >  0) {
-                        animateColor(!doReverse);
-                    } else {
-                        $(header).css('background', '');
-                    }
-            }});
-        };
-        animateColor(false);
+            var header = $.mobile.activePage.find('[data-role="header"]');
+            var origBG = $(header).css('background');
+            var animateColor = function(doReverse) {
+                $(header).animate({
+                    'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+                }, {
+                    duration: 1200,
+                    complete: function() {
+                        if (Helix.Ajax.loadCt >  0) {
+                            animateColor(!doReverse);
+                        } else {
+                            $(header).css('background', '');
+                        }
+                }});
+            };
+            animateColor(false);
+        }
     }
     if (window.CordovaInstalled && suspendSleep) {
         window.HelixSystem.suspendSleep();
@@ -586,10 +588,10 @@ Helix.Ajax = {
 
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
-            async: (params.async !== undefined) ? params.async : true
+            async: (params.async !== undefined) ? params.async : true,
+            silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
         $(document).trigger('prerequest', [ params.url, false ]);
-        var didSucceed = false;
         if (Helix.Ajax.isDeviceOnline()) {
             $.ajax({
                 url: params.url,
@@ -598,8 +600,7 @@ Helix.Ajax = {
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
                     if (returnObj.status === 0) {
-                        didSucceed = true;
-                        if (params.success) {
+                        if (params.success && !params.silentMode) {
                             Helix.Utils.statusMessage("Success", params.success, "info");
                         }
 
