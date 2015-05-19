@@ -24,29 +24,31 @@
  * Show a loader pre-request.
  */
 $(document).on('prerequest', function(ev, url, suspendSleep) {
-    if (!Helix.Ajax.loadOptions.async) {
-        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
-    } else {
-        if (!Helix.Ajax.loadOptions.color) {
-            Helix.Ajax.loadOptions.color = "#FF8000";
-        }
+    if (!Helix.Ajax.loadOptions.silent) {
+        if (!Helix.Ajax.loadOptions.async) {
+            $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        } else {
+            if (!Helix.Ajax.loadOptions.color) {
+                Helix.Ajax.loadOptions.color = "#FF8000";
+            }
 
-        var header = $.mobile.activePage.find('[data-role="header"]');
-        var origBG = $(header).css('background');
-        var animateColor = function(doReverse) {
-            $(header).animate({
-                'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
-            }, {
-                duration: 1200,
-                complete: function() {
-                    if (Helix.Ajax.loadCt >  0) {
-                        animateColor(!doReverse);
-                    } else {
-                        $(header).css('background', '');
-                    }
-            }});
-        };
-        animateColor(false);
+            var header = $.mobile.activePage.find('[data-role="header"]');
+            var origBG = $(header).css('background');
+            var animateColor = function(doReverse) {
+                $(header).animate({
+                    'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+                }, {
+                    duration: 1200,
+                    complete: function() {
+                        if (Helix.Ajax.loadCt >  0) {
+                            animateColor(!doReverse);
+                        } else {
+                            $(header).css('background', '');
+                        }
+                }});
+            };
+            animateColor(false);
+        }
     }
     if (window.CordovaInstalled && suspendSleep) {
         window.HelixSystem.suspendSleep();
@@ -286,9 +288,9 @@ Helix.Ajax = {
                 globalOnComplete(finalKey, name, obj, true, param); // The 'true' means this is an aggregate load
             }
         };
+        loadCommandOptions.syncOverrides = {};
+        loadCommandOptions.syncOverrides.schemaMap = {};
         if (Helix.Ajax.isDeviceOnline()) {
-            loadCommandOptions.syncOverrides = {};
-            loadCommandOptions.syncOverrides.schemaMap = {};
             for (var i = 0; i < nObjsToSync; ++i) {
                 var commandToLaunch = loadCommandOptions.commands[i].name;
                 keyMap[commandToLaunch] = loadCommandOptions.commands[i].key;
@@ -304,16 +306,20 @@ Helix.Ajax = {
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
                     commandToLaunch = loadCommandOptions.commands[idx].name;
+                    keyMap[commandToLaunch] = loadCommandOptions.commands[idx].key;
+    
                     commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+                    loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
+    
                     var itemKey = loadCommandOptions.commands[idx].key;
                     var completeObj = {
-                        fn: loadCommandOptions.oncomplete,
-                        thisArg: loadCommandOptions
+                        fn: commandConfig.oncomplete,
+                        thisArg: commandConfig
                     };
-                    loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
-                        completeObj.args = [ finalKey, name, finalObj ];
+                    commandConfig.oncomplete = function(finalKey, name, finalObj) {
+                        completeObj.args = [ finalKey, name, finalObj, true ];
                         completions.push(completeObj);
-                        loadCommandOptions.oncomplete = completeObj.fn;
+                        commandConfig.oncomplete = completeObj.fn;
                     };
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 } else {
@@ -322,6 +328,7 @@ Helix.Ajax = {
                             completions[i].fn.apply(completions[i].thisArg, completions[i].args);
                         }
                     }
+                    globalOnComplete(null, null, null, true, null);
                 }
             };
 
@@ -332,11 +339,11 @@ Helix.Ajax = {
     synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
         var origOncomplete = loadCommandOptions.oncomplete;
         loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
+            loadCommandOptions.oncomplete = origOncomplete;
             if (origOncomplete) {
                 origOncomplete(finalKey, name, finalObj);
             }
             onComplete(opaque);
-            loadCommandOptions.oncomplete = origOncomplete;
         };
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
@@ -586,10 +593,10 @@ Helix.Ajax = {
 
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
-            async: (params.async !== undefined) ? params.async : true
+            async: (params.async !== undefined) ? params.async : true,
+            silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
         $(document).trigger('prerequest', [ params.url, false ]);
-        var didSucceed = false;
         if (Helix.Ajax.isDeviceOnline()) {
             $.ajax({
                 url: params.url,
@@ -598,8 +605,7 @@ Helix.Ajax = {
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
                     if (returnObj.status === 0) {
-                        didSucceed = true;
-                        if (params.success) {
+                        if (params.success && !params.silentMode) {
                             Helix.Utils.statusMessage("Success", params.success, "info");
                         }
 

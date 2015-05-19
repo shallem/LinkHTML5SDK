@@ -1129,7 +1129,7 @@
                     
             /* Always have a "Clear" option. */
             contextMenuItems.push({
-                'display' : 'Clear',
+                'display' : 'None',
                 'action' : function() {
                     _self.itemList = _self.unfilteredList;
                     _self._resetPaging();

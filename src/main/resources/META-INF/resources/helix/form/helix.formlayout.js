@@ -473,7 +473,9 @@ function __refreshSelectMenu(formElem) {
     .append(inputMarkup);
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
-    $(inputMarkup).selectmenu();
+    $(inputMarkup).selectmenu({
+        corners: false
+    });
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
             formElem.onchange.call(this);
@@ -1017,20 +1019,16 @@ function __refreshIFrame(formElem) {
     $frame.show();
 }
 
-function __refreshHTMLFrame(formElem) {
-    if ($(formElem.editDOM).is(':visible')) {
+function __refreshHTMLFrame(formElem, mode) {
+    if ($(formElem.editDOM).is(':visible') || mode === 1) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
             $(elem).editor('update', ''); 
         } else {
             $(elem).editor('update', formElem.value);
         }        
-    } else if ($(formElem.viewDOM).is(':visible')) {
+    } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
-        /*if (formElem.onload) {
-            formElem.$frame.remove();
-            formElem.$frame = $(formElem.frameMarkup).appendTo($(formElem.viewDOM));
-        }*/
         __refreshIFrame(formElem);
     }
 }
@@ -1920,7 +1918,7 @@ Helix.Layout.createConfirmDialog = function(options) {
     var popup = $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
-        'data-overlay-theme' : 'a',
+        'data-overlay-theme' : 'c',
         'data-theme' : 'c',
         'data-position-to' : 'window',
         'data-history' : 'false',
@@ -1932,6 +1930,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'c',
+        'data-corners' : 'false',
         'id' : popupId + "-cancel"
     });
     if (options.dismissText) {
@@ -1959,6 +1958,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'b',
+        'data-corners': 'false',
         'id' : popupId + "-confirm"
     });
     if (options.confirmText) {

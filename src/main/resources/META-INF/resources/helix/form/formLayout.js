@@ -489,7 +489,7 @@
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
                 } else if (fldType === 'htmlframe') {
-                    __refreshHTMLFrame(item);
+                    __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
                     __refreshButtonGroup(item);
                 } else if (fldType === 'pickList') {
