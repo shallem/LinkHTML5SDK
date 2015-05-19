@@ -473,7 +473,9 @@ function __refreshSelectMenu(formElem) {
     .append(inputMarkup);
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
-    $(inputMarkup).selectmenu();
+    $(inputMarkup).selectmenu({
+        corners: false
+    });
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
             formElem.onchange.call(this);

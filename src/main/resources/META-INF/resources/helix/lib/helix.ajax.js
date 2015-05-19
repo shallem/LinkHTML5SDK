@@ -288,9 +288,9 @@ Helix.Ajax = {
                 globalOnComplete(finalKey, name, obj, true, param); // The 'true' means this is an aggregate load
             }
         };
+        loadCommandOptions.syncOverrides = {};
+        loadCommandOptions.syncOverrides.schemaMap = {};
         if (Helix.Ajax.isDeviceOnline()) {
-            loadCommandOptions.syncOverrides = {};
-            loadCommandOptions.syncOverrides.schemaMap = {};
             for (var i = 0; i < nObjsToSync; ++i) {
                 var commandToLaunch = loadCommandOptions.commands[i].name;
                 keyMap[commandToLaunch] = loadCommandOptions.commands[i].key;
@@ -306,16 +306,20 @@ Helix.Ajax = {
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
                     commandToLaunch = loadCommandOptions.commands[idx].name;
+                    keyMap[commandToLaunch] = loadCommandOptions.commands[idx].key;
+    
                     commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+                    loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
+    
                     var itemKey = loadCommandOptions.commands[idx].key;
                     var completeObj = {
-                        fn: loadCommandOptions.oncomplete,
-                        thisArg: loadCommandOptions
+                        fn: commandConfig.oncomplete,
+                        thisArg: commandConfig
                     };
-                    loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
-                        completeObj.args = [ finalKey, name, finalObj ];
+                    commandConfig.oncomplete = function(finalKey, name, finalObj) {
+                        completeObj.args = [ finalKey, name, finalObj, true ];
                         completions.push(completeObj);
-                        loadCommandOptions.oncomplete = completeObj.fn;
+                        commandConfig.oncomplete = completeObj.fn;
                     };
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 } else {
@@ -324,6 +328,7 @@ Helix.Ajax = {
                             completions[i].fn.apply(completions[i].thisArg, completions[i].args);
                         }
                     }
+                    globalOnComplete(null, null, null, true, null);
                 }
             };
 
@@ -334,11 +339,11 @@ Helix.Ajax = {
     synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
         var origOncomplete = loadCommandOptions.oncomplete;
         loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
+            loadCommandOptions.oncomplete = origOncomplete;
             if (origOncomplete) {
                 origOncomplete(finalKey, name, finalObj);
             }
             onComplete(opaque);
-            loadCommandOptions.oncomplete = origOncomplete;
         };
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
