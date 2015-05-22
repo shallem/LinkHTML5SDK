@@ -970,6 +970,14 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 function __refreshIFrame(formElem) {
     var frameID = formElem.name;
     var $frame = (formElem.$frame ? formElem.$frame : formElem.DOM.find(PrimeFaces.escapeClientId(frameID)));
+    if (formElem.frameMarkup) {
+        // We are refreshing an existing frame. We need to replace it in the DOM with a new one, otherwise onload will not
+        // be called.
+        formElem.$frame = $(formElem.frameMarkup);
+        $frame.replaceWith(formElem.$frame);
+        $frame = formElem.$frame;
+    }
+    
     $frame.hide();
     
     // Load the iframe document content
@@ -1033,6 +1041,37 @@ function __refreshHTMLFrame(formElem, mode) {
     }
 }
 
+function __makeIFrameMarkup(formElem) {
+    var frameID = formElem.name;
+    if (!frameID) {
+        console.log("Each IFrame form element must have a name. Cannot specify an IFrame form element without either.");
+        return;
+    }
+    var extraStyle = '';
+    if (formElem.isScroller) {
+        extraStyle = 'overflow-y: scroll; -webkit-overflow-scrolling: touch;';
+    }
+
+    var iFrameMarkup = null;
+    var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
+    var iFrameWidth = ' width="' + formElem.computedWidth + '"';
+    var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
+
+    if (!formElem.height || (formElem.height === 'full')) {
+        iFrameMarkup = '<iframe id="' + frameID + 
+            '" src="javascript:true;"' +
+            iFrameWidth +
+            onloadAttr +
+            iFrameStyle + '>';
+    } else {
+        iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
+            iFrameWidth +
+            onloadAttr +
+            iFrameStyle + '>';
+    }
+    return iFrameMarkup;
+}
+
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (formElem.height === 'full') {
         $fieldContainer.addClass('hx-layout-full-height');
@@ -1049,38 +1088,13 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
     
     if (!mode) {
-        var frameID = formElem.name;
-        if (!frameID) {
-            console.log("Each IFrame form element must have a name. Cannot specify an IFrame form element without either.");
-            return;
-        }
-        var extraStyle = '';
         if (formElem.isScroller) {
-            extraStyle = 'overflow-y: scroll; -webkit-overflow-scrolling: touch;';
             $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
-        }
-        
-        var iFrameMarkup = null;
-        var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
-        var iFrameWidth = ' width="' + formElem.computedWidth + '"';
-        var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
-        
-        if (!formElem.height || (formElem.height === 'full')) {
-            iFrameMarkup = '<iframe id="' + frameID + 
-                '" src="javascript:true;"' +
-                iFrameWidth +
-                onloadAttr +
-                iFrameStyle + '>';
-        } else {
-            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
-                iFrameWidth +
-                onloadAttr +
-                iFrameStyle + '>';
-        }
-        
-        formElem.frameMarkup = iFrameMarkup;
-        formElem.$frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
+        }        
+        var newFrameMarkup = __makeIFrameMarkup(formElem);
+        formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
+        formElem.frameMarkup = newFrameMarkup;
     } else {
         __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }

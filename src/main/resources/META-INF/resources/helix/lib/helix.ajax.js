@@ -301,6 +301,8 @@ Helix.Ajax = {
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
+            // No pulsating header or loaders when offline.
+            Helix.Ajax.loadOptions.silent = true;
 
             // Run each item individually and synchronously.
             var syncComplete = function(idx) {
@@ -328,7 +330,10 @@ Helix.Ajax = {
                             completions[i].fn.apply(completions[i].thisArg, completions[i].args);
                         }
                     }
-                    globalOnComplete(null, null, null, true, null);
+                    if (globalOnComplete) {
+                        globalOnComplete(null, null, null, true, null);
+                    }
+                    Helix.Ajax.loadOptions.silent = false;
                 }
             };
 
