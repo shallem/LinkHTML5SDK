@@ -667,11 +667,13 @@ Helix.Ajax = {
                     params.body,
                     refreshValues ? JSON.stringify(refreshValues) : '',
                     function() {
-                        if (params.offlineSuccess) {
-                            Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
-                        } else {
-                            Helix.Utils.statusMessage("Action Queued",
-                                "This action will be completed the next time you login to Link online.", "info");
+                        if (!params.silentMode) {
+                            if (params.offlineSuccess) {
+                                Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
+                            } else {
+                                Helix.Utils.statusMessage("Action Queued",
+                                    "This action will be completed the next time you login to Link online.", "info");
+                            }
                         }
                         if (callbacks.offlineSuccess) {
                             callbacks.offlineSuccess.call(window);
