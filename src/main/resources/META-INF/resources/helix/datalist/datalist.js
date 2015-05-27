@@ -1309,13 +1309,13 @@
                 }
             }
             
-            /* Always have a "Clear" option. */
+            /* Always have a "Clear" button to reset all global filters. */
             $('<li />').append($('<a />').attr({ 
                 'href' : 'javascript:void(0)',
                 'data-field': '__clear',
-                'data-theme': 'b',
+                'data-theme': 'a',
                 'data-mini' : 'true'
-            }).append("Clear"))
+            }).append("Clear All"))
               .appendTo(filtersList)
               .on(_self.tapEvent, function(evt) {
                 evt.stopImmediatePropagation();

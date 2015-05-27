@@ -537,7 +537,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
 
         var inputID = Helix.Utils.getUniqueID();
-        var inputMarkup = $('<input />').attr({
+        var inputMarkup = formElem.inputMarkup = $('<input />').attr({
             'name': formElem.name,
             'id' : inputID,
             'type': formElem.dataType,
@@ -656,7 +656,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                             if (ret === true) {
 
                                             } else {
-                                                $(inputMarkup).val('');
+                                                $(_self).val('');
                                             }
                                             formElem.__noblur = false;
                                             return false;
