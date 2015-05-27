@@ -558,8 +558,10 @@
                     }
                     if (txtToSurround !== undefined && txtToSurround !== null) {
                         $(newElement).append(txtToSurround);
+                        _self._selectElementContents(newElement.childNodes[0]);
+                    } else {
+                        _self._selectElementContents(newElement);                    
                     }
-                    _self._selectElementContents(newElement);
                 }
             } else {
                 _self.$editFrame.wrapInner($(newElement));
