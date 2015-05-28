@@ -574,20 +574,43 @@
             }
             
             var _self = this;
-            displayCollection.newEach({
-                eachFn: function(row) {
-                    _prefetchedItems.push(row);
-                },
-                doneFn: function() {
-                    if (direction < 0) {
-                        _self._prefetchPrevDone = true;
-                        _self.$listWrapper.trigger('prefetchPrev');
-                    } else {
-                        _self._prefetchNextDone = true;
-                        _self.$listWrapper.trigger('prefetchNext');
-                    }
+            if(typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1) {
+                var _p = new Promise(function(resolve, reject) {
+                    displayCollection.newEach({
+                        eachFn: function(row) {
+                            _prefetchedItems.push(row);
+                        },
+                        doneFn: function() {
+                            if (direction < 0) {
+                                _self._prefetchPrevDone = true;
+                            } else {
+                                _self._prefetchNextDone = true;
+                            }
+                            resolve("done");
+                        }
+                    });                
+                });
+                if (direction < 0) {
+                    _self._prefetchPrevPromise = _p;
+                } else {
+                    _self._prefetchNextPromise = _p;                    
                 }
-            });
+            } else {
+                displayCollection.newEach({
+                    eachFn: function(row) {
+                        _prefetchedItems.push(row);
+                    },
+                    doneFn: function() {
+                        if (direction < 0) {
+                            _self._prefetchPrevDone = true;
+                            _self.$listWrapper.trigger('prefetchPrev');
+                        } else {
+                            _self._prefetchNextDone = true;
+                            _self.$listWrapper.trigger('prefetchNext');
+                        }
+                    }
+                });
+            }
         },
 
         /**
@@ -596,6 +619,11 @@
         _refreshListOnScroll : function(oncomplete) {
             var _self = this;
             var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
+            _self._prefetchPrev = null;
+            _self._prefetchPrevDone = false;
+            _self._prefetchNext = null;
+            _self._prefetchNextDone = false;
+            
             $.mobile.loading('show', {});
             _self.$parent.hide();
             _self._refreshData(function() {
@@ -604,11 +632,6 @@
 
                 _self.$parent.listview( "refresh" );
                 _self.clearSelected();
-
-                _self._prefetchPrev = null;
-                _self._prefetchPrevDone = false;
-                _self._prefetchNext = null;
-                _self._prefetchNextDone = false;
 
                 oncomplete(doRescroll);
             }, false);
@@ -630,12 +653,12 @@
                 } else {
                     var listHeight = _self.$parent.height() - listWHeight;
                     _self._rescrollList(listHeight);
+                    _self._refreshInProgress = false;
                 }
             };
             
             var _refreshUpDone = function() {
-                _self._refreshInProgress = false;
-                _self._rescrollInProgress = true;
+                //_self._rescrollInProgress = true;
                 _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
 
                 // Added this to try to make sure the DOM height is correct ...
@@ -655,10 +678,18 @@
                 if (_self._prefetchPrevDone) {
                     _self._refreshListOnScroll(_refreshUpDone);
                 } else {
-                    _self.$listWrapper.on('prefetchPrev', function() {
-                        _self._refreshListOnScroll(_refreshUpDone);
-                        _self.$listWrapper.off('prefetchPrev');
-                    });
+                    if (_self._prefetchPrevPromise) {
+                        _self._prefetchPrevPromise.then(function(result) {
+                            _self._refreshListOnScroll(_refreshUpDone);                    
+                        }, function(err) {
+                            throw "How did this happen? PrefetchPrev promise cannot fail!";
+                        });
+                    } else {
+                        _self.$listWrapper.on('prefetchPrev', function() {
+                            _self._refreshListOnScroll(_refreshUpDone);
+                            _self.$listWrapper.off('prefetchPrev');
+                        });
+                    }
                 }
                 _self._atDataTop = false;
             }
@@ -667,8 +698,7 @@
         _doScrollDown: function(doForce) {
             var _self = this;
             var _refreshDownDone = function(_rescroll) {
-                _self._refreshInProgress = false;
-                _self._rescrollInProgress = true;
+                //_self._rescrollInProgress = true;
 
                 if (_rescroll) {
                     _self._rescrollList(0);
@@ -676,6 +706,7 @@
                 } else {
                     _self._atDataTop = true;
                 }
+                _self._refreshInProgress = false;
             }; 
 
             if (_self._fingerOn && !doForce) {
@@ -689,14 +720,20 @@
                 _self._prefetchedItems = _self._prefetchNext;
                 //console.log("A:" + scrollPos);
                 if (_self._prefetchNextDone) {
-                    //console.log("B");
                     _self._refreshListOnScroll(_refreshDownDone);
                 } else {
-                    //console.log("C");
-                    _self.$listWrapper.on('prefetchNext', function() {
-                        _self._refreshListOnScroll(_refreshDownDone);
-                        _self.$listWrapper.off('prefetchNext');
-                    });
+                    if (_self._prefetchNextPromise) {
+                        _self._prefetchNextPromise.then(function(result) {
+                            _self._refreshListOnScroll(_refreshDownDone);
+                        }, function(err) {
+                            throw "How did this happen? PrefetchNext promise cannot fail!";
+                        });
+                    } else {
+                        _self.$listWrapper.on('prefetchNext', function() {
+                            _self._refreshListOnScroll(_refreshDownDone);
+                            _self.$listWrapper.off('prefetchNext');
+                        });
+                    }
                 }
             }
         },
@@ -921,7 +958,7 @@
             /* force the search to be re-applied because the underlying data has changed */
             if (_self.__searchText) {
                 _self.__searchTextDirty = true;
-            }
+            }        
         
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -931,6 +968,9 @@
                 return;
             }
             
+            /* force the rescroll flags to off. */
+            _self._refreshInProgress = false;
+
             _self._resetPaging();
             if (renderWindowStart) {
                 _self.setRenderWindowStart(renderWindowStart);

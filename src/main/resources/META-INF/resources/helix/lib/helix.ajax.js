@@ -601,8 +601,8 @@ Helix.Ajax = {
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
-        $(document).trigger('prerequest', [ params.url, false ]);
         if (Helix.Ajax.isDeviceOnline()) {
+            $(document).trigger('prerequest', [ params.url, false ]);
             $.ajax({
                 url: params.url,
                 type: 'POST',
