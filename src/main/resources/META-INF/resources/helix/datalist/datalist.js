@@ -1572,28 +1572,42 @@
         
         _doSearch: function() {
             var _self = this;
-            _self.__searchText = _self.$searchBox.val();
-            if (_self.__searchText.length < 2) {
-                // We do not do 1 letter searches ...
-                return;
-            }
+            _self.__searchText = _self.$searchBox.val();            
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
             }
+            if (_self.__searchText.length < 2) {
+                // We do not do 1 letter searches ...
+                return;
+            } else {
+                _self.__searchReadyTimeout = setTimeout(function() {
+                    if (_self.__searchReadyTimeout) {
+                        clearTimeout(_self.__searchReadyTimeout);
+                    }
 
-            _self.__searchReadyTimeout = setTimeout(function() {
-                if (_self.__searchReadyTimeout) {
-                    clearTimeout(_self.__searchReadyTimeout);
-                }
-                
-                _self._resetPaging();
-                _self.__searchTextDirty = true;
-                _self._refreshData(function() {
-                    _self.$parent.listview( "refresh" );
-                    _self.scrollToStart();
-                }, true);
-                _self.__searchReadyTimeout = null;
-            }, 3000);
+                    _self._resetPaging();
+                    _self.__searchTextDirty = true;
+                    _self._refreshData(function() {
+                        _self.$parent.listview( "refresh" );
+                        _self.scrollToStart();
+                    }, true);
+                    _self.__searchReadyTimeout = null;
+                }, 3000);
+            }
+        },
+        
+        // Restore the original list contents, without any searching, sorting, or filtering.
+        resetListContents: function() {
+            var _self = this;
+            _self.itemList = _self.originalList;
+            _self._resetPaging();
+            if (_self.options.onSearchClear) {
+                _self.options.onSearchClear.call(_self);
+            }
+            _self._refreshData(function() {
+                _self.$parent.listview( "refresh" );
+                _self.scrollToStart();
+            }, true, _self.extraItems);
         },
         
         _prependSearchBox: function() {
@@ -1733,21 +1747,23 @@
                         if (_self.__searchClear) {
                             _self.$searchBox.val('');
                         }
-                    });    
+                    });
+                    this.$searchBox.on('blur', function() {
+                        // If we had previously searched and we then blur the search box
+                        // when it is empty, restore the original list.
+                        if (!_self.$searchBox.val() && _self.__searchText) {                    
+                            _self.clearSearchText();
+                            _self.resetListContents();
+                        }
+                        return false;
+                    });
                 }
                 
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
-                    _self.itemList = _self.originalList;
-                    _self.clearSearchText();
-                    _self._resetPaging();
+                    _self.$searchBox.val('');
                     _self.$searchBox.blur();
-                    if (_self.options.onSearchClear) {
-                        _self.options.onSearchClear.call(_self);
-                    }
-                    _self._refreshData(function() {
-                        _self.$parent.listview( "refresh" );
-                        _self.scrollToStart();
-                    }, true, _self.extraItems);
+                    _self.clearSearchText();
+                    _self.resetListContents();
                     return false;
                 });
             };

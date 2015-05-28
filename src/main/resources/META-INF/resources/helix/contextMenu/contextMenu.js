@@ -72,7 +72,7 @@
 
             if (Helix.hasTouch) {
                 this.tapEvent = 'touchstart';
-                this.stopEvent = 'tap touchend click vclick';
+                this.stopEvent = Helix.clickEvent + ' tap touchend click mousedown';
             } else {
                 this.tapEvent = 'click';
                 this.stopEvent = '';
@@ -197,19 +197,23 @@
                     nxtLink.on(_self.tapEvent, function(evt) {
                         return _self._handleClick(evt);
                     });
+                    if (_self.stopEvent) {
+                        nxtLink.on(_self.stopEvent, function(evt) {
+                            evt.stopImmediatePropagation();
+                            return false;
+                        });
+                    }
                 }
                 this.optionsList.append(nxtLI);
             }
 
-            if (Helix.hasTouch) {
-                // Prevent jQM touch events from propagating beyond the list items. Otherwise
-                // if tapping a list item closes the list and puts something underneath the list
-                // the tap will fall through.
-                this.optionsList.on('touchstart touchend tap vclick click', 'li', function(evt) {
-                    evt.stopImmediatePropagation();
-                    return false;
-                });
-                $(this._menuContainer).on('touchstart touchend tap vclick click', function(evt) {
+            $(_self._menuContainer).on(_self.tapEvent, function(evt) {
+                // Prevent these events from reaching whatever is below the menu.
+                evt.stopImmediatePropagation();
+                return false;
+            });
+            if (_self.stopEvent) {
+                $(_self._menuContainer).on(_self.stopEvent, function(evt) {
                     // Prevent these events from reaching whatever is below the menu.
                     evt.stopImmediatePropagation();
                     return false;
@@ -229,6 +233,7 @@
                 return true;
             }
             evt.stopImmediatePropagation();
+            evt.preventDefault();
 
             var cbData = $(evt.target).attr('data-field');
             var cbIndex = $(evt.target).attr('data-index');

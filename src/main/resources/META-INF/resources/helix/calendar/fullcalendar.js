@@ -1304,7 +1304,8 @@ function EventManager(options, _sources) {
                 var tzOffset = firstDefined(event.tzOffset, options.tzOffset);
                 var dstOffset = firstDefined(event.dstOffset, options.dstOffset);
                 event.tzOffset = tzOffset;
-		event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
+		event.dstOffset = dstOffset;
+                event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
 		if (event.date) {
 			if (!event.start) {
 				event.start = event.date;
