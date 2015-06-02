@@ -478,7 +478,7 @@ function __refreshSelectMenu(formElem) {
     });
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
-            formElem.onchange.call(this);
+            formElem.onchange.call(this, formElem);
         });
     }
 }
@@ -1523,7 +1523,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         renderFn = __appendTextBox;
     } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
-    } else if (formElem.type === 'pickList') {
+    } else if (formElem.type === 'pickList' || formElem.type === 'picklist') {
         renderFn = __appendSelectMenu;
     } else if (formElem.type === 'checkbox') {
         renderFn = __appendCheckBox;
@@ -1545,7 +1545,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         renderFn = __appendDate;
     } else if (formElem.type === 'tzSelector') {
         renderFn = __appendTZSelector;
-    } else if (formElem.type == 'dialog') {        
+    } else if (formElem.type === 'dialog') {        
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.controls.length; ++elemIdx) {
             var subElem = formElem.controls[elemIdx];
@@ -1663,7 +1663,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                 });           
             });
         }   
-    } else if (formElem.type == "image") {
+    } else if (formElem.type === "image") {
        if ($viewFieldContainer) {
            styleClass = "";
            if (formElem.computedStyleClass) {
@@ -1704,7 +1704,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                $(txtElem).hide();
            });
        }
-    } else if (formElem.type == 'horizontalScroll') {
+    } else if (formElem.type === 'horizontalScroll') {
         renderFn = __appendHorizontalScroll;
     } else if (formElem.type === 'subPanel') {
         // Subpanels should be attached directly to the parent div, not to a surrounding
@@ -1817,6 +1817,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     }
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
+        formElem.parentForm = formLayout;
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
 }

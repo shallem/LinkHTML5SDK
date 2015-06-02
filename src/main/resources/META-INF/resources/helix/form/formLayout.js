@@ -219,6 +219,9 @@
             }
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
             this.rendered = true;
+            for (var z = 0; z < this.options.items.length; ++z) {
+                this.options.items[z].parentForm = this;
+            }
         },
         
         toggle: function(valuesMap) {
@@ -736,13 +739,21 @@
             return null;
         },
         
-        getValues: function() {
+        getValues: function(excludes) {
             var obj = {};
             for (var fieldID in this._fieldMap) {
+                if (excludes && fieldID in excludes) {
+                    continue;
+                }
+                
                 obj[fieldID] = this.getValue(fieldID);
             }
             
             return obj;
+        },
+        
+        getField: function(name) {
+            return this._fieldMap[name];
         },
         
         getFieldElement: function(name) {
