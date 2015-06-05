@@ -239,6 +239,19 @@
     background-color: white;
 }
 
+.ui-header .ui-title, .ui-footer .ui-title { 
+    min-height: 1.1em; 
+    text-align: center; 
+    font-size: 16px; 
+    display: block; 
+    margin: .6em 10% .8em;  /* reduce margin horizontal */
+    padding: 0;
+    text-overflow: ellipsis; 
+    overflow: hidden; 
+    white-space: nowrap; 
+    outline: 0 !important;
+}
+
 /* Fixes a bug in mobile safari where components that appear off screen (or even on
    the edge of a screen) on a screen that scrolls do not render properly when the
    screen is scrolled or the keyboard appears. This particularly shows up in the

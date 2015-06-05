@@ -227,6 +227,12 @@
             <description>Function name to invoke on search clear. This function accepts no arguments, but the datalist is the this variable.</description>
         </attribute>
         <attribute>
+            <name>externalButtonsCallback</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback invoked during buttons layout to add external buttons.</description>
+        </attribute>
+        <attribute>
             <name>indexedSearchText</name>
             <required>false</required>
             <type>java.lang.String</type>

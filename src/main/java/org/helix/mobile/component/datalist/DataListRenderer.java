@@ -275,6 +275,11 @@ public class DataListRenderer extends CoreRenderer {
         // The row renderer
         writer.write(",rowRenderer: " + dlist.getRowRenderer());
         
+        // External buttons.
+        if (dlist.getExternalButtonsCallback() != null) {
+            writer.write(",externalButtonsCallback:  function(list, div, useControlGroup) { return "+ dlist.getExternalButtonsCallback() +"}");
+        }
+        
         writer.write("}).data('helix-helixDatalist');");
         
         writer.write("});");

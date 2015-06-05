@@ -446,55 +446,58 @@ Helix.Ajax = {
                     if (responseObj.error.status) {
                         error.code = responseObj.error.status;
                     } else {
-                       error.code = -1;
-                    }                       
+                        error.code = -1;
+                    }                   
+                    if (responseObj.error.objects) {
+                        error.objects =  responseObj.error.objects;
+                    }
                     loadCommandOptions.onerror(error);
                     return;
                 }
-
-                Helix.Ajax.loadOptions.pin = true;
-
-                var syncObject = null;
-                var paramObject = null;
-                if (responseObj.__hx_type === 1004) {
+	    
+		Helix.Ajax.loadOptions.pin = true;
+		
+		var syncObject = null;
+		var paramObject = null;
+		if (responseObj.__hx_type === 1004) {
                     syncObject = responseObj.sync;
                     paramObject = responseObj.param;
-                } else {
+		} else {
                     syncObject = responseObj;
-                }
-
-                if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
+		}
+		
+		if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
                     if (loadCommandOptions.syncingOptions) {
-                        Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
+			Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
                     }
                     if (syncObject) {
-                        // Add setTimeout to allow the message to display
-                        setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+			// Add setTimeout to allow the message to display
+			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
                             Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
                             if (window.CordovaInstalled) {
-                                window.HelixSystem.allowSleep();
+				window.HelixSystem.allowSleep();
                             }
-                        }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
                     } else {
-                        Helix.Ajax.loadOptions.pin = false;
-                        loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
-                        if (window.CordovaInstalled) {
+			Helix.Ajax.loadOptions.pin = false;
+			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
+			if (window.CordovaInstalled) {
                             window.HelixSystem.allowSleep();
-                        }
+			}
                     }
-                } else if (paramObject) {
+		} else if (paramObject) {
                     Helix.Ajax.loadOptions.pin = false;
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
                     if (window.CordovaInstalled) {
-                        window.HelixSystem.allowSleep();
+			window.HelixSystem.allowSleep();
                     }
-                } else {
+		} else {
                     loadCommandOptions.oncomplete(itemKey, "success");
-                }
+		}
             },
             error: function(xhr, status, errorThrown) {
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;

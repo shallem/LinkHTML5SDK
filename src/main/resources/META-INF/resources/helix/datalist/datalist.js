@@ -168,6 +168,11 @@
             onSearchClear: null,
             
             /**
+             *  Buttons for external actions not managed by but rendered by the datalist.
+             */
+            externalButtonsCallback : null,
+            
+            /**
              * List of fields to allow the user to selectively sort by. This option
              * is specified as an object mapping field names for rows in the
              * underlying QueryCollection object to a user-friendly name that is
@@ -1740,6 +1745,10 @@
                         
                         _self.displaySortMenu(this);
                     });                    
+                    
+                    if (this.options.externalButtonsCallback) {
+                        this.options.externalButtonsCallback(_self, $sortDiv, useControlGroup);
+                   }
                 }
                 
                 if (_self._globalFilterContainer) {
