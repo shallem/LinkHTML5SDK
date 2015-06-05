@@ -55,6 +55,23 @@
             groupMembers: null,
             
             /**
+             * For grouped lists, apply this function to each group row to get the
+             * renderer for this group. If this is null, then we just use the rowRenderer.
+             */
+            groupRenderer: null,
+            
+            /**
+             * For grouped lists, specify a maximum count of items per group. By default there
+             * is no maximum.
+             */
+            itemsPerGroup: -1, 
+            
+            /**
+             * For grouped lists, allow a separate search box in each group.
+             */
+            groupIndexedSearch: null,
+            
+            /**
              * Style class applied to each divider row.
              */
             dividerStyleClass: null,
@@ -1422,7 +1439,7 @@
         
             /* List must be non-empty and it must be a query collection. */
             var displayCollection = _self.itemList;
-            if (!displayCollection || !displayCollection.newEach) {
+            if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
                 return;            
             }
@@ -1552,6 +1569,17 @@
                 }
                 __processDone(_self._prefetchedItems.length);
                 _self._prefetchedItems = [];
+            } else if ($.isArray(displayCollection)) {
+                __processStart(displayCollection.length);
+                if (extraItems && extraItems.pre) {
+                    for (var i = 0; i < extraItems.pre.length; ++i) {
+                        __processRow(extraItems.pre[i]);
+                    }
+                }
+                for (var i = 0; i < displayCollection.length; ++i) {
+                    __processRow(displayCollection[i]);
+                }
+                __processDone(displayCollection.length);
             } else {
                 var orderby = _self._currentSort; 
                 displayCollection = _self._resetGlobalFilters(displayCollection);
@@ -1920,7 +1948,17 @@
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex)) {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Stop rendering ... we have exceeded the max number in a group.
+                                return;
+                            }
+                            
+                            var renderer = null;
+                            if (_self.options.groupRenderer) {
+                                renderer = _self.options.groupRenderer(rowObject.group);
+                            }
+                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
@@ -1933,6 +1971,20 @@
                         },
                         /* On done. */
                         function() {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Add a "More ..." item.
+                                var $moreMarkup = $('<a/>').append('More ...');
+                                if (groupIndex < groupLIs.length) {
+                                    $(groupLIs[groupIndex]).empty().append($moreMarkup);
+                                    groupIndex++;
+                                }
+                                else {
+                                    groupLIs[groupIndex] = $('<li/>').append($moreMarkup).appendTo(_self.$parent);
+                                    groupIndex++;
+                                }
+                                // XXX: MAKE SOMETHING HAPPEN WHEN YOU CLICK MORE ...
+                            }
                             oncomplete();
                             for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
                                 groupLIs[_gidx].hide();
@@ -1959,7 +2011,7 @@
             }  
         },
     
-        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -1975,7 +2027,8 @@
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class' : _self.options.rowStyleClass
+                    'class' : _self.options.rowStyleClass,
+                    'data-theme' : 'c'
                 });
             }
             
@@ -1985,7 +2038,10 @@
                 curRowParent.attr('data-group-index', groupIndex);
             }
         
-            if (_self.options.rowRenderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
+            if (!renderer) {
+                renderer = _self.options.rowRenderer;
+            }
+            if (renderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
                     curRowParent.appendTo(_self.$parent);
                 } else {
@@ -2119,6 +2175,7 @@
                 this.selectedLI.removeClass('ui-btn-active');
                 this.selectedLI = null;
                 this.selected = null;
+                this.selectedGroup = null;
             }
         },
         
@@ -2203,6 +2260,10 @@
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
             this.$clearSelectionDiv.hide();
             Helix.Layout.layoutPage();
+        },
+        
+        clearAllListRows: function() {
+            this.$parent.empty();
         },
   
         createListRow: function(parentElement,rowComponents) {
@@ -2481,6 +2542,13 @@
         },
         
         /**
+         * Reset the isLoaded flag.
+         */
+        clearIsLoaded: function() {
+            this.isLoaded = false;
+        },
+        
+        /**
          * Update the value of the 'noSelectOnPagination' option.
          */
         setNoSelectOnPagination: function(val) {
@@ -2527,6 +2595,13 @@
          */
         getListHeader: function() {
             return this.$searchSortDiv;
+        },
+        
+        /**
+         * Return the options object.
+         */
+        getOptions: function() {
+            return this.options;
         }
     });
 })(jQuery);

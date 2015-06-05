@@ -108,6 +108,7 @@
                 this._typeMap[formElem.name] = formElem.type;
                 this._fieldMap[formElem.name] = formElem;
                 formElem.parentForm = this;
+                formElem.origCondition = formElem.condition;
                 if (this.options.namespace) {
                     if (formElem.id) {
                         formElem.id = this.options.namespace + "_" + formElem.id;
@@ -275,6 +276,7 @@
             "search" : true,
             "textarea" : true,
             "pickList" : true,
+            "picklist" : true,
             "hidden" : true,
             "checkbox" : true,
             "tzSelector" : true,
@@ -784,6 +786,25 @@
             return null;
         },
         
+        hideField : function(name) {
+            var fld = this._fieldMap[name];
+            fld.hidden = true;
+            fld.condition = __hx_always_invisible;
+            this.__updateValue(fld.mode, name, fld, {});            
+        },
+        
+        showField: function(name) {
+            var fld = this._fieldMap[name];
+            fld.hidden = false;
+            fld.condition = fld.origCondition;
+            this.__updateValue(fld.mode, name, fld, {});
+        },
+        
+        isHidden: function(name) {
+            var fld = this._fieldMap[name];
+            return fld.hidden;
+        },
+        
         disableField: function(name) {
             var fieldElem = this.getFieldElement(name);
             if (fieldElem && fieldElem.is('input')) {
@@ -907,3 +928,7 @@
         }
     });
 }( jQuery ));
+
+function __hx_always_invisible() {
+    return false;
+}

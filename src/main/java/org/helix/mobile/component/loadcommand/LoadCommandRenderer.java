@@ -192,6 +192,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         }
         if (cmd.getOnerror() != null) {
             writer.write(" 'onerror' : " + cmd.getOnerror() + ",");
+        } else {
+            writer.write(" 'onerror' : Helix.Ajax.defaultOnError,");
         }
         writer.write(" 'schemaFactory' : " + cmd.getName() + "_genSchema,");
         writer.write(" 'loadingOptions' : {");
@@ -251,24 +253,16 @@ public class LoadCommandRenderer extends CoreRenderer {
         
         writer.write("function " + cmd.getName() + "_load(schemaObj, options, itemKey){ ");
         writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
-        writer.write("if (options && options.oncomplete) { loadCommandOptions.oncomplete = options.oncomplete; }");
-        writer.write("if (options && options.loadingOptions) { loadCommandOptions.loadingOptions = options.loadingOptions; }");
-        writer.write("loadCommandOptions.onerror = (options ? options.onerror : Helix.Ajax.defaultOnError);");
         writer.write("loadCommandOptions.schema = schemaObj;");
-        writer.write("loadCommandOptions.requestOptions.params = (options ? options.params : null);");
         
         // Setup the widget.
-        writer.write("Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);");
+        writer.write("Helix.Ajax.ajaxBeanLoad($.extend({}, loadCommandOptions, options), itemKey);");
 
         writer.write("}");
         
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
         writer.write("function " + cmd.getName() + "(options, itemKey){ ");
-        writer.write("if (!options) { options = {}; }\n");
-        if (onComplete != null) {
-            writer.write("if (!options.oncomplete) {\n options.oncomplete = " + onComplete.toString() + "; }\n");
-        }
         writer.write(cmd.getName() + "_genSchema(");
         writer.write(cmd.getName() + "_load,");
         writer.write("[options, itemKey]);");
