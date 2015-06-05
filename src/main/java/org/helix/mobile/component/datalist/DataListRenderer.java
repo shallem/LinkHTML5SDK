@@ -114,6 +114,18 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",groupMembers: " + dlist.getGroupMembers());
         }
         
+        if (dlist.getGroupRenderer() != null) {
+            writer.write(",groupRenderer: " + dlist.getGroupRenderer());
+        }
+        
+        if (dlist.getGroupIndexedSearch() != null) {
+            writer.write(",groupIndexedSearch: " + dlist.getGroupIndexedSearch());
+        }
+        
+        if (dlist.getItemsPerGroup() != null) {
+            writer.write(",itemsPerGroup: " + dlist.getItemsPerGroup());
+        }
+        
         // The row style class.
         if (dlist.getRowStyleClass() != null) {
             writer.write(",rowStyleClass: '" + dlist.getRowStyleClass() + "'");

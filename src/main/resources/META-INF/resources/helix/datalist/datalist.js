@@ -55,6 +55,23 @@
             groupMembers: null,
             
             /**
+             * For grouped lists, apply this function to each group row to get the
+             * renderer for this group. If this is null, then we just use the rowRenderer.
+             */
+            groupRenderer: null,
+            
+            /**
+             * For grouped lists, specify a maximum count of items per group. By default there
+             * is no maximum.
+             */
+            itemsPerGroup: -1, 
+            
+            /**
+             * For grouped lists, allow a separate search box in each group.
+             */
+            groupIndexedSearch: null,
+            
+            /**
              * Style class applied to each divider row.
              */
             dividerStyleClass: null,
@@ -579,20 +596,43 @@
             }
             
             var _self = this;
-            displayCollection.newEach({
-                eachFn: function(row) {
-                    _prefetchedItems.push(row);
-                },
-                doneFn: function() {
-                    if (direction < 0) {
-                        _self._prefetchPrevDone = true;
-                        _self.$listWrapper.trigger('prefetchPrev');
-                    } else {
-                        _self._prefetchNextDone = true;
-                        _self.$listWrapper.trigger('prefetchNext');
-                    }
+            if(typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1) {
+                var _p = new Promise(function(resolve, reject) {
+                    displayCollection.newEach({
+                        eachFn: function(row) {
+                            _prefetchedItems.push(row);
+                        },
+                        doneFn: function() {
+                            if (direction < 0) {
+                                _self._prefetchPrevDone = true;
+                            } else {
+                                _self._prefetchNextDone = true;
+                            }
+                            resolve("done");
+                        }
+                    });                
+                });
+                if (direction < 0) {
+                    _self._prefetchPrevPromise = _p;
+                } else {
+                    _self._prefetchNextPromise = _p;                    
                 }
-            });
+            } else {
+                displayCollection.newEach({
+                    eachFn: function(row) {
+                        _prefetchedItems.push(row);
+                    },
+                    doneFn: function() {
+                        if (direction < 0) {
+                            _self._prefetchPrevDone = true;
+                            _self.$listWrapper.trigger('prefetchPrev');
+                        } else {
+                            _self._prefetchNextDone = true;
+                            _self.$listWrapper.trigger('prefetchNext');
+                        }
+                    }
+                });
+            }
         },
 
         /**
@@ -601,6 +641,11 @@
         _refreshListOnScroll : function(oncomplete) {
             var _self = this;
             var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
+            _self._prefetchPrev = null;
+            _self._prefetchPrevDone = false;
+            _self._prefetchNext = null;
+            _self._prefetchNextDone = false;
+            
             $.mobile.loading('show', {});
             _self.$parent.hide();
             _self._refreshData(function() {
@@ -609,11 +654,6 @@
 
                 _self.$parent.listview( "refresh" );
                 _self.clearSelected();
-
-                _self._prefetchPrev = null;
-                _self._prefetchPrevDone = false;
-                _self._prefetchNext = null;
-                _self._prefetchNextDone = false;
 
                 oncomplete(doRescroll);
             }, false);
@@ -635,12 +675,12 @@
                 } else {
                     var listHeight = _self.$parent.height() - listWHeight;
                     _self._rescrollList(listHeight);
+                    _self._refreshInProgress = false;
                 }
             };
             
             var _refreshUpDone = function() {
-                _self._refreshInProgress = false;
-                _self._rescrollInProgress = true;
+                //_self._rescrollInProgress = true;
                 _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
 
                 // Added this to try to make sure the DOM height is correct ...
@@ -660,10 +700,18 @@
                 if (_self._prefetchPrevDone) {
                     _self._refreshListOnScroll(_refreshUpDone);
                 } else {
-                    _self.$listWrapper.on('prefetchPrev', function() {
-                        _self._refreshListOnScroll(_refreshUpDone);
-                        _self.$listWrapper.off('prefetchPrev');
-                    });
+                    if (_self._prefetchPrevPromise) {
+                        _self._prefetchPrevPromise.then(function(result) {
+                            _self._refreshListOnScroll(_refreshUpDone);                    
+                        }, function(err) {
+                            throw "How did this happen? PrefetchPrev promise cannot fail!";
+                        });
+                    } else {
+                        _self.$listWrapper.on('prefetchPrev', function() {
+                            _self._refreshListOnScroll(_refreshUpDone);
+                            _self.$listWrapper.off('prefetchPrev');
+                        });
+                    }
                 }
                 _self._atDataTop = false;
             }
@@ -672,8 +720,7 @@
         _doScrollDown: function(doForce) {
             var _self = this;
             var _refreshDownDone = function(_rescroll) {
-                _self._refreshInProgress = false;
-                _self._rescrollInProgress = true;
+                //_self._rescrollInProgress = true;
 
                 if (_rescroll) {
                     _self._rescrollList(0);
@@ -681,6 +728,7 @@
                 } else {
                     _self._atDataTop = true;
                 }
+                _self._refreshInProgress = false;
             }; 
 
             if (_self._fingerOn && !doForce) {
@@ -694,14 +742,20 @@
                 _self._prefetchedItems = _self._prefetchNext;
                 //console.log("A:" + scrollPos);
                 if (_self._prefetchNextDone) {
-                    //console.log("B");
                     _self._refreshListOnScroll(_refreshDownDone);
                 } else {
-                    //console.log("C");
-                    _self.$listWrapper.on('prefetchNext', function() {
-                        _self._refreshListOnScroll(_refreshDownDone);
-                        _self.$listWrapper.off('prefetchNext');
-                    });
+                    if (_self._prefetchNextPromise) {
+                        _self._prefetchNextPromise.then(function(result) {
+                            _self._refreshListOnScroll(_refreshDownDone);
+                        }, function(err) {
+                            throw "How did this happen? PrefetchNext promise cannot fail!";
+                        });
+                    } else {
+                        _self.$listWrapper.on('prefetchNext', function() {
+                            _self._refreshListOnScroll(_refreshDownDone);
+                            _self.$listWrapper.off('prefetchNext');
+                        });
+                    }
                 }
             }
         },
@@ -926,7 +980,7 @@
             /* force the search to be re-applied because the underlying data has changed */
             if (_self.__searchText) {
                 _self.__searchTextDirty = true;
-            }
+            }        
         
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -936,6 +990,9 @@
                 return;
             }
             
+            /* force the rescroll flags to off. */
+            _self._refreshInProgress = false;
+
             _self._resetPaging();
             if (renderWindowStart) {
                 _self.setRenderWindowStart(renderWindowStart);
@@ -1134,7 +1191,7 @@
                     
             /* Always have a "Clear" option. */
             contextMenuItems.push({
-                'display' : 'Clear',
+                'display' : 'None',
                 'action' : function() {
                     _self.itemList = _self.unfilteredList;
                     _self._resetPaging();
@@ -1314,13 +1371,13 @@
                 }
             }
             
-            /* Always have a "Clear" option. */
+            /* Always have a "Clear" button to reset all global filters. */
             $('<li />').append($('<a />').attr({ 
                 'href' : 'javascript:void(0)',
                 'data-field': '__clear',
-                'data-theme': 'b',
+                'data-theme': 'a',
                 'data-mini' : 'true'
-            }).append("Clear"))
+            }).append("Clear All"))
               .appendTo(filtersList)
               .on(_self.tapEvent, function(evt) {
                 evt.stopImmediatePropagation();
@@ -1387,7 +1444,7 @@
         
             /* List must be non-empty and it must be a query collection. */
             var displayCollection = _self.itemList;
-            if (!displayCollection || !displayCollection.newEach) {
+            if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
                 return;            
             }
@@ -1517,6 +1574,17 @@
                 }
                 __processDone(_self._prefetchedItems.length);
                 _self._prefetchedItems = [];
+            } else if ($.isArray(displayCollection)) {
+                __processStart(displayCollection.length);
+                if (extraItems && extraItems.pre) {
+                    for (var i = 0; i < extraItems.pre.length; ++i) {
+                        __processRow(extraItems.pre[i]);
+                    }
+                }
+                for (var i = 0; i < displayCollection.length; ++i) {
+                    __processRow(displayCollection[i]);
+                }
+                __processDone(displayCollection.length);
             } else {
                 var orderby = _self._currentSort; 
                 displayCollection = _self._resetGlobalFilters(displayCollection);
@@ -1577,28 +1645,42 @@
         
         _doSearch: function() {
             var _self = this;
-            _self.__searchText = _self.$searchBox.val();
-            if (_self.__searchText.length < 2) {
-                // We do not do 1 letter searches ...
-                return;
-            }
+            _self.__searchText = _self.$searchBox.val();            
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
             }
+            if (_self.__searchText.length < 2) {
+                // We do not do 1 letter searches ...
+                return;
+            } else {
+                _self.__searchReadyTimeout = setTimeout(function() {
+                    if (_self.__searchReadyTimeout) {
+                        clearTimeout(_self.__searchReadyTimeout);
+                    }
 
-            _self.__searchReadyTimeout = setTimeout(function() {
-                if (_self.__searchReadyTimeout) {
-                    clearTimeout(_self.__searchReadyTimeout);
-                }
-                
-                _self._resetPaging();
-                _self.__searchTextDirty = true;
-                _self._refreshData(function() {
-                    _self.$parent.listview( "refresh" );
-                    _self.scrollToStart();
-                }, true);
-                _self.__searchReadyTimeout = null;
-            }, 3000);
+                    _self._resetPaging();
+                    _self.__searchTextDirty = true;
+                    _self._refreshData(function() {
+                        _self.$parent.listview( "refresh" );
+                        _self.scrollToStart();
+                    }, true);
+                    _self.__searchReadyTimeout = null;
+                }, 3000);
+            }
+        },
+        
+        // Restore the original list contents, without any searching, sorting, or filtering.
+        resetListContents: function() {
+            var _self = this;
+            _self.itemList = _self.originalList;
+            _self._resetPaging();
+            if (_self.options.onSearchClear) {
+                _self.options.onSearchClear.call(_self);
+            }
+            _self._refreshData(function() {
+                _self.$parent.listview( "refresh" );
+                _self.scrollToStart();
+            }, true, _self.extraItems);
         },
         
         _prependSearchBox: function() {
@@ -1742,21 +1824,23 @@
                         if (_self.__searchClear) {
                             _self.$searchBox.val('');
                         }
-                    });    
+                    });
+                    this.$searchBox.on('blur', function() {
+                        // If we had previously searched and we then blur the search box
+                        // when it is empty, restore the original list.
+                        if (!_self.$searchBox.val() && _self.__searchText) {                    
+                            _self.clearSearchText();
+                            _self.resetListContents();
+                        }
+                        return false;
+                    });
                 }
                 
                 $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
-                    _self.itemList = _self.originalList;
-                    _self.clearSearchText();
-                    _self._resetPaging();
+                    _self.$searchBox.val('');
                     _self.$searchBox.blur();
-                    if (_self.options.onSearchClear) {
-                        _self.options.onSearchClear.call(_self);
-                    }
-                    _self._refreshData(function() {
-                        _self.$parent.listview( "refresh" );
-                        _self.scrollToStart();
-                    }, true, _self.extraItems);
+                    _self.clearSearchText();
+                    _self.resetListContents();
                     return false;
                 });
             };
@@ -1873,7 +1957,17 @@
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex)) {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Stop rendering ... we have exceeded the max number in a group.
+                                return;
+                            }
+                            
+                            var renderer = null;
+                            if (_self.options.groupRenderer) {
+                                renderer = _self.options.groupRenderer(rowObject.group);
+                            }
+                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
@@ -1886,6 +1980,20 @@
                         },
                         /* On done. */
                         function() {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Add a "More ..." item.
+                                var $moreMarkup = $('<a/>').append('More ...');
+                                if (groupIndex < groupLIs.length) {
+                                    $(groupLIs[groupIndex]).empty().append($moreMarkup);
+                                    groupIndex++;
+                                }
+                                else {
+                                    groupLIs[groupIndex] = $('<li/>').append($moreMarkup).appendTo(_self.$parent);
+                                    groupIndex++;
+                                }
+                                // XXX: MAKE SOMETHING HAPPEN WHEN YOU CLICK MORE ...
+                            }
                             oncomplete();
                             for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
                                 groupLIs[_gidx].hide();
@@ -1912,7 +2020,7 @@
             }  
         },
     
-        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -1928,7 +2036,8 @@
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class' : _self.options.rowStyleClass
+                    'class' : _self.options.rowStyleClass,
+                    'data-theme' : 'c'
                 });
             }
             
@@ -1938,7 +2047,10 @@
                 curRowParent.attr('data-group-index', groupIndex);
             }
         
-            if (_self.options.rowRenderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
+            if (!renderer) {
+                renderer = _self.options.rowRenderer;
+            }
+            if (renderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
                     curRowParent.appendTo(_self.$parent);
                 } else {
@@ -2072,6 +2184,7 @@
                 this.selectedLI.removeClass('ui-btn-active');
                 this.selectedLI = null;
                 this.selected = null;
+                this.selectedGroup = null;
             }
         },
         
@@ -2156,6 +2269,10 @@
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
             this.$clearSelectionDiv.hide();
             Helix.Layout.layoutPage();
+        },
+        
+        clearAllListRows: function() {
+            this.$parent.empty();
         },
   
         createListRow: function(parentElement,rowComponents) {
@@ -2434,6 +2551,13 @@
         },
         
         /**
+         * Reset the isLoaded flag.
+         */
+        clearIsLoaded: function() {
+            this.isLoaded = false;
+        },
+        
+        /**
          * Update the value of the 'noSelectOnPagination' option.
          */
         setNoSelectOnPagination: function(val) {
@@ -2474,12 +2598,55 @@
         listIsDirty: function() {
             return this.isDirty;
         },
+                
+        setCurrentSort : function(newSort, sortOrder, sortCase, doRefresh) {
+           var oldOrder = this._currentSortOrder;
+           var oldSort = this._currentSort;
+           var oldSortCase = this._currentSortCase;
+                      
+            if (this.options.onSortChange) {
+                var updatedSorts = this.options.onSortChange(this._currentSort, this._currentSortOrder, newSort);
+                if (updatedSorts) {
+                    this._currentSort = (updatedSorts.sort ? updatedSorts.sort : this._currentSort);
+                    this._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : this._currentSortOrder);
+                    this._currentSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : this._currentSortCase);
+                }
+            }  else {
+                    this._currentSort = (newSort ? newSort : this._currentSort);
+                    this._currentSortOrder = (sortOrder ? sortOrder : this._currentSortOrder);
+                    this._currentSortCase = (sortCase ? sortCase : this._currentSortCase);
+            }
+                
+            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) || (oldSortCase !== this._currentSortCase)) {
+                 this._updateSortButtons(); 
+                 
+//                 // Change the li for this sort field so that we can see it is the current sort field.
+//                 $(sortsList).find('li').removeClass('hx-current-sort');
+//                 $(this).addClass('hx-current-sort');
+
+                  if (doRefresh) {
+                        // Display from the beginning of the list.
+                        this._resetPaging();
+                        this._refreshData(function() {
+                            this.$parent.listview( "refresh" );
+                            this.$listWrapper.scrollTop(0);
+                        }, true, this.extraItems);    
+                  }
+             }
+        },
         
         /**
          * Return the list header.
          */
         getListHeader: function() {
             return this.$searchSortDiv;
+        },
+        
+        /**
+         * Return the options object.
+         */
+        getOptions: function() {
+            return this.options;
         }
     });
 })(jQuery);

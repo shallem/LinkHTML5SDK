@@ -83,7 +83,7 @@
         </attribute>
         <attribute>
             <name>rowRenderer</name>
-            <required>true</required>
+            <required>false</required>
             <type>java.lang.String</type>
             <description>Java script expression that renders a single row of data. Parameters are the parentDiv (enclosing the row) and the row (the row data).</description>
         </attribute>
@@ -183,6 +183,25 @@
             <defaultValue>false</defaultValue>
             <description>Function to invoke on a row to get the group members in a grouped list.</description>
         </attribute>
+        <attribute>
+            <name>groupRenderer</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>null</defaultValue>
+            <description>Function to map a group to a renderer for that group. If omitted, then a rowRenderer must be specified.</description>
+        </attribute>
+        <attribute>
+            <name>itemsPerGroup</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Maximum number of items to display in each group in a grouped list. If more than this number are in a group, a more item is added to the list.</description>
+        </attribute>
+        <attribute>
+            <name>groupIndexedSearch</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function that executes an indexed search within a single group. Used for grouped lists.</description>
+        </attribute>        
         <attribute>
             <name>strings</name>
             <required>false</required>
