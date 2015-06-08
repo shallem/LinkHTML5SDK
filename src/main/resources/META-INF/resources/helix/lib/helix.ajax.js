@@ -281,7 +281,7 @@ Helix.Ajax = {
                         config.onerror(error);
                     }
                 } else if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param[syncComponent]);
+                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param ? param[syncComponent] : null);
                 }
             }
             if (globalOnComplete) {
