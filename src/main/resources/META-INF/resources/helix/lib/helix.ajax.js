@@ -382,17 +382,14 @@ Helix.Ajax = {
             return;
         }
 
-        if (!loadCommandOptions.requestOptions.params) {
-            if (loadCommandOptions.params) {
-                loadCommandOptions.requestOptions.params = loadCommandOptions.params;
-            } else {
-                loadCommandOptions.requestOptions.params = [];            
+        loadCommandOptions.requestOptions.params = [];  
+        if (loadCommandOptions.params) {
+            if (!loadCommandOptions.params.push) {
+                // the request options are not an array ...
+                loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
+                return;
             }
-        }
-        if (!loadCommandOptions.requestOptions.params.push) {
-            // the request options are not an array ...
-            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
-            return;
+            loadCommandOptions.requestOptions.params = loadCommandOptions.params;
         }
         loadCommandOptions.requestOptions.params.push({
             name: "__hxLoadKey",

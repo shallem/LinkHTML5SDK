@@ -556,7 +556,7 @@ li {
  * Datalist styles.
  */
 
-.ui-btn-text .hx-subicon {
+.ui-btn-inner .hx-subicon {
     right: 10px;
     top: 55%;
     width: 16px;
