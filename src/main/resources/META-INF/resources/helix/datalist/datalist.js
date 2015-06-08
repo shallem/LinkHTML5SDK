@@ -2302,6 +2302,18 @@
             } else {
                 $(parentElement).removeAttr('data-icon');
             }
+            
+            if (rowComponents.subIcon) {
+                // Elements to put underneath the icon.
+                $(rowComponents.subIcon).attr('data-role', 'subicon').addClass('hx-subicon');
+                if ($(parentElement).find('[data-role="subicon"]').length) {
+                    $(parentElement).find('[data-role="subicon"]').replaceWith(rowComponents.subIcon);
+                } else {
+                    $(parentElement).append(rowComponents.subIcon);
+                }
+            } else {
+                $(parentElement).find('[data-role="subicon"]').remove();
+            }
 
             var oldPfx = $(mainLink).find('[data-role="prefix"]');
             if (rowComponents.prefix) {
