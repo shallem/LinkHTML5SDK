@@ -108,6 +108,7 @@
                 this._typeMap[formElem.name] = formElem.type;
                 this._fieldMap[formElem.name] = formElem;
                 formElem.parentForm = this;
+                formElem.origCondition = formElem.condition;
                 if (this.options.namespace) {
                     if (formElem.id) {
                         formElem.id = this.options.namespace + "_" + formElem.id;
@@ -219,6 +220,9 @@
             }
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
             this.rendered = true;
+            for (var z = 0; z < this.options.items.length; ++z) {
+                this.options.items[z].parentForm = this;
+            }
         },
         
         toggle: function(valuesMap) {
@@ -272,6 +276,7 @@
             "search" : true,
             "textarea" : true,
             "pickList" : true,
+            "picklist" : true,
             "hidden" : true,
             "checkbox" : true,
             "tzSelector" : true,
@@ -489,7 +494,7 @@
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
                 } else if (fldType === 'htmlframe') {
-                    __refreshHTMLFrame(item);
+                    __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
                     __refreshButtonGroup(item);
                 } else if (fldType === 'pickList') {
@@ -727,6 +732,8 @@
                 if (selected.length > 0) {
                     return selected.val();
                 }
+            } else if (fldType === 'htmlarea') {
+                return $(thisField).editor('getHTML')
             } else {
                 return thisField.val();
             }
@@ -734,13 +741,21 @@
             return null;
         },
         
-        getValues: function() {
+        getValues: function(excludes) {
             var obj = {};
             for (var fieldID in this._fieldMap) {
+                if (excludes && fieldID in excludes) {
+                    continue;
+                }
+                
                 obj[fieldID] = this.getValue(fieldID);
             }
             
             return obj;
+        },
+        
+        getField: function(name) {
+            return this._fieldMap[name];
         },
         
         getFieldElement: function(name) {
@@ -769,6 +784,25 @@
                 return ret;
             }
             return null;
+        },
+        
+        hideField : function(name) {
+            var fld = this._fieldMap[name];
+            fld.hidden = true;
+            fld.condition = __hx_always_invisible;
+            this.__updateValue(fld.mode, name, fld, {});            
+        },
+        
+        showField: function(name) {
+            var fld = this._fieldMap[name];
+            fld.hidden = false;
+            fld.condition = fld.origCondition;
+            this.__updateValue(fld.mode, name, fld, {});
+        },
+        
+        isHidden: function(name) {
+            var fld = this._fieldMap[name];
+            return fld.hidden;
         },
         
         disableField: function(name) {
@@ -894,3 +928,7 @@
         }
     });
 }( jQuery ));
+
+function __hx_always_invisible() {
+    return false;
+}

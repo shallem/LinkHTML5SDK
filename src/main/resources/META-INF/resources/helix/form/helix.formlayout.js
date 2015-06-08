@@ -473,10 +473,12 @@ function __refreshSelectMenu(formElem) {
     .append(inputMarkup);
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
-    $(inputMarkup).selectmenu();
+    $(inputMarkup).selectmenu({
+        corners: false
+    });
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
-            formElem.onchange.call(this);
+            formElem.onchange.call(this, formElem);
         });
     }
 }
@@ -535,7 +537,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
 
         var inputID = Helix.Utils.getUniqueID();
-        var inputMarkup = $('<input />').attr({
+        var inputMarkup = formElem.inputMarkup = $('<input />').attr({
             'name': formElem.name,
             'id' : inputID,
             'type': formElem.dataType,
@@ -654,7 +656,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                             if (ret === true) {
 
                                             } else {
-                                                $(inputMarkup).val('');
+                                                $(_self).val('');
                                             }
                                             formElem.__noblur = false;
                                             return false;
@@ -968,6 +970,14 @@ function __appendButton(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 function __refreshIFrame(formElem) {
     var frameID = formElem.name;
     var $frame = (formElem.$frame ? formElem.$frame : formElem.DOM.find(PrimeFaces.escapeClientId(frameID)));
+    if (formElem.frameMarkup) {
+        // We are refreshing an existing frame. We need to replace it in the DOM with a new one, otherwise onload will not
+        // be called.
+        formElem.$frame = $(formElem.frameMarkup);
+        $frame.replaceWith(formElem.$frame);
+        $frame = formElem.$frame;
+    }
+    
     $frame.hide();
     
     // Load the iframe document content
@@ -1017,22 +1027,49 @@ function __refreshIFrame(formElem) {
     $frame.show();
 }
 
-function __refreshHTMLFrame(formElem) {
-    if ($(formElem.editDOM).is(':visible')) {
+function __refreshHTMLFrame(formElem, mode) {
+    if ($(formElem.editDOM).is(':visible') || mode === 1) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
             $(elem).editor('update', ''); 
         } else {
             $(elem).editor('update', formElem.value);
         }        
-    } else if ($(formElem.viewDOM).is(':visible')) {
+    } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
-        /*if (formElem.onload) {
-            formElem.$frame.remove();
-            formElem.$frame = $(formElem.frameMarkup).appendTo($(formElem.viewDOM));
-        }*/
         __refreshIFrame(formElem);
     }
+}
+
+function __makeIFrameMarkup(formElem) {
+    var frameID = formElem.name;
+    if (!frameID) {
+        console.log("Each IFrame form element must have a name. Cannot specify an IFrame form element without either.");
+        return;
+    }
+    var extraStyle = '';
+    if (formElem.isScroller) {
+        extraStyle = 'overflow-y: scroll; -webkit-overflow-scrolling: touch;';
+    }
+
+    var iFrameMarkup = null;
+    var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
+    var iFrameWidth = ' width="' + formElem.computedWidth + '"';
+    var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
+
+    if (!formElem.height || (formElem.height === 'full')) {
+        iFrameMarkup = '<iframe id="' + frameID + 
+            '" src="javascript:true;"' +
+            iFrameWidth +
+            onloadAttr +
+            iFrameStyle + '>';
+    } else {
+        iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
+            iFrameWidth +
+            onloadAttr +
+            iFrameStyle + '>';
+    }
+    return iFrameMarkup;
 }
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
@@ -1051,38 +1088,13 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
     
     if (!mode) {
-        var frameID = formElem.name;
-        if (!frameID) {
-            console.log("Each IFrame form element must have a name. Cannot specify an IFrame form element without either.");
-            return;
-        }
-        var extraStyle = '';
         if (formElem.isScroller) {
-            extraStyle = 'overflow-y: scroll; -webkit-overflow-scrolling: touch;';
             $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
-        }
-        
-        var iFrameMarkup = null;
-        var iFrameStyle = ' style="border:0px; ' + extraStyle + '"';
-        var iFrameWidth = ' width="' + formElem.computedWidth + '"';
-        var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
-        
-        if (!formElem.height || (formElem.height === 'full')) {
-            iFrameMarkup = '<iframe id="' + frameID + 
-                '" src="javascript:true;"' +
-                iFrameWidth +
-                onloadAttr +
-                iFrameStyle + '>';
-        } else {
-            iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
-                iFrameWidth +
-                onloadAttr +
-                iFrameStyle + '>';
-        }
-        
-        formElem.frameMarkup = iFrameMarkup;
-        formElem.$frame = $(iFrameMarkup).appendTo($fieldContainer).hide();
+        }        
+        var newFrameMarkup = __makeIFrameMarkup(formElem);
+        formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
+        formElem.frameMarkup = newFrameMarkup;
     } else {
         __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }
@@ -1511,7 +1523,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         renderFn = __appendTextBox;
     } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
-    } else if (formElem.type === 'pickList') {
+    } else if (formElem.type === 'pickList' || formElem.type === 'picklist') {
         renderFn = __appendSelectMenu;
     } else if (formElem.type === 'checkbox') {
         renderFn = __appendCheckBox;
@@ -1533,7 +1545,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         renderFn = __appendDate;
     } else if (formElem.type === 'tzSelector') {
         renderFn = __appendTZSelector;
-    } else if (formElem.type == 'dialog') {        
+    } else if (formElem.type === 'dialog') {        
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.controls.length; ++elemIdx) {
             var subElem = formElem.controls[elemIdx];
@@ -1651,7 +1663,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                 });           
             });
         }   
-    } else if (formElem.type == "image") {
+    } else if (formElem.type === "image") {
        if ($viewFieldContainer) {
            styleClass = "";
            if (formElem.computedStyleClass) {
@@ -1692,7 +1704,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                $(txtElem).hide();
            });
        }
-    } else if (formElem.type == 'horizontalScroll') {
+    } else if (formElem.type === 'horizontalScroll') {
         renderFn = __appendHorizontalScroll;
     } else if (formElem.type === 'subPanel') {
         // Subpanels should be attached directly to the parent div, not to a surrounding
@@ -1805,6 +1817,7 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     }
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
+        formElem.parentForm = formLayout;
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
 }
@@ -1843,7 +1856,11 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
                 'data-role' : 'content',
                 'style' : 'overflow-y: auto;',
                 'class' : 'hx-main-content'
-                }).append($('<form />'))
+                }).append($('<form />').attr({
+                    'width': '100%',
+                    'height': '100%',
+                    'class': 'hx-layout-full-height'
+                }))
             ),
             'fields' : dialogFields
         };
@@ -1856,7 +1873,9 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
         var dialogForm = $(dialogObj.page).find('form'); 
         $(dialogForm).empty();
         $(dialogForm).data("DIALOG", dialogFields);
-        $(dialogForm).width($.mobile.activePage.width());
+        $(dialogForm).width('100%');
+        $(dialogForm).height('100%');
+        $(dialogForm).addClass('hx-layout-full-height');
         dialogFields.doneLink = PrimeFaces.escapeClientId($.mobile.activePage.attr('id'));
         dialogFields.mode = true; /* Edit mode. */
         dialogFields.separateElements = false; /* Do not separate elements. */
@@ -1914,7 +1933,7 @@ Helix.Layout.createConfirmDialog = function(options) {
     var popup = $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
-        'data-overlay-theme' : 'a',
+        'data-overlay-theme' : 'c',
         'data-theme' : 'c',
         'data-position-to' : 'window',
         'data-history' : 'false',
@@ -1926,6 +1945,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'c',
+        'data-corners' : 'false',
         'id' : popupId + "-cancel"
     });
     if (options.dismissText) {
@@ -1953,6 +1973,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-role' : 'button',
         'data-inline' : 'true',
         'data-theme' : 'b',
+        'data-corners': 'false',
         'id' : popupId + "-confirm"
     });
     if (options.confirmText) {

@@ -24,29 +24,31 @@
  * Show a loader pre-request.
  */
 $(document).on('prerequest', function(ev, url, suspendSleep) {
-    if (!Helix.Ajax.loadOptions.async) {
-        $.mobile.loading( 'show', Helix.Ajax.loadOptions);
-    } else {
-        if (!Helix.Ajax.loadOptions.color) {
-            Helix.Ajax.loadOptions.color = "#FF8000";
-        }
+    if (!Helix.Ajax.loadOptions.silent) {
+        if (!Helix.Ajax.loadOptions.async) {
+            $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        } else {
+            if (!Helix.Ajax.loadOptions.color) {
+                Helix.Ajax.loadOptions.color = "#FF8000";
+            }
 
-        var header = $.mobile.activePage.find('[data-role="header"]');
-        var origBG = $(header).css('background');
-        var animateColor = function(doReverse) {
-            $(header).animate({
-                'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
-            }, {
-                duration: 1200,
-                complete: function() {
-                    if (Helix.Ajax.loadCt >  0) {
-                        animateColor(!doReverse);
-                    } else {
-                        $(header).css('background', '');
-                    }
-            }});
-        };
-        animateColor(false);
+            var header = $.mobile.activePage.find('[data-role="header"]');
+            var origBG = $(header).css('background');
+            var animateColor = function(doReverse) {
+                $(header).animate({
+                    'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+                }, {
+                    duration: 1200,
+                    complete: function() {
+                        if (Helix.Ajax.loadCt >  0) {
+                            animateColor(!doReverse);
+                        } else {
+                            $(header).css('background', '');
+                        }
+                }});
+            };
+            animateColor(false);
+        }
     }
     if (window.CordovaInstalled && suspendSleep) {
         window.HelixSystem.suspendSleep();
@@ -247,7 +249,7 @@ Helix.Ajax = {
             nxtConfig.schemaFactory(function(schema, cfg) {
                 cfg.schema = schema;
                 __doSchema();
-            }, [nxtConfig], (schemaFactories.length > 0 ? true : false) /* No schema sync unless this is the last item. */);
+            }, [nxtConfig], (schemaFactories.length > 1 ? true : false) /* No schema sync unless this is the last item. */);
         };
         __doSchema();
     },
@@ -286,9 +288,9 @@ Helix.Ajax = {
                 globalOnComplete(finalKey, name, obj, true, param); // The 'true' means this is an aggregate load
             }
         };
+        loadCommandOptions.syncOverrides = {};
+        loadCommandOptions.syncOverrides.schemaMap = {};
         if (Helix.Ajax.isDeviceOnline()) {
-            loadCommandOptions.syncOverrides = {};
-            loadCommandOptions.syncOverrides.schemaMap = {};
             for (var i = 0; i < nObjsToSync; ++i) {
                 var commandToLaunch = loadCommandOptions.commands[i].name;
                 keyMap[commandToLaunch] = loadCommandOptions.commands[i].key;
@@ -299,21 +301,27 @@ Helix.Ajax = {
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
+            // No pulsating header or loaders when offline.
+            Helix.Ajax.loadOptions.silent = true;
 
             // Run each item individually and synchronously.
             var syncComplete = function(idx) {
                 if (idx < nObjsToSync) {
                     commandToLaunch = loadCommandOptions.commands[idx].name;
+                    keyMap[commandToLaunch] = loadCommandOptions.commands[idx].key;
+    
                     commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
+                    loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
+    
                     var itemKey = loadCommandOptions.commands[idx].key;
                     var completeObj = {
-                        fn: loadCommandOptions.oncomplete,
-                        thisArg: loadCommandOptions
+                        fn: commandConfig.oncomplete,
+                        thisArg: commandConfig
                     };
-                    loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
-                        completeObj.args = [ finalKey, name, finalObj ];
+                    commandConfig.oncomplete = function(finalKey, name, finalObj) {
+                        completeObj.args = [ finalKey, name, finalObj, true ];
                         completions.push(completeObj);
-                        loadCommandOptions.oncomplete = completeObj.fn;
+                        commandConfig.oncomplete = completeObj.fn;
                     };
                     Helix.Ajax.synchronousBeanLoad(commandConfig,itemKey,syncComplete,++idx);
                 } else {
@@ -322,6 +330,10 @@ Helix.Ajax = {
                             completions[i].fn.apply(completions[i].thisArg, completions[i].args);
                         }
                     }
+                    if (globalOnComplete) {
+                        globalOnComplete(null, null, null, true, null);
+                    }
+                    Helix.Ajax.loadOptions.silent = false;
                 }
             };
 
@@ -332,16 +344,16 @@ Helix.Ajax = {
     synchronousBeanLoad: function(loadCommandOptions, itemKey, onComplete, opaque) {
         var origOncomplete = loadCommandOptions.oncomplete;
         loadCommandOptions.oncomplete = function(finalKey, name, finalObj) {
+            loadCommandOptions.oncomplete = origOncomplete;
             if (origOncomplete) {
                 origOncomplete(finalKey, name, finalObj);
             }
             onComplete(opaque);
-            loadCommandOptions.oncomplete = origOncomplete;
         };
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
 
-    ajaxBeanLoad : function(loadCommandOptions,itemKey,nRetries) {
+    ajaxBeanLoad: function(loadCommandOptions,itemKey,nRetries) {
         // Set a default error handler if we do not have one.
         if (!loadCommandOptions.onerror) {
             loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
@@ -417,87 +429,85 @@ Helix.Ajax = {
 
         $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, true ]);
         /* Give the browser a change to handle the event and show the loader. */
-        setTimeout(function() {
-            $.ajax({
-                type: "POST",
-                url: loadCommandOptions.requestOptions.postBack,
-                dataType: "json",
-                data: $.param(loadCommandOptions.requestOptions.params),
-                success: function(data, status, xhr) {
-                    var responseObj = data;
-                    if (responseObj.error) {
-                        var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                        if (responseObj.error.msg) {
-                            error.msg = responseObj.error.msg;
-                        } else if (Helix.Utils.isString(responseObj.error)) {
-                            error.msg = responseObj.error;
-                        }
-                        if (responseObj.error.status) {
-                            error.code = responseObj.error.status;
-                        } else {
-                           error.code = -1;
-                        }                   
-                        if (responseObj.error.objects) {
-                           error.objects =  responseObj.error.objects;
-                        }
-                        loadCommandOptions.onerror(error);
-                        return;
-                    }
-
-                    Helix.Ajax.loadOptions.pin = true;
-
-                    var syncObject = null;
-                    var paramObject = null;
-                    if (responseObj.__hx_type === 1004) {
-                        syncObject = responseObj.sync;
-                        paramObject = responseObj.param;
-                    } else {
-                        syncObject = responseObj;
-                    }
-
-                    if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
-                        if (loadCommandOptions.syncingOptions) {
-                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
-                        }
-                        if (syncObject) {
-                            // Add setTimeout to allow the message to display
-                            setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
-                                var finalKey = o.key;
-                                $.mobile.loading( "hide" );
-                                window[loadCommandOptions.name] = finalObj;
-                                Helix.Ajax.loadOptions.pin = false;
-                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
-                                if (window.CordovaInstalled) {
-                                    window.HelixSystem.allowSleep();
-                                }
-                            }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
-                        } else {
-                            Helix.Ajax.loadOptions.pin = false;
-                            loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
-                            if (window.CordovaInstalled) {
-                                window.HelixSystem.allowSleep();
-                            }
-                        }
-                    } else if (paramObject) {
-                        Helix.Ajax.loadOptions.pin = false;
-                        loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
-                        if (window.CordovaInstalled) {
-                            window.HelixSystem.allowSleep();
-                        }
-                    } else {
-                        loadCommandOptions.oncomplete(itemKey, "success");
-                    }
-                },
-                error: function(xhr, status, errorThrown) {
+        $.ajax({
+            type: "POST",
+            url: loadCommandOptions.requestOptions.postBack,
+            dataType: "json",
+            data: $.param(loadCommandOptions.requestOptions.params),
+            success: function(data, status, xhr) {
+                var responseObj = data;
+                if (responseObj.error) {
                     var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                    error.msg = status;
+                    if (responseObj.error.msg) {
+                        error.msg = responseObj.error.msg;
+                    } else if (Helix.Utils.isString(responseObj.error)) {
+                        error.msg = responseObj.error;
+                    }
+                    if (responseObj.error.status) {
+                        error.code = responseObj.error.status;
+                    } else {
+                        error.code = -1;
+                    }                   
+                    if (responseObj.error.objects) {
+                        error.objects =  responseObj.error.objects;
+                    }
                     loadCommandOptions.onerror(error);
-                },
-                complete: function(xhr) {
-                    $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+                    return;
                 }
-            });
-        }, 0);
+	    
+		Helix.Ajax.loadOptions.pin = true;
+		
+		var syncObject = null;
+		var paramObject = null;
+		if (responseObj.__hx_type === 1004) {
+                    syncObject = responseObj.sync;
+                    paramObject = responseObj.param;
+		} else {
+                    syncObject = responseObj;
+		}
+		
+		if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
+                    if (loadCommandOptions.syncingOptions) {
+			Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
+                    }
+                    if (syncObject) {
+			// Add setTimeout to allow the message to display
+			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+                            var finalKey = o.key;
+                            $.mobile.loading( "hide" );
+                            window[loadCommandOptions.name] = finalObj;
+                            Helix.Ajax.loadOptions.pin = false;
+                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                            if (window.CordovaInstalled) {
+				window.HelixSystem.allowSleep();
+                            }
+			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+                    } else {
+			Helix.Ajax.loadOptions.pin = false;
+			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
+			if (window.CordovaInstalled) {
+                            window.HelixSystem.allowSleep();
+			}
+                    }
+		} else if (paramObject) {
+                    Helix.Ajax.loadOptions.pin = false;
+                    loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
+                    if (window.CordovaInstalled) {
+			window.HelixSystem.allowSleep();
+                    }
+		} else {
+                    loadCommandOptions.oncomplete(itemKey, "success");
+		}
+            },
+            error: function(xhr, status, errorThrown) {
+                var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                error.msg = status;
+                loadCommandOptions.onerror(error);
+            },
+            complete: function(xhr) {
+                $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+            }
+        });
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
@@ -589,11 +599,11 @@ Helix.Ajax = {
 
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
-            async: (params.async !== undefined) ? params.async : true
+            async: (params.async !== undefined) ? params.async : true,
+            silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
-        $(document).trigger('prerequest', [ params.url, false ]);
-        var didSucceed = false;
         if (Helix.Ajax.isDeviceOnline()) {
+            $(document).trigger('prerequest', [ params.url, false ]);
             $.ajax({
                 url: params.url,
                 type: 'POST',
@@ -601,8 +611,7 @@ Helix.Ajax = {
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
                     if (returnObj.status === 0) {
-                        didSucceed = true;
-                        if (params.success) {
+                        if (params.success && !params.silentMode) {
                             Helix.Utils.statusMessage("Success", params.success, "info");
                         }
 
@@ -659,11 +668,13 @@ Helix.Ajax = {
                     params.body,
                     refreshValues ? JSON.stringify(refreshValues) : '',
                     function() {
-                        if (params.offlineSuccess) {
-                            Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
-                        } else {
-                            Helix.Utils.statusMessage("Action Queued",
-                                "This action will be completed the next time you login to Link online.", "info");
+                        if (!params.silentMode) {
+                            if (params.offlineSuccess) {
+                                Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
+                            } else {
+                                Helix.Utils.statusMessage("Action Queued",
+                                    "This action will be completed the next time you login to Link online.", "info");
+                            }
                         }
                         if (callbacks.offlineSuccess) {
                             callbacks.offlineSuccess.call(window);

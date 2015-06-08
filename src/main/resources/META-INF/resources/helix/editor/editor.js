@@ -12,32 +12,21 @@
             {
                 styles: "bold italic underline strikethrough subscript superscript",
                 font: "font size color highlight",
-                formats: "bullets numbering | outdent indent | alignleft center alignright justify | rule",
+                formats: "bullets numbering", // | outdent indent | alignleft center alignright justify | rule",
                 actions : "undo redo"
             }
             ,
             font:        // font names in the font popup
-            "Arial,Arial Black,Comic Sans MS,Courier New,Narrow,Garamond," +
+            "Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
             "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
-            styles:       // styles in the style popup
-            [["Paragraph", "<p>"], ["Header 1", "<h1>"], ["Header 2", "<h2>"],
-            ["Header 3", "<h3>"],  ["Header 4","<h4>"],  ["Header 5","<h5>"],
-            ["Header 6","<h6>"]],
-            useCSS:       true, // use CSS to style HTML when possible (not supported in ie)
-            docType:      // Document type contained within the editor
-            //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
-            '<!DOCTYPE html>',
-            docCSSFile:   // CSS file used to style the document contained within the editor
-            "",
-            bodyStyle:    // style to assign to document body contained within the editor
-            "font:10pt Arial,Verdana; cursor:text; overflow-y: scroll; overflow-x: hidden; word-wrap: break-word; margin: 0px;",
-            // -webkit-transform: translate3d(0,0,0)
-            tabIndex: -1,
-            showFormat: false
+            tabIndex: -1
         },
 
         _create: function() {
             var editor = this;
+
+            // Init members.
+            this._lastCreatedSpan = null;
 
             // Map whose keys are the current style.
             editor.name = $(this.element).attr('id');
@@ -88,22 +77,14 @@
             /* Instantiate the menus. */
             var popupOptions = {
                 beforeposition: function() {
-                    //focus(editor);
                     if (editor.$toolbarEnabled) {
                         editor.popupOpen = true;
                     }
                 },
                 afterclose: function() {
-                    if (editor.nextAction) {
-                        focus(editor, function() {                    
-                            editor.nextAction();
-                            editor.nextAction = null;
-                        });
-                    } else {
-                        if (editor.popupOpen && editor.$toolbarEnabled) {
-                            focus(editor, function() {
-                            });
-                        }
+                    // Place the caret back where we found it ...
+                    if (editor._lastInputRange) {
+                        editor._setCaretPosition(editor._lastInputRange);
                     }
                     editor.popupOpen = false;
                 },
@@ -134,7 +115,7 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom')
+                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom ui-editor-default-style')
                     .attr('contentEditable', 'true');
 
             this._attachEditFrameEvents();
@@ -146,8 +127,6 @@
 
         // Misc constants
         BUTTON : "button",
-        BUTTON_NAME : "buttonName",
-        BUTTON_VALUE : "buttonValue",
         CHANGE : "change",
         DISABLED: "disabled",
         DIV_TAG : "<div/>",
@@ -161,7 +140,6 @@
         // Class name constants
         MAIN_CLASS : "ui-editor ui-widget-content",    // main containing div
         TOOLBAR_CLASS : "ui-editor-toolbar",            // Editor toolbar
-        PROMPT_CLASS : "ui-editor-prompt",  // prompt popup divs inside body
   
         // Captures the style changes.
         styleChanges : [],
@@ -181,20 +159,31 @@
             });
             $(this.$editFrame).on('keypress', function(ev) {
                 var typed = String.fromCharCode(ev.keyCode);
-                if (_self.styleChanges.length) {
-                    _self._executeStyleActions(typed);
-                    _self.styleChanges = [];
-                    return false;
-                }
                 return true;
             });
             
             $(document).on('selectionchange', function() {
-                _self._lastInputRange = window.getSelection().getRangeAt(0);
+                if (window.getSelection().rangeCount > 0) {
+                    var _last = window.getSelection().getRangeAt(0);
+                    if ($(_last.commonAncestorContainer).closest(Helix.Utils.escapeClientId(_self.name)).length) {
+                        _self._lastInputRange = _last;
+                    }
+                }
             });
             
             $(this.$editFrame).on('input', function() {
-                _self._lastInputRange = window.getSelection().getRangeAt(0);
+                if (window.getSelection().rangeCount > 0) {
+                    _self._lastInputRange = window.getSelection().getRangeAt(0);
+                }
+                if (_self.styleChanges.length) {
+                    var newTextNode = null;
+                    if (_self._lastInputRange && _self._lastInputRange.startContainer) {
+                        newTextNode = _self._lastInputRange.startContainer.splitText(_self._lastInputRange.startContainer.length - 1);
+                    }
+                    
+                    _self._executeStyleActions(newTextNode);
+                    _self.styleChanges = [];
+                }
             });
             
             $(this.$editFrame).on('blur', function() {
@@ -279,6 +268,7 @@
                         this._appendFontSelection(popupMenu, buttonName, menuName);
                         break;
                     case 'size':
+                        this._appendFontSizeInput(popupMenu, buttonName, menuName);
                         break;
                     default:
                         var linkName = this._capitalizeFirstLetter(buttonName);
@@ -288,8 +278,10 @@
                                 .append(linkName)
                                 .on(Helix.clickEvent, null, descriptor, function(ev) {
                                     if (!_self._executeAction.apply(_self, ev.data)) {
-                                        _self._queueStyleAction.apply(_self, ev.data);                                    
+                                        ev.data.push(ev.target)
+                                        _self._queueStyleAction.apply(_self, ev.data);
                                     }
+                                    return false;
                         });
                         break;
                 }
@@ -302,6 +294,12 @@
                 case 'redo':
                     document.execCommand(action, false, null);
                     break;
+                case 'bullets':
+                    this._appendList('<ul/>');
+                    break;
+                case 'numbering':
+                    this._appendList('<ol/>');
+                    break;
                 default:
                     return false;
             }
@@ -309,18 +307,37 @@
             return true;
         },
         
-        _queueStyleAction: function(menuName, action, actionArg) {
-            this.menuPopups[menuName].popup('close');
-            this.$editFrame.focus();
+        _appendList: function(listTag) {
+            var $parent = this.$editFrame;
+            if (this._lastInputRange) {
+                $parent = $(this._lastInputRange.commonAncestorContainer);
+            }
+            
+            var _list = $(listTag);
+            if ($parent[0].nodeType === 3) {
+                _list.insertAfter($parent);
+            } else {
+                _list.appendTo($parent);
+            }
+            
+            var _firstLI = $('<li/>').appendTo(_list);
+            this._selectElementContents(_firstLI[0]);
+        },
+        
+        _queueStyleAction: function(menuName, action, actionArg, target) {
+            if (target) {
+                $(target).toggleClass('ui-editor-style-selected');
+            }
+            if (menuName) {
+                this.menuPopups[menuName].popup('close');
+            }
+            //this.$editFrame.focus();
             this.styleChanges.push([action, actionArg]);
             if (!this._lastInputRange.collapsed) {
                 // We are not changing the style at the caret. We are changing the style of an existing
                 // text selection.
                 this._executeStyleActions();
                 this.styleChanges = [];
-            } else {
-                // Place the caret back where we found it ...
-                this._setCaretPosition(this._lastInputRange);
             }
         },
         
@@ -339,6 +356,17 @@
                 _self._queueStyleAction(menuName, 'font', $(this).find(':selected').attr('value'));
             });
         },
+        
+        _appendFontSizeInput: function(popupMenu, buttonName, menuName) {
+            var _self = this;
+            var inputMarkup = $('<input />')
+                    .attr('type', 'number')
+                    .appendTo(popupMenu)
+                    .val('11');
+            $(inputMarkup).change(function() {
+                _self._queueStyleAction(null, 'size', $(this).val());
+            });
+        }, 
         
         _appendColorSpectrum: function($menu, buttonName, menuName) {
             var _self = this;
@@ -375,8 +403,8 @@
                 corners: false
             }).on(Helix.clickEvent, function(ev) {
                 $('input[data-command="' + buttonName + '"]').spectrum("set", restoreColor);
-                _self.executeAction(buttonName, restoreColor);
                 _self.menuPopups[menuName].popup('close');
+                _self._queueStyleAction(menuName, buttonName, restoreColor);
                 return false;
             });
         },
@@ -404,6 +432,14 @@
                 this.disabled = false;
             }
         },
+        
+        _toggleStyle: function(styleName) {
+            if (this.currentStyles[styleName]) {
+                delete this.currentStyles[styleName];
+            } else {
+                this.currentStyles[styleName] = styleName;
+            }                                        
+        },
 
         _applyStyle: function($newSpan, isCollapsed, styleName, cssName, cssValOn, cssValOff) {
             if (!isCollapsed) {
@@ -411,21 +447,39 @@
                 $newSpan.css(cssName, cssValOn);
             } else {
                 if (this.currentStyles[styleName]) {
-                    delete this.currentStyles[styleName];
-                    $newSpan.css(cssName, cssValOff);
-                } else {
-                    this.currentStyles[styleName] = true;
                     $newSpan.css(cssName, cssValOn);
+                } else {
+                    $newSpan.css(cssName, cssValOff);
                 }                            
             }
         },
         
-        _executeStyleActions: function(nxtKey) {
+        _executeStyleActions: function(txtToSurround) {
             var isCollapsed = this._lastInputRange.collapsed;
-            var $newSpan = this._insertSpan(nxtKey);
+            var $newSpan = this._insertSpan(txtToSurround);
+            
+            // Update the state of all toggle styles.
             for (var i = 0; i < this.styleChanges.length; ++i) {
                 var actionName = this.styleChanges[i][0];
                 var param = this.styleChanges[i][1];
+                switch(actionName) {
+                    case 'bold':
+                    case 'italic':
+                    case 'strikethrough':
+                    case 'underline':
+                    case 'subscript': 
+                    case 'super':
+                        this._toggleStyle(actionName);
+                        break;
+                    default:
+                        this.currentStyles[actionName] = param;
+                        break;
+                }                
+            }
+            
+            // Apply the appropriate style to the new span.
+            for (var actionName in this.currentStyles) {
+                var param = this.currentStyles[actionName];
                 switch(actionName) {
                     case 'color':
                         $newSpan.css('color', param);
@@ -435,6 +489,9 @@
                         break;
                     case 'font':
                         $newSpan.css('font-family', param);                    
+                        break;
+                    case 'size':
+                        $newSpan.css('font-size', param + 'pt');
                         break;
                     case 'bold':
                         this._applyStyle($newSpan, isCollapsed, actionName, 'font-weight', 'bold', 'normal');
@@ -449,10 +506,10 @@
                         this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'underline', 'none');
                         break;
                     case 'subscript': 
-                        $newSpan.append('<sub/>');
+                        $('<sub/>').wrap($newSpan);
                         break;
                     case 'super':
-                        $newSpan.append('<super/>');
+                        $('<super/>').wrap($newSpan);
                         break;
                     default:
                         break;
@@ -468,22 +525,22 @@
         
         _selectElementContents: function(el) {
             var range = document.createRange();
-            range.setStart(el, 1);
+            
+            if (el.nodeType === 3) {
+                // Text node.
+                range.setStart(el, 1);            
+            } else {
+                range.selectNodeContents(el);
+            }
             range.collapse(true);
 
             this._setCaretPosition(range);
         },
         
-        _insertSpan: function(nxtKey) {
+        _insertSpan: function(txtToSurround) {
             var _self = this;
             var isCollapsed = _self._lastInputRange.collapsed;
             var newElement = document.createElement('span');
-            if (nxtKey !== undefined && nxtKey != null && nxtKey.length) {
-                if (nxtKey === ' ') {
-                    nxtKey = '&nbsp;';
-                }
-                $(newElement).html(nxtKey);
-            }
             this.$editFrame.focus();
             if(_self._lastInputRange) {
                 if (!isCollapsed) {
@@ -497,15 +554,18 @@
                     if ($parentSpan.length) {
                         $(newElement).insertAfter($parentSpan);
                     } else {
-                        _self._lastInputRange.insertNode(newElement);                    
+                        _self._lastInputRange.insertNode(newElement);
                     }
-                    // Move the selection inside of the new element.
-                    this._selectElementContents(newElement);
+                    if (txtToSurround !== undefined && txtToSurround !== null) {
+                        $(newElement).append(txtToSurround);
+                        _self._selectElementContents(newElement.childNodes[0]);
+                    } else {
+                        _self._selectElementContents(newElement);                    
+                    }
                 }
             } else {
-                _self.$editFrame.append($(newElement));
-                // Move the selection inside of the new element.
-                this._selectElementContents(newElement);
+                _self.$editFrame.wrapInner($(newElement));
+                _self._selectElementContents(newElement);
             }
             return $(newElement);
         },

@@ -143,12 +143,7 @@ Helix.Layout = {
             var child_i_height = $($fullHeightChild).outerHeight(true);
             totHeight += child_i_height;
             remainingHeight += child_i_height;
-        }
-        if ($fullHeightChild) {
-            totHeight -= $fullHeightChild.outerHeight(true);
-            remainingHeight -= $fullHeightChild.outerHeight(true);
-        }
-        
+        }        
         var childrenToRecurse = $(component).children(fullHeightSelector);
         
         /* If there are no elements to recurse over, set the last child of this element to full the 
@@ -156,6 +151,8 @@ Helix.Layout = {
          */
         if (childrenToRecurse.length === 0) {
             if ($fullHeightChild) {
+                totHeight -= $fullHeightChild.outerHeight(true);
+                remainingHeight -= $fullHeightChild.outerHeight(true);
                 var minHeight = $fullHeightChild.css('min-height');
                 var newHeight = maxHeight - remainingHeight;
                 if (minHeight && newHeight < minHeight) {

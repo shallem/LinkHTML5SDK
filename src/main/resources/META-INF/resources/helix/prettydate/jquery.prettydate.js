@@ -141,23 +141,20 @@
 			if (isNaN(dayDiff) || dayDiff < 0) {
 				return;
 			}
+                        var targetDate = new Date(targetTime);
+                        if (dayDiff === 0) {
+                            // Confirm these are really on the same day ...
+                            var nowDate = new Date(nowTime);
+                            if (targetDate.getDate() !== nowDate.getDate()) {
+                                dayDiff = 1;
+                            }
+                        }
 
 			messages = $.prettyDate.messages;
-			return dayDiff === 0 && (
-					diff < 60 && messages.now ||
-					diff < 120 && messages.minute ||
-					diff < 3600 && messages.minutes(Math.floor(diff / 60)) ||
-					diff < 7200 && messages.hour ||
-					diff < 86400 && messages.hours(targetTime/*Math.floor(diff / 3600)*/)) ||
-					dayDiff === 1 && messages.yesterday ||
-					dayDiff < 7 && messages.days(dayDiff) ||
-					dayDiff < 8 && messages.week ||
-					dayDiff < 14 && messages.days(dayDiff) ||
-					dayDiff < 30 && messages.weeks(Math.ceil(dayDiff / 7)) ||
-					dayDiff < 32 && messages.month ||
-					dayDiff < 363 && messages.months(Math.ceil(dayDiff / 31)) ||
-					dayDiff <= 380 && messages.year ||
-					dayDiff > 380 && messages.years(Math.ceil(dayDiff / 365));
+			return  dayDiff === 0 && targetDate.toString('h:mm tt') ||
+                                dayDiff < 7 && targetDate.toString('ddd h:mm tt') ||
+                                dayDiff <= 90 && targetDate.toString('MMM d') ||
+                                dayDiff > 90 && targetDate.toString('MMM d, yy');
 		}
 
 	};

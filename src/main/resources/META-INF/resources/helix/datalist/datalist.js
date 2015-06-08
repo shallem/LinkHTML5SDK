@@ -2619,6 +2619,7 @@
                 
             if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) || (oldSortCase !== this._currentSortCase)) {
                  this._updateSortButtons(); 
+                 var _self = this;
                  
 //                 // Change the li for this sort field so that we can see it is the current sort field.
 //                 $(sortsList).find('li').removeClass('hx-current-sort');
@@ -2628,8 +2629,8 @@
                         // Display from the beginning of the list.
                         this._resetPaging();
                         this._refreshData(function() {
-                            this.$parent.listview( "refresh" );
-                            this.$listWrapper.scrollTop(0);
+                            _self.$parent.listview( "refresh" );
+                            _self.$listWrapper.scrollTop(0);
                         }, true, this.extraItems);    
                   }
              }

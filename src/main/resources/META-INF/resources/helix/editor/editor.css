@@ -1,9 +1,6 @@
 /* SAH: added float left b/c we let the toolbar float to the right. */
 .ui-editor {background: none #FFFFFF; float: left; }
-.ui-editor  iframe {border:none; margin:0; padding:0}
-.ui-editor  textarea {border:none; margin:0; padding:0; overflow-y:scroll; font:10pt Arial,Verdana; resize:none; outline:none; /* webkit grip focus */}
 .ui-editor-group {float:left; height:26px}
-.ui-editor-button {float:left; width:24px; height:24px; margin:1px 0 1px 0; background: url("#{resource['primefaces:editor/images/buttons.gif']}")}
 .ui-editor-disabled {opacity:0.3; filter:alpha(opacity=30)}
 .ui-editor-divider {float:left; width:1px; height:23px; margin:1px 0 1px 0; background:#CCC}
 .ui-editor-popup {border:solid 1px #999; background-color:white; position:absolute; font:10pt Arial,Verdana; cursor:default; z-index:10000}
@@ -31,16 +28,15 @@
 .ui-overlay-hidden .ui-editor iframe{display: none !important;} 
 .ui-overlay-visible .ui-editor iframe{display: inline !important;} 
 
-/** SAH - styles for each format command. */
-.ui-editor-bold {font-weight:bold;}
-.ui-editor-italic {font-style:italic;}
-.ui-editor-underline {text-decoration:underline;}
-.ui-editor-strikethrough {text-decoration:line-through;}
-.ui-editor-superscript {
-    vertical-align:top;
-    font-size:.6em;
+.ui-editor-style-selected {
+    color: #ec7832;
 }
-.ui-editor-subscript {
-    vertical-align:bottom;
-    font-size:.6em;
+
+.ui-editor-default-style {
+    font-weight: normal;
+    text-decoration: none;
+    font-size: 11pt;
+    font-family: Calibri;
+    color: black;
+    background-color: transparent;
 }
