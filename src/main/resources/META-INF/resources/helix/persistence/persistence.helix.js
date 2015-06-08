@@ -1437,7 +1437,9 @@ function initHelixDB() {
                 /* Serialize synchronization of each component so that we never have >1 flush in progress. */
                 var syncComponent = function() {
                     if (toSync.length === 0) {
-                        opaque.params = paramObj;
+                        if (Object.keys(paramObj).length > 0) {
+                            opaque.params = paramObj;
+                        }
                         syncDone(resultObj, opaque);
                         return;
                     }
@@ -1471,7 +1473,9 @@ function initHelixDB() {
                                 var syncNxt = syncObject[q];
                                 Helix.DB.synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
                                     resultObj[o.name] = finalObj;
-                                    paramObj[o.name] = o.param;
+                                    if (o.param) {
+                                        paramObj[o.name] = o.param;
+                                    }
                                     syncComponent();
                                 }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
                             }                            

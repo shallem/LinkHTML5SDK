@@ -553,6 +553,18 @@ li {
 }
 
 /**
+ * Datalist styles.
+ */
+
+.ui-btn-inner .hx-subicon {
+    right: 10px;
+    top: 55%;
+    width: 16px;
+    height: 10px;
+    position: absolute;
+}
+
+/**
  * Small screen style overrides.
  */
 @media all and (max-width: 500px) {

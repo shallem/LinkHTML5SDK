@@ -91,6 +91,11 @@
              * Message to display in the list if the entire list is empty.
              */
             emptyMessage: "There are no items to display.",
+
+            /**
+             * Method that is called (optionally) if the list is empty.
+             */
+            emptyHook: null,
             
             /**
              * Message to display in the list if a group has no rows.
@@ -548,15 +553,18 @@
             return sortFilterOptions.globalFilters;
         },
         
-        _handleEmpty: function(nelems, msg) {
+        _handleEmpty: function(nelems, nextras, msg) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
-            if (nelems === 0) {                    
+            if (nelems === nextras) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
                 } else if (msg) {
                     this.$parent.append($('<li />')
                         .attr('data-role', 'empty-message')
                         .append(msg));                        
+                }
+                if (this.options.emptyHook) {
+                    this.options.emptyHook.call(this);
                 }
             } else if (emptyLI.length) {
                 $(emptyLI).hide();
@@ -1499,6 +1507,7 @@
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
+            var nExtras = 0;
             
             /* Functions used in processing each item. */
             var __processRow = function(curRow) {
@@ -1506,7 +1515,7 @@
                     groupsToRender.push(curRow);
                 } else {
                     if (nRendered >= _self._itemsPerPage) {
-                        return;
+                        return false;
                     }
 
                     ++rowIndex;
@@ -1514,8 +1523,10 @@
                         // Nothing to do.
                     })) {
                         ++nRendered;
+                        return true;
                     }
                 }
+                return false;
             };
             
             var __processStart = function(count) {
@@ -1534,7 +1545,7 @@
                     /* Call completion when all rows are done rendering. */
                     _self.refreshInProgress = false;
                     oncomplete(opaque);
-                    _self._handleEmpty(nRendered, emptyMsg);
+                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
                     return;
                 }
 
@@ -1559,7 +1570,7 @@
                         $(LIs[_ridx]).hide();
                     }
 
-                    _self._handleEmpty(nRendered, emptyMsg);
+                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
                      _self.refreshInProgress = false;
                     oncomplete(opaque);
                 } else {
@@ -1612,7 +1623,9 @@
                         __processStart(count);
                         if (extraItems && extraItems.pre) {
                             for (var i = 0; i < extraItems.pre.length; ++i) {
-                                __processRow(extraItems.pre[i]);
+                                if (__processRow(extraItems.pre[i])) {
+                                    ++nExtras;
+                                }
                             }
                         }
                     },
@@ -1625,7 +1638,9 @@
                             }
                             if (extraItems && extraItems.post) {
                                 for (i = 0; i < extraItems.post.length; ++i) {
-                                    __processRow(extraItems.post[i]);
+                                    if (__processRow(extraItems.post[i])) {
+                                        ++nExtras;
+                                    }
                                 }
                             }
                         }
@@ -2301,6 +2316,18 @@
                 }
             } else {
                 $(parentElement).removeAttr('data-icon');
+            }
+            
+            if (rowComponents.subIcon) {
+                // Elements to put underneath the icon.
+                $(rowComponents.subIcon).attr('data-role', 'subicon').addClass('hx-subicon');
+                if ($(parentElement).find('[data-role="subicon"]').length) {
+                    $(parentElement).find('[data-role="subicon"]').replaceWith(rowComponents.subIcon);
+                } else {
+                    $(mainLink).append(rowComponents.subIcon);
+                }
+            } else {
+                $(parentElement).find('[data-role="subicon"]').remove();
             }
 
             var oldPfx = $(mainLink).find('[data-role="prefix"]');

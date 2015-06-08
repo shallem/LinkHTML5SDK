@@ -6326,6 +6326,8 @@ $.widget( "mobile.listview", $.mobile.widget, $.extend( {
 
 				if ( a.length && !isDivider ) {
 					icon = item.jqmData( "icon" );
+                                        // SAH - get the subIcon element (if there is one).
+                                        var subIcon = a.find('[data-role="subicon"]'); 
 
 					item.buttonMarkup({
 						wrapperEls: "div",
@@ -6341,7 +6343,11 @@ $.widget( "mobile.listview", $.mobile.widget, $.extend( {
 					}
 
 					a.first().removeClass( "ui-link" ).addClass( "ui-link-inherit" );
-
+                                        // SAH - adding in the subicon
+                                        if (subIcon.length) {
+                                            item.find('.ui-btn-inner').append(subIcon);
+                                        }
+                                        
 					if ( a.length > 1 ) {
 						itemClass += " ui-li-has-alt";
 
