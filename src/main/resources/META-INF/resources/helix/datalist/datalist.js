@@ -1040,6 +1040,12 @@
                 }
             }
             _self._currentSortsJSON = newSortsJSON;
+            _self.__refreshSortContainer();
+        },
+        
+        __refreshSortContainer: function() {
+             var _self = this;
+             
             /* Need to refresh the search/sort area. */
             _self._searchSortDirty = true;
             
@@ -1061,6 +1067,7 @@
                 'data-inset' : 'true',
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
+            var sorts = JSON.parse(_self._currentSortsJSON);
             for (var sortFld in sorts) {
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
@@ -2626,40 +2633,28 @@
             return this.isDirty;
         },
                 
-        setCurrentSort : function(newSort, sortOrder, sortCase, doRefresh) {
+        setCurrentSort : function(jsonSort, doRefresh) {
+          var sort = JSON.parse(jsonSort);
+            
            var oldOrder = this._currentSortOrder;
            var oldSort = this._currentSort;
            var oldSortCase = this._currentSortCase;
-                      
-            if (this.options.onSortChange) {
-                var updatedSorts = this.options.onSortChange(this._currentSort, this._currentSortOrder, newSort);
-                if (updatedSorts) {
-                    this._currentSort = (updatedSorts.sort ? updatedSorts.sort : this._currentSort);
-                    this._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : this._currentSortOrder);
-                    this._currentSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : this._currentSortCase);
-                }
-            }  else {
-                    this._currentSort = (newSort ? newSort : this._currentSort);
-                    this._currentSortOrder = (sortOrder ? sortOrder : this._currentSortOrder);
-                    this._currentSortCase = (sortCase ? sortCase : this._currentSortCase);
-            }
-                
-            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) || (oldSortCase !== this._currentSortCase)) {
-                 this._updateSortButtons(); 
+            this._currentSort = (sort.sortBy ? sort.sortBy : this._currentSort);
+            this._currentSortOrder = (sort.direction ? sort.direction  : this._currentSortOrder);
+            this._currentSortCase = (sort.usecase ? sort.usecase : this._currentSortCase);
+                                
+            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) ||
+                      (oldSortCase !== this._currentSortCase)) {
                  var _self = this;
+                 _self.__refreshSortContainer();
+                 _self._updateSortButtons();                 
                  
-//                 // Change the li for this sort field so that we can see it is the current sort field.
-//                 $(sortsList).find('li').removeClass('hx-current-sort');
-//                 $(this).addClass('hx-current-sort');
-
-                  if (doRefresh) {
-                        // Display from the beginning of the list.
-                        this._resetPaging();
-                        this._refreshData(function() {
-                            _self.$parent.listview( "refresh" );
-                            _self.$listWrapper.scrollTop(0);
-                        }, true, this.extraItems);    
-                  }
+                 if (doRefresh === true) {
+                      _self._refreshData(function() {
+                           _self.$parent.listview( "refresh" );
+                           _self.$listWrapper.scrollTop(0);
+                      }, true, this.extraItems);   
+                 }
              }
         },
         
