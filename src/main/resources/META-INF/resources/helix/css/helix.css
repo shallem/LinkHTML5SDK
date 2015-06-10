@@ -413,7 +413,7 @@ li {
         padding: 0;
     }
     
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete {
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
         top: 7px;
         left: 21px;
     }
@@ -524,17 +524,6 @@ li {
     max-width: 90% !important;
 }
 
-/**
- * iconbutton fixes for icon position.
- */
-.iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
-    top: 25%;
-}
-
-.iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
-    top: 10%;
-}
-
 /* Styles for headers with multiple buttons on each side of the header text */
 .ui-header .hx-button-bar h1 {
     display: inline-block;
@@ -589,12 +578,16 @@ li {
     .iconbutton .ui-btn-inner .ui-icon {
         top: 15%;
     }
-    
-    .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
-        top: 5%;
+
+    .ui-header .iconbutton .ui-btn-inner {
+        height: 32px;
     }
     
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete {
+    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+        padding: 0;
+    }
+        
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
         top: 7px;
         left: 11px;
     }
