@@ -1040,6 +1040,12 @@
                 }
             }
             _self._currentSortsJSON = newSortsJSON;
+            _self.__refreshSortContainer();
+        },
+        
+        __refreshSortContainer: function() {
+             var _self = this;
+             
             /* Need to refresh the search/sort area. */
             _self._searchSortDirty = true;
             
@@ -1061,6 +1067,7 @@
                 'data-inset' : 'true',
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
+            var sorts = JSON.parse(_self._currentSortsJSON);
             for (var sortFld in sorts) {
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
@@ -2624,6 +2631,31 @@
          */
         listIsDirty: function() {
             return this.isDirty;
+        },
+                
+        setCurrentSort : function(jsonSort, doRefresh) {
+          var sort = JSON.parse(jsonSort);
+            
+           var oldOrder = this._currentSortOrder;
+           var oldSort = this._currentSort;
+           var oldSortCase = this._currentSortCase;
+            this._currentSort = (sort.sortBy ? sort.sortBy : this._currentSort);
+            this._currentSortOrder = (sort.direction ? sort.direction  : this._currentSortOrder);
+            this._currentSortCase = (sort.usecase ? sort.usecase : this._currentSortCase);
+                                
+            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) ||
+                      (oldSortCase !== this._currentSortCase)) {
+                 var _self = this;
+                 _self.__refreshSortContainer();
+                 _self._updateSortButtons();                 
+                 
+                 if (doRefresh === true) {
+                      _self._refreshData(function() {
+                           _self.$parent.listview( "refresh" );
+                           _self.$listWrapper.scrollTop(0);
+                      }, true, this.extraItems);   
+                 }
+             }
         },
         
         /**

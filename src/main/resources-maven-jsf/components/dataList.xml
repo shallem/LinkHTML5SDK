@@ -201,7 +201,7 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Function that executes an indexed search within a single group. Used for grouped lists.</description>
-        </attribute>
+        </attribute>        
         <attribute>
             <name>strings</name>
             <required>false</required>
