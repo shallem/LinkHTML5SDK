@@ -64,7 +64,24 @@
              * For grouped lists, specify a maximum count of items per group. By default there
              * is no maximum.
              */
-            itemsPerGroup: -1, 
+            itemsPerGroup: -1,
+            
+            /**
+             * When the size of a group exceeds the itemsPerGroup limit, add an element with the overflow
+             * text below. When that element is clicked, the groupOverflowFn is called.
+             */
+            groupOverflowText: 'More ...',
+            
+            /**
+             * CSS class to apply to the groupOverflowText element.
+             */
+            groupOverflowTextClass: null,
+            
+            /**
+             * Function invoked when the overflow element is tapped. The 'this' variable is the datalist itself.
+             * The group is provided as an argument.
+             */
+            groupOverflowFn: null,
             
             /**
              * For grouped lists, allow a separate search box in each group.
@@ -2005,16 +2022,21 @@
                             if (_self.options.itemsPerGroup > 0 &&
                                     groupIndex > _self.options.itemsPerGroup) {
                                 // Add a "More ..." item.
-                                var $moreMarkup = $('<a/>').append('More ...');
+                                var $moreMarkup = $('<a/>').append(_self.options.groupOverflowText);
+                                if (_self.options.groupOverflowTextClass) {
+                                    $moreMarkup.addClass(_self.options.groupOverflowTextClass);
+                                }
                                 if (groupIndex < groupLIs.length) {
                                     $(groupLIs[groupIndex]).empty().append($moreMarkup);
                                     groupIndex++;
                                 }
                                 else {
-                                    groupLIs[groupIndex] = $('<li/>').append($moreMarkup).appendTo(_self.$parent);
+                                    groupLIs[groupIndex] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
                                     groupIndex++;
                                 }
-                                // XXX: MAKE SOMETHING HAPPEN WHEN YOU CLICK MORE ...
+                                $moreMarkup.on(_self.tapEvent, function() {
+                                    _self.options.groupOverflowFn.call(_self, rowObject.group);
+                                });
                             }
                             oncomplete();
                             for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {

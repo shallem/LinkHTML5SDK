@@ -197,6 +197,24 @@
             <description>Maximum number of items to display in each group in a grouped list. If more than this number are in a group, a more item is added to the list.</description>
         </attribute>
         <attribute>
+            <name>groupOverflowText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Text to display when a group has more elements than itemsPerGroup</description>
+        </attribute>
+        <attribute>
+            <name>groupOverflowTextClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Text class to style the text when a group has an overflow item</description>
+        </attribute>
+        <attribute>
+            <name>groupOverflowFn</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function to be called when the overflow item within a group is tapped.</description>
+        </attribute>
+        <attribute>
             <name>groupIndexedSearch</name>
             <required>false</required>
             <type>java.lang.String</type>
