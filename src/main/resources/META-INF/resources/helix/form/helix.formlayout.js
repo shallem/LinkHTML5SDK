@@ -700,7 +700,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             }
             $fieldContainer.append(valSpan);
         } else {
-            var textElem = $('<p />').attr({
+            var textElem = $('<span />').attr({
                 'data-name' : formElem.name
             }).text(formElem.value);
             if (formElem.computedStyle) {

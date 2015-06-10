@@ -618,11 +618,10 @@ Helix.Ajax = {
                     } else {
                         if (params.error) {
                             Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                        } else if (callbacks.error) {
+                            callbacks.error.call(window, returnObj);
                         } else {
                             Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
-                        }
-                        if (callbacks.error) {
-                            callbacks.error.call(window, returnObj);
                         }
                     }
                 },

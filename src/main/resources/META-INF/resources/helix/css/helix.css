@@ -121,6 +121,8 @@
 .iconbutton {
     width: 60px;
     height: 60px;    
+    padding: 0;
+    margin: 0;
 }
 
 .iconbutton {
@@ -133,9 +135,9 @@
     background: transparent;
 }
 
-.iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+/*.iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
     padding: 0.6em 0 45px;   
-}
+}*/
 
 .iconbutton .ui-btn-inner .ui-btn-text {
     display: none;
@@ -145,8 +147,8 @@
     left: 25%;
     top: 35%;
     margin-left: 0px;
-    width: 32px;
-    height: 32px;
+/*    width: 32px;
+    height: 32px; */
     border-radius: 0 0 0 0;
     background-color: transparent;
 }
@@ -154,14 +156,6 @@
 /**
  * Header styles.
  */
-.ui-header .iconbutton {
-    height: 32px; 
-}
-
-.ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
-    padding: 0.6em 0 30px;   
-}
-
 .ui-header .iconbutton .ui-btn-inner .ui-icon {
     top: 15%;
 }
@@ -398,17 +392,30 @@ li {
     margin-left: 64px;
 }
 
-/* bars vertical offset is too low in the header */
-.ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars {
-    top: 0%;
-}
-
 /**
  * Large screen styles.
  */
 @media all and (min-width: 501px) {
     .hx-phone-only {
         display: none !important;
+    }
+
+    /* Icon buttons in the header. */
+    .ui-header .iconbutton {
+        height: 32px; 
+    }
+    
+    .ui-header .iconbutton .ui-btn-inner {
+        height: 32px;
+    }
+    
+    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+        padding: 0;
+    }
+    
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete {
+        top: 7px;
+        left: 21px;
     }
 }
 
@@ -571,6 +578,8 @@ li {
     .iconbutton {
         width: 40px;
         height: 32px;    
+        padding: 0;
+        margin: 0;
     }
 
     .iconbutton .ui-btn-inner {
@@ -583,6 +592,11 @@ li {
     
     .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
         top: 5%;
+    }
+    
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete {
+        top: 7px;
+        left: 11px;
     }
     
     .ui-header.hx-text-left .ui-title {
