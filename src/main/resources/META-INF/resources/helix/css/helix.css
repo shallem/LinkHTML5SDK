@@ -121,6 +121,8 @@
 .iconbutton {
     width: 60px;
     height: 60px;    
+    padding: 0;
+    margin: 0;
 }
 
 .iconbutton {
@@ -133,9 +135,9 @@
     background: transparent;
 }
 
-.iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+/*.iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
     padding: 0.6em 0 45px;   
-}
+}*/
 
 .iconbutton .ui-btn-inner .ui-btn-text {
     display: none;
@@ -145,8 +147,8 @@
     left: 25%;
     top: 35%;
     margin-left: 0px;
-    width: 32px;
-    height: 32px;
+/*    width: 32px;
+    height: 32px; */
     border-radius: 0 0 0 0;
     background-color: transparent;
 }
@@ -154,14 +156,6 @@
 /**
  * Header styles.
  */
-.ui-header .iconbutton {
-    height: 32px; 
-}
-
-.ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
-    padding: 0.6em 0 30px;   
-}
-
 .ui-header .iconbutton .ui-btn-inner .ui-icon {
     top: 15%;
 }
@@ -237,6 +231,19 @@
 
 .hx-listview li:not(.ui-btn-active) {
     background-color: white;
+}
+
+.ui-header .ui-title, .ui-footer .ui-title { 
+    min-height: 1.1em; 
+    text-align: center; 
+    font-size: 16px; 
+    display: block; 
+    margin: .6em 10% .8em;  /* reduce margin horizontal */
+    padding: 0;
+    text-overflow: ellipsis; 
+    overflow: hidden; 
+    white-space: nowrap; 
+    outline: 0 !important;
 }
 
 /* Fixes a bug in mobile safari where components that appear off screen (or even on
@@ -385,17 +392,30 @@ li {
     margin-left: 64px;
 }
 
-/* bars vertical offset is too low in the header */
-.ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars {
-    top: 0%;
-}
-
 /**
  * Large screen styles.
  */
 @media all and (min-width: 501px) {
     .hx-phone-only {
         display: none !important;
+    }
+
+    /* Icon buttons in the header. */
+    .ui-header .iconbutton {
+        height: 32px; 
+    }
+    
+    .ui-header .iconbutton .ui-btn-inner {
+        height: 32px;
+    }
+    
+    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+        padding: 0;
+    }
+    
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
+        top: 7px;
+        left: 21px;
     }
 }
 
@@ -504,17 +524,6 @@ li {
     max-width: 90% !important;
 }
 
-/**
- * iconbutton fixes for icon position.
- */
-.iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
-    top: 25%;
-}
-
-.iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
-    top: 10%;
-}
-
 /* Styles for headers with multiple buttons on each side of the header text */
 .ui-header .hx-button-bar h1 {
     display: inline-block;
@@ -540,12 +549,26 @@ li {
 }
 
 /**
+ * Datalist styles.
+ */
+
+.ui-btn-inner .hx-subicon {
+    right: 10px;
+    top: 55%;
+    width: 16px;
+    height: 10px;
+    position: absolute;
+}
+
+/**
  * Small screen style overrides.
  */
 @media all and (max-width: 500px) {
     .iconbutton {
         width: 40px;
         height: 32px;    
+        padding: 0;
+        margin: 0;
     }
 
     .iconbutton .ui-btn-inner {
@@ -555,9 +578,18 @@ li {
     .iconbutton .ui-btn-inner .ui-icon {
         top: 15%;
     }
+
+    .ui-header .iconbutton .ui-btn-inner {
+        height: 32px;
+    }
     
-    .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete {
-        top: 5%;
+    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
+        padding: 0;
+    }
+        
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
+        top: 7px;
+        left: 11px;
     }
     
     .ui-header.hx-text-left .ui-title {

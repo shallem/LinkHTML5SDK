@@ -202,40 +202,18 @@ function initHelixDB() {
             return objSchema;
         },
 
-        generatePersistenceSchema: function(schemaTemplate,name,oncomplete,opaque,nRetries,noSync) {
-            if (!Helix.DB.persistenceIsReady()) {
-                $(document).on('hxPersistenceReady', function() {
-                    Helix.DB.generatePersistenceSchema(schemaTemplate,name,oncomplete,opaque,nRetries+1);
-                });
-                return;
-            }
-        
+        generatePersistenceSchemaFromTemplate: function(schemaTemplate,name,oncomplete,opaque,nRetries,noSync) {
+            /* Next, check to see if this specific schema is already available from a previous call to
+             * generatePersistenceSchema. 
+             */
+            var schemaNameToCheck = schemaTemplate.__hx_schema_name;
+            
             // Generate the schema from the supplied schema template and synchronize it with the 
             // database. Returned the generated schema.    
             var s;
             var recursiveFields = [];
             var allSchemas = [];
-
-            /* First, check to see if the schema was created in a recursive call. */
-            if (this.createdSchemas[name]) {
-                // We have already created all schemas associated with this widget.
-                if (oncomplete) {
-                    var oncompleteArgs = [ this.createdSchemas[name] ];
-                    oncompleteArgs = oncompleteArgs.concat(opaque);
-                    oncomplete.apply(this, oncompleteArgs);
-                }
-                return;
-            }
-            /* Next, check to see if this specific schema is already available from a previous call to
-             * generatePersistenceSchema. 
-             */
-            var schemaNameToCheck;
-            if (Object.prototype.toString.call(schemaTemplate) === '[object Array]') {
-                schemaNameToCheck = schemaTemplate[0].__hx_schema_name;
-            } else {
-                schemaNameToCheck = schemaTemplate.__hx_schema_name;
-            }
-        
+            
             if (window.__pmAllSchemas[schemaNameToCheck]) {
                 // We have already created all schemas associated with this widget.
                 if (oncomplete) {
@@ -247,14 +225,7 @@ function initHelixDB() {
             }
         
 
-            if (Object.prototype.toString.call(schemaTemplate) === '[object Array]') {
-                // The template provided references a list of table rows. The schema is
-                // the individual table rows.
-                s = this.generatePersistenceFields(schemaTemplate[0],name,{},recursiveFields,allSchemas);
-            } else {
-                // The template provided references a single table row.
-                s = this.generatePersistenceFields(schemaTemplate,name,{},recursiveFields,allSchemas);   
-            }
+            s = this.generatePersistenceFields(schemaTemplate,name,{},recursiveFields,allSchemas);   
 
             // Recurse over all recursive fields and patch them back into subschemas.
             var recurseIdx;
@@ -306,6 +277,38 @@ function initHelixDB() {
         
             // We are done with this schema ...
             this.createdSchemas[name] = s;
+        },
+
+        generatePersistenceSchema: function(schemaTemplate,name,oncomplete,opaque,nRetries,noSync) {
+            if (!Helix.DB.persistenceIsReady()) {
+                $(document).on('hxPersistenceReady', function() {
+                    Helix.DB.generatePersistenceSchema(schemaTemplate,name,oncomplete,opaque,nRetries+1);
+                });
+                return;
+            }
+
+            /* First, check to see if the schema was created in a recursive call. */
+            if (this.createdSchemas[name]) {
+                // We have already created all schemas associated with this widget.
+                if (oncomplete) {
+                    var oncompleteArgs = [ this.createdSchemas[name] ];
+                    oncompleteArgs = oncompleteArgs.concat(opaque);
+                    oncomplete.apply(this, oncompleteArgs);
+                }
+                return;
+            }
+            if ($.isArray(schemaTemplate)) {
+                if (schemaTemplate[0].__hx_schema_name) {
+                    Helix.DB.generatePersistenceSchemaFromTemplate(schemaTemplate[0], name, oncomplete, opaque, nRetries, noSync);
+                } else {
+                    // This is a standard array of independent sync items. Not an array field.
+                    for (var i = 0; i < schemaTemplate.length; ++i) {
+                        Helix.DB.generatePersistenceSchema(schemaTemplate[i], name, oncomplete, opaque, nRetries, noSync);
+                    }
+                }
+            } else {
+                Helix.DB.generatePersistenceSchemaFromTemplate(schemaTemplate, name, oncomplete, opaque, nRetries, noSync);
+            }            
         },
 
         doAppMigrations: function(tableName, migrationOptions) {
@@ -1083,7 +1086,7 @@ function initHelixDB() {
             /* Handle the special case where the object array has 0 elements. In this case,
              * we just issue a delete. But we do NOT flush the session.
              */
-            if (objArray.length == 0) {
+            if (objArray.length === 0) {
                 if (!parentObj || !parentObj._new) {
                     // We only need to destroy all child objects in an array relationship if
                     // the parent object is not new. If it is new, comparisonCollection will
@@ -1091,7 +1094,7 @@ function initHelixDB() {
                     comparisonCollection.destroyAll();                
                 }
                 oncomplete(field);
-                return;
+                return true;
             }
             
             
@@ -1100,13 +1103,20 @@ function initHelixDB() {
             
             for (var i = 0; i < objArray.length; ++i) {
                 var curElem = objArray[i];
-                elemMap[curElem[elemKeyField]] = curElem;
+                if (curElem.__hx_type) {
+                    // This is not a normal object array. Instead it is an array of delta objects or other
+                    // special objects. Let SynchronizeObject handle it.
+                    return false;
+                } else {
+                    elemMap[curElem[elemKeyField]] = curElem;                
+                }
             }
         
             /* Now sync the query collection against the elemMap. NOTE: delta objects are the more
              * efficient way to do this!
              */
             Helix.DB.synchronizeQueryCollection(allSchemas, elemMap, parentCollection, comparisonCollection, elemSchema, elemKeyField, oncomplete, field, overrides);
+            return true;
         },
     
         updateOneObject: function(allSchemas, persistentObjID, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
@@ -1358,10 +1368,10 @@ function initHelixDB() {
             handleAsyncFields();
         },
 
-        synchronizeArray: function(allSchemas, obj,objSchema,persistentObj,callback,overrides) {
-            Helix.DB.synchronizeArrayField(allSchemas, obj, null, persistentObj, objSchema, null, function() {
+        synchronizeArray: function(allSchemas, obj,objSchema,persistentObj,callback,opaque,overrides) {
+            return Helix.DB.synchronizeArrayField(allSchemas, obj, null, persistentObj, objSchema, null, function() {
                 callback(persistentObj);
-            }, overrides);
+            }, overrides);            
         },
 
         /**
@@ -1405,9 +1415,14 @@ function initHelixDB() {
             }
             
             if (Object.prototype.toString.call(obj) === '[object Array]') {
-                Helix.DB.synchronizeArray(allSchemas, obj,objSchema,objSchema.all(),function(finalObj) {
+                var isHandled = Helix.DB.synchronizeArray(allSchemas, obj,objSchema,objSchema.all(),function(finalObj) {
                     syncDone(finalObj, opaque);
-                },overrides);
+                },opaque,overrides);
+                if (!isHandled) {
+                    for (var i = 0; i < obj.length; ++i) {
+                        Helix.DB.synchronizeObject(obj[i], objSchema, callback, opaque, overrides);
+                    }
+                }
             } else if (obj.__hx_type === 1001) {
                 Helix.DB.synchronizeDeltaObject(allSchemas, obj,objSchema.all(),objSchema,function(finalObj) {
                     syncDone(finalObj, opaque);
@@ -1422,7 +1437,9 @@ function initHelixDB() {
                 /* Serialize synchronization of each component so that we never have >1 flush in progress. */
                 var syncComponent = function() {
                     if (toSync.length === 0) {
-                        opaque.params = paramObj;
+                        if (Object.keys(paramObj).length > 0) {
+                            opaque.params = paramObj;
+                        }
                         syncDone(resultObj, opaque);
                         return;
                     }
@@ -1442,15 +1459,27 @@ function initHelixDB() {
                         if (obj[nxt].__hx_type === 1004) {
                             syncObject = obj[nxt].sync;
                             paramObject = obj[nxt].param;
+                            if (!$.isArray(syncObject)) {
+                                syncObject = [ syncObject ];
+                            }
                         } else {
-                            syncObject = obj[nxt];
+                            syncObject = [ obj[nxt] ];
                         }
                         var loadCommandConfig = overrides.schemaMap[nxt];
-                        Helix.DB.synchronizeObject(syncObject, loadCommandConfig.schema, function(finalObj, o) {
-                            resultObj[o.name] = finalObj;
-                            paramObj[o.name] = o.param;
+                        if (syncObject.length === 0) {
                             syncComponent();
-                        }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
+                        } else {
+                            for (var q = 0; q < syncObject.length; ++q) {
+                                var syncNxt = syncObject[q];
+                                Helix.DB.synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
+                                    resultObj[o.name] = finalObj;
+                                    if (o.param) {
+                                        paramObj[o.name] = o.param;
+                                    }
+                                    syncComponent();
+                                }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
+                            }                            
+                        }
                     }
                 };
                 syncComponent();

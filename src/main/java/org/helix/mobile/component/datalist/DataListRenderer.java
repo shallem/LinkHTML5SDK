@@ -114,6 +114,30 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",groupMembers: " + dlist.getGroupMembers());
         }
         
+        if (dlist.getGroupRenderer() != null) {
+            writer.write(",groupRenderer: " + dlist.getGroupRenderer());
+        }
+        
+        if (dlist.getGroupIndexedSearch() != null) {
+            writer.write(",groupIndexedSearch: " + dlist.getGroupIndexedSearch());
+        }
+        
+        if (dlist.getItemsPerGroup() != null) {
+            writer.write(",itemsPerGroup: " + dlist.getItemsPerGroup());
+        }
+        
+        if (dlist.getGroupOverflowText() != null) {
+            writer.write(",groupOverflowText: '" + dlist.getGroupOverflowText() + "'");
+        }
+        
+        if (dlist.getGroupOverflowTextClass() != null) {
+            writer.write(",groupOverflowTextClass: '" + dlist.getGroupOverflowTextClass() + "'");
+        }
+        
+        if (dlist.getGroupOverflowFn() != null) {
+            writer.write(",groupOverflowFn: " + dlist.getGroupOverflowFn());
+        }
+        
         // The row style class.
         if (dlist.getRowStyleClass() != null) {
             writer.write(",rowStyleClass: '" + dlist.getRowStyleClass() + "'");
@@ -262,6 +286,11 @@ public class DataListRenderer extends CoreRenderer {
         
         // The row renderer
         writer.write(",rowRenderer: " + dlist.getRowRenderer());
+        
+        // External buttons.
+        if (dlist.getExternalButtonsCallback() != null) {
+            writer.write(",externalButtonsCallback:  function(list, div, useControlGroup) { return "+ dlist.getExternalButtonsCallback() +"}");
+        }
         
         writer.write("}).data('helix-helixDatalist');");
         

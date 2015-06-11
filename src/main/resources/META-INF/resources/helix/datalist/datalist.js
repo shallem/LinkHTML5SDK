@@ -55,6 +55,40 @@
             groupMembers: null,
             
             /**
+             * For grouped lists, apply this function to each group row to get the
+             * renderer for this group. If this is null, then we just use the rowRenderer.
+             */
+            groupRenderer: null,
+            
+            /**
+             * For grouped lists, specify a maximum count of items per group. By default there
+             * is no maximum.
+             */
+            itemsPerGroup: -1,
+            
+            /**
+             * When the size of a group exceeds the itemsPerGroup limit, add an element with the overflow
+             * text below. When that element is clicked, the groupOverflowFn is called.
+             */
+            groupOverflowText: 'More ...',
+            
+            /**
+             * CSS class to apply to the groupOverflowText element.
+             */
+            groupOverflowTextClass: null,
+            
+            /**
+             * Function invoked when the overflow element is tapped. The 'this' variable is the datalist itself.
+             * The group is provided as an argument.
+             */
+            groupOverflowFn: null,
+            
+            /**
+             * For grouped lists, allow a separate search box in each group.
+             */
+            groupIndexedSearch: null,
+            
+            /**
              * Style class applied to each divider row.
              */
             dividerStyleClass: null,
@@ -74,6 +108,11 @@
              * Message to display in the list if the entire list is empty.
              */
             emptyMessage: "There are no items to display.",
+
+            /**
+             * Method that is called (optionally) if the list is empty.
+             */
+            emptyHook: null,
             
             /**
              * Message to display in the list if a group has no rows.
@@ -149,6 +188,11 @@
              * Called when the search is cleared.
              */
             onSearchClear: null,
+            
+            /**
+             *  Buttons for external actions not managed by but rendered by the datalist.
+             */
+            externalButtonsCallback : null,
             
             /**
              * List of fields to allow the user to selectively sort by. This option
@@ -526,15 +570,18 @@
             return sortFilterOptions.globalFilters;
         },
         
-        _handleEmpty: function(nelems, msg) {
+        _handleEmpty: function(nelems, nextras, msg) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
-            if (nelems === 0) {                    
+            if (nelems === nextras) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
                 } else if (msg) {
                     this.$parent.append($('<li />')
                         .attr('data-role', 'empty-message')
                         .append(msg));                        
+                }
+                if (this.options.emptyHook) {
+                    this.options.emptyHook.call(this);
                 }
             } else if (emptyLI.length) {
                 $(emptyLI).hide();
@@ -1010,6 +1057,12 @@
                 }
             }
             _self._currentSortsJSON = newSortsJSON;
+            _self.__refreshSortContainer();
+        },
+        
+        __refreshSortContainer: function() {
+             var _self = this;
+             
             /* Need to refresh the search/sort area. */
             _self._searchSortDirty = true;
             
@@ -1031,6 +1084,7 @@
                 'data-inset' : 'true',
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
+            var sorts = JSON.parse(_self._currentSortsJSON);
             for (var sortFld in sorts) {
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
@@ -1422,7 +1476,7 @@
         
             /* List must be non-empty and it must be a query collection. */
             var displayCollection = _self.itemList;
-            if (!displayCollection || !displayCollection.newEach) {
+            if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
                 return;            
             }
@@ -1477,6 +1531,7 @@
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
+            var nExtras = 0;
             
             /* Functions used in processing each item. */
             var __processRow = function(curRow) {
@@ -1484,7 +1539,7 @@
                     groupsToRender.push(curRow);
                 } else {
                     if (nRendered >= _self._itemsPerPage) {
-                        return;
+                        return false;
                     }
 
                     ++rowIndex;
@@ -1492,8 +1547,10 @@
                         // Nothing to do.
                     })) {
                         ++nRendered;
+                        return true;
                     }
                 }
+                return false;
             };
             
             var __processStart = function(count) {
@@ -1512,7 +1569,7 @@
                     /* Call completion when all rows are done rendering. */
                     _self.refreshInProgress = false;
                     oncomplete(opaque);
-                    _self._handleEmpty(nRendered, emptyMsg);
+                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
                     return;
                 }
 
@@ -1537,7 +1594,7 @@
                         $(LIs[_ridx]).hide();
                     }
 
-                    _self._handleEmpty(nRendered, emptyMsg);
+                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
                      _self.refreshInProgress = false;
                     oncomplete(opaque);
                 } else {
@@ -1552,6 +1609,17 @@
                 }
                 __processDone(_self._prefetchedItems.length);
                 _self._prefetchedItems = [];
+            } else if ($.isArray(displayCollection)) {
+                __processStart(displayCollection.length);
+                if (extraItems && extraItems.pre) {
+                    for (var i = 0; i < extraItems.pre.length; ++i) {
+                        __processRow(extraItems.pre[i]);
+                    }
+                }
+                for (var i = 0; i < displayCollection.length; ++i) {
+                    __processRow(displayCollection[i]);
+                }
+                __processDone(displayCollection.length);
             } else {
                 var orderby = _self._currentSort; 
                 displayCollection = _self._resetGlobalFilters(displayCollection);
@@ -1579,7 +1647,9 @@
                         __processStart(count);
                         if (extraItems && extraItems.pre) {
                             for (var i = 0; i < extraItems.pre.length; ++i) {
-                                __processRow(extraItems.pre[i]);
+                                if (__processRow(extraItems.pre[i])) {
+                                    ++nExtras;
+                                }
                             }
                         }
                     },
@@ -1592,7 +1662,9 @@
                             }
                             if (extraItems && extraItems.post) {
                                 for (i = 0; i < extraItems.post.length; ++i) {
-                                    __processRow(extraItems.post[i]);
+                                    if (__processRow(extraItems.post[i])) {
+                                        ++nExtras;
+                                    }
                                 }
                             }
                         }
@@ -1712,6 +1784,10 @@
                         
                         _self.displaySortMenu(this);
                     });                    
+                    
+                    if (this.options.externalButtonsCallback) {
+                        this.options.externalButtonsCallback(_self, $sortDiv, useControlGroup);
+                   }
                 }
                 
                 if (_self._globalFilterContainer) {
@@ -1920,7 +1996,17 @@
                     groupMembers.forEach(
                         /* Element callback. */
                         function(groupRow) {
-                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex)) {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Stop rendering ... we have exceeded the max number in a group.
+                                return;
+                            }
+                            
+                            var renderer = null;
+                            if (_self.options.groupRenderer) {
+                                renderer = _self.options.groupRenderer(rowObject.group);
+                            }
+                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
                                 rowObject.rows.push(groupRow);
                                 ++groupIndex;
                             }
@@ -1933,6 +2019,25 @@
                         },
                         /* On done. */
                         function() {
+                            if (_self.options.itemsPerGroup > 0 &&
+                                    groupIndex > _self.options.itemsPerGroup) {
+                                // Add a "More ..." item.
+                                var $moreMarkup = $('<a/>').append(_self.options.groupOverflowText);
+                                if (_self.options.groupOverflowTextClass) {
+                                    $moreMarkup.addClass(_self.options.groupOverflowTextClass);
+                                }
+                                if (groupIndex < groupLIs.length) {
+                                    $(groupLIs[groupIndex]).empty().append($moreMarkup);
+                                    groupIndex++;
+                                }
+                                else {
+                                    groupLIs[groupIndex] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
+                                    groupIndex++;
+                                }
+                                $moreMarkup.on(_self.tapEvent, function() {
+                                    _self.options.groupOverflowFn.call(_self, rowObject.group);
+                                });
+                            }
                             oncomplete();
                             for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
                                 groupLIs[_gidx].hide();
@@ -1959,7 +2064,7 @@
             }  
         },
     
-        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -1975,7 +2080,8 @@
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class' : _self.options.rowStyleClass
+                    'class' : _self.options.rowStyleClass,
+                    'data-theme' : 'c'
                 });
             }
             
@@ -1985,7 +2091,10 @@
                 curRowParent.attr('data-group-index', groupIndex);
             }
         
-            if (_self.options.rowRenderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
+            if (!renderer) {
+                renderer = _self.options.rowRenderer;
+            }
+            if (renderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
                     curRowParent.appendTo(_self.$parent);
                 } else {
@@ -2119,6 +2228,7 @@
                 this.selectedLI.removeClass('ui-btn-active');
                 this.selectedLI = null;
                 this.selected = null;
+                this.selectedGroup = null;
             }
         },
         
@@ -2204,6 +2314,10 @@
             this.$clearSelectionDiv.hide();
             Helix.Layout.layoutPage();
         },
+        
+        clearAllListRows: function() {
+            this.$parent.empty();
+        },
   
         createListRow: function(parentElement,rowComponents) {
             var isEnhanced = false;
@@ -2231,6 +2345,18 @@
                 }
             } else {
                 $(parentElement).removeAttr('data-icon');
+            }
+            
+            if (rowComponents.subIcon) {
+                // Elements to put underneath the icon.
+                $(rowComponents.subIcon).attr('data-role', 'subicon').addClass('hx-subicon');
+                if ($(parentElement).find('[data-role="subicon"]').length) {
+                    $(parentElement).find('[data-role="subicon"]').replaceWith(rowComponents.subIcon);
+                } else {
+                    $(mainLink).append(rowComponents.subIcon);
+                }
+            } else {
+                $(parentElement).find('[data-role="subicon"]').remove();
             }
 
             var oldPfx = $(mainLink).find('[data-role="prefix"]');
@@ -2481,6 +2607,13 @@
         },
         
         /**
+         * Reset the isLoaded flag.
+         */
+        clearIsLoaded: function() {
+            this.isLoaded = false;
+        },
+        
+        /**
          * Update the value of the 'noSelectOnPagination' option.
          */
         setNoSelectOnPagination: function(val) {
@@ -2521,12 +2654,44 @@
         listIsDirty: function() {
             return this.isDirty;
         },
+                
+        setCurrentSort : function(jsonSort, doRefresh) {
+          var sort = JSON.parse(jsonSort);
+            
+           var oldOrder = this._currentSortOrder;
+           var oldSort = this._currentSort;
+           var oldSortCase = this._currentSortCase;
+            this._currentSort = (sort.sortBy ? sort.sortBy : this._currentSort);
+            this._currentSortOrder = (sort.direction ? sort.direction  : this._currentSortOrder);
+            this._currentSortCase = (sort.usecase ? sort.usecase : this._currentSortCase);
+                                
+            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) ||
+                      (oldSortCase !== this._currentSortCase)) {
+                 var _self = this;
+                 _self.__refreshSortContainer();
+                 _self._updateSortButtons();                 
+                 
+                 if (doRefresh === true) {
+                      _self._refreshData(function() {
+                           _self.$parent.listview( "refresh" );
+                           _self.$listWrapper.scrollTop(0);
+                      }, true, this.extraItems);   
+                 }
+             }
+        },
         
         /**
          * Return the list header.
          */
         getListHeader: function() {
             return this.$searchSortDiv;
+        },
+        
+        /**
+         * Return the options object.
+         */
+        getOptions: function() {
+            return this.options;
         }
     });
 })(jQuery);

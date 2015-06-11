@@ -249,7 +249,7 @@ Helix.Ajax = {
             nxtConfig.schemaFactory(function(schema, cfg) {
                 cfg.schema = schema;
                 __doSchema();
-            }, [nxtConfig], (schemaFactories.length > 0 ? true : false) /* No schema sync unless this is the last item. */);
+            }, [nxtConfig], (schemaFactories.length > 1 ? true : false) /* No schema sync unless this is the last item. */);
         };
         __doSchema();
     },
@@ -281,7 +281,7 @@ Helix.Ajax = {
                         config.onerror(error);
                     }
                 } else if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param[syncComponent]);
+                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param ? param[syncComponent] : null);
                 }
             }
             if (globalOnComplete) {
@@ -353,7 +353,7 @@ Helix.Ajax = {
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
 
-    ajaxBeanLoad : function(loadCommandOptions,itemKey,nRetries) {
+    ajaxBeanLoad: function(loadCommandOptions,itemKey,nRetries) {
         // Set a default error handler if we do not have one.
         if (!loadCommandOptions.onerror) {
             loadCommandOptions.onerror = Helix.Ajax.defaultOnError;
@@ -382,17 +382,14 @@ Helix.Ajax = {
             return;
         }
 
-        if (!loadCommandOptions.requestOptions.params) {
-            if (loadCommandOptions.params) {
-                loadCommandOptions.requestOptions.params = loadCommandOptions.params;
-            } else {
-                loadCommandOptions.requestOptions.params = [];            
+        loadCommandOptions.requestOptions.params = [];  
+        if (loadCommandOptions.params) {
+            if (!loadCommandOptions.params.push) {
+                // the request options are not an array ...
+                loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
+                return;
             }
-        }
-        if (!loadCommandOptions.requestOptions.params.push) {
-            // the request options are not an array ...
-            loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
-            return;
+            loadCommandOptions.requestOptions.params = loadCommandOptions.params;
         }
         loadCommandOptions.requestOptions.params.push({
             name: "__hxLoadKey",
@@ -429,84 +426,85 @@ Helix.Ajax = {
 
         $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, true ]);
         /* Give the browser a change to handle the event and show the loader. */
-        setTimeout(function() {
-            $.ajax({
-                type: "POST",
-                url: loadCommandOptions.requestOptions.postBack,
-                dataType: "json",
-                data: $.param(loadCommandOptions.requestOptions.params),
-                success: function(data, status, xhr) {
-                    var responseObj = data;
-                    if (responseObj.error) {
-                        var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                        if (responseObj.error.msg) {
-                            error.msg = responseObj.error.msg;
-                        } else if (Helix.Utils.isString(responseObj.error)) {
-                            error.msg = responseObj.error;
-                        }
-                        if (responseObj.error.status) {
-                            error.code = responseObj.error.status;
-                        } else {
-                           error.code = -1;
-                        }                       
-                        loadCommandOptions.onerror(error);
-                        return;
-                    }
-
-                    Helix.Ajax.loadOptions.pin = true;
-
-                    var syncObject = null;
-                    var paramObject = null;
-                    if (responseObj.__hx_type === 1004) {
-                        syncObject = responseObj.sync;
-                        paramObject = responseObj.param;
-                    } else {
-                        syncObject = responseObj;
-                    }
-
-                    if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
-                        if (loadCommandOptions.syncingOptions) {
-                            Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
-                        }
-                        if (syncObject) {
-                            // Add setTimeout to allow the message to display
-                            setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
-                                var finalKey = o.key;
-                                $.mobile.loading( "hide" );
-                                window[loadCommandOptions.name] = finalObj;
-                                Helix.Ajax.loadOptions.pin = false;
-                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
-                                if (window.CordovaInstalled) {
-                                    window.HelixSystem.allowSleep();
-                                }
-                            }, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
-                        } else {
-                            Helix.Ajax.loadOptions.pin = false;
-                            loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
-                            if (window.CordovaInstalled) {
-                                window.HelixSystem.allowSleep();
-                            }
-                        }
-                    } else if (paramObject) {
-                        Helix.Ajax.loadOptions.pin = false;
-                        loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
-                        if (window.CordovaInstalled) {
-                            window.HelixSystem.allowSleep();
-                        }
-                    } else {
-                        loadCommandOptions.oncomplete(itemKey, "success");
-                    }
-                },
-                error: function(xhr, status, errorThrown) {
+        $.ajax({
+            type: "POST",
+            url: loadCommandOptions.requestOptions.postBack,
+            dataType: "json",
+            data: $.param(loadCommandOptions.requestOptions.params),
+            success: function(data, status, xhr) {
+                var responseObj = data;
+                if (responseObj.error) {
                     var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                    error.msg = status;
+                    if (responseObj.error.msg) {
+                        error.msg = responseObj.error.msg;
+                    } else if (Helix.Utils.isString(responseObj.error)) {
+                        error.msg = responseObj.error;
+                    }
+                    if (responseObj.error.status) {
+                        error.code = responseObj.error.status;
+                    } else {
+                        error.code = -1;
+                    }                   
+                    if (responseObj.error.objects) {
+                        error.objects =  responseObj.error.objects;
+                    }
                     loadCommandOptions.onerror(error);
-                },
-                complete: function(xhr) {
-                    $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+                    return;
                 }
-            });
-        }, 0);
+	    
+		Helix.Ajax.loadOptions.pin = true;
+		
+		var syncObject = null;
+		var paramObject = null;
+		if (responseObj.__hx_type === 1004) {
+                    syncObject = responseObj.sync;
+                    paramObject = responseObj.param;
+		} else {
+                    syncObject = responseObj;
+		}
+		
+		if (loadCommandOptions.schema || (syncObject && syncObject.__hx_type === 1003)) {
+                    if (loadCommandOptions.syncingOptions) {
+			Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
+                    }
+                    if (syncObject) {
+			// Add setTimeout to allow the message to display
+			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+                            var finalKey = o.key;
+                            $.mobile.loading( "hide" );
+                            window[loadCommandOptions.name] = finalObj;
+                            Helix.Ajax.loadOptions.pin = false;
+                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                            if (window.CordovaInstalled) {
+				window.HelixSystem.allowSleep();
+                            }
+			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+                    } else {
+			Helix.Ajax.loadOptions.pin = false;
+			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
+			if (window.CordovaInstalled) {
+                            window.HelixSystem.allowSleep();
+			}
+                    }
+		} else if (paramObject) {
+                    Helix.Ajax.loadOptions.pin = false;
+                    loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
+                    if (window.CordovaInstalled) {
+			window.HelixSystem.allowSleep();
+                    }
+		} else {
+                    loadCommandOptions.oncomplete(itemKey, "success");
+		}
+            },
+            error: function(xhr, status, errorThrown) {
+                var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                error.msg = status;
+                loadCommandOptions.onerror(error);
+            },
+            complete: function(xhr) {
+                $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+            }
+        });
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
@@ -620,11 +618,10 @@ Helix.Ajax = {
                     } else {
                         if (params.error) {
                             Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                        } else if (callbacks.error) {
+                            callbacks.error.call(window, returnObj);
                         } else {
                             Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
-                        }
-                        if (callbacks.error) {
-                            callbacks.error.call(window, returnObj);
                         }
                     }
                 },
