@@ -125,6 +125,11 @@
     margin: 0;
 }
 
+.hx-button-bar .iconbutton .ui-btn-inner {
+    padding: 0;
+    height: 60px;
+}
+
 .iconbutton {
     background: transparent;
     border: none;
@@ -413,7 +418,9 @@ li {
         padding: 0;
     }
     
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
         top: 7px;
         left: 21px;
     }
