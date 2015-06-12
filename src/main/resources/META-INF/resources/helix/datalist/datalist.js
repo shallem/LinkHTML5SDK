@@ -1613,7 +1613,11 @@
                 __processStart(displayCollection.length);
                 if (extraItems && extraItems.pre) {
                     for (var i = 0; i < extraItems.pre.length; ++i) {
-                        __processRow(extraItems.pre[i]);
+                        var nxtPre = extraItems.pre[i];
+                        if (nxtPre.renderCondition && !nxtPre.renderCondition.call(_self)) {
+                            continue;
+                        }
+                        __processRow(nxtPre);
                     }
                 }
                 for (var i = 0; i < displayCollection.length; ++i) {
@@ -1647,7 +1651,11 @@
                         __processStart(count);
                         if (extraItems && extraItems.pre) {
                             for (var i = 0; i < extraItems.pre.length; ++i) {
-                                if (__processRow(extraItems.pre[i])) {
+                                var nxtPre = extraItems.pre[i];
+                                if (nxtPre.renderCondition && !nxtPre.renderCondition.call(_self)) {
+                                    continue;
+                                }
+                                if (__processRow(nxtPre)) {
                                     ++nExtras;
                                 }
                             }
