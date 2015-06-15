@@ -475,7 +475,7 @@
             var ads = function(elt) { 
                 var callback = _self.options.autodividersSelectorCallback;
 
-                if (callback && $(elt).is(':visible')) {
+                if (callback && $(elt).attr('data-index')) {
                    return callback(elt, _self.displayList, _self._currentSort);
                 } 
 
@@ -1564,7 +1564,7 @@
             var __renderGroup = function(groupIndex) {
                 if (groupsToRender.length === 0) {
                     for (var _ridx = groupIndex; _ridx < LIs.length; ++_ridx) {
-                        $(LIs[_ridx]).hide();
+                        $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
                     /* Call completion when all rows are done rendering. */
                     _self.refreshInProgress = false;
@@ -1591,7 +1591,7 @@
                     /* We did not render any rows. Call completion. */
                     var startIdx = nRendered;
                     for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
-                        $(LIs[_ridx]).hide();
+                        $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
 
                     _self._handleEmpty(nRendered, nExtras, emptyMsg);
@@ -2048,7 +2048,7 @@
                             }
                             oncomplete();
                             for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
-                                groupLIs[_gidx].hide();
+                                groupLIs[_gidx].hide().removeAttr('data-index');
                             }
                         }
                     );
@@ -2700,6 +2700,13 @@
          */
         getOptions: function() {
             return this.options;
+        },
+        
+        /**
+         * Return the query collection of the data we are showing in the list. 
+         */
+        getItemList: function() {
+            return this.itemList;
         }
     });
 })(jQuery);
