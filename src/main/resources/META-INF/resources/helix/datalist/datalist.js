@@ -1015,9 +1015,6 @@
                 return;
             }
             
-            /* force the rescroll flags to off. */
-            _self._refreshInProgress = false;
-
             _self._resetPaging();
             if (renderWindowStart) {
                 _self.setRenderWindowStart(renderWindowStart);
@@ -1439,7 +1436,9 @@
             this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false; 
             this._lastUpdateScroll = 0;
-            this.rescrollInProgress = false;
+            this._rescrollInProgress = false;
+            this._inBounce = 0
+            this._refreshInProgress = false;
             this.scrollCalculationInProgress = false;
         },
                         
