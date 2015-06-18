@@ -837,6 +837,7 @@ define("cordova/exec", function(require, exports, module) {
     requestCount = 0,
     vcHeaderValue = null,
     commandQueue = [], // Contains pending JS->Native messages.
+    pendingQueue = [],
     isInContextOfEvalJs = 0;
 
     function createExecIframe() {
@@ -859,8 +860,8 @@ define("cordova/exec", function(require, exports, module) {
         }
         if (bridgeMode === jsToNativeModes.XHR_OPTIONAL_PAYLOAD) {
             var payloadLength = 0;
-            for (var i = 0; i < commandQueue.length; ++i) {
-                payloadLength += commandQueue[i].length;
+            for (var i = 0; i < pendingQueue.length; ++i) {
+                payloadLength += pendingQueue[i].length;
             }
             // The value here was determined using the benchmark within CordovaLibApp on an iPad 3.
             return payloadLength < 4500;
@@ -984,56 +985,62 @@ define("cordova/exec", function(require, exports, module) {
         // then the queue will be flushed when it returns; no need for a poke.
         // Also, if there is already a command in the queue, then we've already
         // poked the native side, so there is no reason to do so again.
-        if (!isInContextOfEvalJs && commandQueue.length == 1) {
-            var nxtBridge = window.__bridgeModeOverride || bridgeMode;
-            switch (nxtBridge) {
-                case jsToNativeModes.XHR_NO_PAYLOAD:
-                case jsToNativeModes.XHR_WITH_PAYLOAD:
-                case jsToNativeModes.XHR_OPTIONAL_PAYLOAD:
-                    // This prevents sending an XHR when there is already one being sent.
-                    // This should happen only in rare circumstances (refer to unit tests).
-                    if (execXhr && execXhr.readyState != 4) {
-                        execXhr = null;
-                    }
-                    // Re-using the XHR improves exec() performance by about 10%.
-                    execXhr = execXhr || new XMLHttpRequest();
-                    // Changing this to a GET will make the XHR reach the URIProtocol on 4.2.
-                    // For some reason it still doesn't work though...
-                    // Add a timestamp to the query param to prevent caching.
-                    execXhr.open('HEAD', "/!gap_exec?" + (+new Date()), true);
-                    if (!vcHeaderValue) {
-                        vcHeaderValue = /.*\((.*)\)/.exec(navigator.userAgent)[1];
-                    }
-                    execXhr.setRequestHeader('vc', vcHeaderValue);
-                    execXhr.setRequestHeader('rc', ++requestCount);
-                    if (shouldBundleCommandJson()) {
-                        execXhr.setRequestHeader('cmds', iOSExec.nativeFetchMessages());
-                    }
-                    execXhr.send(null);
-                    break;
-                case jsToNativeModes.IFRAME_HASH_NO_PAYLOAD:
-                case jsToNativeModes.IFRAME_HASH_WITH_PAYLOAD:
-                    execHashIframe = execHashIframe || createHashIframe();
-                    // Check if they've removed it from the DOM, and put it back if so.
-                    if (!execHashIframe.contentWindow) {
-                        execHashIframe = createHashIframe();
-                    }
-                    // The delegate method is called only when the hash changes, so toggle it back and forth.
-                    hashToggle = hashToggle ^ 3;
-                    var hashValue = '%0' + hashToggle;
-                    if (bridgeMode === jsToNativeModes.IFRAME_HASH_WITH_PAYLOAD) {
-                        hashValue += iOSExec.nativeFetchMessages();
-                    }
-                    execHashIframe.contentWindow.location.hash = hashValue;
-                    break;
-                default:
-                    execIframe = window.__execIframeOverride || execIframe || createExecIframe();
-                    // Check if they've removed it from the DOM, and put it back if so.
-                    if (!execIframe.contentWindow) {
-                        execIframe = createExecIframe();
-                    }
-                    execIframe.src = "gap://ready";
-            }
+        Array.prototype.push.apply(pendingQueue, commandQueue);
+        commandQueue = [];
+        if (!isInContextOfEvalJs) {
+            // if (commandQueue.length == 1) {
+                var nxtBridge = window.__bridgeModeOverride || bridgeMode;
+                switch (nxtBridge) {
+                    case jsToNativeModes.XHR_NO_PAYLOAD:
+                    case jsToNativeModes.XHR_WITH_PAYLOAD:
+                    case jsToNativeModes.XHR_OPTIONAL_PAYLOAD:
+                        // This prevents sending an XHR when there is already one being sent.
+                        // This should happen only in rare circumstances (refer to unit tests).
+                        if (execXhr && execXhr.readyState != 4) {
+                            execXhr = null;
+                        }
+                        // Re-using the XHR improves exec() performance by about 10%.
+                        execXhr = execXhr || new XMLHttpRequest();
+                        // Changing this to a GET will make the XHR reach the URIProtocol on 4.2.
+                        // For some reason it still doesn't work though...
+                        // Add a timestamp to the query param to prevent caching.
+                        execXhr.open('HEAD', "/!gap_exec?" + (+new Date()), true);
+                        if (!vcHeaderValue) {
+                            vcHeaderValue = /.*\((.*)\)/.exec(navigator.userAgent)[1];
+                        }
+                        execXhr.setRequestHeader('vc', vcHeaderValue);
+                        execXhr.setRequestHeader('rc', ++requestCount);
+                        if (shouldBundleCommandJson()) {
+                            execXhr.setRequestHeader('cmds', iOSExec.nativeFetchMessages());
+                        }
+                        execXhr.send(null);
+                        break;
+                    case jsToNativeModes.IFRAME_HASH_NO_PAYLOAD:
+                    case jsToNativeModes.IFRAME_HASH_WITH_PAYLOAD:
+                        execHashIframe = execHashIframe || createHashIframe();
+                        // Check if they've removed it from the DOM, and put it back if so.
+                        if (!execHashIframe.contentWindow) {
+                            execHashIframe = createHashIframe();
+                        }
+                        // The delegate method is called only when the hash changes, so toggle it back and forth.
+                        hashToggle = hashToggle ^ 3;
+                        var hashValue = '%0' + hashToggle;
+                        if (bridgeMode === jsToNativeModes.IFRAME_HASH_WITH_PAYLOAD) {
+                            hashValue += iOSExec.nativeFetchMessages();
+                        }
+                        execHashIframe.contentWindow.location.hash = hashValue;
+                        break;
+                    default:
+                        execIframe = window.__execIframeOverride || execIframe || createExecIframe();
+                        // Check if they've removed it from the DOM, and put it back if so.
+                        if (!execIframe.contentWindow) {
+                            execIframe = createExecIframe();
+                        }
+                        execIframe.src = "gap://ready";
+                }
+            // } else {
+            //    alert(commandStr + " " + commandQueue.length + " " + isInContextOfEvalJs);            
+            // }
         }
     }
 
@@ -1052,11 +1059,11 @@ define("cordova/exec", function(require, exports, module) {
 
     iOSExec.nativeFetchMessages = function() {
         // Each entry in commandQueue is a JSON string already.
-        if (!commandQueue.length) {
+        if (!pendingQueue.length) {
             return '';
         }
-        var json = '[' + commandQueue.join(',') + ']';
-        commandQueue.length = 0;
+        var json = '[' + pendingQueue.join(',') + ']';
+        pendingQueue.length = 0;
         return json;
     };
 
