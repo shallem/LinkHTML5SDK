@@ -125,6 +125,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.isDisabled()) {
             writer.write(", 'inputDisabled' : true");
         }
+        if (ffield.getTheme() != null) {
+            writer.write(", 'theme' : '" + ffield.getTheme() + "'");
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

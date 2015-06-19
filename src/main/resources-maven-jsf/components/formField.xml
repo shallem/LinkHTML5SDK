@@ -243,6 +243,12 @@
             <description>Orientation of the component (either horizontal or vertical). Only used by some components.</description>
         </attribute>
         <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Theme of the component, if applicable. Currently only applies to buttons.</description>
+        </attribute>
+        <attribute>
             <name>disabled</name>
             <required>false</required>
             <type>java.lang.Boolean</type>
