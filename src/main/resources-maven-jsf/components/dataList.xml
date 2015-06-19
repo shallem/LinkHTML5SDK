@@ -145,6 +145,19 @@
             <description>Sets sorting order. Default is "ascending"</description>
         </attribute>
         <attribute>
+            <name>groupBy</name>
+            <required>false</required>
+            <type>java.lang.Object</type>
+            <description>Object field(s) to be used for default grouping. This is intended to be used in conjunction with autodividers.</description>
+        </attribute>
+        <attribute>
+            <name>groupByOrder</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>ascending</defaultValue>
+            <description>Sets grouping order. Default is "ascending."</description>
+        </attribute>
+        <attribute>
             <name>onSort</name>
             <required>false</required>
             <type>java.lang.String</type>

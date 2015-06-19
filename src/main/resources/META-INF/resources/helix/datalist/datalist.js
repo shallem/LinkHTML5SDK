@@ -218,6 +218,18 @@
              * non-matching fields in the sortBy list.
              */
             sortOrder: "ASCENDING",            
+
+            /**
+             * Field to use for grouping. Grouping is intended to be used in conjunction with
+             * auto dividers, so the groupBy field should be the primary grouping field. This is a
+             * single field - not a comma delimited field list.
+             */
+            groupBy: null,
+            
+            /**
+             * Ordering for the groupBy field.
+             */
+            groupByOrder: "ASCENDING",
             
             /**
              * By default we do not sort case sensitive.
@@ -416,6 +428,11 @@
              * Append the data list.
              */
             var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
+
+            /**
+             * Append the footer.
+             */
+            this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
             
             /**
              * Append the hook div if we have pull to refresh setup.
@@ -1082,6 +1099,7 @@
                 'data-theme' : 'b'
             }).appendTo(_self._sortContainer);
             var sorts = JSON.parse(_self._currentSortsJSON);
+            var currentSortItem = null;
             for (var sortFld in sorts) {
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
@@ -1090,12 +1108,11 @@
                         'data-field': sortFld,
                         'data-direction' : nxtSort.direction,
                         'data-case' : nxtSort.usecase
-                    }).append(nxtSort.display));
-                    $(sortsList).append(sortItem);
+                    }).append(nxtSort.display)).appendTo($(sortsList));
                     
                     /* Highlight the current sort. */
                     if (sortFld === _self._currentSort) {
-                        $(sortItem).addClass('hx-current-sort');
+                        currentSortItem = sortItem;
                     }
                     
                     /* Do the actual sorting ... */
@@ -1171,6 +1188,9 @@
                 }
             }
             sortsList.listview();
+            if (currentSortItem) {
+                $(currentSortItem).addClass('hx-current-sort');
+            }
             _self._sortContainer.popup();            
         },
         
@@ -1528,6 +1548,7 @@
                 LIs = $(_self.$parent).find('li[data-role="list-divider"]');
             } else {
                 // Add not selector to make sure we handle auto dividers properly.
+                $(_self.$parent).find('li[data-role="list-divider"]').remove();
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
             var nExtras = 0;
@@ -1627,7 +1648,7 @@
                 var orderby = _self._currentSort; 
                 displayCollection = _self._resetGlobalFilters(displayCollection);
 
-                if (orderby /*&& !_self.__searchText*/) {
+                if (_self.options.groupBy || orderby) {
                     displayCollection = _self._applyOrdering(displayCollection);
                 }
 
@@ -1938,6 +1959,14 @@
             var orderbyFields = orderby.split(",");
             var directionVals = direction.split(",");
             var caseVals = usecase.split(",");
+
+            if (this.options.groupBy) {
+                if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
+                    displayCollection = displayCollection.order(this.options.groupBy, true, false);                
+                } else {
+                    displayCollection = displayCollection.order(this.options.groupBy, false, false);
+                }
+            }
 
             var oidx = 0;
             for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
@@ -2598,6 +2627,16 @@
             this.options.headerText = txt;
         },
         
+        setFooterContents: function(contents) {
+            this.$footerSection.empty();
+            this.$footerSection.append(contents);
+            this.$footerSection.show();
+        },
+        
+        hideFooter: function() {
+            this.$footerSection.hide();
+        },
+        
         openItemContextMenu: function() {
             this.options.itemContextMenu.open();
         },
@@ -2663,11 +2702,14 @@
         },
                 
         setCurrentSort : function(jsonSort, doRefresh) {
-          var sort = JSON.parse(jsonSort);
+            var sort = jsonSort;
+            if (Helix.Utils.isString(sort)) {
+                sort = JSON.parse(sort);
+            }
             
-           var oldOrder = this._currentSortOrder;
-           var oldSort = this._currentSort;
-           var oldSortCase = this._currentSortCase;
+            var oldOrder = this._currentSortOrder;
+            var oldSort = this._currentSort;
+            var oldSortCase = this._currentSortCase;
             this._currentSort = (sort.sortBy ? sort.sortBy : this._currentSort);
             this._currentSortOrder = (sort.direction ? sort.direction  : this._currentSortOrder);
             this._currentSortCase = (sort.usecase ? sort.usecase : this._currentSortCase);

@@ -213,6 +213,14 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",sortOrder:'" + dlist.getSortOrder() + "'");
         }
         
+        if (dlist.getGroupBy() != null) {
+            writer.write(",groupBy:'" + dlist.getGroupBy() + "'");
+        }
+        
+        if (dlist.getGroupByOrder()!= null) {
+            writer.write(",groupByOrder:'" + dlist.getGroupByOrder() + "'");
+        }
+        
         // Sort callback.
         if (dlist.getOnSort() != null) {
             writer.write(",onSortChange: " + dlist.getOnSort());
