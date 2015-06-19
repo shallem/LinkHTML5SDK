@@ -428,6 +428,11 @@
              * Append the data list.
              */
             var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
+
+            /**
+             * Append the footer.
+             */
+            this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
             
             /**
              * Append the hook div if we have pull to refresh setup.
@@ -2620,6 +2625,16 @@
         
         setHeaderText: function(txt) {
             this.options.headerText = txt;
+        },
+        
+        setFooterContents: function(contents) {
+            this.$footerSection.empty();
+            this.$footerSection.append(contents);
+            this.$footerSection.show();
+        },
+        
+        hideFooter: function() {
+            this.$footerSection.hide();
         },
         
         openItemContextMenu: function() {
