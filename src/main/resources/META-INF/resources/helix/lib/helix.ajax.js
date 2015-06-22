@@ -616,20 +616,26 @@ Helix.Ajax = {
                             callbacks.success.call(window, returnObj);
                         }
                     } else {
-                        if (params.error) {
-                            Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
-                        } else if (callbacks.error) {
+                        if (!params.silentMode) {
+                            if (params.error) {
+                                Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                            } else if (!callbacks.error) {
+                                Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                            }
+                        }
+                        
+                        if (callbacks.error) {
                             callbacks.error.call(window, returnObj);
-                        } else {
-                            Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
                         }
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    if (params.fatal) {
-                        Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
-                    } else {
-                        Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                    if (!params.silentMode) {
+                        if (params.fatal) {
+                            Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                        } else if (!callbacks.fatal) {
+                            Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                        }
                     }
                     if (callbacks.fatal) {
                         callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
