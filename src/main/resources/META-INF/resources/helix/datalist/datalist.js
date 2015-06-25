@@ -2001,6 +2001,50 @@
                         .insertAfter(dividerLI);
                     }
                 };
+                
+                var __finishGroup = function(idx) {
+                    if (_self.options.itemsPerGroup > 0 &&
+                            idx > _self.options.itemsPerGroup) {
+                        // Add a "More ..." item.
+                        var $moreMarkup = $('<a/>').append(_self.options.groupOverflowText);
+                        if (_self.options.groupOverflowTextClass) {
+                            $moreMarkup.addClass(_self.options.groupOverflowTextClass);
+                        }
+                        if (idx < groupLIs.length) {
+                            $(groupLIs[idx]).empty().append($moreMarkup);
+                            idx++;
+                        }
+                        else {
+                            groupLIs[idx] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
+                            idx++;
+                        }
+                        $moreMarkup.on(_self.tapEvent, function() {
+                            _self.options.groupOverflowFn.call(_self, rowObject.group);
+                        });
+                    }
+                    oncomplete();
+                    for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
+                        groupLIs[_gidx].hide().removeAttr('data-index');
+                    }
+                };
+
+                var __renderGroupRow = function(groupRow, groupIndex) {
+                    if (_self.options.itemsPerGroup > 0 &&
+                            groupIndex > _self.options.itemsPerGroup) {
+                        // Stop rendering ... we have exceeded the max number in a group.
+                        return;
+                    }
+
+                    var renderer = null;
+                    if (_self.options.groupRenderer) {
+                        renderer = _self.options.groupRenderer(rowObject.group);
+                    }
+                    if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
+                        rowObject.rows.push(groupRow);
+                        ++groupIndex;
+                    }
+                    return groupIndex;
+                };
 
                 var rowObject = {
                     'group': curRow, 
@@ -2029,57 +2073,35 @@
                 if (groupMembers) {
                     // groupLIs are all LIs from dividerLI to the next divider
                     var groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
-                    groupMembers.forEach(
-                        /* Element callback. */
-                        function(groupRow) {
-                            if (_self.options.itemsPerGroup > 0 &&
-                                    groupIndex > _self.options.itemsPerGroup) {
-                                // Stop rendering ... we have exceeded the max number in a group.
-                                return;
+                    if ($.isArray(groupMembers)) {
+                        if (groupMembers.length === 0) {
+                            __renderEmptyGroup(dividerLI);
+                            __finishGroup(0);
+                        } else {
+                            var i;
+                            for (i = 0; i < groupMembers.length; ++i) {
+                                groupIndex = __renderGroupRow(groupMembers[i], groupIndex);
                             }
-                            
-                            var renderer = null;
-                            if (_self.options.groupRenderer) {
-                                renderer = _self.options.groupRenderer(rowObject.group);
-                            }
-                            if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
-                                rowObject.rows.push(groupRow);
-                                ++groupIndex;
-                            }
-                        },
-                        /* On start. */
-                        function(ct) {
-                            if (ct === 0) {
-                                __renderEmptyGroup(dividerLI);                                
-                            }
-                        },
-                        /* On done. */
-                        function() {
-                            if (_self.options.itemsPerGroup > 0 &&
-                                    groupIndex > _self.options.itemsPerGroup) {
-                                // Add a "More ..." item.
-                                var $moreMarkup = $('<a/>').append(_self.options.groupOverflowText);
-                                if (_self.options.groupOverflowTextClass) {
-                                    $moreMarkup.addClass(_self.options.groupOverflowTextClass);
-                                }
-                                if (groupIndex < groupLIs.length) {
-                                    $(groupLIs[groupIndex]).empty().append($moreMarkup);
-                                    groupIndex++;
-                                }
-                                else {
-                                    groupLIs[groupIndex] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
-                                    groupIndex++;
-                                }
-                                $moreMarkup.on(_self.tapEvent, function() {
-                                    _self.options.groupOverflowFn.call(_self, rowObject.group);
-                                });
-                            }
-                            oncomplete();
-                            for (var _gidx = groupIndex; _gidx < groupLIs.length; ++_gidx) {
-                                groupLIs[_gidx].hide().removeAttr('data-index');
-                            }
+                            __finishGroup(groupIndex);
                         }
-                    );
+                    } else {
+                        groupMembers.forEach(
+                            /* Element callback. */
+                            function(groupRow) {
+                                groupIndex = __renderGroupRow(groupRow, groupIndex);
+                            },
+                            /* On start. */
+                            function(ct) {
+                                if (ct === 0) {
+                                    __renderEmptyGroup(dividerLI);                                
+                                }
+                            },
+                            /* On done. */
+                            function() {
+                                __finishGroup(groupIndex);
+                            }
+                        );
+                    }
                     return true;
                 } else if (groupMembers === null) {
                     __renderEmptyGroup(dividerLI);

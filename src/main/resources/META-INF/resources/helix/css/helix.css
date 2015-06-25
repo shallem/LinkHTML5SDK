@@ -316,6 +316,19 @@ a {
     overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
 }
 
+.hx-form-compactvalue {
+    font-size: small;
+    font-weight: normal;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.hx-form-bordervalue div.ui-input-text {
+    border: solid;
+    border-width: 1px;
+    border-color: lightgrey;
+}
+
 .hx-fieldview {
     padding: .1em;
     margin-bottom: .1em;

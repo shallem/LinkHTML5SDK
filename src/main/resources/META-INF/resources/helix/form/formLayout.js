@@ -158,10 +158,8 @@
                         formElem.hidden = true;
                     }
                 }
-            } else {
-                formElem.hidden = false;
             }
-            if (oldHidden != formElem.hidden) {
+            if (oldHidden !== formElem.hidden) {
                 // Hidden changed.
                 return true;
             }
