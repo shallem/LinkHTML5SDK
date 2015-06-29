@@ -278,7 +278,7 @@
             }
             return false;
         },
-        open: function (obj) {
+        open: function (obj) {            
             this._thisArg = (obj ? obj.thisArg : null);
             this.active = true;
 
@@ -288,6 +288,19 @@
                 } else {
                     this.options.beforeopen.call(this);
                 }
+            }
+            // Make sure at least one item is enabled
+            var enabledCt = 0;
+            for (var i = 0; i < this.options.items.length; ++i) {
+                var nxt = this.options.items[i];
+                if (nxt.enabled) {
+                    ++enabledCt;
+                    break;
+                }
+            }
+            
+            if (enabledCt === 0) {
+                return;
             }
 
             $(this.page).find(PrimeFaces.escapeClientId(this.id + "-screen")).on(this.tapEvent, $.proxy(this, "_stopAndClose"));
