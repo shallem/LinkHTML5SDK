@@ -1994,9 +1994,9 @@
                         $emptyElem.show();
                     } else {                                 
                         $('<li />').attr({
-                            'class' : _self.options.rowStyleClass,
                             'data-index' : rowIndex,
-                            'data-group-index' : '-1'
+                            'data-group-index' : '-1',
+                            'data-role' : 'empty-group'
                         }).append(_self.options.emptyGroupMessage)
                         .insertAfter(dividerLI);
                     }

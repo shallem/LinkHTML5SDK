@@ -238,6 +238,10 @@
     background-color: white;
 }
 
+.hx-listview li[data-role="empty-group"] {
+    color: black;
+}
+
 .ui-header .ui-title, .ui-footer .ui-title { 
     min-height: 1.1em; 
     text-align: center; 
