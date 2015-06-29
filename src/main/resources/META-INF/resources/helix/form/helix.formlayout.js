@@ -743,12 +743,16 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'name': formElem.name,
         'id' : inputID,
         'type' : type,
-        'tabindex' : -1
+        'tabindex' : -1,
+        'data-corners' : 'false'
     });
-    __refreshControl(formElem, true);
-    $('<label />').attr('for', inputID).append(formElem.fieldTitle).appendTo($fieldContainer);
+    $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
     $(inputMarkup).appendTo($fieldContainer);
-    $(inputMarkup).checkboxradio({ mini: useMiniLayout });
+    __refreshControl(formElem, true);
+    $(inputMarkup).checkboxradio({ 
+        mini: useMiniLayout
+    });
+    $fieldContainer.find('label').removeClass('ui-btn-corner-all');
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
             formElem.onchange.call(this);
