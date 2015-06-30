@@ -34,7 +34,7 @@ Helix.Utils =  {
         return { x: xPosition, y: yPosition };
     },
     
-    growl : function(summary, msg, severity, lifetime) {
+    growl : function(summary, msg, severity, lifetime, doEscape) {
         if (!lifetime) {
             lifetime = 10000;
         }
@@ -44,7 +44,8 @@ Helix.Utils =  {
             msgs: [
                 { summary : summary, detail: msg, severity: severity }
             ],
-            life : lifetime
+            life : lifetime,
+            escape: (doEscape ? true : false)
         }).data('helix-helixGrowl');
         $(growlContainer).on('tap', function() {
             growl.removeAll(); 
