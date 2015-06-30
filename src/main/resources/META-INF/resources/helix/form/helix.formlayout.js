@@ -504,17 +504,17 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
 }
 
 function __refreshTextBox(mode, formElem) {
-    if (mode) {
+    if (mode && !formElem.viewOnly) {
         var $input = $(formElem.DOM).find('input[name="'+formElem.name+'"]');
         $input.val(formElem.value);
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
-        var selector = 'span' + dataNameAttr + ',p' + dataNameAttr;
+        var selector = 'span' + dataNameAttr + ',p' + dataNameAttr + ",div" + dataNameAttr;
         var $span = $(formElem.DOM).find(selector);
         if ($span.is('span')) {
             $span.text(formElem.value);
         } else {
-            /* Should be a 'p' tag. */
+            /* Should be a 'p' tag or a 'div' tag. */
             $span.text(formElem.value);
         }
     }
@@ -525,7 +525,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         formElem.value = "";
     }
     
-    if (mode) {
+    if (mode && !formElem.viewOnly) {
         /* Edit */
         if (mode && !formElem.name) {
             /* No field name. We cannot edit this field. */
@@ -687,11 +687,20 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             });
         }
     } else {
-        if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
-            var valSpan = $('<span/>').attr({
-                'data-name' : formElem.name,
+        var hasTitle = formElem.fieldTitle && (typeof formElem.fieldTitle === "string"); 
+        if (hasTitle && mode) {
+            var valSpan = $('<div/>').attr({
+                'class': 'hx-mini-fieldcontain ui-field-contain ui-body ui-br'
+            })
+            .append($('<label/>').attr({
+                'for' : formElem.name,
                 'class' : 'ui-input-text'
-            }).text(formElem.value)
+            }).append(formElem.fieldTitle))
+            .append($('<div/>').attr({
+                'data-name' : formElem.name,
+                'id' : formElem.name,
+                'class' : 'ui-input-text hx-full-width'
+            }).append(formElem.value));
             if (formElem.computedStyle) {
                 valSpan.attr('style', formElem.computedStyle);
             }
@@ -703,6 +712,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             var textElem = $('<span />').attr({
                 'data-name' : formElem.name
             }).text(formElem.value);
+            if (!mode && hasTitle) {
+                textElem.addClass('ui-input-text');
+            }
             if (formElem.computedStyle) {
                 $fieldContainer.attr('style', formElem.computedStyle);
             }
@@ -731,12 +743,16 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'name': formElem.name,
         'id' : inputID,
         'type' : type,
-        'tabindex' : -1
+        'tabindex' : -1,
+        'data-corners' : 'false'
     });
-    __refreshControl(formElem, true);
-    $('<label />').attr('for', inputID).append(formElem.fieldTitle).appendTo($fieldContainer);
+    $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
     $(inputMarkup).appendTo($fieldContainer);
-    $(inputMarkup).checkboxradio({ mini: useMiniLayout });
+    __refreshControl(formElem, true);
+    $(inputMarkup).checkboxradio({ 
+        mini: useMiniLayout
+    });
+    $fieldContainer.find('label').removeClass('ui-btn-corner-all');
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
             formElem.onchange.call(this);

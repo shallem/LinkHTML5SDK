@@ -238,6 +238,10 @@
     background-color: white;
 }
 
+.hx-listview li[data-role="empty-group"] {
+    color: black;
+}
+
 .ui-header .ui-title, .ui-footer .ui-title { 
     min-height: 1.1em; 
     text-align: center; 
@@ -314,6 +318,19 @@ a {
     padding-right: 0px;
     margin-right: 0px;
     overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
+}
+
+.hx-form-compactvalue {
+    font-size: small;
+    font-weight: normal;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.hx-form-bordervalue div.ui-input-text {
+    border: solid;
+    border-width: 1px;
+    border-color: lightgrey;
 }
 
 .hx-fieldview {

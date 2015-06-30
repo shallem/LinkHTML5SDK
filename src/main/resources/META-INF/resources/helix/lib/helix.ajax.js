@@ -271,13 +271,8 @@ Helix.Ajax = {
                 var componentObj = obj[syncComponent];
                 if (componentObj.error) {
                     if (config.onerror) {
-                        var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                        if (componentObj.error.msg) {
-                            error.msg = componentObj.error.msg;
-                        }
-                        if (componentObj.error.status) {
-                            error.code = componentObj.error.status;
-                        }
+                        var error = $.extend({}, Helix.Ajax.ERROR_AJAX_LOAD_FAILED, componentObj.error);
+                        error.code = error.status;
                         config.onerror(error);
                     }
                 } else if (config.oncomplete) {

@@ -38,6 +38,12 @@
             <description>Named group for menu items to make it easy to show/hide items in context.</description>
         </attribute>
         <attribute>
+            <name>data</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Custom data value that is supplied to the ontap event as the first argument. This value is treated as a string.</description>
+        </attribute>
+        <attribute>
             <name>styleClass</name>
             <required>false</required>
             <type>java.lang.String</type>

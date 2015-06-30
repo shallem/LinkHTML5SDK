@@ -158,10 +158,8 @@
                         formElem.hidden = true;
                     }
                 }
-            } else {
-                formElem.hidden = false;
             }
-            if (oldHidden != formElem.hidden) {
+            if (oldHidden !== formElem.hidden) {
                 // Hidden changed.
                 return true;
             }
@@ -714,7 +712,7 @@
             }
             
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
-            if (!mode) {
+            if (!mode || fld.viewOnly) {
                 return $(fld.DOM).find('[data-name="' + fld.name + '"]').html();
             }
             
@@ -774,10 +772,10 @@
                 
                 var nameAttribute = '[name="' + fld.name + '"]';
                 ret = $(fld.DOM).find('input'+nameAttribute+",textarea"+nameAttribute);
-                if (ret.length == 0) {
+                if (ret.length === 0) {
                     ret = $(fld.DOM).find('[data-name="' + fld.name + '"]');
                 }
-                if (ret.length == 0) {
+                if (ret.length === 0) {
                     ret = $(fld.DOM);
                 }
                 
