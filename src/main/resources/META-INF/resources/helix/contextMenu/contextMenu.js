@@ -300,6 +300,7 @@
             }
             
             if (enabledCt === 0) {
+                this.active = false;
                 return;
             }
 
