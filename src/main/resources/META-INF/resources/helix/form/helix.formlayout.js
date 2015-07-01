@@ -672,9 +672,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     autoCompleteList.listview("refresh");
                                     // Scroll the page to the top of this element.
                                     var scroller = _self.closest('.hx-scroller-nozoom');
-                                    var curOffset = scroller.scrollTop();
-                                    var tgtOffset = _self.offset().top;
-                                    scroller.scrollTop(curOffset + (tgtOffset - 250  /* rough keyboard size on iPhone */));
+                                    if (scroller.length) {
+                                        var curOffset = scroller.scrollTop();
+                                        var tgtOffset = _self.offset().top;
+                                        scroller.scrollTop(curOffset + (tgtOffset - 250  /* rough keyboard size on iPhone */));
+                                    }
                                 }
                             } else {
                                 formElem.__noblur = false;
