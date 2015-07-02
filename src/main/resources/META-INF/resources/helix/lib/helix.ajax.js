@@ -293,6 +293,7 @@ Helix.Ajax = {
                 var commandConfig = Helix.Ajax.loadCommands[commandToLaunch];
                 loadCommandOptions.syncOverrides.schemaMap[commandToLaunch] = commandConfig;
             }
+            loadCommandOptions.requestOptions.suspendSleep = true;
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
@@ -398,6 +399,10 @@ Helix.Ajax = {
             name: "__hxGetMethod",
             value: loadCommandOptions.requestOptions.getMethod
         });
+        
+        if (loadCommandOptions.requestOptions.suspendSleep === undefined) {
+            loadCommandOptions.requestOptions.suspendSleep = false;
+        }
 
         if (!Helix.Ajax.isDeviceOnline()) {
             // Use the key to sync from the local DB.
@@ -419,7 +424,7 @@ Helix.Ajax = {
             return;
         }
 
-        $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+        $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
         /* Give the browser a change to handle the event and show the loader. */
         $.ajax({
             type: "POST",
@@ -497,7 +502,7 @@ Helix.Ajax = {
                 loadCommandOptions.onerror(error);
             },
             complete: function(xhr) {
-                $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, true ]);
+                $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
             }
         });
     },
