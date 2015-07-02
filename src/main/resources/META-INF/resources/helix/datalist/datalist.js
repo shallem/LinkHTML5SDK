@@ -2032,7 +2032,7 @@
                     if (_self.options.itemsPerGroup > 0 &&
                             groupIndex > _self.options.itemsPerGroup) {
                         // Stop rendering ... we have exceeded the max number in a group.
-                        return;
+                        return groupIndex;
                     }
 
                     var renderer = null;
