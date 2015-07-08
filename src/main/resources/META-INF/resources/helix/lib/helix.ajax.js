@@ -607,7 +607,8 @@ Helix.Ajax = {
                 data: params.body,
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
-                    if (returnObj.status === 0) {
+                    var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
+                    if (retCode === 0) {
                         if (params.success && !params.silentMode) {
                             Helix.Utils.statusMessage("Success", params.success, "info");
                         }

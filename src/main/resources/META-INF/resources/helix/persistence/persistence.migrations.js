@@ -183,15 +183,17 @@ function definePersistenceMigrations() {
             var selectColumns = [];
             for (var col in allColumns) {
                 var colTarget = allColumns[col];
+                var colName = col;
                 if (Helix.Utils.isString(colTarget)) {
-                    columnsSql.push(col + " " + colTarget);
+                    columnsSql.push(colName + " " + colTarget);
                 } else {
                     // This is a relationship column.
-                    columnsSql.push("`" + col + "` VARCHAR(32)");
+                    colName = "`" + col + "`";
+                    columnsSql.push(colName + " VARCHAR(32)");
                 }
                 
                 if (col in allOldColumns) {
-                    selectColumns.push(col);
+                    selectColumns.push(colName);
                 } else {
                     selectColumns.push('NULL');
                 }
@@ -203,7 +205,9 @@ function definePersistenceMigrations() {
             columnsSql = columnsSql.join(', ');
             selectColumns = selectColumns.join(', ');
 
-            arr.unshift(["ALTER TABLE `" + tableName + "` RENAME TO `" + tableName + "_bkp`;", null]);
+            var quotedTblName = "`" + tableName + "_bkp`";
+            arr.unshift(["DROP TABLE IF EXISTS " + quotedTblName + ";"])
+            arr.unshift(["ALTER TABLE `" + tableName + "` RENAME TO " + quotedTblName + ";", null]);
             arr.unshift(["CREATE TABLE `" + tableName + "` (" + columnsSql + ");", null]);
             if (!keyChanged || (keyChanged && (newKeyCol in allOldColumns))) {
                 // If the unique ID field of a table changed to a new field, then all old data in that table is invalidated
@@ -211,7 +215,7 @@ function definePersistenceMigrations() {
                 // and a violation of the table constraint.
                 arr.unshift(["INSERT INTO `" + tableName + "` SELECT " + selectColumns + " FROM `" + tableName + "_bkp`;", null]);
             }
-            arr.unshift(["DROP TABLE `" + tableName + "_bkp`;", null]);
+            arr.unshift(["DROP TABLE " + quotedTblName + ";", null]);
         });
     }
     

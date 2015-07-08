@@ -1233,7 +1233,8 @@
                                 _self.$listWrapper.scrollTop(0);
                             }, true);
                             _self._filterContextMenu.close();
-                        }
+                        },
+                        'enabled' : true
                     });
                 }
             }
@@ -1249,7 +1250,8 @@
                         _self.$listWrapper.scrollTop(0);
                     }, true, _self.extraItems);
                     _self._filterContextMenu.close();
-                }
+                },
+                'enabled' : true
             });
             _self._filterContextMenu = $(_self._filterContainer).helixContextMenu({
                 items: contextMenuItems
