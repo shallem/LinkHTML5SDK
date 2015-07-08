@@ -247,7 +247,7 @@
     text-align: center; 
     font-size: 16px; 
     display: block; 
-    margin: .6em 10% .8em;  /* reduce margin horizontal */
+    margin: .6em 64px .8em;  /* reduce margin horizontal; choose 64px to allow for 1 button on the left. */
     padding: 0;
     text-overflow: ellipsis; 
     overflow: hidden; 
