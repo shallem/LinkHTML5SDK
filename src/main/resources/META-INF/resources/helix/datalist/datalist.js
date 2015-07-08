@@ -408,7 +408,7 @@
                 this.$wrapper.parent().attr('id', parentId);
             }
             
-            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical');
+            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$headerSection)
