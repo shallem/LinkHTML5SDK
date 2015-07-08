@@ -408,7 +408,7 @@
                 this.$wrapper.parent().attr('id', parentId);
             }
             
-            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical');
+            this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$headerSection)
@@ -1233,7 +1233,8 @@
                                 _self.$listWrapper.scrollTop(0);
                             }, true);
                             _self._filterContextMenu.close();
-                        }
+                        },
+                        'enabled' : true
                     });
                 }
             }
@@ -1249,7 +1250,8 @@
                         _self.$listWrapper.scrollTop(0);
                     }, true, _self.extraItems);
                     _self._filterContextMenu.close();
-                }
+                },
+                'enabled' : true
             });
             _self._filterContextMenu = $(_self._filterContainer).helixContextMenu({
                 items: contextMenuItems

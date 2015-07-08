@@ -573,6 +573,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 }
             });
         }
+        if (formElem.onchange) {
+            $(inputMarkup).on('input', function() {
+                formElem.onchange.call(this, formElem);
+            });
+        }
         if (formElem.onspace) {
             $(inputMarkup).on("keydown", function (e) {
                 if (e.which === 32) {
@@ -764,7 +769,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     $fieldContainer.find('label').removeClass('ui-btn-corner-all');
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
-            formElem.onchange.call(this);
+            formElem.onchange.call(this, formElem);
         });
     }
     if (!mode) {

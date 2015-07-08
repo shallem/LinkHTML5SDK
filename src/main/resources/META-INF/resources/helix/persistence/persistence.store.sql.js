@@ -835,8 +835,13 @@ function config(persistence, dialect) {
             sql += " ORDER BY "
             + this._orderColumns.map(
                 function (c) {
-                    return (c[2] ? "`" : "LOWER(`") + mainPrefix + c[0] + (c[2] ? "` " : "`) ")
-                    + (c[1] ? "ASC" : "DESC");
+                    var fldName = c[0];
+                    var fldType = meta.fields[fldName];
+                    if (fldType && fldType !== 'TEXT') {
+                        c[2] = true;
+                    }
+                    return (c[2] ? "`" : "LOWER(`") + mainPrefix + fldName + (c[2] ? "` " : "`) ")
+                        + (c[1] ? "ASC" : "DESC");                        
                 }).join(", ");
         }
         if(this._limit >= 0) {
