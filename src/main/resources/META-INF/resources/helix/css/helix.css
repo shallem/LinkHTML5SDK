@@ -386,6 +386,7 @@ a {
 
 .hx-main-content {
     height: 100%;
+    width: 100%;
 }
 
 .hx-flex-vertical {
@@ -518,7 +519,7 @@ li {
 }
 
 .ui-page.hx-no-footer {
-    padding-bottom: 0px;
+    padding-bottom: 0px !important;
 }
 
 /**
@@ -585,6 +586,13 @@ li {
 }
 
 /**
+ * Page styles
+ */
+.hx-mini-mode.ui-page {
+    height: 100%;
+}
+
+/**
  * Small screen style overrides.
  */
 @media all and (max-width: 500px) {
@@ -611,7 +619,9 @@ li {
         padding: 0;
     }
         
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,.ui-icon.ui-icon-delete,.ui-icon.ui-icon-check {
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
+    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
         top: 7px;
         left: 11px;
     }

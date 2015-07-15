@@ -375,7 +375,12 @@
             /*
              * Display sort buttons or not
              */
-            showButtons: true,
+            showSortButton: true,
+            
+            /**
+             * Displaye filter buttons or not
+             */
+            showFilterButton: true,
             
             /*
              * If true, shows an arrow icon on the right hand side of each list item
@@ -476,13 +481,6 @@
                 this.$parent.attr('data-icon', false);
             }
 
-            var sb = true;
-            
-            if (this.options.showButtons === false) {
-                sb = false;
-            }
-            
-            this.showButtons = sb;
             var ad = this.options.autodividers;
             if (!ad) {
                 ad = false;
@@ -1550,7 +1548,6 @@
                 LIs = $(_self.$parent).find('li[data-role="list-divider"]');
             } else {
                 // Add not selector to make sure we handle auto dividers properly.
-                $(_self.$parent).find('li[data-role="list-divider"]').remove();
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
             var nExtras = 0;
@@ -1617,7 +1614,10 @@
                     }
 
                     _self._handleEmpty(nRendered, nExtras, emptyMsg);
-                     _self.refreshInProgress = false;
+                    // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
+                    // restoring them.
+                    $(_self.$parent).find('li[data-role="list-divider"]').remove();
+                    _self.refreshInProgress = false;
                     oncomplete(opaque);
                 } else {
                     __renderGroup(0);
@@ -1754,7 +1754,6 @@
         
         _prependSearchBox: function() {
             var _self = this;
-            var hasButtons = (_self._globalFilterContainer || _self._sortContainer) && _self.showButtons; 
             var useControlGroup = false;
             if (!_self._searchSortDirty) {
                 return;
@@ -1762,9 +1761,13 @@
             
             _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
+            if (!_self.options.showSortButton && !_self.options.showFilterButton && !_self.options.indexedSearch) {
+                _self.$searchSortDiv.hide();
+                return;
+            }
 
             var _attachButtons = function() {
-                if (_self._sortContainer && _self._globalFilterContainer) {
+                if (_self.options.showSortButton && _self.options.showFilterButton) {
                     useControlGroup = true;
                 }
                 
@@ -1773,11 +1776,11 @@
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
-                if (_self._sortContainer) {
+                if (_self.options.showSortButton) {
                     /* Ascending/descending sort buttons. */
                     var sAscendID = Helix.Utils.getUniqueID();
                     var sDescendID = Helix.Utils.getUniqueID();
-                    this.options.sortButtons = {
+                    _self.options.sortButtons = {
                         'ascending' : PrimeFaces.escapeClientId(sAscendID),
                         'descending' : PrimeFaces.escapeClientId(sDescendID)
                     };
@@ -1820,7 +1823,7 @@
                    }
                 }
                 
-                if (_self._globalFilterContainer) {
+                if (_self.options.showFilterButton) {
                     /* Filter button. */
                     var sFilterID = Helix.Utils.getUniqueID();
                     this.$filter = $('<a/>').attr({
@@ -1851,7 +1854,7 @@
             var _attachSearchBox = function() {
                 var styleClass = 'hx-display-inline';
                 var widthStyle = null;
-                if (!hasButtons) {
+                if (!_self.options.showSortButton && !_self.options.showFilterButton) {
                     styleClass = styleClass + ' hx-full-width';
                 } else {
                     widthStyle='60%';
@@ -1915,9 +1918,7 @@
             };
 
             if (this.options.buttonPos === 'left') {
-                if (hasButtons) {
-                    _attachButtons.call(this);
-                }
+                _attachButtons.call(this);
                 if (this.options.indexedSearch) {
                     _attachSearchBox.call(this);
                 }                
@@ -1925,9 +1926,7 @@
                 if (this.options.indexedSearch) {
                     _attachSearchBox.call(this);
                 }
-                if (hasButtons) {
-                    _attachButtons.call(this);
-                }
+                _attachButtons.call(this);
             }
             
             _self.$searchSortDiv.show();

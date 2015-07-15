@@ -132,6 +132,20 @@
             <description>Style class for each divider row in a grouped list.</description>
         </attribute>
         <attribute>
+            <name>sortButton</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>true</defaultValue>
+            <description>Should the sort button be displayed.</description>
+        </attribute>
+        <attribute>
+            <name>filterButton</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>true</defaultValue>
+            <description>Should the filter button be displayed.</description>
+        </attribute>
+        <attribute>
             <name>sortBy</name>
             <required>false</required>
             <type>java.lang.Object</type>

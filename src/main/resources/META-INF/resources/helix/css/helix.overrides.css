@@ -130,3 +130,13 @@
 .ui-input-search {
     border-radius: 0.2em;
 }
+
+.ui-mini.ui-btn-inline {
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+}
+
+.hx-mini-mode .ui-collapsible-inset {
+    margin-bottom: 0.15em;
+    margin-top: 0.15em;
+}

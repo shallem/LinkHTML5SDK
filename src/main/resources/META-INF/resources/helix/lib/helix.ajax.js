@@ -594,6 +594,71 @@ Helix.Ajax = {
         });
     },
 
+    ajaxGet: function(params, callbacks) {
+        Helix.Ajax.loadOptions = {
+            async: (params.async !== undefined) ? params.async : true,
+            silent: (params.silentMode !== undefined) ? params.silentMode : false
+        };
+        $(document).trigger('prerequest', [ params.url, false ]);
+        var args = '';
+        for (var key in params.params) {
+            var nxtArg = key + '=' + encodeURIComponent(params.params[key]);
+            if (args) {
+                args = args + '&' + nxtArg;
+            } else {
+                args = nxtArg;
+            }
+        }
+        
+        $.ajax({
+            url: params.url + (args ? '?' : '') + args,
+            type: 'GET',
+            success: function(returnObj,textStatus,jqXHR) {
+                var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
+                if (retCode === 0) {
+                    if (params.success && !params.silentMode) {
+                        Helix.Utils.statusMessage("Success", params.success, "info");
+                    }
+
+                    if (callbacks.success) {
+                        callbacks.success.call(window, returnObj);
+                    }
+                } else {
+                    if (!params.silentMode) {
+                        if (params.error) {
+                            Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                        } else if (!callbacks.error) {
+                            Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                        }
+                    }
+
+                    if (callbacks.error) {
+                        callbacks.error.call(window, returnObj);
+                    }
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (!params.silentMode) {
+                    if (params.fatal) {
+                        Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                    } else if (!callbacks.fatal) {
+                        Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                    }
+                }
+                if (callbacks.fatal) {
+                    callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+                }
+            },
+            complete: function() {
+                if (callbacks.complete) {
+                    callbacks.complete.call(window);
+                }
+                $(document).trigger('postrequest', [ params.url, false ]);
+            },
+            dataType: 'json'
+        });
+    },
+
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
             async: (params.async !== undefined) ? params.async : true,

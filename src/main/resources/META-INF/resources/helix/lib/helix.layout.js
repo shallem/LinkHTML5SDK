@@ -192,26 +192,11 @@ Helix.Layout = {
         if ($footer.is(':visible')) {
             footerHeight = Helix.Layout.footerHeight = $footer.outerHeight(true);
         }
-        var pageHeight = height;
         var contentHeight = height - footerHeight - headerHeight;
-        if ($header.is('[data-position="fixed"]')) {
-            pageHeight -= headerHeight;
-        }
-        if ($footer.is('[data-position="fixed"]')) {
-            pageHeight -= footerHeight;
-        }
-        page.height(pageHeight);
         
-        var content = page.find('.hx-main-content');
-        content.css('height', contentHeight);
-        if (!$(content).parent().is('.ui-page')) {
-            $(content).parent().height(pageHeight);
-        }
-        
-        content.each(function() {
-            //var innerWidth = width - (this.offsetWidth - this.clientWidth);
-            $(this).css('width', width);
-        });
+        var $content = page.find('.hx-main-content');
+        $content.css('height', contentHeight);
+        $content.parentsUntil('.ui-page').addClass('hx-full-height').addClass('hx-full-width');
         
         return contentHeight;
     },

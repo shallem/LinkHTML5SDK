@@ -23,6 +23,8 @@ public class SplitLeftRenderer extends CoreRenderer {
         
         // Output the left div.
         writer.startElement("div", sleft);
+        // By default make the left div full screen. This renders better during load.
+        writer.writeAttribute("class", "hx-split-full", null);
         for (UIComponent c : sleft.getChildren()) {
             c.encodeAll(context);
         }
