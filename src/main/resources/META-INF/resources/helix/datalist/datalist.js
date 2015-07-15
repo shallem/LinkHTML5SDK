@@ -1767,6 +1767,10 @@
             }
 
             var _attachButtons = function() {
+                if (!_self.options.showSortButton && !_self.options.showFilterButton) {
+                    return;
+                }
+                
                 if (_self.options.showSortButton && _self.options.showFilterButton) {
                     useControlGroup = true;
                 }
