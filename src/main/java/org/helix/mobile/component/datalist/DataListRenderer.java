@@ -203,6 +203,10 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",onSearchClear: " + dlist.getOnSearchClear());
         }
 
+        // Show sort/filter buttons.
+        writer.write(",showSortButton: " + (dlist.isSortButton() ? "true" : "false"));
+        writer.write(",showFilterButton: " + (dlist.isFilterButton() ? "true" : "false"));
+        
         // Default field to sort by.
         if (dlist.getSortBy() != null) {
             writer.write(",sortBy:'" + dlist.getSortBy() + "'");
