@@ -542,7 +542,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             'id' : inputID,
             'type': formElem.dataType,
             'value': (formElem.value),
-            'tabindex' : formLayout.__tabIndex++
+            'tabindex' : formLayout.__tabIndex++,
+            'autocapitalize' : 'sentences'
         });
         
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
@@ -1242,6 +1243,9 @@ function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMin
     var $buttonBar = $('<div />').attr({
         'class' : 'buttonBarMaster buttonbar ' + formElem.computedStyleClass
     }).appendTo($fieldContainer);
+    if (formElem.onclick) {
+        $buttonBar.on(Helix.clickEvent, formElem.onclick);
+    }
     if (formElem.name) {
         $buttonBar.attr('id', formElem.name);
     }
