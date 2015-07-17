@@ -116,7 +116,8 @@
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
                     .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom ui-editor-default-style')
-                    .attr('contentEditable', 'true');
+                    .attr('contentEditable', 'true')
+                    .attr('autocapitalize', 'sentences');
 
             this._attachEditFrameEvents();
         },

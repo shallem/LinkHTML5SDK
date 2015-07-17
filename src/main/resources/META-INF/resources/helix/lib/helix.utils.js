@@ -252,4 +252,4 @@ Helix.Utils =  {
     escapeClientId : function(id) {
         return "#" + id.replace(/:/g,"\\:");
     }
-}
+};

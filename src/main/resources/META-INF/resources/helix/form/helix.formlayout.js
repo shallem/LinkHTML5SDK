@@ -673,17 +673,37 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                         $("<li/>").append("The search returned >20 results.");
                                     }
 
-
                                     autoCompleteList.show();
                                     autoCompleteList.listview("refresh");
-                                    // Scroll the page to the top of this element.
-                                    if (Helix.Utils.isPhone()) {
-                                        var scroller = _self.closest('.hx-scroller-nozoom');
-                                        if (scroller.length) {
-                                            var curOffset = scroller.scrollTop();
-                                            var tgtOffset = _self.offset().top;
-                                            scroller.scrollTop(curOffset + (tgtOffset - 250  /* rough keyboard size on iPhone */));
-                                        }
+                                    // Scroll the page so that this element and at least some of the autocompletions do not
+                                    // appear underneath the keyboard. Otherwise the user might not see the dropdown autocomplete
+                                    // list.
+                                    var screenPos = Helix.Utils.getPosition(_self[0]);
+                                    var scroller = _self.closest('.hx-scroller-nozoom');
+                                    if (scroller.length) {
+                                        var curOffset = scroller.scrollTop();
+                                        var tgtOffset = 0;
+                                        var kbdSize = 0;
+                                        var screenHgt = window.innerHeight;
+                                        if (screenHgt < 100) {
+                                            // do nothing.
+                                        } else {
+                                            if (Math.abs(window.orientation) === 90) {
+                                                // Landscape
+                                                kbdSize = screen.width - screenHgt;
+                                            } else {
+                                                kbdSize = screen.height - screenHgt;
+                                            }
+                                        
+                                            if (Helix.Utils.isPhone() && screenPos.y > 100) {
+                                                tgtOffset = (screenPos.y - kbdSize - 50);
+                                                scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
+                                            } else if (screenPos.y > 200) {
+                                                tgtOffset = (screenPos.y - kbdSize - 100);
+                                                scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
+                                            }
+                                        }                                        
+                                        //alert('POS: ' + screenPos.y + ', CUR: ' + curOffset + ', TGT: ' + tgtOffset + ', HGT: ' + screenHgt + ' ' + kbdSize + ', WID: ' + window.innerWidth);
                                     }
                                 }
                             } else {
