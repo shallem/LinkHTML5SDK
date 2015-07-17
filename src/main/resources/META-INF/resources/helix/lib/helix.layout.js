@@ -327,7 +327,7 @@ Helix.Layout.layoutPage = function(page, noTrigger) {
     if (!noTrigger) {
         $(page).trigger("hxLayoutDone");
     }
-}
+};
 
 /**
  * Do an initial layout on before show. This mostly gets rid of the snapping
@@ -395,9 +395,9 @@ Helix.contextEvent = (function() {
 })();
 
 Helix.browser = (function() {
-    if (navigator.userAgent.indexOf("AppleWebKit") != -1) {
+    if (navigator.userAgent.indexOf("AppleWebKit") !== -1) {
         // Safari or mobile safari.
-        if (navigator.userAgent.indexOf("Mobile") != -1) {
+        if (navigator.userAgent.indexOf("Mobile") !== -1) {
             return "iOS";
         } else {
             return "MacOS";
