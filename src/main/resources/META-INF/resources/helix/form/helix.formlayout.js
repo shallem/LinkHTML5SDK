@@ -678,32 +678,19 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // Scroll the page so that this element and at least some of the autocompletions do not
                                     // appear underneath the keyboard. Otherwise the user might not see the dropdown autocomplete
                                     // list.
-                                    var screenPos = Helix.Utils.getPosition(_self[0]);
                                     var scroller = _self.closest('.hx-scroller-nozoom');
                                     if (scroller.length) {
                                         var curOffset = scroller.scrollTop();
                                         var tgtOffset = 0;
-                                        var kbdSize = 0;
                                         var screenHgt = window.innerHeight;
-                                        if (screenHgt < 100) {
-                                            // do nothing.
-                                        } else {
-                                            if (Math.abs(window.orientation) === 90) {
-                                                // Landscape
-                                                kbdSize = screen.width - screenHgt;
-                                            } else {
-                                                kbdSize = screen.height - screenHgt;
-                                            }
-                                        
-                                            if (Helix.Utils.isPhone() && screenPos.y > 100) {
-                                                tgtOffset = (screenPos.y - kbdSize - 50);
-                                                scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
-                                            } else if (screenPos.y > 200) {
-                                                tgtOffset = (screenPos.y - kbdSize - 100);
+                                        if (screenHgt > 150) {
+                                            var screenPos = Helix.Utils.getPosition(_self[0]);
+                                            var actualPos = (screenPos.y > screenHgt ? screenHgt : screenPos.y);
+                                            if (Helix.Utils.isPhone() && screenHgt > 150 && actualPos > 150) {
+                                                tgtOffset = (actualPos - 150);
                                                 scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
                                             }
-                                        }                                        
-                                        //alert('POS: ' + screenPos.y + ', CUR: ' + curOffset + ', TGT: ' + tgtOffset + ', HGT: ' + screenHgt + ' ' + kbdSize + ', WID: ' + window.innerWidth);
+                                        }
                                     }
                                 }
                             } else {
