@@ -55,6 +55,7 @@
             editor.menuPopups = {};
             editor.menuToolbar = {};
             editor.menus = {};
+            editor.isFirstTyping = true;
 
             this._createPopupMenu('style', 'Style', $parent, $toolbar, this.options.controls.styles, doMini);
             editor.$styleMenu = editor.menus['style'];
@@ -205,6 +206,11 @@
             $(this.$editFrame).on('focus', function() {
                 _self.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
                 _self.$toolbarEnabled = true;
+                if (_self.isFirstTyping) {
+                    // Capitalize the first letter.
+                    _self.styleChanges.push(['firstcap', null]);
+                    _self.isFirstTyping = false;
+                }
             });
         },
     
@@ -332,7 +338,6 @@
             if (menuName) {
                 this.menuPopups[menuName].popup('close');
             }
-            //this.$editFrame.focus();
             this.styleChanges.push([action, actionArg]);
             if (!this._lastInputRange.collapsed) {
                 // We are not changing the style at the caret. We are changing the style of an existing
@@ -417,6 +422,9 @@
     
         update: function(val) {
             this.$editFrame.html(val);
+            if (!val) {
+                this.isFirstTyping = true;            
+            }
         },
 
         // disable - enables or disables the editor
@@ -472,6 +480,13 @@
                     case 'super':
                         this._toggleStyle(actionName);
                         break;
+                    case 'firstcap':
+                        if (txtToSurround !== undefined) {
+                            var capitalized = this._capitalizeFirstLetter(txtToSurround.wholeText);
+                            txtToSurround.nodeValue = capitalized;
+                            this._setCaretAtEndOfElement(txtToSurround, capitalized.length);
+                        }
+                        break;
                     default:
                         this.currentStyles[actionName] = param;
                         break;
@@ -516,6 +531,15 @@
                         break;
                 }
             }
+        },
+        
+        _setCaretAtEndOfElement: function(elem, pos) {
+            var range = document.createRange();
+            var sel = window.getSelection();
+            range.setStart(elem, pos);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
         },
         
         _setCaretPosition: function(range) {
