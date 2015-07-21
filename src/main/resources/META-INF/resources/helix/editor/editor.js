@@ -601,6 +601,10 @@
 
         getHTML: function() {
             return '<html><body>' + this.$editFrame.html() + '</body></html>';
+        },
+        
+        blur: function() {
+           $(this.$editFrame).blur(); 
         }
     });
 })(jQuery);
