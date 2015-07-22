@@ -876,7 +876,7 @@
                  * Reset the selection if directed to do so.
                  */
                 if (resetSelection) {
-                    _self.resetSelection();
+                    _self.clearSelected();
                 }
                 
                 _self.$wrapper.show();
