@@ -406,6 +406,7 @@
                 this.$wrapper.addClass('hx-full-height');
             }
             
+            this._scrollerTimeout = null;
             this.$page = this.$wrapper.closest('.ui-page');
             var parentId = this.$wrapper.parent().attr('id');
             if (!parentId) {
@@ -685,6 +686,8 @@
             _self._prefetchPrevDone = false;
             _self._prefetchNext = null;
             _self._prefetchNextDone = false;
+            _self._prefetchNextPromise = null;
+            _self._prefetchPrevPromise = null;
             
             $.mobile.loading('show', {});
             _self.$parent.hide();
@@ -699,14 +702,30 @@
             }, false);
         },
         
-        _rescrollList : function(rescrollTarget) {
+        _setScrollTimer: function() {
+            this._rescrollInProgress = true;
+            this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
-            _self._lastScrollPos = rescrollTarget;
-            _self.$listWrapper.scrollTop(rescrollTarget);
+            setTimeout(function() {
+                _self.$listWrapper.addClass('hx-scroller-nozoom');
+                _self._rescrollInProgress = false;
+            }, 2000);
         },
         
-        _doScrollUp: function(doForce) {
+        _rescrollList : function(rescrollTarget) {
+            this._lastScrollPos = rescrollTarget;
             var _self = this;
+            setTimeout(function() {
+                _self.$listWrapper.addClass('hx-scroller-nozoom');
+                _self.$listWrapper.scrollTop(rescrollTarget);
+            }, (rescrollTarget === 0 ? 0 : 100));
+        },
+        
+        _doScrollUp: function() {
+            var _self = this;
+            _self._scrollerTimeout = null;
+            _self._setScrollTimer();
+
             var __finishDoScrollUp = function() {
                 var listWHeight = _self.$listWrapper.height();
                 if (listWHeight === 0) {
@@ -715,87 +734,63 @@
                 } else {
                     var listHeight = _self.$parent.height() - listWHeight;
                     _self._rescrollList(listHeight);
-                    _self._refreshInProgress = false;
                 }
             };
             
             var _refreshUpDone = function() {
-                //_self._rescrollInProgress = true;
                 _self._renderWindowStart = (_self._renderWindowStart) - _self._itemsPerPage + 1;
-
-                // Added this to try to make sure the DOM height is correct ...
-                setTimeout(__finishDoScrollUp, 0);
+                __finishDoScrollUp();
             };
 
-            // If we are in the bottom half of the list, prefetch a page if we haven't already.
-            if (_self._fingerOn && !doForce) {
-                // Do not refresh the list while someone's finger is still on it - we can't tell if their intention
-                // is to have it refreshed or to keep scrolling. Also we want to make it possible to scroll carefully to the
-                // top element in the list and not have the list refresh every time you do that ...
-                _self._refreshInProgress = false;
-                return;
+            _self._prefetchedItems = _self._prefetchPrev;
+            if (_self._prefetchPrevDone) {
+                _self._refreshListOnScroll(_refreshUpDone);
             } else {
-                // At or very near the bottom of the list ...
-                _self._prefetchedItems = _self._prefetchPrev;
-                if (_self._prefetchPrevDone) {
-                    _self._refreshListOnScroll(_refreshUpDone);
+                if (_self._prefetchPrevPromise) {
+                    _self._prefetchPrevPromise.then(function(result) {
+                        _self._refreshListOnScroll(_refreshUpDone);                    
+                    }, function(err) {
+                        throw "How did this happen? PrefetchPrev promise cannot fail!";
+                    });
                 } else {
-                    if (_self._prefetchPrevPromise) {
-                        _self._prefetchPrevPromise.then(function(result) {
-                            _self._refreshListOnScroll(_refreshUpDone);                    
-                        }, function(err) {
-                            throw "How did this happen? PrefetchPrev promise cannot fail!";
-                        });
-                    } else {
-                        _self.$listWrapper.on('prefetchPrev', function() {
-                            _self._refreshListOnScroll(_refreshUpDone);
-                            _self.$listWrapper.off('prefetchPrev');
-                        });
-                    }
+                    _self.$listWrapper.on('prefetchPrev', function() {
+                        _self._refreshListOnScroll(_refreshUpDone);
+                        _self.$listWrapper.off('prefetchPrev');
+                    });
                 }
-                _self._atDataTop = false;
             }
+            _self._atDataTop = false;
         },
         
-        _doScrollDown: function(doForce) {
+        _doScrollDown: function() {
             var _self = this;
-            var _refreshDownDone = function(_rescroll) {
-                //_self._rescrollInProgress = true;
+            _self._scrollerTimeout = null;
+            _self._setScrollTimer();
 
+            var _refreshDownDone = function(_rescroll) {
                 if (_rescroll) {
                     _self._rescrollList(0);
                     _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
                 } else {
                     _self._atDataTop = true;
                 }
-                _self._refreshInProgress = false;
             }; 
 
-            if (_self._fingerOn && !doForce) {
-                // Do not refresh the list while someone's finger is still on it - we can't tell if their intention
-                // is to have it refreshed or to keep scrolling. Also we want to make it possible to scroll carefully to the
-                // bottom element in the list and not have the list refresh every time you do that ...
-                _self._refreshInProgress = false;
-                return;
+            _self._prefetchedItems = _self._prefetchNext;
+            if (_self._prefetchNextDone) {
+                _self._refreshListOnScroll(_refreshDownDone);
             } else {
-                // At or near the top of the list.
-                _self._prefetchedItems = _self._prefetchNext;
-                //console.log("A:" + scrollPos);
-                if (_self._prefetchNextDone) {
-                    _self._refreshListOnScroll(_refreshDownDone);
+                if (_self._prefetchNextPromise) {
+                    _self._prefetchNextPromise.then(function(result) {
+                        _self._refreshListOnScroll(_refreshDownDone);
+                    }, function(err) {
+                        throw "How did this happen? PrefetchNext promise cannot fail!";
+                    });
                 } else {
-                    if (_self._prefetchNextPromise) {
-                        _self._prefetchNextPromise.then(function(result) {
-                            _self._refreshListOnScroll(_refreshDownDone);
-                        }, function(err) {
-                            throw "How did this happen? PrefetchNext promise cannot fail!";
-                        });
-                    } else {
-                        _self.$listWrapper.on('prefetchNext', function() {
-                            _self._refreshListOnScroll(_refreshDownDone);
-                            _self.$listWrapper.off('prefetchNext');
-                        });
-                    }
+                    _self.$listWrapper.on('prefetchNext', function() {
+                        _self._refreshListOnScroll(_refreshDownDone);
+                        _self.$listWrapper.off('prefetchNext');
+                    });
                 }
             }
         },
@@ -881,8 +876,7 @@
                  * Reset the selection if directed to do so.
                  */
                 if (resetSelection) {
-                    _self.selected = null;
-                    _self.selectItem(true);
+                    _self.clearSelected();
                 }
                 
                 _self.$wrapper.show();
@@ -897,7 +891,6 @@
 
                     _self.$listWrapper.on('touchstart', function() {
                         _self._fingerOn = true;
-                        _self._rescrollInProgress = false;
                     });
                     
                     _self.$listWrapper.on('touchend', function() {
@@ -909,44 +902,17 @@
                         var lastScroll = _self._lastScrollPos;
                         var listHeight = _self.$parent.height() - _self.$listWrapper.height();
                         //console.log("SCROLL: " + scrollPos + ", LAST: " + lastScroll + ", HEIGHT: " + listHeight);
-                        if (_self._refreshInProgress) {
+                        if (_self._rescrollInProgress) {
                             return;
                         }
                         if (!_self.$parent.is(':visible')) {
                             return;
                         }
-                        if (scrollPos < 0 || scrollPos > listHeight) {
-                            if (scrollPos > listHeight) {
-                                _self._inBounce = 1; // Down
-                            } else if (scrollPos < 0) {
-                                _self._inBounce = -1; // Up
-                            }
-                        } else if (_self._inBounce !== 0) {
-                            _self._refreshInProgress = true;
-                            if (_self._inBounce > 0 && !_self._atDataTop) {
-                                if (_self._fingerOn) {
-                                    _self._doScrollDown(true);
-                                } else {
-                                    _self._doScrollDown();
-                                }
-                            } else if (_self._inBounce < 0 && _self._renderWindowStart > 0) {
-                                if (_self._fingerOn) {
-                                    _self._doScrollUp(true);
-                                } else {
-                                    _self._doScrollUp();
-                                }
-                            } else {
-                                _self._refreshInProgress = false;
-                            }
-                            _self._inBounce = 0;
-                            return;
+                        if (_self._scrollerTimeout) {
+                            clearTimeout(_self._scrollerTimeout);
+                            _self._scrollerTimeout = null;
                         }
-                        if (_self._rescrollInProgress) {
-                            return;
-                        }
-                        
                         _self._lastScrollPos = scrollPos;
-                        _self._refreshInProgress = true;
                         
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
@@ -955,30 +921,44 @@
                         // of the list and remove from the front.
                        
                         //console.log("RENDER: " + _self._renderWindowStart + ", ATTOP: " + _self._atDataTop);
-                        if (lastScroll > scrollPos && _self._renderWindowStart > 0) {
+                        if ((lastScroll > scrollPos || scrollPos < 0) && _self._renderWindowStart > 0) {
                             // We are scrolling up ...
                             if (scrollPos < (listHeight * .5)) {
                                 if (!_self._prefetchPrev) {
                                     _self._prefetchPage(-1);
-                                }                            
-                                if (_self._firstElemVisible()) {
-                                    _self._doScrollUp();
+                                }
+                                if (scrollPos < 0) {
+                                    // Bounce.
+                                    _self._rescrollInProgress = true;
+                                    setTimeout($.proxy(_self._doScrollUp, _self), 200);
+                                } else if (_self._firstElemVisible()) {
+                                    if (_self._fingerOn) {
+                                        return;
+                                    }
+                                    
+                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollUp, _self), 100);
                                     return;
                                 }
                             }
-                        } else if (lastScroll < scrollPos && !_self._atDataTop) {
+                        } else if ((lastScroll < scrollPos || scrollPos > listHeight) && !_self._atDataTop) {
                             // Scrolling down.
                             if (scrollPos > (listHeight * .5)) {
                                 if (!_self._prefetchNext) {
                                     _self._prefetchPage(1);
                                 }
-                                if (_self._lastElemVisible()) {
-                                    _self._doScrollDown();
+                                if (scrollPos > listHeight) {
+                                    // Bounce
+                                    _self._rescrollInProgress = true;
+                                    setTimeout($.proxy(_self._doScrollDown, _self), 200);
+                                } else if (_self._lastElemVisible()) {
+                                    if (_self._fingerOn) {
+                                        return;
+                                    }
+                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollDown, _self), 100);
                                     return;
                                 }
                             }
                         }
-                        _self._refreshInProgress = false;
                     });
                 }
                 _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
@@ -1503,6 +1483,7 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
+            this.$listWrapper.show();
             if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
@@ -2604,7 +2585,7 @@
          */
         scrollToStart: function() {
             // Prevent pagination
-            this._rescrollInProgress = true;
+            this._setScrollTimer();
             this.$listWrapper.scrollTop(0);
         },
         
@@ -2616,7 +2597,7 @@
          */
         setScrollPosition: function(pos) {
             // Prevent pagination
-            this._rescrollInProgress = true;
+            this._setScrollTimer();
             this.$listWrapper.scrollTop(pos);
         },
         
@@ -2711,6 +2692,10 @@
                 this.__searchClear = true;
             }
             this.__searchText = '';
+        },
+        
+        hideList: function() {
+            this.$listWrapper.hide();
         },
         
         /**
