@@ -1483,6 +1483,7 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
+            this.$listWrapper.show();
             if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
@@ -2691,6 +2692,10 @@
                 this.__searchClear = true;
             }
             this.__searchText = '';
+        },
+        
+        hideList: function() {
+            this.$listWrapper.hide();
         },
         
         /**
