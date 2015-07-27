@@ -321,6 +321,7 @@
                         });
                     }
                 } else if (fieldType === "pickList" ||
+                           fieldType === 'picklist' ||
                            fieldType === "tzSelector") {
                     var selected = $(this).find('option:selected');
                     toSerialize.push({
@@ -474,15 +475,18 @@
                     __refreshDate(mode, item);
                 } else if (fldType === 'tzSelector') {
                     __refreshTZSelector(mode, item);
-                } else if (fldType === 'pickList') {
+                } else if (fldType === 'pickList' ||
+                           fldType === 'picklist') {
                     if (mode) {
                         thisField = $(item.DOM).find('[name="' + searchName + '"]');
                         $(thisField).find('option:selected').each(function() {
                             $(this).prop({ selected : false });
                         });
-                        $(thisField).find('option[value="' + value + '"]').each(function() {
-                            $(this).prop({ selected : true });
-                        });
+                        if (value) {
+                            $(thisField).find('option[value="' + value + '"]').each(function() {
+                                $(this).prop({ selected : true });
+                            });
+                        }
                         $(thisField).selectmenu('refresh');                        
                     } else {
                         __refreshTextBox(mode, item);
@@ -495,8 +499,6 @@
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
                     __refreshButtonGroup(item);
-                } else if (fldType === 'pickList') {
-                    __refreshSelectMenu(item);
                 } else if ((fldType === 'text') || (fldType === 'search')) {
                     __refreshTextBox(mode, item);
                 } else if (fldType === 'textarea') {
@@ -725,7 +727,8 @@
                 }
                 return null;
             } else if (fldType === 'tzSelector' ||
-                       fldType === 'pickList') {
+                       fldType === 'pickList' ||
+                       fldType === 'picklist') {
                 var selected = $(thisField).find('option:selected');
                 if (selected.length > 0) {
                     return selected.val();
@@ -887,6 +890,7 @@
                         toValidate = false;
                     }
                 } else if (fieldType === "pickList" ||
+                            fieldType === 'picklist' ||
                            fieldType === "tzSelector") {
                     var selected = $(this).find('option:selected');
                     toValidate = selected.val();
