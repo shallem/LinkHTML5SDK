@@ -646,9 +646,11 @@
                 var fieldID = item.name;
                 var strippedFieldID = this._stripNamespace(fieldID);
 
-                if (name === strippedFieldID) {
+                if (name === strippedFieldID ||
+                        name === fieldID) {
                     break;
                 }
+                item = null;
             }
             if (!item) {
                 return;
