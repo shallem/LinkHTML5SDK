@@ -641,13 +641,13 @@
         
         setValue: function(name, value) {
             var item;
+            name = this._stripNamespace(name);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 item = this.options.items[idx];
                 var fieldID = item.name;
                 var strippedFieldID = this._stripNamespace(fieldID);
 
-                if (name === strippedFieldID ||
-                        name === fieldID) {
+                if (name === strippedFieldID) {
                     break;
                 }
                 item = null;
