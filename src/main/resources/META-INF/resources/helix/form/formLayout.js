@@ -922,6 +922,8 @@
         },
         
         addItem: function(item) {
+            item.originalName = item.name;
+            item.name =  this.options.namespace + '_' + item.name;
             this.options.items.push(item);
         },
         
