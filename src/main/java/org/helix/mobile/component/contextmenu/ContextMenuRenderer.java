@@ -60,7 +60,7 @@ public class ContextMenuRenderer extends CoreRenderer {
             writer.write(",theme: '" + menu.getTheme() + "'");
         }
         if (menu.getDividerTheme() != null) {
-            writer.write(",dividerTheme: '" + menu.getTheme() + "'");
+            writer.write(",dividerTheme: '" + menu.getDividerTheme()+ "'");
         }
         writer.write(",name: '" + menu.getClientId(context) + "'");
         

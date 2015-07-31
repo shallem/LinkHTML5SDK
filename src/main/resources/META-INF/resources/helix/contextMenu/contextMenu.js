@@ -164,16 +164,14 @@
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
                 'data-inset' : 'true',
-                'id' : this.id + "-ul",
-                'data-theme' : this.options.theme
+                'id' : this.id + "-ul" 
             }).appendTo(this._menuContainer);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
                 var nxtLI = $('<li />');
 
                 if (nxtItem.isDivider) {
-                    nxtLI.attr('data-role', 'divider');
-                    nxtLI.attr('data-theme', this.options.dividerTheme);
+                    nxtLI.attr('data-role', 'list-divider');
                     nxtLI.append(nxtItem.display);
                 } else {
                     var nxtLink = $('<a />').attr({
@@ -220,7 +218,10 @@
                 });
             }
 
-            this.optionsList.listview();
+            this.optionsList.listview({
+                theme: this.options.theme,
+                dividerTheme: this.options.dividerTheme
+            });
             _self._menuContainer.popup({
                 dismissible: !Helix.hasTouch, // We will explicitly close the popup when this is a touch device.
                 afterclose: function() {

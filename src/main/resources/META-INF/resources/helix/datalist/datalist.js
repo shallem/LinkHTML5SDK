@@ -2713,6 +2713,14 @@
             return this.isDirty;
         },
                 
+        getCurrentSort : function() {
+            return {
+                sortBy: this._currentSort,
+                direction: this._currentSortOrder,
+                usecase: this._currentSortCase
+            };
+        },
+        
         setCurrentSort : function(jsonSort, doRefresh) {
             var sort = jsonSort;
             if (Helix.Utils.isString(sort)) {
