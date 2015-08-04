@@ -55,8 +55,17 @@ public class LoadCommandServlet extends HttpServlet {
             String err = null;
             try {
                 Object thisObj = lca.getCTOR().newInstance(req);
-                lca.doLoad(thisObj, req);
-                String jsonToReturn = lca.getAndSerialize(thisObj);
+                Object facade = lca.getFacade(thisObj);
+                String jsonToReturn;
+                if (facade != null) {
+                    synchronized(facade) {
+                        lca.doLoad(thisObj, req);
+                        jsonToReturn = lca.getAndSerialize(thisObj);
+                    }
+                } else {
+                    lca.doLoad(thisObj, req);
+                    jsonToReturn = lca.getAndSerialize(thisObj);
+                }
                 res.setContentType("application/json");
                 res.setCharacterEncoding("UTF-8");
                 res.getWriter().write(jsonToReturn);
