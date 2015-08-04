@@ -38,6 +38,7 @@ public class LoadCommandAction {
     private final Method loader;
     private final Method getter;
     private Method errorGetter;
+    private Method facadeGetter;
     private Method postConstruct;
     private final String beanName;
     private final String key;
@@ -61,6 +62,8 @@ public class LoadCommandAction {
                 this.postConstruct = m;
             } else if (m.getName().equals("getLastError")) {
                 this.errorGetter = m;
+            } else if (m.getName().equals("getFacade")) {
+                this.facadeGetter = m;
             }
         }
     }
@@ -170,5 +173,21 @@ public class LoadCommandAction {
     
     public Constructor getCTOR() {
         return this.ctor;
+    }
+    
+    public Object getFacade(Object thisObject) {
+        try {
+            return this.facadeGetter.invoke(thisObject, new Object[] {});
+        } catch (IllegalAccessException ex) {
+            LOG.log(Level.SEVERE, "Illegal access when getting facade", ex);
+            throw new FacesException("Failed to get facade: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            LOG.log(Level.SEVERE, "Illegal argument when getting facade", ex);
+            throw new FacesException("Failed to get facade: " + ex.getMessage());
+        } catch (InvocationTargetException ex) {
+            LOG.log(Level.SEVERE, "Invocation target when getting facade", ex);
+            LOG.log(Level.SEVERE, "Target exception", ex.getTargetException());
+            throw new FacesException("Failed to get facade: " + ex.getTargetException().getMessage());
+        }
     }
 }
