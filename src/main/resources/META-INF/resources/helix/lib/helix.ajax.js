@@ -40,7 +40,7 @@ $(document).on('prerequest', function(ev, url, suspendSleep) {
                 }, {
                     duration: 1200,
                     complete: function() {
-                        if (Helix.Ajax.loadCt >  0) {
+                        if (Helix.Ajax.loadCt >  0 || Helix.Ajax.loadOptions.pin) {
                             animateColor(!doReverse);
                         } else {
                             $(header).css('background', '');
@@ -71,7 +71,6 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
     }
 
     /* Clear out the load options - this is meant as a per-load set of options. */
-    Helix.Ajax.loadOptions = {};
     Helix.Ajax.loadCt--;
 });
 
@@ -205,6 +204,9 @@ Helix.Ajax = {
                 async : true,
                 color : loadingOptions.color
             };
+        }
+        if (loadingOptions.pin) {
+            Helix.Ajax.loadOptions.pin = true;
         }
     },
 
@@ -451,9 +453,7 @@ Helix.Ajax = {
                     loadCommandOptions.onerror(error);
                     return;
                 }
-	    
-		Helix.Ajax.loadOptions.pin = true;
-		
+				
 		var syncObject = null;
 		var paramObject = null;
 		if (responseObj.__hx_type === 1004) {
@@ -473,21 +473,18 @@ Helix.Ajax = {
                             var finalKey = o.key;
                             $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
-                            Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
 			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
                     } else {
-			Helix.Ajax.loadOptions.pin = false;
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {
                             window.HelixSystem.allowSleep();
 			}
                     }
 		} else if (paramObject) {
-                    Helix.Ajax.loadOptions.pin = false;
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
                     if (window.CordovaInstalled) {
 			window.HelixSystem.allowSleep();

@@ -1138,22 +1138,45 @@ function initHelixDB() {
     
         synchronizeDeltaField: function(allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
+            
+            // Defensively make sure the delta obj is well formed.
+            if (!deltaObj.adds) {
+                deltaObj.adds = [];
+            }
+            if (!deltaObj.updates) {
+                deltaObj.updates = [];
+            }
 
             var nToAdd = deltaObj.adds.length;
             var nAddsDone = 0;
             var allAdds = [];
-            var addDone = function(pObj) {
+            var addDone = function(pObj, uidToEID) {
                 ++nAddsDone;
                 allAdds.push(pObj);
                 if (nAddsDone === nToAdd) {
                     /* Nothing more to add - we are done. */
+                    syncFn(uidToEID);
+                }
+            };
+            
+            var syncFn = function(uidToEID) {
+                if (deltaObj.updates.length > 0) {
+                    var updatedObj = deltaObj.updates.pop();
+                    var toUpdateKey = updatedObj[keyField];
+                    var objId = uidToEID[toUpdateKey];
+                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                        syncFn(uidToEID);
+                        //syncFn(pObj);
+                    },overrides);                    
+                } else {
+                    /* Nothing more to sync. Done. */
                     oncomplete(field, allAdds);
                 }
             };
 
             var doAdds = function(uidToEID) {
                 if (deltaObj.adds.length === 0) {
-                    oncomplete(field, allAdds);
+                    syncFn(uidToEID);
                 } else {
                     while (deltaObj.adds.length > 0) {
                         var toAdd = deltaObj.adds.pop();
@@ -1172,34 +1195,19 @@ function initHelixDB() {
                 }
             };
 
-            var syncFn = function(uidToEID) {
-                if (deltaObj.updates.length > 0) {
-                    var updatedObj = deltaObj.updates.pop();
-                    var toUpdateKey = updatedObj[keyField];
-                    var objId = uidToEID[toUpdateKey];
-                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
-                        syncFn(uidToEID);
-                        //syncFn(pObj);
-                    },overrides);                    
-                } else {
-                    /* Nothing more to sync. Do all removes. */
-                    doAdds(uidToEID);
-                }
-            };
-            
             var createUIDToEIDMap = function() {
                 var uidToEID = {};
                 if (deltaObj.adds.length === 0 &&
                     deltaObj.updates.length === 0) {
                     // Skip to the finish line ...
-                    doAdds(null);
+                    syncFn(null);
                 } else {
                     elemSchema.all().include([keyField]).newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
                         }, 
                         doneFn: function() {
-                            syncFn(uidToEID);
+                            doAdds(uidToEID);
                         }
                     });
                 }
