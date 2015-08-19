@@ -63,7 +63,7 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
     if (!Helix.Ajax.loadOptions.pin) {
         if (!Helix.Ajax.loadOptions.async) {
             /* Hide the loader. */
-            $.mobile.loading( "hide" );
+            Helix.Ajax.hideLoader();
         }
         if (window.CordovaInstalled && resumeSleep) {
             window.HelixSystem.allowSleep();
@@ -471,7 +471,6 @@ Helix.Ajax = {
 			// Add setTimeout to allow the message to display
 			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
-                            $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
                             if (window.CordovaInstalled) {

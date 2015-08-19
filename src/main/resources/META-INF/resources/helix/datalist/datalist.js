@@ -1775,10 +1775,11 @@
                     this.$sortAscending = $('<a/>').attr({
                         'id' : sAscendID,
                         'data-role' : 'none',
-                        'data-icon' : 'arrow-u',
+                        'data-icon' : 'hx-sort-asc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt ui-icon-nodisc'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1791,10 +1792,11 @@
                     this.$sortDescending = $('<a/>').attr({
                         'id' : sDescendID,
                         'data-role' : 'none',
-                        'data-icon' : 'arrow-d',
+                        'data-icon' : 'hx-sort-desc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt ui-icon-nodisc'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1816,10 +1818,11 @@
                     this.$filter = $('<a/>').attr({
                         'id' : sFilterID,
                         'data-role' : 'none',
-                        'data-icon' : 'filter',
+                        'data-icon' : 'hx-filter-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {

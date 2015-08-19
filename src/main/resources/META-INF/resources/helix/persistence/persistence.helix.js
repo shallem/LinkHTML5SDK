@@ -242,7 +242,8 @@ function initHelixDB() {
             // Determine if any upgrades need to be generated. The required SQL commands
             // are stored as schema sync hooks.
             var dirty = false;
-            if (Helix.DB.doMigrations(name,allSchemas)) {
+            var masterDBAdds = [];
+            if (Helix.DB.doMigrations(name,allSchemas,masterDBAdds)) {
                 dirty = true;
             }
             
@@ -255,6 +256,11 @@ function initHelixDB() {
             } else {
                 // Flush all schemas.
                 persistence.schemaSync(function(tx) {
+                    // Add all tables created in this sync to the master DB, if needed.
+                    for (var t = 0; t < masterDBAdds.length; ++t) {
+                        persistence.add(masterDBAdds[t]);
+                    }
+                    
                     // Flush all master DB changes.
                     persistence.flush(function() {
                         if (dirty) {
@@ -331,9 +337,9 @@ function initHelixDB() {
             Helix.DB.__schemaVersion = Helix.DB.__schemaVersion + 1;
         },
 
-        doMigrations: function(metaName,allSchemas) {
+        doMigrations: function(metaName,allSchemas,masterDBAdds) {
             // Migrate tables one at a time.
-            if (allSchemas.length == 0) {
+            if (allSchemas.length === 0) {
                 return false;
             }
 
@@ -346,7 +352,7 @@ function initHelixDB() {
                 if (schema.schema.meta.textIndex) {
                     schema.schema.meta.textIndex['__hx_generated'] = false;
                 }
-                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap);
+                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap, masterDBAdds);
                 if (curVer > 0) {
                     // Migrations must be done.
                     dirty = true;
@@ -364,7 +370,7 @@ function initHelixDB() {
                         }
                     }
                 } else if (curVer <= 0) {
-                    if (curVer == 0) {
+                    if (curVer === 0) {
                         // This table is already in the DB. Mark it as a generated table.
                         persistence.generatedTables[tableName] = true;
                         // Do not regenerate textIndex tables.
@@ -377,10 +383,10 @@ function initHelixDB() {
             return dirty;
         },
 
-        migrateTable: function(oldVersion, schema, metaName, dirtyMap) {
+        migrateTable: function(oldVersion, schema, metaName, dirtyMap, masterDBAdds) {
             var tableName = schema.schema.meta.name;
             var schemaRec = window.__pmAllTables[tableName];
-            if (schemaRec == null) {
+            if (schemaRec === null || schemaRec === undefined) {
                 // This is a new table.
                 var newSchema = new window.__pmMasterDB();
                 newSchema.metaName = metaName;
@@ -397,7 +403,7 @@ function initHelixDB() {
                 newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
                 newSchema.tableManyToOne = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
 
-                persistence.add(newSchema);
+                masterDBAdds.push(newSchema);
                 
                 // New table - return -1;
                 return -1;
