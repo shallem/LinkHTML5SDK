@@ -20,6 +20,15 @@
  * @author Seth Hallem
  */
 
+var ignoreErrors = false;
+$(document).on('resign', function() {
+    ignoreErrors = true;
+});
+
+$(document).on('active', function() {
+    ignoreErrors = false;
+});
+
 /**
  * Show a loader pre-request.
  */
@@ -493,6 +502,9 @@ Helix.Ajax = {
 		}
             },
             error: function(xhr, status, errorThrown) {
+                if (ignoreErrors) {
+                    return;
+                }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                 error.msg = status;
                 loadCommandOptions.onerror(error);
@@ -634,6 +646,9 @@ Helix.Ajax = {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                if (ignoreErrors) {
+                    return;
+                }
                 if (!params.silentMode) {
                     if (params.fatal) {
                         Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
@@ -692,6 +707,9 @@ Helix.Ajax = {
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
+                    if (ignoreErrors) {
+                        return;
+                    }
                     if (!params.silentMode) {
                         if (params.fatal) {
                             Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
