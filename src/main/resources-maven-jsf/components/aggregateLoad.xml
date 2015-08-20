@@ -69,5 +69,12 @@
             <type>java.lang.Object</type>
             <description>Retrieve a serializeable object post load. Prior to load this should return an empty object that can be used to generate a template schema.</description>
         </attribute>
+        <attribute>
+            <name>pin</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Should the loader be automatically hidden when the AJAX command completes or not?</description>
+        </attribute>
     </attributes>
 </component>

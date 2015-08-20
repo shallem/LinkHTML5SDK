@@ -20,6 +20,15 @@
  * @author Seth Hallem
  */
 
+var ignoreErrors = false;
+$(document).on('resign', function() {
+    ignoreErrors = true;
+});
+
+$(document).on('active', function() {
+    ignoreErrors = false;
+});
+
 /**
  * Show a loader pre-request.
  */
@@ -40,7 +49,7 @@ $(document).on('prerequest', function(ev, url, suspendSleep) {
                 }, {
                     duration: 1200,
                     complete: function() {
-                        if (Helix.Ajax.loadCt >  0) {
+                        if (Helix.Ajax.loadCt >  0 || Helix.Ajax.loadOptions.pin) {
                             animateColor(!doReverse);
                         } else {
                             $(header).css('background', '');
@@ -63,7 +72,7 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
     if (!Helix.Ajax.loadOptions.pin) {
         if (!Helix.Ajax.loadOptions.async) {
             /* Hide the loader. */
-            $.mobile.loading( "hide" );
+            Helix.Ajax.hideLoader();
         }
         if (window.CordovaInstalled && resumeSleep) {
             window.HelixSystem.allowSleep();
@@ -71,7 +80,6 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
     }
 
     /* Clear out the load options - this is meant as a per-load set of options. */
-    Helix.Ajax.loadOptions = {};
     Helix.Ajax.loadCt--;
 });
 
@@ -205,6 +213,9 @@ Helix.Ajax = {
                 async : true,
                 color : loadingOptions.color
             };
+        }
+        if (loadingOptions.pin) {
+            Helix.Ajax.loadOptions.pin = true;
         }
     },
 
@@ -451,9 +462,7 @@ Helix.Ajax = {
                     loadCommandOptions.onerror(error);
                     return;
                 }
-	    
-		Helix.Ajax.loadOptions.pin = true;
-		
+				
 		var syncObject = null;
 		var paramObject = null;
 		if (responseObj.__hx_type === 1004) {
@@ -471,23 +480,19 @@ Helix.Ajax = {
 			// Add setTimeout to allow the message to display
 			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
-                            $.mobile.loading( "hide" );
                             window[loadCommandOptions.name] = finalObj;
-                            Helix.Ajax.loadOptions.pin = false;
                             loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
 			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
                     } else {
-			Helix.Ajax.loadOptions.pin = false;
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {
                             window.HelixSystem.allowSleep();
 			}
                     }
 		} else if (paramObject) {
-                    Helix.Ajax.loadOptions.pin = false;
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
                     if (window.CordovaInstalled) {
 			window.HelixSystem.allowSleep();
@@ -497,6 +502,9 @@ Helix.Ajax = {
 		}
             },
             error: function(xhr, status, errorThrown) {
+                if (ignoreErrors) {
+                    return;
+                }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                 error.msg = status;
                 loadCommandOptions.onerror(error);
@@ -638,6 +646,9 @@ Helix.Ajax = {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                if (ignoreErrors) {
+                    return;
+                }
                 if (!params.silentMode) {
                     if (params.fatal) {
                         Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
@@ -696,6 +707,9 @@ Helix.Ajax = {
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
+                    if (ignoreErrors) {
+                        return;
+                    }
                     if (!params.silentMode) {
                         if (params.fatal) {
                             Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");

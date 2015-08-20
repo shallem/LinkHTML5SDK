@@ -242,7 +242,8 @@ function initHelixDB() {
             // Determine if any upgrades need to be generated. The required SQL commands
             // are stored as schema sync hooks.
             var dirty = false;
-            if (Helix.DB.doMigrations(name,allSchemas)) {
+            var masterDBAdds = [];
+            if (Helix.DB.doMigrations(name,allSchemas,masterDBAdds)) {
                 dirty = true;
             }
             
@@ -255,6 +256,11 @@ function initHelixDB() {
             } else {
                 // Flush all schemas.
                 persistence.schemaSync(function(tx) {
+                    // Add all tables created in this sync to the master DB, if needed.
+                    for (var t = 0; t < masterDBAdds.length; ++t) {
+                        persistence.add(masterDBAdds[t]);
+                    }
+                    
                     // Flush all master DB changes.
                     persistence.flush(function() {
                         if (dirty) {
@@ -331,9 +337,9 @@ function initHelixDB() {
             Helix.DB.__schemaVersion = Helix.DB.__schemaVersion + 1;
         },
 
-        doMigrations: function(metaName,allSchemas) {
+        doMigrations: function(metaName,allSchemas,masterDBAdds) {
             // Migrate tables one at a time.
-            if (allSchemas.length == 0) {
+            if (allSchemas.length === 0) {
                 return false;
             }
 
@@ -346,7 +352,7 @@ function initHelixDB() {
                 if (schema.schema.meta.textIndex) {
                     schema.schema.meta.textIndex['__hx_generated'] = false;
                 }
-                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap);
+                var curVer = Helix.DB.migrateTable(Helix.DB.__schemaVersion, schema, metaName, dirtyMap, masterDBAdds);
                 if (curVer > 0) {
                     // Migrations must be done.
                     dirty = true;
@@ -364,7 +370,7 @@ function initHelixDB() {
                         }
                     }
                 } else if (curVer <= 0) {
-                    if (curVer == 0) {
+                    if (curVer === 0) {
                         // This table is already in the DB. Mark it as a generated table.
                         persistence.generatedTables[tableName] = true;
                         // Do not regenerate textIndex tables.
@@ -377,10 +383,10 @@ function initHelixDB() {
             return dirty;
         },
 
-        migrateTable: function(oldVersion, schema, metaName, dirtyMap) {
+        migrateTable: function(oldVersion, schema, metaName, dirtyMap, masterDBAdds) {
             var tableName = schema.schema.meta.name;
             var schemaRec = window.__pmAllTables[tableName];
-            if (schemaRec == null) {
+            if (schemaRec === null || schemaRec === undefined) {
                 // This is a new table.
                 var newSchema = new window.__pmMasterDB();
                 newSchema.metaName = metaName;
@@ -397,7 +403,7 @@ function initHelixDB() {
                 newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
                 newSchema.tableManyToOne = Helix.DB.convertRelationshipToString(schema.schema.meta.hasOne);
 
-                persistence.add(newSchema);
+                masterDBAdds.push(newSchema);
                 
                 // New table - return -1;
                 return -1;
@@ -1138,22 +1144,48 @@ function initHelixDB() {
     
         synchronizeDeltaField: function(allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var keyField = this.getKeyField(elemSchema);
+            
+            // Defensively make sure the delta obj is well formed.
+            if (!deltaObj.adds) {
+                deltaObj.adds = [];
+            }
+            if (!deltaObj.updates) {
+                deltaObj.updates = [];
+            }
 
             var nToAdd = deltaObj.adds.length;
             var nAddsDone = 0;
             var allAdds = [];
-            var addDone = function(pObj) {
+            var addDone = function(pObj, uidToEID) {
                 ++nAddsDone;
                 allAdds.push(pObj);
+                if (pObj && uidToEID) {
+                    uidToEID[pObj[keyField]] = pObj.id;
+                }
                 if (nAddsDone === nToAdd) {
                     /* Nothing more to add - we are done. */
+                    syncFn(uidToEID);
+                }
+            };
+            
+            var syncFn = function(uidToEID) {
+                if (deltaObj.updates.length > 0) {
+                    var updatedObj = deltaObj.updates.pop();
+                    var toUpdateKey = updatedObj[keyField];
+                    var objId = uidToEID[toUpdateKey];
+                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                        syncFn(uidToEID);
+                        //syncFn(pObj);
+                    },overrides);                    
+                } else {
+                    /* Nothing more to sync. Done. */
                     oncomplete(field, allAdds);
                 }
             };
 
             var doAdds = function(uidToEID) {
                 if (deltaObj.adds.length === 0) {
-                    oncomplete(field, allAdds);
+                    syncFn(uidToEID);
                 } else {
                     while (deltaObj.adds.length > 0) {
                         var toAdd = deltaObj.adds.pop();
@@ -1172,34 +1204,19 @@ function initHelixDB() {
                 }
             };
 
-            var syncFn = function(uidToEID) {
-                if (deltaObj.updates.length > 0) {
-                    var updatedObj = deltaObj.updates.pop();
-                    var toUpdateKey = updatedObj[keyField];
-                    var objId = uidToEID[toUpdateKey];
-                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
-                        syncFn(uidToEID);
-                        //syncFn(pObj);
-                    },overrides);                    
-                } else {
-                    /* Nothing more to sync. Do all removes. */
-                    doAdds(uidToEID);
-                }
-            };
-            
             var createUIDToEIDMap = function() {
                 var uidToEID = {};
                 if (deltaObj.adds.length === 0 &&
                     deltaObj.updates.length === 0) {
                     // Skip to the finish line ...
-                    doAdds(null);
+                    syncFn(null);
                 } else {
                     elemSchema.all().include([keyField]).newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
                         }, 
                         doneFn: function() {
-                            syncFn(uidToEID);
+                            doAdds(uidToEID);
                         }
                     });
                 }

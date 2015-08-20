@@ -1483,15 +1483,17 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            this.$listWrapper.show();
+            //this.$listWrapper.show();
             if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
                 this.__searchTextDirty = false;
                 this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
                     _self.indexedSearchDone(displayCollection, oncomplete);
+                    _self.$listWrapper.show();
                 }, _self.originalList);
             } else {
                 this._sortAndRenderData(displayCollection, function(finalCompletion) {
                     finalCompletion();
+                    _self.$listWrapper.show();            
                     $(_self.$wrapper).trigger('refreshdone');
                 }, this.options.emptyMessage, oncomplete, noPaginate, extraItems);
             }
@@ -1773,10 +1775,11 @@
                     this.$sortAscending = $('<a/>').attr({
                         'id' : sAscendID,
                         'data-role' : 'none',
-                        'data-icon' : 'arrow-u',
+                        'data-icon' : 'hx-sort-asc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt ui-icon-nodisc'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1789,10 +1792,11 @@
                     this.$sortDescending = $('<a/>').attr({
                         'id' : sDescendID,
                         'data-role' : 'none',
-                        'data-icon' : 'arrow-d',
+                        'data-icon' : 'hx-sort-desc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt ui-icon-nodisc'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1814,10 +1818,11 @@
                     this.$filter = $('<a/>').attr({
                         'id' : sFilterID,
                         'data-role' : 'none',
-                        'data-icon' : 'filter',
+                        'data-icon' : 'hx-filter-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
-                        'data-mini' : (useControlGroup ? 'true' : 'false')
+                        'data-mini' : (useControlGroup ? 'true' : 'false'),
+                        'class' : 'ui-icon-alt'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {

@@ -79,7 +79,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         writer.write(" 'loadingOptions' : {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "', ");
-        writer.write(" 'color' : '" + (cmd.getLoadingColor() != null ? cmd.getLoadingColor() : "") + "'");
+        writer.write(" 'color' : '" + (cmd.getLoadingColor() != null ? cmd.getLoadingColor() : "") + "', ");
+        writer.write(" 'pin' : " + (cmd.isPin() ? "true" : "false") + ", ");
         writer.write("},");
         if (cmd.getSyncingMessage() != null) {
             writer.write(" 'syncingOptions' : {");
