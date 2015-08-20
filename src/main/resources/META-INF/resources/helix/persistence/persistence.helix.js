@@ -1159,6 +1159,9 @@ function initHelixDB() {
             var addDone = function(pObj, uidToEID) {
                 ++nAddsDone;
                 allAdds.push(pObj);
+                if (pObj && uidToEID) {
+                    uidToEID[pObj[keyField]] = pObj.id;
+                }
                 if (nAddsDone === nToAdd) {
                     /* Nothing more to add - we are done. */
                     syncFn(uidToEID);
