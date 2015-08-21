@@ -287,7 +287,13 @@ Helix.Ajax = {
                         config.onerror(error);
                     }
                 } else if (config.oncomplete) {
-                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, param ? param[syncComponent] : null);
+                    var _p = param;
+                    if (param === undefined) {
+                        _p = null;
+                    } else if (param && syncComponent in param) {
+                        _p = param[syncComponent];
+                    }
+                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, _p);
                 }
             }
             if (globalOnComplete) {
