@@ -1195,7 +1195,7 @@ function initHelixDB() {
                         if (objId) {
                             Helix.DB.updateOneObject(allSchemas,objId,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
                                 parentCollection.add(pObj);
-                                addDone(pObj);
+                                addDone(pObj, uidToEID);
                             },overrides);
                         } else {
                             Helix.DB.addObjectToQueryCollection(allSchemas,toAdd,elemSchema, parentCollection,overrides,addDone,uidToEID);
