@@ -1435,6 +1435,7 @@
             var _self = this;
         
             if (_self.refreshInProgress) {
+                //alert("HELLO2");
                 // Do not list refreshed interleave. Finish one, then do the next one.
                 _self._queuedRefreshes.push([ oncomplete, noPaginate, extraItems, itemList, renderWindowStart ]);
                 return;
@@ -1484,9 +1485,13 @@
                 _self.$listWrapper.show();
                 _self.$parent.listview( "refresh" );                
                 $(_self.$wrapper).trigger('refreshdone');
+                _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
-                    var args = _self._queuedRefreshes.pop();
-                    _self._refreshData(args[0], args[1], args[2], args[3], args[4]);
+                    var _args = _self._queuedRefreshes.pop();
+                    //alert("HELLO");
+                    setTimeout(function() {
+                        _self._refreshData(_args[0], _args[1], _args[2], _args[3], _args[4]);                    
+                    }, 0);
                 }
             }, this.options.emptyMessage, oncomplete, noPaginate, _self.extraItems);
         },
@@ -1557,7 +1562,6 @@
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
                     /* Call completion when all rows are done rendering. */
-                    _self.refreshInProgress = false;
                     oncomplete(opaque);
                     _self._handleEmpty(nRendered, nExtras, emptyMsg);
                     return;
@@ -1588,7 +1592,6 @@
                     // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
                     // restoring them.
                     $(_self.$parent).find('li[data-role="list-divider"]').remove();
-                    _self.refreshInProgress = false;
                     oncomplete(opaque);
                 } else {
                     __renderGroup(0);
