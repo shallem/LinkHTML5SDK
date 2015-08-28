@@ -2032,6 +2032,16 @@ function initPersistence(persistence) {
             c._reverse = true;
             return this._session.uniqueQueryCollection(c);
         };
+        
+         /**
+     * Returns a new query collection which clears the ordering of the result set
+     * @return the query collection that will no longer has any imposed ordering
+     */
+        QueryCollection.prototype.clearOrder = function() {
+            var c = this.clone();
+            c._orderColumns = [];
+            return this._session.uniqueQueryCollection(c);
+        };
 
         /**
      * Returns a new query collection which will prefetch a certain object relationship.
