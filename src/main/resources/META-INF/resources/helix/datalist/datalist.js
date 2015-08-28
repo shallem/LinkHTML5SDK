@@ -419,6 +419,7 @@
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$headerSection)
                 .addClass('hx-full-width')
+                .addClass('hx-search-sort')
                 .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
@@ -539,7 +540,6 @@
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
-            this._inBounce = 0;
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             //this.contextEvent = 'taphold';
@@ -557,9 +557,14 @@
                 this.strings = this.options.strings.split(",");            
             }
 
-            this.refreshList(this.options.itemList,this.options.condition,null,function() {
-                
-            });
+            // Queued refershes - tracks refresh calls that occur during another refresh.
+            this._queuedRefreshes = [];
+
+            if (this.options.itemList) {
+                this.refreshList(this.options.itemList,this.options.condition,null,function() {
+
+                });
+            }
         },
         
         _getSortsFromOptions: function(sortFilterOptions) {
@@ -610,22 +615,18 @@
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
         _prefetchPage: function(direction) {
-            var displayCollection = this.unfilteredList;
-            displayCollection = this._resetGlobalFilters(displayCollection);
-
-            if (this._currentSort /*&& !_self.__searchText*/) {
-                displayCollection = this._applyOrdering(displayCollection);
-            }
-
+            var displayCollection = this.itemList;
+            
             /* Apply skip and limit. */
             this._nextRenderWindow = (this._renderWindowStart + (direction * this._itemsPerPage)) - direction;
             if (this._nextRenderWindow > 0) {
                 //console.log("SKIPPING: " + this._nextRenderWindow);
                 displayCollection = displayCollection.skip(this._nextRenderWindow);
-            } else if (this._nextRenderWindow < 0) {
+            } else if (this._nextRenderWindow <= 0) {
                 this._nextRenderWindow = 0;
+                displayCollection = displayCollection.skip(0);
             }
-            displayCollection = displayCollection.limit(this._itemsPerPage);
+            displayCollection = displayCollection.limit(this.options.itemsPerPage);
             
             var _prefetchedItems = [];
             if (direction < 0) {
@@ -690,14 +691,9 @@
             _self._prefetchPrevPromise = null;
             
             $.mobile.loading('show', {});
-            _self.$parent.hide();
             _self._refreshData(function() {
-                _self.$parent.show();
                 $.mobile.loading('hide', {});
-
-                _self.$parent.listview( "refresh" );
                 _self.clearSelected();
-
                 oncomplete(doRescroll);
             }, false);
         },
@@ -802,19 +798,22 @@
          */
         refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems) {
             var _self = this;
-            
-            /* itemList is the current query collection. Display list is an array
-             * of the currently displayed items.
-             */
-            _self.originalList = _self.unfilteredList = _self.itemList = list;
+
+            // Prevent this function from being called again. Future calls should all go to refreshData.
+            _self.isLoaded = true;            
         
-            /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
                 !condition) {
                 /* The condition is false. Remove this entirely from the DOM. */    
                 _self.$wrapper.hide();
                 return;
-            }   
+            }
+
+            if (extraItems !== undefined) {
+                _self.extraItems = extraItems;
+            } else {
+                _self.extraItems = null;
+            }
             
             /* Create the sort popup */
             var sorts = null;
@@ -837,6 +836,10 @@
                 
                 _self._refreshSortContainer(sorts);
             }
+            /* itemList is the current query collection. Display list is an array
+             * of the currently displayed items.
+             */
+            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, this.options.sortBy, this.options.sortOrder, this.options.sortCaseSensitive);
             
             var thisFilters = null;
             if (!sortFilterOptions) {
@@ -868,18 +871,13 @@
             /**
              * Display from the beginning of the list.
              */
-            _self._resetPaging();
-            _self._refreshData(function() {
-                _self.$parent.listview( "refresh" );
-                
+            _self._refreshData(function() {                
                 /**
                  * Reset the selection if directed to do so.
                  */
                 if (resetSelection) {
                     _self.clearSelected();
                 }
-                
-                _self.$wrapper.show();
                 
                 /* It seems that attaching the scrolling classes after showing the list
                  * is required to make scrolling work properly on iOS.
@@ -962,13 +960,12 @@
                     });
                 }
                 _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
-                _self.isLoaded = true;
                 
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
                 }
-            }, true, extraItems);
+            }, true, extraItems, _self.originalList);
         },
         
         /**
@@ -992,16 +989,6 @@
         refreshData: function(list,condition,oncomplete,renderWindowStart,extraItems) {
             var _self = this;
             
-            /* itemList is the current query collection. Display list is an array
-             * of the currently displayed items.
-             */
-            _self.originalList = _self.unfilteredList = _self.itemList = list;
-            
-            /* force the search to be re-applied because the underlying data has changed */
-            if (_self.__searchText) {
-                _self.__searchTextDirty = true;
-            }        
-        
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
                 !condition) {
@@ -1010,17 +997,23 @@
                 return;
             }
             
-            _self._resetPaging();
-            if (renderWindowStart) {
-                _self.setRenderWindowStart(renderWindowStart);
+            var displayCollection;
+            if (list) {
+                list = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
+                displayCollection = _self._resetGlobalFilters(list);
             }
             _self._refreshData(function() {
-                _self.$parent.listview( "refresh" );
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
                 }
-            }, true, extraItems);
+                /* itemList is the current query collection. Display list is an array
+                 * of the currently displayed items.
+                 */
+                if (list) {
+                    _self.originalList = _self.unfilteredList = list;
+                }
+            }, true, extraItems, displayCollection, renderWindowStart);
         },
         
         _updateSortButtons: function() {
@@ -1100,6 +1093,11 @@
                         var defDirection = $(evt.target).attr('data-direction');
                         var caseSensitive = $(evt.target).attr('data-case');
                         
+                        var newSort = _self._currentSort;
+                        var newSortOrder = _self._currentSortOrder;
+                        var newSortCase = _self._currentSortCase;
+                        
+                        var tgt = this;
                         var found = false;
                         if (_self._currentSort) {
                             var curSortFields = _self._currentSort.split(',');
@@ -1121,19 +1119,18 @@
                                         curSortOrders[i] = "ASCENDING";
                                     }
                                     found = true;
-                                    break;
                                 }
                             }
                             if (found) {
-                                _self._currentSortOrder = curSortOrders.join(',');
+                                newSortOrder = curSortOrders.join(',');
                             }
                         }
                         // We don't append sort orders - we just reset the sort order to the
                         // new field.
                         if (!found) {
-                            _self._currentSort = newSortField;
-                            _self._currentSortOrder = defDirection; 
-                            _self._currentSortCase = caseSensitive;
+                            newSort = newSortField;
+                            newSortOrder = defDirection; 
+                            newSortCase = caseSensitive;
                         }
                         
                         if (_self.nElems === 0) {
@@ -1141,25 +1138,27 @@
                             return false;
                         }
                         if (_self.options.onSortChange) {
-                            var updatedSorts = _self.options.onSortChange(_self._currentSort, _self._currentSortOrder, newSortField);
+                            var updatedSorts = _self.options.onSortChange(newSort, newSortOrder, newSortField);
                             if (updatedSorts) {
-                                _self._currentSort = (updatedSorts.sort ? updatedSorts.sort : _self._currentSort);
-                                _self._currentSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : _self._currentSortOrder);
-                                _self._currentSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : _self._currentSortCase);
+                                newSort = (updatedSorts.sort ? updatedSorts.sort : newSort);
+                                newSortOrder = (updatedSorts.sortOrder ? updatedSorts.sortOrder : newSortOrder);
+                                newSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : newSortCase);
                             }
                         }
-                        _self._updateSortButtons();
-                        
-                        // Change the li for this sort field so that we can see it is the current sort field.
-                        $(sortsList).find('li').removeClass('hx-current-sort');
-                        $(this).addClass('hx-current-sort');
 
                         // Display from the beginning of the list.
-                        _self._resetPaging();
                         _self._refreshData(function() {
-                            _self.$parent.listview( "refresh" );
                             _self.$listWrapper.scrollTop(0);
-                        }, true, _self.extraItems);
+                            _self._currentSort = newSort;
+                            _self._currentSortOrder = newSortOrder;
+                            _self._currentSortCase = newSortCase;
+                            
+                            _self._updateSortButtons();
+                        
+                            // Change the li for this sort field so that we can see it is the current sort field.
+                            $(sortsList).find('li').removeClass('hx-current-sort');
+                            $(tgt).addClass('hx-current-sort');
+                        }, true, undefined, _self._applyOrdering(_self.itemList.clearOrder(), newSort, newSortOrder, newSortCase));
                         $(_self._sortContainer).popup("close");
                         return false;
                     });
@@ -1192,7 +1191,7 @@
             }
             
             _self._filterContainer = $('<div/>').appendTo(_self.$wrapper);
-            
+            _self._thisFilterField = null;
             var contextMenuItems = [];
             for (var filterFld in filters) {
                 if (filters[filterFld] !== "[none]") {
@@ -1204,12 +1203,10 @@
                         'display': filters[filterFld],
                         'data': filterFld,
                         'action': function(newFilterField) {
-                            _self.itemList = _self.options.doThisFilter(_self.itemList, newFilterField, _self.selected);
-                            _self._resetPaging();
                             _self._refreshData(function() {
-                                _self.$parent.listview( "refresh" );
+                                _self._thisFilterField = newFilterField;
                                 _self.$listWrapper.scrollTop(0);
-                            }, true);
+                            }, true, _self.extraItems, _self.options.doThisFilter(_self.itemList, newFilterField, _self.selected));
                             _self._filterContextMenu.close();
                         },
                         'enabled' : true
@@ -1221,12 +1218,10 @@
             contextMenuItems.push({
                 'display' : 'None',
                 'action' : function() {
-                    _self.itemList = _self.unfilteredList;
-                    _self._resetPaging();
                     _self._refreshData(function() {
                         _self.$parent.listview( "refresh" );
                         _self.$listWrapper.scrollTop(0);
-                    }, true, _self.extraItems);
+                    }, true, _self.extraItems, _self.unfilteredList);
                     _self._filterContextMenu.close();
                 },
                 'enabled' : true
@@ -1246,7 +1241,7 @@
         },
         
         _resetGlobalFilters: function(itemList) {
-            var curCollection = (itemList ? itemList : this.unfilteredList);
+            var curCollection = (itemList ? itemList : this._applyOrdering(this.unfilteredList, this._currentSort, this._currentSortOrder, this._currentSortCase));
             for (var filteredFld in this._filterMap) {
                 curCollection = this.options.doGlobalFilter(curCollection, filteredFld, this._filterMap[filteredFld]);
             }
@@ -1260,7 +1255,9 @@
                 // Clear out this field, then starting from the unfiltered list re-instate all
                 // remaining fields.
                 delete _self._filterMap[gFilterField];
-                _self.itemList = this._resetGlobalFilters();
+                _self._refreshData(function() {
+                    
+                }, true, undefined, _self._resetGlobalFilters());
             } else {
                 if (_self._filterMap[gFilterField] &&
                     _self._filterMap[gFilterField] === _filterValue) {
@@ -1268,19 +1265,19 @@
                     return;
                 } else if (_self._filterMap[gFilterField] &&
                            _self._filterMap[gFilterField] !== _filterValue) {
-                    // Start over.
+                    // The filter value changed. Apply the filter to the original list.
                     _self._filterMap[gFilterField] = _filterValue;
-                    _self.itemList = this._resetGlobalFilters();
+                    _self._refreshData(function() {
+                    
+                    }, true, undefined, _self._resetGlobalFilters());
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
-                    _self.itemList = _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue);
+                    _self._refreshData(function() {
+                    
+                    }, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
                 }
-            }
-            _self._resetPaging();
-            _self._refreshData(function() {
-                _self.$parent.listview( "refresh" );
-            }, true);
+            }            
         },
         
         _clearGlobalFilterMenu: function() {
@@ -1412,16 +1409,12 @@
                 evt.stopImmediatePropagation();
                 evt.preventDefault();
                 
-                // Reset the values in the global filter popup.
-                _self._clearGlobalFilterMenu();
-                
-                _self._filterMap = {};
-                _self.itemList = _self.unfilteredList;
-                _self._resetPaging();
                 _self._refreshData(function() {
-                    _self.$parent.listview( "refresh" );
+                    // Reset the values in the global filter popup.
+                    _self._clearGlobalFilterMenu();
+                    _self._filterMap = {};
                     _self.$listWrapper.scrollTop(0);
-                }, true, _self.extraItems);
+                }, true, undefined, _self._applyOrdering(_self.unfilteredList, _self._currentSort, _self._currentSortOrder, _self._currentSortCase));
                 $(_self._globalFilterContainer).popup("close");
             });
             
@@ -1432,35 +1425,30 @@
         _resetPaging: function() {
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
-            this._renderWindowDelta = 0;
             this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false; 
-            this._lastUpdateScroll = 0;
             this._rescrollInProgress = false;
-            this._inBounce = 0
-            this._refreshInProgress = false;
-            this.scrollCalculationInProgress = false;
         },
                         
         
-        _refreshData: function(oncomplete, noPaginate, extraItems) {
+        _refreshData: function(oncomplete, noPaginate, extraItems, itemList, renderWindowStart) {
             var _self = this;
         
             if (_self.refreshInProgress) {
                 // Do not list refreshed interleave. Finish one, then do the next one.
-                $(_self.$wrapper).on('refreshdone', function(evt) {
-                    _self._refreshData(evt.data, noPaginate, extraItems);
-                    return false;
-                }, oncomplete);
+                _self._queuedRefreshes.push([ oncomplete, noPaginate, extraItems, itemList, renderWindowStart ]);
                 return;
             }
         
-            //this._clearListRows();
+            _self.refreshInProgress = true;
+            _self.displayList = [];
+            
+            if (renderWindowStart !== undefined) {
+                _self.setRenderWindowStart(renderWindowStart);
+            }
             if (extraItems !== undefined) {
                 _self.extraItems = extraItems;
             }
-            _self.refreshInProgress = true;
-            _self.displayList = [];
         
             if (_self.options.headerText) {
                 if (!_self._headerLI) {
@@ -1473,7 +1461,14 @@
                 }
             }
         
-            /* List must be non-empty and it must be a query collection. */
+            /* List must be non-empty and either a query collection or an array. */
+            if (itemList) {
+                /* The item list is new - so we reset paging. */
+                _self._resetPaging();
+                _self.itemList = itemList;
+            } else {
+                
+            }
             var displayCollection = _self.itemList;
             if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
@@ -1483,20 +1478,17 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            //this.$listWrapper.show();
-            if (this.__searchTextDirty && this.__searchText && this.__searchText.trim()) {
-                this.__searchTextDirty = false;
-                this.options.indexedSearch(this.__searchText.trim(), function(displayCollection) {
-                    _self.indexedSearchDone(displayCollection, oncomplete);
-                    _self.$listWrapper.show();
-                }, _self.originalList);
-            } else {
-                this._sortAndRenderData(displayCollection, function(finalCompletion) {
-                    finalCompletion();
-                    _self.$listWrapper.show();            
-                    $(_self.$wrapper).trigger('refreshdone');
-                }, this.options.emptyMessage, oncomplete, noPaginate, extraItems);
-            }
+            //this.$listWrapper.hide();
+            this._sortAndRenderData(displayCollection, function(finalCompletion) {
+                finalCompletion();
+                _self.$listWrapper.show();
+                _self.$parent.listview( "refresh" );                
+                $(_self.$wrapper).trigger('refreshdone');
+                if (_self._queuedRefreshes.length) {
+                    var args = _self._queuedRefreshes.pop();
+                    _self._refreshData(args[0], args[1], args[2], args[3], args[4]);
+                }
+            }, this.options.emptyMessage, oncomplete, noPaginate, _self.extraItems);
         },
         
         indexedSearchDone: function(displayCollection, oncomplete) {
@@ -1504,7 +1496,6 @@
             this.displayList = [];
             if (!oncomplete) {
                 oncomplete = function() {
-                    _self.$parent.listview( "refresh" );
                     _self.scrollToStart();
                 };
             }
@@ -1514,10 +1505,7 @@
                 displayCollection.call(this);
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
-                this._sortAndRenderData(displayCollection, function(finalCompletion) {
-                    finalCompletion();
-                    $(_self.$wrapper).trigger('refreshdone');
-                }, this.options.emptySearchMessage, oncomplete, true);
+                this._refreshData(oncomplete, true, undefined, displayCollection, 0);
             }
         },
         
@@ -1630,13 +1618,6 @@
                 }
                 __processDone(displayCollection.length);
             } else {
-                var orderby = _self._currentSort; 
-                displayCollection = _self._resetGlobalFilters(displayCollection);
-
-                if (_self.options.groupBy || orderby) {
-                    displayCollection = _self._applyOrdering(displayCollection);
-                }
-
                 /* Apply skip and limit. */
                 if (_self._renderWindowStart > 0) {
                     displayCollection = displayCollection.skip(_self._renderWindowStart);
@@ -1710,12 +1691,12 @@
                         clearTimeout(_self.__searchReadyTimeout);
                     }
 
-                    _self._resetPaging();
-                    _self.__searchTextDirty = true;
-                    _self._refreshData(function() {
-                        _self.$parent.listview( "refresh" );
-                        _self.scrollToStart();
-                    }, true);
+                    var searchText = _self.__searchText.trim();
+                    if (searchText) {
+                        _self.options.indexedSearch(searchText, function(displayCollection) {
+                            _self.indexedSearchDone(displayCollection);                                                            
+                        }, _self.originalList);
+                    }
                     _self.__searchReadyTimeout = null;
                 }, 3000);
             }
@@ -1724,15 +1705,12 @@
         // Restore the original list contents, without any searching, sorting, or filtering.
         resetListContents: function() {
             var _self = this;
-            _self.itemList = _self.originalList;
-            _self._resetPaging();
             if (_self.options.onSearchClear) {
                 _self.options.onSearchClear.call(_self);
             }
             _self._refreshData(function() {
-                _self.$parent.listview( "refresh" );
                 _self.scrollToStart();
-            }, true, _self.extraItems);
+            }, true, _self.extraItems, _self.originalList);
         },
         
         _prependSearchBox: function() {
@@ -1759,7 +1737,6 @@
                 }
                 
                 var $sortDiv = $('<div/>').attr({
-                    'class' : 'hx-display-inline',
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
@@ -1842,16 +1819,7 @@
             };
             
             var _attachSearchBox = function() {
-                var styleClass = 'hx-display-inline';
-                var widthStyle = null;
-                if (!_self.options.showSortButton && !_self.options.showFilterButton) {
-                    styleClass = styleClass + ' hx-full-width';
-                } else {
-                    widthStyle='60%';
-                }
-                var $searchDiv = $('<div/>').attr({
-                    'class' : styleClass
-                }).appendTo(_self.$searchSortDiv);
+                var $searchDiv = $('<div/>').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
                 if (this.options.indexedSearchType !== 'search') {
@@ -1866,9 +1834,6 @@
                     //'data-clear-btn': true,
                     'value': this.options.indexedSearchText
                 }).appendTo($searchDiv);
-                if (widthStyle) {
-                    $searchDiv.css('width', widthStyle);
-                }
 
                 this.$searchLabel = $('<label/>').attr({
                     'for': sboxID
@@ -1898,7 +1863,8 @@
                     });
                 }
                 
-                $searchDiv.find('a.ui-input-clear').on(_self.tapEvent, function() {
+                var $clearBtn = $searchDiv.find('a.ui-input-clear'); 
+                $clearBtn.on(_self.tapEvent, function() {
                     _self.$searchBox.val('');
                     _self.$searchBox.blur();
                     _self.clearSearchText();
@@ -1942,35 +1908,37 @@
         },
         
         /* Apply the appropriate sort to the display collection. */
-        _applyOrdering: function(displayCollection) {
-            var orderby = this._currentSort; 
-            var direction = this._currentSortOrder;
-            var usecase = this._currentSortCase;
-        
-            var orderbyFields = orderby.split(",");
-            var directionVals = direction.split(",");
-            var caseVals = usecase.split(",");
-
-            if (this.options.groupBy) {
-                if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
-                    displayCollection = displayCollection.order(this.options.groupBy, true, false);                
-                } else {
-                    displayCollection = displayCollection.order(this.options.groupBy, false, false);
+        _applyOrdering: function(displayCollection, orderby, direction, usecase) {
+            if (displayCollection) {
+                displayCollection = displayCollection.clearOrder();
+                if (this.options.groupBy) {
+                    if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
+                        displayCollection = displayCollection.order(this.options.groupBy, true, false);                
+                    } else {
+                        displayCollection = displayCollection.order(this.options.groupBy, false, false);
+                    }
                 }
-            }
 
-            var oidx = 0;
-            for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
-                var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
-                var nxtCase = (caseVals[oidx] === 'true' ? true : false);
-                if (latestDirection.toUpperCase() === 'DESCENDING') {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
-                } else {
-                    displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
+                if (orderby) {
+                    var orderbyFields = orderby.split(",");
+                    var directionVals = direction.split(",");
+                    var caseVals = (Helix.Utils.isString(usecase) ? usecase.split(",") : usecase.toString());
+
+                    var oidx = 0;
+                    for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
+                        var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
+                        var nxtCase = (caseVals[oidx] === 'true' ? true : false);
+                        if (latestDirection.toUpperCase() === 'DESCENDING') {
+                            displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
+                        } else {
+                            displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
+                        }
+                    }
                 }
             }
             return displayCollection;
         },
+        
         _renderSingleRow: function(LIs, rowIndex, itemsPerPage, curRow, oncomplete) {
             var _self = this;
             var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
@@ -2725,7 +2693,7 @@
                 usecase: this._currentSortCase
             };
         },
-        
+                
         setCurrentSort : function(jsonSort, doRefresh) {
             var sort = jsonSort;
             if (Helix.Utils.isString(sort)) {
@@ -2735,21 +2703,29 @@
             var oldOrder = this._currentSortOrder;
             var oldSort = this._currentSort;
             var oldSortCase = this._currentSortCase;
-            this._currentSort = (sort.sortBy ? sort.sortBy : this._currentSort);
-            this._currentSortOrder = (sort.direction ? sort.direction  : this._currentSortOrder);
-            this._currentSortCase = (sort.usecase ? sort.usecase : this._currentSortCase);
+            var newSort = (sort.sortBy ? sort.sortBy : oldSort);
+            var newOrder = (sort.direction ? sort.direction  : oldOrder);
+            var newCase = (sort.usecase ? sort.usecase : oldSortCase);
                                 
-            if ((oldSort !== this._currentSort) || (oldOrder !== this._currentSortOrder) ||
-                      (oldSortCase !== this._currentSortCase)) {
+            if ((oldSort !== newSort) || 
+                    (oldOrder !== newOrder) ||
+                      (oldSortCase !== newCase)) {
                  var _self = this;
-                 _self.__refreshSortContainer();
-                 _self._updateSortButtons();                 
+                 var __sortUpdateDone = function() {
+                    _self._currentSort = newSort;
+                    _self._currentSortOrder = newOrder;
+                    _self._currentSortCase = newCase;
+                    _self.__refreshSortContainer();
+                    _self._updateSortButtons();
+                 };
                  
                  if (doRefresh === true) {
                       _self._refreshData(function() {
-                           _self.$parent.listview( "refresh" );
-                           _self.$listWrapper.scrollTop(0);
-                      }, true, this.extraItems);   
+                            __sortUpdateDone();
+                            _self.$listWrapper.scrollTop(0);
+                      }, true, this.extraItems, _self._applyOrdering(_self.itemList, newSort, newOrder, newCase));   
+                 } else {
+                    __sortUpdateDone();                
                  }
              }
         },
