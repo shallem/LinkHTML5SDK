@@ -1912,7 +1912,8 @@
         
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function(displayCollection, orderby, direction, usecase) {
-            if (displayCollection) {
+            // Make sure this is a query collection.
+            if (displayCollection && displayCollection.clearOrder) {
                 displayCollection = displayCollection.clearOrder();
                 if (this.options.groupBy) {
                     if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
