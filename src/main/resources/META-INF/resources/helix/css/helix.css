@@ -585,6 +585,25 @@ li {
     position: absolute;
 }
 
+.hx-search-sort {
+    display: flex;
+    display: -webkit-flex;
+    margin: .2em;
+}
+
+.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
+    margin: 0em;
+}
+
+.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .ui-btn-inner {
+    padding: .4em 20px .4em 20px
+}
+
+.hx-search-sort .ui-input-search {
+    padding-left: 30px;
+    padding-right: 10px;
+}
+
 /**
  * Page styles
  */

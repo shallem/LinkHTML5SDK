@@ -293,7 +293,7 @@ Helix.Ajax = {
                     } else if (param && syncComponent in param) {
                         _p = param[syncComponent];
                     }
-                    config.oncomplete(keyMap[config.name], config.name, componentObj, true, _p);
+                    config.oncomplete(keyMap[syncComponent], config.name, componentObj, true, _p);
                 }
             }
             if (globalOnComplete) {
