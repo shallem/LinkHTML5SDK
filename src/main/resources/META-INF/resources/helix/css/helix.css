@@ -593,6 +593,8 @@ li {
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
     margin: 0em;
+    -webkit-flex: 0 0 auto;
+    flex: none;
 }
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .ui-btn-inner {
