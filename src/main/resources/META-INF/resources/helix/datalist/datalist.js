@@ -1473,6 +1473,7 @@
             var displayCollection = _self.itemList;
             if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
+                alert("Invalid display list.");
                 return;            
             }
                         
@@ -1498,7 +1499,6 @@
         
         indexedSearchDone: function(displayCollection, oncomplete) {
             var _self = this;
-            this.displayList = [];
             if (!oncomplete) {
                 oncomplete = function() {
                     _self.scrollToStart();
@@ -2158,8 +2158,6 @@
             if (_self.options.selectAction && curRowFresh) {
                 $(curRowParent).on(_self.tapEvent, function(event) {
                     event.stopImmediatePropagation();
-                    event.stopPropagation();
-                    event.preventDefault();
                     
                     if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
                         return false;
