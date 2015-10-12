@@ -167,3 +167,8 @@
     margin-bottom: 0.15em;
     margin-top: 0.15em;
 }
+
+.hx-icon-sort-filter {
+    background-image: none;
+    background-color: transparent;
+}

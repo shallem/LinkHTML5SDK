@@ -302,6 +302,9 @@
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
 		    <include>calendar/fullcalendar.js</include>
 
+		    <!-- https://github.com/gregjacobs/Autolinker.js -->
+		    <include>autolink/Autolinker.js</include>
+
 		    <include>colorpicker/spectrum.js</include>
 
 		    <!-- Dialog box component using jQM popups. -->

@@ -1759,7 +1759,7 @@
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc'
+                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1776,7 +1776,7 @@
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc'
+                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1802,7 +1802,7 @@
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt'
+                        'class' : 'ui-icon-alt hx-icon-sort-filter'
                     }).button()
                     .appendTo($sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1822,7 +1822,7 @@
             };
             
             var _attachSearchBox = function() {
-                var $searchDiv = $('<div/>').appendTo(_self.$searchSortDiv);
+                var $searchDiv = $('<div/>').addClass('hx-full-width').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
                 if (this.options.indexedSearchType !== 'search') {
