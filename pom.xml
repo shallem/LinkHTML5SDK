@@ -288,8 +288,9 @@
 		  <includes>
 		    <include>jquery.mobile-1.3.1.js</include>
 
-		    <!-- Start of Link SDK. -->
+		    <!-- Start of Link SDK. -->		    
 		    <include>helix.init.js</include>
+		    <include>helix.compatibility.js</include>
 
 		    <!-- Adapted primefaces components. -->
 		    <include>primefaces-js/core.js</include>
@@ -345,7 +346,7 @@
 		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <!-- Datagrid component. -->
-		    <include>datagrid/datagrid.js</include>
+		    <!-- <include>datagrid/datagrid.js</include> -->
 
 		    <!-- Panelgroup component. -->
 		    <include>panelgroup/panelgroup.js</include>

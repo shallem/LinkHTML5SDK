@@ -75,6 +75,7 @@
       ["show", show],
       ["hide", hide],
       ["refresh", refresh],
+      ["updateBody", updateBody],
       ["getForm", getForm, true]
     ];
 
@@ -92,7 +93,7 @@
     /**
      * Call this function to show the dialog.
      */
-    function show(dialog,formElems,callbackThis) {
+    function show(dialog,formElems,callbackThis,callbackArgs) {
         if (dialog.options.hasForm && formElems) {
             /* Layout the form dynamically. */
             Helix.Utils.layoutForm($(dialog.form), formElems);
@@ -107,6 +108,9 @@
         
         if (callbackThis) {
             this._callbackThis = callbackThis;
+        }
+        if (callbackArgs) {
+            this._callbackArgs = callbackArgs;
         }
     }
     
@@ -145,6 +149,11 @@
         }
     }
 
+    function updateBody(dialog,newBody) {
+        this.options.bodyContent = newBody;
+        this.refresh(false);
+    }
+
     function encodeHeader(dialog,$mainDiv) {
         
         if (dialog.options.hasForm) {
@@ -173,7 +182,8 @@
             'id' : dialog.options.id + "_content"
         });
         
-        if (!dialog.options.hasForm) {
+        if (dialog.options.bodyHeader ||
+                dialog.options.bodyContent) {
             $contentDiv.attr('data-role', 'content');
             $contentDiv.attr('data-theme', 'd');
         
@@ -185,7 +195,9 @@
             if (dialog.options.bodyContent) {
                 $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
             }
-        } else {
+        } 
+        
+        if (dialog.options.hasForm) {
             dialog.form = $('<form/>').attr({
                 'id' : dialog.name + "-form"
             });
@@ -225,11 +237,16 @@
         }).append(dialog.options.confirmTitle)
             .on(Helix.clickEvent, function(ev) {
                 ev.preventDefault();
+                var args = [];
                 if (dialog.options.hasForm && dialog.form) {
-                    dialog.options.onConfirm.call(_self._callbackThis ? _self._callbackThis: dialog, $(dialog.form).serialize());
+                    args.push($(dialog.form).serialize());
                 } else {
-                    dialog.options.onConfirm.call(_self._callbackThis ? _self._callbackThis: dialog, dialog);
+                    args.push(dialog);
                 }
+                if (_self._callbackArgs) {
+                    args = args.concat(_self._callbackArgs);
+                }
+                dialog.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: dialog, args);
                 $(dialog.$mainDiv).popup( "close" );
                 return false;
             }).button()

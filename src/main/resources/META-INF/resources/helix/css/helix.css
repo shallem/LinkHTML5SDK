@@ -609,6 +609,24 @@ li {
 }
 
 /**
+ * Animations
+ */
+.hx-loading {
+    -webkit-animation: loading_color_change 1s infinite alternate;
+    animation: loading_color_change 1s infinite alternate;
+}
+
+@-webkit-keyframes loading_color_change {
+    from { background: #384056; }
+    to { background: #f79022; }
+}
+
+@keyframes loading_color_change {
+    from { background: #384056; }
+    to { background: #f79022; }
+}
+
+/**
  * Page styles
  */
 .hx-mini-mode.ui-page {

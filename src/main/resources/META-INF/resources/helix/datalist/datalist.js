@@ -47,6 +47,16 @@
              * the collection of groups, not group rows.
              */
             groupName: null,
+
+            /**
+             * For grouped lists, apply this function to each row to figure out the
+             * options for that group. Right now the main supported option is the
+             * search : fn option, where fn is invoked if a search icon is clicked in
+             * the group header.
+             */
+            groupOptions: function() {
+                return {};
+            },
             
             /**
              * For grouped lists, apply this function to each group row to get the
@@ -2017,6 +2027,7 @@
           
                 var groupName = _self.options.groupName(rowObject.group);
                 var groupMembers = _self.options.groupMembers(rowObject.group);
+                var groupOptions = _self.options.groupOptions(rowObject.group);
                 var groupIndex = 0;
                 
                 // Attach the group header.
@@ -2024,7 +2035,17 @@
                 if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
                         'data-role' : 'list-divider'
-                    }).append(groupName).appendTo(_self.$parent);
+                    }).append(groupName);
+                    if (groupOptions.search) {
+                        dividerLI.append($('<div/>').attr({
+                            'class' : 'ui-icon ui-icon-search sh-hbutton-right',
+                            'style' : 'margin-top: -.25em;'
+                        }).on(Helix.clickEvent, function() {
+                            groupOptions.search(rowObject.group);
+                            return false;
+                        }));
+                    }
+                    dividerLI.appendTo(_self.$parent);
                 } else {
                     dividerLI = LIs[arrIdx];
                     $(dividerLI).text(groupName).show();
