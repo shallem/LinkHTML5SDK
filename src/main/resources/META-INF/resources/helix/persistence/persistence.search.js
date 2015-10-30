@@ -263,6 +263,7 @@ persistence.search.config = function(persistence, dialect, options) {
                 Entity.meta.textIndex = {};
                 // We have not yet generated the index tables.
                 Entity.meta.textIndex['__hx_generated'] = false;
+                Entity.meta.textIndexSchemaCreated = false;
             }
             Entity.meta.textIndex[prop] = true;
             
@@ -450,7 +451,7 @@ persistence.search.config = function(persistence, dialect, options) {
         var queries = [];
         for(var entityName in entityMeta) {
             var meta = entityMeta[entityName];
-            if(meta.textIndex && !(meta.textIndex['__hx_generated'])) {
+            if(!meta.textIndexSchemaCreated && meta.textIndex && !(meta.textIndex['__hx_generated'])) {
                 queries.push([dialect.createTable(entityName + '_Index', [['entityId', 'INTEGER'], ['prop', 'INTEGER'], ['word', 'VARCHAR(100)'], ['occurrences', 'INT']]), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['prop', 'word']), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['word']), null]);
@@ -459,6 +460,8 @@ persistence.search.config = function(persistence, dialect, options) {
                 queries.push([dialect.createTable(entityName + '_IndexFields', [['propName', 'VARCHAR(100)']]), null]);
                 queries.push([dialect.createIndex(entityName + '_IndexFields', ['propName']), null]);
                 persistence.generatedTables[entityName + '_IndexFields'] = true;                
+            
+                meta.textIndexSchemaCreated = true;
             }
         }
         queries.reverse();

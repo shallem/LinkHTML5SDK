@@ -588,6 +588,8 @@ li {
 .hx-search-sort {
     display: flex;
     display: -webkit-flex;
+    align-items: center;
+    -webkit-align-items: center;
     margin: .2em;
 }
 
@@ -604,6 +606,24 @@ li {
 .hx-search-sort .ui-input-search {
     padding-left: 30px;
     padding-right: 10px;
+}
+
+/**
+ * Animations
+ */
+.hx-loading {
+    -webkit-animation: loading_color_change 1s infinite alternate;
+    animation: loading_color_change 1s infinite alternate;
+}
+
+@-webkit-keyframes loading_color_change {
+    from { background: #384056; }
+    to { background: #f79022; }
+}
+
+@keyframes loading_color_change {
+    from { background: #384056; }
+    to { background: #f79022; }
 }
 
 /**

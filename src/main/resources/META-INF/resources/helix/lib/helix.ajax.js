@@ -41,22 +41,26 @@ $(document).on('prerequest', function(ev, url, suspendSleep) {
                 Helix.Ajax.loadOptions.color = "#FF8000";
             }
 
-            var header = $.mobile.activePage.find('[data-role="header"]');
-            var origBG = $(header).css('background');
-            var animateColor = function(doReverse) {
-                $(header).animate({
-                    'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
-                }, {
-                    duration: 1200,
-                    complete: function() {
-                        if (Helix.Ajax.loadCt >  0 || Helix.Ajax.loadOptions.pin) {
-                            animateColor(!doReverse);
-                        } else {
-                            $(header).css('background', '');
-                        }
-                }});
-            };
-            animateColor(false);
+            if (Helix.compatibility.animation) {
+                $.mobile.activePage.find('[data-role="header"]').addClass('hx-loading');
+            } else {
+                var header = $.mobile.activePage.find('[data-role="header"]');
+                var origBG = $(header).css('background');
+                var animateColor = function(doReverse) {
+                    $(header).animate({
+                        'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+                    }, {
+                        duration: 1200,
+                        complete: function() {
+                            if (Helix.Ajax.loadCt >  0 || Helix.Ajax.loadOptions.pin) {
+                                animateColor(!doReverse);
+                            } else {
+                                $(header).css('background', '');
+                            }
+                    }});
+                };
+                animateColor(false);
+            }
         }
     }
     if (window.CordovaInstalled && suspendSleep) {
@@ -81,6 +85,9 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
 
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadCt--;
+    if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
+        $.mobile.activePage.find('[data-role="header"]').removeClass('hx-loading');
+    }
 });
 
 /**
@@ -178,6 +185,7 @@ Helix.Ajax = {
      */
     hideLoader: function() {
         $.mobile.loading('hide');
+        $.mobile.activePage.find('[data-role="header"]').removeClass('hx-loading');
     },
 
     refreshLoader: function() {
