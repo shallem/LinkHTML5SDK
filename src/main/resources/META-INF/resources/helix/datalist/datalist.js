@@ -609,7 +609,8 @@
                 } else if (msg) {
                     this.$parent.append($('<li />')
                         .attr('data-role', 'empty-message')
-                        .append(msg));                        
+                        .append(msg)
+                        .addClass('hx-empty-message'));
                 }
                 if (this.options.emptyHook) {
                     this.options.emptyHook.call(this);

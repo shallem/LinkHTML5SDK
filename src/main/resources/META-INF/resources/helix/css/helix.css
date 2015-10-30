@@ -415,6 +415,10 @@ li {
     margin-left: 64px;
 }
 
+.hx-empty-message {
+    color: black;
+}
+
 /**
  * Large screen styles.
  */
