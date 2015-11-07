@@ -2758,7 +2758,7 @@
          * Return the list header.
          */
         getListHeader: function() {
-            return this.$searchSortDiv;
+            return this.$headerSection;
         },
         
         /**
