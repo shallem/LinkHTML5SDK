@@ -748,7 +748,7 @@ Helix.Ajax = {
             if (params.disableOffline) {
                 Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
             } else if (!window.CordovaInstalled) {
-                alert("This device is offline and the browser does not support JavaScript extensions. Please try save this contact when you are online.");
+                Helix.Utils.statusMessage("Error", "This device is offline and the browser does not support JavaScript extensions. Please try save this contact when you are online.", 'fatal');
             } else {
                 // Collect the data we will need to continue this offline draft. Not always used or applicable.
                 var refreshValues = null;
@@ -763,6 +763,7 @@ Helix.Ajax = {
                     'application/x-www-form-urlencoded',
                     params.body,
                     refreshValues ? JSON.stringify(refreshValues) : '',
+                    params.id ? params.id : 0,
                     function() {
                         if (!params.silentMode) {
                             if (params.offlineSuccess) {
