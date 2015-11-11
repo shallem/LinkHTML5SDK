@@ -333,7 +333,7 @@
                     var timeVal = _self._getDateTimeValue(nxtItem.DOM, this, nxtItem.name);
                     toSerialize.push({
                         name: strippedFieldID,
-                        value: timeVal
+                        value: timeVal.getTime()
                     });
                 } else {
                     toSerialize.push({
@@ -663,7 +663,7 @@
         },
         
         _getDateTimeValue: function(parentDOM, fld, searchName) {
-            var dateObj = $(fld).datebox("get");
+            /*var dateObj = $(fld).datebox("get");
             if (!dateObj) {
                 return 0;
             }
@@ -677,7 +677,9 @@
                     minute: timeObj.theDate.getMinutes()
                 });           
             }
-            return dateObj.getTime();
+            return dateObj.getTime();*/
+            var isoStr = $(fld).val();
+            return new Date(isoStr);
         },
         
         getValue: function(name) {
@@ -723,11 +725,7 @@
             if (fldType === 'date' ||
                 fldType === 'exactdate' ||
                 fldType === 'datetime') {
-                var timeVal = this._getDateTimeValue(fld.DOM, thisField, searchName);
-                if (timeVal > 0) {
-                    return new Date(timeVal);
-                }
-                return null;
+                return this._getDateTimeValue(fld.DOM, thisField, searchName);
             } else if (fldType === 'tzSelector' ||
                        fldType === 'pickList' ||
                        fldType === 'picklist') {
@@ -840,7 +838,12 @@
             if (!val.getTime) {
                 val = new Date(parseInt(val));
             }
-            return !(val.isBefore(new Date()));
+            var nowDate = new Date();
+            // Adjust nowDate to account for the fact that 'val' is interpreted as GMT time, whereas for this purpose
+            // we want to interpret it in the local TZ. getTimezoneOffset returns minutes of offset from current TZ to
+            // GMT (e.g., EST is GMT -300, and getTimezoneOffset returns +300)
+            nowDate.setTime(nowDate.getTime() - (nowDate.getTimezoneOffset() * 60 * 1000));
+            return !(val.isBefore(nowDate));
         },
         
         save: function () {

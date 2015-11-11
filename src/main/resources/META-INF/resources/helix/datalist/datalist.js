@@ -1845,14 +1845,15 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
-                    //'data-clear-btn': true,
                     'value': this.options.indexedSearchText
                 }).appendTo($searchDiv);
 
                 this.$searchLabel = $('<label/>').attr({
                     'for': sboxID
                 }).append('Search').appendTo($searchDiv).hide();
-                this.$searchBox.textinput();
+                this.$searchBox.textinput({
+                    clearBtn : true
+                });
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
