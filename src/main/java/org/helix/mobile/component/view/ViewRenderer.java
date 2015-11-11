@@ -41,7 +41,7 @@ public class ViewRenderer extends CoreRenderer {
             cssExtraClass= " hx-scrolling-page";
             writer.writeAttribute("style", "overflow-y: auto;", null);
         }
-        writer.writeAttribute("class", "ui-page hx-full-mode" + cssExtraClass, null);
+        writer.writeAttribute("class", "ui-page hx-full-height hx-full-mode" + cssExtraClass, null);
         
         if (swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);

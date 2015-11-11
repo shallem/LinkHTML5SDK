@@ -679,7 +679,10 @@
             }
             return dateObj.getTime();*/
             var isoStr = $(fld).val();
-            return new Date(isoStr);
+            var d = new Date(isoStr);
+            // Re-adjust back to local TZ.
+            d.addMinutes(d.getTimezoneOffset());
+            return d;
         },
         
         getValue: function(name) {
