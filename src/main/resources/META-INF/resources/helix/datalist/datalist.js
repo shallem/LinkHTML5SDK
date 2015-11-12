@@ -1999,7 +1999,7 @@
                     }
                     oncomplete();
                     for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
-                        groupLIs[_gidx].hide().removeAttr('data-index');
+                        $(groupLIs[_gidx]).hide().removeAttr('data-index');
                     }
                 };
 
