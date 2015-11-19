@@ -32,7 +32,8 @@ public class ContentRenderer extends CoreRenderer {
         writer.writeAttribute("id", content.getClientId(context), "id");
         writer.writeAttribute("data-role", "content", null);
         
-        String contentStyle = "position:fixed;";
+        //String contentStyle = "position:fixed;";
+        String contentStyle = "";
         if (content.isFullScreen()) {
             contentStyle = contentStyle + " overflow: hidden;";
         }

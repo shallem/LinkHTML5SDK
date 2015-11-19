@@ -195,15 +195,20 @@ Helix.Layout = {
         var contentHeight = height - footerHeight - headerHeight;
         
         var $content = page.find('.hx-main-content');
-        $content.css('height', contentHeight);
+        //$content.css('height', contentHeight);
         $content.parentsUntil('.ui-page').addClass('hx-full-height').addClass('hx-full-width');
+        
+        if ($content.parent().is('.ui-page')) {
+            page.children( ".ui-header, .ui-content, .ui-footer" ).wrapAll( '<div class="hx-page-flex hx-full-height" />' );
+            //$content.parent().addClass('hx-page-flex');
+        }
         
         return contentHeight;
     },
     
     layoutPageFullScreen: function(page) {
         var contentHeight = Helix.Layout.resizePages(page);
-        var fullContentHeight = contentHeight;
+        /*var fullContentHeight = contentHeight;
         
         Helix.Layout.contentHeight = contentHeight;
         $('[data-role="content"]', page).children().each(function() {
@@ -219,7 +224,7 @@ Helix.Layout = {
             } else {
                 contentHeight = contentHeight - $(this).outerHeight(true);
             }
-        });        
+        });*/        
     },
     
     renderer: function(page, id, fn) {
