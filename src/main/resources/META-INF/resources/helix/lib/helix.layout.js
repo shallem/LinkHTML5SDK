@@ -208,6 +208,10 @@ Helix.Layout = {
     
     layoutPageFullScreen: function(page) {
         var contentHeight = Helix.Layout.resizePages(page);
+        setTimeout(function() {
+            var $content = page.find('.hx-main-content');
+            $content.height(contentHeight);
+        }, 0);
         /*var fullContentHeight = contentHeight;
         
         Helix.Layout.contentHeight = contentHeight;

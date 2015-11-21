@@ -287,6 +287,7 @@ function Calendar(element, options, eventSources) {
 	function initialRender() {
 		tm = options.theme ? 'ui' : 'fc';
 		element.addClass('fc');
+                element.addClass('hx-flex-vertical');
 		if (options.isRTL) {
 			element.addClass('fc-rtl');
 		}
@@ -299,7 +300,7 @@ function Calendar(element, options, eventSources) {
                 var fullheightStyle = '';
                 fullheightStyle = 'hx-layout-full-height hx-no-scroll';
                 
-                var markup = "<div class='fc-content " + fullheightStyle + "' style='position:relative'/>"
+                var markup = "<div class='fc-content hx-flex-fill " + fullheightStyle + "' style='position:relative'/>"
 		content = $(markup)
 			.prependTo(element);
 
@@ -3353,34 +3354,14 @@ function AgendaView(element, calendar, viewName) {
 		viewHeight = height;
 		slotTopCache = {};
 	
+                var viewHeight = $('.fc-view').height();
 		var headHeight = dayBody.position().top;
-                var headOffset = headHeight + calendar.contentOffset();
 		var allDayHeight = slotScroller.position().top; // including divider
-		
-                /*
-                var bodyHeight = Math.min( // total body height, including borders
-			//height - headHeight,   // when scrollbars
-                        height - headOffset,
-			slotTable.height() + allDayHeight + 1 // when no scrollbars. +1 for bottom border
-		);
-                if (bodyHeight < 400) {
-                    // SAH - force a minimum height of 400px
-                    bodyHeight = 400;
-                }*/
-
-		//dayBodyFirstCellStretcher
-		//	.height(bodyHeight - vsides(dayBodyFirstCell));
-		
-                var oldTop = parseInt(slotLayer.css('top'));
-		slotLayer.css('top', headHeight);
-                if (oldTop != headHeight) {
-                    var diff = (headHeight - oldTop);
-                    slotScroller.height(slotScroller.height() - diff);
-                }
+                slotScroller.height(viewHeight - headHeight - allDayHeight);
                 
-		//slotScroller.height(bodyHeight - allDayHeight - 1);
+                slotLayer.css('top', headHeight);
                 
-		// the stylesheet guarantees that the first row has no border.
+                // the stylesheet guarantees that the first row has no border.
 		// this allows .height() to work well cross-browser.
 		slotHeight = slotTable.find('tr:first').height() + 1; // +1 for bottom border
 
