@@ -331,10 +331,12 @@
                 } else if (fieldType === "date" ||
                            fieldType === "datetime") {
                     var timeVal = _self._getDateTimeValue(nxtItem.DOM, this, nxtItem.name);
-                    toSerialize.push({
-                        name: strippedFieldID,
-                        value: timeVal.getTime()
-                    });
+                    if (timeVal) {
+                        toSerialize.push({
+                            name: strippedFieldID,
+                            value: timeVal.getTime()
+                        });
+                    }
                 } else {
                     toSerialize.push({
                         name : strippedFieldID,
@@ -663,22 +665,11 @@
         },
         
         _getDateTimeValue: function(parentDOM, fld, searchName) {
-            /*var dateObj = $(fld).datebox("get");
-            if (!dateObj) {
-                return 0;
+            var isoStr = $(fld).val();
+            if (!isoStr) {
+                return null;
             }
             
-            dateObj = dateObj.clone();
-            var timeElem = $(parentDOM).find('[name="' + searchName + '_time"]');
-            if (timeElem.length > 0) {
-                var timeObj = timeElem.data('mobile-datebox');
-                dateObj.set({
-                    hour : timeObj.theDate.getHours(),
-                    minute: timeObj.theDate.getMinutes()
-                });           
-            }
-            return dateObj.getTime();*/
-            var isoStr = $(fld).val();
             var d = new Date(isoStr);
             // Re-adjust back to local TZ.
             d.addMinutes(d.getTimezoneOffset());

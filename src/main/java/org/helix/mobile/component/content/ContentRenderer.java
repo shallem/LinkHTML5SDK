@@ -34,16 +34,19 @@ public class ContentRenderer extends CoreRenderer {
         
         //String contentStyle = "position:fixed;";
         String contentStyle = "";
+        String extraStyleClass = "";
         if (content.isFullScreen()) {
             contentStyle = contentStyle + " overflow: hidden;";
+        } else {
+            extraStyleClass = " hx-scroller-nozoom";
         }
         writer.writeAttribute("style", contentStyle, null);
         
         if(content.getStyle() != null) writer.writeAttribute("style", content.getStyle(), null);
         if(content.getStyleClass() != null) {
-            writer.writeAttribute("class", "hx-main-content " + content.getStyleClass(), null);
+            writer.writeAttribute("class", "hx-main-content " + content.getStyleClass() + extraStyleClass, null);
         } else {
-            writer.writeAttribute("class", "hx-main-content", null);
+            writer.writeAttribute("class", "hx-main-content" + extraStyleClass, null);
         }
     }
 

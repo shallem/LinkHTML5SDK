@@ -226,6 +226,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         if (formElem.type === 'datetime') {
             // Date and time
             inputType = 'datetime-local';
+        } else if (formElem.type === 'date') {
+            inputType = 'date';
         } else {
             // Just date
             inputType = 'time';
