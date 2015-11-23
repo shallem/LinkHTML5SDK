@@ -298,9 +298,9 @@ function Calendar(element, options, eventSources) {
 			element.addClass('ui-widget');
 		}
                 var fullheightStyle = '';
-                fullheightStyle = 'hx-layout-full-height hx-no-scroll';
+                fullheightStyle = 'hx-full-height hx-no-scroll';
                 
-                var markup = "<div class='fc-content hx-flex-fill " + fullheightStyle + "' style='position:relative'/>"
+                var markup = "<div class='fc-content hx-flex-fill hx-flex-vertical " + fullheightStyle + "' style='position:relative'/>"
 		content = $(markup)
 			.prependTo(element);
 
@@ -387,19 +387,19 @@ function Calendar(element, options, eventSources) {
 
                 var fullheightStyle = '';
                 if (newViewName === 'month') {
-                    fullheightStyle = 'pm-layout-full-height hx-scroller-nozoom';
+                    fullheightStyle = 'hx-full-height hx-scroller-nozoom';
                     if ($.mobile.activePage) {
                         $.mobile.activePage.off('pageshow.fc').on('pageshow.fc', function() {
                             $(content).find('.fc-view-month').scrollTop(0);
                         });
                     }
                 } else {
-                    fullheightStyle = 'pm-layout-full-height hx-no-scroll';
+                    fullheightStyle = 'hx-flex-fill hx-no-scroll';
                 }
-                var markup = "<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>";
+                var markup = $("<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>");
 
 		currentView = new fcViews[newViewName](
-			$(markup)
+                            markup
 				.appendTo(content),
 			t // the calendar object
 		);
@@ -3354,10 +3354,16 @@ function AgendaView(element, calendar, viewName) {
 		viewHeight = height;
 		slotTopCache = {};
 	
-                var viewHeight = $('.fc-view').height();
-		var headHeight = dayBody.position().top;
+                // Height of the fc-content; fc-view height is not reliable.
+                var contentHeight = element.parent().height();
+		//element.height(contentHeight);
+                var headHeight = dayBody.position().top;
 		var allDayHeight = slotScroller.position().top; // including divider
-                slotScroller.height(viewHeight - headHeight - allDayHeight);
+                slotScroller.height(contentHeight - headHeight - allDayHeight);
+                
+                // Set the height of the grid layer to provide grid lines throughout
+                // the calendar.
+                element.find('.fc-agenda-days td.fc-widget-content').height(contentHeight - headHeight);
                 
                 slotLayer.css('top', headHeight);
                 

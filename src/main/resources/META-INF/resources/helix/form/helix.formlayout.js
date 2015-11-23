@@ -130,38 +130,23 @@ function __refreshDate(mode, formElem) {
         } else if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
             if (isNaN(formElem.value)) {
                 // Keep formElem.value as is - a string to parse.
-                if (!mode) {
-                    displayDate = Date.parse(formElem.value);
-                }
+                displayDate = Date.parse(formElem.value);
             } else {
                 formElem.value = Number(formElem.value);
-                if (!mode) {
-                    displayDate = new Date(formElem.value);
-                }
+                displayDate = new Date(formElem.value);
             }
         } else {
-            if (!mode) {
-                displayDate = formElem.value;
-            }
+            displayDate = formElem.value;
         }
-    }
-    if (displayDate) {
-        // View mode
-        dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
-        timeDisplayStr = displayDate.toString('h:mm tt');
     }
 
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
-        var newDateStr = formElem.value ? formElem.value.toString('yyyy-MM-ddTHH:mm:ss') : '';
+        var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
         $(thisField).val(newDateStr);
-        /*$(thisField).trigger('datebox', { method: 'set', value : formElem.value });
-
-        var timeElem = $(formElem.DOM).find('[name="' + formElem.name + '_time"]');
-        if (timeElem.length > 0) {
-            $(timeElem).trigger('datebox', { method: 'set', value: formElem.value });
-        }*/
     } else {
+        dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
+        timeDisplayStr = displayDate.toString('h:mm tt');
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',div' + dataNameAttr;
         $(formElem.DOM).find(selector).remove();
