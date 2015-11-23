@@ -143,10 +143,15 @@ function __refreshDate(mode, formElem) {
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
+        if (formElem.type === 'date') {
+            newDateStr = newDateStr.substring(0, 10);
+        }
         $(thisField).val(newDateStr);
     } else {
-        dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
-        timeDisplayStr = displayDate.toString('h:mm tt');
+        if (displayDate) {
+            dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
+            timeDisplayStr = displayDate.toString('h:mm tt');
+        }
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',div' + dataNameAttr;
         $(formElem.DOM).find(selector).remove();
