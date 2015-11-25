@@ -130,36 +130,28 @@ function __refreshDate(mode, formElem) {
         } else if (Object.prototype.toString.call(formElem.value) !== '[object Date]') {
             if (isNaN(formElem.value)) {
                 // Keep formElem.value as is - a string to parse.
-                if (!mode) {
-                    displayDate = Date.parse(formElem.value);
-                }
+                displayDate = Date.parse(formElem.value);
             } else {
                 formElem.value = Number(formElem.value);
-                if (!mode) {
-                    displayDate = new Date(formElem.value);
-                }
+                displayDate = new Date(formElem.value);
             }
         } else {
-            if (!mode) {
-                displayDate = formElem.value;
-            }
+            displayDate = formElem.value;
         }
-    }
-    if (displayDate) {
-        // View mode
-        dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
-        timeDisplayStr = displayDate.toString('h:mm tt');
     }
 
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
-        $(thisField).trigger('datebox', { method: 'set', value : formElem.value });
-
-        var timeElem = $(formElem.DOM).find('[name="' + formElem.name + '_time"]');
-        if (timeElem.length > 0) {
-            $(timeElem).trigger('datebox', { method: 'set', value: formElem.value });
+        var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
+        if (formElem.type === 'date') {
+            newDateStr = newDateStr.substring(0, 10);
         }
+        $(thisField).val(newDateStr);
     } else {
+        if (displayDate) {
+            dateDisplayStr = displayDate.toString('ddd MMM d, yyyy');
+            timeDisplayStr = displayDate.toString('h:mm tt');
+        }
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',div' + dataNameAttr;
         $(formElem.DOM).find(selector).remove();
@@ -228,11 +220,44 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             })
             .append(formElem.fieldTitle)
         );
+        var inputType;
+        var valueString;
+        var stepStr = formElem.dateStep ? formElem.dateStep : '300';
+        if (formElem.type === 'datetime') {
+            // Date and time
+            inputType = 'datetime-local';
+        } else if (formElem.type === 'date') {
+            inputType = 'date';
+        } else {
+            // Just date
+            inputType = 'time';
+        }
+        valueString = new Date(defaultValue).toISOString();
+        var inputWrapper = dateDiv;
+        var inputID = Helix.Utils.getUniqueID();
+        var dateInput = $('<input />').attr({
+            'name': formElem.name,
+            'id': inputID,
+            'data-role' : 'none',
+            'style' : 'font-size: 16px',
+            'type' : inputType,
+            'step' : stepStr
+        }).appendTo(inputWrapper);
+        if (formElem.onfocus) {
+            dateInput.focus(formElem.onfocus);
+        }
+        if (formElem.onchange) {
+            dateInput.change(formElem.onchange);
+        }
+        $fieldContainer.append(dateDiv);
+        dateDiv.fieldcontain();
+
+
         /*var inputWrapper = $('<div />').attr({ 
             'style' : formElem.computedStyle,
             'class' : formElem.computedStyleClass
         }).appendTo(dateDiv);*/
-        var inputWrapper = dateDiv;
+        /*var inputWrapper = dateDiv;
         var inputID = Helix.Utils.getUniqueID();
         var dateInput = $('<input />').attr({
             'name': formElem.name,
@@ -242,7 +267,6 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         }).appendTo(inputWrapper);
         var timeInput = null;
         if (formElem.type === 'datetime') {
-            /* Add a time box. */
             timeInput = $('<input />').attr({
                 'name': formElem.name + "_time",
                 'id': inputID + "_time",
@@ -274,7 +298,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 "displayInline" : (timeInput ? true : false),
                 "minuteStep" : minuteStep
             });
-        }
+        }*/
     } else {
         __refreshDate(mode, formElem);
     }
@@ -1948,12 +1972,13 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                 //$(inputElem).datebox('setDate', new Date(parseInt(formElem.value)));
                 var dateValue;
                 if (!formElem.value) {
-                    dateValue = Date.now();
+                    dateValue = new Date();
                 } else {
                     dateValue = parseInt(formElem.value);
                     dateValue = new Date(dateValue);
                 }
-                $(inputElem).trigger('datebox', {'method':'set', 'value': dateValue});
+                $(inputElem).val(dateValue.toISOString());
+                //$(inputElem).trigger('datebox', {'method':'set', 'value': dateValue});
             } else if (formElem.type === "text" || formElem.type === "search" || 
                        formElem.type === "hidden") {
                 $(inputElem).val(formElem.value);

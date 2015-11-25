@@ -32,7 +32,7 @@ $(document).on('active', function() {
 /**
  * Show a loader pre-request.
  */
-$(document).on('prerequest', function(ev, url, suspendSleep) {
+$(document).on('prerequest', function(ev, page, url, suspendSleep) {
     if (!Helix.Ajax.loadOptions.silent) {
         if (!Helix.Ajax.loadOptions.async) {
             $.mobile.loading( 'show', Helix.Ajax.loadOptions);
@@ -42,9 +42,9 @@ $(document).on('prerequest', function(ev, url, suspendSleep) {
             }
 
             if (Helix.compatibility.animation) {
-                $.mobile.activePage.find('[data-role="header"]').addClass('hx-loading');
+                page.find('[data-role="header"]').addClass('hx-loading');
             } else {
-                var header = $.mobile.activePage.find('[data-role="header"]');
+                var header = page.find('[data-role="header"]');
                 var origBG = $(header).css('background');
                 var animateColor = function(doReverse) {
                     $(header).animate({
@@ -72,7 +72,7 @@ $(document).on('prerequest', function(ev, url, suspendSleep) {
 /**
  * Hide the loader post-request.
  */
-$(document).on('postrequest', function(ev, url, resumeSleep) {
+$(document).on('postrequest', function(ev, page, url, resumeSleep) {
     if (!Helix.Ajax.loadOptions.pin) {
         if (!Helix.Ajax.loadOptions.async) {
             /* Hide the loader. */
@@ -86,7 +86,7 @@ $(document).on('postrequest', function(ev, url, resumeSleep) {
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadCt--;
     if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
-        $.mobile.activePage.find('[data-role="header"]').removeClass('hx-loading');
+        $(page).find('[data-role="header"]').removeClass('hx-loading');
     }
 });
 
@@ -449,7 +449,8 @@ Helix.Ajax = {
             return;
         }
 
-        $(document).trigger('prerequest', [ loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
+        var page = $.mobile.activePage;
+        $(document).trigger('prerequest', [ page, loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
         /* Give the browser a change to handle the event and show the loader. */
         $.ajax({
             type: "POST",
@@ -524,13 +525,14 @@ Helix.Ajax = {
                 loadCommandOptions.onerror(error);
             },
             complete: function(xhr) {
-                $(document).trigger('postrequest', [ loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
+                $(document).trigger('postrequest', [ page, loadCommandOptions.requestOptions.postBack, loadCommandOptions.requestOptions.suspendSleep ]);
             }
         });
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
-        $(document).trigger('prerequest', [ url, false ]);
+        var page = $.mobile.activePage;
+        $(document).trigger('prerequest', [ page, url, false ]);
         if (actions && actions.beforeSubmit) {
             actions.beforeSubmit();
         }
@@ -580,7 +582,7 @@ Helix.Ajax = {
                 }
             },
             complete: function(xhr) {
-                $(document).trigger('postrequest', [ url, false ]);
+                $(document).trigger('postrequest', [ page, url, false ]);
             }
         });
     },
@@ -621,7 +623,8 @@ Helix.Ajax = {
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
-        $(document).trigger('prerequest', [ params.url, false ]);
+        var page = $.mobile.activePage;
+        $(document).trigger('prerequest', [ page, params.url, false ]);
         var args = '';
         for (var key in params.params) {
             var nxtArg = key + '=' + encodeURIComponent(params.params[key]);
@@ -678,7 +681,7 @@ Helix.Ajax = {
                 if (callbacks.complete) {
                     callbacks.complete.call(window);
                 }
-                $(document).trigger('postrequest', [ params.url, false ]);
+                $(document).trigger('postrequest', [ page, params.url, false ]);
             },
             dataType: 'json'
         });
@@ -690,7 +693,8 @@ Helix.Ajax = {
             silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
         if (Helix.Ajax.isDeviceOnline()) {
-            $(document).trigger('prerequest', [ params.url, false ]);
+            var page = $.mobile.activePage;
+            $(document).trigger('prerequest', [ page, params.url, false ]);
             $.ajax({
                 url: params.url,
                 type: 'POST',
@@ -739,7 +743,7 @@ Helix.Ajax = {
                     if (callbacks.complete) {
                         callbacks.complete.call(window);
                     }
-                    $(document).trigger('postrequest', [ params.url, false ]);
+                    $(document).trigger('postrequest', [ page, params.url, false ]);
                 },
                 dataType: 'json'
             });

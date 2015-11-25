@@ -331,10 +331,12 @@
                 } else if (fieldType === "date" ||
                            fieldType === "datetime") {
                     var timeVal = _self._getDateTimeValue(nxtItem.DOM, this, nxtItem.name);
-                    toSerialize.push({
-                        name: strippedFieldID,
-                        value: timeVal
-                    });
+                    if (timeVal) {
+                        toSerialize.push({
+                            name: strippedFieldID,
+                            value: timeVal.getTime()
+                        });
+                    }
                 } else {
                     toSerialize.push({
                         name : strippedFieldID,
@@ -663,21 +665,15 @@
         },
         
         _getDateTimeValue: function(parentDOM, fld, searchName) {
-            var dateObj = $(fld).datebox("get");
-            if (!dateObj) {
-                return 0;
+            var isoStr = $(fld).val();
+            if (!isoStr) {
+                return null;
             }
             
-            dateObj = dateObj.clone();
-            var timeElem = $(parentDOM).find('[name="' + searchName + '_time"]');
-            if (timeElem.length > 0) {
-                var timeObj = timeElem.data('mobile-datebox');
-                dateObj.set({
-                    hour : timeObj.theDate.getHours(),
-                    minute: timeObj.theDate.getMinutes()
-                });           
-            }
-            return dateObj.getTime();
+            var d = new Date(isoStr);
+            // Re-adjust back to local TZ.
+            d.addMinutes(d.getTimezoneOffset());
+            return d;
         },
         
         getValue: function(name) {
@@ -723,11 +719,7 @@
             if (fldType === 'date' ||
                 fldType === 'exactdate' ||
                 fldType === 'datetime') {
-                var timeVal = this._getDateTimeValue(fld.DOM, thisField, searchName);
-                if (timeVal > 0) {
-                    return new Date(timeVal);
-                }
-                return null;
+                return this._getDateTimeValue(fld.DOM, thisField, searchName);
             } else if (fldType === 'tzSelector' ||
                        fldType === 'pickList' ||
                        fldType === 'picklist') {
@@ -840,7 +832,12 @@
             if (!val.getTime) {
                 val = new Date(parseInt(val));
             }
-            return !(val.isBefore(new Date()));
+            var nowDate = new Date();
+            // Adjust nowDate to account for the fact that 'val' is interpreted as GMT time, whereas for this purpose
+            // we want to interpret it in the local TZ. getTimezoneOffset returns minutes of offset from current TZ to
+            // GMT (e.g., EST is GMT -300, and getTimezoneOffset returns +300)
+            nowDate.setTime(nowDate.getTime() - (nowDate.getTimezoneOffset() * 60 * 1000));
+            return !(val.isBefore(nowDate));
         },
         
         save: function () {

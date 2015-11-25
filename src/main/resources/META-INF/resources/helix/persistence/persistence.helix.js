@@ -1451,6 +1451,21 @@ function initHelixDB() {
                 var resultObj = {};
                 var paramObj = {};
                 
+                var syncObjects = function(syncObject, paramObject, loadCommandConfig, nxt) {
+                    if (syncObject.length === 0) {
+                            syncComponent();
+                    } else {
+                        var syncNxt = syncObject.pop();
+                        Helix.DB.synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
+                            resultObj[o.name] = finalObj;
+                            if (o.param) {
+                                paramObj[o.name] = o.param;
+                            }
+                            syncObjects(syncObject, paramObject, loadCommandConfig, nxt);
+                        }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
+                    }
+                };
+                
                 /* Serialize synchronization of each component so that we never have >1 flush in progress. */
                 var syncComponent = function() {
                     if (toSync.length === 0) {
@@ -1483,20 +1498,7 @@ function initHelixDB() {
                             syncObject = [ obj[nxt] ];
                         }
                         var loadCommandConfig = overrides.schemaMap[nxt];
-                        if (syncObject.length === 0) {
-                            syncComponent();
-                        } else {
-                            for (var q = 0; q < syncObject.length; ++q) {
-                                var syncNxt = syncObject[q];
-                                Helix.DB.synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
-                                    resultObj[o.name] = finalObj;
-                                    if (o.param) {
-                                        paramObj[o.name] = o.param;
-                                    }
-                                    syncComponent();
-                                }, { name: nxt, param: paramObject }, loadCommandConfig.syncOverrides);
-                            }                            
-                        }
+                        syncObjects(syncObject, paramObject, loadCommandConfig, nxt);
                     }
                 };
                 syncComponent();

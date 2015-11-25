@@ -287,6 +287,7 @@ function Calendar(element, options, eventSources) {
 	function initialRender() {
 		tm = options.theme ? 'ui' : 'fc';
 		element.addClass('fc');
+                element.addClass('hx-flex-vertical');
 		if (options.isRTL) {
 			element.addClass('fc-rtl');
 		}
@@ -297,9 +298,9 @@ function Calendar(element, options, eventSources) {
 			element.addClass('ui-widget');
 		}
                 var fullheightStyle = '';
-                fullheightStyle = 'hx-layout-full-height hx-no-scroll';
+                fullheightStyle = 'hx-full-height hx-no-scroll';
                 
-                var markup = "<div class='fc-content " + fullheightStyle + "' style='position:relative'/>"
+                var markup = "<div class='fc-content hx-flex-fill hx-flex-vertical " + fullheightStyle + "' style='position:relative'/>"
 		content = $(markup)
 			.prependTo(element);
 
@@ -386,19 +387,19 @@ function Calendar(element, options, eventSources) {
 
                 var fullheightStyle = '';
                 if (newViewName === 'month') {
-                    fullheightStyle = 'pm-layout-full-height hx-scroller-nozoom';
+                    fullheightStyle = 'hx-full-height hx-scroller-nozoom';
                     if ($.mobile.activePage) {
                         $.mobile.activePage.off('pageshow.fc').on('pageshow.fc', function() {
                             $(content).find('.fc-view-month').scrollTop(0);
                         });
                     }
                 } else {
-                    fullheightStyle = 'pm-layout-full-height hx-no-scroll';
+                    fullheightStyle = 'hx-flex-fill hx-no-scroll';
                 }
-                var markup = "<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>";
+                var markup = $("<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>");
 
 		currentView = new fcViews[newViewName](
-			$(markup)
+                            markup
 				.appendTo(content),
 			t // the calendar object
 		);
@@ -3353,34 +3354,20 @@ function AgendaView(element, calendar, viewName) {
 		viewHeight = height;
 		slotTopCache = {};
 	
-		var headHeight = dayBody.position().top;
-                var headOffset = headHeight + calendar.contentOffset();
+                // Height of the fc-content; fc-view height is not reliable.
+                var contentHeight = element.parent().height();
+		//element.height(contentHeight);
+                var headHeight = dayBody.position().top;
 		var allDayHeight = slotScroller.position().top; // including divider
-		
-                /*
-                var bodyHeight = Math.min( // total body height, including borders
-			//height - headHeight,   // when scrollbars
-                        height - headOffset,
-			slotTable.height() + allDayHeight + 1 // when no scrollbars. +1 for bottom border
-		);
-                if (bodyHeight < 400) {
-                    // SAH - force a minimum height of 400px
-                    bodyHeight = 400;
-                }*/
-
-		//dayBodyFirstCellStretcher
-		//	.height(bodyHeight - vsides(dayBodyFirstCell));
-		
-                var oldTop = parseInt(slotLayer.css('top'));
-		slotLayer.css('top', headHeight);
-                if (oldTop != headHeight) {
-                    var diff = (headHeight - oldTop);
-                    slotScroller.height(slotScroller.height() - diff);
-                }
+                slotScroller.height(contentHeight - headHeight - allDayHeight);
                 
-		//slotScroller.height(bodyHeight - allDayHeight - 1);
+                // Set the height of the grid layer to provide grid lines throughout
+                // the calendar.
+                element.find('.fc-agenda-days td.fc-widget-content').height(contentHeight - headHeight);
                 
-		// the stylesheet guarantees that the first row has no border.
+                slotLayer.css('top', headHeight);
+                
+                // the stylesheet guarantees that the first row has no border.
 		// this allows .height() to work well cross-browser.
 		slotHeight = slotTable.find('tr:first').height() + 1; // +1 for bottom border
 

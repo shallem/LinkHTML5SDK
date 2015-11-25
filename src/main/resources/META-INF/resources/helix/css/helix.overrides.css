@@ -172,3 +172,7 @@
     background-image: none;
     background-color: transparent;
 }
+
+.ui-panel {
+    min-height: initial;
+}

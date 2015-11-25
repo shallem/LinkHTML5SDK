@@ -1845,14 +1845,15 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
-                    //'data-clear-btn': true,
                     'value': this.options.indexedSearchText
                 }).appendTo($searchDiv);
 
                 this.$searchLabel = $('<label/>').attr({
                     'for': sboxID
                 }).append('Search').appendTo($searchDiv).hide();
-                this.$searchBox.textinput();
+                this.$searchBox.textinput({
+                    clearBtn : true
+                });
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
@@ -1998,7 +1999,7 @@
                     }
                     oncomplete();
                     for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
-                        groupLIs[_gidx].hide().removeAttr('data-index');
+                        $(groupLIs[_gidx]).hide().removeAttr('data-index');
                     }
                 };
 
@@ -2758,7 +2759,7 @@
          * Return the list header.
          */
         getListHeader: function() {
-            return this.$searchSortDiv;
+            return this.$headerSection;
         },
         
         /**

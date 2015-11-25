@@ -6684,7 +6684,7 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 					shadow: true,
 					mini: o.mini
 				})
-                                        .hide(); // SAH - make sure this doesn't flash and then go away.
+                                        .addClass("ui-input-clear-hidden"); // SAH - make sure this doesn't flash and then go away.
 				
 			if ( !isSearch ) {
 				focusedEl.addClass( "ui-input-has-clear" );

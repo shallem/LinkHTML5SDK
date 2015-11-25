@@ -41,7 +41,7 @@ public class ViewRenderer extends CoreRenderer {
             cssExtraClass= " hx-scrolling-page";
             writer.writeAttribute("style", "overflow-y: auto;", null);
         }
-        writer.writeAttribute("class", "ui-page hx-full-mode" + cssExtraClass, null);
+        writer.writeAttribute("class", "ui-page hx-full-height hx-full-mode" + cssExtraClass, null);
         
         if (swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);
@@ -68,7 +68,7 @@ public class ViewRenderer extends CoreRenderer {
             
             writer.startElement("div", component);
             writer.writeAttribute("data-role", "footer", null);
-            writer.writeAttribute("data-position", "fixed", null);
+            //writer.writeAttribute("data-position", "fixed", null);
             writer.writeAttribute("data-tap-toggle", "false", null);
             writer.writeAttribute("data-update-page-padding", "false", null);
             
