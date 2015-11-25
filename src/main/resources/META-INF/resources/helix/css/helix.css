@@ -680,3 +680,11 @@ li {
         display: none !important;
     }
 }
+
+.ui-panel-inner {
+    height: 100%;
+}
+
+.hx-almost-full-height {
+    height: 98%;
+}

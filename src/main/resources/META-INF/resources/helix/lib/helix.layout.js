@@ -211,6 +211,9 @@ Helix.Layout = {
         setTimeout(function() {
             var $content = page.find('.hx-main-content');
             $content.height(contentHeight);
+            
+            // Overlays should always be the height of the underlying window.
+            page.find('.hx-overlay-full-height').height($(window).height());
         }, 0);
         /*var fullContentHeight = contentHeight;
         
