@@ -638,8 +638,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
                                              .css('width', '90%')
-                                             .css('position', 'absolute')
-                                             .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                                             //.css('position', 'absolute')
+                                             .css('max-height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
                                              .css('overflow-y', 'scroll')
                                              .css('display', 'none')
                                              .css('background-color', '#f9f9f9')

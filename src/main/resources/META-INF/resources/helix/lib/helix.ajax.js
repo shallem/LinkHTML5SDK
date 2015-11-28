@@ -86,7 +86,7 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep) {
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadCt--;
     if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
-        $(page).find('[data-role="header"]').removeClass('hx-loading');
+        $('.hx-loading').removeClass('hx-loading');
     }
 });
 
