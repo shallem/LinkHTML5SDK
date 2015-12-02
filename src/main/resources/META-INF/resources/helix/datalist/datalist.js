@@ -807,8 +807,9 @@
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
          * and globalFilters with the format described in the options documentation.
          */
-        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems) {
+        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions) {
             var _self = this;
+            var _options = $.extend({}, _self.options, (overrideOptions ? overrideOptions : {}));
 
             // Prevent this function from being called again. Future calls should all go to refreshData.
             _self.isLoaded = true;            
@@ -829,7 +830,7 @@
             /* Create the sort popup */
             var sorts = null;
             if (!sortFilterOptions) {
-                sorts = _self.options.sorts;
+                sorts = _options.sorts;
             } else {
                 sorts = _self._getSortsFromOptions(sortFilterOptions);
             }            
@@ -837,11 +838,11 @@
                 // If there is a default sort that is not returned in the list of sorts,
                 // add it. (EG. It can happen if the default sort uses a combination
                 // of fields).
-                if ((this.options.sortBy) && (sorts[this.options.sortBy] === undefined)) {
-                   sorts[this.options.sortBy] = {
+                if ((_options.sortBy) && (sorts[_options.sortBy] === undefined)) {
+                   sorts[_options.sortBy] = {
                         display : "Default",
-                        direction : this.options.sortOrder.toUpperCase(),
-                        usecase : this.options.sortCaseSensitive
+                        direction : _options.sortOrder.toUpperCase(),
+                        usecase : _options.sortCaseSensitive
                    };
                 }
                 
@@ -850,25 +851,25 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, this.options.sortBy, this.options.sortOrder, this.options.sortCaseSensitive);
+            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _options.sortBy, _options.sortOrder, _options.sortCaseSensitive);
             
             var thisFilters = null;
             if (!sortFilterOptions) {
-                thisFilters = _self.options.thisFilters;
+                thisFilters = _options.thisFilters;
             } else {
                 thisFilters = _self._getThisFiltersFromOptions(sortFilterOptions);
             }
-            if (thisFilters && _self.options.doThisFilter) {
+            if (thisFilters && _options.doThisFilter) {
                 _self._refreshFilterContainer(thisFilters);
             }
             
             var globalFilters = null;
             if (!sortFilterOptions) {
-                globalFilters = _self.options.globalFilters;
+                globalFilters = _options.globalFilters;
             } else {
                 globalFilters = _self._getGlobalFiltersFromOptions(sortFilterOptions);
             }
-            if (globalFilters && _self.options.doGlobalFilter) {
+            if (globalFilters && _options.doGlobalFilter) {
                 _self._refreshGlobalFilterContainer(globalFilters);
             }
             
@@ -893,7 +894,7 @@
                 /* It seems that attaching the scrolling classes after showing the list
                  * is required to make scrolling work properly on iOS.
                  */
-                if (_self.options.scroll) {
+                if (_options.scroll) {
                     _self.$listWrapper.removeClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-full-height');

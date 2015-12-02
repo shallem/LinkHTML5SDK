@@ -179,7 +179,7 @@
                 }
                 if (_self.styleChanges.length) {
                     var newTextNode = null;
-                    if (_self._lastInputRange && _self._lastInputRange.startContainer) {
+                    if (_self._lastInputRange && _self._lastInputRange.startContainer && _self._lastInputRange.startContainer.nodeType === Node.TEXT_NODE) {
                         newTextNode = _self._lastInputRange.startContainer.splitText(_self._lastInputRange.startContainer.length - 1);
                     }
                     
