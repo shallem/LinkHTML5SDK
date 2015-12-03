@@ -1112,6 +1112,7 @@ function initHelixDB() {
                 if (curElem.__hx_type) {
                     // This is not a normal object array. Instead it is an array of delta objects or other
                     // special objects. Let SynchronizeObject handle it.
+                    oncomplete(field);
                     return false;
                 } else {
                     elemMap[curElem[elemKeyField]] = curElem;                
@@ -1358,7 +1359,7 @@ function initHelixDB() {
              */
             var handleAsyncFields = function() {
                 /* See if we are done. */
-                if (asyncFields.length == 0) {
+                if (asyncFields.length === 0) {
                     syncDone();
                     return;
                 }
