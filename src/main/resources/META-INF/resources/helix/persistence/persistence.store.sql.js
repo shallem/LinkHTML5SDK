@@ -470,7 +470,11 @@ function config(persistence, dialect) {
             });
         } else if (propertyPairs.length > 0) {
             sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
-            tx.executeSql(sql, values, callback, callback);
+            tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
+                persistence.errorHandler(e.message, e.code);
+                callback();                  
+                return false;
+            });
         } else {
             // Nothing to do. Just call the callback.
             if (callback) {
@@ -576,7 +580,7 @@ function config(persistence, dialect) {
         persistence.asyncForEach(queries, function(queryTuple, callback) {
             tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, query) {
                 var msg = err.message + ' when executing query ' + query;
-                console.log(msg);
+                persistence.errorHandler(msg, err.code);
                 if(delay) {
                     setTimeout(function() {
                         callback(_, msg);
@@ -876,9 +880,7 @@ function config(persistence, dialect) {
                     }
                     callback(results);
                 }, function(tx, error) {
-                    if (persistence.errorHandler(error.message)) {
-                        return;
-                    }
+                    persistence.errorHandler(error.message, error.code);
                     callback(null, error);
                 }
                 );
@@ -958,7 +960,10 @@ function config(persistence, dialect) {
         var deleteSql = "DELETE FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
         var args2 = args.slice(0);
 
-        tx.executeSql(deleteSql, args2, callback, callback);
+        tx.executeSql(deleteSql, args2, callback, function(tx, error) {
+            persistence.errorHandler(error.message, error.code);
+            callback(error);
+        });
         
         /* SAH: NOTE; we are not clearing out all removed objects from the session. This means
          * we could have a tracked object that is not in the DB. If that object were subsequently
@@ -1090,10 +1095,16 @@ function config(persistence, dialect) {
                 }
                 
                 var nxtUpdateSql = updateSql + ' WHERE id IN (' +  idList + ')';
-                tx.executeSql(nxtUpdateSql, updateArgs, callback, callback);
+                tx.executeSql(nxtUpdateSql, updateArgs, callback, function(tx, error) {
+                    persistence.errorHandler(error.message, error.code);
+                    callback(error);
+                });
                 ++i;
             }
-        }, callback);
+        }, function(tx, error) {
+            persistence.errorHandler(error.message, error.code);
+            callback(error);
+        });
     };
 
     /**

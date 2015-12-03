@@ -69,7 +69,9 @@ function initPersistence(persistence) {
      * Default global error handler.
      */
     persistence.errorHandler = function(errMsg, code) {
-        alert((code ? (code + ": ") : "") + errMsg);
+        var msg = (code ? (code + ": ") : "") + errMsg; 
+        alert(msg);
+        Helix.Utils.statusMessage("Database Error", msg, "severe");
         return false;
     };
 
