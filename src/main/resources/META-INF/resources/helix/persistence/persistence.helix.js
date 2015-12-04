@@ -1112,7 +1112,6 @@ function initHelixDB() {
                 if (curElem.__hx_type) {
                     // This is not a normal object array. Instead it is an array of delta objects or other
                     // special objects. Let SynchronizeObject handle it.
-                    oncomplete(field);
                     return false;
                 } else {
                     elemMap[curElem[elemKeyField]] = curElem;                
@@ -1371,7 +1370,17 @@ function initHelixDB() {
                     /* Synchronize the array field - since this is not a delta object, we assume the returned
                      * object has all fields that should be in this data table.
                      */
-                    Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
+                    if (!Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides)) {
+                        var nDone = 0;
+                        for (var _q = 0; _q < fieldVal.length; ++_q) {
+                            Helix.DB.synchronizeObject(fieldVal[_q], fieldSchema, function() {
+                                ++nDone;
+                                if (nDone === fieldVal.length) {
+                                    handleAsyncFields();
+                                }
+                            }, null, overrides);
+                        }
+                    }
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type === 1001) {
                         Helix.DB.synchronizeDeltaField(allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
