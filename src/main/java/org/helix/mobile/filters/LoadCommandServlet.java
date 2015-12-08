@@ -66,6 +66,10 @@ public class LoadCommandServlet extends HttpServlet {
                     lca.doLoad(thisObj, req);
                     jsonToReturn = lca.getAndSerialize(thisObj);
                 }
+                LOG.log(Level.FINEST, "JSON to serialize for command {0}: {1}", new Object[] {
+                    lca.getBeanName(),
+                    jsonToReturn
+                });
                 res.setContentType("application/json");
                 res.setCharacterEncoding("UTF-8");
                 res.getWriter().write(jsonToReturn);

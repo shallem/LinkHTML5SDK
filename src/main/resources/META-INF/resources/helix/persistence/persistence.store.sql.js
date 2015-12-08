@@ -532,7 +532,7 @@ function config(persistence, dialect) {
         var nDone = 0;
         var __callback = function() {
             ++nDone;
-            if (nQueries == nDone && callback) {
+            if (nQueries === nDone && callback) {
                 callback();
             }
         };
