@@ -1586,7 +1586,7 @@ function initHelixDB() {
                     }, 
                     doneFn: function(ct) {
                         if (masterDBVer === 0 && ct > 0) {
-                            persistence.schemaSyncHooks.push(function() {
+                            persistence.nextSchemaSyncHooks.push(function() {
                                 var queries = [];
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN masterDBVer TEXT" , null]);
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN textIndexFields TEXT" , null]);
