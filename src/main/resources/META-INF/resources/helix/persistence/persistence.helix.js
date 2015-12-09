@@ -398,6 +398,7 @@ function initHelixDB() {
                 newSchema.filterFields = JSON.stringify(schema.filterFields);
                 newSchema.globalFilterFields = JSON.stringify(schema.globalFilterFields);
                 newSchema.textIndexFields = JSON.stringify(schema.textIndexFields);
+                newSchema.masterDBVer = Helix.DB.__masterDBVer;
 
                 // Convert relationships to JSON.
                 newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
