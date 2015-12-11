@@ -31,6 +31,8 @@ function initHelixDB() {
         
         indexFull: false,
         
+        noAutoIndexing: false,
+        
         reservedFields : {
             "__hx_sorts" : true,
             "__hx_key" : true,
@@ -1402,6 +1404,16 @@ function initHelixDB() {
             }, overrides);            
         },
 
+
+        launchIndexing: function() {
+            if (!Helix.DB.noAutoIndexing) {
+                for (var schemaName in window.__pmAllSchemas) { 
+                    var indexSchema = window.__pmAllSchemas[schemaName];
+                    indexSchema.indexAsync(0, Helix.DB.indexFull);
+                }
+            }
+        },
+
         /**
          * Call this function to synchronize an object to the database after loading that
          * object from the remote server. This function first queries the database using the 
@@ -1422,10 +1434,7 @@ function initHelixDB() {
                      */
                     // Launch async indexing ... these calls do nothing if there are
                     // no fields to index or if async indexing is not enabled.
-                    for (var schemaName in allSchemas) { 
-                        var indexSchema = allSchemas[schemaName];
-                        indexSchema.indexAsync(0, Helix.DB.indexFull);
-                    }
+                    Helix.DB.launchIndexing();
                 });
             };
         

@@ -314,6 +314,14 @@ persistence.search.config = function(persistence, dialect, options) {
             return session.uniqueQueryCollection(new SearchQueryCollection(session, Entity.meta.name, query, prefixByDefault));
         };
         
+        Entity.indexingDone = function(ncalls) {
+            --Helix.DB.__indexingCount;
+            if (Helix.DB.__indexingCount === 0 && Helix.DB.__indexingMessageShown == true) {
+                Helix.Utils.statusMessage("Indexing done", "The app is done indexing.", "info");
+                Helix.DB.__indexingMessageShown = false;
+            }
+        };
+        
         Entity.indexAsync = function(ncalls, __indexFull, __indexParams) {
             // Launch asynchronous indexing, if that has been enabled. This will launch
             // a background task (essentially) to index a table in batches of 100 records
@@ -329,8 +337,7 @@ persistence.search.config = function(persistence, dialect, options) {
                 // We only do this up to 40 times per index, otherwise the application can
                 // be sluggish for far too long.
                 indexedOnce = true;
-                
-                Helix.DB.__indexingCount--;
+                this.indexingDone(ncalls);
                 return;
             }
             
@@ -352,6 +359,11 @@ persistence.search.config = function(persistence, dialect, options) {
                 ++Helix.DB.__indexingCount;
             }
             
+            if (ncalls === 4 && !Helix.DB.__indexingMessageShown) {
+                Helix.Utils.statusMessage("Indexing in progress", "The app is indexing text contents to enable local search. This can make the app sluggish until all indexing is done. Indexing generally completes within 5 minutes.", "info");
+                Helix.DB.__indexingMessageShown = true;
+            }
+            
             // Run a query to get 100 objects that are not yet indexed.
             if (!__indexParams) {
                 __indexParams = {};
@@ -359,8 +371,8 @@ persistence.search.config = function(persistence, dialect, options) {
             }
             __indexParams.updateIDs = [];
             __indexParams.updateObjs = [];
+            __indexParams.delaySecs = (ncalls === 4 ? 2 : 0);
             __indexParams.nxtCall = ++ncalls;
-            __indexParams.delaySecs = (__indexFull ? 1 : 3);
             __indexParams.toIndex = 0;
             __indexParams.nObjects = 20;
             
@@ -371,8 +383,7 @@ persistence.search.config = function(persistence, dialect, options) {
                     params.toIndex = ct;
                     if (params.toIndex <= 0) {
                         that.__hx_indexing = false;
-                        
-                        --Helix.DB.__indexingCount;
+                        that.indexingDone(ncalls);
                     }
                 },
                 eachFn: function(elem, params) {
@@ -398,11 +409,16 @@ persistence.search.config = function(persistence, dialect, options) {
                             that.__hx_indexing = false;
                             if (!indexedOnce && ct == params.nObjects) {
                                 // Checking that ct == nObjects ensures that we only recurse if we really need to.
-                                that.indexAsync(params.nxtCall, __indexFull, params);
+                                if (params.delaySecs > 0) {
+                                    setTimeout(that.indexAsync(params.nxtCall, __indexFull, params), params.delaySecs * 1000);
+                                } else {
+                                    that.indexAsync(params.nxtCall, __indexFull, params);
+                                }
                             } else {
                                 // When the user has already endured one round of indexing, we don't force them
                                 // to endure multiple slow rounds of indexing. Instead we just do 1 shot of indexing
                                 // and stop.
+                                that.indexingDone(ncalls);
                                 return;
                             }
                         });
