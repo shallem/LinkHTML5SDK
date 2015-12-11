@@ -496,7 +496,9 @@ Helix.Ajax = {
 			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
-                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject));
+                            if (loadCommandOptions.oncomplete) {
+                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject));
+                            }
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
