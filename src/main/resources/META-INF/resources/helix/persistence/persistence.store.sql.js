@@ -464,14 +464,14 @@ function config(persistence, dialect) {
             var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
             obj._new = false;
             tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-                persistence.errorHandler(e.message, e.code);
+                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
                 callback();                  
                 return false;
             });
         } else if (propertyPairs.length > 0) {
             sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
             tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-                persistence.errorHandler(e.message, e.code);
+                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
                 callback();                  
                 return false;
             });
@@ -539,8 +539,8 @@ function config(persistence, dialect) {
     
         for (var i = 0; i < additionalQueries.length; ++i) {
             var queryTuple = additionalQueries[i];
-            tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err) {
-                persistence.errorHandler(err.message, err.code);
+            tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err, badSQL, badArgs) {
+                persistence.errorHandler(err.message, err.code, badSQL, badArgs);
                 __callback();
             });
         }
@@ -578,9 +578,8 @@ function config(persistence, dialect) {
             callbackArgs.push(arguments[i]);
         }
         persistence.asyncForEach(queries, function(queryTuple, callback) {
-            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, query) {
-                var msg = err.message + ' when executing query ' + query;
-                persistence.errorHandler(msg, err.code);
+            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, badSQL, badArgs) {
+                persistence.errorHandler(err.message, err.code, badSQL, badArgs);
                 if(delay) {
                     setTimeout(function() {
                         callback(_, msg);
@@ -879,8 +878,8 @@ function config(persistence, dialect) {
                             // session.add(e);
                     }
                     callback(results);
-                }, function(tx, error) {
-                    persistence.errorHandler(error.message, error.code);
+                }, function(tx, error, badSQL, badArgs) {
+                    persistence.errorHandler(error.message, error.code, badSQL, badArgs);
                     callback(null, error);
                 }
                 );
@@ -960,8 +959,8 @@ function config(persistence, dialect) {
         var deleteSql = "DELETE FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
         var args2 = args.slice(0);
 
-        tx.executeSql(deleteSql, args2, callback, function(tx, error) {
-            persistence.errorHandler(error.message, error.code);
+        tx.executeSql(deleteSql, args2, callback, function(tx, error, badSQL, badArgs) {
+            persistence.errorHandler(error.message, error.code, badSQL, badArgs);
             callback(error);
         });
         
@@ -1095,14 +1094,14 @@ function config(persistence, dialect) {
                 }
                 
                 var nxtUpdateSql = updateSql + ' WHERE id IN (' +  idList + ')';
-                tx.executeSql(nxtUpdateSql, updateArgs, callback, function(tx, error) {
-                    persistence.errorHandler(error.message, error.code);
+                tx.executeSql(nxtUpdateSql, updateArgs, callback, function(tx, error, badSQL, badArgs) {
+                    persistence.errorHandler(error.message, error.code, badSQL, badArgs);
                     callback(error);
                 });
                 ++i;
             }
-        }, function(tx, error) {
-            persistence.errorHandler(error.message, error.code);
+        }, function(tx, error, badSQL, badArgs) {
+            persistence.errorHandler(error.message, error.code, badSQL, badArgs);
             callback(error);
         });
     };

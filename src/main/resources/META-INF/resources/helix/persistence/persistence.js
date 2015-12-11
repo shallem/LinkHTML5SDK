@@ -68,9 +68,8 @@ function initPersistence(persistence) {
      * Mobile Helix
      * Default global error handler.
      */
-    persistence.errorHandler = function(errMsg, code) {
-        var msg = (code ? (code + ": ") : "") + errMsg; 
-        alert(msg);
+    persistence.errorHandler = function(errMsg, code, stmt, args) {
+        var msg = (code ? (code + ": ") : "") + errMsg + " in statement: " + stmt; 
         Helix.Utils.statusMessage("Database Error", msg, "severe");
         return false;
     };
