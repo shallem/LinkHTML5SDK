@@ -496,11 +496,11 @@ Helix.Ajax = {
 			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
-                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject));
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
-			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+			}, { key: itemKey, params: paramObject }, loadCommandOptions.syncOverrides), 0);
                     } else {
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {
