@@ -90,6 +90,10 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep) {
     }
 });
 
+$(document).on('pause', function() {
+   $('.hx-loading').removeClass('hx-loading'); 
+});
+
 /**
  *
  */
