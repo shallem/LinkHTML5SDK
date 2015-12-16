@@ -1500,10 +1500,9 @@
                 $(_self.$wrapper).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
-                    var _args = _self._queuedRefreshes.pop();
-                    //alert("HELLO");
+                    var refreshArgs = _self._queuedRefreshes.pop();
                     setTimeout(function() {
-                        _self._refreshData(_args[0], _args[1], _args[2], _args[3], _args[4]);                    
+                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4]);                    
                     }, 0);
                 }
             }, this.options.emptyMessage, oncomplete, noPaginate, _self.extraItems);
@@ -1522,6 +1521,7 @@
                 displayCollection.call(this);
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
+                displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 this._refreshData(oncomplete, true, undefined, displayCollection, 0);
             }
         },
