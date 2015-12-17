@@ -2528,7 +2528,7 @@
                 this.options.selectAction(this.selected, this.selectedGroup, this.strings);
             }          
         },
-        selectNext: function() {
+        selectNext: function(noSelectAction) {
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
@@ -2538,7 +2538,7 @@
                 } while (nxt.is('li') && !nxt.is('li[data-index]'));
                 if (nxt.length) {
                     this.setSelected(nxt);
-                    this.selectItem();
+                    this.selectItem(noSelectAction);
                 }
             }
         },
