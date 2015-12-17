@@ -664,7 +664,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             // not the value in the input text box.
                             formElem.__noblur = true;
                             autoCompleteList.empty();
-                            if (LIs && LIs.length && _self.is(':focus')) {
+                            if (LIs && LIs.length) {
                                 if (LIs.length === 1 && LIs[0] === _self.val()) {
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
