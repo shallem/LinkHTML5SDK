@@ -699,23 +699,6 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
 
                                     autoCompleteList.show();
                                     autoCompleteList.listview("refresh");
-                                    // Scroll the page so that this element and at least some of the autocompletions do not
-                                    // appear underneath the keyboard. Otherwise the user might not see the dropdown autocomplete
-                                    // list.
-                                    var scroller = _self.closest('.hx-scroller-nozoom');
-                                    if (scroller.length) {
-                                        var curOffset = scroller.scrollTop();
-                                        var tgtOffset = 0;
-                                        var screenHgt = window.innerHeight;
-                                        if (screenHgt > 150) {
-                                            var screenPos = Helix.Utils.getPosition(_self[0]);
-                                            var actualPos = (screenPos.y > screenHgt ? screenHgt : screenPos.y);
-                                            if (Helix.Utils.isPhone() && screenHgt > 150 && actualPos > 150) {
-                                                tgtOffset = (actualPos - 150);
-                                                scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
-                                            }
-                                        }
-                                    }
                                 }
                             } else {
                                 formElem.__noblur = false;

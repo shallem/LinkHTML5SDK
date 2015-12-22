@@ -1708,8 +1708,8 @@
 
                     var searchText = _self.__searchText.trim();
                     if (searchText) {
-                        _self.options.indexedSearch(searchText, function(displayCollection) {
-                            _self.indexedSearchDone(displayCollection);                                                            
+                        _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
+                            _self.indexedSearchDone(displayCollection, oncomplete);
                         }, _self.originalList);
                     }
                     _self.__searchReadyTimeout = null;

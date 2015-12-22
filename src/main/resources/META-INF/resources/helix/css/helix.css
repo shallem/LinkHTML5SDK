@@ -682,7 +682,7 @@ li {
 }
 
 .ui-panel-inner {
-    height: 100%;
+    height:  calc(100% - 30px);
 }
 
 .hx-almost-full-height {

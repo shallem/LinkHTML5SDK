@@ -174,6 +174,8 @@ Helix.Layout = {
     resizePages: function(page) {
         var height = $(window).height();
         var width = $(window).width();
+        page.css('max-height', '');
+        page.height(height);
 
         /* In our mobile framework we never let pages scroll. Elements inside can scroll
          * using the scrollingDiv. jQuery Mobile lays out headers and footers by attaching
