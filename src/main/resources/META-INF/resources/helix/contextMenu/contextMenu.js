@@ -285,7 +285,7 @@
 
             if (this.options.beforeopen) {
                 if (this._thisArg) {
-                    this.options.beforeopen.call(this._thisArg);
+                    this.options.beforeopen.call(this._thisArg, this);
                 } else {
                     this.options.beforeopen.call(this);
                 }

@@ -173,7 +173,6 @@ Helix.Layout = {
     },
     resizePages: function(page) {
         var height = $(window).height();
-        var width = $(window).width();
         page.css('max-height', '');
         page.height(height);
 
@@ -217,23 +216,6 @@ Helix.Layout = {
             // Overlays should always be the height of the underlying window.
             page.find('.hx-overlay-full-height').height($(window).height());
         }, 0);
-        /*var fullContentHeight = contentHeight;
-        
-        Helix.Layout.contentHeight = contentHeight;
-        $('[data-role="content"]', page).children().each(function() {
-            if ($(this).is("style,script")) {
-                // Skip style and script tags - see note at http://api.jquery.com/height/
-                return;
-            }
-            
-            if ($(this).is('.pm-layout-full-height,.hx-layout-full-height,.mh-layout-parent-height,.hx-layout-parent-height')) {
-                Helix.Layout.layoutFullHeightComponent(contentHeight, this);
-            } else if ($(this).is('.hx-overlay-full-height')) {
-                Helix.Layout.layoutFullHeightComponent(fullContentHeight, this);
-            } else {
-                contentHeight = contentHeight - $(this).outerHeight(true);
-            }
-        });*/        
     },
     
     renderer: function(page, id, fn) {

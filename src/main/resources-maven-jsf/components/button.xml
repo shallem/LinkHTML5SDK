@@ -59,5 +59,11 @@
             <description>Indicate if a button is left or right aligned in the context of a button bar.</description>
             <defaultValue>left</defaultValue>
         </attribute>
+        <attribute>
+            <name>styleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Style class to add to the button</description>
+        </attribute>
     </attributes>
 </component>

@@ -37,6 +37,15 @@ public class FooterRenderer extends CoreRenderer {
         if(footer.getStyleClass() != null) writer.writeAttribute("class", footer.getStyleClass(), null);
         if(swatch != null) writer.writeAttribute("data-theme", swatch, null);        
         if(footer.isFixed())  writer.writeAttribute("data-position", "fixed", null);
+        
+        UIComponent left = footer.getFacet("left");
+        UIComponent right = footer.getFacet("right");
+        if(left != null) {
+            left.encodeAll(context);
+        }
+        if(right != null) {
+            right.encodeAll(context);
+        }
     }
 
     @Override

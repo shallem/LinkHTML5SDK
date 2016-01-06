@@ -31,6 +31,9 @@ public class ButtonRenderer extends CoreRenderer {
         if (button.getId() != null) {
             writer.writeAttribute("id", button.getId(), null);
         }
+        if (button.getStyleClass() != null) {
+            writer.writeAttribute("class", button.getStyleClass(), null);
+        }
         
         String onclick = button.getOnclick();
         if (!isValueBlank(onclick)) {
