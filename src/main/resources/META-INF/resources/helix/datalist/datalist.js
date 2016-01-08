@@ -159,6 +159,13 @@
             itemContextMenu: null,
             
             /**
+             * Additional arguments option of the itemContextMenu, which is used to provide
+             * additional arguments to the beforeOpen method of the context menu and to its
+             * tap events. This should be an array.
+             */
+            itemContextMenuArgs: null,
+            
+            /**
              * Filter to apply to determine whether or not a particular item has
              * the context menu attached to it. By default, all list items have the
              * context menu attached. If a function returning a boolean value is 
@@ -2161,7 +2168,8 @@
                         _self.setSelected(event.target);
                         _self.options.itemContextMenu.open({
                             positionTo: event.target,
-                            thisArg: _self
+                            thisArg: _self,
+                            extraArgs: _self.options.itemContextMenuArgs
                         });
                     });
                 } else if (!curRowFresh) {
