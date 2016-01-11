@@ -1022,6 +1022,11 @@
                 displayCollection = _self._resetGlobalFilters(list);
             }
             _self._refreshData(function() {
+                // Make sure the list selection matches the item that appears active.
+                _self.$listWrapper.find('li.ui-btn-active').each(function() {
+                    _self.setSelected(this);
+                });
+                
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
@@ -1617,7 +1622,7 @@
                 }
             };
             
-            if (_self._prefetchedItems && _self._prefetchedItems.length > 20 && (noPaginate !== true)) {
+            if (_self._prefetchedItems && (noPaginate !== true)) {
                 __processStart(_self._prefetchedItems.length);
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
@@ -2001,8 +2006,10 @@
                             groupLIs[idx] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
                             idx++;
                         }
-                        $moreMarkup.on(_self.tapEvent, function() {
+                        $moreMarkup.on(_self.tapEvent, function(ev) {
+                            ev.stopImmediatePropagation();
                             _self.options.groupOverflowFn.call(_self, rowObject.group);
+                            return false;
                         });
                     }
                     oncomplete();
