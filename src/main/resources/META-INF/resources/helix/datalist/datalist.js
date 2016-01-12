@@ -723,7 +723,7 @@
             setTimeout(function() {
                 _self.$listWrapper.addClass('hx-scroller-nozoom');
                 _self._rescrollInProgress = false;
-            }, 2000);
+            }, 500);
         },
         
         _rescrollList : function(rescrollTarget) {
@@ -1466,7 +1466,6 @@
             }
         
             _self.refreshInProgress = true;
-            _self.displayList = [];
             
             if (renderWindowStart !== undefined) {
                 _self.setRenderWindowStart(renderWindowStart);
@@ -1603,11 +1602,15 @@
                 }
             };
             
-            var __processDone = function(count) {
+            var __processDone = function(count, startIdx) {
                 var _ridx;
                 if (!_self.options.grouped) {
                     /* We did not render any rows. Call completion. */
-                    var startIdx = nRendered;
+                    if (!startIdx) {
+                        startIdx = nRendered;
+                    } else {
+                        startIdx = startIdx + nRendered;
+                    }
                     for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
@@ -1623,13 +1626,26 @@
             };
             
             if (_self._prefetchedItems && (noPaginate !== true)) {
-                __processStart(_self._prefetchedItems.length);
+                // If the prefetched items list is too small, we won't be able to scroll up. Instead we just extend the list.
+                var ct = _self._prefetchedItems.length;
+                var startIdx = 0;
+                if (_self._prefetchedItems.length < 20) {
+                    _self._atDataTop = true;
+                    ct = ct + _self._itemsPerPage;
+                    rowIndex = _self._itemsPerPage;
+                    startIdx = _self._itemsPerPage;
+                } else {
+                    _self.displayList = [];
+                }
+                
+                __processStart(ct);
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
                 }
-                __processDone(_self._prefetchedItems.length);
+                __processDone(ct, startIdx);
                 _self._prefetchedItems = [];
             } else if ($.isArray(displayCollection)) {
+                _self.displayList = [];
                 __processStart(displayCollection.length);
                 if (extraItems && extraItems.pre) {
                     for (var i = 0; i < extraItems.pre.length; ++i) {
@@ -1645,6 +1661,7 @@
                 }
                 __processDone(displayCollection.length);
             } else {
+                _self.displayList = [];
                 /* Apply skip and limit. */
                 if (_self._renderWindowStart > 0) {
                     displayCollection = displayCollection.skip(_self._renderWindowStart);

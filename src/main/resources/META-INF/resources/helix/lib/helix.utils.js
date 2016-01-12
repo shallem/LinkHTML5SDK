@@ -47,7 +47,8 @@ Helix.Utils =  {
             life : lifetime,
             escape: (doEscape ? true : false)
         }).data('helix-helixGrowl');
-        $(growlContainer).on('tap', function() {
+        $(growlContainer).on('tap swipe', function() {
+            $(growlContainer).off('tap swipe');
             growl.removeAll(); 
         });
         return growl;
@@ -60,9 +61,6 @@ Helix.Utils =  {
                 ]);
         } else {
             Helix.Utils.errorGrowl = Helix.Utils.growl(summary, msg, severity, lifetime);
-        }
-        if (severity === 'error') {
-            console.log('[ERROR] ' + msg);
         }
     },
 
