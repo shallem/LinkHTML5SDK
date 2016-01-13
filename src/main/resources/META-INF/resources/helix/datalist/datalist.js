@@ -2773,8 +2773,10 @@
                     _self._currentSort = newSort;
                     _self._currentSortOrder = newOrder;
                     _self._currentSortCase = newCase;
-                    _self.__refreshSortContainer();
-                    _self._updateSortButtons();
+                    if(_self.isLoaded) {
+                        _self.__refreshSortContainer();
+                        _self._updateSortButtons();
+                    }
                  };
                  
                  if (doRefresh === true) {
