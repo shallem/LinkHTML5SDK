@@ -700,7 +700,7 @@
          */
         _refreshListOnScroll : function(oncomplete) {
             var _self = this;
-            var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
+            var doRescroll = (_self._prefetchedItems.length >= 20) ? true : false;
             _self._prefetchPrev = null;
             _self._prefetchPrevDone = false;
             _self._prefetchNext = null;
@@ -782,6 +782,7 @@
             _self._setScrollTimer();
 
             var _refreshDownDone = function(_rescroll) {
+                //alert("RESCROLL: " + _rescroll);
                 if (_rescroll) {
                     _self._rescrollList(0);
                     _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
@@ -914,6 +915,7 @@
                         _self._fingerOn = false;
                     });
                     
+                    _self._inBounce = false;
                     _self.$listWrapper.scroll(function(ev) {
                         var scrollPos = _self.$listWrapper.scrollTop();
                         var lastScroll = _self._lastScrollPos;
@@ -931,6 +933,19 @@
                         }
                         _self._lastScrollPos = scrollPos;
                         
+                        if (scrollPos < 0 || scrollPos > listHeight) {
+                            if (_self._inBounce === true) {
+                                return;
+                            }
+                            _self._inBounce = true;
+                            //alert("BOUNCE: " + scrollPos + ", " + _self._renderWindowStart);
+                        } else {
+                            /*if (_self._inBounce) {
+                                alert("CLEAR " + listHeight);
+                            }*/
+                            _self._inBounce = false;
+                        }
+                        
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
                         // we prepend more to the bottom of the list and remove from the
@@ -947,6 +962,7 @@
                                 if (scrollPos < 0) {
                                     // Bounce.
                                     _self._rescrollInProgress = true;
+                                    //alert("BOUNCEUP");
                                     setTimeout($.proxy(_self._doScrollUp, _self), 200);
                                 } else if (_self._firstElemVisible()) {
                                     if (_self._fingerOn) {
@@ -966,6 +982,7 @@
                                 if (scrollPos > listHeight) {
                                     // Bounce
                                     _self._rescrollInProgress = true;
+                                    //alert("BOUNCEDOWN");
                                     setTimeout($.proxy(_self._doScrollDown, _self), 200);
                                 } else if (_self._lastElemVisible()) {
                                     if (_self._fingerOn) {
