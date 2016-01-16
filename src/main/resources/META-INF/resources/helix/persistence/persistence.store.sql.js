@@ -464,13 +464,17 @@ function config(persistence, dialect) {
             var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
             obj._new = false;
             tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-                persistence.errorHandler(e.message, e.code);
+                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
                 callback();                  
                 return false;
             });
         } else if (propertyPairs.length > 0) {
             sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
-            tx.executeSql(sql, values, callback, callback);
+            tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
+                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
+                callback();                  
+                return false;
+            });
         } else {
             // Nothing to do. Just call the callback.
             if (callback) {
@@ -528,15 +532,15 @@ function config(persistence, dialect) {
         var nDone = 0;
         var __callback = function() {
             ++nDone;
-            if (nQueries == nDone && callback) {
+            if (nQueries === nDone && callback) {
                 callback();
             }
         };
     
         for (var i = 0; i < additionalQueries.length; ++i) {
             var queryTuple = additionalQueries[i];
-            tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err) {
-                persistence.errorHandler(err.message, err.code);
+            tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err, badSQL, badArgs) {
+                persistence.errorHandler(err.message, err.code, badSQL, badArgs);
                 __callback();
             });
         }
@@ -574,9 +578,8 @@ function config(persistence, dialect) {
             callbackArgs.push(arguments[i]);
         }
         persistence.asyncForEach(queries, function(queryTuple, callback) {
-            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, query) {
-                var msg = err.message + ' when executing query ' + query;
-                console.log(msg);
+            tx.executeSql(queryTuple[0], queryTuple[1], callback, function(_, err, badSQL, badArgs) {
+                persistence.errorHandler(err.message, err.code, badSQL, badArgs);
                 if(delay) {
                     setTimeout(function() {
                         callback(_, msg);
@@ -875,10 +878,8 @@ function config(persistence, dialect) {
                             // session.add(e);
                     }
                     callback(results);
-                }, function(tx, error) {
-                    if (persistence.errorHandler(error.message)) {
-                        return;
-                    }
+                }, function(tx, error, badSQL, badArgs) {
+                    persistence.errorHandler(error.message, error.code, badSQL, badArgs);
                     callback(null, error);
                 }
                 );
@@ -958,7 +959,10 @@ function config(persistence, dialect) {
         var deleteSql = "DELETE FROM `" + entityName + "` " + joinSql + ' ' + whereSql;
         var args2 = args.slice(0);
 
-        tx.executeSql(deleteSql, args2, callback, callback);
+        tx.executeSql(deleteSql, args2, callback, function(tx, error, badSQL, badArgs) {
+            persistence.errorHandler(error.message, error.code, badSQL, badArgs);
+            callback(error);
+        });
         
         /* SAH: NOTE; we are not clearing out all removed objects from the session. This means
          * we could have a tracked object that is not in the DB. If that object were subsequently
@@ -1090,10 +1094,16 @@ function config(persistence, dialect) {
                 }
                 
                 var nxtUpdateSql = updateSql + ' WHERE id IN (' +  idList + ')';
-                tx.executeSql(nxtUpdateSql, updateArgs, callback, callback);
+                tx.executeSql(nxtUpdateSql, updateArgs, callback, function(tx, error, badSQL, badArgs) {
+                    persistence.errorHandler(error.message, error.code, badSQL, badArgs);
+                    callback(error);
+                });
                 ++i;
             }
-        }, callback);
+        }, function(tx, error, badSQL, badArgs) {
+            persistence.errorHandler(error.message, error.code, badSQL, badArgs);
+            callback(error);
+        });
     };
 
     /**

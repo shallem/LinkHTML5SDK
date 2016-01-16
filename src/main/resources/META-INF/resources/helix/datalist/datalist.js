@@ -159,6 +159,13 @@
             itemContextMenu: null,
             
             /**
+             * Additional arguments option of the itemContextMenu, which is used to provide
+             * additional arguments to the beforeOpen method of the context menu and to its
+             * tap events. This should be an array.
+             */
+            itemContextMenuArgs: null,
+            
+            /**
              * Filter to apply to determine whether or not a particular item has
              * the context menu attached to it. By default, all list items have the
              * context menu attached. If a function returning a boolean value is 
@@ -693,7 +700,7 @@
          */
         _refreshListOnScroll : function(oncomplete) {
             var _self = this;
-            var doRescroll = (_self._prefetchedItems.length > 20) ? true : false;
+            var doRescroll = (_self._prefetchedItems.length >= 20) ? true : false;
             _self._prefetchPrev = null;
             _self._prefetchPrevDone = false;
             _self._prefetchNext = null;
@@ -716,7 +723,7 @@
             setTimeout(function() {
                 _self.$listWrapper.addClass('hx-scroller-nozoom');
                 _self._rescrollInProgress = false;
-            }, 2000);
+            }, 500);
         },
         
         _rescrollList : function(rescrollTarget) {
@@ -775,6 +782,7 @@
             _self._setScrollTimer();
 
             var _refreshDownDone = function(_rescroll) {
+                //alert("RESCROLL: " + _rescroll);
                 if (_rescroll) {
                     _self._rescrollList(0);
                     _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
@@ -807,8 +815,9 @@
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
          * and globalFilters with the format described in the options documentation.
          */
-        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems) {
+        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions) {
             var _self = this;
+            var _options = $.extend({}, _self.options, (overrideOptions ? overrideOptions : {}));
 
             // Prevent this function from being called again. Future calls should all go to refreshData.
             _self.isLoaded = true;            
@@ -829,7 +838,7 @@
             /* Create the sort popup */
             var sorts = null;
             if (!sortFilterOptions) {
-                sorts = _self.options.sorts;
+                sorts = _options.sorts;
             } else {
                 sorts = _self._getSortsFromOptions(sortFilterOptions);
             }            
@@ -837,11 +846,11 @@
                 // If there is a default sort that is not returned in the list of sorts,
                 // add it. (EG. It can happen if the default sort uses a combination
                 // of fields).
-                if ((this.options.sortBy) && (sorts[this.options.sortBy] === undefined)) {
-                   sorts[this.options.sortBy] = {
+                if ((_options.sortBy) && (sorts[_options.sortBy] === undefined)) {
+                   sorts[_options.sortBy] = {
                         display : "Default",
-                        direction : this.options.sortOrder.toUpperCase(),
-                        usecase : this.options.sortCaseSensitive
+                        direction : _options.sortOrder.toUpperCase(),
+                        usecase : _options.sortCaseSensitive
                    };
                 }
                 
@@ -850,25 +859,25 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, this.options.sortBy, this.options.sortOrder, this.options.sortCaseSensitive);
+            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _options.sortBy, _options.sortOrder, _options.sortCaseSensitive);
             
             var thisFilters = null;
             if (!sortFilterOptions) {
-                thisFilters = _self.options.thisFilters;
+                thisFilters = _options.thisFilters;
             } else {
                 thisFilters = _self._getThisFiltersFromOptions(sortFilterOptions);
             }
-            if (thisFilters && _self.options.doThisFilter) {
+            if (thisFilters && _options.doThisFilter) {
                 _self._refreshFilterContainer(thisFilters);
             }
             
             var globalFilters = null;
             if (!sortFilterOptions) {
-                globalFilters = _self.options.globalFilters;
+                globalFilters = _options.globalFilters;
             } else {
                 globalFilters = _self._getGlobalFiltersFromOptions(sortFilterOptions);
             }
-            if (globalFilters && _self.options.doGlobalFilter) {
+            if (globalFilters && _options.doGlobalFilter) {
                 _self._refreshGlobalFilterContainer(globalFilters);
             }
             
@@ -893,7 +902,7 @@
                 /* It seems that attaching the scrolling classes after showing the list
                  * is required to make scrolling work properly on iOS.
                  */
-                if (_self.options.scroll) {
+                if (_options.scroll) {
                     _self.$listWrapper.removeClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-scroller-nozoom');
                     _self.$listWrapper.addClass('hx-full-height');
@@ -906,6 +915,7 @@
                         _self._fingerOn = false;
                     });
                     
+                    _self._inBounce = false;
                     _self.$listWrapper.scroll(function(ev) {
                         var scrollPos = _self.$listWrapper.scrollTop();
                         var lastScroll = _self._lastScrollPos;
@@ -923,6 +933,19 @@
                         }
                         _self._lastScrollPos = scrollPos;
                         
+                        if (scrollPos < 0 || scrollPos > listHeight) {
+                            if (_self._inBounce === true) {
+                                return;
+                            }
+                            _self._inBounce = true;
+                            //alert("BOUNCE: " + scrollPos + ", " + _self._renderWindowStart);
+                        } else {
+                            /*if (_self._inBounce) {
+                                alert("CLEAR " + listHeight);
+                            }*/
+                            _self._inBounce = false;
+                        }
+                        
                         // We display a scrolling window of items. We always pull in
                         // page size * 2 items. If we are in the bottom half of the list
                         // we prepend more to the bottom of the list and remove from the
@@ -939,6 +962,7 @@
                                 if (scrollPos < 0) {
                                     // Bounce.
                                     _self._rescrollInProgress = true;
+                                    //alert("BOUNCEUP");
                                     setTimeout($.proxy(_self._doScrollUp, _self), 200);
                                 } else if (_self._firstElemVisible()) {
                                     if (_self._fingerOn) {
@@ -958,6 +982,7 @@
                                 if (scrollPos > listHeight) {
                                     // Bounce
                                     _self._rescrollInProgress = true;
+                                    //alert("BOUNCEDOWN");
                                     setTimeout($.proxy(_self._doScrollDown, _self), 200);
                                 } else if (_self._lastElemVisible()) {
                                     if (_self._fingerOn) {
@@ -1014,6 +1039,11 @@
                 displayCollection = _self._resetGlobalFilters(list);
             }
             _self._refreshData(function() {
+                // Make sure the list selection matches the item that appears active.
+                _self.$listWrapper.find('li.ui-btn-active').each(function() {
+                    _self.setSelected(this);
+                });
+                
                 if (oncomplete) {
                     oncomplete(_self);
                     _self.isDirty = false;
@@ -1453,7 +1483,6 @@
             }
         
             _self.refreshInProgress = true;
-            _self.displayList = [];
             
             if (renderWindowStart !== undefined) {
                 _self.setRenderWindowStart(renderWindowStart);
@@ -1499,10 +1528,9 @@
                 $(_self.$wrapper).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
-                    var _args = _self._queuedRefreshes.pop();
-                    //alert("HELLO");
+                    var refreshArgs = _self._queuedRefreshes.pop();
                     setTimeout(function() {
-                        _self._refreshData(_args[0], _args[1], _args[2], _args[3], _args[4]);                    
+                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4]);                    
                     }, 0);
                 }
             }, this.options.emptyMessage, oncomplete, noPaginate, _self.extraItems);
@@ -1521,6 +1549,7 @@
                 displayCollection.call(this);
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
+                displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 this._refreshData(oncomplete, true, undefined, displayCollection, 0);
             }
         },
@@ -1590,11 +1619,15 @@
                 }
             };
             
-            var __processDone = function(count) {
+            var __processDone = function(count, startIdx) {
                 var _ridx;
                 if (!_self.options.grouped) {
                     /* We did not render any rows. Call completion. */
-                    var startIdx = nRendered;
+                    if (!startIdx) {
+                        startIdx = nRendered;
+                    } else {
+                        startIdx = startIdx + nRendered;
+                    }
                     for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
@@ -1609,14 +1642,27 @@
                 }
             };
             
-            if (_self._prefetchedItems && _self._prefetchedItems.length > 20 && (noPaginate !== true)) {
-                __processStart(_self._prefetchedItems.length);
+            if (_self._prefetchedItems && (noPaginate !== true)) {
+                // If the prefetched items list is too small, we won't be able to scroll up. Instead we just extend the list.
+                var ct = _self._prefetchedItems.length;
+                var startIdx = 0;
+                if (_self._prefetchedItems.length < 20) {
+                    _self._atDataTop = true;
+                    ct = ct + _self._itemsPerPage;
+                    rowIndex = _self._itemsPerPage;
+                    startIdx = _self._itemsPerPage;
+                } else {
+                    _self.displayList = [];
+                }
+                
+                __processStart(ct);
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
                 }
-                __processDone(_self._prefetchedItems.length);
+                __processDone(ct, startIdx);
                 _self._prefetchedItems = [];
             } else if ($.isArray(displayCollection)) {
+                _self.displayList = [];
                 __processStart(displayCollection.length);
                 if (extraItems && extraItems.pre) {
                     for (var i = 0; i < extraItems.pre.length; ++i) {
@@ -1632,6 +1678,7 @@
                 }
                 __processDone(displayCollection.length);
             } else {
+                _self.displayList = [];
                 /* Apply skip and limit. */
                 if (_self._renderWindowStart > 0) {
                     displayCollection = displayCollection.skip(_self._renderWindowStart);
@@ -1707,8 +1754,8 @@
 
                     var searchText = _self.__searchText.trim();
                     if (searchText) {
-                        _self.options.indexedSearch(searchText, function(displayCollection) {
-                            _self.indexedSearchDone(displayCollection);                                                            
+                        _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
+                            _self.indexedSearchDone(displayCollection, oncomplete);
                         }, _self.originalList);
                     }
                     _self.__searchReadyTimeout = null;
@@ -1993,8 +2040,10 @@
                             groupLIs[idx] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
                             idx++;
                         }
-                        $moreMarkup.on(_self.tapEvent, function() {
+                        $moreMarkup.on(_self.tapEvent, function(ev) {
+                            ev.stopImmediatePropagation();
                             _self.options.groupOverflowFn.call(_self, rowObject.group);
+                            return false;
                         });
                     }
                     oncomplete();
@@ -2160,7 +2209,8 @@
                         _self.setSelected(event.target);
                         _self.options.itemContextMenu.open({
                             positionTo: event.target,
-                            thisArg: _self
+                            thisArg: _self,
+                            extraArgs: _self.options.itemContextMenuArgs
                         });
                     });
                 } else if (!curRowFresh) {
@@ -2527,7 +2577,7 @@
                 this.options.selectAction(this.selected, this.selectedGroup, this.strings);
             }          
         },
-        selectNext: function() {
+        selectNext: function(noSelectAction) {
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
@@ -2537,7 +2587,7 @@
                 } while (nxt.is('li') && !nxt.is('li[data-index]'));
                 if (nxt.length) {
                     this.setSelected(nxt);
-                    this.selectItem();
+                    this.selectItem(noSelectAction);
                 }
             }
         },
@@ -2740,8 +2790,10 @@
                     _self._currentSort = newSort;
                     _self._currentSortOrder = newOrder;
                     _self._currentSortCase = newCase;
-                    _self.__refreshSortContainer();
-                    _self._updateSortButtons();
+                    if(_self.isLoaded) {
+                        _self.__refreshSortContainer();
+                        _self._updateSortButtons();
+                    }
                  };
                  
                  if (doRefresh === true) {

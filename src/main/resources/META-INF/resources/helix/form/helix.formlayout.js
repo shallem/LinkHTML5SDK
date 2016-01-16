@@ -638,8 +638,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
                                              .css('width', '90%')
-                                             .css('position', 'absolute')
-                                             .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                                             //.css('position', 'absolute')
+                                             .css('max-height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
                                              .css('overflow-y', 'scroll')
                                              .css('display', 'none')
                                              .css('background-color', '#f9f9f9')
@@ -664,7 +664,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             // not the value in the input text box.
                             formElem.__noblur = true;
                             autoCompleteList.empty();
-                            if (LIs && LIs.length && _self.is(':focus')) {
+                            if (LIs && LIs.length) {
                                 if (LIs.length === 1 && LIs[0] === _self.val()) {
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
@@ -699,23 +699,6 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
 
                                     autoCompleteList.show();
                                     autoCompleteList.listview("refresh");
-                                    // Scroll the page so that this element and at least some of the autocompletions do not
-                                    // appear underneath the keyboard. Otherwise the user might not see the dropdown autocomplete
-                                    // list.
-                                    var scroller = _self.closest('.hx-scroller-nozoom');
-                                    if (scroller.length) {
-                                        var curOffset = scroller.scrollTop();
-                                        var tgtOffset = 0;
-                                        var screenHgt = window.innerHeight;
-                                        if (screenHgt > 150) {
-                                            var screenPos = Helix.Utils.getPosition(_self[0]);
-                                            var actualPos = (screenPos.y > screenHgt ? screenHgt : screenPos.y);
-                                            if (Helix.Utils.isPhone() && screenHgt > 150 && actualPos > 150) {
-                                                tgtOffset = (actualPos - 150);
-                                                scroller.scrollTop(Math.max(curOffset + tgtOffset, 0));
-                                            }
-                                        }
-                                    }
                                 }
                             } else {
                                 formElem.__noblur = false;

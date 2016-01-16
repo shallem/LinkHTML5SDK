@@ -86,8 +86,12 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep) {
     /* Clear out the load options - this is meant as a per-load set of options. */
     Helix.Ajax.loadCt--;
     if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
-        $(page).find('[data-role="header"]').removeClass('hx-loading');
+        $('.hx-loading').removeClass('hx-loading');
     }
+});
+
+$(document).on('pause', function() {
+   $('.hx-loading').removeClass('hx-loading'); 
 });
 
 /**
@@ -496,11 +500,13 @@ Helix.Ajax = {
 			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
-                            loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params ? o.params : paramObject));
+                            if (loadCommandOptions.oncomplete) {
+                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject));
+                            }
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
-			}, { key: itemKey }, loadCommandOptions.syncOverrides), 0);
+			}, { key: itemKey, params: paramObject }, loadCommandOptions.syncOverrides), 0);
                     } else {
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {
@@ -752,7 +758,7 @@ Helix.Ajax = {
             if (params.disableOffline) {
                 Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
             } else if (!window.CordovaInstalled) {
-                Helix.Utils.statusMessage("Error", "This device is offline and the browser does not support JavaScript extensions. Please try save this contact when you are online.", 'fatal');
+                Helix.Utils.statusMessage("This device is offline and the browser does not support JavaScript extensions. Please try this operation again when you are online.");
             } else {
                 // Collect the data we will need to continue this offline draft. Not always used or applicable.
                 var refreshValues = null;

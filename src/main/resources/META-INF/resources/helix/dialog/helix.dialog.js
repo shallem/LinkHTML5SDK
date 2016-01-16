@@ -202,6 +202,18 @@
                 'id' : dialog.name + "-form"
             });
             $contentDiv.append(dialog.form);
+            $(dialog.form).on('submit', function(ev) {
+                ev.preventDefault();
+                var args = [];
+                args.push($(dialog.form).serialize());
+                if (_self._callbackArgs) {
+                    args = args.concat(_self._callbackArgs);
+                }
+                $(dialog.form).find('input').blur();
+                dialog.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: dialog, args);
+                $(dialog.$mainDiv).popup( "close" );
+                return false;
+            });
         }
         
         /* Cancel button. */
@@ -240,6 +252,7 @@
                 var args = [];
                 if (dialog.options.hasForm && dialog.form) {
                     args.push($(dialog.form).serialize());
+                    $(dialog.form).find('input').blur();
                 } else {
                     args.push(dialog);
                 }

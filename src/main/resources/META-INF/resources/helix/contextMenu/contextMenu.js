@@ -243,10 +243,12 @@
             var item = this.options.items[cbIndex];
             if (item.action) {
                 var __runAction = function () {
+                    var args = [ cbData, evt ];
+                    args.push.apply(args, _self._extraArgs);
                     if (_self._thisArg) {
-                        item.action.call(_self._thisArg, cbData, evt);
+                        item.action.apply(_self._thisArg, args);
                     } else {
-                        item.action.call(_self, cbData, evt);
+                        item.action.apply(_self, args);
                     }
                     // Do this asynchronously so that the screen overlay is still there until
                     // after touch end has completely made its way through the DOM.
@@ -281,11 +283,14 @@
         },
         open: function (obj) {            
             this._thisArg = (obj ? obj.thisArg : null);
+            this._extraArgs = ((obj && obj.extraArgs) ? obj.extraArgs : []);
             this.active = true;
 
             if (this.options.beforeopen) {
                 if (this._thisArg) {
-                    this.options.beforeopen.call(this._thisArg);
+                    var args = [ this ];
+                    args.push.apply(args, this._extraArgs);
+                    this.options.beforeopen.apply(this._thisArg, args);
                 } else {
                     this.options.beforeopen.call(this);
                 }

@@ -31,6 +31,8 @@ function initHelixDB() {
         
         indexFull: false,
         
+        noAutoIndexing: false,
+        
         reservedFields : {
             "__hx_sorts" : true,
             "__hx_key" : true,
@@ -398,6 +400,7 @@ function initHelixDB() {
                 newSchema.filterFields = JSON.stringify(schema.filterFields);
                 newSchema.globalFilterFields = JSON.stringify(schema.globalFilterFields);
                 newSchema.textIndexFields = JSON.stringify(schema.textIndexFields);
+                newSchema.masterDBVer = Helix.DB.__masterDBVer;
 
                 // Convert relationships to JSON.
                 newSchema.tableOneToMany = Helix.DB.convertRelationshipToString(schema.schema.meta.hasMany);
@@ -893,7 +896,7 @@ function initHelixDB() {
          * Data synchronization routines.
          */
     
-        cascadingRemoveQueryCollection: function(queryCollection, oncomplete, overrides) {
+        cascadingRemoveQueryCollection: function(elemSchema, queryCollection, oncomplete, overrides) {
             var toDelete = [];
             var cascade = function() {
                 if (toDelete.length === 0) {
@@ -902,7 +905,7 @@ function initHelixDB() {
                 }
                 
                 var elem = toDelete.pop();
-                Helix.DB.cascadingRemove(elem, function() {
+                Helix.DB.cascadingRemove(elemSchema, elem, function() {
                     queryCollection.remove(elem);
                     persistence.remove(elem);
                     if (overrides && overrides.deleteHook) {
@@ -923,58 +926,57 @@ function initHelixDB() {
             });
         },
     
-        cascadingRemove: function(persistentObj, oncomplete, overrides) {
-            var toCascade = [];
-            var recurseDown = function() {
+        cascadingRemove: function(elemSchema, persistentObj, oncomplete, overrides) {
+            var recurseDown = function(toCascade) {
                 if (toCascade.length === 0) {
-                    //persistence.remove(persistentObj);
                     oncomplete(persistentObj, "remove");
                     return;
                 }
                 
                 var nxt = toCascade.pop();
-                if (nxt.forEach) {
+                var nxtSchema = elemSchema.__pm_subSchemas[nxt.fld];
+                if (nxt.obj.forEach) {
                     // Query collection.
-                    Helix.DB.cascadingRemoveQueryCollection(nxt, recurseDown, overrides);
+                    Helix.DB.cascadingRemoveQueryCollection(nxtSchema, nxt.obj, function() {
+                        recurseDown(toCascade);
+                    }, overrides);
                 } else {
-                    Helix.DB.cascadingRemove(nxt, recurseDown, overrides);
+                    Helix.DB.cascadingRemove(nxtSchema, nxt.obj, function(_pobj, op) { 
+                        if (op === 'remove') {
+                            persistence.remove(_pobj);
+                        }
+                        recurseDown(toCascade);
+                    }, overrides);
                 }
             };
             
             // First, save off the objects we need to delete recursively. When we are done, we call
             // recurseDown above.
-            var fields = Object.keys(persistentObj._data).slice(0);
-            var collect = function() {
-                if (fields.length === 0) {
-                    recurseDown();
-                    return;
+            var _toCascade = [];
+            for (var key in persistentObj) {
+                if (elemSchema && key in elemSchema.__pm_subSchemas) {
+                    // Make sure we only go down. We don't want to delete a parent object.
+                } else {
+                    continue;
                 }
-                
-                var fld = fields.pop();
-                if (!persistentObj.hasOwnProperty(fld)) {
-                    collect();
-                    return;
-                }
-                
                 try {
-                    var getter = Object.getOwnPropertyDescriptor(persistentObj, fld).get;
-                    var subObj = getter.call(persistentObj);
-                    if (subObj && subObj.forEach) {
-                        toCascade.push(subObj);
+                    var getter = Object.getOwnPropertyDescriptor(persistentObj, key).get;
+                    if (getter) {
+                        var subObj = getter.call(persistentObj);
+                        if (subObj && subObj.forEach) {
+                            _toCascade.push({ obj: subObj, fld: key });
+                        }
                     }
-                    collect();
                 } catch(err) {
-                    persistentObj.fetch(fld, function(obj) {
+                    persistentObj.fetch(key, function(obj) {
                         // This is a one-to-one relationship with an object.
                         if (obj) {
-                            toCascade.push(obj);
+                            _toCascade.push({ obj: obj, fld: key });
                         }
-                        collect();
                     });
                 }
-            };
-            // Start the recursion.
-            collect();
+            }
+            recurseDown(_toCascade);
         },
     
         addObjectToQueryCollection: function(allSchemas,
@@ -1055,7 +1057,7 @@ function initHelixDB() {
 
                         if (deleteObjs.length > 0) {
                             var toDelete = deleteObjs.pop();
-                            Helix.DB.cascadingRemove(toDelete,removeFn,overrides);
+                            Helix.DB.cascadingRemove(elemSchema,toDelete,removeFn,overrides);
                         } else {
                             /* Nothing more to remove. Add in any new objects. */
                             doAdds();
@@ -1173,10 +1175,14 @@ function initHelixDB() {
                     var updatedObj = deltaObj.updates.pop();
                     var toUpdateKey = updatedObj[keyField];
                     var objId = uidToEID[toUpdateKey];
-                    Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
-                        syncFn(uidToEID);
-                        //syncFn(pObj);
-                    },overrides);                    
+                    if (objId) {
+                        Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                            syncFn(uidToEID);
+                            //syncFn(pObj);
+                        },overrides);
+                    } else {
+                        Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,uidToEID);
+                    }
                 } else {
                     /* Nothing more to sync. Done. */
                     oncomplete(field, allAdds);
@@ -1244,7 +1250,7 @@ function initHelixDB() {
                     parentCollection.filter(keyField, "=", toDeleteKey).newEach({
                         eachFn: function(elem) { 
                             if (elem) {
-                                Helix.DB.cascadingRemove(elem,removeFn,overrides);
+                                Helix.DB.cascadingRemove(elemSchema,elem,removeFn,overrides);
                             }
                         },
                         startFn: function(ct) {
@@ -1322,7 +1328,7 @@ function initHelixDB() {
             
             if (!persistentObj) {
                 persistentObj = new objSchema();
-                persistence.add(persistentObj);        
+                persistence.add(persistentObj);
             }
             persistentObj.__hx_schema = objSchema;
             persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
@@ -1358,7 +1364,7 @@ function initHelixDB() {
              */
             var handleAsyncFields = function() {
                 /* See if we are done. */
-                if (asyncFields.length == 0) {
+                if (asyncFields.length === 0) {
                     syncDone();
                     return;
                 }
@@ -1370,7 +1376,17 @@ function initHelixDB() {
                     /* Synchronize the array field - since this is not a delta object, we assume the returned
                      * object has all fields that should be in this data table.
                      */
-                    Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);
+                    if (!Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides)) {
+                        var nDone = 0;
+                        for (var _q = 0; _q < fieldVal.length; ++_q) {
+                            Helix.DB.synchronizeObject(fieldVal[_q], fieldSchema, function() {
+                                ++nDone;
+                                if (nDone === fieldVal.length) {
+                                    handleAsyncFields();
+                                }
+                            }, null, overrides);
+                        }
+                    }
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type === 1001) {
                         Helix.DB.synchronizeDeltaField(allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides);                 
@@ -1389,6 +1405,16 @@ function initHelixDB() {
             return Helix.DB.synchronizeArrayField(allSchemas, obj, null, persistentObj, objSchema, null, function() {
                 callback(persistentObj);
             }, overrides);            
+        },
+
+
+        launchIndexing: function() {
+            if (!Helix.DB.noAutoIndexing) {
+                for (var schemaName in window.__pmAllSchemas) { 
+                    var indexSchema = window.__pmAllSchemas[schemaName];
+                    indexSchema.indexAsync(0, Helix.DB.indexFull);
+                }
+            }
         },
 
         /**
@@ -1411,10 +1437,7 @@ function initHelixDB() {
                      */
                     // Launch async indexing ... these calls do nothing if there are
                     // no fields to index or if async indexing is not enabled.
-                    for (var schemaName in allSchemas) { 
-                        var indexSchema = allSchemas[schemaName];
-                        indexSchema.indexAsync(0, Helix.DB.indexFull);
-                    }
+                    Helix.DB.launchIndexing();
                 });
             };
         
@@ -1437,7 +1460,11 @@ function initHelixDB() {
                 },opaque,overrides);
                 if (!isHandled) {
                     for (var i = 0; i < obj.length; ++i) {
-                        Helix.DB.synchronizeObject(obj[i], objSchema, callback, opaque, overrides);
+                        var nxtOpaque = opaque;
+                        if (opaque && opaque.params && $.isArray(opaque.params)) {
+                            nxtOpaque = $.extend({}, opaque, { params: opaque.params[i] });
+                        }    
+                        Helix.DB.synchronizeObject(obj[i], objSchema, callback, nxtOpaque, overrides);
                     }
                 }
             } else if (obj.__hx_type === 1001) {
@@ -1576,7 +1603,7 @@ function initHelixDB() {
                     }, 
                     doneFn: function(ct) {
                         if (masterDBVer === 0 && ct > 0) {
-                            persistence.schemaSyncHooks.push(function() {
+                            persistence.nextSchemaSyncHooks.push(function() {
                                 var queries = [];
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN masterDBVer TEXT" , null]);
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN textIndexFields TEXT" , null]);
