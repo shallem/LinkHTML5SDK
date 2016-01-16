@@ -47,9 +47,11 @@ Helix.Utils =  {
             life : lifetime,
             escape: (doEscape ? true : false)
         }).data('helix-helixGrowl');
-        $(growlContainer).on('tap swipe', function() {
+        $(growlContainer).on('tap swipe', function(ev) {
+            ev.stopImmediatePropagation();
             $(growlContainer).off('tap swipe');
             growl.removeAll(); 
+            return false;
         });
         return growl;
     },
