@@ -39,7 +39,8 @@ public class LoadCommandAction {
     private final Method getter;
     private Method errorGetter;
     private Method facadeGetter;
-    private Method postConstruct;
+    private Method preLoad;
+    private Method postLoad;
     private final String beanName;
     private final String key;
     private final Class beanClass;
@@ -58,12 +59,33 @@ public class LoadCommandAction {
         this.beanClass = c;
         
         for (Method m : c.getMethods()) {
-            if (m.getAnnotation(javax.annotation.PostConstruct.class) != null) {
-                this.postConstruct = m;
+            if (m.getAnnotation(org.helix.mobile.filters.PreLoad.class) != null) {
+                this.preLoad = m;
+            } else if (m.getAnnotation(org.helix.mobile.filters.PostLoad.class) != null) {
+                this.postLoad = m;
             } else if (m.getName().equals("getLastError")) {
                 this.errorGetter = m;
             } else if (m.getName().equals("getFacade")) {
                 this.facadeGetter = m;
+            }
+        }
+    }
+    
+    public void preLoad(Object thisObject, HttpServletRequest req) throws FacesException {
+        if (preLoad != null) {
+            try {
+                preLoad.invoke(thisObject, new Object[] { req, loader.getName() });
+            } catch (IllegalAccessException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke preLoad: " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke preLoad: " + ex.getMessage());
+            } catch (InvocationTargetException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex.getTargetException());
+
+                throw new FacesException("Failed to invoke preLoad: " + ex.getTargetException().getLocalizedMessage());
             }
         }
     }
@@ -163,6 +185,25 @@ public class LoadCommandAction {
         }
     }
 
+    public void postLoad(Object thisObject, HttpServletRequest req) throws FacesException {
+        if (postLoad != null) {
+            try {
+                postLoad.invoke(thisObject, new Object[] { req, loader.getName() });
+            } catch (IllegalAccessException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke postLoad: " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke postLoad: " + ex.getMessage());
+            } catch (InvocationTargetException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex.getTargetException());
+
+                throw new FacesException("Failed to invoke postLoad: " + ex.getTargetException().getLocalizedMessage());
+            }
+        }
+    }
+    
     public String getBeanName() {
         return beanName;
     }
