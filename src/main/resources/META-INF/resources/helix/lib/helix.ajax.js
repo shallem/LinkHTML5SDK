@@ -229,6 +229,11 @@ Helix.Ajax = {
         if (loadingOptions.pin) {
             Helix.Ajax.loadOptions.pin = true;
         }
+        if (loadingOptions.silent) {
+            Helix.Ajax.loadOptions.silent = true;
+        } else {
+            Helix.Ajax.loadOptions.silent = false;
+        }
     },
 
     defaultOnError: function(errorObj) {
