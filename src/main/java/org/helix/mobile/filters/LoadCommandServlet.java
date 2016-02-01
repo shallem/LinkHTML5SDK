@@ -57,14 +57,19 @@ public class LoadCommandServlet extends HttpServlet {
                 Object thisObj = lca.getCTOR().newInstance(req);
                 Object facade = lca.getFacade(thisObj);
                 String jsonToReturn;
-                if (facade != null) {
-                    synchronized(facade) {
+                try {
+                    lca.preLoad(thisObj, req);
+                    if (facade != null) {
+                        synchronized(facade) {
+                            lca.doLoad(thisObj, req);
+                            jsonToReturn = lca.getAndSerialize(thisObj);
+                        }
+                    } else {
                         lca.doLoad(thisObj, req);
                         jsonToReturn = lca.getAndSerialize(thisObj);
                     }
-                } else {
-                    lca.doLoad(thisObj, req);
-                    jsonToReturn = lca.getAndSerialize(thisObj);
+                } finally {
+                    lca.postLoad(thisObj, req);
                 }
                 LOG.log(Level.FINEST, "JSON to serialize for command {0}: {1}", new Object[] {
                     lca.getBeanName(),
