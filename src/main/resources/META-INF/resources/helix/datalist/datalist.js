@@ -2564,6 +2564,7 @@
                     }));
                 }
             }*/
+            return mainLink;
         },
         selectItem: function(noSelectAction) {
             if (!this.selected) {
