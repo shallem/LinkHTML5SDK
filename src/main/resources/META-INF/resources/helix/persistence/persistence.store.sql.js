@@ -582,10 +582,10 @@ function config(persistence, dialect) {
                 persistence.errorHandler(err.message, err.code, badSQL, badArgs);
                 if(delay) {
                     setTimeout(function() {
-                        callback(_, msg);
+                        callback(_, err.message);
                     }, delay);
                 } else {
-                    callback(_, msg);
+                    callback(_, err.message);
                 }
             });
         }, function(result, err) {
