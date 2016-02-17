@@ -2827,6 +2827,13 @@
          */
         getItemList: function() {
             return this.itemList;
+        },
+        
+        /**
+         * Return the width of the list.
+         */
+        getListWidth: function() {
+            return this.$listWrapper.width();
         }
     });
 })(jQuery);

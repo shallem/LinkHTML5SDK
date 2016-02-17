@@ -216,7 +216,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         })
         .append($('<label />').attr({
             'for' : formElem.name,
-            'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '') + (useMiniLayout ? ' hx-full-width' : '')
+            'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
             })
             .append(formElem.fieldTitle)
         );
@@ -233,7 +233,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             inputType = 'time';
         }
         valueString = new Date(defaultValue).toISOString();
-        var inputWrapper = dateDiv;
+        var inputWrapper = $('<div/>').addClass('ui-input-text').addClass('hx-input-date').appendTo(dateDiv);
         var inputID = Helix.Utils.getUniqueID();
         var dateInput = $('<input />').attr({
             'name': formElem.name,
@@ -343,11 +343,11 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         var dateDiv = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'class' : 'hx-tz-selector ' + (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
-            'style' : 'padding-top: 0.5em;' + labelWidthOverride,
+            'style' : labelWidthOverride,
             'class' : 'ui-input-text ' + formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
@@ -364,7 +364,8 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
         tzSelect.selectmenu({
-            corners: false
+            corners: false,
+            mini: useMiniLayout
         });
         dateDiv.fieldcontain();
         if (formElem.computedStyle || formElem.computedStyleClass) {
@@ -453,7 +454,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
 }
 
-function __refreshSelectMenu(formElem) {
+function __refreshSelectMenu(formElem, useMiniLayout) {
     var $fieldContainer = formElem.DOM;
     if ($fieldContainer) {
         $fieldContainer.empty();
@@ -498,7 +499,8 @@ function __refreshSelectMenu(formElem) {
     $fieldContainer.append(selectContainer);
     selectContainer.fieldcontain();
     $(inputMarkup).selectmenu({
-        corners: false
+        corners: false,
+        mini: useMiniLayout
     });
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
@@ -521,7 +523,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
         
         formElem.tabIndex = formLayout.__tabIndex++;
             
-        __refreshSelectMenu(formElem, $fieldContainer);
+        __refreshSelectMenu(formElem, $fieldContainer, useMiniLayout);
     } else {
         __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
@@ -845,17 +847,8 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         $(fieldMarkup).addClass('hx-mini-fieldcontain');
     }
 
-    var formMarkup = $("<form />").appendTo(fieldMarkup);
+    var formMarkup = $("<form />").addClass('hx-full-width').appendTo(fieldMarkup);
     var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
-    /*
-     *.attr({
-        'data-role' : 'fieldcontain'
-    })
-     *.attr({
-        'data-role' : 'controlgroup',
-        'data-type' : 'horizontal',
-        'data-mini' : (useMiniLayout ? 'true' : 'false')
-    })*/
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
