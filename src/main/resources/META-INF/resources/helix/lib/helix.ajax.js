@@ -778,6 +778,7 @@ Helix.Ajax = {
                     'application/x-www-form-urlencoded',
                     params.body,
                     refreshValues ? JSON.stringify(refreshValues) : '',
+                    params.id ? params.id : 0,
                     function() {
                         if (!params.silentMode) {
                             if (params.offlineSuccess) {

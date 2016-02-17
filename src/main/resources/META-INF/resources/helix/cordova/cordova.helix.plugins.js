@@ -28,8 +28,8 @@
     };
     
     window.OfflinePost = {
-        savePost: function ( url, contentType, postBody, jsonObj, success, fail) {
-            return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj]);
+        savePost: function ( url, contentType, postBody, jsonObj, offlineID, success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj, offlineID]);
         }
     };
     
