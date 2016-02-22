@@ -251,54 +251,6 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         }
         $fieldContainer.append(dateDiv);
         dateDiv.fieldcontain();
-
-
-        /*var inputWrapper = $('<div />').attr({ 
-            'style' : formElem.computedStyle,
-            'class' : formElem.computedStyleClass
-        }).appendTo(dateDiv);*/
-        /*var inputWrapper = dateDiv;
-        var inputID = Helix.Utils.getUniqueID();
-        var dateInput = $('<input />').attr({
-            'name': formElem.name,
-            'id': inputID,
-            'data-role' : 'none',
-            'style' : 'font-size: 16px'
-        }).appendTo(inputWrapper);
-        var timeInput = null;
-        if (formElem.type === 'datetime') {
-            timeInput = $('<input />').attr({
-                'name': formElem.name + "_time",
-                'id': inputID + "_time",
-                'data-role' : 'none',
-                'style' : 'font-size: 16px'
-            }).appendTo(inputWrapper);
-        }
-        
-        // 'value' : defaultValueText,
-        $fieldContainer.append(dateDiv);
-        dateDiv.fieldcontain();
-        dateInput.datebox({"mode" : "flipbox", 
-            "useNewStyle":false, 
-            "defaultValue": defaultValue, 
-            "openCallback" : (formElem.onfocus ? formElem.onfocus : false),
-            "closeCallback" : (formElem.onchange ? formElem.onchange : false),
-            "displayInline" : (timeInput ? true : false)
-        });
-        if (timeInput) {
-            var minuteStep = 1;
-            if (formElem.options && formElem.options.minuteStep) {
-                minuteStep = formElem.options.minuteStep;
-            }
-            timeInput.datebox({"mode" : "timeflipbox", 
-                "overrideTimeFormat" : 12, 
-                "defaultValue": defaultValue,
-                "openCallback" : (formElem.onfocus ? formElem.onfocus : false),
-                "closeCallback" : (formElem.onchange ? formElem.onchange : false),
-                "displayInline" : (timeInput ? true : false),
-                "minuteStep" : minuteStep
-            });
-        }*/
     } else {
         __refreshDate(mode, formElem);
     }
@@ -895,6 +847,55 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         type: (formElem.direction ? formElem.direction : "horizontal")
     });
     $(fieldMarkup).fieldcontain();
+}
+
+function __refreshOnOffSlider(formElem) {
+    $(formElem.DOM).find('input').removeAttr('checked').prop('checked', formElem.value);
+}
+
+// Borrowed from: https://proto.io/freebies/onoff/
+function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    if (!formElem.name) {
+        console.log("Skipping on/off slider because it has no name.");
+        return;
+    }
+    
+    var fieldMarkup = $('<div />').appendTo($fieldContainer);
+    if (useMiniLayout) {
+        $(fieldMarkup).addClass('hx-mini-fieldcontain');
+    }
+
+    if (formElem.fieldTitle) {
+        fieldMarkup.addClass('ui-field-contain');
+        fieldMarkup.append($('<label/>').append(formElem.fieldTitle));
+    }
+
+    if (mode) {        
+        var switchContainer = $('<div/>').addClass('hxonoff').appendTo(fieldMarkup);
+        var switchInput = $('<input/>').attr({
+            'name' : formElem.name,
+            'type' : 'checkbox',
+            'class' : 'hxonoff-checkbox',
+            'id' : formElem.name
+        }).appendTo(switchContainer);
+        if (formElem.onchange) {
+            switchInput.change(function() {
+                formElem.onchange.call(this, formElem);
+            });
+        }
+        if (formElem.value === true) {
+            switchInput.prop('checked', true);
+        }
+        
+        switchContainer.append($('<label/>').attr({
+            'class': 'hxonoff-label',
+            'for' : formElem.name
+        }).append($('<span/>').addClass('hxonoff-inner'))
+                .append($('<span/>').addClass('hxonoff-switch'))
+        );
+    } else {
+        fieldMarkup.append($('<div/>').append(formElem.value ? 'on' : 'off'));
+    }
 }
 
 function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
@@ -1572,6 +1573,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         renderFn = __appendControlSet;
     } else if (formElem.type === 'radio') {
         renderFn = __appendRadioButtons;
+    } else if (formElem.type === 'onoff') {
+        renderFn = __appendOnOffSlider;
     } else if (formElem.type === 'htmlarea') {
         renderFn = __appendHTMLArea;
     } else if (formElem.type === 'htmlframe') {

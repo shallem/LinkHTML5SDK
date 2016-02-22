@@ -497,6 +497,8 @@
                     __refreshControl(item, false, mode);
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
+                } else if (fldType === 'onoff') {
+                    __refreshOnOffSlider(item);
                 } else if (fldType === 'htmlframe') {
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
