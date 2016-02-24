@@ -20,6 +20,13 @@
  * @author Seth Hallem
  */
 
+$(document).on('resumeActive', function() {
+    // This is called when we open a window by switching windows. At this point, a header bar has
+    // been added to the app screen, which decreases the size of the webview enclosing our app. We 
+    // need to resize our app appropriately.
+    Helix.Layout.layoutPage();
+});
+
 Helix.Layout = {
     /**
      * Selectors used to identify scrollers.
