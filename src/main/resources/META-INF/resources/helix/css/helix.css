@@ -522,6 +522,11 @@ li {
     display: none;
 }
 
+/* Add an override that says that if we are in mini mode and we add the class hx-show-footer then we re-enable the footer. */
+.hx-mini-mode.hx-show-footer .ui-footer .hx-full-mode-only {
+    display: block;
+}
+
 .ui-page.hx-no-footer {
     padding-bottom: 0px !important;
 }

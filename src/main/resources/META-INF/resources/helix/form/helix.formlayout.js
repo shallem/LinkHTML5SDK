@@ -867,7 +867,7 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
 
     if (formElem.fieldTitle) {
         fieldMarkup.addClass('ui-field-contain');
-        fieldMarkup.append($('<label/>').append(formElem.fieldTitle));
+        fieldMarkup.append($('<label/>').addClass('ui-input-text').append(formElem.fieldTitle));
     }
 
     if (mode) {        

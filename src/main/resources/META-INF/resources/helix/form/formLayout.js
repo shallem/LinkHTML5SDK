@@ -301,7 +301,8 @@
                         name: strippedFieldID,
                         value: $(this).editor('getHTML')
                     });
-                } else if (fieldType === "checkbox") {
+                } else if (fieldType === "checkbox" ||
+                           fieldType === 'onoff') {
                     if ($(this).is(":checked")) {
                         toSerialize.push({
                             name : strippedFieldID,
@@ -495,6 +496,8 @@
                     }
                 } else if (fldType === 'checkbox') {
                     __refreshControl(item, false, mode);
+                } else if (fldType === 'onoff') {
+                    __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
                 } else if (fldType === 'onoff') {
@@ -526,12 +529,6 @@
                     // Controlset
                     for (idx = 0; idx < item.controls.length; ++idx) {
                         var controlItem = item.controls[idx];
-                        /*if (!controlItem.hidden) {
-                            $(controlItem.DOM).closest('div.ui-checkbox').show();
-                        } else {
-                            $(controlItem.DOM).closest('div.ui-checkbox').hide();
-                        }*/
-                        
                         this.__refreshOneValue(mode, controlItem, valuesMap);
                     }
                 } else if (fldType === 'htmlarea') {
@@ -700,7 +697,8 @@
             var fldType = this._typeMap[name];
             
             // Checkboxes and radios are handled the same regardless of mode.
-            if (fldType === 'checkbox') {
+            if (fldType === 'checkbox' ||
+                fldType === 'onoff') {
                 if ($(thisField).is(":checked")) {
                     return true;
                 }

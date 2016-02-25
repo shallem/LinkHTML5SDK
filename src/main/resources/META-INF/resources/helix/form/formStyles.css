@@ -1,5 +1,7 @@
 .hxonoff {
-    position: relative; width: 90px;
+    position: relative; 
+    width: 80px;
+    padding-left: 1em;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
 }
 
@@ -26,10 +28,10 @@
     display: block; 
     float: left; 
     width: 50%; 
-    height: 30px; 
+    height: 25px; 
     padding: 0; 
-    line-height: 30px;
-    font-size: 14px; 
+    line-height: 25px;
+    font-size: 13px; 
     color: white; 
     font-family: Trebuchet, Arial, sans-serif; 
     font-weight: bold;
@@ -58,7 +60,7 @@
     position: absolute; 
     top: 0; 
     bottom: 0;
-    right: 56px;
+    right: 45px;
     border: 2px solid #999999; 
     border-radius: 20px;
     transition: all 0.3s ease-in 0s; 
