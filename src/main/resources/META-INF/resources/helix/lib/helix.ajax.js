@@ -29,10 +29,12 @@ $(document).on('active', function() {
     ignoreErrors = false;
 });
 
-$(document).on('pause', function() {
-    // The native app will kill all in progress network requests when it receives the pause event.
-    Helix.Ajax.loadCt = 0;
-    $('.hx-loading').removeClass('hx-loading'); 
+$(document).on('cordovaReady', function() {
+    document.addEventListener('pause', function() {
+        // The native app will kill all in progress network requests when it receives the pause event.
+        Helix.Ajax.loadCt = 0;
+        $('.hx-loading').removeClass('hx-loading'); 
+    }, false);    
 });
 
 /**
