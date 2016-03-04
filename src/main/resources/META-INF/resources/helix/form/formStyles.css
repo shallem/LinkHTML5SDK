@@ -73,3 +73,134 @@
 .hxonoff-checkbox:checked + .hxonoff-label .hxonoff-switch {
     right: 0px; 
 }
+
+/* Form restyling. */
+.hx-mini-fieldcontain {
+    max-width: 100% !important;
+}
+
+.hx-form-container .ui-field-contain {
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: row;
+    overflow: hidden;
+    border: none;
+}
+
+.hx-form-container .ui-field-contain label.ui-input-text {
+    text-align: right;
+    border: none;
+    font-size: 12.5px;
+    padding-top: 0.2em;
+    padding-right: 0.2em;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
+.hx-form-container .ui-field-contain label.ui-input-text .ui-btn {
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    color: darkblue;
+}
+
+.hx-form-container .ui-field-contain label.ui-input-text .ui-btn .ui-btn-inner {
+    padding: 0;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text {
+    box-shadow: none;
+    flex: 2; /* Fill the remainder of the flex box. */
+    -webkit-flex: 2;
+    border: none;
+    background-color: transparent;
+    border-bottom: darkgrey;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text.hx-input-date {
+    margin-bottom: 0.15em;
+    margin-top: 0.15em;
+    border: none;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text.hx-input-date input {
+    border: none;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text .ui-btn .ui-btn-inner {
+    padding-top: .35em;
+    padding-bottom: 0.25em;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text input {
+    display: inline-block;
+}
+
+.hx-form-container div.ui-input-text input {
+    width: 100%;
+}
+
+.hx-form-container .ui-field-contain div.ui-input-text.hx-button-container input {
+    width: auto;
+}
+
+.hx-form-container .hx-mini-fieldcontain label.ui-input-text {
+    display: inline-block;
+}
+
+.hx-form-container .hx-mini-fieldcontain div.ui-input-text {
+    display: inline-block;
+}
+
+.hx-form-container .hx-mini-fieldcontain {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    margin: 0;
+}
+
+.hx-form,.hx-form-mini .ui-collapsible-inset > .ui-btn-inner {
+    font-size: 14px;
+}
+
+.hx-form,.hx-form-mini .ui-collapsible-inset .ui-collapsible-content {
+    padding-left: 0.5em;
+    padding-right: 0;
+    padding-top: 0.4em;
+    padding-bottom: 0;
+}
+
+.hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-label {
+    margin: 0 .3em .3em 0;
+    font-size: 12.5px;
+    display: inline-block;
+}
+
+.hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls label {
+    color: darkblue;
+}
+
+.hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls .ui-radio label {
+    color: black;
+}
+
+.hx-form-container .ui-field-contain .ui-controlgroup.ui-controlgroup-horizontal .ui-controlgroup-controls .ui-radio label {
+    color: darkblue;
+}
+
+.hx-form-container .ui-field-contain fieldset.ui-controlgroup {
+    margin-top: 0.15em;
+    margin-bottom: 0.15em;
+}
+
+@media all and (max-width: 500px) {
+    .hx-form-container .hx-tz-selector {
+        display: block;
+    }
+    
+    .hx-form-container .hx-tz-selector label.ui-input-text {
+        text-align: left;
+    }
+}

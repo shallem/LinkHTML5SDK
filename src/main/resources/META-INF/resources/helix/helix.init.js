@@ -54,6 +54,17 @@ Helix.postInit = function(fn, thisArg, args) {
     }
 };
 
+Helix.ignoreErrors = false;
+
+$(document).on('resign', function() {
+    Helix.ignoreErrors = true;
+});
+
+$(document).on('active', function() {
+    Helix.ignoreErrors = false;
+});
+
+
 Helix.ready = false;
 
 (function($) {

@@ -33,6 +33,16 @@
         }
     };
     
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 3) {
+        window.OfflinePost.clearPost = function(offlineID, success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "clearPost", [ offlineID ]);
+        };
+        window.OfflinePost.listPosts = function(success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "listPosts", []);
+        };
+    }
+    
     window.HelixPolicy = {
         getPolicy: function ( policy, success, fail ) {
             if (Object.prototype.toString.call(policy) === '[object Array]') {
