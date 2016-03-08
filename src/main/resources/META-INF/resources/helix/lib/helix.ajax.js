@@ -29,6 +29,14 @@ $(document).on('active', function() {
     ignoreErrors = false;
 });
 
+$(document).on('cordovaReady', function() {
+    document.addEventListener('pause', function() {
+        // The native app will kill all in progress network requests when it receives the pause event.
+        Helix.Ajax.loadCt = 0;
+        $('.hx-loading').removeClass('hx-loading'); 
+    }, false);    
+});
+
 /**
  * Show a loader pre-request.
  */
@@ -88,10 +96,6 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep) {
     if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
         $('.hx-loading').removeClass('hx-loading');
     }
-});
-
-$(document).on('pause', function() {
-   $('.hx-loading').removeClass('hx-loading'); 
 });
 
 /**
