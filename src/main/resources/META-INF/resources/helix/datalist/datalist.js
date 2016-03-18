@@ -409,6 +409,12 @@
              */
             multiSelect: false,
 
+            /**
+             * Callback to add buttons that will appear when one more item is selected. The 'this' is the datalist
+             * in the callback and the first parameter is the parent div.
+             */
+            selectionButtonsCallback: null,
+
             /*
              * Number of rows to display in a single view of the list. The list automatically
              * paginates as the user scrolls.
@@ -443,7 +449,7 @@
             
             this.$clearSelectionDiv = $('<div/>')
                 .appendTo(this.$headerSection)
-                .addClass('hx-full-width')
+                .addClass('hx-full-width hx-list-selection-buttons')
                 .attr('id', parentId + '_clear_sel')
                 .hide();
             
@@ -1524,7 +1530,7 @@
             this._sortAndRenderData(displayCollection, function(finalCompletion) {
                 finalCompletion();
                 _self.$listWrapper.show();
-                _self.$parent.listview( "refresh" );                
+                _self.$parent.listview( "refresh" );         
                 $(_self.$wrapper).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
@@ -1956,6 +1962,7 @@
             }
             var _self = this;
             _self.$clearSelectionDiv.empty();
+            
             _self.$clearSelectionDiv.append($('<a/>').append("Clear").buttonMarkup({
                 mini: true,
                 corners: false,
@@ -1967,6 +1974,15 @@
                 _self.clearAllMultiSelect();
                 return false;
             }));
+            
+            var $controlGroup = $('<div/>').appendTo(_self.$clearSelectionDiv);
+            if (this.options.selectionButtonsCallback) {
+                this.options.selectionButtonsCallback.call(_self, $controlGroup);
+            }
+            $controlGroup.controlgroup({ 
+                type: 'horizontal',
+                shadow: false
+            });
         },
         
         /* Apply the appropriate sort to the display collection. */
@@ -2248,10 +2264,12 @@
                         var selectedElems = _self.getAllMultiSelectElements();
                         if (selectedElems.length === 0) {
                             _self.$clearSelectionDiv.hide();
+                            _self.$searchSortDiv.show();
                             Helix.Layout.layoutPage();
                         } else {
                             if (!_self.$clearSelectionDiv.is(':visible')) {
                                 _self.$clearSelectionDiv.show();
+                                _self.$searchSortDiv.hide();
                                 Helix.Layout.layoutPage();
                             }                            
                         }
@@ -2404,6 +2422,7 @@
         clearAllMultiSelect: function() {
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
             this.$clearSelectionDiv.hide();
+            this.$searchSortDiv.show();
             Helix.Layout.layoutPage();
         },
         
@@ -2834,6 +2853,27 @@
          */
         getListWidth: function() {
             return this.$listWrapper.width();
+        },
+        
+        /**
+         * Refresh the listview component that is the rendering of the data list.
+         */
+        refreshListView: function() {
+            this.$parent.listview( "refresh" );         
+        },
+        
+        /**
+         * Re-render the list view if some attributes of the underlying data have changed (but not
+         * the data set itself).
+         */
+        renderListView: function(oncomplete) {
+            var _self = this;
+            this._sortAndRenderData(this.itemList, function(finalCompletion) {
+                if (finalCompletion) {
+                    finalCompletion();
+                }
+                _self.$parent.listview( "refresh" );         
+            }, this.options.emptyMessage, oncomplete, true, this.extraItems);
         }
     });
 })(jQuery);
