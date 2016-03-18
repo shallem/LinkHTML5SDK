@@ -252,7 +252,7 @@ Helix.Utils =  {
     escapeClientId : function(id) {
         return "#" + id.replace(/:/g,"\\:");
     },
-    
+
     isImageLoaded: function(img) {
         if ($.isArray(img)) {
             if (!img.length) {

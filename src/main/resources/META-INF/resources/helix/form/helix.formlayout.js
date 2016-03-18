@@ -588,6 +588,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             if (!formElem.autocompleteThreshold) {
                 formElem.autocompleteThreshold = 2;
             }
+            if (!formElem.autocompleteTimeout) {
+                formElem.autocompleteTimeout = 1.5;
+            }
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
@@ -665,7 +668,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                     // Wait 1 second for the user to pause typing before we do anything.
                     formElem.__autocompleteTimeout = setTimeout(function() {
                         __doAutocomplete();
-                    }, 1500);                    
+                    }, formElem.autocompleteTimeout * 1000);                    
                 }
             });
         }

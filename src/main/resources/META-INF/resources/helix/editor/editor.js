@@ -481,7 +481,7 @@
                         this._toggleStyle(actionName);
                         break;
                     case 'firstcap':
-                        if (txtToSurround !== undefined) {
+                        if (txtToSurround) {
                             var capitalized = this._capitalizeFirstLetter(txtToSurround.wholeText);
                             txtToSurround.nodeValue = capitalized;
                             this._setCaretAtEndOfElement(txtToSurround, capitalized.length);
