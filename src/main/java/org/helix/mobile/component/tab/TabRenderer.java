@@ -35,6 +35,10 @@ public class TabRenderer extends CoreRenderer {
         } else {
             styleClass = "ui-icon-" + tab.getIcon();
         }
+        if (tab.getTheme() != null) {
+            String theme = tab.getTheme();
+            writer.writeAttribute("data-theme", theme, null);
+        }
         if (isActive) {
             writer.writeAttribute("class", styleClass + " ui-btn-active", null);
         } else {

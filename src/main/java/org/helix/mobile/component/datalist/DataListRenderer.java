@@ -304,6 +304,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",externalButtonsCallback:  function(list, div, useControlGroup) { return "+ dlist.getExternalButtonsCallback() +"}");
         }
         
+        // Selection buttons.
+        if (dlist.getSelectionButtonsCallback() != null) {
+            writer.write(",selectionButtonsCallback:  " + dlist.getSelectionButtonsCallback());
+        }
+        
         writer.write("}).data('helix-helixDatalist');");
         
         writer.write("});");

@@ -117,6 +117,13 @@
         }
     };
     
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 3) {
+        window.HelixSystem.exitApp = function() {
+            return cordova.exec(null, null, "HelixSystem", "exitApp", []);
+        };
+    }
+    
     window.HelixLocalNotifications = {
         scheduleNotification: function(fireDate, uniqueID, description, minutesBefore, success, failure) {
             return cordova.exec(success, failure, "LocalNotificationScheduler", "scheduleNotification", 

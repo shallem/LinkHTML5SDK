@@ -278,6 +278,12 @@
             <description>Callback invoked during buttons layout to add external buttons.</description>
         </attribute>
         <attribute>
+            <name>selectionButtonsCallback</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback invoked during buttons layout to add buttons that appear when one ore more list items are selected.</description>
+        </attribute>
+        <attribute>
             <name>indexedSearchText</name>
             <required>false</required>
             <type>java.lang.String</type>
