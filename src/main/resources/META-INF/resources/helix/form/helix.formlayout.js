@@ -2074,4 +2074,4 @@ Helix.Layout.createConfirmDialog = function(options) {
         e.preventDefault();
         $(window).off('navigate.popup');
     });
-}
+};

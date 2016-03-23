@@ -184,11 +184,19 @@
             holdAction: null,
             
             /**
-             * Function that accepts a query collection, the contents of
-             * the search box, and the current query collection and returns 
-             * a filtered query collection. If null, no search box is shown.
+             * Function that accepts the contents of the search box and a continuation function and
+             * supplies a filtered query collection (based on the search box) to that continuation function. An
+             * optional 3rd argument is the results of a 'local' search, meant for cases where a 'quick-and-dirty'
+             * search can be performed on the client and those results might be merged with results returned by the
+             * server. If null, no search box is shown.
              */
             indexedSearch: null,
+            
+            /**
+             * Function that executes a fast, local search for content on the client side. Arguments are a search query
+             * string and a continuation function.
+             */
+            localIndexedSearch: null,
             
             /**
              * Text to display in the search box when it is first rendered. Useful
@@ -1743,6 +1751,23 @@
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
         
+        _doRemoteSearch: function(searchText, localResultsColl) {
+            var _self = this;
+            _self.__searchReadyTimeout = setTimeout(function() {
+                if (_self.__searchReadyTimeout) {
+                    clearTimeout(_self.__searchReadyTimeout);
+                }
+
+                if (searchText) {
+                    _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
+                        _self.indexedSearchDone(displayCollection, oncomplete);
+                    }, localResultsColl);
+                }
+                _self.__searchReadyTimeout = null;
+            }, 3000);
+
+        },
+        
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();            
@@ -1753,19 +1778,16 @@
                 // We do not do 1 letter searches ...
                 return;
             } else {
-                _self.__searchReadyTimeout = setTimeout(function() {
-                    if (_self.__searchReadyTimeout) {
-                        clearTimeout(_self.__searchReadyTimeout);
-                    }
-
-                    var searchText = _self.__searchText.trim();
-                    if (searchText) {
-                        _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
-                            _self.indexedSearchDone(displayCollection, oncomplete);
-                        }, _self.originalList);
-                    }
-                    _self.__searchReadyTimeout = null;
-                }, 3000);
+                var searchText = _self.__searchText.trim();
+                if (_self.options.localIndexedSearch) {
+                    _self.options.localIndexedSearch.call(_self, searchText, function(res) {
+                        _self.indexedSearchDone(res, function() {
+                            _self._doRemoteSearch(searchText, res);                        
+                        });
+                    });
+                } else {
+                    _self._doRemoteSearch(searchText, _self.originalList);
+                }                
             }
         },
         
@@ -1803,7 +1825,7 @@
                     useControlGroup = true;
                 }
                 
-                var $sortDiv = $('<div/>').attr({
+                _self.$sortDiv = $('<div/>').attr({
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
@@ -1825,7 +1847,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1842,7 +1864,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1850,10 +1872,6 @@
                         
                         _self.displaySortMenu(this);
                     });                    
-                    
-                    if (this.options.externalButtonsCallback) {
-                        this.options.externalButtonsCallback(_self, $sortDiv, useControlGroup);
-                   }
                 }
                 
                 if (_self.options.showFilterButton) {
@@ -1868,7 +1886,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1878,15 +1896,19 @@
                     });                    
                 }
                 
+                if (this.options.externalButtonsCallback) {
+                    this.options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
+                }
+                
                 if (useControlGroup) {
-                    $sortDiv.controlgroup();
+                    _self.$sortDiv.controlgroup();
                 } else {
-                    $sortDiv.controlgroup({ corners: false });
+                    _self.$sortDiv.controlgroup({ corners: false });
                 }
             };
             
             var _attachSearchBox = function() {
-                var $searchDiv = $('<div/>').addClass('hx-full-width').appendTo(_self.$searchSortDiv);
+                var $searchDiv = $('<div/>').addClass('hx-almost-full-width').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
                 if (this.options.indexedSearchType !== 'search') {
@@ -1919,6 +1941,9 @@
                         if (_self.__searchClear) {
                             _self.$searchBox.val('');
                         }
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.hide(100);
+                        }
                     });
                     this.$searchBox.on('blur', function() {
                         // If we had previously searched and we then blur the search box
@@ -1927,7 +1952,21 @@
                             _self.clearSearchText();
                             _self.resetListContents();
                         }
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.show();
+                        }
                         return false;
+                    });
+                } else {
+                    this.$searchBox.on('focus', function() {
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.hide(100);
+                        }
+                    });
+                    this.$searchBox.on('blur', function() {
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.show();
+                        }
                     });
                 }
                 
