@@ -346,13 +346,25 @@ function initPersistence(persistence) {
          * Marks the object to be removed (on next flush)
          * @param obj object to be removed
          */
-        persistence.remove = function(obj) {
-            if (!this.objectsToRemove[obj.id]) {
-                this.objectsToRemove[obj.id] = obj;
+        persistence.remove = function(obj, keyField, keyValue) {
+            if (!keyField) {
+                keyField = 'id';
+            }
+            if (!keyValue) {
+                keyValue = obj.id;
+            }
+            
+            var lookupKey = keyField + '=' + keyValue;
+            if (!this.objectsToRemove[lookupKey]) {
+                this.objectsToRemove[lookupKey] = obj;
             }
             // SAH - turn off event triggering.
             // this.objectRemoved(obj);
             return this;
+        };
+        
+        persistence.getRemoveKeyValuePair = function(removeID) {
+            return removeID.split('=');
         };
 
 

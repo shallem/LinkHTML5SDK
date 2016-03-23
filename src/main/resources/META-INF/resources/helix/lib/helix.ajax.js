@@ -144,11 +144,18 @@ $(document).on('helixready', function() {
                         body: elem.body
                     }, {
                         success: function() {
+                            if (Helix.Ajax.postedOfflineActionsCallback) {
+                                Helix.Ajax.postedOfflineActionsCallback(elem);
+                            }
                             persistence.remove(elem);
                         },
                         error: function(obj) {
                             elem.status = obj.code;
                             elem.error = obj.msg;
+                            if (obj.code === -3) {
+                                // this is a non-fatal error, so we still remove this action from the DB.
+                                persistence.remove(elem);
+                            }
                             Helix.Ajax.failedOfflineActions.push(elem);
                         },
                         fatal: function(textStatus, errorThrown, xhrStatus) {
@@ -167,6 +174,7 @@ $(document).on('helixready', function() {
                                     }
                                 }
                             }
+                            persistence.flush();
                         }
                     });              
                 }
@@ -176,13 +184,36 @@ $(document).on('helixready', function() {
                 window.OfflinePost.listPosts(function(postsListString) {
                     var postsList = $.parseJSON(postsListString);
                     for (var i = 0; i < postsList.length; ++i) {
-                        var nxt = postsList[i];
-                        Helix.Ajax.failedOfflineActions.push({
+                        var nxt = postsList[i];                        
+                        var statusObj = $.parseJSON(nxt.result);
+                        var elem = {
                             'json' : nxt.obj,
                             'id' : nxt.ROWID,
-                            'status': nxt.status,
-                            'error': nxt.error
-                        })
+                            'status': statusObj.code,
+                            'error': statusObj.error
+                        };
+                        
+                        switch(statusObj.code) {
+                            case -3:
+                                window.OfflinePost.clearPost(nxt.ROWID, function() {}, function() {});
+                                break;
+                            case 0:
+                                // Success;
+                                if (Helix.Ajax.postedOfflineActionsCallback) {
+                                   Helix.Ajax.postedOfflineActionsCallback(elem);
+                                }
+                                window.OfflinePost.clearPost(nxt.ROWID, function() {}, function() {});
+                                break;
+                            default:
+                                Helix.Ajax.failedOfflineActions.push(elem);
+                                break;
+                        }
+                    }
+                    if (Helix.Ajax.failedOfflineActions.length > 0) {
+                        Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
+                        if (Helix.Ajax.failedOfflineActionsCallback) {
+                            Helix.Ajax.failedOfflineActionsCallback.call(window, Helix.Ajax.failedOfflineActions);
+                        }
                     }
                 });
             }
@@ -238,7 +269,27 @@ Helix.Ajax = {
      * @param {type} arr
      * @returns {undefined}
      */
-    failedOfflineActionsCallback: function(arr) {},
+    failedOfflineActionsCallback: function(arr) {
+        
+    },
+
+    /**
+     * Function to be invoked with each offline action that succeeds. By default it 
+     * assumes that a type, key, and value have been provided for the offline element and, using
+     * these values, deletes the item from the database.
+     * 
+     * @param {type} elem
+     * @returns {undefined}
+     */
+    postedOfflineActionsCallback: function(elem) {
+        if (elem.json) {
+            var refreshObj = $.parseJSON(elem.json);
+            if (refreshObj.type) {
+                var schema = Helix.DB.getSchemaForTable(refreshObj.type);
+                schema.all().filter(refreshObj.key, '=', refreshObj.value).destroyAll();
+            }
+        }
+    },
 
     isDeviceOnline : function() {
         if (Helix.Ajax.forceDeviceOffline) {
@@ -736,7 +787,7 @@ Helix.Ajax = {
             }
         }
         
-        $.ajax({
+        var xhr = $.ajax({
             url: params.url + (args ? '?' : '') + args,
             type: 'GET',
             success: function(returnObj,textStatus,jqXHR) {
@@ -796,12 +847,24 @@ Helix.Ajax = {
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
             $(document).trigger('prerequest', [ page, params.url, false ]);
-            $.ajax({
+            var ret = {
+                isCancelled : false,
+                cancel: function() {
+                    this._xhr.abort();
+                    this.isCancelled = true;
+                }
+            };
+            ret._xhr = $.ajax({
+                context: ret,
                 url: params.url,
                 type: 'POST',
                 data: params.body,
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
+                    if (this.isCancelled) {
+                        return;
+                    }
+                    
                     var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
                     if (retCode === 0) {
                         if (params.success && !params.silentMode) {
@@ -826,6 +889,9 @@ Helix.Ajax = {
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
+                    if (this.isCancelled) {
+                        return;
+                    }
                     if (Helix.ignoreErrors) {
                         return;
                     }
@@ -841,6 +907,9 @@ Helix.Ajax = {
                     }
                 },
                 complete: function() {
+                    if (this.isCancelled) {
+                        return;
+                    }
                     if (callbacks.complete) {
                         callbacks.complete.call(window);
                     }
@@ -848,6 +917,7 @@ Helix.Ajax = {
                 },
                 dataType: 'json'
             });
+            return ret;
         } else {
             // Collect the data we will need to continue this offline draft. Not always used or applicable.
             var refreshValues = null;
@@ -869,7 +939,7 @@ Helix.Ajax = {
                         if (obj) {
                             obj.url = params.url;
                             obj.body = params.body;
-                            obj.refreshValues = refreshValues;
+                            obj.json = refreshValues ? JSON.stringify(refreshValues) : '';
                         } else {
                             obj = new Helix.Ajax.offlineNetworkQueue({
                                 'url': params.url,
@@ -931,6 +1001,7 @@ Helix.Ajax = {
             }
             Helix.Ajax.hideLoader();
         }
+        return null;
     },
     
     deleteOfflinePost: function(postID, success, fail) {

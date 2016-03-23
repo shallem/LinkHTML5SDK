@@ -193,6 +193,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getIndexedSearch() != null) {
             writer.write(",indexedSearch: " + dlist.getIndexedSearch());
         }
+        if (dlist.getLocalIndexedSearch()!= null) {
+            writer.write(",localIndexedSearch: " + dlist.getLocalIndexedSearch());
+        }
         if (dlist.getIndexedSearchText() != null) {
             writer.write(",indexedSearchText: '" + dlist.getIndexedSearchText() + "'");
         }

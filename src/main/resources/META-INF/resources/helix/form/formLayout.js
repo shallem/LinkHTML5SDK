@@ -727,7 +727,8 @@
                 if (selected.length > 0) {
                     return selected.val();
                 }
-            } else if (fldType === 'htmlarea') {
+            } else if (fldType === 'htmlarea' ||
+                       fldType === 'htmlframe') {
                 return $(thisField).editor('getHTML')
             } else {
                 return thisField.val();

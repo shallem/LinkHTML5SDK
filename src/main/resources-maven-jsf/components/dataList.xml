@@ -263,7 +263,13 @@
             <name>indexedSearch</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Enables free text search. Supply a function that accepts two arguments, the search query and a query collection, and returns a filtered query collection.</description>
+            <description>Enables free text search. Supply a function that accepts three arguments, the search query, a completion function, and an optional query collection that results form the local search. The completion should be invoked with a filtered query collection as its only argument.</description>
+        </attribute>
+        <attribute>
+            <name>localIndexedSearch</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Enables free text search. Supply a function that accepts two arguments, the search query and a completion function. The completion function should be called with the filtered query collection as its only argument. This function should be fast, and is presumed to only execute locally without requiring network access. This function is optional.</description>
         </attribute>
         <attribute>
             <name>onSearchClear</name>

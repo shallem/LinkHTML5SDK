@@ -371,6 +371,10 @@ a {
     width: 100%;
 }
 
+.hx-almost-full-width {
+    width: 98%;
+}
+
 /* Highlight the current sort. */
 .hx-current-sort a.ui-link-inherit {
     color: orange !important;
@@ -488,7 +492,7 @@ li {
     height: 6px;
 
     /*Add a white border on the bottom and left, creating that 'L' */
-    border: solid #fff;
+    border: solid #b20000;
     border-width: 0 2px 2px 0;
 
     /*Position it on top of the circle*/

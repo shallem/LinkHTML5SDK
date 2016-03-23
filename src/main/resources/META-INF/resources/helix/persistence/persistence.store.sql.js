@@ -316,7 +316,7 @@ function config(persistence, dialect) {
         var removeObjArray = [];
         for (var id in session.objectsToRemove) {
             if (session.objectsToRemove.hasOwnProperty(id)) {
-                removeObjArray.push(session.objectsToRemove[id]);
+                removeObjArray.push([id, session.objectsToRemove[id]]);
                 delete session.trackedObjects[id]; // Stop tracking
             }
         }
@@ -342,13 +342,13 @@ function config(persistence, dialect) {
                 return true;
             }, persistObjArray);
         } else { // More efficient
-            for(var i = 0; i < persistObjArray.length; i++) {
-                save(persistObjArray[i], tx);
-            }
             for(var i = 0; i < removeObjArray.length; i++) {
                 remove(removeObjArray[i], tx);
             }
-        
+            for(var i = 0; i < persistObjArray.length; i++) {
+                save(persistObjArray[i], tx);
+            }
+            
             // Stop tracking everything we flushed.
             if (stopTracking === true ||
                 stopTracking === undefined) {
@@ -550,16 +550,24 @@ function config(persistence, dialect) {
 
     persistence.save = save;
 
-    function remove (obj, tx, callback) {
+    function remove(removeObjPair, tx, callback) {
+        var removeKeyValue = persistence.getRemoveKeyValuePair(removeObjPair[0]);
+        var obj = removeObjPair[1];
+        
         var meta = persistence.getMeta(obj._type);
         var tm = persistence.typeMapper;
-        var queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
-        for (var rel in meta.hasMany) {
-            if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
-                var tableName = meta.hasMany[rel].tableName;
-                //var inverseProperty = meta.hasMany[rel].inverseProperty;
-                queries.push(["DELETE FROM `" + tableName + "` WHERE `" + meta.name + '_' + rel + "` = " + tm.outId(obj.id), null]);
+        var queries = [];
+        if (removeKeyValue[0] === 'id' && obj.id) {
+            queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
+            for (var rel in meta.hasMany) {
+                if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
+                    var tableName = meta.hasMany[rel].tableName;
+                    //var inverseProperty = meta.hasMany[rel].inverseProperty;
+                    queries.push(["DELETE FROM `" + tableName + "` WHERE `" + meta.name + '_' + rel + "` = " + tm.outId(obj.id), null]);
+                }
             }
+        } else {
+            queries = [["DELETE FROM `" + obj._type + "` WHERE " + removeKeyValue[0] + " = ?", [removeKeyValue[1]]]];
         }
         executeQueriesSeq(tx, queries, callback);
     }

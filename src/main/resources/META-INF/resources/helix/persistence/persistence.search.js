@@ -653,12 +653,15 @@ persistence.search.config = function(persistence, dialect, options) {
     }
   
     function handleDeletes(queries, tx, callback) {
-        for (var id in persistence.getObjectsToRemove()) {
-            if (persistence.getObjectsToRemove().hasOwnProperty(id)) {
-                var obj = persistence.getObjectsToRemove()[id];
+        var toRemove = persistence.getObjectsToRemove();
+        for (var id in toRemove) {
+            if (toRemove.hasOwnProperty(id)) {
+                var obj = toRemove[id];
                 var meta = persistence.getEntityMeta()[obj._type];
                 if(meta.textIndex) {
-                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `id`=?)', [id]]);
+                    var keyValuePair = persistence.getRemoveKeyValuePair(id);
+                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `' 
+                                + keyValuePair[0] + '`=?)', [keyValuePair[1]]]);
                 }
             }
         }
