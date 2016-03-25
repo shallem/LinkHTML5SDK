@@ -25,6 +25,7 @@ import javax.faces.component.UIOutput;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import javax.servlet.http.HttpServletRequest;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class PageRenderer extends CoreRenderer {
@@ -80,6 +81,11 @@ public class PageRenderer extends CoreRenderer {
         // we miss the mobileinit event.
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
+        
+        String userAgent = ((HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest()).getHeader("User-Agent");
+        if (userAgent != null) {
+            writer.write("var __hxUserAgent = '" + userAgent + "';");
+        }
         
         // Initialize jQuery Mobile
         writer.write("$(document).bind('mobileinit', function(){");
