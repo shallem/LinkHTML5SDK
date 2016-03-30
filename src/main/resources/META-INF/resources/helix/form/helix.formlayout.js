@@ -239,9 +239,9 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             'name': formElem.name,
             'id': inputID,
             'data-role' : 'none',
-            'style' : 'font-size: 16px',
             'type' : inputType,
-            'step' : stepStr
+            'step' : stepStr,
+            'class' : formLayout.textStyleClass
         }).appendTo(inputWrapper);
         if (formElem.onfocus) {
             dateInput.focus(formElem.onfocus);
@@ -363,17 +363,21 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         return;
     }
     
+    var inputMarkup;
     if (mode) {
         /* Edit */
         // Use the mini style to set font size to 'small'
         var inputID = Helix.Utils.getUniqueID();
-        var inputMarkup = $('<textarea />').attr({
+        inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
             'id' : inputID,
             'style': formElem.computedStyle,
             'class' : formElem.computedStyleClass,
             'tabindex' : formLayout.__tabIndex++
         }).append(formElem.value);
+        if (formLayout.textStyleClass) {
+            inputMarkup.addClass(formLayout.textStyleClass);
+        }
 
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
@@ -381,7 +385,8 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
-            'for' : inputID
+            'for' : inputID,
+            'class' : formLayout.titleStyleClass
             })
             .append(formElem.fieldTitle)
         )
@@ -398,15 +403,19 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             });
         }
     } else {
-        if (formElem.fieldTitle && (typeof formElem.fieldTitle == "string")) {
-            $fieldContainer.append($('<span />').attr('data-name', formElem.name).append("&nbsp;" + formElem.value));
+        if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
+            inputMarkup = $('<span />').attr('data-name', formElem.name).append("&nbsp;" + formElem.value);
         } else {
-            $fieldContainer.append($('<p />').attr('data-name', formElem.name).append(formElem.value));
+            inputMarkup = $('<p />').attr('data-name', formElem.name).append(formElem.value);
         }
+        $fieldContainer.append(inputMarkup);
+    }
+    if (formLayout.textStyleClass) {
+        inputMarkup.addClass(formLayout.textStyleClass);
     }
 }
 
-function __refreshSelectMenu(formElem, useMiniLayout) {
+function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayout) {
     var $fieldContainer = formElem.DOM;
     if ($fieldContainer) {
         $fieldContainer.empty();
@@ -432,7 +441,7 @@ function __refreshSelectMenu(formElem, useMiniLayout) {
             'value': formElem.options[i].value
         }).append(formElem.options[i].label).appendTo(inputMarkup);
 
-        if (formElem.value && formElem.options[i].value == formElem.value) {
+        if (formElem.value && formElem.options[i].value === formElem.value) {
             // This item is selected.
             option.attr('selected', true);
         }
@@ -443,7 +452,8 @@ function __refreshSelectMenu(formElem, useMiniLayout) {
         'style' : formElem.computedStyle
     })
     .append($('<label />').attr({
-        'for' : inputID
+        'for' : inputID,
+        'class' : formLayout.titleStyleClass
         })
         .append(formElem.fieldTitle)
     )
@@ -454,6 +464,9 @@ function __refreshSelectMenu(formElem, useMiniLayout) {
         corners: false,
         mini: useMiniLayout
     });
+    if (formLayout.textStyleClass) {
+        $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
+    }
     if (formElem.onchange) {
         $(inputMarkup).change(function() {
             formElem.onchange.call(this, formElem);
@@ -475,7 +488,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
         
         formElem.tabIndex = formLayout.__tabIndex++;
             
-        __refreshSelectMenu(formElem, $fieldContainer, useMiniLayout);
+        __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayout);
     } else {
         __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
@@ -523,6 +536,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             'tabindex' : formLayout.__tabIndex++,
             'autocapitalize' : 'sentences'
         });
+        if (formLayout.textStyleClass) {
+            inputMarkup.addClass(formLayout.textStyleClass);
+        }
         
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
         var textContainer = $('<div />').attr({
@@ -850,6 +866,9 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         type: (formElem.direction ? formElem.direction : "horizontal")
     });
     $(fieldMarkup).fieldcontain();
+    if (formLayout.textStyleClass) {
+        $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
+    }
 }
 
 function __refreshOnOffSlider(formElem) {
@@ -942,6 +961,9 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         type: "horizontal" 
     });
     $(fieldMarkup).fieldcontain();
+    if (formLayout.textStyleClass) {
+        $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
+    }
     
     // After enhancement, hide any hidden controls
     for (i = 0; i < formElem.controls.length; ++i) {
@@ -1837,6 +1859,9 @@ function __preprocessFormLayout(formLayout) {
     
     if (!formLayout.titleStyleClass) {
         formLayout.titleStyleClass = '';
+    }
+    if (!formLayout.textStyleClass) {
+        formLayout.textStyleClass = '';
     }
     
     formLayout.__tabIndex = 1;

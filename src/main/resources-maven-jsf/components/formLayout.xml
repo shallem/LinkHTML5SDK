@@ -82,6 +82,12 @@
             <description>Default style class for all field titles</description>
         </attribute>
         <attribute>
+            <name>textStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class to be applied to all value (not title) elements containing text.</description>
+        </attribute>
+        <attribute>
             <name>width</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -99,6 +105,12 @@
             <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
             <description>Indicates if this is a full screen layout or not (default).</description>
+        </attribute>
+        <attribute>
+            <name>useMiniLayout</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Map from device type to boolean indicating if a mini layout should be used. Add &quot;all&quot; to the map to always use the mini layout.</description>
         </attribute>
     </attributes>
 </component>

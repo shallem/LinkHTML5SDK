@@ -1782,7 +1782,9 @@
                 if (_self.options.localIndexedSearch) {
                     _self.options.localIndexedSearch.call(_self, searchText, function(res) {
                         _self.indexedSearchDone(res, function() {
-                            _self._doRemoteSearch(searchText, res);                        
+                            if (_self.options.indexedSearch) {
+                                _self._doRemoteSearch(searchText, res);                        
+                            }
                         });
                     });
                 } else {
@@ -1982,11 +1984,11 @@
 
             if (this.options.buttonPos === 'left') {
                 _attachButtons.call(this);
-                if (this.options.indexedSearch) {
+                if (this.options.indexedSearch || this.options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }                
             } else {
-                if (this.options.indexedSearch) {
+                if (this.options.indexedSearch  || this.options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }
                 _attachButtons.call(this);

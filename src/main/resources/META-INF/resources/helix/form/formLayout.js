@@ -77,8 +77,9 @@
              * type
              */
             this.layoutMini = false;
-            if (Helix.deviceType in this.options.useMiniLayout &&
-                this.options.useMiniLayout[Helix.deviceType]) {
+            if (("all" in this.options.useMiniLayout) ||
+                (Helix.deviceType in this.options.useMiniLayout &&
+                 this.options.useMiniLayout[Helix.deviceType])) {
                 $(this.element).addClass('hx-form-mini');
                 this.layoutMini = true;
             }

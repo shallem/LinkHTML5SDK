@@ -321,7 +321,6 @@ a {
 }
 
 .hx-form-compactvalue {
-    font-size: small;
     font-weight: normal;
     padding-top: 0px;
     padding-bottom: 0px;
@@ -349,18 +348,6 @@ a {
 
 .hx-mini-fieldcontain .ui-input-datebox {
     padding: .2em;
-}
-
-.hx-mini-fieldcontain .ui-input-text .ui-body-c {
-    font-size: small;
-}
-
-.hx-mini-fieldcontain textarea.ui-input-text {
-    font-size: small;
-}
-
-.hx-mini-fieldcontain .ui-btn-text {
-    font-size: x-small;
 }
 
 .hx-display-inline {
@@ -630,13 +617,13 @@ li {
 }
 
 @-webkit-keyframes loading_color_change {
-    from { background: #384056; }
-    to { background: #f79022; }
+    from { background: #BCCBF6; }
+    to { background: #CC9E0F; }
 }
 
 @keyframes loading_color_change {
-    from { background: #384056; }
-    to { background: #f79022; }
+    from { background: #BCCBF6; }
+    to { background: #CC9E0F; }
 }
 
 /**

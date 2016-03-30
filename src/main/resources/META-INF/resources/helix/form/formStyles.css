@@ -87,11 +87,17 @@
     border: none;
 }
 
+.hx-form-container .ui-field-contain label.ui-select {
+    padding-top: 0.4em;
+    padding-right: 1em;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
 .hx-form-container .ui-field-contain label.ui-input-text {
     text-align: right;
     border: none;
-    font-size: 12.5px;
-    padding-top: 0.2em;
+    padding-top: 0.4em;
     padding-right: 0.2em;
     padding-bottom: 0;
     padding-left: 0;
@@ -161,10 +167,6 @@
     margin: 0;
 }
 
-.hx-form,.hx-form-mini .ui-collapsible-inset > .ui-btn-inner {
-    font-size: 14px;
-}
-
 .hx-form,.hx-form-mini .ui-collapsible-inset .ui-collapsible-content {
     padding-left: 0.5em;
     padding-right: 0;
@@ -174,7 +176,6 @@
 
 .hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-label {
     margin: 0 .3em .3em 0;
-    font-size: 12.5px;
     display: inline-block;
 }
 
