@@ -70,6 +70,7 @@
             /* Initialize variables. */
             this._typeMap = [];
             this._fieldMap = [];
+            this._isDirty = false;
             
             this.page = $(this.element).closest('[data-role="page"]');
             
@@ -210,6 +211,8 @@
          * @param valuesMap Map form field names to values.
          */
         refresh: function(valuesMap) { 
+            $(this.element).off('change.' + this.options.namespace);
+            this._isDirty = false;
             this._computeHidden(valuesMap);
             
             if (!valuesMap) {
@@ -222,6 +225,17 @@
             for (var z = 0; z < this.options.items.length; ++z) {
                 this.options.items[z].parentForm = this;
             }
+            $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
+                ev.data._isDirty = true;
+            });
+        },
+        
+        isDirty: function() {
+            return this._isDirty;
+        },
+        
+        clearDirty: function() {
+            this._isDirty = false;
         },
         
         toggle: function(valuesMap) {
@@ -826,7 +840,7 @@
         
         _checkNotPast: function(val) {
             // Val should be a date object
-            if (!val.getTime && isNaN(val)) {
+            if (!val || (!val.getTime && isNaN(val))) {
                 // Not a date object.
                 return false;
             }
@@ -910,6 +924,9 @@
             var validationErrors = {};
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
+                if (nxtItem.hidden) {
+                    continue;
+                }
                 if (nxtItem.type === 'subPanel') {
                     // Go through the items.
                     for (var j = 0; j < nxtItem.items.length; ++j) {

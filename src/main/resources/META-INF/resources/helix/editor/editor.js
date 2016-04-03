@@ -27,6 +27,7 @@
 
             // Init members.
             this._lastCreatedSpan = null;
+            this._isDirty = false;
 
             // Map whose keys are the current style.
             editor.name = $(this.element).attr('id');
@@ -116,7 +117,7 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom ui-editor-default-style')
+                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom ui-editor-default-style hx-editor')
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
 
@@ -186,6 +187,8 @@
                     _self._executeStyleActions(newTextNode);
                     _self.styleChanges = [];
                 }
+                _self._isDirty = true;
+                $(this).trigger('change');
             });
             
             $(this.$editFrame).on('blur', function() {
@@ -212,6 +215,10 @@
                     _self.isFirstTyping = false;
                 }
             });
+        },
+        
+        isDirty: function() {
+            return this._isDirty;
         },
     
         _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini) {
