@@ -638,3 +638,11 @@ and (max-device-width : 480px) {
     overflow-y:scroll;
     -webkit-overflow-scrolling: touch;
 }
+
+.hx-now-slot {
+    background-image: -webkit-linear-gradient(top, rgba(255,90,0,0.2), rgba(255,174,0,0.2));
+    background-image: -moz-linear-gradient(top, rgba(255,90,0,0.2), rgba(255,174,0,0.2));
+    background-image: -ms-linear-gradient(top, rgba(255,90,0,0.2), rgba(255,174,0,0.2));
+    background-image: -o-linear-gradient(top, rgba(255,90,0,0.2), rgba(255,174,0,0.2));
+    background-image: linear-gradient(top, rgba(255,90,0,0.2), rgba(255,174,0,0.2));
+}

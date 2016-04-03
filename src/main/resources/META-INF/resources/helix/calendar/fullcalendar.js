@@ -88,12 +88,6 @@
         handleWindowResize: true,
         /* SAH - layout full page with the calendar contents scrolling. */
         fullPage: true,
-        /* SAH - offset event start/end by a timezone offset. tzOffset is the standard time offset.
-         * dstOffset is the daylight savings time offset. The default is to offset based on the browser
-         * locale.
-         */
-        tzOffset: -((new Date((new Date()).getUTCFullYear(), 1, 1)).getTimezoneOffset() / 60.0),
-        dstOffset: -((new Date((new Date()).getUTCFullYear(), 6, 1)).getTimezoneOffset() / 60.0),
         /* SAH - when the user clicks on the calendar, treat all clicks like slot clicks even if the user
          * clicks on an event. This is useful in the free/busy view where events appear on the calendar but
          * the user taps to select a time slot, not an event.
@@ -234,6 +228,7 @@
         t.trigger = trigger;
         t.contentOffset = getContentOffset;
         t.gotoHour = gotoHour;
+        t.markNowSlot = markNowSlot;
 
 
         // imports
@@ -359,7 +354,7 @@
 
 
         function changeView(newViewName) {
-            if (!currentView || newViewName != currentView.name) {
+            if (!currentView || newViewName !== currentView.name) {
                 _changeView(newViewName);
             }
         }
@@ -400,6 +395,7 @@
 
             renderView();
             unfreezeContentHeight();
+            currentView.markNowSlot();
 
             ignoreWindowResize--;
         }
@@ -584,6 +580,9 @@
             rerenderEvents(eventID);
         }
 
+        function markNowSlot() {
+            currentView.markNowSlot();
+        }
 
 
         /* Header Updating
@@ -1028,7 +1027,7 @@
 
         function fetchEventSource(source, fetchID) {
             _fetchEventSource(source, function (events) {
-                if (fetchID == currentFetchID) {
+                if (fetchID === currentFetchID) {
                     if (events) {
 
                         if (options.eventDataTransform) {
@@ -1199,7 +1198,7 @@
                     : 0;                                                      // was null and event was just resized
             for (i = 0; i < len; i++) {
                 e = cache[i];
-                if (e._id == event._id && e != event) {
+                if (e._id === event._id && e !== event) {
                     e.start = new Date(+e.start + startDelta);
                     if (event.end) {
                         if (e.end) {
@@ -1309,10 +1308,9 @@
         function normalizeEvent(event) {
             var source = event.source || {};
             var ignoreTimezone = firstDefined(source.ignoreTimezone, options.ignoreTimezone);
-            var tzOffset = firstDefined(event.tzOffset, options.tzOffset);
-            var dstOffset = firstDefined(event.dstOffset, options.dstOffset);
-            event.tzOffset = tzOffset;
-            event.dstOffset = dstOffset;
+
+            event.tzOffset = -((new Date((new Date()).getUTCFullYear(), 1, 1)).getTimezoneOffset() / 60.0);
+            event.dstOffset = -((new Date((new Date()).getUTCFullYear(), 6, 1)).getTimezoneOffset() / 60.0);
             event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
             if (event.date) {
                 if (!event.start) {
@@ -1320,8 +1318,8 @@
                 }
                 delete event.date;
             }
-            event._start = cloneDate(event.start = parseDate(event.start, ignoreTimezone, tzOffset, dstOffset));
-            event.end = parseDate(event.end, ignoreTimezone, tzOffset, dstOffset);
+            event._start = cloneDate(event.start = parseDate(event.start, ignoreTimezone, event.tzOffset, event.dstOffset));
+            event.end = parseDate(event.end, ignoreTimezone, event.tzOffset, event.dstOffset);
             if (event.end && event.end <= event.start) {
                 event.end = null;
             }
@@ -1330,7 +1328,7 @@
                 event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
             }
             if (event.className) {
-                if (typeof event.className == 'string') {
+                if (Helix.Utils.isString(event.className)) {
                     event.className = event.className.split(/\s+/);
                 }
             } else {
@@ -1338,7 +1336,6 @@
             }
             // TODO: if there is no start date, return false to indicate an invalid event
         }
-
 
 
         /* Utils
@@ -1475,11 +1472,6 @@
 
 
     function zeroDate() { // returns a Date with time 00:00:00 and dateOfMonth=1
-        /*var i=0, d;
-         do {
-         d = new Date(1970, i++, 1);
-         } while (d.getHours()); // != 0
-         return d;*/
         return new Date(0);
     }
 
@@ -2344,27 +2336,30 @@
         t.dragStop = dragStop;
         t.defaultEventEnd = defaultEventEnd;
         t.getHoverListener = function () {
-            return hoverListener
+            return hoverListener;
         };
         t.colLeft = colLeft;
         t.colRight = colRight;
         t.colContentLeft = colContentLeft;
         t.colContentRight = colContentRight;
         t.getIsCellAllDay = function () {
-            return true
+            return true;
         };
         t.allDayRow = allDayRow;
         t.getRowCnt = function () {
-            return rowCnt
+            return rowCnt;
         };
         t.getColCnt = function () {
-            return colCnt
+            return colCnt;
         };
         t.getColWidth = function () {
-            return colWidth
+            return colWidth;
         };
         t.getDaySegmentContainer = function () {
-            return daySegmentContainer
+            return daySegmentContainer;
+        };
+        t.markNowSlot = function() {
+            
         };
 
 
@@ -2880,7 +2875,6 @@
         // imports
         DayEventRenderer.call(t);
 
-
         function renderEvents(events, modifiedEventId) {
             t.renderDayEvents(events, modifiedEventId);
         }
@@ -2889,10 +2883,6 @@
         function clearEvents() {
             t.getDaySegmentContainer().empty();
         }
-
-
-        // TODO: have this class (and AgendaEventRenderer) be responsible for creating the event container div
-
     }
 
     ;
@@ -3019,7 +3009,7 @@
 // TODO: make it work in quirks mode (event corners, all-day height)
 // TODO: test liquid width, especially in IE6
 
-
+    // This is a week view.
     function AgendaView(element, calendar, viewName) {
         var t = this;
 
@@ -3081,6 +3071,7 @@
         t.reportDayClick = reportDayClick; // selection mousedown hack
         t.dragStart = dragStart;
         t.dragStop = dragStop;
+        t.markNowSlot = markNowSlot;
 
         // Export the slot click handler.
         t.slotClick = slotClick;
@@ -3186,7 +3177,7 @@
             // week # options. (TODO: bad, logic also in other views)
             showWeekNumbers = opt('weekNumbers');
             weekNumberTitle = opt('weekNumberTitle');
-            if (opt('weekNumberCalculation') != 'iso') {
+            if (opt('weekNumberCalculation') !== 'iso') {
                 weekNumberFormat = "w";
             }
             else {
@@ -3290,8 +3281,16 @@
             slotTable = $(s).appendTo(slotContainer);
 
             slotBind(slotTable.find('td'));
+            markNowSlot();
         }
 
+        function markNowSlot() {
+            var n = new Date(); // now
+            var slotIncrement = opt('slotMinutes');
+            $(slotContainer).find('tr.hx-now-slot').removeClass('hx-now-slot');
+            var slotNum = Math.floor((n.getHours() * 60 + n.getMinutes())/slotIncrement);
+            $(slotContainer).find('tr.fc-slot' + slotNum).addClass('hx-now-slot');
+        }
 
 
         /* Build Day Table
