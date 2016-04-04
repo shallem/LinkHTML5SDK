@@ -480,16 +480,7 @@
                 } else if (fldType === 'pickList' ||
                            fldType === 'picklist') {
                     if (mode) {
-                        thisField = $(item.DOM).find('[name="' + searchName + '"]');
-                        $(thisField).find('option:selected').each(function() {
-                            $(this).prop({ selected : false });
-                        });
-                        if (value) {
-                            $(thisField).find('option[value="' + value + '"]').each(function() {
-                                $(this).prop({ selected : true });
-                            });
-                        }
-                        $(thisField).selectmenu('refresh');                        
+                        __refreshSelectMenu(item);
                     } else {
                         __refreshTextBox(mode, item);
                     }
@@ -924,6 +915,38 @@
             item.originalName = item.name;
             item.name =  this.options.namespace + '_' + item.name;
             this.options.items.push(item);
+        },
+        
+        removeItem: function(item) {
+            item.originalName = item.name;
+            item.name =  this.options.namespace + '_' + item.name;
+            
+            if (this.options.items) {
+                for (var i=0; i<this.options.items.length; i++) {
+                    if (this.options.items[i].name === item.name) {
+                            this.options.items.splice(i, 1);
+                            return i;
+                    }
+                }
+            }
+            
+            return -1;
+        },
+              
+        replaceItem: function(item) {
+            item.originalName = item.name;
+            item.name =  this.options.namespace + '_' + item.name;
+            
+            if (this.options.items) {
+                for (var i=0; i<this.options.items.length; i++) {
+                    if (this.options.items[i].name === item.name) {
+                            this.options.items[i] = item;
+                            return i;
+                    }
+                }
+            }
+            
+            return -1;
         },
         
         getItems: function() {
