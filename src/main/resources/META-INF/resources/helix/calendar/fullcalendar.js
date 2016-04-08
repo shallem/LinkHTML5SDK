@@ -1318,12 +1318,13 @@
                 }
                 delete event.date;
             }
-            event._start = cloneDate(event.start = parseDate(event.start, ignoreTimezone, event.tzOffset, event.dstOffset));
-            event.end = parseDate(event.end, ignoreTimezone, event.tzOffset, event.dstOffset);
-            if (event.end && event.end <= event.start) {
+            event.start = parseDate(event.start, ignoreTimezone, event.tzOffset, event.dstOffset);
+            if (event.end) {
+                event.end = parseDate(event.end, ignoreTimezone, event.tzOffset, event.dstOffset);
+            }
+            if (event.end && event._end <= event._start) {
                 event.end = null;
             }
-            event._end = event.end ? cloneDate(event.end) : null;
             if (event.allDay === undefined) {
                 event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
             }
@@ -1531,13 +1532,13 @@
     }
 
     function parseDate(s, ignoreTimezone, tzOffset, dstOffset) { // ignoreTimezone defaults to true
-        if (typeof s == 'object') { // already a Date object
-            return convertTimezone(s, tzOffset, dstOffset);
+        if (typeof s === 'object') { // already a Date object
+            return convertTimezone(cloneDate(s), tzOffset, dstOffset);
         }
-        if (typeof s == 'number') { // a UNIX timestamp
+        if (typeof s === 'number') { // a UNIX timestamp
             return convertTimezone(new Date(s * 1000), tzOffset, dstOffset);
         }
-        if (typeof s == 'string') {
+        if (typeof s === 'string') {
             if (s.match(/^\d+(\.\d+)?$/)) { // a UNIX timestamp
                 return convertTimezone(new Date(parseFloat(s) * 1000), tzOffset, dstOffset);
             }

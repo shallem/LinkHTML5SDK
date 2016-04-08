@@ -150,6 +150,14 @@
             swipeRightAction: null,
             
             /**
+             * Action to perform is the split button is clicked. To render split buttons, supply icon
+             * class (ui-icon-<supply this class>) as the splitLink member of the object provided to
+             * createListRow. Whenever that split button is tapped, this function will be called after
+             * setting the list selection.
+             */
+            splitAction: null,
+            
+            /**
              * Context menu to display if the user tap-holds (for touch devices)
              * or double clicks (for non-touch devices) on a list item. When 
              * both this option and holdAction are specified, this option takes
@@ -342,18 +350,8 @@
             itemList: null,
             
             /**
-             * Specify the icon for a split icon layout if one is going to be
-             * used for the list items. See jQuery Mobile documentation of the
-             * listview plugin for further detail on what a split icon layout
-             * means.
+             * 
              */
-            splitIcon: null,
-            
-            /**
-             * Specify the theme for the split button. This item is ignored unless
-             * splitIcon is non-null.
-             */
-            splitTheme: null,
             
             /**
              * Function used to render a single data row (i.e. a non-group-name
@@ -466,6 +464,12 @@
              * Append the data list.
              */
             var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
+            
+            // Set context menu event to taphold for touch devices, dblclick for none-touch.
+            this.contextEvent = Helix.contextEvent;
+            this.tapEvent = Helix.clickEvent;
+            this._cancelNextTap = false;
+            this._installActionHandlers();
 
             /**
              * Append the footer.
@@ -500,15 +504,8 @@
             }
             
             /**
-             * Split icons, if appropriate.
+             * Action icon, if enabled.
              */
-            if (this.options.splitIcon) {
-                this.$parent.attr('data-split-icon', this.options.splitIcon);
-            }
-            if (this.options.splitTheme) {
-                this.$parent.attr('data-split-theme', this.options.splitTheme);
-            }
-
             if (this.options.showDataIcon === false) {
                 this.showDataIcon = false;
                 this.$parent.attr('data-icon', false);
@@ -571,13 +568,7 @@
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
-            
-            // Set context menu event to taphold for touch devices, dblclick for none-touch.
-            //this.contextEvent = 'taphold';
-            this.contextEvent = Helix.contextEvent;
-            this.tapEvent = Helix.clickEvent;
-            this._cancelNextTap = false;
-        
+                   
             // Default sort.
             this._currentSort = this.options.sortBy;
             this._currentSortOrder = this.options.sortOrder.toUpperCase();
@@ -2214,6 +2205,107 @@
             }  
         },
     
+        _installActionHandlers: function() {
+            // Tap-hold
+            if (this.options.itemContextMenu) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    
+                    // This allows the container to have taphold context menus that are not
+                    // triggered when this event is triggered.
+                    _self.setSelected(event.target);
+                    if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(_self.selected)) {
+                        _self.options.itemContextMenu.open({
+                            positionTo: event.target,
+                            thisArg: _self,
+                            extraArgs: _self.options.itemContextMenuArgs
+                        });
+                    }
+                    event.stopImmediatePropagation();
+                    return false;
+                });
+            } else if (this.options.holdAction) {
+                $(this.$listWrapper).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem(true);                    
+                    }
+                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self._cancelNextTap = true;
+
+                    event.stopImmediatePropagation();
+                    return false;
+                }); 
+            } 
+            
+            // Tap
+            if (this.options.selectAction) {
+                $(this.$listWrapper).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+                    
+                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
+                        return false;
+                    }
+                    if (_self._cancelNextTap) {
+                        _self._cancelNextTap = false;
+                        return false;
+                    }
+                    
+                    if (_self.options.multiSelect && event.clientX < 35) {
+                        $(event.target).toggleClass("hx-selected");
+                        
+                        // Check to see if we have anything selected - if yes, show the clear button;
+                        // if not, hide it. Re-layout the page if we make a change.
+                        var selectedElems = _self.getAllMultiSelectElements();
+                        if (selectedElems.length === 0) {
+                            _self.$clearSelectionDiv.hide();
+                            _self.$searchSortDiv.show();
+                            Helix.Layout.layoutPage();
+                        } else {
+                            if (!_self.$clearSelectionDiv.is(':visible')) {
+                                _self.$clearSelectionDiv.show();
+                                _self.$searchSortDiv.hide();
+                                Helix.Layout.layoutPage();
+                            }                            
+                        }
+                    } else {
+                        if (_self.setSelected(event.target))  {
+                            if ($(this).is('[data-origin="splitlink"]')) {
+                                if (_self.options.splitAction) {
+                                    _self.options.splitAction(_self.selected, _self.selectedGroup, _self.strings);
+                                }
+                            } else {
+                                _self.selectItem();
+                            }
+                        }
+                    }
+
+                    return false;
+                });
+            }
+            if (this.options.swipeLeftAction) {
+                this.$listWrapper.on('swipeleft', 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeLeftAction(_self.selected);
+                    return false;
+                });
+            }
+            if (this.options.swipeRightAction) {
+                $(this.$listWrapper).on('swiperight', 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeRightAction(_self.selected);
+                    return false;
+                });
+            }
+        },
+    
         _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
             var _self = this;
             var curRowParent = null;
@@ -2253,95 +2345,6 @@
             } else {
                 return false;
             }
-            
-            if (_self.options.itemContextMenu) {
-                if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(row)) {
-                    $(curRowParent).off(this.contextEvent).on(this.contextEvent, function(event) {
-                        // This allows the container to have taphold context menus that are not
-                        // triggered when this event is triggered.
-                        event.stopImmediatePropagation();
-                        event.stopPropagation();
-                        event.preventDefault();
-
-                        _self.setSelected(event.target);
-                        _self.options.itemContextMenu.open({
-                            positionTo: event.target,
-                            thisArg: _self,
-                            extraArgs: _self.options.itemContextMenuArgs
-                        });
-                    });
-                } else if (!curRowFresh) {
-                    $(curRowParent).off(this.contextEvent);
-                }
-            } else if (_self.options.holdAction && curRowFresh) {
-                $(curRowParent).on(_self.contextEvent, function(event) {
-                    event.stopImmediatePropagation();
-                    
-                    if (_self.setSelected(event.target)) {
-                        _self.selectItem(true);                    
-                    }
-                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
-                    _self._cancelNextTap = true;
-                    return false;
-                }); 
-            } 
-            if (_self.options.selectAction && curRowFresh) {
-                $(curRowParent).on(_self.tapEvent, function(event) {
-                    event.stopImmediatePropagation();
-                    
-                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
-                        return false;
-                    }
-                    if (_self._cancelNextTap) {
-                        _self._cancelNextTap = false;
-                        return false;
-                    }
-                    
-                    if (_self.options.multiSelect && event.clientX < 35) {
-                        $(event.target).toggleClass("hx-selected");
-                        
-                        // Check to see if we have anything selected - if yes, show the clear button;
-                        // if not, hide it. Re-layout the page if we make a change.
-                        var selectedElems = _self.getAllMultiSelectElements();
-                        if (selectedElems.length === 0) {
-                            _self.$clearSelectionDiv.hide();
-                            _self.$searchSortDiv.show();
-                            Helix.Layout.layoutPage();
-                        } else {
-                            if (!_self.$clearSelectionDiv.is(':visible')) {
-                                _self.$clearSelectionDiv.show();
-                                _self.$searchSortDiv.hide();
-                                Helix.Layout.layoutPage();
-                            }                            
-                        }
-                    } else {
-                        if (_self.setSelected(event.target)) {
-                            _self.selectItem();
-                        }
-                    }
-
-                    return false;
-                });
-            }
-            if (_self.options.swipeLeftAction && curRowFresh) {
-                $(curRowParent).on('swipeleft', function(event) {
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeLeftAction(_self.selected);
-                    return false;
-                });
-            }
-            if (_self.options.swipeRightAction && curRowFresh) {
-                $(curRowParent).on('swiperight', function(event) {
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeRightAction(_self.selected);
-                    return false;
-                });
-            }
-        
             return true;
         },
     
@@ -2480,7 +2483,7 @@
             
             var mainLink = null;
             if (isEnhanced) {
-                mainLink = $(parentElement).find('a');
+                mainLink = $(parentElement).find('a').first();
             } else {
                 mainLink = $('<a />').attr({
                     'href' : 'javascript:void(0)'
@@ -2612,18 +2615,31 @@
                 $(parentElement).attr('data-key', rowComponents.key);
             }
             
-            /* XXX: not supported for now. 
             if (rowComponents.splitLink) {
+                var hasSplit = false;
                 if (isEnhanced) {
-                    
-                } else {
-                    $(parentElement).append($('<a />').attr({
-                        'href' : 'javascript:void(0)'
-                    }).on(this.tapEvent, function(ev) {
-                        rowComponents.splitLink(ev);
-                    }));
+                    var splitSet = $(parentElement).find('[data-origin="splitlink"]');
+                    if (splitSet.length) {
+                        splitSet.show()
+                        hasSplit = true;
+                    } else {
+                        // Need to remove .ui-li from the parent li otherwise jQM won't enhance the split button markup
+                        $(parentElement).removeClass('ui-li');
+                    }
+                } 
+                
+                if (hasSplit === false) {
+                    $('<a />').attr({
+                        'href' : 'javascript:void(0)',
+                        'data-role' : 'button',
+                        'data-origin' : 'splitlink',
+                        'data-icon' : rowComponents.splitLink,
+                        'data-theme' : 'd'
+                    }).appendTo(parentElement);
                 }
-            }*/
+            } else {
+                $(parentElement).find('[data-origin="splitlink"]').hide();
+            }
             return mainLink;
         },
         selectItem: function(noSelectAction) {

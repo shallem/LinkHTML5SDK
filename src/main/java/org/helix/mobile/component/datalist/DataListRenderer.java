@@ -256,11 +256,8 @@ public class DataListRenderer extends CoreRenderer {
         }
         
         // Split theme
-        if (dlist.getSplitIcon() != null) {
-            writer.write(",splitIcon: '" + dlist.getSplitIcon() + "'");
-        }
-        if (dlist.getSplitTheme() != null) {
-            writer.write(",splitTheme: '" + dlist.getSplitTheme() + "'");
+        if (dlist.getSplitAction()!= null) {
+            writer.write(",splitAction: " + dlist.getSplitAction());
         }
         
         // Pull to refresh.

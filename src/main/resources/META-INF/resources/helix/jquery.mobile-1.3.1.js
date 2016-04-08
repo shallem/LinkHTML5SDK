@@ -6374,9 +6374,10 @@ $.widget( "mobile.listview", $.mobile.widget, $.extend( {
 							})
 							.find( ".ui-btn-inner" )
 								.append(
+                                                                // SAH: change shadow, corners to false
 									$( document.createElement( "span" ) ).buttonMarkup({
-										shadow: true,
-										corners: true,
+										shadow: false,
+										corners: false,
 										theme: splittheme,
 										iconpos: "notext",
 										// link icon overrides list item icon overrides ul element overrides options

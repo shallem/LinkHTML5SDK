@@ -309,17 +309,10 @@
             <description>Indicate if the contents of the list should be scrollable.</description>
         </attribute>
         <attribute>
-            <name>splitIcon</name>
+            <name>splitAction</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Specify if a split icon will be used in the list elements.</description>
-        </attribute>
-        <attribute>
-            <name>splitTheme</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <defaultValue>b</defaultValue>
-            <description>Specify the theme of the split element.</description>
+            <description>Specify if a split icon will be used in the list elements. In that case, this action is invoked whenever that split link is clicked.</description>
         </attribute>
         <attribute>
             <name>headerText</name>

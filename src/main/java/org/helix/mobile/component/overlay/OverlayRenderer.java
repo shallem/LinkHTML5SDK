@@ -62,6 +62,11 @@ public class OverlayRenderer extends CoreRenderer {
             writer.write(overlay.getBeforeOpen() + ".call($(event.target));");
             writer.write("});" );
         }
+        if (overlay.getOpen() != null) {
+            writer.write("$(PrimeFaces.escapeClientId('" + clientId + "')).on('panelopen', function( event, ui ) {");
+            writer.write(overlay.getOpen() + ".call($(event.target));");
+            writer.write("});" );
+        }
         if (overlay.getAfterClose() != null) {
             writer.write("$(PrimeFaces.escapeClientId('" + clientId + "')).on('panelclose', function( event, ui ) {");
             writer.write(overlay.getAfterClose() + ".call($(event.target));");

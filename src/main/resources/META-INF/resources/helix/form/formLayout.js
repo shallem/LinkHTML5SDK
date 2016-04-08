@@ -152,6 +152,8 @@
                     } else {
                         formElem.hidden = true;
                     }
+                } else if ($.isFunction(formElem.condition)) {
+                    formElem.hidden = !(formElem.condition.call(this, (valuesMap ? valuesMap : null), fldName));
                 } else  {
                     var fn = window[formElem.condition];
                     if(typeof fn === 'function') {
@@ -189,6 +191,10 @@
                 }
                 this.__computeOneHidden(formElem, valuesMap);
             }
+        },
+        
+        refreshHidden: function(name) {
+            
         },
     
         updateItem: function(name, updatedProperties) {
@@ -656,7 +662,7 @@
         },
         
         setValue: function(name, value) {
-            var item;
+            var item, subItem;
             name = this._stripNamespace(name);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 item = this.options.items[idx];
@@ -664,6 +670,21 @@
                 var strippedFieldID = this._stripNamespace(fieldID);
 
                 if (name === strippedFieldID) {
+                    break;
+                }
+                if (item.type === 'subPanel') {
+                    // Go through the items.
+                    for (var j = 0; j < item.items.length; ++j) {
+                        subItem = item.items[j];
+                        var _subID = this._stripNamespace(subItem.name);
+                        if (name === _subID) {
+                            break;
+                        }
+                        subItem = null;
+                    }
+                }
+                if (subItem) {
+                    item = subItem;
                     break;
                 }
                 item = null;
@@ -674,7 +695,9 @@
             
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             var valuesObj = {};
-            valuesObj[name] = value;
+            if (value) {
+                valuesObj[name] = value;
+            }
             this.__refreshOneValue(mode, item, valuesObj);
         },
         
