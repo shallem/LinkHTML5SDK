@@ -2229,7 +2229,7 @@
                     return false;
                 });
             } else if (this.options.holdAction) {
-                $(this.$listWrapper).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);                    
@@ -2244,7 +2244,7 @@
             
             // Tap
             if (this.options.selectAction) {
-                $(this.$listWrapper).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
                     var _self = event.data;
                     event.stopImmediatePropagation();
                     
@@ -2263,15 +2263,13 @@
                         // if not, hide it. Re-layout the page if we make a change.
                         var selectedElems = _self.getAllMultiSelectElements();
                         if (selectedElems.length === 0) {
-                            _self.$clearSelectionDiv.hide();
-                            _self.$searchSortDiv.show();
+                            _self.$clearSelectionDiv.slideToggle();
+                            _self.$searchSortDiv.slideToggle();
                             Helix.Layout.layoutPage();
-                        } else {
-                            if (!_self.$clearSelectionDiv.is(':visible')) {
-                                _self.$clearSelectionDiv.show();
-                                _self.$searchSortDiv.hide();
-                                Helix.Layout.layoutPage();
-                            }                            
+                        } else if (!_self.$clearSelectionDiv.is(':visible')) {
+                            _self.$clearSelectionDiv.slideToggle();
+                            _self.$searchSortDiv.slideToggle();
+                            Helix.Layout.layoutPage();
                         }
                     } else {
                         if (_self.setSelected(event.target))  {
@@ -2289,7 +2287,7 @@
                 });
             }
             if (this.options.swipeLeftAction) {
-                this.$listWrapper.on('swipeleft', 'div.ui-li', this, function(event) {
+                this.$listWrapper.off('swipeleft').on('swipeleft', 'div.ui-li', this, function(event) {
                     var _self = event.data;
                     event.stopImmediatePropagation();
 
@@ -2299,7 +2297,7 @@
                 });
             }
             if (this.options.swipeRightAction) {
-                $(this.$listWrapper).on('swiperight', 'div.ui-li', this, function(event) {
+                $(this.$listWrapper).off('swiperight').on('swiperight', 'div.ui-li', this, function(event) {
                     var _self = event.data;
                     event.stopImmediatePropagation();
 
@@ -2469,8 +2467,8 @@
         
         clearAllMultiSelect: function() {
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
-            this.$clearSelectionDiv.hide();
-            this.$searchSortDiv.show();
+            this.$clearSelectionDiv.slideToggle();
+            this.$searchSortDiv.slideToggle();
             Helix.Layout.layoutPage();
         },
         
