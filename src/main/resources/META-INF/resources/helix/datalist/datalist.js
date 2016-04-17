@@ -2204,6 +2204,10 @@
                 return false;
             }  
         },
+        
+        refreshHandlers: function() {
+            this._installActionHandlers();
+        },
     
         _installActionHandlers: function() {
             // Tap-hold
