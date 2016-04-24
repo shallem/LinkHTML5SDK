@@ -442,11 +442,11 @@ li {
 /**
  * bullets on multi select lista
  */
-.hx-listview.hxMultiSelect li.ui-btn {
+.hx-listview.hxMultiSelect li.hx-multi-select-item {
     padding: 0 0 0 30px;
 }
 
-.hx-listview.hxMultiSelect li.ui-btn:before{
+.hx-listview.hxMultiSelect li.hx-multi-select-item:before{
     /*fill it with a blank space*/
     content:"\00a0";
 
@@ -591,6 +591,7 @@ li {
     align-items: center;
     -webkit-align-items: center;
     margin: .2em;
+    height: 32px
 }
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
@@ -606,6 +607,8 @@ li {
 .hx-search-sort .ui-input-search {
     padding-left: 30px;
     padding-right: 10px;
+    margin-top: 0em;
+    margin-bottom: 0em;
 }
 
 /**
@@ -624,6 +627,16 @@ li {
 @keyframes loading_color_change {
     from { background: #BCCBF6; }
     to { background: #CC9E0F; }
+}
+
+.hx-toggleable {
+    -webkit-transition: height .4s linear;
+    transition: height .4s linear;
+    overflow: hidden;
+}
+
+.hx-toggled {
+    height: 0px !important;
 }
 
 /**
@@ -681,10 +694,6 @@ li {
     height:  calc(100% - 30px);
 }
 
-.hx-almost-full-height {
-    height: 98%;
-}
-
 .ui-btn-active {
     background-color: rgba(44, 92, 255, 0.541);
     background-image: -webkit-gradient(linear, left top, left bottom, from( rgba(0,0,0,0.37) /*{global-active-background-start}*/), to( #6facd5 /*{global-active-background-end}*/)); /* Saf4+, Chrome */
@@ -693,4 +702,96 @@ li {
     background-image:     -ms-linear-gradient( rgba(0,0,0,0.37) /*{global-active-background-start}*/, #6facd5 /*{global-active-background-end}*/); /* IE10 */
     background-image:      -o-linear-gradient( rgba(0,0,0,0.37) /*{global-active-background-start}*/, #6facd5 /*{global-active-background-end}*/); /* Opera 11.10+ */
     background-image:         linear-gradient( rgba(0,0,0,0.37) /*{global-active-background-start}*/, #6facd5 /*{global-active-background-end}*/);
+}
+
+.ui-footer ul li a.ui-btn-up-a:not(.ui-btn-active) {
+    background-color: #666;
+}
+
+.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal {
+    float: right;
+    display: inline-block;
+    margin: 0;
+}
+
+/* Match height/margin of hx-search-sort */
+.hx-list-selection-buttons {
+    margin: .2em;
+    height: 32px;
+}
+
+.ui-li>.ui-btn-inner {
+    border: none;
+}
+
+/* Layout of split icons */
+.hx-listview .ui-li-link-alt {
+    width: 60px;
+}
+
+.hx-listview .ui-li-link-alt .ui-btn {
+    right: 16px;
+    border: none;
+}
+
+.hx-listview li[data-role="empty-group"] {
+    font-weight: normal;
+    font-family: Helvetica;
+    font-size: 11pt;
+}
+
+.hx-almost-full-height {
+    height: 97%;
+}
+
+/* Position of split icons in data lists */
+.ui-li-link-alt .ui-btn-icon-notext .ui-btn-inner .ui-icon { 
+    position: absolute; 
+    top: 50%; 
+    margin-top: -11px; 
+}
+
+/**
+ * Animations
+ */
+.ui-header.ui-bar-d {
+    border-bottom: 0.25em solid #bbb;
+}
+
+.hx-loading {
+    -webkit-animation: pulsating_border 1s infinite alternate;
+    animation: pulsating_border 1s infinite alternate;
+    border-bottom: 0.25em solid rgba(192, 39, 45, 1); 
+}
+
+/*@-webkit-keyframes pulsating_border {
+    0%   { border-bottom-color: rgba(192, 39, 45, 1); }
+    25%  { border-bottom-color: rgba(169, 43, 52, 1); }
+    50% { border-bottom-color: rgba(147, 47, 59, 1); }
+    75% { border-bottom-color: rgba(124, 52, 66, 1); }
+    100% { border-bottom-color: rgba(101, 56, 72, 1); }
+}
+
+@keyframes pulsating_border {
+    0%   { border-bottom-color: rgba(192, 39, 45, 1); }
+    25%  { border-bottom-color: rgba(169, 43, 52, 1); }
+    50% { border-bottom-color: rgba(147, 47, 59, 1); }
+    75% { border-bottom-color: rgba(124, 52, 66, 1); }
+    100% { border-bottom-color: rgba(101, 56, 72, 1); }
+}*/
+
+@-webkit-keyframes pulsating_border {
+    from   { border-bottom-color: rgba(192, 39, 45, 1); }
+    to  { border-bottom-color: #bbb }
+}
+
+@keyframes pulsating_border {
+    from   { border-bottom-color: rgba(192, 39, 45, 1); }
+    to  { border-bottom-color: #bbb }
+}
+
+/* Make the background of overlays a bit transparent. */
+.hx-overlay-full-height.ui-panel {
+    background: rgba(243,243,243,0.6);
+    background-image: linear-gradient(rgba(221,221,221,0.6), rgba(204,204,204,0.6));
 }

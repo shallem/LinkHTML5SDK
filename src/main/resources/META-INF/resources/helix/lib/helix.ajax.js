@@ -181,16 +181,14 @@ $(document).on('helixready', function() {
             });
         } else {
             if (window.OfflinePost.listPosts) {
-                window.OfflinePost.listPosts(function(postsListString) {
-                    var postsList = $.parseJSON(postsListString);
+                window.OfflinePost.listPosts(function(postsList) {
                     for (var i = 0; i < postsList.length; ++i) {
                         var nxt = postsList[i];                        
-                        var statusObj = $.parseJSON(nxt.result);
                         var elem = {
                             'json' : nxt.obj,
                             'id' : nxt.ROWID,
-                            'status': statusObj.code,
-                            'error': statusObj.error
+                            'status': nxt.status,
+                            'error': nxt.error
                         };
                         
                         switch(statusObj.code) {

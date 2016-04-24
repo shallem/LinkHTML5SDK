@@ -119,8 +119,14 @@
     
     if (window.CordovaVersion >= 3 &&
         window.CordovaRevision >= 3) {
+        alert("HELLO");
         window.HelixSystem.exitApp = function() {
             return cordova.exec(null, null, "HelixSystem", "exitApp", []);
+        };
+        window.HelixSystem.openApp = function(appID, action, argsObj) {
+            var args = Helix.Utils.crossAppArgs(appID, action, argsObj);
+            var url = 'hx://openapp?' + args;
+            window.open(url);
         };
     }
     

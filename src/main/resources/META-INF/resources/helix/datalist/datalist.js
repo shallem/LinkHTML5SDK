@@ -365,6 +365,11 @@
             rowRenderer: null,
             
             /**
+             * "This" arg for the row renderer. If this is null then the list itself is used.
+             */
+            rowRendererContext: null,
+            
+            /**
              * When supplied, a function to call on pull-to-refresh. When null,
              * pull to refresh is disabled.
              */
@@ -447,15 +452,14 @@
             this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$headerSection)
-                .addClass('hx-full-width')
-                .addClass('hx-search-sort')
+                .addClass('hx-full-width hx-search-sort hx-toggleable')
                 .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
             
             this.$clearSelectionDiv = $('<div/>')
                 .appendTo(this.$headerSection)
-                .addClass('hx-full-width hx-list-selection-buttons')
+                .addClass('hx-full-width hx-list-selection-buttons hx-toggleable hx-toggled')
                 .attr('id', parentId + '_clear_sel')
                 .hide();
             
@@ -1986,6 +1990,7 @@
             }
             
             _self.$searchSortDiv.show();
+            _self.$clearSelectionDiv.show();
         },
         
         _prependClearSelection: function() {
@@ -2248,6 +2253,9 @@
                     var _self = event.data;
                     event.stopImmediatePropagation();
                     
+                    if ($(this).is('.ui-li-divider')) {
+                        return false;
+                    }
                     if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
                         return false;
                     }
@@ -2263,13 +2271,11 @@
                         // if not, hide it. Re-layout the page if we make a change.
                         var selectedElems = _self.getAllMultiSelectElements();
                         if (selectedElems.length === 0) {
-                            _self.$clearSelectionDiv.slideToggle();
-                            _self.$searchSortDiv.slideToggle();
-                            Helix.Layout.layoutPage();
-                        } else if (!_self.$clearSelectionDiv.is(':visible')) {
-                            _self.$clearSelectionDiv.slideToggle();
-                            _self.$searchSortDiv.slideToggle();
-                            Helix.Layout.layoutPage();
+                            _self.$clearSelectionDiv.addClass('hx-toggled');
+                            _self.$searchSortDiv.removeClass('hx-toggled');
+                        } else {
+                            _self.$clearSelectionDiv.removeClass('hx-toggled');
+                            _self.$searchSortDiv.addClass('hx-toggled');
                         }
                     } else {
                         if (_self.setSelected(event.target))  {
@@ -2338,7 +2344,8 @@
             if (!renderer) {
                 renderer = _self.options.rowRenderer;
             }
-            if (renderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
+            var rendererContext = _self.options.rowRendererContext ? _self.options.rowRendererContext : _self;
+            if (renderer.call(rendererContext, curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
                     curRowParent.appendTo(_self.$parent);
                 } else {
@@ -2467,8 +2474,8 @@
         
         clearAllMultiSelect: function() {
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
-            this.$clearSelectionDiv.slideToggle();
-            this.$searchSortDiv.slideToggle();
+            this.$clearSelectionDiv.addClass('hx-toggled');
+            this.$searchSortDiv.removeClass('hx-toggled');
             Helix.Layout.layoutPage();
         },
         
@@ -2481,6 +2488,13 @@
             if ($(parentElement).hasClass('ui-li')) {
                 // Already enhanced.
                 isEnhanced = true;
+            }
+            if (this.options.multiSelect) {
+                if (!rowComponents.disableMultiSelect) {
+                    $(parentElement).addClass('hx-multi-select-item');
+                } else {
+                    $(parentElement).removeClass('hx-multi-select-item');                
+                }
             }
             
             var mainLink = null;

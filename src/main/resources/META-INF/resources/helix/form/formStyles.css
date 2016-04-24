@@ -205,3 +205,11 @@
         text-align: left;
     }
 }
+
+.hx-form-container .hx-block-field {
+    display: block;
+}
+
+textarea.ui-input-text {
+    padding: 0 .4em;
+}

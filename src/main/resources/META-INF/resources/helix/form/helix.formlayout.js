@@ -457,8 +457,8 @@ function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayou
         'id' : inputID,
         'tabindex' : formElem.tabIndex
     });
-    if (formElem.selectWidth) {
-        $(inputMarkup).attr('width', formElem.selectWidth);
+    if (formElem.computedWidth) {
+        $(inputMarkup).attr('width', formElem.computedWidth);
     }
 
     var i;
@@ -477,23 +477,33 @@ function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayou
         }
     }
 
-    var selectContainer = $('<div />').attr({
-        'data-role' : 'fieldcontain',
-        'style' : formElem.computedStyle
-    })
-    .append($('<label />').attr({
-        'for' : inputID,
-        'class' : formLayout.titleStyleClass
+    if (formElem.fieldTitle) {
+        var selectContainer = $('<div />').attr({
+            'data-role' : 'fieldcontain',
+            'style' : formElem.computedStyle
         })
-        .append(formElem.fieldTitle)
-    )
-    .append(inputMarkup);
-    $fieldContainer.append(selectContainer);
-    selectContainer.fieldcontain();
+        .append($('<label />').attr({
+            'for' : inputID,
+            'class' : formLayout.titleStyleClass
+            })
+            .append(formElem.fieldTitle)
+        )
+        .append(inputMarkup);
+        $fieldContainer.append(selectContainer);
+        selectContainer.fieldcontain();
+        if (formElem.selectWidth) {
+            $(selectContainer).attr('width', formElem.selectWidth);
+        }
+    } else {
+        $fieldContainer.append(inputMarkup);
+    }
     $(inputMarkup).selectmenu({
         corners: false,
         mini: useMiniLayout
     });
+    if (formElem.computedWidth) {
+        $(inputMarkup).closest('.ui-select').width(formElem.computedWidth);
+    }
     if (formLayout.textStyleClass) {
         $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
     }
@@ -586,6 +596,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         $(inputMarkup).textinput({
             disabled: formElem.inputDisabled ? true : false
         });
+        if (formElem.width && formElem.type === 'search') {
+            $(inputMarkup).parent('.ui-input-search').width(formElem.width);
+        }
+        
         if (formElem.fieldTitleType === 'button') {
             $(formElem.fieldTitle).button();
         }
