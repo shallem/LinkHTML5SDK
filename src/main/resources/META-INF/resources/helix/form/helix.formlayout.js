@@ -672,7 +672,12 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                     autoCompleteList.listview("refresh");
                 } else {
                     var __doAutocomplete = function() {
-                        formElem.autocomplete.call(formElem, text, function(LIs) {
+                        formElem.autocomplete.call(formElem, text, function(LIs, queryText) {
+                            if (queryText !== _self.val()) {
+                                // The user has changed the text further since we ran this query.
+                                return;
+                            }
+                            
                             // Set __noblur to prevent the user's clicking on an autocomplete list
                             // item from triggering a blur event, which doesn't make sense because
                             // the value supplied to the blur event should be the value clicked upon,

@@ -117,19 +117,6 @@
         }
     };
     
-    if (window.CordovaVersion >= 3 &&
-        window.CordovaRevision >= 3) {
-        alert("HELLO");
-        window.HelixSystem.exitApp = function() {
-            return cordova.exec(null, null, "HelixSystem", "exitApp", []);
-        };
-        window.HelixSystem.openApp = function(appID, action, argsObj) {
-            var args = Helix.Utils.crossAppArgs(appID, action, argsObj);
-            var url = 'hx://openapp?' + args;
-            window.open(url);
-        };
-    }
-    
     window.HelixLocalNotifications = {
         scheduleNotification: function(fireDate, uniqueID, description, minutesBefore, success, failure) {
             return cordova.exec(success, failure, "LocalNotificationScheduler", "scheduleNotification", 
@@ -164,5 +151,20 @@
         window.HelixBulkContacts.queue = function(contactsToQueue, done) {
             return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
         };
+    }
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 3) {
+        alert("HELLO");
+        $.extend(window.HelixSystem, {
+            exitApp : function() {
+                return cordova.exec(null, null, "HelixSystem", "exitApp", []);
+            },
+            openApp : function(appID, action, argsObj) {
+                var args = Helix.Utils.crossAppArgs(appID, action, argsObj);
+                var url = 'hx://openapp?' + args;
+                window.open(url);
+            }
+        });
     }
 })();
