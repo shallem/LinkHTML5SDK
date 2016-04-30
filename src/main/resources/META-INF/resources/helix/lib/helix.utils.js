@@ -288,14 +288,14 @@ Helix.Utils =  {
     },
     
     getURLParameters : function() {
-        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        var sPageURL = window.location.search.substring(1),
         sURLVariables = sPageURL.split('&'),
         i,
         ret = {};
 
         for (i = 0; i < sURLVariables.length; i++) {
             var nxt = sURLVariables[i].split('=');
-            ret[nxt[0]] = nxt[1];
+            ret[decodeURIComponent(nxt[0])] = decodeURIComponent(nxt[1]);
         }
         return ret;
     }

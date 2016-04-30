@@ -155,7 +155,6 @@
     
     if (window.CordovaVersion >= 3 &&
         window.CordovaRevision >= 3) {
-        alert("HELLO");
         $.extend(window.HelixSystem, {
             exitApp : function() {
                 return cordova.exec(null, null, "HelixSystem", "exitApp", []);
