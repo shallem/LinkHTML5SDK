@@ -185,22 +185,22 @@ $(document).on('helixready', function() {
                     for (var i = 0; i < postsList.length; ++i) {
                         var nxt = postsList[i];                        
                         var elem = {
-                            'json' : nxt.obj,
-                            'id' : nxt.ROWID,
+                            'json' : nxt.json,
+                            'id' : nxt.id,
                             'status': nxt.status,
                             'error': nxt.error
                         };
                         
-                        switch(statusObj.code) {
+                        switch(elem.status) {
                             case -3:
-                                window.OfflinePost.clearPost(nxt.ROWID, function() {}, function() {});
+                                window.OfflinePost.clearPost(elem.id, function() {}, function() {});
                                 break;
                             case 0:
                                 // Success;
                                 if (Helix.Ajax.postedOfflineActionsCallback) {
                                    Helix.Ajax.postedOfflineActionsCallback(elem);
                                 }
-                                window.OfflinePost.clearPost(nxt.ROWID, function() {}, function() {});
+                                window.OfflinePost.clearPost(elem.id, function() {}, function() {});
                                 break;
                             default:
                                 Helix.Ajax.failedOfflineActions.push(elem);
