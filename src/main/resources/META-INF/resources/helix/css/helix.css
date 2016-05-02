@@ -720,6 +720,11 @@ li {
     height: 32px;
 }
 
+.hx-list-selection-buttons .ui-mini.ui-btn-inline {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
 .ui-li>.ui-btn-inner {
     border: none;
 }
