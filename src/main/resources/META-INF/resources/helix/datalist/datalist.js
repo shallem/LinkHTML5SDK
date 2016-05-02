@@ -1781,7 +1781,7 @@
                                 _self._doRemoteSearch(searchText, res);                        
                             }
                         });
-                    });
+                    }, _self.originalList);
                 } else {
                     _self._doRemoteSearch(searchText, _self.originalList);
                 }                

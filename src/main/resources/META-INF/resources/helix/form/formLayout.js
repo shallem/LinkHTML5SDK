@@ -575,10 +575,17 @@
             var fieldID = item.name;
             var strippedFieldID = this._stripNamespace(fieldID);
             if (!item.readOnly) {
-                if (valuesMap[strippedFieldID] !== undefined ||
-                    valuesMap['default'] !== undefined) {
-                    var newValue = (valuesMap[strippedFieldID] !== undefined ? 
-                                        valuesMap[strippedFieldID] : valuesMap['default']);
+                if ((fieldID in valuesMap) ||
+                        (strippedFieldID in valuesMap) ||
+                        ('default' in valuesMap)) {
+                    var newValue;
+                    if (fieldID in valuesMap) {
+                        newValue = valuesMap[fieldID];
+                    } else if (strippedFieldID in valuesMap) {
+                        newValue = valuesMap[strippedFieldID];
+                    } else {
+                        newValue = valuesMap['default'];
+                    }
                     
                     var fldType = item.type;
                     if (fldType !== 'buttonGroup') {
@@ -714,6 +721,7 @@
         },
         
         getValue: function(name) {
+            name = this._stripNamespace(name);
             var fld = this._fieldMap[name];
             if (!fld) {
                 return null;
