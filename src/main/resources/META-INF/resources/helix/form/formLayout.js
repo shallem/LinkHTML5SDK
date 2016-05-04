@@ -104,27 +104,31 @@
             $(this.element).empty();
         },
         
+        _processOneItem: function(formElem) {
+            this._typeMap[formElem.name] = formElem.type;
+            this._fieldMap[formElem.name] = formElem;
+            formElem.parentForm = this;
+            formElem.origCondition = formElem.condition;
+            if (this.options.namespace) {
+                if (formElem.id) {
+                    formElem.id = this.options.namespace + "_" + formElem.id;
+                }
+                formElem.originalName = formElem.name;
+                formElem.name = this.options.namespace + "_" + formElem.name;
+            }
+            if (formElem.type === 'controlset') {
+                // Control set.
+                this._processItems(formElem.controls);
+            } else if (formElem.items) {
+                // Sub panel.
+                this._processItems(formElem.items);
+            }            
+        },
+        
         _processItems: function(itemsList) {
             for (var idx = 0; idx < itemsList.length; ++idx) {
                 var formElem = itemsList[idx];
-                this._typeMap[formElem.name] = formElem.type;
-                this._fieldMap[formElem.name] = formElem;
-                formElem.parentForm = this;
-                formElem.origCondition = formElem.condition;
-                if (this.options.namespace) {
-                    if (formElem.id) {
-                        formElem.id = this.options.namespace + "_" + formElem.id;
-                    }
-                    formElem.originalName = formElem.name;
-                    formElem.name = this.options.namespace + "_" + formElem.name;
-                }
-                if (formElem.type === 'controlset') {
-                    // Control set.
-                    this._processItems(formElem.controls);
-                } else if (formElem.items) {
-                    // Sub panel.
-                    this._processItems(formElem.items);
-                }
+                this._processOneItem(formElem);
             }
         },
     
@@ -971,9 +975,8 @@
         },
         
         addItem: function(item) {
-            item.originalName = item.name;
-            item.name =  this.options.namespace + '_' + item.name;
             this.options.items.push(item);
+            this._processOneItem(item);
         },
         
         getItems: function() {
