@@ -251,5 +251,52 @@ Helix.Utils =  {
     },
     escapeClientId : function(id) {
         return "#" + id.replace(/:/g,"\\:");
+    },
+
+    isImageLoaded: function(img) {
+        if ($.isArray(img)) {
+            if (!img.length) {
+                return false;
+            }
+            
+            img = img[0];
+        }
+        
+        // During the onload event, IE correctly identifies any images that
+        // weren’t downloaded as not complete. Others should too. Gecko-based
+        // browsers act like NS4 in that they report this incorrectly.
+        if (!img.complete) {
+            return false;
+        }
+
+        // However, they do have two very useful properties: naturalWidth and
+        // naturalHeight. These give the true size of the image. If it failed
+        // to load, either of these should be zero.
+
+        if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) {
+            return false;
+        }
+
+        // No other way of checking: assume it’s ok.
+        return true;
+    },
+    
+    crossAppArgs: function(appID, action, argsObj) {
+        return 'appid=' + encodeURIComponent(appID) +
+                    '&action=' + encodeURIComponent(action) +
+                    '&args=' + encodeURIComponent(JSON.stringify(argsObj));
+    },
+    
+    getURLParameters : function() {
+        var sPageURL = window.location.search.substring(1),
+        sURLVariables = sPageURL.split('&'),
+        i,
+        ret = {};
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            var nxt = sURLVariables[i].split('=');
+            ret[decodeURIComponent(nxt[0])] = decodeURIComponent(nxt[1]);
+        }
+        return ret;
     }
 };

@@ -150,6 +150,14 @@
             swipeRightAction: null,
             
             /**
+             * Action to perform is the split button is clicked. To render split buttons, supply icon
+             * class (ui-icon-<supply this class>) as the splitLink member of the object provided to
+             * createListRow. Whenever that split button is tapped, this function will be called after
+             * setting the list selection.
+             */
+            splitAction: null,
+            
+            /**
              * Context menu to display if the user tap-holds (for touch devices)
              * or double clicks (for non-touch devices) on a list item. When 
              * both this option and holdAction are specified, this option takes
@@ -184,11 +192,19 @@
             holdAction: null,
             
             /**
-             * Function that accepts a query collection, the contents of
-             * the search box, and the current query collection and returns 
-             * a filtered query collection. If null, no search box is shown.
+             * Function that accepts the contents of the search box and a continuation function and
+             * supplies a filtered query collection (based on the search box) to that continuation function. An
+             * optional 3rd argument is the results of a 'local' search, meant for cases where a 'quick-and-dirty'
+             * search can be performed on the client and those results might be merged with results returned by the
+             * server. If null, no search box is shown.
              */
             indexedSearch: null,
+            
+            /**
+             * Function that executes a fast, local search for content on the client side. Arguments are a search query
+             * string and a continuation function.
+             */
+            localIndexedSearch: null,
             
             /**
              * Text to display in the search box when it is first rendered. Useful
@@ -334,18 +350,8 @@
             itemList: null,
             
             /**
-             * Specify the icon for a split icon layout if one is going to be
-             * used for the list items. See jQuery Mobile documentation of the
-             * listview plugin for further detail on what a split icon layout
-             * means.
+             * 
              */
-            splitIcon: null,
-            
-            /**
-             * Specify the theme for the split button. This item is ignored unless
-             * splitIcon is non-null.
-             */
-            splitTheme: null,
             
             /**
              * Function used to render a single data row (i.e. a non-group-name
@@ -357,6 +363,11 @@
              *      renderRow(curRowParent, list, rowData, rowIndex, strings)
              */
             rowRenderer: null,
+            
+            /**
+             * "This" arg for the row renderer. If this is null then the list itself is used.
+             */
+            rowRendererContext: null,
             
             /**
              * When supplied, a function to call on pull-to-refresh. When null,
@@ -409,6 +420,12 @@
              */
             multiSelect: false,
 
+            /**
+             * Callback to add buttons that will appear when one more item is selected. The 'this' is the datalist
+             * in the callback and the first parameter is the parent div.
+             */
+            selectionButtonsCallback: null,
+
             /*
              * Number of rows to display in a single view of the list. The list automatically
              * paginates as the user scrolls.
@@ -435,15 +452,14 @@
             this.$headerSection = $('<header/>').appendTo(this.$section);
             this.$searchSortDiv = $('<div/>')
                 .appendTo(this.$headerSection)
-                .addClass('hx-full-width')
-                .addClass('hx-search-sort')
+                .addClass('hx-full-width hx-search-sort hx-toggleable')
                 .attr('id', parentId + '_list_header')
                 .hide();
             this._searchSortDirty = true;
             
             this.$clearSelectionDiv = $('<div/>')
                 .appendTo(this.$headerSection)
-                .addClass('hx-full-width')
+                .addClass('hx-full-width hx-list-selection-buttons hx-toggleable hx-toggled')
                 .attr('id', parentId + '_clear_sel')
                 .hide();
             
@@ -452,6 +468,12 @@
              * Append the data list.
              */
             var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
+            
+            // Set context menu event to taphold for touch devices, dblclick for none-touch.
+            this.contextEvent = Helix.contextEvent;
+            this.tapEvent = Helix.clickEvent;
+            this._cancelNextTap = false;
+            this._installActionHandlers();
 
             /**
              * Append the footer.
@@ -486,15 +508,8 @@
             }
             
             /**
-             * Split icons, if appropriate.
+             * Action icon, if enabled.
              */
-            if (this.options.splitIcon) {
-                this.$parent.attr('data-split-icon', this.options.splitIcon);
-            }
-            if (this.options.splitTheme) {
-                this.$parent.attr('data-split-theme', this.options.splitTheme);
-            }
-
             if (this.options.showDataIcon === false) {
                 this.showDataIcon = false;
                 this.$parent.attr('data-icon', false);
@@ -557,13 +572,7 @@
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
-            
-            // Set context menu event to taphold for touch devices, dblclick for none-touch.
-            //this.contextEvent = 'taphold';
-            this.contextEvent = Helix.contextEvent;
-            this.tapEvent = Helix.clickEvent;
-            this._cancelNextTap = false;
-        
+                   
             // Default sort.
             this._currentSort = this.options.sortBy;
             this._currentSortOrder = this.options.sortOrder.toUpperCase();
@@ -1524,7 +1533,7 @@
             this._sortAndRenderData(displayCollection, function(finalCompletion) {
                 finalCompletion();
                 _self.$listWrapper.show();
-                _self.$parent.listview( "refresh" );                
+                _self.$parent.listview( "refresh" );         
                 $(_self.$wrapper).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
@@ -1737,6 +1746,23 @@
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
         
+        _doRemoteSearch: function(searchText, localResultsColl) {
+            var _self = this;
+            _self.__searchReadyTimeout = setTimeout(function() {
+                if (_self.__searchReadyTimeout) {
+                    clearTimeout(_self.__searchReadyTimeout);
+                }
+
+                if (searchText) {
+                    _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
+                        _self.indexedSearchDone(displayCollection, oncomplete);
+                    }, localResultsColl);
+                }
+                _self.__searchReadyTimeout = null;
+            }, 3000);
+
+        },
+        
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();            
@@ -1747,19 +1773,18 @@
                 // We do not do 1 letter searches ...
                 return;
             } else {
-                _self.__searchReadyTimeout = setTimeout(function() {
-                    if (_self.__searchReadyTimeout) {
-                        clearTimeout(_self.__searchReadyTimeout);
-                    }
-
-                    var searchText = _self.__searchText.trim();
-                    if (searchText) {
-                        _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
-                            _self.indexedSearchDone(displayCollection, oncomplete);
-                        }, _self.originalList);
-                    }
-                    _self.__searchReadyTimeout = null;
-                }, 3000);
+                var searchText = _self.__searchText.trim();
+                if (_self.options.localIndexedSearch) {
+                    _self.options.localIndexedSearch.call(_self, searchText, function(res) {
+                        _self.indexedSearchDone(res, function() {
+                            if (_self.options.indexedSearch) {
+                                _self._doRemoteSearch(searchText, res);                        
+                            }
+                        });
+                    }, _self.originalList);
+                } else {
+                    _self._doRemoteSearch(searchText, _self.originalList);
+                }                
             }
         },
         
@@ -1797,7 +1822,7 @@
                     useControlGroup = true;
                 }
                 
-                var $sortDiv = $('<div/>').attr({
+                _self.$sortDiv = $('<div/>').attr({
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
@@ -1819,7 +1844,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1836,7 +1861,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1844,10 +1869,6 @@
                         
                         _self.displaySortMenu(this);
                     });                    
-                    
-                    if (this.options.externalButtonsCallback) {
-                        this.options.externalButtonsCallback(_self, $sortDiv, useControlGroup);
-                   }
                 }
                 
                 if (_self.options.showFilterButton) {
@@ -1862,7 +1883,7 @@
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
                         'class' : 'ui-icon-alt hx-icon-sort-filter'
                     }).button()
-                    .appendTo($sortDiv)
+                    .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
                         ev.stopPropagation();
                         ev.stopImmediatePropagation();
@@ -1872,15 +1893,19 @@
                     });                    
                 }
                 
+                if (this.options.externalButtonsCallback) {
+                    this.options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
+                }
+                
                 if (useControlGroup) {
-                    $sortDiv.controlgroup();
+                    _self.$sortDiv.controlgroup();
                 } else {
-                    $sortDiv.controlgroup({ corners: false });
+                    _self.$sortDiv.controlgroup({ corners: false });
                 }
             };
             
             var _attachSearchBox = function() {
-                var $searchDiv = $('<div/>').addClass('hx-full-width').appendTo(_self.$searchSortDiv);
+                var $searchDiv = $('<div/>').addClass('hx-almost-full-width').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
                 if (this.options.indexedSearchType !== 'search') {
@@ -1913,6 +1938,9 @@
                         if (_self.__searchClear) {
                             _self.$searchBox.val('');
                         }
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.hide(100);
+                        }
                     });
                     this.$searchBox.on('blur', function() {
                         // If we had previously searched and we then blur the search box
@@ -1921,7 +1949,21 @@
                             _self.clearSearchText();
                             _self.resetListContents();
                         }
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.show();
+                        }
                         return false;
+                    });
+                } else {
+                    this.$searchBox.on('focus', function() {
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.hide(100);
+                        }
+                    });
+                    this.$searchBox.on('blur', function() {
+                        if (_self.$sortDiv) {
+                            _self.$sortDiv.show();
+                        }
                     });
                 }
                 
@@ -1937,17 +1979,18 @@
 
             if (this.options.buttonPos === 'left') {
                 _attachButtons.call(this);
-                if (this.options.indexedSearch) {
+                if (this.options.indexedSearch || this.options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }                
             } else {
-                if (this.options.indexedSearch) {
+                if (this.options.indexedSearch  || this.options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }
                 _attachButtons.call(this);
             }
             
             _self.$searchSortDiv.show();
+            _self.$clearSelectionDiv.show();
         },
         
         _prependClearSelection: function() {
@@ -1956,6 +1999,7 @@
             }
             var _self = this;
             _self.$clearSelectionDiv.empty();
+            
             _self.$clearSelectionDiv.append($('<a/>').append("Clear").buttonMarkup({
                 mini: true,
                 corners: false,
@@ -1967,6 +2011,15 @@
                 _self.clearAllMultiSelect();
                 return false;
             }));
+            
+            var $controlGroup = $('<div/>').appendTo(_self.$clearSelectionDiv);
+            if (this.options.selectionButtonsCallback) {
+                this.options.selectionButtonsCallback.call(_self, $controlGroup);
+            }
+            $controlGroup.controlgroup({ 
+                type: 'horizontal',
+                shadow: false
+            });
         },
         
         /* Apply the appropriate sort to the display collection. */
@@ -2156,6 +2209,110 @@
                 return false;
             }  
         },
+        
+        refreshHandlers: function() {
+            this._installActionHandlers();
+        },
+    
+        _installActionHandlers: function() {
+            // Tap-hold
+            if (this.options.itemContextMenu) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    
+                    // This allows the container to have taphold context menus that are not
+                    // triggered when this event is triggered.
+                    _self.setSelected(event.target);
+                    if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(_self.selected)) {
+                        _self.options.itemContextMenu.open({
+                            positionTo: event.target,
+                            thisArg: _self,
+                            extraArgs: _self.options.itemContextMenuArgs
+                        });
+                    }
+                    event.stopImmediatePropagation();
+                    return false;
+                });
+            } else if (this.options.holdAction) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem(true);                    
+                    }
+                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self._cancelNextTap = true;
+
+                    event.stopImmediatePropagation();
+                    return false;
+                }); 
+            } 
+            
+            // Tap
+            if (this.options.selectAction) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+                    
+                    if ($(this).is('.ui-li-divider')) {
+                        return false;
+                    }
+                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
+                        return false;
+                    }
+                    if (_self._cancelNextTap) {
+                        _self._cancelNextTap = false;
+                        return false;
+                    }
+                    
+                    if (_self.options.multiSelect && event.clientX < 35) {
+                        $(event.target).toggleClass("hx-selected");
+                        
+                        // Check to see if we have anything selected - if yes, show the clear button;
+                        // if not, hide it. Re-layout the page if we make a change.
+                        var selectedElems = _self.getAllMultiSelectElements();
+                        if (selectedElems.length === 0) {
+                            _self.$clearSelectionDiv.addClass('hx-toggled');
+                            _self.$searchSortDiv.removeClass('hx-toggled');
+                        } else {
+                            _self.$clearSelectionDiv.removeClass('hx-toggled');
+                            _self.$searchSortDiv.addClass('hx-toggled');
+                        }
+                    } else {
+                        if (_self.setSelected(event.target))  {
+                            if ($(this).is('[data-origin="splitlink"]')) {
+                                if (_self.options.splitAction) {
+                                    _self.options.splitAction(_self.selected, _self.selectedGroup, _self.strings);
+                                }
+                            } else {
+                                _self.selectItem();
+                            }
+                        }
+                    }
+
+                    return false;
+                });
+            }
+            if (this.options.swipeLeftAction) {
+                this.$listWrapper.off('swipeleft').on('swipeleft', 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeLeftAction(_self.selected);
+                    return false;
+                });
+            }
+            if (this.options.swipeRightAction) {
+                $(this.$listWrapper).off('swiperight').on('swiperight', 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    event.stopImmediatePropagation();
+
+                    _self.setSelected(event.target);
+                    _self.options.swipeRightAction(_self.selected);
+                    return false;
+                });
+            }
+        },
     
         _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
             var _self = this;
@@ -2187,7 +2344,8 @@
             if (!renderer) {
                 renderer = _self.options.rowRenderer;
             }
-            if (renderer(curRowParent, _self, row, rowIndex, _self.options.strings)) {
+            var rendererContext = _self.options.rowRendererContext ? _self.options.rowRendererContext : _self;
+            if (renderer.call(rendererContext, curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
                     curRowParent.appendTo(_self.$parent);
                 } else {
@@ -2196,93 +2354,6 @@
             } else {
                 return false;
             }
-            
-            if (_self.options.itemContextMenu) {
-                if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(row)) {
-                    $(curRowParent).off(this.contextEvent).on(this.contextEvent, function(event) {
-                        // This allows the container to have taphold context menus that are not
-                        // triggered when this event is triggered.
-                        event.stopImmediatePropagation();
-                        event.stopPropagation();
-                        event.preventDefault();
-
-                        _self.setSelected(event.target);
-                        _self.options.itemContextMenu.open({
-                            positionTo: event.target,
-                            thisArg: _self,
-                            extraArgs: _self.options.itemContextMenuArgs
-                        });
-                    });
-                } else if (!curRowFresh) {
-                    $(curRowParent).off(this.contextEvent);
-                }
-            } else if (_self.options.holdAction && curRowFresh) {
-                $(curRowParent).on(_self.contextEvent, function(event) {
-                    event.stopImmediatePropagation();
-                    
-                    if (_self.setSelected(event.target)) {
-                        _self.selectItem(true);                    
-                    }
-                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
-                    _self._cancelNextTap = true;
-                    return false;
-                }); 
-            } 
-            if (_self.options.selectAction && curRowFresh) {
-                $(curRowParent).on(_self.tapEvent, function(event) {
-                    event.stopImmediatePropagation();
-                    
-                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
-                        return false;
-                    }
-                    if (_self._cancelNextTap) {
-                        _self._cancelNextTap = false;
-                        return false;
-                    }
-                    
-                    if (_self.options.multiSelect && event.clientX < 35) {
-                        $(event.target).toggleClass("hx-selected");
-                        
-                        // Check to see if we have anything selected - if yes, show the clear button;
-                        // if not, hide it. Re-layout the page if we make a change.
-                        var selectedElems = _self.getAllMultiSelectElements();
-                        if (selectedElems.length === 0) {
-                            _self.$clearSelectionDiv.hide();
-                            Helix.Layout.layoutPage();
-                        } else {
-                            if (!_self.$clearSelectionDiv.is(':visible')) {
-                                _self.$clearSelectionDiv.show();
-                                Helix.Layout.layoutPage();
-                            }                            
-                        }
-                    } else {
-                        if (_self.setSelected(event.target)) {
-                            _self.selectItem();
-                        }
-                    }
-
-                    return false;
-                });
-            }
-            if (_self.options.swipeLeftAction && curRowFresh) {
-                $(curRowParent).on('swipeleft', function(event) {
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeLeftAction(_self.selected);
-                    return false;
-                });
-            }
-            if (_self.options.swipeRightAction && curRowFresh) {
-                $(curRowParent).on('swiperight', function(event) {
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeRightAction(_self.selected);
-                    return false;
-                });
-            }
-        
             return true;
         },
     
@@ -2403,7 +2474,8 @@
         
         clearAllMultiSelect: function() {
             $(this.element).find('li.hx-selected').removeClass('hx-selected');
-            this.$clearSelectionDiv.hide();
+            this.$clearSelectionDiv.addClass('hx-toggled');
+            this.$searchSortDiv.removeClass('hx-toggled');
             Helix.Layout.layoutPage();
         },
         
@@ -2417,10 +2489,17 @@
                 // Already enhanced.
                 isEnhanced = true;
             }
+            if (this.options.multiSelect) {
+                if (!rowComponents.disableMultiSelect) {
+                    $(parentElement).addClass('hx-multi-select-item');
+                } else {
+                    $(parentElement).removeClass('hx-multi-select-item');                
+                }
+            }
             
             var mainLink = null;
             if (isEnhanced) {
-                mainLink = $(parentElement).find('a');
+                mainLink = $(parentElement).find('a').first();
             } else {
                 mainLink = $('<a />').attr({
                     'href' : 'javascript:void(0)'
@@ -2552,18 +2631,31 @@
                 $(parentElement).attr('data-key', rowComponents.key);
             }
             
-            /* XXX: not supported for now. 
             if (rowComponents.splitLink) {
+                var hasSplit = false;
                 if (isEnhanced) {
-                    
-                } else {
-                    $(parentElement).append($('<a />').attr({
-                        'href' : 'javascript:void(0)'
-                    }).on(this.tapEvent, function(ev) {
-                        rowComponents.splitLink(ev);
-                    }));
+                    var splitSet = $(parentElement).find('[data-origin="splitlink"]');
+                    if (splitSet.length) {
+                        splitSet.show()
+                        hasSplit = true;
+                    } else {
+                        // Need to remove .ui-li from the parent li otherwise jQM won't enhance the split button markup
+                        $(parentElement).removeClass('ui-li');
+                    }
+                } 
+                
+                if (hasSplit === false) {
+                    $('<a />').attr({
+                        'href' : 'javascript:void(0)',
+                        'data-role' : 'button',
+                        'data-origin' : 'splitlink',
+                        'data-icon' : rowComponents.splitLink,
+                        'data-theme' : 'd'
+                    }).appendTo(parentElement);
                 }
-            }*/
+            } else {
+                $(parentElement).find('[data-origin="splitlink"]').hide();
+            }
             return mainLink;
         },
         selectItem: function(noSelectAction) {
@@ -2827,6 +2919,34 @@
          */
         getItemList: function() {
             return this.itemList;
+        },
+        
+        /**
+         * Return the width of the list.
+         */
+        getListWidth: function() {
+            return this.$listWrapper.width();
+        },
+        
+        /**
+         * Refresh the listview component that is the rendering of the data list.
+         */
+        refreshListView: function() {
+            this.$parent.listview( "refresh" );         
+        },
+        
+        /**
+         * Re-render the list view if some attributes of the underlying data have changed (but not
+         * the data set itself).
+         */
+        renderListView: function(oncomplete) {
+            var _self = this;
+            this._sortAndRenderData(this.itemList, function(finalCompletion) {
+                if (finalCompletion) {
+                    finalCompletion();
+                }
+                _self.$parent.listview( "refresh" );         
+            }, this.options.emptyMessage, oncomplete, true, this.extraItems);
         }
     });
 })(jQuery);

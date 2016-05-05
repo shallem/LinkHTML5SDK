@@ -84,6 +84,12 @@ public class FormLayoutRenderer extends CoreRenderer {
         if (layout.getHeight() != null) {
             writer.write(", 'height' : '" + layout.getHeight() + "'");
         }
+        if (layout.getUseMiniLayout() != null) {
+            writer.write(", 'useMiniLayout' : " + layout.getUseMiniLayout());
+        }
+        if (layout.getTextStyleClass() != null) {
+            writer.write(", 'textStyleClass' : '" + layout.getTextStyleClass() + "'");
+        }
         
         writer.write(",modes : '" + layout.getModes() + "'");
         writer.write(",currentMode: '" + layout.getCurrentMode() + "'");
