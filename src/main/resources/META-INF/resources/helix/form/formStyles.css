@@ -194,6 +194,10 @@
     color: darkblue;
 }
 
+.hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls .ui-radio input {
+    background-color: transparent; // Get rid of a rounded artifact from the user agent style sheet in mobile safari
+}
+
 .hx-form-container .ui-field-contain fieldset.ui-controlgroup {
     margin-top: 0.15em;
     margin-bottom: 0.15em;
