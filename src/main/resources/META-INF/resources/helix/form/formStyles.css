@@ -102,6 +102,7 @@
     padding-bottom: 0;
     padding-left: 0;
     width: inherit;
+    line-height: 1;
 }
 
 .hx-form-container .ui-field-contain label.ui-input-text .ui-btn {
@@ -126,7 +127,6 @@
     border-bottom-width: 1px;
     border-bottom-style: solid;
     width: inherit;
-    padding-top: 0.4em;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-input-date {
