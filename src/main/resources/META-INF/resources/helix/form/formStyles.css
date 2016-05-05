@@ -126,6 +126,7 @@
     border-bottom-width: 1px;
     border-bottom-style: solid;
     width: inherit;
+    padding-top: 0.4em;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-input-date {

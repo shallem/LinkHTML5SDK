@@ -63,7 +63,17 @@
              * get naming conflicts between different forms in the same applications. It is strongly
              * recommended that the namespace is non-empty.
              */
-            namespace : ''
+            namespace : '',
+            
+            /**
+             * Style class for all field titles.
+             */
+            titleStyleClass: '',
+            
+            /**
+             * Style class for all text inputs.
+             */
+            textStyleClass: ''
         },
 
         _create: function() {
