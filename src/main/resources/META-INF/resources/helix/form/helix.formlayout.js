@@ -748,7 +748,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             })
             .append($('<label/>').attr({
                 'for' : formElem.name,
-                'class' : 'ui-input-text'
+                'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
             }).append(formElem.fieldTitle))
             .append(inputMarkup);
             if (formElem.computedStyle) {

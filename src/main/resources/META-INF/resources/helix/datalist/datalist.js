@@ -1759,8 +1759,12 @@
                     }, localResultsColl);
                 }
                 _self.__searchReadyTimeout = null;
-            }, 3000);
+            }, 1000);
 
+        },
+        
+        getCurrentSearchText: function() {
+            return this.$searchBox.val()
         },
         
         _doSearch: function() {
@@ -1791,12 +1795,15 @@
         // Restore the original list contents, without any searching, sorting, or filtering.
         resetListContents: function() {
             var _self = this;
+            var _doRefresh = true;
             if (_self.options.onSearchClear) {
-                _self.options.onSearchClear.call(_self);
+                _doRefresh = _self.options.onSearchClear.call(_self);
             }
-            _self._refreshData(function() {
-                _self.scrollToStart();
-            }, true, _self.extraItems, _self.originalList);
+            if (_doRefresh !== false) {
+                _self._refreshData(function() {
+                    _self.scrollToStart();
+                }, true, _self.extraItems, _self.originalList);
+            }
         },
         
         _prependSearchBox: function() {
