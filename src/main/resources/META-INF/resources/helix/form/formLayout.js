@@ -192,7 +192,7 @@
                 var formElem = this.options.items[idx];
                 
                 // Process sub items.
-                if (formElem.type in this._groupedTypes) {
+                if (formElem.type in this._groupedTypes || formElem.type === 'radio') {
                     for (i = 0; i < formElem.controls.length; ++i) {
                         var subItem = formElem.controls[i];
                         this.__computeOneHidden(subItem, valuesMap);
