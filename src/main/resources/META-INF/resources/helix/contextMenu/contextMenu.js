@@ -160,7 +160,7 @@
                 'data-theme' : 'a',
                 'id' : this.id,
                 'data-history': 'false',
-                'style' : '-webkit-touch-callout: none'
+                'class' : 'hx-no-webkit-select'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
@@ -178,8 +178,7 @@
                     var nxtLink = $('<a />').attr({
                         'href' : 'javascript:void(0)',
                         'data-index' : i,
-                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i),
-                        'style' : '-webkit-user-select: none'
+                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i)
                     }).append(nxtItem.display);
                     if (nxtItem.data) {
                         nxtLink.attr('data-field', nxtItem.data);

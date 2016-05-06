@@ -301,6 +301,11 @@ a {
     -webkit-touch-callout: none !important;
 }
 
+.hx-no-webkit-select,.hx-no-webkit-select * {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+}
+
 /*a { -webkit-user-select: none !important; }*/
 
 /* Without this override our datalist component is cut off inside of overlay panels. */
