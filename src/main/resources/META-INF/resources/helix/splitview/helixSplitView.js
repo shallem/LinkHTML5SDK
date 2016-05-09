@@ -159,6 +159,7 @@
                 
                 if (this.options.buttonBarSelector) {
                     $(this.options.buttonBarSelector).addClass('hx-split-both');
+                    $(this.options.buttonBarSelector).removeClass('hx-split-left hx-split-right');
                 }
             } else {
                 if (!this.__current) {
