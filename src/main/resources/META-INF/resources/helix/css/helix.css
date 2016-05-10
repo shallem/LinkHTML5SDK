@@ -531,23 +531,23 @@ li {
  * Split screen styles.
  */
 .hx-split-left .hx-split-left-hide {
-    display: none;
+    display: none !important;
 }
 
 .hx-split-right .hx-split-right-hide {
-    display: none;
+    display: none !important;
 }
 
 .hx-split-left .hx-split-full-hide {
-    display: none;
+    display: none !important;
 }
 
 .hx-split-right .hx-split-full-hide {
-    display: none;
+    display: none !important;
 }
 
 .hx-split-both .hx-split-both-hide {
-    display: none;
+    display: none !important;
 }
 
 .hx-mini-fieldcontain {
