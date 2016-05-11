@@ -806,7 +806,10 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'tabindex' : -1,
         'data-corners' : 'false'
     });
-    $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
+    var lbl = $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
+    if (formLayout.textStyleClass || formElem.textStyleClass) {
+        lbl.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
+    }
     $(inputMarkup).appendTo($fieldContainer);
     __refreshControl(formElem, true);
     $(inputMarkup).checkboxradio({ 
