@@ -880,7 +880,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     }
 
     var formMarkup = $("<form />").addClass('hx-full-width').appendTo(fieldMarkup);
-    var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
+    var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup).addClass('hx-full-width');
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
@@ -995,7 +995,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     /*    'data-role' : 'controlgroup',
         'data-type' : 'horizontal',
         'data-mini' : (useMiniLayout ? 'true' : 'false') */
-    }).appendTo(fieldMarkup);
+    }).appendTo(fieldMarkup).addClass('hx-full-width');
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
@@ -1492,7 +1492,9 @@ function __preprocessFormElement(formLayout, formElem) {
     } else {
         formElem.computedWidth = '';
     }
-    if (!formElem.computedStyle) {
+    if (!formElem.computedStyle && formElem.computedWidth) {
+        formElem.computedStyle = 'width: ' + formElem.computedWidth;
+    } else if (formElem.computedWidth) {
         formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
     }
     
