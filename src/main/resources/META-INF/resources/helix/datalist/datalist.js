@@ -1048,10 +1048,8 @@
                 displayCollection = _self._resetGlobalFilters(list);
             }
             _self._refreshData(function() {
-                // Make sure the list selection matches the item that appears active.
-                _self.$listWrapper.find('li.ui-btn-active').each(function() {
-                    _self.setSelected(this);
-                });
+                // XXX: Make sure the list selection matches the item that appears active.
+                _self.$listWrapper.find('li.ui-btn-active').removeClass('ui-btn-active');
                 
                 if (oncomplete) {
                     oncomplete(_self);
@@ -1529,12 +1527,10 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            //this.$listWrapper.hide();
             this._sortAndRenderData(displayCollection, function(finalCompletion) {
                 finalCompletion();
-                _self.$listWrapper.show();
                 _self.$parent.listview( "refresh" );         
-                $(_self.$wrapper).trigger('refreshdone');
+                $(_self.$parent).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
                     var refreshArgs = _self._queuedRefreshes.pop();
