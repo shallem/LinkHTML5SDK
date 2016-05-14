@@ -223,6 +223,9 @@ function initHelixDB() {
                     oncompleteArgs = oncompleteArgs.concat(opaque);
                     oncomplete.apply(this, oncompleteArgs);
                 }
+                if (name) {
+                    this.createdSchemas[name] = window.__pmAllSchemas[schemaNameToCheck];
+                }
                 return;
             }
         

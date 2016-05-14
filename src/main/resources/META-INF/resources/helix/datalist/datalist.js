@@ -1040,6 +1040,8 @@
                 /* The condition is false. Remove this entirely from the DOM. */    
                 _self.$wrapper.hide();
                 return;
+            } else {
+                _self.$wrapper.show();
             }
             
             var displayCollection;
@@ -1047,9 +1049,13 @@
                 list = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 displayCollection = _self._resetGlobalFilters(list);
             }
+            var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
             _self._refreshData(function() {
-                // XXX: Make sure the list selection matches the item that appears active.
-                _self.$listWrapper.find('li.ui-btn-active').removeClass('ui-btn-active');
+                if (selectedID) {
+                    _self.setSelected(_self.$listWrapper.find('li[data-id="' + selectedID + '"]'));
+                } else {
+                    _self.clearSelected();
+                }
                 
                 if (oncomplete) {
                     oncomplete(_self);
@@ -2486,7 +2492,7 @@
             this.$parent.empty();
         },
   
-        createListRow: function(parentElement,rowComponents) {
+        createListRow: function(parentElement,rowComponents,rowID) {
             var isEnhanced = false;
             if ($(parentElement).hasClass('ui-li')) {
                 // Already enhanced.
@@ -2658,6 +2664,10 @@
                 }
             } else {
                 $(parentElement).find('[data-origin="splitlink"]').hide();
+            }
+            
+            if (rowID) {
+                $(parentElement).attr('data-id', rowID);
             }
             return mainLink;
         },

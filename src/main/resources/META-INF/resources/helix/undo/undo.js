@@ -95,23 +95,13 @@
             var _timeout = this.setRemovalTimeout(doAction, lifetime);
 
             //remove message on click of close icon
-            if (!Helix.hasTouch) {
-                message.on('click', _timeout, function(ev) {
-                    _self.removeAll();
-                    undoAction.call(_self);
-                    clearTimeout(ev.data);
-                    ev.stopImmediatePropagation();
-                    return false;
-                });
-            } else {
-                message.on('tap', _timeout, function(ev) {
-                    _self.removeAll();
-                    undoAction.call(_self);
-                    clearTimeout(ev.data);
-                    ev.stopImmediatePropagation();
-                    return false;
-                });
-            }
+            message.on(Helix.clickEvent, _timeout, function(ev) {
+                _self.removeAll();
+                undoAction.call(_self);
+                clearTimeout(ev.data);
+                ev.stopImmediatePropagation();
+                return false;
+            });
         },
     
         setRemovalTimeout: function(doAction, lifetime) {

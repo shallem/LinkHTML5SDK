@@ -276,6 +276,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(cmd.resolveWidgetVar());
         writer.write("',callback,args,0,noSync);");
         writer.write("}");
+        
+        writer.write("$(document).on('hxGenerateSchemas', function() {" + cmd.getName() + "_genSchema(null, null, true); });");
         endScript(writer);
     }
 }
