@@ -400,19 +400,23 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class' : formElem.computedStyleClass,
             'tabindex' : formLayout.__tabIndex++
         }).append(formElem.value);
+        var lbl = $('<label />').attr({
+            'for' : inputID,
+            'class' : formLayout.titleStyleClass
+            })
+        .append(formElem.fieldTitle);
+        if (!formElem.fieldTitle) {
+            lbl.hide();
+        }
 
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-block-field ' + (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
-        .append($('<label />').attr({
-            'for' : inputID,
-            'class' : formLayout.titleStyleClass
-            })
-            .append(formElem.fieldTitle)
-        )
+        .append(lbl)
         .append(inputMarkup);
+        
         $fieldContainer.append(textContainer);
         textContainer.fieldcontain();
         $(inputMarkup).textinput();

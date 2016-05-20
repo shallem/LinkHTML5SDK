@@ -449,11 +449,11 @@ Helix.Ajax = {
                     } else if (param && syncComponent in param) {
                         _p = param[syncComponent];
                     }
-                    config.oncomplete(keyMap[syncComponent], config.name, componentObj, true, _p);
+                    config.oncomplete(keyMap[syncComponent], config.name, componentObj, true, _p, loadCommandOptions);
                 }
             }
             if (globalOnComplete) {
-                globalOnComplete(finalKey, name, obj, true, param); // The 'true' means this is an aggregate load
+                globalOnComplete(finalKey, name, obj, true, param, loadCommandOptions); // The 'true' means this is an aggregate load
             }
         };
         loadCommandOptions.syncOverrides = {};
@@ -488,7 +488,7 @@ Helix.Ajax = {
                         thisArg: commandConfig
                     };
                     commandConfig.oncomplete = function(finalKey, name, finalObj) {
-                        completeObj.args = [ finalKey, name, finalObj, true ];
+                        completeObj.args = [ finalKey, name, finalObj, true, null, loadCommandOptions ];
                         completions.push(completeObj);
                         commandConfig.oncomplete = completeObj.fn;
                     };
@@ -500,7 +500,7 @@ Helix.Ajax = {
                         }
                     }
                     if (globalOnComplete) {
-                        globalOnComplete(null, null, null, true, null);
+                        globalOnComplete(null, null, null, true, null, loadCommandOptions);
                     }
                     Helix.Ajax.loadOptions.silent = false;
                 }
@@ -641,16 +641,16 @@ Helix.Ajax = {
                     }
                     if (syncObject) {
 			// Add setTimeout to allow the message to display
-			setTimeout(Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
+			Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
                             if (loadCommandOptions.oncomplete) {
-                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject));
+                                loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject), loadCommandOptions);
                             }
                             if (window.CordovaInstalled) {
 				window.HelixSystem.allowSleep();
                             }
-			}, { key: itemKey, params: paramObject }, loadCommandOptions.syncOverrides), 0);
+			}, { key: itemKey, params: paramObject }, loadCommandOptions.syncOverrides);
                     } else {
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {

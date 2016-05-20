@@ -433,6 +433,10 @@
                 this.isFirstTyping = true;            
             }
         },
+        
+        focus: function() {
+            this.$editFrame.focus();
+        },
 
         // disable - enables or disables the editor
         disable: function(disabled) {

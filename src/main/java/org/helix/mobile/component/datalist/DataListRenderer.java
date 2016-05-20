@@ -160,6 +160,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getEmptyGroupMessage() != null) {
             writer.write(",emptyGroupMessage: '" + dlist.getEmptyGroupMessage() + "'");
         }
+        if (dlist.getEmptyHook() != null) {
+            writer.write(",emptyHook: " + dlist.getEmptyHook());
+        }
         
         // Pagination
         if (dlist.getItemsPerPage() != null) {
@@ -204,6 +207,9 @@ public class DataListRenderer extends CoreRenderer {
         }
         if (dlist.getOnSearchClear() != null) {
             writer.write(",onSearchClear: " + dlist.getOnSearchClear());
+        }
+        if (dlist.getAfterSearchClear() != null) {
+            writer.write(",afterSearchClear: " + dlist.getAfterSearchClear());
         }
 
         // Show sort/filter buttons.

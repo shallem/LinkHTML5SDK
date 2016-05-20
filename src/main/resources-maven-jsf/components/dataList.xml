@@ -95,6 +95,12 @@
             <description>Text to display when there is no data to display. Default is "No records found."</description>
         </attribute>
         <attribute>
+            <name>emptyHook</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of a function to call when the list is refreshed to empty.</description>
+        </attribute>
+        <attribute>
             <name>emptyGroupMessage</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -276,6 +282,12 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Function name to invoke on search clear. This function accepts no arguments, but the datalist is the this variable.</description>
+        </attribute>
+        <attribute>
+            <name>afterSearchClear</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Function name to invoke after the list is refreshed post search clear.</description>
         </attribute>
         <attribute>
             <name>externalButtonsCallback</name>
