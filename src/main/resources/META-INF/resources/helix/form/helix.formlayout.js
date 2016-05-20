@@ -145,7 +145,8 @@ function __refreshDate(mode, formElem) {
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
-        if (formElem.type === 'date') {
+        if (formElem.type === 'date' ||
+            formElem.type === 'exactdate') {
             newDateStr = newDateStr.substring(0, 10);
         }
         $(thisField).val(newDateStr);
@@ -206,7 +207,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         if (formElem.type === 'datetime') {
             // Date and time
             inputType = 'datetime-local';
-        } else if (formElem.type === 'date') {
+        } else if (formElem.type === 'date' ||
+                   formElem.type === 'exactdate') {
             inputType = 'date';
         } else {
             // Just date

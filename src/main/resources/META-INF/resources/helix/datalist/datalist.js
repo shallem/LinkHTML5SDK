@@ -861,11 +861,11 @@
                 // If there is a default sort that is not returned in the list of sorts,
                 // add it. (EG. It can happen if the default sort uses a combination
                 // of fields).
-                if ((_options.sortBy) && (sorts[_options.sortBy] === undefined)) {
+                if ((_self._currentSort) && (sorts[_self._currentSort] === undefined)) {
                    sorts[_options.sortBy] = {
                         display : "Default",
-                        direction : _options.sortOrder.toUpperCase(),
-                        usecase : _options.sortCaseSensitive
+                        direction : _self._currentSortOrder.toUpperCase(),
+                        usecase : _self._currentSortCase
                    };
                 }
                 
@@ -874,7 +874,7 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _options.sortBy, _options.sortOrder, _options.sortCaseSensitive);
+            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
             
             var thisFilters = null;
             if (!sortFilterOptions) {

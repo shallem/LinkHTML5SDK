@@ -226,7 +226,7 @@ textarea.ui-input-text {
 }
 
 @media all and (min-width: 28em){
-    .hx-form-container .ui-field-contain label.ui-select { width: inherit; }
-    .hx-form-container .ui-field-contain .ui-select { width: 95%; }
+    .hx-form-container .ui-field-contain label.ui-select { width: initial; }
+    .hx-form-container .ui-field-contain .ui-select { width: initial; }
     .hx-form-container .ui-field-contain .ui-controlgroup-label { width: initial; }
 }
