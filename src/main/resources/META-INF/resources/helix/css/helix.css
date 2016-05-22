@@ -272,6 +272,7 @@
 /* Scrolling elements should have this style. */
 .hx-scroller-nozoom {
     overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
 }
 
 .hx-no-scroll {
