@@ -43,7 +43,7 @@
             <name>iconPos</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>bottom</defaultValue>
+            <defaultValue>left</defaultValue>
             <description>Standard jQuery Mobile icon position to be used for this button.</description>
         </attribute>
         <attribute>

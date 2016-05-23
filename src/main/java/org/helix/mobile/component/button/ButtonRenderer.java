@@ -25,6 +25,7 @@ public class ButtonRenderer extends CoreRenderer {
         writer.writeAttribute("data-role", "button", null);
         writer.writeAttribute("data-corners", "false", null);
         writer.writeAttribute("data-shadow", "false", null);
+        writer.writeAttribute("data-iconpos", button.getIconPos(), null);
         writer.writeAttribute("href", button.getHref(), null);
         if (button.getTheme() != null) {
             writer.writeAttribute("data-theme", button.getTheme(), null);
