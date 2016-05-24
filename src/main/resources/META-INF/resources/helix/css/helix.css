@@ -275,6 +275,11 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Attempt to fix webkit bug that makes part of the HTML in a page disappear by forcing hardware acceleration. */
+.hx-scroller-nozoom  * { 
+    -webkit-transform: translate3d(0, 0, 0); 
+}
+
 .hx-no-scroll {
     overflow-y: hidden;
     overflow-x: hidden;
