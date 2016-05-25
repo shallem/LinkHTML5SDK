@@ -848,8 +848,8 @@ Helix.Ajax = {
             var ret = {
                 isCancelled : false,
                 cancel: function() {
-                    this._xhr.abort();
                     this.isCancelled = true;
+                    this._xhr.abort();
                 }
             };
             ret._xhr = $.ajax({
