@@ -731,8 +731,9 @@
             }, false);
         },
         
-        _setScrollTimer: function() {
+        _setScrollTimer: function(scrollAction) {
             this._rescrollInProgress = true;
+            scrollAction();
             this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
             setTimeout(function() {
@@ -743,17 +744,12 @@
         
         _rescrollList : function(rescrollTarget) {
             this._lastScrollPos = rescrollTarget;
-            var _self = this;
-            setTimeout(function() {
-                _self.$listWrapper.addClass('hx-scroller-nozoom');
-                _self.$listWrapper.scrollTop(rescrollTarget);
-            }, (rescrollTarget === 0 ? 0 : 100));
+            this.$listWrapper.scrollTop(rescrollTarget);
         },
         
         _doScrollUp: function() {
             var _self = this;
             _self._scrollerTimeout = null;
-            _self._setScrollTimer();
 
             var __finishDoScrollUp = function() {
                 var listWHeight = _self.$listWrapper.height();
@@ -761,8 +757,10 @@
                     // Wait some more.
                     setTimeout(__finishDoScrollUp, 100);
                 } else {
-                    var listHeight = _self.$parent.height() - listWHeight;
-                    _self._rescrollList(listHeight);
+                    _self._setScrollTimer(function() {
+                        var listHeight = _self.$parent.height() - listWHeight;
+                        _self._rescrollList(listHeight);                        
+                    });
                 }
             };
             
@@ -794,13 +792,14 @@
         _doScrollDown: function() {
             var _self = this;
             _self._scrollerTimeout = null;
-            _self._setScrollTimer();
 
             var _refreshDownDone = function(_rescroll) {
                 //alert("RESCROLL: " + _rescroll);
                 if (_rescroll) {
-                    _self._rescrollList(0);
-                    _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                    _self._setScrollTimer(function() {
+                        _self._rescrollList(0);
+                        _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;                        
+                    });
                 } else {
                     _self._atDataTop = true;
                 }
@@ -2778,8 +2777,10 @@
          */
         scrollToStart: function() {
             // Prevent pagination
-            this._setScrollTimer();
-            this.$listWrapper.scrollTop(0);
+            var _self = this;
+            this._setScrollTimer(function() {
+                _self.$listWrapper.scrollTop(0);
+            });
         },
         
         /**
@@ -2790,8 +2791,10 @@
          */
         setScrollPosition: function(pos) {
             // Prevent pagination
-            this._setScrollTimer();
-            this.$listWrapper.scrollTop(pos);
+            var _self = this;
+            this._setScrollTimer(function() {
+                _self.$listWrapper.scrollTop(pos);            
+            });
         },
         
         /**

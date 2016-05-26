@@ -705,7 +705,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        $("<li/>").append(LIs[i]).on('vclick', function() {
+                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function() {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text());
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();

@@ -803,7 +803,7 @@ Helix.Ajax = {
                         if (params.error) {
                             Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
                         } else if (!callbacks.error) {
-                            Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                            Helix.Utils.statusMessage("Error in GET", returnObj.msg ? returnObj.msg : "Accessing url " + params.url, "severe");
                         }
                     }
 
@@ -897,7 +897,7 @@ Helix.Ajax = {
                         if (params.fatal) {
                             Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
                         } else if (!callbacks.fatal) {
-                            Helix.Utils.statusMessage("Error", errorThrown, "severe");
+                            Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "severe");
                         }
                     }
                     if (callbacks.fatal) {
@@ -906,6 +906,7 @@ Helix.Ajax = {
                 },
                 complete: function() {
                     if (this.isCancelled) {
+                        $(document).trigger('postrequest', [ page, params.url, false ]);
                         return;
                     }
                     if (callbacks.complete) {

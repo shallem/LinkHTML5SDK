@@ -811,3 +811,8 @@ li {
     background: rgba(243,243,243,0.6);
     background-image: linear-gradient(rgba(221,221,221,0.6), rgba(204,204,204,0.6));
 }
+
+.wordBreak {
+    word-wrap:break-word;
+    white-space: normal;
+}
