@@ -3114,9 +3114,24 @@ function getSpecialEventObject( eventType ) {
 			if ( !hasVirtualBindings( this ) ) {
 				$this.removeData( dataPropertyName );
 			}
-		}
+		},
+                
+                suspendTouchHandlers: function() {
+                    $document.unbind( "touchstart", handleTouchStart )
+						.unbind( "touchmove", handleTouchMove )
+						.unbind( "touchend", handleTouchEnd )
+						.unbind( "scroll", handleScroll );
+                },
+                
+                resumeTouchHandlers: function() {
+                    $document.bind( "touchstart", handleTouchStart )
+						.bind( "touchend", handleTouchEnd )
+						.bind( "touchmove", handleTouchMove )
+						.bind( "scroll", handleScroll );
+                }
 	};
 }
+$.mobile.getSpecialEventObject = getSpecialEventObject;
 
 // Expose our custom events to the jQuery bind/unbind mechanism.
 

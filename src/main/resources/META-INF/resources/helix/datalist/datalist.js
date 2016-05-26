@@ -223,6 +223,11 @@
             onSearchClear: null,
             
             /**
+             * Called after the list refresh triggered by a search clear is done.
+             */
+            afterSearchClear: null,
+            
+            /**
              *  Buttons for external actions not managed by but rendered by the datalist.
              */
             externalButtonsCallback : null,
@@ -617,19 +622,20 @@
             return sortFilterOptions.globalFilters;
         },
         
-        _handleEmpty: function(nelems, nextras, msg) {
+        _handleEmpty: function(nelems, nextras, msg, hook) {
             var emptyLI = $(this.$parent).find('li[data-role="empty-message"]');
             if (nelems === nextras) {                    
                 if (emptyLI.length) {
                     $(emptyLI).show();
+                    $(emptyLI).text(msg);
                 } else if (msg) {
                     this.$parent.append($('<li />')
                         .attr('data-role', 'empty-message')
                         .append(msg)
                         .addClass('hx-empty-message'));
                 }
-                if (this.options.emptyHook) {
-                    this.options.emptyHook.call(this);
+                if (hook) {
+                    hook.call(this);
                 }
             } else if (emptyLI.length) {
                 $(emptyLI).hide();
@@ -725,8 +731,9 @@
             }, false);
         },
         
-        _setScrollTimer: function() {
+        _setScrollTimer: function(scrollAction) {
             this._rescrollInProgress = true;
+            scrollAction();
             this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
             setTimeout(function() {
@@ -737,17 +744,12 @@
         
         _rescrollList : function(rescrollTarget) {
             this._lastScrollPos = rescrollTarget;
-            var _self = this;
-            setTimeout(function() {
-                _self.$listWrapper.addClass('hx-scroller-nozoom');
-                _self.$listWrapper.scrollTop(rescrollTarget);
-            }, (rescrollTarget === 0 ? 0 : 100));
+            this.$listWrapper.scrollTop(rescrollTarget);
         },
         
         _doScrollUp: function() {
             var _self = this;
             _self._scrollerTimeout = null;
-            _self._setScrollTimer();
 
             var __finishDoScrollUp = function() {
                 var listWHeight = _self.$listWrapper.height();
@@ -755,8 +757,10 @@
                     // Wait some more.
                     setTimeout(__finishDoScrollUp, 100);
                 } else {
-                    var listHeight = _self.$parent.height() - listWHeight;
-                    _self._rescrollList(listHeight);
+                    _self._setScrollTimer(function() {
+                        var listHeight = _self.$parent.height() - listWHeight;
+                        _self._rescrollList(listHeight);                        
+                    });
                 }
             };
             
@@ -788,13 +792,14 @@
         _doScrollDown: function() {
             var _self = this;
             _self._scrollerTimeout = null;
-            _self._setScrollTimer();
 
             var _refreshDownDone = function(_rescroll) {
                 //alert("RESCROLL: " + _rescroll);
                 if (_rescroll) {
-                    _self._rescrollList(0);
-                    _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;
+                    _self._setScrollTimer(function() {
+                        _self._rescrollList(0);
+                        _self._renderWindowStart = (_self._renderWindowStart) + _self._itemsPerPage - 1;                        
+                    });
                 } else {
                     _self._atDataTop = true;
                 }
@@ -855,11 +860,11 @@
                 // If there is a default sort that is not returned in the list of sorts,
                 // add it. (EG. It can happen if the default sort uses a combination
                 // of fields).
-                if ((_options.sortBy) && (sorts[_options.sortBy] === undefined)) {
+                if ((_self._currentSort) && (sorts[_self._currentSort] === undefined)) {
                    sorts[_options.sortBy] = {
                         display : "Default",
-                        direction : _options.sortOrder.toUpperCase(),
-                        usecase : _options.sortCaseSensitive
+                        direction : _self._currentSortOrder.toUpperCase(),
+                        usecase : _self._currentSortCase
                    };
                 }
                 
@@ -868,7 +873,7 @@
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
              */
-            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _options.sortBy, _options.sortOrder, _options.sortCaseSensitive);
+            _self.originalList = _self.unfilteredList = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
             
             var thisFilters = null;
             if (!sortFilterOptions) {
@@ -1010,7 +1015,7 @@
                     oncomplete(_self);
                     _self.isDirty = false;
                 }
-            }, true, extraItems, _self.originalList);
+            }, true, extraItems, _self.originalList, _options);
         },
         
         /**
@@ -1031,8 +1036,9 @@
          * Called when the data in the list has changed, but the list structure itself
          * has not.
          */
-        refreshData: function(list,condition,oncomplete,renderWindowStart,extraItems) {
+        refreshData: function(list,condition,oncomplete,renderWindowStart,extraItems,overrideOptions) {
             var _self = this;
+            var _options = $.extend({}, _self.options, (overrideOptions ? overrideOptions : {}));
             
             /* Hide the list while we are manipulating it. */
             if ((condition !== undefined) &&
@@ -1040,6 +1046,8 @@
                 /* The condition is false. Remove this entirely from the DOM. */    
                 _self.$wrapper.hide();
                 return;
+            } else {
+                _self.$wrapper.show();
             }
             
             var displayCollection;
@@ -1047,11 +1055,13 @@
                 list = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 displayCollection = _self._resetGlobalFilters(list);
             }
+            var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
             _self._refreshData(function() {
-                // Make sure the list selection matches the item that appears active.
-                _self.$listWrapper.find('li.ui-btn-active').each(function() {
-                    _self.setSelected(this);
-                });
+                if (selectedID) {
+                    _self.setSelected(_self.$listWrapper.find('li[data-id="' + selectedID + '"]'));
+                } else {
+                    _self.clearSelected();
+                }
                 
                 if (oncomplete) {
                     oncomplete(_self);
@@ -1063,7 +1073,7 @@
                 if (list) {
                     _self.originalList = _self.unfilteredList = list;
                 }
-            }, true, extraItems, displayCollection, renderWindowStart);
+            }, true, extraItems, displayCollection, renderWindowStart, _options);
         },
         
         _updateSortButtons: function() {
@@ -1477,17 +1487,20 @@
             this._renderWindowStart = 0;
             this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false; 
-            this._rescrollInProgress = false;
+            this._rescrollInProgress = false;   
         },
                         
         
-        _refreshData: function(oncomplete, noPaginate, extraItems, itemList, renderWindowStart) {
+        _refreshData: function(oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options) {
             var _self = this;
+            if (!_options) {
+                _options = _self.options;
+            }
         
             if (_self.refreshInProgress) {
                 //alert("HELLO2");
                 // Do not list refreshed interleave. Finish one, then do the next one.
-                _self._queuedRefreshes.push([ oncomplete, noPaginate, extraItems, itemList, renderWindowStart ]);
+                _self._queuedRefreshes.push([ oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options ]);
                 return;
             }
         
@@ -1504,10 +1517,10 @@
                 if (!_self._headerLI) {
                     _self._headerLI = $('<li />').attr({
                         'data-role' : 'list-divider'
-                    }).append(_self.options.headerText)
+                    }).append(_options.headerText)
                     .appendTo(_self.$parent);
                 } else {
-                    _self._headerLI.text(_self.options.headerText);
+                    _self._headerLI.text(_options.headerText);
                 }
             }
         
@@ -1529,23 +1542,21 @@
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            //this.$listWrapper.hide();
             this._sortAndRenderData(displayCollection, function(finalCompletion) {
-                finalCompletion();
-                _self.$listWrapper.show();
+                finalCompletion.call(_self);
                 _self.$parent.listview( "refresh" );         
-                $(_self.$wrapper).trigger('refreshdone');
+                $(_self.$parent).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
                     var refreshArgs = _self._queuedRefreshes.pop();
                     setTimeout(function() {
-                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4]);                    
+                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4], refreshArgs[5]);                    
                     }, 0);
                 }
-            }, this.options.emptyMessage, oncomplete, noPaginate, _self.extraItems);
+            }, _options.emptyMessage, oncomplete, noPaginate, _self.extraItems, _options);
         },
         
-        indexedSearchDone: function(displayCollection, oncomplete) {
+        indexedSearchDone: function(displayCollection, oncomplete, optionsOverrides) {
             var _self = this;
             if (!oncomplete) {
                 oncomplete = function() {
@@ -1559,14 +1570,18 @@
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
                 displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
-                this._refreshData(oncomplete, true, undefined, displayCollection, 0);
+                this._refreshData(oncomplete, true, undefined, displayCollection, 0, optionsOverrides);
             }
         },
         
-        _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque, noPaginate, extraItems) {
+        listIsEmpty: function() {
+            return this.nRendered === 0;
+        },
+        
+        _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque, noPaginate, extraItems, _options) {
             var _self = this;
             var rowIndex = 0;
-            var nRendered = 0;
+            _self.nRendered = 0;
             var LIs = [];
             var groupsToRender = [];
             if (_self.options.grouped) {
@@ -1582,7 +1597,7 @@
                 if (_self.options.grouped) {
                     groupsToRender.push(curRow);
                 } else {
-                    if (nRendered >= _self._itemsPerPage) {
+                    if (_self.nRendered >= _self._itemsPerPage) {
                         return false;
                     }
 
@@ -1590,7 +1605,7 @@
                     if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function() {
                         // Nothing to do.
                     })) {
-                        ++nRendered;
+                        ++_self.nRendered;
                         return true;
                     }
                 }
@@ -1611,20 +1626,20 @@
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
                     /* Call completion when all rows are done rendering. */
-                    oncomplete(opaque);
-                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
+                    oncomplete.call(_self, opaque);
+                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
                     return;
                 }
 
                 var nxt = groupsToRender.shift();
-                if (nRendered >= _self._itemsPerPage) {
+                if (_self.nRendered >= _self._itemsPerPage) {
                     return;
                 }
 
                 if (_self._renderSingleRow(LIs, groupIndex, _self._itemsPerPage, nxt, function() {
                     __renderGroup(groupIndex + 1);
                 })) {
-                    ++nRendered;
+                    ++_self.nRendered;
                 }
             };
             
@@ -1633,19 +1648,19 @@
                 if (!_self.options.grouped) {
                     /* We did not render any rows. Call completion. */
                     if (!startIdx) {
-                        startIdx = nRendered;
+                        startIdx = _self.nRendered;
                     } else {
-                        startIdx = startIdx + nRendered;
+                        startIdx = startIdx + _self.nRendered;
                     }
                     for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
 
-                    _self._handleEmpty(nRendered, nExtras, emptyMsg);
+                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
                     // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
                     // restoring them.
                     $(_self.$parent).find('li[data-role="list-divider"]').remove();
-                    oncomplete(opaque);
+                    oncomplete.call(_self, opaque);
                 } else {
                     __renderGroup(0);
                 }
@@ -1754,8 +1769,8 @@
                 }
 
                 if (searchText) {
-                    _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete) {
-                        _self.indexedSearchDone(displayCollection, oncomplete);
+                    _self.options.indexedSearch.call(_self, searchText, function(displayCollection, oncomplete, optionsOverrides) {
+                        _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);
                     }, localResultsColl);
                 }
                 _self.__searchReadyTimeout = null;
@@ -1779,12 +1794,15 @@
             } else {
                 var searchText = _self.__searchText.trim();
                 if (_self.options.localIndexedSearch) {
-                    _self.options.localIndexedSearch.call(_self, searchText, function(res) {
+                    _self.options.localIndexedSearch.call(_self, searchText, function(res, optionsOverrides, oncomplete) {
                         _self.indexedSearchDone(res, function() {
+                            if (oncomplete) {
+                                oncomplete.call(_self);
+                            }
                             if (_self.options.indexedSearch) {
                                 _self._doRemoteSearch(searchText, res);                        
                             }
-                        });
+                        }, optionsOverrides);
                     }, _self.originalList);
                 } else {
                     _self._doRemoteSearch(searchText, _self.originalList);
@@ -1802,6 +1820,9 @@
             if (_doRefresh !== false) {
                 _self._refreshData(function() {
                     _self.scrollToStart();
+                    if (_self.options.afterSearchClear) {
+                        _self.options.afterSearchClear.call(_self);
+                    }
                 }, true, _self.extraItems, _self.originalList);
             }
         },
@@ -2364,6 +2385,25 @@
             return true;
         },
     
+        rerenderSelected: function() {
+            if (this.selected === null) {
+                return;
+            }
+            var renderer = this.options.rowRenderer;
+            if (this.options.grouped) {
+                renderer = this.options.groupRenderer(this.selectedGroup);
+            }
+            
+            var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
+            if (renderer.call(rendererContext, this.selectedLI.find('.ui-li'), this, this.selected, this.selectedIndex, this.options.strings)) {
+                this.selectedLI.show();
+                return true;
+            } else {
+                this.selectedLI.hide();
+                return false;
+            } 
+        },
+    
         setSelected: function(targetElem) {
             var enclosingLI = $(targetElem).closest("li[data-index]");
             var enclosingIndex = $(enclosingLI).attr('data-index');
@@ -2490,7 +2530,7 @@
             this.$parent.empty();
         },
   
-        createListRow: function(parentElement,rowComponents) {
+        createListRow: function(parentElement,rowComponents,rowID) {
             var isEnhanced = false;
             if ($(parentElement).hasClass('ui-li')) {
                 // Already enhanced.
@@ -2663,6 +2703,10 @@
             } else {
                 $(parentElement).find('[data-origin="splitlink"]').hide();
             }
+            
+            if (rowID) {
+                $(parentElement).attr('data-id', rowID);
+            }
             return mainLink;
         },
         selectItem: function(noSelectAction) {
@@ -2733,8 +2777,10 @@
          */
         scrollToStart: function() {
             // Prevent pagination
-            this._setScrollTimer();
-            this.$listWrapper.scrollTop(0);
+            var _self = this;
+            this._setScrollTimer(function() {
+                _self.$listWrapper.scrollTop(0);
+            });
         },
         
         /**
@@ -2745,8 +2791,10 @@
          */
         setScrollPosition: function(pos) {
             // Prevent pagination
-            this._setScrollTimer();
-            this.$listWrapper.scrollTop(pos);
+            var _self = this;
+            this._setScrollTimer(function() {
+                _self.$listWrapper.scrollTop(pos);            
+            });
         },
         
         /**
@@ -2953,7 +3001,7 @@
                     finalCompletion();
                 }
                 _self.$parent.listview( "refresh" );         
-            }, this.options.emptyMessage, oncomplete, true, this.extraItems);
+            }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
         }
     });
 })(jQuery);

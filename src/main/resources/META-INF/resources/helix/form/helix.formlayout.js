@@ -145,7 +145,8 @@ function __refreshDate(mode, formElem) {
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
-        if (formElem.type === 'date') {
+        if (formElem.type === 'date' ||
+            formElem.type === 'exactdate') {
             newDateStr = newDateStr.substring(0, 10);
         }
         $(thisField).val(newDateStr);
@@ -206,7 +207,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         if (formElem.type === 'datetime') {
             // Date and time
             inputType = 'datetime-local';
-        } else if (formElem.type === 'date') {
+        } else if (formElem.type === 'date' ||
+                   formElem.type === 'exactdate') {
             inputType = 'date';
         } else {
             // Just date
@@ -400,19 +402,23 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class' : formElem.computedStyleClass,
             'tabindex' : formLayout.__tabIndex++
         }).append(formElem.value);
+        var lbl = $('<label />').attr({
+            'for' : inputID,
+            'class' : formLayout.titleStyleClass
+            })
+        .append(formElem.fieldTitle);
+        if (!formElem.fieldTitle) {
+            lbl.hide();
+        }
 
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-block-field ' + (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
-        .append($('<label />').attr({
-            'for' : inputID,
-            'class' : formLayout.titleStyleClass
-            })
-            .append(formElem.fieldTitle)
-        )
+        .append(lbl)
         .append(inputMarkup);
+        
         $fieldContainer.append(textContainer);
         textContainer.fieldcontain();
         $(inputMarkup).textinput();
@@ -699,7 +705,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        $("<li/>").append(LIs[i]).on('vclick', function() {
+                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function() {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text());
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
@@ -806,7 +812,10 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'tabindex' : -1,
         'data-corners' : 'false'
     });
-    $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
+    var lbl = $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
+    if (formLayout.textStyleClass || formElem.textStyleClass) {
+        lbl.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
+    }
     $(inputMarkup).appendTo($fieldContainer);
     __refreshControl(formElem, true);
     $(inputMarkup).checkboxradio({ 
@@ -877,7 +886,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     }
 
     var formMarkup = $("<form />").addClass('hx-full-width').appendTo(fieldMarkup);
-    var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup);
+    var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup).addClass('hx-full-width');
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
@@ -992,7 +1001,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     /*    'data-role' : 'controlgroup',
         'data-type' : 'horizontal',
         'data-mini' : (useMiniLayout ? 'true' : 'false') */
-    }).appendTo(fieldMarkup);
+    }).appendTo(fieldMarkup).addClass('hx-full-width');
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
@@ -1489,7 +1498,9 @@ function __preprocessFormElement(formLayout, formElem) {
     } else {
         formElem.computedWidth = '';
     }
-    if (!formElem.computedStyle) {
+    if (!formElem.computedStyle && formElem.computedWidth) {
+        formElem.computedStyle = 'width: ' + formElem.computedWidth;
+    } else if (formElem.computedWidth) {
         formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
     }
     

@@ -859,6 +859,19 @@
             }
         },
         
+        focusField: function(name) {
+            var fieldElem = this.getFieldElement(name);
+            if (fieldElem.is('input,textarea,select')) {
+                fieldElem.focus();
+            } else {
+                // See if this is an editor.
+                var fld = this.getField(name);
+                if (fld.type === 'htmlarea') {
+                    $(fieldElem).find('[name="'+fld.name+'"]').editor('focus');
+                }
+            }
+        },
+        
         enableField: function(name) {
             var fieldElem = this.getFieldElement(name);
             if (fieldElem && fieldElem.is('input')) {

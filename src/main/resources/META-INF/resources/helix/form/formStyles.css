@@ -101,7 +101,7 @@
     padding-right: 0.2em;
     padding-bottom: 0;
     padding-left: 0;
-    width: inherit;
+    width: auto;
     line-height: 1;
 }
 
@@ -126,7 +126,9 @@
     border-bottom: darkgrey;
     border-bottom-width: 1px;
     border-bottom-style: solid;
-    width: inherit;
+    width: auto;
+    display: flex;
+    flex-direction: row;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-input-date {
@@ -149,7 +151,9 @@
 }
 
 .hx-form-container div.ui-input-text input {
-    width: 100%;
+    flex: 2;
+    -webkit-flex: 2;
+    width: auto;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-button-container input {
@@ -219,4 +223,10 @@
 
 textarea.ui-input-text {
     padding: 0 .4em;
+}
+
+@media all and (min-width: 28em){
+    .hx-form-container .ui-field-contain label.ui-select { width: initial; }
+    .hx-form-container .ui-field-contain .ui-select { width: initial; }
+    .hx-form-container .ui-field-contain .ui-controlgroup-label { width: initial; }
 }

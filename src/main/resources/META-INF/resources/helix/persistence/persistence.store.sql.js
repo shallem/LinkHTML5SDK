@@ -299,7 +299,7 @@ function config(persistence, dialect) {
         // Before we go any further see if we have anything to do. If not, just call the completion function.
         var session = this;
         if (Object.keys(session.trackedObjects).length === 0 &&
-                Object.keys(session.objectsToRemove) === 0) {
+                Object.keys(session.objectsToRemove).length === 0) {
             // Nothing to track and nothing to remove.
             if (callback) {
                 callback();
