@@ -28,10 +28,20 @@
     };
     
     window.OfflinePost = {
-        savePost: function ( url, contentType, postBody, jsonObj, success, fail) {
-            return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj]);
+        savePost: function ( url, contentType, postBody, jsonObj, offlineID, success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "savePost", [url, contentType, postBody, jsonObj, offlineID]);
         }
     };
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 3) {
+        window.OfflinePost.clearPost = function(offlineID, success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "clearPost", [ offlineID ]);
+        };
+        window.OfflinePost.listPosts = function(success, fail) {
+            return cordova.exec(success, fail, "OfflinePost", "listPosts", []);
+        };
+    }
     
     window.HelixPolicy = {
         getPolicy: function ( policy, success, fail ) {
@@ -141,5 +151,19 @@
         window.HelixBulkContacts.queue = function(contactsToQueue, done) {
             return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
         };
+    }
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 3) {
+        $.extend(window.HelixSystem, {
+            exitApp : function() {
+                return cordova.exec(null, null, "HelixSystem", "exitApp", []);
+            },
+            openApp : function(appID, action, argsObj) {
+                var args = Helix.Utils.crossAppArgs(appID, action, argsObj);
+                var url = 'hx://openapp?' + args;
+                window.open(url);
+            }
+        });
     }
 })();

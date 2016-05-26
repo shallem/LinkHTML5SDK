@@ -61,7 +61,7 @@
     <dependency>
       <groupId>org.helix</groupId>
       <artifactId>LinkSDKSerializer</artifactId>
-      <version>1.1.3</version>
+      <version>1.1.4</version>
     </dependency>
 
   </dependencies>
@@ -223,14 +223,8 @@
 		    <include>colorpicker/spectrum.css</include>
 		    <include>editor/editor.css</include>
 
-		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
-		    <include>datebox/jqm-datebox.css</include>
-
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
 		    <include>calendar/fullcalendar.css</include>
-
-		    <!-- http://usehook.com/ pull to refresh.
-		    <include>css/hook.css</include>  -->
 
 		    <include>css/helix.css</include>
 
@@ -238,13 +232,14 @@
 
 		    <!-- Styles from the PrimeFaces project. -->
 		    <include>primefaces-styles/primefaces-aristo.css</include>
-		    <include>primefaces-styles/primefaces-datagrid.css</include>
-		    <include>primefaces-styles/primefaces-paginator.css</include>
 		    <include>primefaces-styles/primefaces-growl.css</include>
 		    <include>primefaces-styles/primefaces-core.css</include>
 
 		    <!-- Undo styles. -->
 		    <include>undo/helix-undo.css</include>
+
+		    <!-- Form layout styles. -->
+		    <include>form/formStyles.css</include>
 
 		  </includes>
 		  <aggregations>
@@ -295,10 +290,6 @@
 		    <!-- Adapted primefaces components. -->
 		    <include>primefaces-js/core.js</include>
 		    <include>primefaces-js/growl.js</include>
-
-		    <!-- https://github.com/jtsage/jquery-mobile-datebox -->
-		    <include>datebox/jqm-datebox.core.js</include>
-		    <include>datebox/jqm-datebox.mode.flipbox.js</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
 		    <include>calendar/fullcalendar.js</include>

@@ -1273,8 +1273,14 @@ function initHelixDB() {
                 }
             };
 
-            /* Handle deletes, then sync. Then we handle modifications and adds. */
-            removeFn();
+            if ((deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) ||
+                    (deltaObj.deletes && deltaObj.deletes.length > 0)) {
+                /* Handle deletes, then sync. Then we handle modifications and adds. */
+                removeFn();
+            } else {
+                /* Nothing to remove; move on to adds ... */
+                prepareAdds();
+            }
         },
     
         synchronizeDeltaObject: function(allSchemas, deltaObj, parentCollection, elemSchema, oncomplete, overrides) {

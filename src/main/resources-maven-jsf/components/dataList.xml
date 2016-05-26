@@ -263,7 +263,13 @@
             <name>indexedSearch</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Enables free text search. Supply a function that accepts two arguments, the search query and a query collection, and returns a filtered query collection.</description>
+            <description>Enables free text search. Supply a function that accepts three arguments, the search query, a completion function, and an optional query collection that results form the local search. The completion should be invoked with a filtered query collection as its only argument.</description>
+        </attribute>
+        <attribute>
+            <name>localIndexedSearch</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Enables free text search. Supply a function that accepts two arguments, the search query and a completion function. The completion function should be called with the filtered query collection as its only argument. This function should be fast, and is presumed to only execute locally without requiring network access. This function is optional.</description>
         </attribute>
         <attribute>
             <name>onSearchClear</name>
@@ -276,6 +282,12 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Callback invoked during buttons layout to add external buttons.</description>
+        </attribute>
+        <attribute>
+            <name>selectionButtonsCallback</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback invoked during buttons layout to add buttons that appear when one ore more list items are selected.</description>
         </attribute>
         <attribute>
             <name>indexedSearchText</name>
@@ -297,17 +309,10 @@
             <description>Indicate if the contents of the list should be scrollable.</description>
         </attribute>
         <attribute>
-            <name>splitIcon</name>
+            <name>splitAction</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <description>Specify if a split icon will be used in the list elements.</description>
-        </attribute>
-        <attribute>
-            <name>splitTheme</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <defaultValue>b</defaultValue>
-            <description>Specify the theme of the split element.</description>
+            <description>Specify if a split icon will be used in the list elements. In that case, this action is invoked whenever that split link is clicked.</description>
         </attribute>
         <attribute>
             <name>headerText</name>

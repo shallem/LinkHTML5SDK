@@ -36,5 +36,11 @@
             <type>java.lang.String</type>
             <description>Text to display underneath the icon for the tab.</description>
         </attribute>
+        <attribute>
+            <name>theme</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>a</defaultValue>
+        </attribute>
     </attributes>
 </component>

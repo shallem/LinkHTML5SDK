@@ -315,6 +315,9 @@ persistence.search.config = function(persistence, dialect, options) {
         };
         
         Entity.indexingDone = function(ncalls) {
+            if (Helix.DB.__indexingMessageTimeout) {
+                clearTimeout(Helix.DB.__indexingMessageTimeout);
+            }
             --Helix.DB.__indexingCount;
             if (Helix.DB.__indexingCount === 0 && Helix.DB.__indexingMessageShown == true) {
                 Helix.Utils.statusMessage("Indexing done", "The app is done indexing.", "info");
@@ -359,9 +362,14 @@ persistence.search.config = function(persistence, dialect, options) {
                 ++Helix.DB.__indexingCount;
             }
             
-            if (ncalls === 4 && !Helix.DB.__indexingMessageShown) {
-                Helix.Utils.statusMessage("Indexing in progress", "The app is indexing text contents to enable local search. This can make the app sluggish until all indexing is done. Indexing generally completes within 5 minutes.", "info");
-                Helix.DB.__indexingMessageShown = true;
+            if (ncalls === 2 && !Helix.DB.__indexingMessageShown) {
+                if (Helix.DB.__indexingMessageTimeout) {
+                    clearTimeout(Helix.DB.__indexingMessageTimeout);
+                }
+                Helix.DB.__indexingMessageTimeout = setTimeout(function() {
+                    Helix.Utils.statusMessage("Indexing in progress", "The app is indexing text contents to enable local search. This can make the app sluggish until all indexing is done. Indexing generally completes within 5 minutes.", "info");
+                    Helix.DB.__indexingMessageShown = true;
+                }, 7000);
             }
             
             // Run a query to get 100 objects that are not yet indexed.
@@ -653,12 +661,15 @@ persistence.search.config = function(persistence, dialect, options) {
     }
   
     function handleDeletes(queries, tx, callback) {
-        for (var id in persistence.getObjectsToRemove()) {
-            if (persistence.getObjectsToRemove().hasOwnProperty(id)) {
-                var obj = persistence.getObjectsToRemove()[id];
+        var toRemove = persistence.getObjectsToRemove();
+        for (var id in toRemove) {
+            if (toRemove.hasOwnProperty(id)) {
+                var obj = toRemove[id];
                 var meta = persistence.getEntityMeta()[obj._type];
                 if(meta.textIndex) {
-                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `id`=?)', [id]]);
+                    var keyValuePair = persistence.getRemoveKeyValuePair(id);
+                    queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `' 
+                                + keyValuePair[0] + '`=?)', [keyValuePair[1]]]);
                 }
             }
         }

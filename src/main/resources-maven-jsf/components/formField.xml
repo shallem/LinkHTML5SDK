@@ -178,6 +178,18 @@
             <description>Action to execute when an element is selected from an autocomplete list.</description>
         </attribute>
         <attribute>
+            <name>autocompleteThreshold</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Number of characters required before autocomplete executes with the contents of the input box.</description>
+        </attribute>
+        <attribute>
+            <name>autocompleteTimeout</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Number of seconds (whole or fractional) before autocomplete executes with the contents of the input box.</description>
+        </attribute>
+        <attribute>
             <name>validator</name>
             <required>false</required>
             <type>java.lang.String</type>

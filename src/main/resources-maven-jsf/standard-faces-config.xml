@@ -1,14 +1,6 @@
     
     <name>helix</name>
-    
-    <ordering>
-        <after>
-            <name>primefaces</name>
-            <name>primefaces-extensions</name>
-            <name>primefaces-mobile</name>
-        </after>
-    </ordering>
-  
+      
     <application>
         <resource-handler>org.helix.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
         <system-event-listener>

@@ -63,13 +63,24 @@
              * get naming conflicts between different forms in the same applications. It is strongly
              * recommended that the namespace is non-empty.
              */
-            namespace : ''
+            namespace : '',
+            
+            /**
+             * Style class for all field titles.
+             */
+            titleStyleClass: '',
+            
+            /**
+             * Style class for all text inputs.
+             */
+            textStyleClass: ''
         },
 
         _create: function() {
             /* Initialize variables. */
             this._typeMap = [];
             this._fieldMap = [];
+            this._isDirty = false;
             
             this.page = $(this.element).closest('[data-role="page"]');
             
@@ -77,8 +88,9 @@
              * type
              */
             this.layoutMini = false;
-            if (Helix.deviceType in this.options.useMiniLayout &&
-                this.options.useMiniLayout[Helix.deviceType]) {
+            if (("all" in this.options.useMiniLayout) ||
+                (Helix.deviceType in this.options.useMiniLayout &&
+                 this.options.useMiniLayout[Helix.deviceType])) {
                 $(this.element).addClass('hx-form-mini');
                 this.layoutMini = true;
             }
@@ -102,27 +114,31 @@
             $(this.element).empty();
         },
         
+        _processOneItem: function(formElem) {
+            this._typeMap[formElem.name] = formElem.type;
+            this._fieldMap[formElem.name] = formElem;
+            formElem.parentForm = this;
+            formElem.origCondition = formElem.condition;
+            if (this.options.namespace) {
+                if (formElem.id) {
+                    formElem.id = this.options.namespace + "_" + formElem.id;
+                }
+                formElem.originalName = formElem.name;
+                formElem.name = this.options.namespace + "_" + formElem.name;
+            }
+            if (formElem.type === 'controlset') {
+                // Control set.
+                this._processItems(formElem.controls);
+            } else if (formElem.items) {
+                // Sub panel.
+                this._processItems(formElem.items);
+            }            
+        },
+        
         _processItems: function(itemsList) {
             for (var idx = 0; idx < itemsList.length; ++idx) {
                 var formElem = itemsList[idx];
-                this._typeMap[formElem.name] = formElem.type;
-                this._fieldMap[formElem.name] = formElem;
-                formElem.parentForm = this;
-                formElem.origCondition = formElem.condition;
-                if (this.options.namespace) {
-                    if (formElem.id) {
-                        formElem.id = this.options.namespace + "_" + formElem.id;
-                    }
-                    formElem.originalName = formElem.name;
-                    formElem.name = this.options.namespace + "_" + formElem.name;
-                }
-                if (formElem.type === 'controlset') {
-                    // Control set.
-                    this._processItems(formElem.controls);
-                } else if (formElem.items) {
-                    // Sub panel.
-                    this._processItems(formElem.items);
-                }
+                this._processOneItem(formElem);
             }
         },
     
@@ -150,6 +166,8 @@
                     } else {
                         formElem.hidden = true;
                     }
+                } else if ($.isFunction(formElem.condition)) {
+                    formElem.hidden = !(formElem.condition.call(this, (valuesMap ? valuesMap : null), fldName));
                 } else  {
                     var fn = window[formElem.condition];
                     if(typeof fn === 'function') {
@@ -174,7 +192,7 @@
                 var formElem = this.options.items[idx];
                 
                 // Process sub items.
-                if (formElem.type in this._groupedTypes) {
+                if (formElem.type in this._groupedTypes || formElem.type === 'radio') {
                     for (i = 0; i < formElem.controls.length; ++i) {
                         var subItem = formElem.controls[i];
                         this.__computeOneHidden(subItem, valuesMap);
@@ -187,6 +205,10 @@
                 }
                 this.__computeOneHidden(formElem, valuesMap);
             }
+        },
+        
+        refreshHidden: function(name) {
+            
         },
     
         updateItem: function(name, updatedProperties) {
@@ -209,6 +231,8 @@
          * @param valuesMap Map form field names to values.
          */
         refresh: function(valuesMap) { 
+            $(this.element).off('change.' + this.options.namespace);
+            this._isDirty = false;
             this._computeHidden(valuesMap);
             
             if (!valuesMap) {
@@ -221,6 +245,17 @@
             for (var z = 0; z < this.options.items.length; ++z) {
                 this.options.items[z].parentForm = this;
             }
+            $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
+                ev.data._isDirty = true;
+            });
+        },
+        
+        isDirty: function() {
+            return this._isDirty;
+        },
+        
+        clearDirty: function() {
+            this._isDirty = false;
         },
         
         toggle: function(valuesMap) {
@@ -301,7 +336,8 @@
                         name: strippedFieldID,
                         value: $(this).editor('getHTML')
                     });
-                } else if (fieldType === "checkbox") {
+                } else if (fieldType === "checkbox" ||
+                           fieldType === 'onoff') {
                     if ($(this).is(":checked")) {
                         toSerialize.push({
                             name : strippedFieldID,
@@ -486,8 +522,12 @@
                     }
                 } else if (fldType === 'checkbox') {
                     __refreshControl(item, false, mode);
+                } else if (fldType === 'onoff') {
+                    __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item);
+                } else if (fldType === 'onoff') {
+                    __refreshOnOffSlider(item);
                 } else if (fldType === 'htmlframe') {
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
@@ -515,12 +555,6 @@
                     // Controlset
                     for (idx = 0; idx < item.controls.length; ++idx) {
                         var controlItem = item.controls[idx];
-                        /*if (!controlItem.hidden) {
-                            $(controlItem.DOM).closest('div.ui-checkbox').show();
-                        } else {
-                            $(controlItem.DOM).closest('div.ui-checkbox').hide();
-                        }*/
-                        
                         this.__refreshOneValue(mode, controlItem, valuesMap);
                     }
                 } else if (fldType === 'htmlarea') {
@@ -546,10 +580,17 @@
             var fieldID = item.name;
             var strippedFieldID = this._stripNamespace(fieldID);
             if (!item.readOnly) {
-                if (valuesMap[strippedFieldID] !== undefined ||
-                    valuesMap['default'] !== undefined) {
-                    var newValue = (valuesMap[strippedFieldID] !== undefined ? 
-                                        valuesMap[strippedFieldID] : valuesMap['default']);
+                if ((fieldID in valuesMap) ||
+                        (strippedFieldID in valuesMap) ||
+                        ('default' in valuesMap)) {
+                    var newValue;
+                    if (fieldID in valuesMap) {
+                        newValue = valuesMap[fieldID];
+                    } else if (strippedFieldID in valuesMap) {
+                        newValue = valuesMap[strippedFieldID];
+                    } else {
+                        newValue = valuesMap['default'];
+                    }
                     
                     var fldType = item.type;
                     if (fldType !== 'buttonGroup') {
@@ -633,7 +674,7 @@
         },
         
         setValue: function(name, value) {
-            var item;
+            var item, subItem;
             name = this._stripNamespace(name);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 item = this.options.items[idx];
@@ -641,6 +682,21 @@
                 var strippedFieldID = this._stripNamespace(fieldID);
 
                 if (name === strippedFieldID) {
+                    break;
+                }
+                if (item.type === 'subPanel') {
+                    // Go through the items.
+                    for (var j = 0; j < item.items.length; ++j) {
+                        subItem = item.items[j];
+                        var _subID = this._stripNamespace(subItem.name);
+                        if (name === _subID) {
+                            break;
+                        }
+                        subItem = null;
+                    }
+                }
+                if (subItem) {
+                    item = subItem;
                     break;
                 }
                 item = null;
@@ -651,7 +707,9 @@
             
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             var valuesObj = {};
-            valuesObj[name] = value;
+            if (value) {
+                valuesObj[name] = value;
+            }
             this.__refreshOneValue(mode, item, valuesObj);
         },
         
@@ -668,6 +726,7 @@
         },
         
         getValue: function(name) {
+            name = this._stripNamespace(name);
             var fld = this._fieldMap[name];
             if (!fld) {
                 return null;
@@ -689,7 +748,8 @@
             var fldType = this._typeMap[name];
             
             // Checkboxes and radios are handled the same regardless of mode.
-            if (fldType === 'checkbox') {
+            if (fldType === 'checkbox' ||
+                fldType === 'onoff') {
                 if ($(thisField).is(":checked")) {
                     return true;
                 }
@@ -718,7 +778,8 @@
                 if (selected.length > 0) {
                     return selected.val();
                 }
-            } else if (fldType === 'htmlarea') {
+            } else if (fldType === 'htmlarea' ||
+                       fldType === 'htmlframe') {
                 return $(thisField).editor('getHTML')
             } else {
                 return thisField.val();
@@ -815,7 +876,7 @@
         
         _checkNotPast: function(val) {
             // Val should be a date object
-            if (!val.getTime && isNaN(val)) {
+            if (!val || (!val.getTime && isNaN(val))) {
                 // Not a date object.
                 return false;
             }
@@ -899,6 +960,9 @@
             var validationErrors = {};
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
+                if (nxtItem.hidden) {
+                    continue;
+                }
                 if (nxtItem.type === 'subPanel') {
                     // Go through the items.
                     for (var j = 0; j < nxtItem.items.length; ++j) {
@@ -912,9 +976,8 @@
         },
         
         addItem: function(item) {
-            item.originalName = item.name;
-            item.name =  this.options.namespace + '_' + item.name;
             this.options.items.push(item);
+            this._processOneItem(item);
         },
         
         removeItem: function(item) {

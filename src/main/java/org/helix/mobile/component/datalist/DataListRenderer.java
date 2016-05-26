@@ -193,6 +193,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getIndexedSearch() != null) {
             writer.write(",indexedSearch: " + dlist.getIndexedSearch());
         }
+        if (dlist.getLocalIndexedSearch()!= null) {
+            writer.write(",localIndexedSearch: " + dlist.getLocalIndexedSearch());
+        }
         if (dlist.getIndexedSearchText() != null) {
             writer.write(",indexedSearchText: '" + dlist.getIndexedSearchText() + "'");
         }
@@ -253,11 +256,8 @@ public class DataListRenderer extends CoreRenderer {
         }
         
         // Split theme
-        if (dlist.getSplitIcon() != null) {
-            writer.write(",splitIcon: '" + dlist.getSplitIcon() + "'");
-        }
-        if (dlist.getSplitTheme() != null) {
-            writer.write(",splitTheme: '" + dlist.getSplitTheme() + "'");
+        if (dlist.getSplitAction()!= null) {
+            writer.write(",splitAction: " + dlist.getSplitAction());
         }
         
         // Pull to refresh.
@@ -302,6 +302,11 @@ public class DataListRenderer extends CoreRenderer {
         // External buttons.
         if (dlist.getExternalButtonsCallback() != null) {
             writer.write(",externalButtonsCallback:  function(list, div, useControlGroup) { return "+ dlist.getExternalButtonsCallback() +"}");
+        }
+        
+        // Selection buttons.
+        if (dlist.getSelectionButtonsCallback() != null) {
+            writer.write(",selectionButtonsCallback:  " + dlist.getSelectionButtonsCallback());
         }
         
         writer.write("}).data('helix-helixDatalist');");

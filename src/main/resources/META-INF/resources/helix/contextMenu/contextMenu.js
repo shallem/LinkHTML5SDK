@@ -159,7 +159,8 @@
                 'data-role' : 'popup',
                 'data-theme' : 'a',
                 'id' : this.id,
-                'data-history': 'false'
+                'data-history': 'false',
+                'class' : 'hx-no-webkit-select'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
                 'data-role' : 'listview',
@@ -177,7 +178,7 @@
                     var nxtLink = $('<a />').attr({
                         'href' : 'javascript:void(0)',
                         'data-index' : i,
-                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i) 
+                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i)
                     }).append(nxtItem.display);
                     if (nxtItem.data) {
                         nxtLink.attr('data-field', nxtItem.data);
@@ -350,6 +351,9 @@
         },
         getName: function () {
             return this.options.name;
+        },
+        isActive: function() {
+            return this.active;
         }
     });
 }(jQuery));

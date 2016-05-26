@@ -98,6 +98,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getAutocompleteSelect() != null) {
             writer.write(", 'autocompleteSelect' : " + ffield.getAutocompleteSelect());
         }
+        if (ffield.getAutocompleteThreshold() != null) {
+            writer.write(", 'autocompleteThreshold' : " + ffield.getAutocompleteThreshold());
+        }
+        if (ffield.getAutocompleteTimeout() != null) {
+            writer.write(", 'autocompleteTimeout' : " + ffield.getAutocompleteTimeout());
+        }
         if (ffield.getOptions() != null) {
             writer.write(", 'options' : " + ffield.getOptions());
         }

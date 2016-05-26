@@ -296,13 +296,17 @@ function config(persistence, dialect) {
         tx = args.tx;
         callback = args.callback;
 
+        // Before we go any further see if we have anything to do. If not, just call the completion function.
         var session = this;
-        if(!tx) {
-            this.transaction(function(tx) {
-                session.flush(tx, callback);
-            });
+        if (Object.keys(session.trackedObjects).length === 0 &&
+                Object.keys(session.objectsToRemove) === 0) {
+            // Nothing to track and nothing to remove.
+            if (callback) {
+                callback();
+            }
             return;
         }
+
         // SAH - eliminate flush hooks. We want to add as many statements into a single
         // txn as possible. Allowing asynchronous delays can cause a transaction to flush
         // before we add required statements to it. Users of this API need to find another
@@ -316,47 +320,52 @@ function config(persistence, dialect) {
         var removeObjArray = [];
         for (var id in session.objectsToRemove) {
             if (session.objectsToRemove.hasOwnProperty(id)) {
-                removeObjArray.push(session.objectsToRemove[id]);
+                removeObjArray.push([id, session.objectsToRemove[id]]);
                 delete session.trackedObjects[id]; // Stop tracking
             }
         }
-        session.objectsToRemove = {};
-        if(callback) {
-            persistence.asyncParForEach(removeObjArray, function(obj, callback) {
-                remove(obj, tx, callback);
-            }, function(result, err, _persistArr) {
-                if (err) return callback(result, err);
-                persistence.asyncParForEach(_persistArr, function(obj, callback) {
-                    save(obj, tx, callback);
-                }, function() {
-                    if (stopTracking === true ||
-                        stopTracking === undefined) {
-                        for (i = 0; i < _persistArr.length; ++i) {
-                            id = _persistArr[i].id;
-                            delete session.trackedObjects[id];            
-                        }         
-                    }
-                    
-                    callback();
-                });
-                return true;
-            }, persistObjArray);
-        } else { // More efficient
-            for(var i = 0; i < persistObjArray.length; i++) {
-                save(persistObjArray[i], tx);
-            }
-            for(var i = 0; i < removeObjArray.length; i++) {
-                remove(removeObjArray[i], tx);
-            }
         
-            // Stop tracking everything we flushed.
-            if (stopTracking === true ||
-                stopTracking === undefined) {
-                for (i = 0; i < persistObjArray.length; ++i) {
-                    id = persistObjArray[i].id;
-                    delete session.trackedObjects[id];            
-                }         
+        // Stop tracking everything we flushed. This also ensures that if async calls
+        // to flush happen at the same time only one of them attempts to persist the list
+        // of tracked objects (which have now been moved into the local persistObjArray).
+        if (stopTracking === true ||
+            stopTracking === undefined) {
+            for (var i = 0; i < persistObjArray.length; ++i) {
+                id = persistObjArray[i].id;
+                delete session.trackedObjects[id];            
+            }         
+        }
+        
+        var __doFlush = function(tx, callback, persistObjArray, removeObjArray) {
+            session.objectsToRemove = {};
+            if(callback) {
+                persistence.asyncParForEach(removeObjArray, function(obj, callback) {
+                    remove(obj, tx, callback);
+                }, function(result, err, _persistArr) {
+                    if (err) return callback(result, err);
+                    persistence.asyncParForEach(_persistArr, function(obj, callback) {
+                        save(obj, tx, callback);
+                    }, function() {
+                        callback();
+                    });
+                    return true;
+                }, persistObjArray);
+            } else { // More efficient
+                for(var i = 0; i < removeObjArray.length; i++) {
+                    remove(removeObjArray[i], tx);
+                }
+                for(var i = 0; i < persistObjArray.length; i++) {
+                    save(persistObjArray[i], tx);
+                }
             }
+        };
+
+        if(!tx) {
+            this.transaction(function(tx) {
+                __doFlush(tx, callback, persistObjArray, removeObjArray);
+            });
+        } else {
+            __doFlush(tx, callback, persistObjArray, removeObjArray);
         }
     };
 
@@ -550,16 +559,24 @@ function config(persistence, dialect) {
 
     persistence.save = save;
 
-    function remove (obj, tx, callback) {
+    function remove(removeObjPair, tx, callback) {
+        var removeKeyValue = persistence.getRemoveKeyValuePair(removeObjPair[0]);
+        var obj = removeObjPair[1];
+        
         var meta = persistence.getMeta(obj._type);
         var tm = persistence.typeMapper;
-        var queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
-        for (var rel in meta.hasMany) {
-            if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
-                var tableName = meta.hasMany[rel].tableName;
-                //var inverseProperty = meta.hasMany[rel].inverseProperty;
-                queries.push(["DELETE FROM `" + tableName + "` WHERE `" + meta.name + '_' + rel + "` = " + tm.outId(obj.id), null]);
+        var queries = [];
+        if (removeKeyValue[0] === 'id' && obj.id) {
+            queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
+            for (var rel in meta.hasMany) {
+                if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
+                    var tableName = meta.hasMany[rel].tableName;
+                    //var inverseProperty = meta.hasMany[rel].inverseProperty;
+                    queries.push(["DELETE FROM `" + tableName + "` WHERE `" + meta.name + '_' + rel + "` = " + tm.outId(obj.id), null]);
+                }
             }
+        } else {
+            queries = [["DELETE FROM `" + obj._type + "` WHERE " + removeKeyValue[0] + " = ?", [removeKeyValue[1]]]];
         }
         executeQueriesSeq(tx, queries, callback);
     }

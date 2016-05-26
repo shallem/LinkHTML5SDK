@@ -58,8 +58,7 @@ Helix.Layout = {
         '.pm-layout-full-height',
         '.hx-layout-full-height',
         '.hx-overlay-full-height',
-        '.hx-layout-recurse',
-        '.ui-panel-inner'
+        '.hx-layout-recurse'
     ],
 
     /**
@@ -292,19 +291,12 @@ Helix.Layout = {
     setMiniViewMode: function() {
         $('.ui-page').addClass('hx-mini-mode');
         $('.ui-page').removeClass('hx-full-mode');
-        
-        if ($('.ui-footer').is(':visible')) {
-            
-        } else {
-            $('.ui-page').addClass('hx-no-footer');
-        }
         Helix.Layout.layoutPage();
     },
     
     setRegularViewMode: function() {
         $('.ui-page').addClass('hx-full-mode');
         $('.ui-page').removeClass('hx-mini-mode');
-        $('.ui-page').removeClass('hx-no-footer');
     }
 };
 
