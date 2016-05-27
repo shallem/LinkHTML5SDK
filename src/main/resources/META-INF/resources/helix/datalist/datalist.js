@@ -602,6 +602,9 @@
             if (sortFilterOptions.__hx_sorts) {
                 return sortFilterOptions.__hx_sorts;
             }
+            if (sortFilterOptions.sortBy) {
+                return sortFilterOptions;
+            }
             
             return sortFilterOptions.sorts;
         },
@@ -939,6 +942,10 @@
                             return;
                         }
                         if (!_self.$parent.is(':visible')) {
+                            return;
+                        }
+                        // The list is in the process of rendering, but not yet present on the screen.
+                        if (listHeight < 0) {
                             return;
                         }
                         if (_self._scrollerTimeout) {
@@ -1787,6 +1794,11 @@
             _self.__searchText = _self.$searchBox.val();            
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
+            }
+            if (_self.__searchText.length === 0) {
+                // The same as clearing the search.
+                _self.resetListContents();
+                return;
             }
             if (_self.__searchText.length < 2) {
                 // We do not do 1 letter searches ...
