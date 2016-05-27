@@ -484,6 +484,10 @@
                         item.editDOM.hide();
                     }
                 }
+                
+                if (!item.DOM) {
+                    return;
+                }
 
                 if (item.hidden) {
                     if (item.DOM) {
