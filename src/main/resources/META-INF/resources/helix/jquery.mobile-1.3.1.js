@@ -4099,7 +4099,9 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 
 		height = ( typeof height === "number" )? height : getScreenHeight();
 		
-		aPage.css( "min-height", height - aPagePadT - aPagePadB - aPageBorderT - aPageBorderB );
+                // SAH: sometimes min-height is set to larger than the screen height. Let our own layout mechanism in the link
+                // SDK do this work.
+		//aPage.css( "min-height", height - aPagePadT - aPagePadB - aPageBorderT - aPageBorderB );
 	};
 
 	//shared page enhancements
