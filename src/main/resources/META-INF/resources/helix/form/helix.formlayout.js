@@ -873,7 +873,7 @@ function __refreshRadioButtons(formElem) {
 
 function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     if (!formElem.name) {
-        console.log("Skipping radio buttons because it has no name.");
+        console.log("Skipping radio button because it has no name.");
         return;
     }
     
@@ -917,7 +917,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         if (subElem.defaultValue !== undefined) {
             $(inputMarkup).attr('data-value', subElem.defaultValue);
         }
-        if (subElem.defaultValue === formElem.defaultValue) {
+        if ((subElem.defaultValue === formElem.defaultValue) || (subElem.defaultValue === formElem.value)) {
             $(inputMarkup).attr('checked', 'true');
         }
         if (formElem.onchange) {
