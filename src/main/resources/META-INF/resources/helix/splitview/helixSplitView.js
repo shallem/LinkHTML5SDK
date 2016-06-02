@@ -234,7 +234,6 @@
             this.refresh();
             
             Helix.Layout.refresh();
-            Helix.Layout.layoutPage($.mobile.activePage, true);
         },
         
         showRight: function() {
@@ -247,7 +246,6 @@
                 this.refresh();
             
                 Helix.Layout.refresh();
-                Helix.Layout.layoutPage($.mobile.activePage, true);
             } else {
                 /* Do nothing. We are already on the right. */
             }
@@ -263,7 +261,6 @@
                 this.refresh();
             
                 Helix.Layout.refresh();
-                Helix.Layout.layoutPage($.mobile.activePage, true);
             } else {
                 /* Do nothing. We are already on the right. */
             }
