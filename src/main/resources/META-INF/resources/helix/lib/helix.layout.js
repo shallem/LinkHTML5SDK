@@ -375,9 +375,14 @@ $(document).on('pagecreate', function(ev) {
 });*/
 
 window.addEventListener('orientationchange', function(ev) {
+    Helix.Layout.refresh();
+    Helix.Layout.layoutPage();
     $('.ui-page').each(function() {
-        Helix.Layout.refresh($(this));
-        Helix.Layout.layoutPage($(this));    
+        if (!$(this).is(':visible')) {
+            Helix.Layout.postRenderer($(this), $.proxy(function() {
+                Helix.Layout.layoutPage(this);
+            }, $(this)), true);
+        }
     });
 });
 
