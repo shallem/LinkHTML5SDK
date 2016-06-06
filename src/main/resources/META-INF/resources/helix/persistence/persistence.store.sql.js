@@ -360,10 +360,34 @@ function config(persistence, dialect) {
             }
         };
 
-        if(!tx) {
-            this.transaction(function(tx) {
-                __doFlush(tx, callback, persistObjArray, removeObjArray);
+        var __flushChunk = function(_cb, _persists, _removes, startIdx) {
+            persistence.transaction(function(tx) {
+                var _slice;
+                if (startIdx + 250 >= _persists.length) {
+                    _slice = _persists.slice(startIdx);
+                    __doFlush(tx, _cb, _slice, _removes);
+                } else {
+                    _slice = _persists.slice(startIdx, startIdx+250);
+                    __doFlush(tx, function() {
+                        setTimeout(function() {
+                            // Put this in a setTimeout to make sure that the cordova command queue has a chance
+                            // to get flushed at the end of the transaction callback.
+                            __flushChunk(_cb, _persists, [], startIdx + 250);                        
+                        }, 0);
+                    }, _slice, _removes);
+                }
             });
+        };
+
+        if(!tx) {
+            if (persistObjArray.length > 250) {
+                // Block into chunks of 250.
+                __flushChunk(callback, persistObjArray, removeObjArray, 0);
+            } else {
+                this.transaction(function(tx) {
+                    __doFlush(tx, callback, persistObjArray, removeObjArray);
+                });
+            }
         } else {
             __doFlush(tx, callback, persistObjArray, removeObjArray);
         }
