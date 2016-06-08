@@ -470,6 +470,7 @@ Helix.Ajax = {
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
+            var resultsObj = {};
             // No pulsating header or loaders when offline.
             Helix.Ajax.loadOptions.silent = true;
 
@@ -488,6 +489,7 @@ Helix.Ajax = {
                         thisArg: commandConfig
                     };
                     commandConfig.oncomplete = function(finalKey, name, finalObj) {
+                        resultsObj[commandToLaunch] = finalObj;
                         completeObj.args = [ finalKey, name, finalObj, true, null, loadCommandOptions ];
                         completions.push(completeObj);
                         commandConfig.oncomplete = completeObj.fn;
@@ -500,7 +502,7 @@ Helix.Ajax = {
                         }
                     }
                     if (globalOnComplete) {
-                        globalOnComplete(null, null, null, true, null, loadCommandOptions);
+                        globalOnComplete(null, loadCommandOptions.name, resultsObj, true, null, loadCommandOptions);
                     }
                     Helix.Ajax.loadOptions.silent = false;
                 }
