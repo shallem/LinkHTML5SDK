@@ -432,6 +432,14 @@
             if (!val) {
                 this.isFirstTyping = true;            
             }
+            
+            // Repair. We cannot handle 'b' and 'i' tags
+            this.$editFrame.find('b').each(function() {
+                $(this).replaceWith($('<span/>').css('font-weight', 'bold').append(this.innerHTML));
+            });
+            this.$editFrame.find('i').each(function() {
+                $(this).replaceWith($('<span/>').css('font-style', 'italic').append(this.innerHTML));
+            });
         },
         
         focus: function() {
@@ -462,26 +470,24 @@
         },
 
         _applyStyle: function($newSpan, isCollapsed, styleName, cssName, cssValOn, cssValOff) {
-            if (!isCollapsed) {
-                // Apply to non-empty selected text. Should not influence the current state of bold/not.
+            $newSpan.find('span').css(cssName, ''); // Clear out any old values
+            if (styleName in this.currentStyles) {
                 $newSpan.css(cssName, cssValOn);
             } else {
-                if (this.currentStyles[styleName]) {
-                    $newSpan.css(cssName, cssValOn);
-                } else {
-                    $newSpan.css(cssName, cssValOff);
-                }                            
-            }
+                $newSpan.css(cssName, cssValOff);
+            }                            
         },
         
         _executeStyleActions: function(txtToSurround) {
             var isCollapsed = this._lastInputRange.collapsed;
             var $newSpan = this._insertSpan(txtToSurround);
+            var changedStyles = {};
             
             // Update the state of all toggle styles.
             for (var i = 0; i < this.styleChanges.length; ++i) {
                 var actionName = this.styleChanges[i][0];
                 var param = this.styleChanges[i][1];
+                changedStyles[actionName] = true;
                 switch(actionName) {
                     case 'bold':
                     case 'italic':
@@ -505,7 +511,7 @@
             }
             
             // Apply the appropriate style to the new span.
-            for (var actionName in this.currentStyles) {
+            for (var actionName in $.extend({}, this.currentStyles, changedStyles)) {
                 var param = this.currentStyles[actionName];
                 switch(actionName) {
                     case 'color':
@@ -580,7 +586,13 @@
             this.$editFrame.focus();
             if(_self._lastInputRange) {
                 if (!isCollapsed) {
-                    _self._lastInputRange.surroundContents(newElement);
+                    // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+                    // See comment at the top of the link above as to why this method is better than
+                    // surroundContents
+                    newElement.appendChild(_self._lastInputRange.extractContents()); 
+                    _self._lastInputRange.insertNode(newElement)
+                    
+                    //_self._lastInputRange.surroundContents(newElement);
                     // Restore the caret position.
                     _self._setCaretPosition(_self._lastInputRange);
                 } else {
