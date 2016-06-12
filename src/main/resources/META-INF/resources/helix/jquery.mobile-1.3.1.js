@@ -3308,7 +3308,11 @@ if ( eventCaptureSupported ) {
 					// ONLY trigger a 'tap' event if the start target is
 					// the same as the stop target.
 					if ( origTarget === event.target ) {
-						triggerCustomEvent( thisObject, "tap", event );
+                                                // SAH: added because these events were firing with the wrong target object.
+                                                // see LA-893
+                                                var _tgt = document.elementFromPoint(event.clientX, event.clientY);
+						//triggerCustomEvent( thisObject, "tap", event );
+                                                triggerCustomEvent( thisObject, "tap", $.extend({}, event, { target : _tgt } ) );
 					}
 				}
 
@@ -3317,7 +3321,11 @@ if ( eventCaptureSupported ) {
 				$document.bind( "vmousecancel", clearTapHandlers );
 
 				timer = setTimeout( function() {
-					triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
+                                    // SAH: added because these events were firing with the wrong target object.
+                                    // see LA-893
+                                    var _tgt = document.elementFromPoint(event.clientX, event.clientY);
+                                    //triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
+                                    triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: _tgt } ) );
 				}, $.event.special.tap.tapholdThreshold );
 			});
 		}
@@ -4952,7 +4960,8 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 				$btn = $btn.closest( ".ui-btn" );
 			}
 
-			if ( $btn.length > 0 && !$btn.hasClass( "ui-disabled" ) ) {
+                        // SAH: added event.noButtonSelect
+			if ( $btn.length > 0 && !$btn.hasClass( "ui-disabled" ) && event.noButtonSelect !== true) {
 				removeActiveLinkClass( true );
 				$activeClickedLink = $btn;
 				$activeClickedLink.addClass( $.mobile.activeBtnClass );

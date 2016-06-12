@@ -476,7 +476,7 @@
             
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             this.contextEvent = Helix.contextEvent;
-            this.tapEvent = Helix.clickEvent;
+            this.tapEvent = (Helix.hasTouch ? 'tap' : 'click'); //Helix.clickEvent;
             this._cancelNextTap = false;
             this._installActionHandlers();
 
@@ -2335,6 +2335,11 @@
 
                     return false;
                 });
+                $(this.$listWrapper).on('vclick', function(event) {
+                    // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
+                    // list item highlighted active. We handle all of the active highlighting in the datalist class.
+                    event.noButtonSelect = true;
+                });
             }
             if (this.options.swipeLeftAction) {
                 this.$listWrapper.off('swipeleft').on('swipeleft', 'div.ui-li', this, function(event) {
@@ -2432,9 +2437,10 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            if (this.selectedLI) {
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active');
+            /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
-            }
+            }*/
             if (this.options.grouped) {
                 this.selectedGroupRow = enclosingGroupIndex;
                 this.selectedGroup = this.displayList[enclosingIndex].group;
