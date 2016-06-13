@@ -3280,7 +3280,10 @@ if ( eventCaptureSupported ) {
 			var thisObject = this,
 				$this = $( thisObject );
 
-			$this.bind( "vmousedown", function( event ) {
+                        /* SAH: changed from bind to off/on. Add the off call because otherwise if both a taphold and
+                         * a tap are targeted to the same object then we will end up triggering each event twice.
+                         */
+			$this.off("vmousedown").on( "vmousedown", function( event ) {
 
 				if ( event.which && event.which !== 1 ) {
 					return false;
@@ -3320,12 +3323,15 @@ if ( eventCaptureSupported ) {
 					.bind( "vclick", clickHandler );
 				$document.bind( "vmousecancel", clearTapHandlers );
 
-				timer = setTimeout( function() {
+                                
+                                timer = setTimeout( function() {
                                     // SAH: added because these events were firing with the wrong target object.
                                     // see LA-893
-                                    var _tgt = document.elementFromPoint(event.clientX, event.clientY);
                                     //triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
-                                    triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: _tgt } ) );
+                                    //setTimeout(function() {
+                                        var _tgt = document.elementFromPoint(event.clientX, event.clientY);
+                                        triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: _tgt } ) );                                        
+                                    //}, 10);
 				}, $.event.special.tap.tapholdThreshold );
 			});
 		}
