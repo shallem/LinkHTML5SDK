@@ -3314,8 +3314,8 @@ if ( eventCaptureSupported ) {
                                                 // SAH: added because these events were firing with the wrong target object.
                                                 // see LA-893
                                                 var _tgt = document.elementFromPoint(event.clientX, event.clientY);
-						//triggerCustomEvent( thisObject, "tap", event );
-                                                triggerCustomEvent( thisObject, "tap", $.extend({}, event, { target : _tgt } ) );
+						triggerCustomEvent( thisObject, "tap", event );
+                                                //triggerCustomEvent( thisObject, "tap", $.extend({}, event, { target : _tgt } ) );
 					}
 				}
 
