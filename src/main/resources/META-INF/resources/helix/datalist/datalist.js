@@ -2612,9 +2612,6 @@
             this.selectedLI.addClass('ui-btn-active');
             this.selectedIndex = enclosingIndex;
             this.selected = nxtSelection;
-            if (!nxtSelection) {
-                alert("NO SEL");
-            }
             
             return true;
         },
