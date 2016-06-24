@@ -180,6 +180,7 @@ Helix.Layout = {
     resizePages: function(page) {
         var height = $(window).height();
         page.css('max-height', '');
+        page.css('min-height', '');
         page.height(height);
 
         /* In our mobile framework we never let pages scroll. Elements inside can scroll
@@ -202,12 +203,10 @@ Helix.Layout = {
         var contentHeight = height - footerHeight - headerHeight;
         
         var $content = page.find('.hx-main-content');
-        //$content.css('height', contentHeight);
         $content.parentsUntil('.ui-page').addClass('hx-full-height').addClass('hx-full-width');
         
         if ($content.parent().is('.ui-page')) {
             page.children( ".ui-header, .ui-content, .ui-footer" ).wrapAll( '<div class="hx-page-flex hx-full-height" />' );
-            //$content.parent().addClass('hx-page-flex');
         }
         
         return contentHeight;
@@ -251,13 +250,16 @@ Helix.Layout = {
         renderers.push(fn);
     },
     
-    postRenderer: function(page, fn) {
+    postRenderer: function(page, fn, isOneTime) {
         var postRenderers = $(page).data('hxpostrender');
         if (!postRenderers) {
             postRenderers = [];
             $(page).data('hxpostrender', postRenderers);
         } 
-        postRenderers.push(fn);
+        postRenderers.push({ 
+            'fn': fn,
+            'oneTime': (isOneTime === true ? true : false)
+        });
     },
     
     refresh: function(page, noTrigger) {
@@ -280,11 +282,17 @@ Helix.Layout = {
             page = $.mobile.activePage;
         }
         
-        var prenderers = $(page).data('hxpostrender');
-        if (prenderers) {
-            for (var i = 0; i < prenderers.length; ++i) {
-                prenderers[i].call(this);
+        var nxtPostRenderers = [];
+        var postRenderers = $(page).data('hxpostrender');
+        if (postRenderers) {
+            for (var i = 0; i < postRenderers.length; ++i) {
+                var nxt = postRenderers[i];
+                nxt.fn.call(this);
+                if (nxt.oneTime !== true) {
+                    nxtPostRenderers.push(nxt);
+                }
             }
+            $(page).data('hxpostrender', nxtPostRenderers);
         }
     },
     
@@ -352,18 +360,30 @@ $(document).on('pageshow', function(ev) {
      * we wait for the app to explicitly trigger the final render actions on the page.
      */
     if (!$.mobile.activePage.is('[data-async="true"]')) {
-        Helix.Layout.layoutPage($.mobile.activePage);
         Helix.Layout.postRefresh(ev.target, true);
     }
 });
 
-$(document).on('keyboardHide', function(ev) {
-    Helix.Layout.layoutPage();
+$(document).on('pagecreate', function(ev) {
+    Helix.Layout.postRenderer($(ev.target), $.proxy(function() {
+        Helix.Layout.layoutPage(this);
+    }, $(ev.target)), true);
 });
 
-$(document).on('orientationchange', function(ev) {
+/*$(document).on('keyboardHide', function(ev) {
+    Helix.Layout.layoutPage();
+});*/
+
+window.addEventListener('orientationchange', function(ev) {
     Helix.Layout.refresh();
     Helix.Layout.layoutPage();
+    $('.ui-page').each(function() {
+        if (!$(this).is(':visible')) {
+            Helix.Layout.postRenderer($(this), $.proxy(function() {
+                Helix.Layout.layoutPage(this);
+            }, $(this)), true);
+        }
+    });
 });
 
 Helix.deviceType = (function() {

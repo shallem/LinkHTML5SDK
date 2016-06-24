@@ -1324,7 +1324,7 @@
             }
             if (event.end && event._end <= event._start) {
                 event.end = null;
-            }
+            }   
             if (event.allDay === undefined) {
                 event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
             }
@@ -1601,6 +1601,9 @@
                 offset *= m[15] == '-' ? 1 : -1;
                 date = new Date(+date + (offset * 60 * 1000));
             }
+        }
+        if (ignoreTimezone) {
+            return date;
         }
         return convertTimezone(date, tzOffset, dstOffset);
     }

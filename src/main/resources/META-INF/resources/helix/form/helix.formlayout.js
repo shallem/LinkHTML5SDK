@@ -395,10 +395,17 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         /* Edit */
         // Use the mini style to set font size to 'small'
         var inputID = Helix.Utils.getUniqueID();
+        var heightStyle = formElem.height ? 'height: ' + formElem.height : '';
+        var computedStyle = formElem.computedStyle;
+        if (computedStyle && heightStyle) {
+            computedStyle = computedStyle + ';' + heightStyle;
+        } else if (heightStyle) {
+            computedStyle = heightStyle;
+        }
         inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
             'id' : inputID,
-            'style': formElem.computedStyle,
+            'style': computedStyle,
             'class' : formElem.computedStyleClass,
             'tabindex' : formLayout.__tabIndex++
         }).append(formElem.value);

@@ -62,15 +62,18 @@
             editor.$styleMenu = editor.menus['style'];
 
             // Add the font commands popup to the button bar
-            this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini)
+            var defaultValues = {
+                'font' : 'Calibri'
+            };
+            this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini, defaultValues);
             editor.$fontMenu = editor.menus['font'];
 
             // Add the format commands popup to the button bar
-            this._createPopupMenu('format', 'Format', $parent, $toolbar, this.options.controls.formats, doMini)
+            this._createPopupMenu('format', 'Format', $parent, $toolbar, this.options.controls.formats, doMini);
             editor.$formatMenu = editor.menus['format'];
 
             /* The action menu is "nice-to-have". Skip it on smaller screens. */
-            this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini)
+            this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini);
             editor.$actionMenu = editor.menus['action'];
 
             /* Attach the toolbar to the enclosing div. */
@@ -221,8 +224,12 @@
             return this._isDirty;
         },
     
-        _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini) {
+        _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini, defaultValues) {
             var editor = this;
+            if (!defaultValues) {
+                defaultValues = {};
+            }
+            
             var $popup = this.menuPopups[menuName] = $(this.DIV_TAG)
                 .attr({
                     'id' : menuName + "_" + editor.name
@@ -234,7 +241,7 @@
                 'data-theme' : 'c'
             }).appendTo($popup);
             $.each(menuOptions.split(" "), function(idx, buttonName) {
-                editor._addButtonToMenu($menu, $popup, buttonName, menuName);
+                editor._addButtonToMenu($menu, $popup, buttonName, menuName, defaultValues[buttonName]);
             });
 
             var $button = this.menuToolbar[menuName] = 
@@ -254,7 +261,7 @@
         },
 
         // Add a button to a popup menu.
-        _addButtonToMenu: function(popupMenu, popupParent, buttonName, menuName) {
+        _addButtonToMenu: function(popupMenu, popupParent, buttonName, menuName, defaultValue) {
             var _self = this;
             if (buttonName === "") return;
 
@@ -279,7 +286,7 @@
                         this._appendColorSpectrum(popupMenu, buttonName, menuName);
                         break;
                     case 'font':
-                        this._appendFontSelection(popupMenu, buttonName, menuName);
+                        this._appendFontSelection(popupMenu, buttonName, menuName, defaultValue);
                         break;
                     case 'size':
                         this._appendFontSizeInput(popupMenu, buttonName, menuName);
@@ -354,16 +361,20 @@
             }
         },
         
-        _appendFontSelection: function(popupMenu, buttonName, menuName) {
+        _appendFontSelection: function(popupMenu, buttonName, menuName, defaultValue) {
             var _self = this;
             var inputMarkup = $('<select />')
                     .attr('data-corners', 'false')
+                    .attr('data-mini', 'true')
                     .appendTo(popupMenu);
             $.each(this.options.font.split(','), function() {
                 $('<option />').attr({
                     'value': this
                 }).append($('<span/>').css('font-family', this).append(this)).appendTo(inputMarkup);
             })
+            if (defaultValue) {
+                inputMarkup.val(defaultValue);
+            }
             inputMarkup.selectmenu();
             $(inputMarkup).change(function() {
                 _self._queueStyleAction(menuName, 'font', $(this).find(':selected').attr('value'));
@@ -432,6 +443,14 @@
             if (!val) {
                 this.isFirstTyping = true;            
             }
+            
+            // Repair. We cannot handle 'b' and 'i' tags
+            this.$editFrame.find('b').each(function() {
+                $(this).replaceWith($('<span/>').css('font-weight', 'bold').append(this.innerHTML));
+            });
+            this.$editFrame.find('i').each(function() {
+                $(this).replaceWith($('<span/>').css('font-style', 'italic').append(this.innerHTML));
+            });
         },
         
         focus: function() {
@@ -462,26 +481,24 @@
         },
 
         _applyStyle: function($newSpan, isCollapsed, styleName, cssName, cssValOn, cssValOff) {
-            if (!isCollapsed) {
-                // Apply to non-empty selected text. Should not influence the current state of bold/not.
+            $newSpan.find('span').css(cssName, ''); // Clear out any old values
+            if (styleName in this.currentStyles) {
                 $newSpan.css(cssName, cssValOn);
             } else {
-                if (this.currentStyles[styleName]) {
-                    $newSpan.css(cssName, cssValOn);
-                } else {
-                    $newSpan.css(cssName, cssValOff);
-                }                            
-            }
+                $newSpan.css(cssName, cssValOff);
+            }                            
         },
         
         _executeStyleActions: function(txtToSurround) {
             var isCollapsed = this._lastInputRange.collapsed;
             var $newSpan = this._insertSpan(txtToSurround);
+            var changedStyles = {};
             
             // Update the state of all toggle styles.
             for (var i = 0; i < this.styleChanges.length; ++i) {
                 var actionName = this.styleChanges[i][0];
                 var param = this.styleChanges[i][1];
+                changedStyles[actionName] = true;
                 switch(actionName) {
                     case 'bold':
                     case 'italic':
@@ -505,7 +522,7 @@
             }
             
             // Apply the appropriate style to the new span.
-            for (var actionName in this.currentStyles) {
+            for (var actionName in $.extend({}, this.currentStyles, changedStyles)) {
                 var param = this.currentStyles[actionName];
                 switch(actionName) {
                     case 'color':
@@ -580,7 +597,13 @@
             this.$editFrame.focus();
             if(_self._lastInputRange) {
                 if (!isCollapsed) {
-                    _self._lastInputRange.surroundContents(newElement);
+                    // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+                    // See comment at the top of the link above as to why this method is better than
+                    // surroundContents
+                    newElement.appendChild(_self._lastInputRange.extractContents()); 
+                    _self._lastInputRange.insertNode(newElement)
+                    
+                    //_self._lastInputRange.surroundContents(newElement);
                     // Restore the caret position.
                     _self._setCaretPosition(_self._lastInputRange);
                 } else {

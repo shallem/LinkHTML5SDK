@@ -470,6 +470,7 @@ Helix.Ajax = {
             Helix.Ajax.ajaxBeanLoad(loadCommandOptions);
         } else {
             var completions = [];
+            var resultsObj = {};
             // No pulsating header or loaders when offline.
             Helix.Ajax.loadOptions.silent = true;
 
@@ -488,6 +489,7 @@ Helix.Ajax = {
                         thisArg: commandConfig
                     };
                     commandConfig.oncomplete = function(finalKey, name, finalObj) {
+                        resultsObj[commandToLaunch] = finalObj;
                         completeObj.args = [ finalKey, name, finalObj, true, null, loadCommandOptions ];
                         completions.push(completeObj);
                         commandConfig.oncomplete = completeObj.fn;
@@ -500,7 +502,7 @@ Helix.Ajax = {
                         }
                     }
                     if (globalOnComplete) {
-                        globalOnComplete(null, null, null, true, null, loadCommandOptions);
+                        globalOnComplete(null, loadCommandOptions.name, resultsObj, true, null, loadCommandOptions);
                     }
                     Helix.Ajax.loadOptions.silent = false;
                 }
@@ -666,8 +668,12 @@ Helix.Ajax = {
                     loadCommandOptions.oncomplete(itemKey, "success");
 		}
             },
-            error: function(xhr, status, errorThrown) {
+            error: function(jqXHR, status, errorThrown) {
                 if (Helix.ignoreErrors) {
+                    return;
+                }
+                if (jqXHR.status < 0 || jqXHR.status >= 600) {
+                    // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
@@ -816,6 +822,10 @@ Helix.Ajax = {
                 if (Helix.ignoreErrors) {
                     return;
                 }
+                if (jqXHR.status < 0 || jqXHR.status >= 600) {
+                    // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
+                    return;
+                }
                 if (!params.silentMode) {
                     if (params.fatal) {
                         Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
@@ -891,6 +901,10 @@ Helix.Ajax = {
                         return;
                     }
                     if (Helix.ignoreErrors) {
+                        return;
+                    }
+                    if (jqXHR.status < 0 || jqXHR.status >= 600) {
+                        // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                         return;
                     }
                     if (!params.silentMode) {

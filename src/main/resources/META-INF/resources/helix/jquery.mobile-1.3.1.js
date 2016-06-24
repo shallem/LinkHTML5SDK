@@ -3280,7 +3280,10 @@ if ( eventCaptureSupported ) {
 			var thisObject = this,
 				$this = $( thisObject );
 
-			$this.bind( "vmousedown", function( event ) {
+                        /* SAH: changed from bind to off/on. Add the off call because otherwise if both a taphold and
+                         * a tap are targeted to the same object then we will end up triggering each event twice.
+                         */
+			$this.off("vmousedown").on( "vmousedown", function( event ) {
 
 				if ( event.which && event.which !== 1 ) {
 					return false;
@@ -3316,8 +3319,9 @@ if ( eventCaptureSupported ) {
 					.bind( "vclick", clickHandler );
 				$document.bind( "vmousecancel", clearTapHandlers );
 
-				timer = setTimeout( function() {
-					triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
+                                
+                                timer = setTimeout( function() {
+                                    triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
 				}, $.event.special.tap.tapholdThreshold );
 			});
 		}
@@ -4099,7 +4103,9 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 
 		height = ( typeof height === "number" )? height : getScreenHeight();
 		
-		aPage.css( "min-height", height - aPagePadT - aPagePadB - aPageBorderT - aPageBorderB );
+                // SAH: sometimes min-height is set to larger than the screen height. Let our own layout mechanism in the link
+                // SDK do this work.
+		//aPage.css( "min-height", height - aPagePadT - aPagePadB - aPageBorderT - aPageBorderB );
 	};
 
 	//shared page enhancements
@@ -4950,7 +4956,8 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 				$btn = $btn.closest( ".ui-btn" );
 			}
 
-			if ( $btn.length > 0 && !$btn.hasClass( "ui-disabled" ) ) {
+                        // SAH: added event.noButtonSelect
+			if ( $btn.length > 0 && !$btn.hasClass( "ui-disabled" ) && event.noButtonSelect !== true) {
 				removeActiveLinkClass( true );
 				$activeClickedLink = $btn;
 				$activeClickedLink.addClass( $.mobile.activeBtnClass );

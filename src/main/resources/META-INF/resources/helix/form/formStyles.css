@@ -153,7 +153,7 @@
 .hx-form-container div.ui-input-text input {
     flex: 2;
     -webkit-flex: 2;
-    width: auto;
+    width: 100%;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-button-container input {
