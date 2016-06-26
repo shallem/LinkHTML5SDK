@@ -1264,9 +1264,15 @@ function initHelixDB() {
                     });
                 } else if (deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) {
                     var nxt = deltaObj.deleteSpec.pop();
-                    elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
-                        removeFn();
-                    });
+                    if (nxt.op === 'CLEAR' && parentCollection) {
+                        parentCollection.destroyAll(function() {
+                            removeFn();
+                        });
+                    } else {
+                        elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
+                            removeFn();
+                        });
+                    }
                 } else {
                     /* Make sure all deletes are in the DB. */
                     persistence.flush(function() {
