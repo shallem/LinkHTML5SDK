@@ -62,15 +62,18 @@
             editor.$styleMenu = editor.menus['style'];
 
             // Add the font commands popup to the button bar
-            this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini)
+            var defaultValues = {
+                'font' : 'Calibri'
+            };
+            this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini, defaultValues);
             editor.$fontMenu = editor.menus['font'];
 
             // Add the format commands popup to the button bar
-            this._createPopupMenu('format', 'Format', $parent, $toolbar, this.options.controls.formats, doMini)
+            this._createPopupMenu('format', 'Format', $parent, $toolbar, this.options.controls.formats, doMini);
             editor.$formatMenu = editor.menus['format'];
 
             /* The action menu is "nice-to-have". Skip it on smaller screens. */
-            this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini)
+            this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini);
             editor.$actionMenu = editor.menus['action'];
 
             /* Attach the toolbar to the enclosing div. */
@@ -221,8 +224,12 @@
             return this._isDirty;
         },
     
-        _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini) {
+        _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini, defaultValues) {
             var editor = this;
+            if (!defaultValues) {
+                defaultValues = {};
+            }
+            
             var $popup = this.menuPopups[menuName] = $(this.DIV_TAG)
                 .attr({
                     'id' : menuName + "_" + editor.name
@@ -234,7 +241,7 @@
                 'data-theme' : 'c'
             }).appendTo($popup);
             $.each(menuOptions.split(" "), function(idx, buttonName) {
-                editor._addButtonToMenu($menu, $popup, buttonName, menuName);
+                editor._addButtonToMenu($menu, $popup, buttonName, menuName, defaultValues[buttonName]);
             });
 
             var $button = this.menuToolbar[menuName] = 
@@ -254,7 +261,7 @@
         },
 
         // Add a button to a popup menu.
-        _addButtonToMenu: function(popupMenu, popupParent, buttonName, menuName) {
+        _addButtonToMenu: function(popupMenu, popupParent, buttonName, menuName, defaultValue) {
             var _self = this;
             if (buttonName === "") return;
 
@@ -279,7 +286,7 @@
                         this._appendColorSpectrum(popupMenu, buttonName, menuName);
                         break;
                     case 'font':
-                        this._appendFontSelection(popupMenu, buttonName, menuName);
+                        this._appendFontSelection(popupMenu, buttonName, menuName, defaultValue);
                         break;
                     case 'size':
                         this._appendFontSizeInput(popupMenu, buttonName, menuName);
@@ -354,16 +361,20 @@
             }
         },
         
-        _appendFontSelection: function(popupMenu, buttonName, menuName) {
+        _appendFontSelection: function(popupMenu, buttonName, menuName, defaultValue) {
             var _self = this;
             var inputMarkup = $('<select />')
                     .attr('data-corners', 'false')
+                    .attr('data-mini', 'true')
                     .appendTo(popupMenu);
             $.each(this.options.font.split(','), function() {
                 $('<option />').attr({
                     'value': this
                 }).append($('<span/>').css('font-family', this).append(this)).appendTo(inputMarkup);
             })
+            if (defaultValue) {
+                inputMarkup.val(defaultValue);
+            }
             inputMarkup.selectmenu();
             $(inputMarkup).change(function() {
                 _self._queueStyleAction(menuName, 'font', $(this).find(':selected').attr('value'));

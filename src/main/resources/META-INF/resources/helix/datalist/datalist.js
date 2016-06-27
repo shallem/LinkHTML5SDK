@@ -478,7 +478,11 @@
             this.contextEvent = Helix.contextEvent;
             this.tapEvent = (Helix.hasTouch ? 'tap' : 'click'); //Helix.clickEvent;
             this._cancelNextTap = false;
-            this._installActionHandlers();
+            if (Helix.hasTouch) {
+                this._installTouchActionHandlers();                
+            } else {
+                this._installNoTouchActionHandlers();
+            }
 
             /**
              * Append the footer.
@@ -926,6 +930,8 @@
 
                     _self.$listWrapper.on('touchstart', function() {
                         _self._fingerOn = true;
+                        clearTimeout(_self._scrollerTimeout);
+                        _self._scrollerTimeout = null;
                     });
                     
                     _self.$listWrapper.on('touchend', function() {
@@ -974,7 +980,7 @@
                         // of the list and remove from the front.
                        
                         //console.log("RENDER: " + _self._renderWindowStart + ", ATTOP: " + _self._atDataTop);
-                        if ((lastScroll > scrollPos || scrollPos < 0) && _self._renderWindowStart > 0) {
+                        if ((lastScroll > scrollPos || scrollPos <= 0) && _self._renderWindowStart > 0) {
                             // We are scrolling up ...
                             if (scrollPos < (listHeight * .5)) {
                                 if (!_self._prefetchPrev) {
@@ -990,11 +996,11 @@
                                         return;
                                     }
                                     
-                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollUp, _self), 100);
+                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollUp, _self), 200);
                                     return;
                                 }
                             }
-                        } else if ((lastScroll < scrollPos || scrollPos > listHeight) && !_self._atDataTop) {
+                        } else if ((lastScroll < scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
                             // Scrolling down.
                             if (scrollPos > (listHeight * .5)) {
                                 if (!_self._prefetchNext) {
@@ -1673,6 +1679,20 @@
                 }
             };
             
+            var __addPreExtras = function() {
+                if (extraItems && extraItems.pre) {
+                    for (var i = 0; i < extraItems.pre.length; ++i) {
+                        var nxtPre = extraItems.pre[i];
+                        if (nxtPre.renderCondition && !nxtPre.renderCondition.call(_self)) {
+                            continue;
+                        }
+                        if (__processRow(nxtPre)) {
+                            ++nExtras;
+                        }
+                    }
+                }
+            };
+            
             if (_self._prefetchedItems && (noPaginate !== true)) {
                 // If the prefetched items list is too small, we won't be able to scroll up. Instead we just extend the list.
                 var ct = _self._prefetchedItems.length;
@@ -1687,6 +1707,7 @@
                 }
                 
                 __processStart(ct);
+                __addPreExtras();
                 for (var i = 0; i < _self._prefetchedItems.length; ++i) {
                     __processRow(_self._prefetchedItems[i]);
                 }
@@ -1695,15 +1716,7 @@
             } else if ($.isArray(displayCollection)) {
                 _self.displayList = [];
                 __processStart(displayCollection.length);
-                if (extraItems && extraItems.pre) {
-                    for (var i = 0; i < extraItems.pre.length; ++i) {
-                        var nxtPre = extraItems.pre[i];
-                        if (nxtPre.renderCondition && !nxtPre.renderCondition.call(_self)) {
-                            continue;
-                        }
-                        __processRow(nxtPre);
-                    }
-                }
+                __addPreExtras();
                 for (var i = 0; i < displayCollection.length; ++i) {
                     __processRow(displayCollection[i]);
                 }
@@ -1727,17 +1740,7 @@
                             count = count + _self.prefetchedItems.length;
                         }
                         __processStart(count);
-                        if (extraItems && extraItems.pre) {
-                            for (var i = 0; i < extraItems.pre.length; ++i) {
-                                var nxtPre = extraItems.pre[i];
-                                if (nxtPre.renderCondition && !nxtPre.renderCondition.call(_self)) {
-                                    continue;
-                                }
-                                if (__processRow(nxtPre)) {
-                                    ++nExtras;
-                                }
-                            }
-                        }
+                        __addPreExtras();
                     },
                     /* Called on done. */
                     doneFn: function(count) {
@@ -2255,11 +2258,132 @@
         },
         
         refreshHandlers: function() {
-            this._installActionHandlers();
+            if (Helix.hasTouch) {
+                this._installTouchActionHandlers();                
+            } else {
+                this._installNoTouchActionHandlers();
+            }
+        },
+        
+        _handleTap: function(event) {
+            event.stopImmediatePropagation();
+                    
+            if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
+                return false;
+            }
+
+            var touch = event.changedTouches[0];
+            var target = document.elementFromPoint(touch.clientX, touch.clientY);
+            target = $(target).closest('li,a[data-origin="splitlink"]');
+            if (target.length === 0) {
+                return false;
+            }
+            
+            if ($(target).is('.ui-li-divider')) {
+                return false;
+            }
+            
+            if (this.options.multiSelect && touch.clientX < 35) {
+                $(target).toggleClass("hx-selected");
+
+                // Check to see if we have anything selected - if yes, show the clear button;
+                // if not, hide it. Re-layout the page if we make a change.
+                var selectedElems = this.getAllMultiSelectElements();
+                if (selectedElems.length === 0) {
+                    this.$clearSelectionDiv.addClass('hx-toggled');
+                    this.$searchSortDiv.removeClass('hx-toggled');
+                } else {
+                    this.$clearSelectionDiv.removeClass('hx-toggled');
+                    this.$searchSortDiv.addClass('hx-toggled');
+                }
+            } else {
+                if (this.setSelected(target))  {
+                    if ($(target).is('a')) {
+                        if (this.options.splitAction) {
+                            this.options.splitAction(this.selected, this.selectedGroup, this.strings);
+                        }
+                    } else {
+                        this.selectItem();
+                    }
+                }
+            }
+
+            return false;
         },
     
-        _installActionHandlers: function() {
-            // Tap-hold
+        _queueTap: function(ev) {
+            if (this._nextTapTimer) {
+                clearTimeout(this._nextTapTimer);
+            }
+            if (ev) {
+                if (this._longTouchTimer) {
+                    clearTimeout(this._longTouchTimer);
+                    this._longTouchTimer = null;
+                    this._longTapAction = null;
+                }
+                if (this._longTouchReadyTimer) {
+                    clearTimeout(this._longTouchReadyTimer);
+                    this._longTouchReadyTimer = null;
+                }
+                this._nextTapAction = $.proxy(function() {
+                    if (this.list._handleTap(this.data) === false) {
+                        this.data.preventDefault();
+                        this.data.stopPropagation();
+                    }
+                }, {
+                    list: this,
+                    data: ev
+                });
+            }
+            this._nextTapTimer = setTimeout(function(list) {
+                if (list._nextTapAction) {
+                    list._nextTapAction();
+                    list._nextTapAction = false;
+                }
+            }, 100, this);
+        },
+        
+        _queueLongTap: function(ev) {
+            if (this._longTouchTimer) {
+                clearTimeout(this._longTouchTimer);
+            }
+            if (ev) {
+                this._longTapAction = $.proxy(function() {
+                    var _yDiff = this.list.$listWrapper.scrollTop() - this.list._lastScrollTop;
+                    if (Math.abs(_yDiff) > 10) {
+                        // Scrolled too much
+                        return;
+                    }
+                    
+                    var touch = this.data.changedTouches[0];
+                    var _tgt = document.elementFromPoint(touch.clientX, touch.clientY);
+                    var _tgtDiv = $(_tgt).closest('div.ui-li');
+                    if (_tgtDiv.length) {
+                        this.list.setSelected(_tgtDiv);
+                        if (!this.list.options.itemContextMenuFilter || this.list.options.itemContextMenuFilter(this.list.selected)) {
+                            this.list.options.itemContextMenu.open({
+                                positionTo: _tgtDiv,
+                                thisArg: this.list,
+                                extraArgs: this.list.options.itemContextMenuArgs
+                            });
+                        }
+                    }                        
+                }, {
+                    list: this,
+                    data: ev
+                });
+            }
+            this._longTouchTimer = setTimeout(function(list) {
+                list._longTouchTimer = null;
+                if (list._longTapAction) {
+                    list._longTapAction();
+                    list._longTapAction = null;                        
+                }
+            }, 600, this);
+        },
+    
+        _installNoTouchActionHandlers: function() {
+            // Right-click
             if (this.options.itemContextMenu) {
                 $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
                     var _self = event.data;
@@ -2291,49 +2415,14 @@
                 }); 
             } 
             
-            // Tap
+            // Click
             if (this.options.selectAction) {
                 $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
                     var _self = event.data;
-                    event.stopImmediatePropagation();
-                    
-                    if ($(this).is('.ui-li-divider')) {
-                        return false;
+                    var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
+                    if (_tgt.length) {
+                        return _self._handleTap(event, _tgt);
                     }
-                    if (_self.options.itemContextMenu && _self.options.itemContextMenu.active) {
-                        return false;
-                    }
-                    if (_self._cancelNextTap) {
-                        _self._cancelNextTap = false;
-                        return false;
-                    }
-                    
-                    if (_self.options.multiSelect && event.clientX < 35) {
-                        $(event.target).toggleClass("hx-selected");
-                        
-                        // Check to see if we have anything selected - if yes, show the clear button;
-                        // if not, hide it. Re-layout the page if we make a change.
-                        var selectedElems = _self.getAllMultiSelectElements();
-                        if (selectedElems.length === 0) {
-                            _self.$clearSelectionDiv.addClass('hx-toggled');
-                            _self.$searchSortDiv.removeClass('hx-toggled');
-                        } else {
-                            _self.$clearSelectionDiv.removeClass('hx-toggled');
-                            _self.$searchSortDiv.addClass('hx-toggled');
-                        }
-                    } else {
-                        if (_self.setSelected(event.target))  {
-                            if ($(this).is('[data-origin="splitlink"]')) {
-                                if (_self.options.splitAction) {
-                                    _self.options.splitAction(_self.selected, _self.selectedGroup, _self.strings);
-                                }
-                            } else {
-                                _self.selectItem();
-                            }
-                        }
-                    }
-
-                    return false;
                 });
                 $(this.$listWrapper).on('vclick', function(event) {
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
@@ -2341,6 +2430,80 @@
                     event.noButtonSelect = true;
                 });
             }
+        },
+    
+        _installTouchActionHandlers: function() {
+            var _self = this;
+
+            // Tap-hold
+            if (this.options.holdAction) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function(event) {
+                    var _self = event.data;
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem(true);                    
+                    }
+                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self._cancelNextTap = true;
+
+                    event.stopImmediatePropagation();
+                    return false;
+                }); 
+            } 
+            
+            // Tap
+            if (this.options.selectAction) {
+                /*$(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
+                    var _self = event.data;
+                    var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
+                    if (_tgt.length) {
+                        return _self._handleTap(event, _tgt);
+                    }
+                });*/
+                this.$listWrapper[0].addEventListener('touchstart', function(ev) {
+                    _self._tapInstant = new Date().getTime();
+                    _self._lastScrollTop = _self.$listWrapper.scrollTop();
+                    _self._lastTapX = ev.changedTouches[0].clientX;
+                    if (_self.options.itemContextMenu) {
+                        _self._queueLongTap(ev);
+                    }
+                }, false);
+                this.$listWrapper[0].addEventListener('touchend', function(ev) {
+                    var _now = new Date().getTime();
+                    var _tDiff = _now - _self._tapInstant;
+                    var _yDiff = _self.$listWrapper.scrollTop() - _self._lastScrollTop;
+                    var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
+                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10) {
+                        if (_self._nextTapTimer) {
+                            clearTimeout(_self._nextTapTimer);
+                            _self._nextTapTimer = null;
+                        }
+                        // The finger moved too much ...
+                        return;
+                    }
+                    if (_tDiff > 600) {
+                        return;
+                    }
+                    if (_self._longTouchTimer) {
+                        clearTimeout(_self._longTouchTimer);
+                        _self._longTouchTimer = null;
+                    }
+                    _self._queueTap(ev);
+                }, false);
+                this.$listWrapper[0].addEventListener('scroll', function(ev) {
+                    if (_self._nextTapTimer) {
+                        _self._queueTap();
+                    }
+                    if (_self._longTouchTimer) {
+                        clearTimeout(_self._longTouchTimer);
+                    }
+                }, false);
+                $(this.$listWrapper).on('vclick', function(event) {
+                    // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
+                    // list item highlighted active. We handle all of the active highlighting in the datalist class.
+                    event.noButtonSelect = true;
+                });
+            }
+            
             if (this.options.swipeLeftAction) {
                 this.$listWrapper.off('swipeleft').on('swipeleft', 'div.ui-li', this, function(event) {
                     var _self = event.data;
@@ -2437,7 +2600,7 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c');
             /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }*/

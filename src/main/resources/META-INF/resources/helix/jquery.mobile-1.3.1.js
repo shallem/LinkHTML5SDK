@@ -3311,11 +3311,7 @@ if ( eventCaptureSupported ) {
 					// ONLY trigger a 'tap' event if the start target is
 					// the same as the stop target.
 					if ( origTarget === event.target ) {
-                                                // SAH: added because these events were firing with the wrong target object.
-                                                // see LA-893
-                                                var _tgt = document.elementFromPoint(event.clientX, event.clientY);
 						triggerCustomEvent( thisObject, "tap", event );
-                                                //triggerCustomEvent( thisObject, "tap", $.extend({}, event, { target : _tgt } ) );
 					}
 				}
 
@@ -3325,13 +3321,7 @@ if ( eventCaptureSupported ) {
 
                                 
                                 timer = setTimeout( function() {
-                                    // SAH: added because these events were firing with the wrong target object.
-                                    // see LA-893
-                                    //triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
-                                    //setTimeout(function() {
-                                        var _tgt = document.elementFromPoint(event.clientX, event.clientY);
-                                        triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: _tgt } ) );                                        
-                                    //}, 10);
+                                    triggerCustomEvent( thisObject, "taphold", $.Event( "taphold", { target: origTarget } ) );
 				}, $.event.special.tap.tapholdThreshold );
 			});
 		}
