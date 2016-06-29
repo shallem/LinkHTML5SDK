@@ -1591,6 +1591,10 @@
             return this.nRendered === 0;
         },
         
+        getExtrasCount: function() {
+            return this.nExtras;
+        },
+        
         _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque, noPaginate, extraItems, _options) {
             var _self = this;
             var rowIndex = 0;
@@ -1603,7 +1607,7 @@
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
-            var nExtras = 0;
+            _self.nExtras = 0;
             
             /* Functions used in processing each item. */
             var __processRow = function(curRow) {
@@ -1640,7 +1644,7 @@
                     }
                     /* Call completion when all rows are done rendering. */
                     oncomplete.call(_self, opaque);
-                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
+                    _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
                     return;
                 }
 
@@ -1669,7 +1673,7 @@
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
 
-                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
+                    _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
                     // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
                     // restoring them.
                     $(_self.$parent).find('li[data-role="list-divider"]').remove();
@@ -1687,7 +1691,7 @@
                             continue;
                         }
                         if (__processRow(nxtPre)) {
-                            ++nExtras;
+                            ++_self.nExtras;
                         }
                     }
                 }
@@ -1752,7 +1756,7 @@
                             if (extraItems && extraItems.post) {
                                 for (i = 0; i < extraItems.post.length; ++i) {
                                     if (__processRow(extraItems.post[i])) {
-                                        ++nExtras;
+                                        ++_self.nExtras;
                                     }
                                 }
                             }
