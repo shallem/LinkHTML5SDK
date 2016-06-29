@@ -839,6 +839,9 @@
         
         hideField : function(name) {
             var fld = this._fieldMap[name];
+            if (!fld) {
+                return;
+            }
             fld.hidden = true;
             fld.condition = __hx_always_invisible;
             this.__updateValue(fld.mode, name, fld, {});            
