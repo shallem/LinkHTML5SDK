@@ -2476,6 +2476,15 @@
                         _self._queueLongTap(ev);
                     }
                 }, false);
+                this.$listWrapper[0].addEventListener('touchmove', function(ev) {
+                   var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
+                   if (Math.abs(_xDiff) > 10) {
+                        if (_self._longTouchTimer) {
+                            clearTimeout(_self._longTouchTimer);
+                            _self._longTouchTimer = null;
+                        }
+                   }
+                });
                 this.$listWrapper[0].addEventListener('touchend', function(ev) {
                     var _now = new Date().getTime();
                     var _tDiff = _now - _self._tapInstant;
