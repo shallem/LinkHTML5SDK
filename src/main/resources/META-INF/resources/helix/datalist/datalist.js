@@ -2520,6 +2520,7 @@
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
                     event.noButtonSelect = true;
+                    event.stopImmediatePropagation();
                 });
             }
             
