@@ -1450,7 +1450,11 @@ function initHelixDB() {
                     /* Launch async indexing ... these calls do nothing if there are
                        no fields to index or if async indexing is not enabled. */
                     Helix.DB.launchIndexing();
-                    callback(finalObj, opaque);
+                    setTimeout(function() {
+                        // Use setTimeout to make sure that any open transactions are finished before we invoke
+                        // the callback.
+                        callback(finalObj, opaque);                    
+                    }, 0);
                 });
             },opaque,overrides);
         },
