@@ -863,6 +863,10 @@ Helix.Ajax = {
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
+        if (!Helix.Ajax.loadOptions.async) {
+            Helix.Ajax.loadOptions.text = params.loadingMessage;
+            Helix.Ajax.loadOptions.textVisible = true;
+        }
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
             $(document).trigger('prerequest', [ page, params.url, false ]);
