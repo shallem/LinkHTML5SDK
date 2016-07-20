@@ -224,6 +224,9 @@
 
 textarea.ui-input-text {
     padding: 0 .4em;
+    width: auto;
+    flex: 2;
+    -webkit-flex: 2;
 }
 
 @media all and (min-width: 28em){

@@ -919,7 +919,7 @@ function initHelixDB() {
             };
         
             
-            queryCollection.newEach({
+            queryCollection.noFlush().newEach({
                 eachFn: function(elem) {
                     toDelete.push(elem);
                 },
@@ -1009,7 +1009,7 @@ function initHelixDB() {
             var syncObjs = [];
             var deleteObjs = [];
             var addObjs = [];
-            compareCollection.newEach({
+            compareCollection.noFlush().newEach({
                 eachFn: function(qryElem) {
                     var qryElemKeyValue = qryElem[keyFieldName];
                     if (newObjectMap[qryElemKeyValue]) {
@@ -1220,7 +1220,7 @@ function initHelixDB() {
                     // Skip to the finish line ...
                     syncFn(null);
                 } else {
-                    elemSchema.all().include([keyField]).newEach({    
+                    elemSchema.all().include([keyField]).noRelationships().noFlush().newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
                         }, 
@@ -1250,7 +1250,7 @@ function initHelixDB() {
 
                 if (deltaObj.deletes && deltaObj.deletes.length > 0) {
                     var toDeleteKey = deltaObj.deletes.pop();
-                    parentCollection.filter(keyField, "=", toDeleteKey).newEach({
+                    parentCollection.filter(keyField, "=", toDeleteKey).noFlush().newEach({
                         eachFn: function(elem) { 
                             if (elem) {
                                 Helix.DB.cascadingRemove(elemSchema,elem,removeFn,overrides);
@@ -1264,9 +1264,15 @@ function initHelixDB() {
                     });
                 } else if (deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) {
                     var nxt = deltaObj.deleteSpec.pop();
-                    elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
-                        removeFn();
-                    });
+                    if (nxt.op === 'CLEAR' && parentCollection) {
+                        parentCollection.destroyAll(function() {
+                            removeFn();
+                        });
+                    } else {
+                        elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
+                            removeFn();
+                        });
+                    }
                 } else {
                     /* Make sure all deletes are in the DB. */
                     persistence.flush(function() {
@@ -1339,6 +1345,7 @@ function initHelixDB() {
                 persistentObj = new objSchema();
                 persistence.add(persistentObj);
             }
+            objSchema.__indexingDirty = true;
             persistentObj.__hx_schema = objSchema;
             persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
             
@@ -1388,7 +1395,7 @@ function initHelixDB() {
                     if (!Helix.DB.synchronizeArrayField(allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, overrides)) {
                         var nDone = 0;
                         for (var _q = 0; _q < fieldVal.length; ++_q) {
-                            Helix.DB.synchronizeObject(fieldVal[_q], fieldSchema, function() {
+                            Helix.DB._synchronizeObject(fieldVal[_q], fieldSchema, function() {
                                 ++nDone;
                                 if (nDone === fieldVal.length) {
                                     handleAsyncFields();
@@ -1421,7 +1428,10 @@ function initHelixDB() {
             if (!Helix.DB.noAutoIndexing) {
                 for (var schemaName in window.__pmAllSchemas) { 
                     var indexSchema = window.__pmAllSchemas[schemaName];
-                    indexSchema.indexAsync(0, Helix.DB.indexFull);
+                    if (indexSchema.__indexingDirty) {
+                        indexSchema.indexAsync(0, Helix.DB.indexFull);
+                        indexSchema.__indexingDirty = false;
+                    }
                 }
             }
         },
@@ -1434,21 +1444,23 @@ function initHelixDB() {
          * and flushes it to the DB. Invoke the callback on completion.
          */
         synchronizeObject: function(obj,objSchema,callback,opaque,overrides) {
-            var allSchemas = {};
-            var syncDone = function(finalObj, opaque) {            
+            Helix.DB._synchronizeObject(obj,objSchema,function(finalObj, opaque) {
                 /* We get here when the synchronize is done. */
                 persistence.flush(function() {
-                    /* This will either send an object to the callback. */
-                    callback(finalObj,opaque);
-                    
-                    /* Again launch async indexing. If indexing is already in progress or there
-                     * is nothing to do, then this will do nothing.
-                     */
-                    // Launch async indexing ... these calls do nothing if there are
-                    // no fields to index or if async indexing is not enabled.
+                    /* Launch async indexing ... these calls do nothing if there are
+                       no fields to index or if async indexing is not enabled. */
                     Helix.DB.launchIndexing();
+                    setTimeout(function() {
+                        // Use setTimeout to make sure that any open transactions are finished before we invoke
+                        // the callback.
+                        callback(finalObj, opaque);                    
+                    }, 0);
                 });
-            };
+            },opaque,overrides);
+        },
+        
+        _synchronizeObject: function(obj,objSchema,callback,opaque,overrides) {
+            var allSchemas = {};
         
             /* Check the overrides. IF we do not have overrides for the field sync then
              * install the default.
@@ -1465,7 +1477,7 @@ function initHelixDB() {
             
             if (Object.prototype.toString.call(obj) === '[object Array]') {
                 var isHandled = Helix.DB.synchronizeArray(allSchemas, obj,objSchema,objSchema.all(),function(finalObj) {
-                    syncDone(finalObj, opaque);
+                    callback(finalObj, opaque);
                 },opaque,overrides);
                 if (!isHandled) {
                     for (var i = 0; i < obj.length; ++i) {
@@ -1473,12 +1485,12 @@ function initHelixDB() {
                         if (opaque && opaque.params && $.isArray(opaque.params)) {
                             nxtOpaque = $.extend({}, opaque, { params: opaque.params[i] });
                         }    
-                        Helix.DB.synchronizeObject(obj[i], objSchema, callback, nxtOpaque, overrides);
+                        Helix.DB._synchronizeObject(obj[i], objSchema, callback, nxtOpaque, overrides);
                     }
                 }
             } else if (obj.__hx_type === 1001) {
                 Helix.DB.synchronizeDeltaObject(allSchemas, obj,objSchema.all(),objSchema,function(finalObj) {
-                    syncDone(finalObj, opaque);
+                    callback(finalObj, opaque);
                 },overrides);
             } else if (obj.__hx_type === 1003) {
                 // This is an aggregate load command. Each object field represents a distinct object that
@@ -1489,10 +1501,10 @@ function initHelixDB() {
                 
                 var syncObjects = function(syncObject, paramObject, loadCommandConfig, nxt) {
                     if (syncObject.length === 0) {
-                            syncComponent();
+                        syncComponent();
                     } else {
                         var syncNxt = syncObject.pop();
-                        Helix.DB.synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
+                        Helix.DB._synchronizeObject(syncNxt, loadCommandConfig.schema, function(finalObj, o) {
                             resultObj[o.name] = finalObj;
                             if (o.param) {
                                 paramObj[o.name] = o.param;
@@ -1508,7 +1520,7 @@ function initHelixDB() {
                         if (Object.keys(paramObj).length > 0) {
                             opaque.params = paramObj;
                         }
-                        syncDone(resultObj, opaque);
+                        callback(resultObj, opaque);
                         return;
                     }
                     
@@ -1544,7 +1556,7 @@ function initHelixDB() {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj) {
                         /* Store the schema in the final obj. */
                         finalObj.__hx_schema = objSchema;
-                        syncDone(finalObj, opaque);
+                        callback(finalObj, opaque);
                     }, overrides);
                 });
             }            
@@ -1611,6 +1623,7 @@ function initHelixDB() {
                         allTables[elem.tableName] = elem;
                     }, 
                     doneFn: function(ct) {
+                        var masterDBDirty = false;
                         if (masterDBVer === 0 && ct > 0) {
                             persistence.nextSchemaSyncHooks.push(function() {
                                 var queries = [];
@@ -1618,6 +1631,7 @@ function initHelixDB() {
                                 queries.push(["ALTER TABLE MasterDB ADD COLUMN textIndexFields TEXT" , null]);
                                 return queries.reverse();
                             });
+                            masterDBDirty = true;
                         }
                         if (masterDBVer !== Helix.DB.__masterDBVer) {
                             persistence.nextSchemaSyncHooks.push(function() {
@@ -1625,9 +1639,10 @@ function initHelixDB() {
                                 queries.push(["UPDATE MasterDB SET masterDBVer=?", [ Helix.DB.__masterDBVer ]]);
                                 return queries;
                             });
+                            masterDBDirty = true;
                         }
                         
-                        persistence.schemaSync(function() {
+                        var __triggerReady = function() {
                             var schemasDone = [];
                             // Must make persistence ready PRIOR to triggering hxGenerateSchemas, which calls generatePersistenceSchema for
                             // SDK schemas.
@@ -1639,17 +1654,23 @@ function initHelixDB() {
                             $(document).trigger('hxGenerateSchemas', [ schemasDone ]);
                             
                             if (schemasDone.length > 0) {
-                                persistence.schemaSync(function() {
+                                persistence.schemaSync(function(tx) {
                                     // Flush any MasterDB changes triggered by SDK generated schemas.
                                     persistence.flush(function() {
                                         persistence.clean();
                                         $(document).trigger('hxPersistenceReady');                                
-                                    });                                    
+                                    });
                                 });
                             } else {
                                 $(document).trigger('hxPersistenceReady');                            
                             }
-                        });
+                        };
+                        
+                        if (masterDBDirty) {
+                            persistence.schemaSync(__triggerReady);
+                        } else {
+                            __triggerReady();
+                        }
                     }
                 })
             });
@@ -1676,8 +1697,8 @@ function initHelixDB() {
                 persistence.migrations.init(tx, function() {
                     persistence.migrations.Migrator.version(tx, function(schemaVer) {
                         Helix.DB.__schemaVersion = schemaVer;
-                        Helix.DB.pmCreateMasterTable();
                     });
+                    Helix.DB.pmCreateMasterTable();
                 });
             });
         },

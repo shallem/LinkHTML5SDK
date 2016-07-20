@@ -1591,6 +1591,10 @@
             return this.nRendered === 0;
         },
         
+        getExtrasCount: function() {
+            return this.nExtras;
+        },
+        
         _sortAndRenderData: function(displayCollection, oncomplete, emptyMsg, opaque, noPaginate, extraItems, _options) {
             var _self = this;
             var rowIndex = 0;
@@ -1603,7 +1607,7 @@
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
             }            
-            var nExtras = 0;
+            _self.nExtras = 0;
             
             /* Functions used in processing each item. */
             var __processRow = function(curRow) {
@@ -1640,7 +1644,7 @@
                     }
                     /* Call completion when all rows are done rendering. */
                     oncomplete.call(_self, opaque);
-                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
+                    _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
                     return;
                 }
 
@@ -1669,7 +1673,7 @@
                         $(LIs[_ridx]).hide().removeAttr('data-index');
                     }
 
-                    _self._handleEmpty(_self.nRendered, nExtras, emptyMsg, _options.emptyHook);
+                    _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
                     // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
                     // restoring them.
                     $(_self.$parent).find('li[data-role="list-divider"]').remove();
@@ -1687,7 +1691,7 @@
                             continue;
                         }
                         if (__processRow(nxtPre)) {
-                            ++nExtras;
+                            ++_self.nExtras;
                         }
                     }
                 }
@@ -1752,7 +1756,7 @@
                             if (extraItems && extraItems.post) {
                                 for (i = 0; i < extraItems.post.length; ++i) {
                                     if (__processRow(extraItems.post[i])) {
-                                        ++nExtras;
+                                        ++_self.nExtras;
                                     }
                                 }
                             }
@@ -2265,25 +2269,12 @@
             }
         },
         
-        _handleTap: function(event) {
-            event.stopImmediatePropagation();
-                    
-            if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
-                return false;
-            }
-
-            var touch = event.changedTouches[0];
-            var target = document.elementFromPoint(touch.clientX, touch.clientY);
-            target = $(target).closest('li,a[data-origin="splitlink"]');
-            if (target.length === 0) {
-                return false;
-            }
-            
+        _handleClick: function(event, target) {            
             if ($(target).is('.ui-li-divider')) {
                 return false;
             }
             
-            if (this.options.multiSelect && touch.clientX < 35) {
+            if (this.options.multiSelect && event.clientX < 35) {
                 $(target).toggleClass("hx-selected");
 
                 // Check to see if we have anything selected - if yes, show the clear button;
@@ -2307,8 +2298,25 @@
                     }
                 }
             }
-
+            
             return false;
+        },
+        
+        _handleTap: function(event) {
+            event.stopImmediatePropagation();
+                    
+            if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
+                return false;
+            }
+
+            var touch = event.changedTouches[0];
+            var target = document.elementFromPoint(touch.clientX, touch.clientY);
+            target = $(target).closest('li,a[data-origin="splitlink"]');
+            if (target.length === 0) {
+                return false;
+            }
+            
+            return this._handleClick(touch, target);
         },
     
         _queueTap: function(ev) {
@@ -2421,7 +2429,8 @@
                     var _self = event.data;
                     var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
                     if (_tgt.length) {
-                        return _self._handleTap(event, _tgt);
+                        event.stopImmediatePropagation();
+                        return _self._handleClick(event, _tgt);
                     }
                 });
                 $(this.$listWrapper).on('vclick', function(event) {
@@ -2467,6 +2476,15 @@
                         _self._queueLongTap(ev);
                     }
                 }, false);
+                this.$listWrapper[0].addEventListener('touchmove', function(ev) {
+                   var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
+                   if (Math.abs(_xDiff) > 10) {
+                        if (_self._longTouchTimer) {
+                            clearTimeout(_self._longTouchTimer);
+                            _self._longTouchTimer = null;
+                        }
+                   }
+                });
                 this.$listWrapper[0].addEventListener('touchend', function(ev) {
                     var _now = new Date().getTime();
                     var _tDiff = _now - _self._tapInstant;
@@ -2491,7 +2509,8 @@
                 }, false);
                 this.$listWrapper[0].addEventListener('scroll', function(ev) {
                     if (_self._nextTapTimer) {
-                        _self._queueTap();
+                        //_self._queueTap();
+                        clearTimeout(_self._nextTapTimer);
                     }
                     if (_self._longTouchTimer) {
                         clearTimeout(_self._longTouchTimer);
@@ -2501,6 +2520,7 @@
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
                     event.noButtonSelect = true;
+                    event.stopImmediatePropagation();
                 });
             }
             
