@@ -230,7 +230,7 @@
          * 
          * @param valuesMap Map form field names to values.
          */
-        refresh: function(valuesMap) { 
+        refresh: function(valuesMap) {
             $(this.element).off('change.' + this.options.namespace);
             this._isDirty = false;
             this._computeHidden(valuesMap);
@@ -627,6 +627,10 @@
         },
         
         refreshValues: function(valuesMap, modeChanged) {
+            if (!valuesMap) {
+                valuesMap = this.getValues();
+            }
+            
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
