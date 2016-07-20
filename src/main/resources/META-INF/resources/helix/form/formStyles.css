@@ -199,7 +199,8 @@
 }
 
 .hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls .ui-radio input {
-    background-color: transparent; /* Get rid of a rounded artifact from the user agent style sheet in mobile safari */
+    /* Get rid of a rounded artifact from the user agent style sheet in mobile safari */
+    background-color: transparent; 
 }
 
 .hx-form-container .ui-field-contain fieldset.ui-controlgroup {
@@ -223,6 +224,9 @@
 
 textarea.ui-input-text {
     padding: 0 .4em;
+    width: auto;
+    flex: 2;
+    -webkit-flex: 2;
 }
 
 @media all and (min-width: 28em){

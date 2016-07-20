@@ -6981,7 +6981,7 @@ $.mobile.document.delegate( "ul,ol", "listviewcreate", function() {
 	var replaceDividers = function () {
 		list.find( "li:jqmData(role='list-divider')" ).remove();
 
-		var lis = list.find( 'li' ),
+		var lis = list.find( 'li:visible' ), // SAH: Added :visible
 			lastDividerText = null, li, dividerText;
 
 		for ( var i = 0; i < lis.length ; i++ ) {

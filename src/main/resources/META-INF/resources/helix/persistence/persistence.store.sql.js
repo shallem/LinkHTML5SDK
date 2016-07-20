@@ -174,13 +174,6 @@ function config(persistence, dialect) {
         callback = args.callback;
         emulate = args.emulate;
 
-        if(!tx) {
-            var session = this;
-            this.transaction(function(tx) {
-                session.schemaSync(tx, callback, emulate);
-            });
-            return;
-        }
         var queries = [], meta, colDefs, otherMeta, tableName;
 
         var tm = persistence.typeMapper;
@@ -262,9 +255,15 @@ function config(persistence, dialect) {
             // Done
             callback(tx);
         } else {
-            executeQueriesSeq(tx, queries, function(_, err) {
-                callback(tx, err);
-            });
+            if (queries.length === 0) {
+                callback();
+            } else {
+                this.transaction(function(tx) {
+                    executeQueriesSeq(tx, queries, function(_, err) {
+                        callback(tx, err);
+                    });
+                });
+            }
         }
     };
 
@@ -307,6 +306,11 @@ function config(persistence, dialect) {
             return;
         }
 
+        var addlQueries = [];
+        for (var i = 0; i < session.flushHooks.length; ++i) {
+            session.flushHooks[i].call(session, addlQueries);
+        }
+
         // SAH - eliminate flush hooks. We want to add as many statements into a single
         // txn as possible. Allowing asynchronous delays can cause a transaction to flush
         // before we add required statements to it. Users of this API need to find another
@@ -346,7 +350,11 @@ function config(persistence, dialect) {
                     persistence.asyncParForEach(_persistArr, function(obj, callback) {
                         save(obj, tx, callback);
                     }, function() {
-                        callback();
+                        if (addlQueries.length > 0) {
+                            persistence.executeQueriesSeq(tx, addlQueries, callback);
+                        } else {
+                            callback();
+                        }
                     });
                     return true;
                 }, persistObjArray);
@@ -356,6 +364,9 @@ function config(persistence, dialect) {
                 }
                 for(var i = 0; i < persistObjArray.length; i++) {
                     save(persistObjArray[i], tx);
+                }
+                if (addlQueries.length > 0) {
+                    persistence.executeQueriesSeq(tx, addlQueries);
                 }
             }
         };
@@ -810,7 +821,7 @@ function config(persistence, dialect) {
             return;
         }
 
-        function selectAll (meta, tableAlias, prefix, excludes, includes) {
+        function selectAll (meta, tableAlias, prefix, excludes, includes, noRelationships) {
             var selectFields = [ tm.inIdVar("`" + tableAlias + "`.id") + " AS `" + prefix + "id`" ];
             for ( var p in meta.fields) {
                 if (excludes && (p in excludes)) {
@@ -825,10 +836,13 @@ function config(persistence, dialect) {
                         + prefix + p + "`");
                 }
             }
-            for ( var p in meta.hasOne) {
-                if (meta.hasOne.hasOwnProperty(p)) {
-                    selectFields.push(tm.inIdVar("`" + tableAlias + "`.`" + p + "`") + " AS `"
-                        + prefix + p + "`");
+            
+            if (!noRelationships) {
+                for ( var p in meta.hasOne) {
+                    if (meta.hasOne.hasOwnProperty(p)) {
+                        selectFields.push(tm.inIdVar("`" + tableAlias + "`.`" + p + "`") + " AS `"
+                            + prefix + p + "`");
+                    }
                 }
             }
             selectFields.push(tm.inVar("`" + tableAlias + "`.`rowid`", 'INT') + " AS `"
@@ -840,7 +854,7 @@ function config(persistence, dialect) {
         var mainPrefix = meta.alias + "_";
 
         var mainAlias = 'root';
-        var selectFields = selectAll(meta, mainAlias, mainPrefix, this._excludes, this._includes);
+        var selectFields = selectAll(meta, mainAlias, mainPrefix, this._excludes, this._includes, this._excludeRelationships);
 
         var joinSql = '';
         var additionalWhereSqls = this._additionalWhereSqls.slice(0);
@@ -894,7 +908,8 @@ function config(persistence, dialect) {
         if(this._skip > 0) {
             sql += " OFFSET " + this._skip;
         }
-        session.flush(tx, function () {
+        
+        function runQuery(tx) {
             tx.executeSql(sql, args, 
                 function (rows) {
                     var results = [];
@@ -923,8 +938,16 @@ function config(persistence, dialect) {
                     persistence.errorHandler(error.message, error.code, badSQL, badArgs);
                     callback(null, error);
                 }
-                );
-        });
+            );
+        }
+        
+        if (this._noFlush) {
+            runQuery(tx);
+        } else {
+            session.flush(tx, function () {
+                runQuery(tx);
+            });
+        }
     }
 
     /**
@@ -1104,13 +1127,14 @@ function config(persistence, dialect) {
         
         var additionalWhereSqls = this._additionalWhereSqls.slice(0);
 
+        var args = [];
         var whereSql = "WHERE "
-        + [ this._filter.sql(meta, null, []) ].concat(additionalWhereSqls).join(' AND ');
+        + [ this._filter.sql(meta, null, args) ].concat(additionalWhereSqls).join(' AND ');
 
         var selectSql = "SELECT root.id FROM `" + entityName + "` as root " + joinSql + ' ' + whereSql;
         var updateSql = "UPDATE `" + entityName + "`" + " SET " + propertyPairs.join(',') + ' ';
         
-        tx.executeSql(selectSql, [], function(results) {
+        tx.executeSql(selectSql, args, function(results) {
             // Take these objects out of the tracked objects list so that we do
             // not mistakenly use a cached copy of them with a wrong value in it.
             var idsToUpdate = [];

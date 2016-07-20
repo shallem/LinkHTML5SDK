@@ -660,7 +660,7 @@ persistence.search.config = function(persistence, dialect, options) {
         });
     }
   
-    function handleDeletes(queries, tx, callback) {
+    function handleDeletes(queries) {
         var toRemove = persistence.getObjectsToRemove();
         for (var id in toRemove) {
             if (toRemove.hasOwnProperty(id)) {
@@ -673,14 +673,8 @@ persistence.search.config = function(persistence, dialect, options) {
                 }
             }
         }
-        //
-        pushQueries(queries, tx, callback);
     }
-  
-    function pushQueries(queries, tx, callback) {
-        queries.reverse();
-        persistence.executeQueriesSeq(tx, queries, callback);
-    }
+    persistence.flushHooks.push(handleDeletes);
   
     /* SAH - we don't support synchronous indexing. */
 };

@@ -608,6 +608,12 @@ Helix.Ajax = {
             dataType: "json",
             data: $.param(loadCommandOptions.requestOptions.params),
             success: function(data, status, xhr) {
+                if (!data) {
+                    // We go nothing back from the server. This happens when the network request is killed
+                    // by the client (e.g., because the app was put to sleep).
+                    return;
+                }
+                
                 var responseObj = data;
                 if (responseObj.error) {
                     var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
@@ -642,7 +648,6 @@ Helix.Ajax = {
 			Helix.Utils.statusMessage("Sync in progress", loadCommandOptions.syncingOptions.message, "info");
                     }
                     if (syncObject) {
-			// Add setTimeout to allow the message to display
 			Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
@@ -795,6 +800,12 @@ Helix.Ajax = {
             url: params.url + (args ? '?' : '') + args,
             type: 'GET',
             success: function(returnObj,textStatus,jqXHR) {
+                if (!returnObj) {
+                    // We go nothing back from the server. This happens when the network request is killed
+                    // by the client (e.g., because the app was put to sleep).
+                    return;
+                }
+                
                 var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
                 if (retCode === 0) {
                     if (params.success && !params.silentMode) {
@@ -852,6 +863,10 @@ Helix.Ajax = {
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false
         };
+        if (!Helix.Ajax.loadOptions.async) {
+            Helix.Ajax.loadOptions.text = params.loadingMessage;
+            Helix.Ajax.loadOptions.textVisible = true;
+        }
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
             $(document).trigger('prerequest', [ page, params.url, false ]);
@@ -869,6 +884,12 @@ Helix.Ajax = {
                 data: params.body,
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(returnObj,textStatus,jqXHR) {
+                    if (!returnObj) {
+                        // We go nothing back from the server. This happens when the network request is killed
+                        // by the client (e.g., because the app was put to sleep).
+                        return;
+                    }
+                    
                     if (this.isCancelled) {
                         return;
                     }
