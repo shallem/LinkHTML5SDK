@@ -2767,7 +2767,7 @@
                         .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
                 }
             } else {
-                $(parentElement).removeAttr('data-icon');
+                $(parentElement).attr('data-icon', 'false');
             }
             
             if (rowComponents.subIcon) {
