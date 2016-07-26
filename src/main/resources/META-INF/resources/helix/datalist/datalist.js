@@ -2156,7 +2156,7 @@
                     }
                 };
 
-                var __renderGroupRow = function(groupRow, groupIndex) {
+                var __renderGroupRow = function(groupRow, groupIndex, groupStart) {
                     if (_self.options.itemsPerGroup > 0 &&
                             groupIndex > _self.options.itemsPerGroup) {
                         // Stop rendering ... we have exceeded the max number in a group.
@@ -2167,7 +2167,7 @@
                     if (_self.options.groupRenderer) {
                         renderer = _self.options.groupRenderer(rowObject.group);
                     }
-                    if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer)) {
+                    if (_self._renderRowMarkup(groupLIs, groupRow, arrIdx, groupIndex, renderer, groupStart)) {
                         rowObject.rows.push(groupRow);
                         ++groupIndex;
                     }
@@ -2210,7 +2210,9 @@
                 }
                 
                 if (groupMembers) {
-                    // groupLIs are all LIs from dividerLI to the next divider
+                    // Remove empty group messages.
+                    $(dividerLI).nextUntil('li[data-role="list-divider"]', '[data-role="empty-group"]').remove();
+                    // groupLIs are all LIs from dividerLI to the next divider (except empty messages)
                     var groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
                     if ($.isArray(groupMembers)) {
                         if (groupMembers.length === 0) {
@@ -2219,7 +2221,7 @@
                         } else {
                             var i;
                             for (i = 0; i < groupMembers.length; ++i) {
-                                groupIndex = __renderGroupRow(groupMembers[i], groupIndex);
+                                groupIndex = __renderGroupRow(groupMembers[i], groupIndex, dividerLI);
                             }
                             __finishGroup(groupIndex);
                         }
@@ -2227,12 +2229,14 @@
                         groupMembers.forEach(
                             /* Element callback. */
                             function(groupRow) {
-                                groupIndex = __renderGroupRow(groupRow, groupIndex);
+                                groupIndex = __renderGroupRow(groupRow, groupIndex, dividerLI);
                             },
                             /* On start. */
                             function(ct) {
                                 if (ct === 0) {
                                     __renderEmptyGroup(dividerLI);                                
+                                } else {
+                                    
                                 }
                             },
                             /* On done. */
@@ -2546,7 +2550,7 @@
             }
         },
     
-        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer) {
+        _renderRowMarkup: function(LIs, row, rowIndex, groupIndex, renderer, groupStart) {
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -2579,7 +2583,16 @@
             var rendererContext = _self.options.rowRendererContext ? _self.options.rowRendererContext : _self;
             if (renderer.call(rendererContext, curRowParent, _self, row, rowIndex, _self.options.strings)) {
                 if (curRowFresh) {
-                    curRowParent.appendTo(_self.$parent);
+                    if (!_self.options.grouped) {
+                        curRowParent.appendTo(_self.$parent);                    
+                    } else {
+                        if (LIs.length > 0) {
+                            curRowParent.insertAfter(LIs[LIs.length - 1]);
+                        } else {
+                            curRowParent.insertAfter(groupStart);                            
+                        }
+                        LIs.push(curRowParent);
+                    }
                 } else {
                     curRowParent.show();
                 }
