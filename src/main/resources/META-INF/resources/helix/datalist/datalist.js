@@ -2132,23 +2132,30 @@
                     if (_self.options.itemsPerGroup > 0 &&
                             idx > _self.options.itemsPerGroup) {
                         // Add a "More ..." item.
-                        var $moreMarkup = $('<a/>').append(_self.options.groupOverflowText);
+                        var $moreMarkup = $('<div/>')
+                                .append(_self.options.groupOverflowText);
+                        var $moreLink = $('<a/>').attr({
+                            'href' : 'javascript:void(0)'
+                        }).append($moreMarkup);
                         if (_self.options.groupOverflowTextClass) {
                             $moreMarkup.addClass(_self.options.groupOverflowTextClass);
                         }
+                        var li;
                         if (idx < groupLIs.length) {
-                            $(groupLIs[idx]).empty().append($moreMarkup);
+                            li = groupLIs[idx];
+                            $(li).empty().append($moreLink);
+                            // Force jQueryMobile to re-enhance
+                            $(li).removeClass('ui-li');
+                            idx++;
+                        } else {
+                            li = groupLIs[idx] = $('<li/>')
+                                    .attr('data-theme', 'c')
+                                    .append($moreLink)
+                                    .appendTo(_self.$parent);
                             idx++;
                         }
-                        else {
-                            groupLIs[idx] = $('<li/>').attr('data-theme', 'c').append($moreMarkup).appendTo(_self.$parent);
-                            idx++;
-                        }
-                        $moreMarkup.on(_self.tapEvent, function(ev) {
-                            ev.stopImmediatePropagation();
-                            _self.options.groupOverflowFn.call(_self, rowObject.group);
-                            return false;
-                        });
+                        $(li).attr('data-group-index', '-999'); // -999 for overflow
+                        $(li).attr('data-index', rowIndex);
                     }
                     oncomplete();
                     for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
@@ -2191,20 +2198,21 @@
                     dividerLI = $('<li />').attr({
                         'data-role' : 'list-divider'
                     }).append(groupName);
-                    if (groupOptions.search) {
-                        dividerLI.append($('<div/>').attr({
-                            'class' : 'ui-icon ui-icon-search sh-hbutton-right',
-                            'style' : 'margin-top: -.25em;'
-                        }).on(Helix.clickEvent, function() {
-                            groupOptions.search(rowObject.group);
-                            return false;
-                        }));
-                    }
                     dividerLI.appendTo(_self.$parent);
                 } else {
                     dividerLI = LIs[arrIdx];
                     $(dividerLI).text(groupName).show();
                 }
+                if (groupOptions.search) {
+                    $(dividerLI).append($('<div/>').attr({
+                        'class' : 'ui-icon ui-icon-search sh-hbutton-right',
+                        'style' : 'margin-top: -.25em;'
+                    }).on(Helix.clickEvent, rowObject, function(ev) {
+                        groupOptions.search(ev.data.group);
+                        return false;
+                    }));
+                }
+                
                 if (_self.options.dividerStyleClass) {
                     $(dividerLI).addClass(_self.options.dividerStyleClass);
                 }
@@ -2628,7 +2636,13 @@
             var nxtSelection;
             if (this.options.grouped) {
                 enclosingGroupIndex = $(enclosingLI).attr('data-group-index');
-                nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+                if (Number(enclosingGroupIndex) === -999) {
+                    // Overflow
+                    this.options.groupOverflowFn.call(this, this.displayList[enclosingIndex].group);
+                    return false; // so that normal click handlers are not invoked.
+                } else {
+                    nxtSelection = this.displayList[enclosingIndex].rows[enclosingGroupIndex];
+                }
             } else {
                 nxtSelection = this.displayList[enclosingIndex];
             }

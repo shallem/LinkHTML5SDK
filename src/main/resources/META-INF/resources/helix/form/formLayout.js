@@ -141,6 +141,24 @@
                 this._processOneItem(formElem);
             }
         },
+        
+        resetItems: function(itemsList) {
+            this._typeMap = [];
+            this._fieldMap = [];
+            this._isDirty = false;
+
+            for (var idx = 0; idx < itemsList.length; ++idx) {
+                var formElem = itemsList[idx];
+                formElem.name = formElem.originalName;
+            }
+            this.options.items = itemsList;
+            this._processItems(this.options.items);
+
+            if (this.options.items.length > 0) {
+                this.rendered = false;
+                this.refresh();
+            }
+        },
     
         _stripNamespace: function(fldName) {
             return fldName.replace(this.options.namespace + "_", '');
