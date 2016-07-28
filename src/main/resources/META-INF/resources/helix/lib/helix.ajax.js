@@ -681,6 +681,11 @@ Helix.Ajax = {
                     // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
+                if (jqXHR.status === 404) {
+                    // This generally happens because of a network error.
+                    Helix.Utils.statusMessage("Error", "I am sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    return;
+                }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                 error.msg = status;
                 loadCommandOptions.onerror(error);
@@ -837,6 +842,12 @@ Helix.Ajax = {
                     // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
+                if (jqXHR.status === 404) {
+                    // This generally happens because of a network error.
+                    Helix.Utils.statusMessage("Error", "I am sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    return;
+                }
+                
                 if (!params.silentMode) {
                     if (params.fatal) {
                         Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");

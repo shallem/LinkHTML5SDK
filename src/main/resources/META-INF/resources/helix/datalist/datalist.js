@@ -741,17 +741,18 @@
         _setScrollTimer: function(scrollAction) {
             this._rescrollInProgress = true;
             scrollAction();
-            this.$listWrapper.removeClass('hx-scroller-nozoom');
+            //this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
             setTimeout(function() {
-                _self.$listWrapper.addClass('hx-scroller-nozoom');
+                //_self.$listWrapper.addClass('hx-scroller-nozoom');
                 _self._rescrollInProgress = false;
             }, 500);
         },
         
         _rescrollList : function(rescrollTarget) {
             this._lastScrollPos = rescrollTarget;
-            this.$listWrapper.scrollTop(rescrollTarget);
+            //this.$listWrapper.scrollTop(rescrollTarget);
+            this.$listWrapper[0].scrollTop = rescrollTarget;
         },
         
         _doScrollUp: function() {
@@ -827,6 +828,89 @@
                         _self._refreshListOnScroll(_refreshDownDone);
                         _self.$listWrapper.off('prefetchNext');
                     });
+                }
+            }
+        },
+        
+        scrollHandler: function(ev) {
+            var _self = this;
+            var scrollPos = _self.$listWrapper.scrollTop();
+            var lastScroll = _self._lastScrollPos;
+            var listHeight = _self.$parent.height() - _self.$listWrapper.height();
+            if (_self._rescrollInProgress) {
+                return;
+            }
+            if (!_self.$parent.is(':visible')) {
+                return;
+            }
+            // The list is in the process of rendering, but not yet present on the screen.
+            if (listHeight < 0) {
+                return;
+            }
+            if (_self._scrollerTimeout) {
+                clearTimeout(_self._scrollerTimeout);
+                _self._scrollerTimeout = null;
+            }
+            _self._lastScrollPos = scrollPos;
+
+            if (scrollPos < 0 || scrollPos > listHeight) {
+                if (_self._inBounce === true) {
+                    return;
+                }
+                _self._inBounce = true;
+                //alert("BOUNCE: " + scrollPos + ", " + _self._renderWindowStart);
+            } else {
+                /*if (_self._inBounce) {
+                    alert("CLEAR " + listHeight);
+                }*/
+                _self._inBounce = false;
+            }
+
+            // We display a scrolling window of items. We always pull in
+            // page size * 2 items. If we are in the bottom half of the list
+            // we prepend more to the bottom of the list and remove from the
+            // top. If Ifwe are in the top half of the list we append to the end
+            // of the list and remove from the front.
+
+            //console.log("RENDER: " + _self._renderWindowStart + ", ATTOP: " + _self._atDataTop);
+            if ((lastScroll > scrollPos || scrollPos <= 0) && _self._renderWindowStart > 0) {
+                // We are scrolling up ...
+                if (scrollPos < (listHeight * .5)) {
+                    if (!_self._prefetchPrev) {
+                        _self._prefetchPage(-1);
+                    }
+                    if (scrollPos < 0) {
+                        // Bounce.
+                        _self._rescrollInProgress = true;
+                        //alert("BOUNCEUP");
+                        setTimeout($.proxy(_self._doScrollUp, _self), 200);
+                    } else if (_self._firstElemVisible()) {
+                        if (_self._fingerOn) {
+                            return;
+                        }
+
+                        _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollUp, _self), 200);
+                        return;
+                    }
+                }
+            } else if ((lastScroll < scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
+                // Scrolling down.
+                if (scrollPos > (listHeight * .5)) {
+                    if (!_self._prefetchNext) {
+                        _self._prefetchPage(1);
+                    }
+                    if (scrollPos > listHeight) {
+                        // Bounce
+                        _self._rescrollInProgress = true;
+                        //alert("BOUNCEDOWN");
+                        setTimeout($.proxy(_self._doScrollDown, _self), 200);
+                    } else if (_self._lastElemVisible()) {
+                        if (_self._fingerOn) {
+                            return;
+                        }
+                        _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollDown, _self), 100);
+                        return;
+                    }
                 }
             }
         },
@@ -908,6 +992,12 @@
             
             /* generate a clear selection button for multi select */
             _self._prependClearSelection();
+
+            /* Set scrolling styles */
+            if (_options.scroll) {
+                _self.$listWrapper.addClass('hx-scroller-nozoom');
+                _self.$listWrapper.addClass('hx-full-height');
+            }
             
             /**
              * Display from the beginning of the list.
@@ -924,10 +1014,6 @@
                  * is required to make scrolling work properly on iOS.
                  */
                 if (_options.scroll) {
-                    _self.$listWrapper.removeClass('hx-scroller-nozoom');
-                    _self.$listWrapper.addClass('hx-scroller-nozoom');
-                    _self.$listWrapper.addClass('hx-full-height');
-
                     _self.$listWrapper.on('touchstart', function() {
                         _self._fingerOn = true;
                         clearTimeout(_self._scrollerTimeout);
@@ -939,90 +1025,11 @@
                     });
                     
                     _self._inBounce = false;
-                    _self.$listWrapper.scroll(function(ev) {
-                        var scrollPos = _self.$listWrapper.scrollTop();
-                        var lastScroll = _self._lastScrollPos;
-                        var listHeight = _self.$parent.height() - _self.$listWrapper.height();
-                        //console.log("SCROLL: " + scrollPos + ", LAST: " + lastScroll + ", HEIGHT: " + listHeight);
-                        if (_self._rescrollInProgress) {
-                            return;
-                        }
-                        if (!_self.$parent.is(':visible')) {
-                            return;
-                        }
-                        // The list is in the process of rendering, but not yet present on the screen.
-                        if (listHeight < 0) {
-                            return;
-                        }
-                        if (_self._scrollerTimeout) {
-                            clearTimeout(_self._scrollerTimeout);
-                            _self._scrollerTimeout = null;
-                        }
-                        _self._lastScrollPos = scrollPos;
-                        
-                        if (scrollPos < 0 || scrollPos > listHeight) {
-                            if (_self._inBounce === true) {
-                                return;
-                            }
-                            _self._inBounce = true;
-                            //alert("BOUNCE: " + scrollPos + ", " + _self._renderWindowStart);
-                        } else {
-                            /*if (_self._inBounce) {
-                                alert("CLEAR " + listHeight);
-                            }*/
-                            _self._inBounce = false;
-                        }
-                        
-                        // We display a scrolling window of items. We always pull in
-                        // page size * 2 items. If we are in the bottom half of the list
-                        // we prepend more to the bottom of the list and remove from the
-                        // top. If Ifwe are in the top half of the list we append to the end
-                        // of the list and remove from the front.
-                       
-                        //console.log("RENDER: " + _self._renderWindowStart + ", ATTOP: " + _self._atDataTop);
-                        if ((lastScroll > scrollPos || scrollPos <= 0) && _self._renderWindowStart > 0) {
-                            // We are scrolling up ...
-                            if (scrollPos < (listHeight * .5)) {
-                                if (!_self._prefetchPrev) {
-                                    _self._prefetchPage(-1);
-                                }
-                                if (scrollPos < 0) {
-                                    // Bounce.
-                                    _self._rescrollInProgress = true;
-                                    //alert("BOUNCEUP");
-                                    setTimeout($.proxy(_self._doScrollUp, _self), 200);
-                                } else if (_self._firstElemVisible()) {
-                                    if (_self._fingerOn) {
-                                        return;
-                                    }
-                                    
-                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollUp, _self), 200);
-                                    return;
-                                }
-                            }
-                        } else if ((lastScroll < scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
-                            // Scrolling down.
-                            if (scrollPos > (listHeight * .5)) {
-                                if (!_self._prefetchNext) {
-                                    _self._prefetchPage(1);
-                                }
-                                if (scrollPos > listHeight) {
-                                    // Bounce
-                                    _self._rescrollInProgress = true;
-                                    //alert("BOUNCEDOWN");
-                                    setTimeout($.proxy(_self._doScrollDown, _self), 200);
-                                } else if (_self._lastElemVisible()) {
-                                    if (_self._fingerOn) {
-                                        return;
-                                    }
-                                    _self._scrollerTimeout = setTimeout($.proxy(_self._doScrollDown, _self), 100);
-                                    return;
-                                }
-                            }
-                        }
-                    });
+                    var __scrollHandler = function(ev) {
+                        this.scrollHandler(ev);
+                    };
+                    _self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, this));
                 }
-                _self.$listWrapper.css('-webkit-overflow-scrolling', 'touch');
                 
                 if (oncomplete) {
                     oncomplete(_self);
@@ -2360,7 +2367,7 @@
                     list._nextTapAction();
                     list._nextTapAction = false;
                 }
-            }, 100, this);
+            }, 0, this);
         },
         
         _queueLongTap: function(ev) {
@@ -2668,6 +2675,8 @@
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
+                this.selectedLI.removeClass('ui-btn-down-c');
+                this.selectedLI.addClass('ui-btn-up-c');
                 this.selectedLI = null;
                 this.selected = null;
                 this.selectedGroup = null;
@@ -2967,7 +2976,7 @@
                 }
             }
         },
-        selectPrev: function() {
+        selectPrev: function(noSelectAction) {
             if (!this.selectedLI) {
                 this.setSelectedByIndex(0, 0);
             } else {
@@ -2977,7 +2986,7 @@
                 } while (prev.is('li') && !prev.is('li[data-index]'));
                 if (prev.length) {
                     this.setSelected(prev);
-                    this.selectItem();
+                    this.selectItem(noSelectAction);
                 }
             }
         },

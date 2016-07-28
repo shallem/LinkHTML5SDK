@@ -62,9 +62,10 @@ public class HeaderRenderer extends CoreRenderer {
         }
 
         if(title != null) {
-             writer.startElement("h1", header);
+             writer.startElement("div", header);
+             writer.writeAttribute("class", "hx-title hx-flex-fill", null);
              writer.writeText(title, null);
-             writer.endElement("h1");
+             writer.endElement("div");
         } else {
             /* If there is no title, render any children. */
             this.renderChildren(context, component);

@@ -95,7 +95,7 @@
             var _timeout = this.setRemovalTimeout(doAction, lifetime);
 
             //remove message on click of close icon
-            message.on(Helix.clickEvent, _timeout, function(ev) {
+            message.on(Helix.hasTouch ? 'touchstart' : Helix.clickEvent, _timeout, function(ev) {
                 _self.removeAll();
                 undoAction.call(_self);
                 clearTimeout(ev.data);
