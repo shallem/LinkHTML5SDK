@@ -1641,6 +1641,8 @@
                 if (count < _self._itemsPerPage) {
                     // We did not get the full "limit" count of items requested
                     _self._atDataTop = true;
+                } else {
+                    _self._atDataTop = false;
                 }
             };
             
