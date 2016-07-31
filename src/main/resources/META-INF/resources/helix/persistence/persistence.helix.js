@@ -1220,6 +1220,20 @@ function initHelixDB() {
                     // Skip to the finish line ...
                     syncFn(null);
                 } else {
+                    persistence.transaction(function(tx) {
+                        var sql = 'SELECT id, ' + keyField + ' FROM `' + elemSchema.meta.name + '`;';
+                        tx.executeSql(sql, null, function(rows) {
+                            for ( var i = 0; i < rows.length; i++) {
+                                var r = rows[i];
+                                uidToEID[r[keyField]] = r.id;
+                            }
+                            doAdds(uidToEID);
+                        }, function(t, e, badSQL, badArgs) {
+                            persistence.errorHandler(e.message, e.code, badSQL, badArgs);
+                            doAdds(uidToEID);
+                        });
+                    });
+                    /*
                     elemSchema.all().include([keyField]).noRelationships().noFlush().newEach({    
                         eachFn: function(elem) {
                             uidToEID[elem[keyField]] = elem.id;
@@ -1227,7 +1241,7 @@ function initHelixDB() {
                         doneFn: function() {
                             doAdds(uidToEID);
                         }
-                    });
+                    });*/
                 }
             };
             
