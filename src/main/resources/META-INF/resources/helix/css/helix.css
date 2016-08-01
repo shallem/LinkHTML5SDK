@@ -648,6 +648,7 @@ li {
 
 .hx-toggled {
     height: 0px !important;
+    margin: 0;
 }
 
 /**
@@ -815,4 +816,16 @@ li {
 .wordBreak {
     word-wrap:break-word;
     white-space: normal;
+}
+
+.hx-title {
+    margin-top: 0.6em;
+    margin-bottom: 0.2em;
+    padding: 0;
+    vertical-align: middle;
+    font-size: 16px;
+    font-weight: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
