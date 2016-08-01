@@ -2730,7 +2730,7 @@
             if (rowComponents.icon) {
                 var oldIcon = $(parentElement).attr('data-icon');
                 $(parentElement).attr('data-icon', rowComponents.icon);
-                $(parentElement).find('span')
+                $(parentElement).find('span.ui-icon')
                     .removeClass('ui-icon-'+oldIcon)
                     .addClass('ui-icon-'+rowComponents.icon);
             }
