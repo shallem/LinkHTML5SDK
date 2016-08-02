@@ -42,7 +42,9 @@ public class HeaderRenderer extends CoreRenderer {
             writer.writeAttribute("style", header.getStyle(), null);
         }
         if(header.getStyleClass() != null) {
-            writer.writeAttribute("class", header.getStyleClass(), null);
+            writer.writeAttribute("class", "hx-no-webkit-select " + header.getStyleClass(), null);
+        } else {
+            writer.writeAttribute("class", "hx-no-webkit-select", null);            
         }
         if(swatch != null) {
             writer.writeAttribute("data-theme", swatch, null);
@@ -62,9 +64,10 @@ public class HeaderRenderer extends CoreRenderer {
         }
 
         if(title != null) {
-             writer.startElement("h1", header);
+             writer.startElement("div", header);
+             writer.writeAttribute("class", "hx-title hx-flex-fill", null);
              writer.writeText(title, null);
-             writer.endElement("h1");
+             writer.endElement("div");
         } else {
             /* If there is no title, render any children. */
             this.renderChildren(context, component);
