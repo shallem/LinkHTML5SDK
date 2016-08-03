@@ -1917,6 +1917,12 @@ function initPersistence(persistence) {
                     s += fld;
                 }
             }
+            if (this._excludeRelationships) {
+                s += '|NoRel';
+            }
+            if (this._noFlush) {
+                s += '|NoFlush';
+            }
             s += '|Limit:';
             s += this._limit;
             s += '|Skip:';
@@ -2228,6 +2234,25 @@ function initPersistence(persistence) {
             }
             return c;
         },
+        
+        /**
+         * Do not include "relationship" fields in the query collection results.
+         */
+        QueryCollection.prototype.noRelationships = function() {
+            var c = this.clone();
+            c._excludeRelationships = true;
+            return c;
+        },
+
+        /**
+         * Do not flush to the DB before listing this query collection.
+         */
+        QueryCollection.prototype.noFlush = function() {
+            var c = this.clone();
+            c._noFlush = true;
+            return c;
+        },
+
 
         /**
      * Execute a function for each item in the list

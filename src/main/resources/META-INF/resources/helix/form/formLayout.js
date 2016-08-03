@@ -141,6 +141,24 @@
                 this._processOneItem(formElem);
             }
         },
+        
+        resetItems: function(itemsList) {
+            this._typeMap = [];
+            this._fieldMap = [];
+            this._isDirty = false;
+
+            for (var idx = 0; idx < itemsList.length; ++idx) {
+                var formElem = itemsList[idx];
+                formElem.name = formElem.originalName;
+            }
+            this.options.items = itemsList;
+            this._processItems(this.options.items);
+
+            if (this.options.items.length > 0) {
+                this.rendered = false;
+                this.refresh();
+            }
+        },
     
         _stripNamespace: function(fldName) {
             return fldName.replace(this.options.namespace + "_", '');
@@ -230,7 +248,7 @@
          * 
          * @param valuesMap Map form field names to values.
          */
-        refresh: function(valuesMap) { 
+        refresh: function(valuesMap) {
             $(this.element).off('change.' + this.options.namespace);
             this._isDirty = false;
             this._computeHidden(valuesMap);
@@ -627,6 +645,10 @@
         },
         
         refreshValues: function(valuesMap, modeChanged) {
+            if (!valuesMap) {
+                valuesMap = this.getValues();
+            }
+            
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
@@ -839,6 +861,9 @@
         
         hideField : function(name) {
             var fld = this._fieldMap[name];
+            if (!fld) {
+                return;
+            }
             fld.hidden = true;
             fld.condition = __hx_always_invisible;
             this.__updateValue(fld.mode, name, fld, {});            
