@@ -2773,6 +2773,17 @@
             this.$parent.empty();
         },
   
+        _findRowComponents : function(elem, components) {
+            var roleAttr = elem.getAttribute('data-role');
+            if (roleAttr) {
+                components[roleAttr] = $(elem);
+                return;
+            }
+            for (var i = 0; i < elem.children.length; ++i) {
+                this._findRowComponents(elem.children[i], components);
+            }
+        },
+  
         createListRow: function(parentElement,rowComponents,rowID) {
             var isEnhanced = false;
             if ($(parentElement).hasClass('ui-li')) {
@@ -2789,8 +2800,14 @@
             
             var mainLink = null;
             if (isEnhanced) {
-                mainLink = $(parentElement).find('a').first();
-            } else {
+                var m = $(parentElement)[0].getElementsByTagName('a');
+                if (m.length) {
+                    mainLink = $(m[0]);
+                }
+                //mainLink = $(parentElement).find('a').first();
+            } 
+            
+            if (!mainLink) {
                 mainLink = $('<a />').attr({
                     'href' : 'javascript:void(0)'
                 }).appendTo($(parentElement));
@@ -2808,33 +2825,43 @@
                 $(parentElement).attr('data-icon', 'false');
             }
             
+            var components = {};
+            this._findRowComponents(mainLink[0], components);
+            
             if (rowComponents.subIcon) {
                 // Elements to put underneath the icon.
                 $(rowComponents.subIcon).attr('data-role', 'subicon').addClass('hx-subicon');
-                if ($(parentElement).find('[data-role="subicon"]').length) {
+                /*if ($(parentElement).find('[data-role="subicon"]').length) {
                     $(parentElement).find('[data-role="subicon"]').replaceWith(rowComponents.subIcon);
                 } else {
                     $(mainLink).append(rowComponents.subIcon);
+                }*/
+                if (components.subicon) {
+                    components.subicon.replaceWith(rowComponents.subIcon);
+                } else {
+                    $(mainLink).append(rowComponents.subIcon);
                 }
-            } else {
-                $(parentElement).find('[data-role="subicon"]').remove();
+            } else if (components.subicon) {
+                components.subicon.remove();
             }
 
-            var oldPfx = $(mainLink).find('[data-role="prefix"]');
+            //var oldPfx = $(mainLink).find('[data-role="prefix"]');
+            var oldPfx = components.prefix;
             if (rowComponents.prefix) {
-                if (oldPfx.length) {
+                if (oldPfx /*oldPfx.length*/) {
                     oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
                 } else {
                     mainLink.append($('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix')));
                     mainLink = $('<div/>').appendTo(mainLink);
                 }
-            } else {
+            } else if (oldPfx) {
                 oldPfx.closest('div').next().remove();
             }
             
+            var imgMarkup = components.image;
             if (rowComponents.image) {
-                var imgMarkup = $(mainLink).find('img[data-role="image"]');
-                if (imgMarkup.length) {
+                //var imgMarkup = $(mainLink).find('img[data-role="image"]');
+                if (imgMarkup /*imgMarkup.length*/) {
                     imgMarkup.attr('src', rowComponents.image).show();
                 } else {
                     mainLink.append($('<img />').attr({
@@ -2842,14 +2869,16 @@
                         'data-role' : 'image'
                     }));
                 }
-            } else {
-                $(mainLink).find('img[data-role="image"]').hide();
+            } else if (imgMarkup) {
+                //$(mainLink).find('img[data-role="image"]').hide();
+                imgMarkup.hide();
             }
             
+            var headerMarkup = components.itemheader;
             if (rowComponents.header) {
-                var headerMarkup = mainLink.find('h3[data-role="itemheader"]');
+                //var headerMarkup = mainLink.find('h3[data-role="itemheader"]');
                 if( Object.prototype.toString.call(rowComponents.header) === '[object String]' ) {
-                    if (headerMarkup.length) {
+                    if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
                         mainLink.append($('<h3 />')
@@ -2857,7 +2886,7 @@
                             .text(Helix.Utils.escapeQuotes(rowComponents.header)));
                     }
                 } else {
-                    if (headerMarkup.length) {
+                    if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.empty().append(rowComponents.header);
                     } else {
                         mainLink.append($('<h3 />')
@@ -2865,13 +2894,14 @@
                             .append(rowComponents.header));
                     }
                 }
-            } else {
-                mainLink.find('h3[data-role="itemheader"]').hide();
+            } else if (headerMarkup) {
+                //mainLink.find('h3[data-role="itemheader"]').hide();
+                headerMarkup.hide();
             }
             
+            var subheaderMarkup = components.subheader; //mainLink.find('p[data-role="subheader"]');
             if (rowComponents.subHeader) {
-                var subheaderMarkup = mainLink.find('p[data-role="subheader"]');
-                if (subheaderMarkup.length) {
+                if (subheaderMarkup /*subheaderMarkup.length*/) {
                     subheaderMarkup.text(rowComponents.subHeader).show();
                 } else {
                     mainLink.append($('<p />')
@@ -2879,33 +2909,35 @@
                         .append($('<strong />')
                         .text(rowComponents.subHeader)));
                 }
-            } else {
-                mainLink.find('p[data-role="subheader"]').hide();
+            } else if (subheaderMarkup) {
+                //mainLink.find('p[data-role="subheader"]').hide();
+                subheaderMarkup.hide();
             }
             
+            var bodyMarkup = components.body;
             if (rowComponents.body) {
-                var bodyMarkup = null;
                 if (rowComponents.header || rowComponents.subHeader) {
-                    bodyMarkup = mainLink.find('p[data-role="body"]');
-                    if (bodyMarkup.length) {
+                    //bodyMarkup = mainLink.find('p[data-role="body"]');
+                    if (bodyMarkup /*bodyMarkup.length*/) {
                         bodyMarkup.empty().append(rowComponents.body).show();
                     } else {
                         mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
                     }
                 } else {
-                    bodyMarkup = mainLink.find('[data-role="body"]');
-                    if (bodyMarkup.length) {
+                    //bodyMarkup = mainLink.find('[data-role="body"]');
+                    if (bodyMarkup /*bodyMarkup.length*/) {
                         mainLink.empty();
                     }
                     $(rowComponents.body).attr('data-role', 'body');
                     mainLink.append(rowComponents.body);
                 }
-            } else {
-                mainLink.find('[data-role="body"]').hide();
+            } else if (bodyMarkup) {
+                //mainLink.find('[data-role="body"]').hide();
+                bodyMarkup.hide();
             }
             
             if (rowComponents.aside) {
-                var asideMarkup = $('p.ui-li-aside');
+                var asideMarkup = mainLink.find('p.ui-li-aside');
                 if (asideMarkup.length) {
                     asideMarkup.empty().append(rowComponents.aside).show();
                 } else {
@@ -2914,7 +2946,7 @@
                     }).append(rowComponents.aside));
                 }
             } else {
-                $('p.ui-li-aside').hide();
+                mainLink.find('p.ui-li-aside').hide();
             }
             
             if (rowComponents.key) {

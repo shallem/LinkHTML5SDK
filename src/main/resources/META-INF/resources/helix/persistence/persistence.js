@@ -436,11 +436,36 @@ function initPersistence(persistence) {
          * entity name
          * @return the entity constructor function to be invoked with `new fn()`
          */
+        function _makeGetter(field) {
+            return function() {
+                return persistence.canonical(this)._data[field];
+            };
+        }
+        
+        function _makeSetter(field) {
+            return function(val) {
+                var that = persistence.add(this);
+                that._data[field] = val;
+                that._dirtyProperties[field] = true;
+                that._ignoreProperties[field] = false;                
+            };
+        }
+        
         function getEntity(entityName, doForce) {
             if (!doForce && entityClassCache[entityName]) {
                 return entityClassCache[entityName];
             }
             var meta = entityMeta[entityName];
+            var props = {};
+            for ( var field in meta.fields) {
+                if (meta.fields.hasOwnProperty(field)) {
+                    props[field] = {
+                        enumerable: true,
+                        get: _makeGetter(field),
+                        set: _makeSetter(field)
+                    }
+                }
+            }
 
             /**
              * @constructor
@@ -509,11 +534,12 @@ function initPersistence(persistence) {
                 this._session = session || persistence;
                 this.subscribers = {}; // observable
 
-                for ( var field in meta.fields) {
+                /*for ( var field in meta.fields) {
                     if (meta.fields.hasOwnProperty(field)) {
                         _addField.call(this, session, field);
                     }
-                }
+                }*/
+                Object.defineProperties(this, props);
 
                 for ( var it in meta.hasOne) {
                     if (meta.hasOne.hasOwnProperty(it)) {
