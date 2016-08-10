@@ -6001,7 +6001,29 @@ $.mobile.behaviors.addFirstLastClasses = {
 		if ( !create ) {
 			this.element.trigger( "updatelayout" );
 		}
+	},
+        
+        _addFirstLastClassesSAH: function( $els, create ) {
+		$els.removeClass( "ui-first-child ui-last-child" );
+                for (var i = 0; i < $els.length; ++i) {
+                    var nxt = $els[i];
+                    if ($(nxt).is(':visible')) {
+                        $(nxt).addClass('ui-first-child');
+                        break;
+                    }
+                }
+                for (i = $els.length - 1; i > 0; --i) {
+                    var nxt = $els[i];
+                    if ($(nxt).is(':visible')) {
+                        $(nxt).addClass('ui-last-child');
+                        break;
+                    }
+                }
+		if ( !create ) {
+			this.element.trigger( "updatelayout" );
+		}
 	}
+
 };
 
 })( jQuery );
@@ -6491,7 +6513,8 @@ $.widget( "mobile.listview", $.mobile.widget, $.extend( {
 		this._addThumbClasses( li );
 		this._addThumbClasses( $list.find( ".ui-link-inherit" ) );
 
-		this._addFirstLastClasses( li, this._getVisibles( li, create ), create );
+		//this._addFirstLastClasses( li, this._getVisibles( li, create ), create );
+                this._addFirstLastClassesSAH( li, create );
 		// autodividers binds to this to redraw dividers after the listview refresh
 		this._trigger( "afterrefresh" );
 	},
