@@ -683,7 +683,7 @@ Helix.Ajax = {
                 }
                 if (jqXHR.status === 404) {
                     // This generally happens because of a network error.
-                    Helix.Utils.statusMessage("Error", "I am sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.");
                     return;
                 }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
@@ -844,7 +844,7 @@ Helix.Ajax = {
                 }
                 if (jqXHR.status === 404) {
                     // This generally happens because of a network error.
-                    Helix.Utils.statusMessage("Error", "I am sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.");
                     return;
                 }
                 
