@@ -582,13 +582,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
 
         var inputID = Helix.Utils.getUniqueID();
+        var capitalization = (formElem.autocapitalize ? formElem.autocapitalize : 'sentences');
         formElem.inputMarkup = inputMarkup = $('<input />').attr({
             'name': formElem.name,
             'id' : inputID,
             'type': formElem.dataType,
             'value': (formElem.value),
             'tabindex' : formLayout.__tabIndex++,
-            'autocapitalize' : 'sentences'
+            'autocapitalize' : capitalization
         });
         
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
