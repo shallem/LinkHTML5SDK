@@ -25,6 +25,7 @@
 	top:60px;
 	right:20px;
 	width:301px;
+        z-index: 1002;
 }
 .ui-growl-item-container {
 	position:relative;
