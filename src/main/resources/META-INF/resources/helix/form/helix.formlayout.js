@@ -551,6 +551,9 @@ function __refreshTextBox(mode, formElem) {
     if (mode && !formElem.viewOnly) {
         var $input = $(formElem.DOM).find('input[name="'+formElem.name+'"]');
         $input.val(formElem.value);
+        if (formElem.autocompleteList) {
+            formElem.autocompleteList.hide();
+        }
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',p' + dataNameAttr + ",div" + dataNameAttr;
@@ -673,6 +676,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                              .css('display', 'none')
                                              .css('background-color', '#f9f9f9')
                                              .appendTo($fieldContainer).listview({ inset : true });
+            formElem.autocompleteList = autoCompleteList;
             $(inputMarkup).on('input', function() {
                 if (formElem.__autocompleteTimeout) {
                     clearTimeout(formElem.__autocompleteTimeout);

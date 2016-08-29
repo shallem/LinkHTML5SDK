@@ -659,6 +659,7 @@
                             this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
                         }                        
                     }
+                    $(nxtItem.DOM).trigger('collapse');
                 } else{
                     this.__refreshOneValue(mode, nxtItem, valuesMap,modeChanged);
                 }
