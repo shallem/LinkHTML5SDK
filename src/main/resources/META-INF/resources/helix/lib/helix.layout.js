@@ -386,10 +386,15 @@ window.addEventListener('orientationchange', function(ev) {
     });
 });
 
+Helix.screenWidth = (function() {
+    return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+})();
+
 Helix.deviceType = (function() {
-    if (window.screen.width <= 500) {
+    var w = Helix.screenWidth;
+    if (w <= 500) {
         return "phone";
-    } else if (window.screen.width <= 767) {
+    } else if (w <= 767) {
         return "phablet";
     } else {
         return "tablet";
