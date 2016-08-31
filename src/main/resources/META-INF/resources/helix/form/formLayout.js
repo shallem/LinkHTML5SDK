@@ -149,7 +149,9 @@
 
             for (var idx = 0; idx < itemsList.length; ++idx) {
                 var formElem = itemsList[idx];
-                formElem.name = formElem.originalName;
+                if (formElem.originalName) {
+                    formElem.name = formElem.originalName;
+                }
             }
             this.options.items = itemsList;
             this._processItems(this.options.items);

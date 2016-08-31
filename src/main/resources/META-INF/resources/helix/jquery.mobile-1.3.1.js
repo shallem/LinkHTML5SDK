@@ -10601,75 +10601,76 @@ $.widget( "mobile.panel", $.mobile.widget, {
 	_modalOpenClasses: null,
 
 	open: function( immediate ) {
-		if ( !this._open ) {
-			var self = this,
-				o = self.options,
-				_openPanel = function() {
-					self._page.off( "panelclose" );
-					self._page.jqmData( "panel", "open" );
-					
-					if ( !immediate && $.support.cssTransform3d && !!o.animate ) {
-						self.element.add( self._wrapper ).on( self._transitionEndEvents, complete );
-					} else {
-						setTimeout( complete, 0 );
-					}
-					
-					if ( self.options.theme && self.options.display !== "overlay" ) {
-						self._page
-							.removeClass( self._pageTheme )
-							.addClass( "ui-body-" + self.options.theme );
-					}
-					
-					self.element.removeClass( o.classes.panelClosed ).addClass( o.classes.panelOpen );
-					
-					self._positionPanel();
-					
-					// Fix for IE7 min-height bug
-					if ( self.options.theme && self.options.display !== "overlay" ) {
-						self._wrapper.css( "min-height", self._page.css( "min-height" ) );
-					}
-					
-					self._contentWrapOpenClasses = self._getPosDisplayClasses( o.classes.contentWrap );
-					self._wrapper
-						.removeClass( o.classes.contentWrapClosed )
-						.addClass( self._contentWrapOpenClasses + " " + o.classes.contentWrapOpen );
-						
-					self._fixedToolbarOpenClasses = self._getPosDisplayClasses( o.classes.contentFixedToolbar );
-					self._fixedToolbar
-						.removeClass( o.classes.contentFixedToolbarClosed )
-						.addClass( self._fixedToolbarOpenClasses + " " + o.classes.contentFixedToolbarOpen );
-						
-					self._modalOpenClasses = self._getPosDisplayClasses( o.classes.modal ) + " " + o.classes.modalOpen;
-					if ( self._modal ) {
-						self._modal.addClass( self._modalOpenClasses );
-					}
-				},
-				complete = function() {
-					self.element.add( self._wrapper ).off( self._transitionEndEvents, complete );
+            if (this._open) {
+                this.close();
+            }
+                    var self = this,
+                            o = self.options,
+                            _openPanel = function() {
+                                    self._page.off( "panelclose" );
+                                    self._page.jqmData( "panel", "open" );
 
-					self._page.addClass( o.classes.pagePanelOpen );
-					
-					self._bindFixListener();
-					
-					self._trigger( "open" );
-				};
+                                    if ( !immediate && $.support.cssTransform3d && !!o.animate ) {
+                                            self.element.add( self._wrapper ).on( self._transitionEndEvents, complete );
+                                    } else {
+                                            setTimeout( complete, 0 );
+                                    }
 
-			if ( this.element.closest( ".ui-page-active" ).length < 0 ) {
-				immediate = true;
-			}
-			
-			self._trigger( "beforeopen" );
-			
-			if ( self._page.jqmData('panel') === "open" ) {
-				self._page.on( "panelclose", function() {
-					_openPanel();
-				});
-			} else {
-				_openPanel();
-			}
-			
-			self._open = true;
-		}
+                                    if ( self.options.theme && self.options.display !== "overlay" ) {
+                                            self._page
+                                                    .removeClass( self._pageTheme )
+                                                    .addClass( "ui-body-" + self.options.theme );
+                                    }
+
+                                    self.element.removeClass( o.classes.panelClosed ).addClass( o.classes.panelOpen );
+
+                                    self._positionPanel();
+
+                                    // Fix for IE7 min-height bug
+                                    if ( self.options.theme && self.options.display !== "overlay" ) {
+                                            self._wrapper.css( "min-height", self._page.css( "min-height" ) );
+                                    }
+
+                                    self._contentWrapOpenClasses = self._getPosDisplayClasses( o.classes.contentWrap );
+                                    self._wrapper
+                                            .removeClass( o.classes.contentWrapClosed )
+                                            .addClass( self._contentWrapOpenClasses + " " + o.classes.contentWrapOpen );
+
+                                    self._fixedToolbarOpenClasses = self._getPosDisplayClasses( o.classes.contentFixedToolbar );
+                                    self._fixedToolbar
+                                            .removeClass( o.classes.contentFixedToolbarClosed )
+                                            .addClass( self._fixedToolbarOpenClasses + " " + o.classes.contentFixedToolbarOpen );
+
+                                    self._modalOpenClasses = self._getPosDisplayClasses( o.classes.modal ) + " " + o.classes.modalOpen;
+                                    if ( self._modal ) {
+                                            self._modal.addClass( self._modalOpenClasses );
+                                    }
+                            },
+                            complete = function() {
+                                    self.element.add( self._wrapper ).off( self._transitionEndEvents, complete );
+
+                                    self._page.addClass( o.classes.pagePanelOpen );
+
+                                    self._bindFixListener();
+
+                                    self._trigger( "open" );
+                            };
+
+                    if ( this.element.closest( ".ui-page-active" ).length < 0 ) {
+                            immediate = true;
+                    }
+
+                    self._trigger( "beforeopen" );
+
+                    if ( self._page.jqmData('panel') === "open" ) {
+                            self._page.on( "panelclose", function() {
+                                    _openPanel();
+                            });
+                    } else {
+                            _openPanel();
+                    }
+
+                    self._open = true;
 	},
 
 	close: function( immediate ) {
