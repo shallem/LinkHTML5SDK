@@ -829,3 +829,7 @@ li {
     white-space: nowrap;
     overflow: hidden;
 }
+
+.hx-title-center {
+    text-align: center;
+}
