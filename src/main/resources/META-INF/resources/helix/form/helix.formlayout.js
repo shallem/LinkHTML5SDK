@@ -718,7 +718,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                         $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function() {
-                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text());
+                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem);
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
                                             if (ret === true) {
