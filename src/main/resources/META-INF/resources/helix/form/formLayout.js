@@ -631,18 +631,31 @@
         },
         
         __refreshOneValue: function(mode, item, valuesMap, modeChanged) {
-            var hiddenChanged = this.__computeOneHidden(item, valuesMap);
-            var valueChanged = this.__copyOneValue(item, valuesMap);
             var visibilityChanged = 
                 (mode === 0 && item.mode === 'edit') || 
                 (mode === 1 && item.mode === 'view') || 
                 (item.type === 'controlset') ||
                 modeChanged;
-            
-            if (hiddenChanged || valueChanged || visibilityChanged) {
+
+            if (visibilityChanged) {
                 this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
                 return true;
             }
+
+            var hiddenChanged = this.__computeOneHidden(item, valuesMap);
+            
+            if (hiddenChanged) {
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                return true;
+            }
+            
+            var valueChanged = this.__copyOneValue(item, valuesMap);
+
+            if (valueChanged) {
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                return true;
+            }
+            
             return false;
         },
         

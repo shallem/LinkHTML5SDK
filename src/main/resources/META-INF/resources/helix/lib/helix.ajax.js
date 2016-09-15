@@ -376,7 +376,7 @@ Helix.Ajax = {
     },
 
     defaultOnError: function(errorObj) {
-        Helix.Utils.statusMessage("Load Failed", errorObj.msg, "error");
+        Helix.Utils.statusMessage("Action Failed", errorObj.msg, "error");
     },
 
     /**
