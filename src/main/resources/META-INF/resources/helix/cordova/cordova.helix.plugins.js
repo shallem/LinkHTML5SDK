@@ -175,6 +175,9 @@
             },
             getRefreshData: function(op, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "getRefreshData", [ op ]);
+            },
+            clearAppBadge: function(success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "clearAppBadge", [  ]);
             }
         });
     }
