@@ -125,9 +125,12 @@
     margin: 0;
 }
 
+.iconbuttonHeight {
+    height: 60px;    
+}
+
 .hx-button-bar .iconbutton .ui-btn-inner {
-    padding: 0;
-    height: 60px;
+    border: none;
 }
 
 .iconbutton {
@@ -136,6 +139,8 @@
 }
 
 .iconbutton .ui-btn-inner {
+    padding: 0;
+    height: 100%;
     text-overflow: none;
     background: transparent;
 }
@@ -149,11 +154,7 @@
 }
 
 .iconbutton .ui-btn-inner .ui-icon {
-    left: 25%;
-    top: 35%;
     margin-left: 0px;
-/*    width: 32px;
-    height: 32px; */
     border-radius: 0 0 0 0;
     background-color: transparent;
 }
@@ -161,10 +162,6 @@
 /**
  * Header styles.
  */
-.ui-header .iconbutton .ui-btn-inner .ui-icon {
-    top: 15%;
-}
-
 .ui-header .ui-controlgroup:not(.ui-btn-right) .ui-controlgroup:not(.ui-btn-left) .ui-controlgroup-controls a {
     padding-top: 3px;
 }
@@ -431,17 +428,13 @@ li {
 
     /* Icon buttons in the header. */
     .ui-header .iconbutton {
-        height: 32px; 
+        height: 40px; 
     }
     
     .ui-header .iconbutton .ui-btn-inner {
-        height: 32px;
+        height: 40px;
     }
-    
-    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
-        padding: 0;
-    }
-    
+        
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
@@ -579,6 +572,24 @@ li {
     margin-left: 80px;
 }
 
+.ui-header .hx-button-bar {
+    float: none;
+    display: block;
+    position: static;
+    margin-top: 0em;
+    margin-bottom: 0em;
+    margin-right: 0.2em;    
+}
+
+.ui-header .hx-button-bar.ui-btn-right {
+    margin-left: 0.2em;    
+}
+
+.ui-header > .ui-btn {
+    display: block;
+    position: static;
+}
+
 .ui-growl-message p {
     white-space: normal;
     word-wrap: break-word;
@@ -664,27 +675,19 @@ li {
 @media all and (max-width: 500px) {
     .iconbutton {
         width: 40px;
-        height: 32px;    
+        height: 40px;    
         padding: 0;
         margin: 0;
     }
+    
+    .iconbuttonHeight {
+        height: 40px;    
+    }
 
     .iconbutton .ui-btn-inner {
-        padding: 0.4em 0 30px;
-    }
-
-    .iconbutton .ui-btn-inner .ui-icon {
-        top: 15%;
-    }
-
-    .ui-header .iconbutton .ui-btn-inner {
-        height: 32px;
-    }
-    
-    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
         padding: 0;
     }
-        
+       
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
@@ -819,7 +822,7 @@ li {
 }
 
 .hx-title {
-    margin-top: 0.6em;
+    margin-top: 0.75em;
     margin-bottom: 0.2em;
     padding: 0;
     vertical-align: middle;
@@ -828,4 +831,8 @@ li {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+}
+
+.hx-title-center {
+    text-align: center;
 }

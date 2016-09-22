@@ -94,6 +94,10 @@ public class PageRenderer extends CoreRenderer {
         writer.write("$.mobile.hashListeningEnabled = false;");
         writer.write("$.mobile.pushStateEnabled = false;");
         
+        // Highlighting a button blue when you tap on it is not an iOS friendly way of doing things
+        // This allows us to apply custom styling.
+        writer.write("$.mobile.activeBtnClass = 'hx-btn-active';");
+        
         if(page.getLoadingMessage() != null) {
             writer.write("$.mobile.loadingMessage = '" + page.getLoadingMessage() + "';");
         }

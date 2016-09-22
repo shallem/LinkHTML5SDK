@@ -49,5 +49,12 @@
             <type>java.lang.String</type>
             <description>Style class of the component.</description>
         </attribute>
+        <attribute>
+            <name>centerTitle</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <description>Center the title - default is to left justify.</description>
+            <defaultValue>false</defaultValue>
+        </attribute>
     </attributes>
 </component>

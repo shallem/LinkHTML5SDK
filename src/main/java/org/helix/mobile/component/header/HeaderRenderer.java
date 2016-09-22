@@ -57,15 +57,19 @@ public class HeaderRenderer extends CoreRenderer {
         } else {
             writer.writeAttribute("data-tap-toggle", "false", null);
         }
-
         if(left != null) {
             left.getAttributes().put("styleClass", "ui-btn-left");
             left.encodeAll(context);
         }
 
         if(title != null) {
-             writer.startElement("div", header);
-             writer.writeAttribute("class", "hx-title hx-flex-fill", null);
+            writer.startElement("div", header);
+            if (header.isCenterTitle()) {
+                 writer.writeAttribute("class", "hx-title hx-title-center hx-flex-fill", null);
+            } else {
+                 writer.writeAttribute("class", "hx-title hx-flex-fill", null);            
+            }
+
              writer.writeText(title, null);
              writer.endElement("div");
         } else {
