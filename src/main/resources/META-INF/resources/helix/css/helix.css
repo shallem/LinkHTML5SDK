@@ -125,6 +125,10 @@
     margin: 0;
 }
 
+.iconbuttonHeight {
+    height: 60px;    
+}
+
 .hx-button-bar .iconbutton .ui-btn-inner {
     border: none;
 }
@@ -678,6 +682,10 @@ li {
         height: 40px;    
         padding: 0;
         margin: 0;
+    }
+    
+    .iconbuttonHeight {
+        height: 40px;    
     }
 
     .iconbutton .ui-btn-inner {
