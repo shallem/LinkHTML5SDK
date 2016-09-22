@@ -434,11 +434,7 @@ li {
     .ui-header .iconbutton .ui-btn-inner {
         height: 40px;
     }
-    
-    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
-        padding: 0;
-    }
-    
+        
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
@@ -689,13 +685,9 @@ li {
     }
 
     .iconbutton .ui-btn-inner {
-        padding: 0.4em 0 30px;
-    }
-    
-    .ui-header .iconbutton.ui-mini.ui-btn-icon-bottom .ui-btn-inner {
         padding: 0;
     }
-        
+       
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
     .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
