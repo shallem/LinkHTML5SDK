@@ -822,8 +822,7 @@ li {
 }
 
 .hx-title {
-    margin-top: 0.75em;
-    margin-bottom: 0.2em;
+    margin: 0;
     padding: 0;
     vertical-align: middle;
     font-size: 16px;
@@ -835,4 +834,9 @@ li {
 
 .hx-title-center {
     text-align: center;
+}
+
+/* Traditional JQM buttons with a 16px icon and text should be 32px high. */
+a.ui-btn:not(.iconbutton) {
+    height: 32px;
 }

@@ -187,4 +187,12 @@
 .ui-header {
     display: flex;
     display: -webkit-flex;
+    align-items: center;
+}
+
+/* Turn off box shadow as this is not how mobile is styled */
+.ui-focus,
+.ui-btn:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none;
 }

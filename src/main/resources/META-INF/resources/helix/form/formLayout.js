@@ -637,20 +637,13 @@
                 (item.type === 'controlset') ||
                 modeChanged;
 
-            if (visibilityChanged) {
-                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
-                return true;
-            }
-
             var hiddenChanged = this.__computeOneHidden(item, valuesMap);
-            
-            if (hiddenChanged) {
+            if (visibilityChanged || hiddenChanged) {
                 this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
                 return true;
             }
             
             var valueChanged = this.__copyOneValue(item, valuesMap);
-
             if (valueChanged) {
                 this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
                 return true;
