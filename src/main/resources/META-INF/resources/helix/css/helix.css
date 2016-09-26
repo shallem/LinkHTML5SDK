@@ -126,7 +126,7 @@
 }
 
 .iconbuttonHeight {
-    height: 60px;    
+    min-height: 60px;    
 }
 
 .hx-button-bar .iconbutton .ui-btn-inner {
@@ -681,17 +681,22 @@ li {
     }
     
     .iconbuttonHeight {
-        height: 40px;    
+        min-height: 40px;    
     }
 
-    .iconbutton .ui-btn-inner {
+    .iconbutton .ui-btn-inner, .ui-mini.ui-btn-icon-bottom .ui-btn-inner, .ui-mini .ui-btn-icon-bottom .ui-btn-inner {
         padding: 0;
     }
+    
+    .iconbutton .ui-icon-check {
+        left: 11px !important;
+        top: 11px !important;
+    }
        
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
-        top: 7px;
+    .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
+    .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
+    .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
+        top: 11px;
         left: 11px;
     }
     
@@ -727,6 +732,26 @@ li {
     float: right;
     display: inline-block;
     margin: 0;
+}
+
+.hx-toolbar.iconbutton {
+    width: 48px;
+    height: 32px;
+}
+
+.hx-toolbar.iconbutton .ui-btn-inner {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+}
+
+.hx-toolbar.iconbutton .ui-btn-inner .ui-icon {
+  position: relative;
+  margin-top: -3px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
 }
 
 /* Match height/margin of hx-search-sort */
@@ -838,5 +863,5 @@ li {
 
 /* Traditional JQM buttons with a 16px icon and text should be 32px high. */
 a.ui-btn:not(.iconbutton) {
-    height: 32px;
+    max-height: 32px;
 }

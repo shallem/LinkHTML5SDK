@@ -27,7 +27,7 @@ public class TabRenderer extends CoreRenderer {
         writer.startElement("li", component);
         writer.startElement("a", component);
         writer.writeAttribute("href", "#" + tab.getPage(), null);
-        writer.writeAttribute("style", "height: 48px", null);
+        writer.writeAttribute("style", "max-height: 48px; height: 48px", null);
         //writer.writeAttribute("data-icon", "custom", null);
         String styleClass = "";
         if (!tab.isCustomIcon()) {
