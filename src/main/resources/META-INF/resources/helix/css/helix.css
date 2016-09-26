@@ -739,14 +739,14 @@ li {
     height: 32px;
 }
 
-.hx-toolbar.iconbutton .ui-btn-inner {
+.ui-controlgroup .hx-toolbar.iconbutton .ui-btn-inner {
     width: 100%;
     height: 100%;
     padding: 0;
     border: none;
 }
 
-.hx-toolbar.iconbutton .ui-btn-inner .ui-icon {
+.ui-controlgroup .hx-toolbar.iconbutton .ui-btn-inner .ui-icon {
   position: relative;
   margin-top: -3px;
   margin-bottom: 0px;
