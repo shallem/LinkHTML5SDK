@@ -669,6 +669,13 @@ li {
     height: 100%;
 }
 
+.iconbutton .ui-btn-inner, 
+.ui-mini.ui-btn-icon-bottom.iconbutton .ui-btn-inner, 
+.ui-mini .ui-btn-icon-bottom.iconbutton .ui-btn-inner,
+.ui-header .ui-mini.ui-btn-icon-bottom.iconbutton .ui-btn-inner {
+    padding: 0;
+}
+
 /**
  * Small screen style overrides.
  */
@@ -682,10 +689,6 @@ li {
     
     .iconbuttonHeight {
         min-height: 40px;    
-    }
-
-    .iconbutton .ui-btn-inner, .ui-mini.ui-btn-icon-bottom .ui-btn-inner, .ui-mini .ui-btn-icon-bottom .ui-btn-inner {
-        padding: 0;
     }
     
     .iconbutton .ui-icon-check {
