@@ -187,22 +187,12 @@
 .ui-header {
     display: flex;
     display: -webkit-flex;
+    align-items: center;
 }
 
-.ui-header .hx-button-bar {
-    float: none;
-    display: block;
-    position: static;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    margin-right: 0.2em;    
-}
-
-.ui-header .hx-button-bar.ui-btn-right {
-    margin-left: 0.2em;    
-}
-
-.ui-header > .ui-btn {
-    display: block;
-    position: static;
+/* Turn off box shadow as this is not how mobile is styled */
+.ui-focus,
+.ui-btn:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none;
 }
