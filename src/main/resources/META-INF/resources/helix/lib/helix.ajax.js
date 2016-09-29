@@ -681,7 +681,7 @@ Helix.Ajax = {
                     // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
-                if (jqXHR.status === 404) {
+                if (jqXHR.status === 404 || jqXHR.status === 408) {
                     // This generally happens because of a network error.
                     Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.");
                     return;
