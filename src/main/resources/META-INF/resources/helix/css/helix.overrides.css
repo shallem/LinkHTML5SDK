@@ -196,3 +196,9 @@
     -webkit-box-shadow: none;
     box-shadow: none;
 }
+
+/* Improved background coloring for ui-bar-d */
+.ui-bar-d {
+    background-image: linear-gradient( #FFF5F5 /*{d-bar-background-start}*/, #bbb /*{d-bar-background-end}*/);
+    background-image: -webkit-linear-gradient( #FFF5F5 /*{d-bar-background-start}*/, #bbb /*{d-bar-background-end}*/);
+}
