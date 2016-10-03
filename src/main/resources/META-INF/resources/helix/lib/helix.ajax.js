@@ -674,7 +674,7 @@ Helix.Ajax = {
 		}
             },
             error: function(jqXHR, status, errorThrown) {
-                if (Helix.ignoreErrors) {
+                if (Helix.ignoreErrors || loadCommandOptions.loadingOptions.silent) {
                     return;
                 }
                 if (jqXHR.status < 0 || jqXHR.status >= 600) {

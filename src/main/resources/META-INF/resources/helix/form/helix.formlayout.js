@@ -441,7 +441,10 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             $(inputMarkup).change(function() {
                 formElem.onchange.call(this, formElem);
             });
-        }     
+        }
+        if (formElem.onfocus) {
+            $(inputMarkup).focus(formElem.onfocus);
+        }
         $(inputMarkup).on('input', function() {
             $(this).trigger('change');
         });
