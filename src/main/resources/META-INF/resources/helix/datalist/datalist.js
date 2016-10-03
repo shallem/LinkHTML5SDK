@@ -583,10 +583,7 @@
             this._fingerOn = false;
                    
             // Default sort.
-            this._currentSort = this.options.sortBy;
-            this._currentSortOrder = this.options.sortOrder.toUpperCase();
-            this._currentSortCase = '';
-            this._updateSortButtons();
+            this.setDefaultSort();
         
             if (this.options.strings) {
                 this.strings = this.options.strings.split(",");            
@@ -600,6 +597,13 @@
 
                 });
             }
+        },
+        
+        setDefaultSort: function() {
+            this._currentSort = this.options.sortBy;
+            this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._currentSortCase = '';
+            this._updateSortButtons();
         },
         
         _getSortsFromOptions: function(sortFilterOptions) {
