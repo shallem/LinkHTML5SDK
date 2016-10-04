@@ -2180,9 +2180,11 @@ Helix.Layout.createConfirmDialog = function(options) {
 
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     $.mobile.activePage.append( popup ).trigger( "pagecreate" );
-    $(popup).popup("open");
+    setTimeout(function() {
+        $(popup).popup("open");    
+    }, 200);
     $(window).on('navigate.popup', function (e) {
         e.preventDefault();
         $(window).off('navigate.popup');
-    });
+    });        
 };
