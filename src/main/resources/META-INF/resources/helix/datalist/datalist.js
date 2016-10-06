@@ -2299,7 +2299,7 @@
                 return false;
             }
             
-            if (this.options.multiSelect && event.clientX < 35) {
+            if (this.options.multiSelect && event.clientX < 35 && $(target).is('hx-multi-select-item')) {
                 $(target).toggleClass("hx-selected");
 
                 // Check to see if we have anything selected - if yes, show the clear button;
@@ -2486,6 +2486,12 @@
             
             // Tap
             if (this.options.selectAction) {
+                /* Suppress tap and vclick so they don't propagate below this list. */
+                $(this.listWrapper).off('tap vclick').on('tap vclick', function (ev) {
+                    ev.stopImmediatePropagation();
+                    return false;
+                });
+                
                 /*$(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
                     var _self = event.data;
                     var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
