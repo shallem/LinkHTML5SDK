@@ -5573,6 +5573,9 @@ $.fn.buttonMarkup = function( options ) {
 				mini:       options.mini       !== undefined ? options.mini       : getAttrFixed( e, nsKey + "mini" )
 			}, options ),
 
+                        // SAH
+                        wrapperMarkup = o.wrapperEls,
+
 			// Classes Defined
 			innerClass = "ui-btn-inner",
 			textClass = "ui-btn-text",
@@ -5613,8 +5616,12 @@ $.fn.buttonMarkup = function( options ) {
 			state = buttonElements.state;
 		}
 		else {
-			buttonInner = document.createElement( o.wrapperEls );
-			buttonText = document.createElement( o.wrapperEls );
+                    // SAH - change to use wrapperMarkup; change wrapperMarkup to div when there is no icon.
+                    if (!o.icon) {
+                        wrapperMarkup = 'div';
+                    }
+			buttonInner = document.createElement( wrapperMarkup );
+			buttonText = document.createElement( wrapperMarkup );
 		}
 		buttonIcon = o.icon ? document.createElement( "span" ) : null;
 
@@ -5652,7 +5659,9 @@ $.fn.buttonMarkup = function( options ) {
 			if ( o.iconshadow ) {
 				iconClass += " ui-icon-shadow";
 			}
-		}
+		} else {
+                    buttonClass += ' hx-noicon-button';
+                }
 
 		if ( o.iconpos ) {
 			buttonClass += " ui-btn-icon-" + o.iconpos;
@@ -5959,6 +5968,9 @@ $.widget( "mobile.collapsible", $.mobile.widget, {
 				collapsibleHeading.find( "a" ).first().addClass( $.mobile.activeBtnClass );
 			})
 			.bind( "vclick", function( event ) {
+                                if (!collapsibleHeading.is(':visible')) {
+                                    return;
+                                }
 
 				var type = collapsibleHeading.is( ".ui-collapsible-heading-collapsed" ) ? "expand" : "collapse";
 
@@ -7004,7 +7016,7 @@ $.mobile.document.delegate( "ul,ol", "listviewcreate", function() {
 	var replaceDividers = function () {
 		list.find( "li:jqmData(role='list-divider')" ).remove();
 
-		var lis = list.find( 'li:visible' ), // SAH: Added :visible
+		var lis = list.find( 'li' ),
 			lastDividerText = null, li, dividerText;
 
 		for ( var i = 0; i < lis.length ; i++ ) {
@@ -7017,8 +7029,10 @@ $.mobile.document.delegate( "ul,ol", "listviewcreate", function() {
 				divider.setAttribute( 'data-' + $.mobile.ns + 'role', 'list-divider' );
 				li.parentNode.insertBefore( divider, li );
 			}
-
-			lastDividerText = dividerText;
+                        // SAH - blank means ignore
+                        if (dividerText) {
+                            lastDividerText = dividerText;
+                        }
 		}
 	};
 
@@ -7230,9 +7244,18 @@ $.widget( "mobile.checkboxradio", $.mobile.widget, $.extend( {
 			label = this.label;
 
 		if ( input.checked ) {
+                    // SAH: only change button markup when we really have an icon change.
+                    if (this.inputtype === 'radio') {
+                        label.removeClass( this.uncheckedClass + active ).addClass( checkedClass );
+                    } else {
 			label.removeClass( this.uncheckedClass + active ).addClass( checkedClass ).buttonMarkup( { icon: this.checkedicon } );
+                    }
 		} else {
+                    if (this.inputtype === 'radio') {
+			label.removeClass( checkedClass ).addClass( this.uncheckedClass );                        
+                    } else {
 			label.removeClass( checkedClass ).addClass( this.uncheckedClass ).buttonMarkup( { icon: this.uncheckedicon } );
+                    }
 		}
 
 		if ( input.disabled ) {

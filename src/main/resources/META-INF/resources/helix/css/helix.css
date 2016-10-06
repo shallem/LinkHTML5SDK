@@ -473,7 +473,7 @@ li {
     margin-top: -8px;
 }
 
-.hx-listview.hxMultiSelect li.hx-selected:after{
+.hx-listview.hxMultiSelect li.hx-multi-select-item.hx-selected:after{
     /*Add another block-level blank space*/
     content:"\00a0";
     display:block;
@@ -633,6 +633,10 @@ li {
     margin-bottom: 0em;
 }
 
+.hx-form-container .ui-field-contain .ui-input-search {
+    width: 100%;
+}
+
 /**
  * Animations
  */
@@ -768,6 +772,11 @@ li {
     margin-bottom: 0em;
 }
 
+.hx-list-selection-buttons .iconbutton {
+    height: 32px;
+    width: 40px; 
+}
+
 .ui-li>.ui-btn-inner {
     border: none;
 }
@@ -867,4 +876,26 @@ li {
 /* Traditional JQM buttons with a 16px icon and text should be 32px high. */
 a.ui-btn:not(.iconbutton) {
     max-height: 32px;
+}
+
+/* Used by the JQM buttonMarkup changes we have made to align button text in the button container when
+   there is no icon. */
+.hx-noicon-button {
+    min-height: 32px;
+    padding: 0;
+}
+
+a.hx-noicon-button div.ui-btn-inner {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0;
+}
+
+li.hx-noicon-button div.ui-btn-inner {
+    width: 100%;
+}
+
+.hx-noicon-button div.ui-btn-text {
+    width: 100%;
 }

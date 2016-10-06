@@ -517,9 +517,10 @@ function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayou
         corners: false,
         mini: useMiniLayout
     });
-    if (formElem.computedWidth) {
-        $(inputMarkup).closest('.ui-select').width(formElem.computedWidth);
-    }
+    // SAH: migrated to flex box ...
+    // if (formElem.computedWidth) {
+    //  $(inputMarkup).closest('.ui-select').width(formElem.computedWidth);
+    // }
     if (formLayout.textStyleClass) {
         $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
     }
@@ -1094,6 +1095,10 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
             'id': formElem.id
         }).append(formElem.fieldTitle);
     }
+    if (formElem.computedWidth) {
+        $buttonLink.width(formElem.computedWidth);
+    }
+    
     if (formElem.href) {
         $buttonLink.attr('href', formElem.href);
     } else {

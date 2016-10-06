@@ -85,6 +85,7 @@
     flex-direction: row;
     overflow: hidden;
     border: none;
+    margin: 0.4em 0;
 }
 
 .hx-form-container .ui-field-contain label.ui-select {
@@ -98,9 +99,10 @@
     text-align: right;
     border: none;
     padding-top: 0.4em;
-    padding-right: 0.2em;
+    padding-right: 0;
     padding-bottom: 0;
     padding-left: 0;
+    margin-right: 0;
     width: auto;
     line-height: 1;
 }
@@ -154,6 +156,9 @@
     flex: 2;
     -webkit-flex: 2;
     width: 100%;
+    margin-left: 1em;
+    padding-bottom: 0.1em;
+    padding-top: 0.1em;
 }
 
 .hx-form-container .ui-field-contain div.ui-input-text.hx-button-container input {
@@ -223,11 +228,17 @@
 }
 
 textarea.ui-input-text {
-    padding: 0 .4em;
+    padding: 0;
+    margin-left: 1em;
     width: auto;
     flex: 2;
     -webkit-flex: 2;
 }
+
+.hx-form-container .ui-field-contain div.ui-select { 
+    flex: 2;
+}
+
 
 @media all and (min-width: 28em){
     .hx-form-container .ui-field-contain label.ui-select { width: initial; }
