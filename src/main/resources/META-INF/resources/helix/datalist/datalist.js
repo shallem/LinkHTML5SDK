@@ -2299,7 +2299,7 @@
                 return false;
             }
             
-            if (this.options.multiSelect && event.clientX < 35 && $(target).is('hx-multi-select-item')) {
+            if (this.options.multiSelect && event.clientX < 35 && $(target).is('.hx-multi-select-item')) {
                 $(target).toggleClass("hx-selected");
 
                 // Check to see if we have anything selected - if yes, show the clear button;
