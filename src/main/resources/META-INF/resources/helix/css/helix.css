@@ -665,6 +665,8 @@ li {
 .hx-toggled {
     transform: translateY(-100px);
     -webkit-transform: translateY(-100px);
+    height: 0;
+    margin: 0;
 }
 
 /**
