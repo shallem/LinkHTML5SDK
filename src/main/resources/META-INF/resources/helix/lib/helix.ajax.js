@@ -33,7 +33,7 @@ $(document).on('cordovaReady', function() {
  */
 $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate) {
     if (loadingDelegate) {
-        loadingDelegate.onStart();
+        loadingDelegate.startLoading();
     } else {
         if (!Helix.Ajax.loadOptions.silent) {
             if (!Helix.Ajax.loadOptions.async) {
@@ -88,7 +88,7 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelega
     }
 
     if (loadingDelegate) {
-        loadingDelegate.onStop();
+        loadingDelegate.stopLoading();
     } else {
         /* Clear out the load options - this is meant as a per-load set of options. */
         Helix.Ajax.loadCt--;
@@ -610,7 +610,7 @@ Helix.Ajax = {
         $(document).trigger('prerequest', [ page, 
             loadCommandOptions.requestOptions.postBack, 
             loadCommandOptions.requestOptions.suspendSleep,
-            loadCommandOptions.requestOptions.loadingDelegate
+            loadCommandOptions.loadingDelegate
         ]);
         /* Give the browser a change to handle the event and show the loader. */
         $.ajax({
@@ -694,7 +694,7 @@ Helix.Ajax = {
                 }
                 if (jqXHR.status === 404 || jqXHR.status === 408) {
                     // This generally happens because of a network error.
-                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
                     return;
                 }
                 var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
@@ -706,7 +706,7 @@ Helix.Ajax = {
                     [   page, 
                         loadCommandOptions.requestOptions.postBack, 
                         loadCommandOptions.requestOptions.suspendSleep,
-                        loadCommandOptions.requestOptions.loadingDelegate
+                        loadCommandOptions.loadingDelegate
                     ]);
             }
         });
@@ -851,16 +851,16 @@ Helix.Ajax = {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                if (Helix.ignoreErrors) {
+                if (Helix.ignoreErrors || params.silentMode) {
                     return;
                 }
                 if (jqXHR.status < 0 || jqXHR.status >= 600) {
                     // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
-                if (jqXHR.status === 404) {
+                if (jqXHR.status === 404 || jqXHR.status === 408) {
                     // This generally happens because of a network error.
-                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.");
+                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
                     return;
                 }
                 

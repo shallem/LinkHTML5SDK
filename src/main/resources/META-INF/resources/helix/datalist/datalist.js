@@ -35,6 +35,11 @@
             headerText: null,
             
             /**
+             * Text to display in the footer when data is loading.
+             */
+            footerLoadingText: null,
+            
+            /**
              * Determines if the list is grouped. Groups are divided using a 
              * jQuery Mobile list divider. If the list is grouped, then the groupName
              * and groupMembers options must be provided.
@@ -3116,10 +3121,32 @@
             this.options.headerText = txt;
         },
         
+        startLoading: function() {
+            var loader = $('<div/>').addClass('hx-datalist-loading')
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'));
+            if (this.options.footerLoadingText) {
+                loader = $('<div/>').addClass('hx-datalist-loading-parent')
+                        .append(loader)
+                        .append($('<div/>').addClass('hx-datalist-loading-text').append(this.options.footerLoadingText));
+            }
+            this.setFooterContents(loader);
+        },
+        
+        stopLoading: function() {
+            this.setFooterContents();
+        },
+        
         setFooterContents: function(contents) {
             this.$footerSection.empty();
-            this.$footerSection.append(contents);
-            this.$footerSection.show();
+            if (contents) {
+                this.$footerSection.append(contents);
+                this.$footerSection.show();
+            } else {
+                this.$footerSection.hide();
+            }
         },
         
         hideFooter: function() {

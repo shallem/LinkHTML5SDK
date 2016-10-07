@@ -902,3 +902,86 @@ li.hx-noicon-button div.ui-btn-inner {
 .hx-noicon-button div.ui-btn-text {
     width: 100%;
 }
+
+/* Datalist loader. */
+.hx-datalist-loading-parent {
+    margin-bottom: 0.2em;
+    margin-top: 0.2em;
+
+    background: rgba(252,234,187,1);
+    background: -webkit-gradient(left top, right top, color-stop(0%, rgba(252,234,187,1)), color-stop(45%, rgba(251,223,147,1)), color-stop(100%, rgba(252,205,77,1)));
+    background: -webkit-linear-gradient(left, rgba(252,234,187,1) 0%, rgba(251,223,147,1) 45%, rgba(252,205,77,1) 100%);
+    background: linear-gradient(to right, rgba(252,234,187,1) 0%, rgba(251,223,147,1) 45%, rgba(252,205,77,1) 100%);
+}
+
+.hx-datalist-loading {
+    display: inline-block;
+}
+
+.hx-datalist-loading-text {
+    margin-left: 1em;
+    display: inline-block;
+}
+
+.hx-datalist-loading-bar {
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    border-radius: 4px;
+    -webkit-animation: loading 1s ease-in-out infinite;
+    animation: loading 1s ease-in-out infinite;
+}
+
+@-webkit-keyframes loading {
+    0% {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+    
+    20% {
+        -webkit-transform: scale(1, 2.2);
+        transform: scale(1, 2.2);
+    }
+    
+    40% {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+@keyframes loading {
+    0% {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+    
+    20% {
+        -webkit-transform: scale(1, 2.2);
+        transform: scale(1, 2.2);
+    }
+    
+    40% {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+.hx-datalist-loading-bar:nth-child(1) {
+    background-color: #3498db;
+    animation-delay: 0.0s;
+}
+
+.hx-datalist-loading-bar:nth-child(2) {
+    background-color: #c0392b;
+    animation-delay: 0.09s;
+}
+
+.hx-datalist-loading-bar:nth-child(3) {
+    background-color: #f1c40f;
+    animation-delay: 0.18s;
+}
+
+.hx-datalist-loading-bar:nth-child(4) {
+    background-color: #27ae60;
+    animation-delay: 0.27s;
+}

@@ -410,6 +410,11 @@
          <defaultValue>false</defaultValue>
          <description>Enable multi select of list items.</description>
       </attribute>
-
+      <attribute>
+          <name>loadingText</name>
+          <required>false</required>
+          <type>java.lang.String</type>
+          <description>Text to display when the datalist is used as a loading delegate.</description>
+      </attribute>
    </attributes>
 </component>

@@ -164,6 +164,11 @@ public class DataListRenderer extends CoreRenderer {
             writer.write(",emptyHook: " + dlist.getEmptyHook());
         }
         
+        // Messag to display when the list is loading.
+        if (dlist.getLoadingText() != null) {
+            writer.write(",footerLoadingText: '" + dlist.getLoadingText() + "'");
+        }
+        
         // Pagination
         if (dlist.getItemsPerPage() != null) {
             writer.write(",itemsPerPage: " + dlist.getItemsPerPage());
