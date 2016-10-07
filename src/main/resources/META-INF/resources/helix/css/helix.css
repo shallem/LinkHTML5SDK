@@ -656,14 +656,15 @@ li {
 }
 
 .hx-toggleable {
-    -webkit-transition: height .4s linear;
-    transition: height .4s linear;
+    transition: transform 1s ease;
+    -webkit-transition: -webkit-transform 1s ease;
+    
     overflow: hidden;
 }
 
 .hx-toggled {
-    height: 0px !important;
-    margin: 0;
+    transform: translateY(-100px);
+    -webkit-transform: translateY(-100px);
 }
 
 /**
