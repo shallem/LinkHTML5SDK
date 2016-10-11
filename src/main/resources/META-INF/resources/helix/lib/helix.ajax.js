@@ -618,6 +618,7 @@ Helix.Ajax = {
             url: loadCommandOptions.requestOptions.postBack,
             dataType: "json",
             data: $.param(loadCommandOptions.requestOptions.params),
+            headers: loadCommandOptions.headers ? loadCommandOptions.headers : {},
             success: function(data, status, xhr) {
                 if (!data) {
                     // We go nothing back from the server. This happens when the network request is killed
