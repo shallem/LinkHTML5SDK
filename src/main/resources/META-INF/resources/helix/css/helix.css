@@ -757,11 +757,7 @@ li {
 }
 
 .ui-controlgroup .hx-toolbar.iconbutton .ui-btn-inner .ui-icon {
-  position: relative;
-  margin-top: -3px;
-  margin-bottom: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
+  margin: 0;
 }
 
 /* Match height/margin of hx-search-sort */

@@ -541,8 +541,13 @@ Helix.Ajax = {
         }
 
         // Setup loader options and show the loader.
-        Helix.Ajax.setLoaderOptions(loadCommandOptions.loadingOptions);
-        //$.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        Helix.Ajax.setLoaderOptions($.extend(
+            {}, 
+            loadCommandOptions.loadingOptions, 
+            { 
+                silent: (loadCommandOptions.silentMode !== undefined) ? loadCommandOptions.silentMode : false 
+            }
+        ));
 
         // Make sure the DB is ready. If not, wait 5 seconds.
         if (!Helix.DB.persistenceIsReady()) {
@@ -694,6 +699,8 @@ Helix.Ajax = {
                     return;
                 }
                 if (jqXHR.status === 404 || jqXHR.status === 408) {
+                    // Retry 3 times.
+                    
                     // This generally happens because of a network error.
                     Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
                     return;
