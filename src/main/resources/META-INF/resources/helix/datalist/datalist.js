@@ -3121,16 +3121,21 @@
             this.options.headerText = txt;
         },
         
-        startLoading: function() {
+        startLoading: function(text) {
             var loader = $('<div/>').addClass('hx-datalist-loading')
                     .append($('<div/>').addClass('hx-datalist-loading-bar'))
                     .append($('<div/>').addClass('hx-datalist-loading-bar'))
                     .append($('<div/>').addClass('hx-datalist-loading-bar'))
                     .append($('<div/>').addClass('hx-datalist-loading-bar'));
-            if (this.options.footerLoadingText) {
+            
+            if (!text) {
+                text = this.options.footerLoadingText;
+            }
+            
+            if (text) {
                 loader = $('<div/>').addClass('hx-datalist-loading-parent')
                         .append(loader)
-                        .append($('<div/>').addClass('hx-datalist-loading-text').append(this.options.footerLoadingText));
+                        .append($('<div/>').addClass('hx-datalist-loading-text').append(text));
             }
             this.setFooterContents(loader);
         },

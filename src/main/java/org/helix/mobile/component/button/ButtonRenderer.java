@@ -21,7 +21,11 @@ public class ButtonRenderer extends CoreRenderer {
         Button button = (Button) component;
         
         writer.startElement("a", button);
-        writer.writeAttribute("data-icon", button.getIcon(), null);
+        
+        if (button.getIcon() != null) {
+            writer.writeAttribute("data-icon", button.getIcon(), null);
+        }
+        
         writer.writeAttribute("data-role", "button", null);
         writer.writeAttribute("data-corners", "false", null);
         writer.writeAttribute("data-shadow", "false", null);

@@ -64,6 +64,11 @@
              * recommended that the namespace is non-empty.
              */
             namespace : '',
+                        
+            /**
+             * Text to display in the footer when data is loading.
+             */
+            footerLoadingText: null,
             
             /**
              * Style class for all field titles.
@@ -244,6 +249,43 @@
             }
         },
     
+        startLoading: function(text) {
+            var loader = $('<div/>').addClass('hx-datalist-loading')
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'))
+                    .append($('<div/>').addClass('hx-datalist-loading-bar'));
+            
+            if (!text) {
+                text = this.options.footerLoadingText;
+            }
+            
+            if (text) {
+                loader = $('<div/>').addClass('hx-datalist-loading-parent')
+                        .append(loader)
+                        .append($('<div/>').addClass('hx-datalist-loading-text').append(text));
+            }
+            this.setFooterContents(loader);
+        },
+        
+        stopLoading: function() {
+            this.setFooterContents();
+        },
+        
+        setFooterContents: function(contents) {
+            this.$footerSection.empty();
+            if (contents) {
+                this.$footerSection.append(contents);
+                this.$footerSection.show();
+            } else {
+                this.$footerSection.hide();
+            }
+        },
+        
+        hideFooter: function() {
+            this.$footerSection.hide();
+        },
+
         /**
          * Render the form using the form layout code. valuesMap is an optional
          * map from field names to field values.
@@ -262,9 +304,15 @@
             }
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
             this.rendered = true;
+            this.$section = $('<section/>').appendTo(this.element).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             for (var z = 0; z < this.options.items.length; ++z) {
                 this.options.items[z].parentForm = this;
             }
+            /**
+             * Append the footer.
+             */
+            this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
+                        
             $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
                 ev.data._isDirty = true;
             });
