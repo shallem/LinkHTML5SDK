@@ -691,7 +691,7 @@ Helix.Ajax = {
 		}
             },
             error: function(jqXHR, status, errorThrown) {
-                if (Helix.ignoreErrors || loadCommandOptions.loadingOptions.silent) {
+                if (Helix.ignoreErrors || loadCommandOptions.silentMode) {
                     return;
                 }
                 if (jqXHR.status < 0 || jqXHR.status >= 600) {
@@ -918,6 +918,7 @@ Helix.Ajax = {
                 type: 'POST',
                 data: params.body,
                 contentType: 'application/x-www-form-urlencoded',
+                headers: params.headers ? params.headers : {},
                 success: function(returnObj,textStatus,jqXHR) {
                     if (!returnObj) {
                         // We go nothing back from the server. This happens when the network request is killed

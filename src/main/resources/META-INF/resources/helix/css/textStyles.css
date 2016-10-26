@@ -1,0 +1,115 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Oct 26, 2016, 11:05:41 AM
+    Author     : v3devel
+*/
+
+.textCategoryLarge {
+    font-size: 16pt;
+}
+
+.textSizeSmall .textCategoryLarge {
+    font-size: 14pt;
+}
+
+.textSizeLarge .textCategoryLarge {
+    font-size: 18pt;
+}
+
+.textCategoryMedium, 
+label.ui-select.textCategoryMedium, 
+label.ui-input-text.textCategoryMedium,
+span.ui-btn-txt.textCategoryMedium,
+input.ui-input-text.textCategoryMedium,
+textarea.ui-input-text.textCategoryMedium,
+.textCategoryMedium .ui-btn .ui-btn-inner {
+    font-size: 13pt;
+}
+
+.textSizeSmall .textCategoryMedium, 
+.textSizeSmall label.ui-select.textCategoryMedium, 
+.textSizeSmall label.ui-input-text.textCategoryMedium,
+.textSizeSmall span.ui-btn-txt.textCategoryMedium,
+.textSizeSmall input.ui-input-text.textCategoryMedium,
+.textSizeSmall textarea.ui-input-text.textCategoryMedium,
+.textSizeSmall .textCategoryMedium .ui-btn .ui-btn-inner {
+    font-size: 11.5pt;
+}
+
+.textSizeLarge .textCategoryMedium, 
+.textSizeLarge label.ui-select.textCategoryMedium, 
+.textSizeLarge label.ui-input-text.textCategoryMedium,
+.textSizeLarge span.ui-btn-txt.textCategoryMedium,
+.textSizeLarge input.ui-input-text.textCategoryMedium,
+.textSizeLarge textarea.ui-input-text.textCategoryMedium,
+.textSizeLarge .textCategoryMedium .ui-btn .ui-btn-inner {
+    font-size: 14pt;
+}
+
+.textCategorySmall, 
+label.ui-select.textCategorySmall, 
+label.ui-input-text.textCategorySmall,
+span.ui-btn-txt.textCategorySmall,
+input.ui-input-text.textCategorySmall,
+textarea.ui-input-text.textCategorySmall,
+.textCategorySmall .ui-btn .ui-btn-inner {
+    font-size: 10pt;
+}
+
+.textSizeSmall .textCategorySmall, 
+.textSizeSmall label.ui-select.textCategorySmall, 
+.textSizeSmall label.ui-input-text.textCategorySmall,
+.textSizeSmall span.ui-btn-txt.textCategorySmall,
+.textSizeSmall input.ui-input-text.textCategorySmall,
+.textSizeSmall textarea.ui-input-text.textCategorySmall,
+.textSizeSmall .textCategorySmall .ui-btn .ui-btn-inner {
+    font-size: 9pt;
+}
+
+.textSizeLarge .textCategorySmall, 
+.textSizeLarge label.ui-select.textCategorySmall, 
+.textSizeLarge label.ui-input-text.textCategorySmall,
+.textSizeLarge .ui-btn-inner .ui-btn-txt.textCategorySmall,
+.textSizeLarge input.ui-input-text.textCategorySmall,
+.textSizeLarge textarea.ui-input-text.textCategorySmall,
+.textSizeLarge .textCategorySmall .ui-btn .ui-btn-inner {
+    font-size: 11pt;
+}
+
+.textCategoryXSmall, 
+label.ui-select.textCategoryXSmall, 
+label.ui-input-text.textCategoryXSmall,
+span.ui-btn-txt.textCategoryXSmall,
+input.ui-input-text.textCategoryXSmall,
+textarea.ui-input-text.textCategoryXSmall,
+.textCategoryXSmall .ui-btn .ui-btn-inner {
+    font-size: 9pt;
+}
+
+.textSizeSmall .textCategoryXSmall, 
+.textSizeSmall label.ui-select.textCategoryXSmall, 
+.textSizeSmall label.ui-input-text.textCategoryXSmall,
+.textSizeSmall span.ui-btn-txt.textCategoryXSmall,
+.textSizeSmall input.ui-input-text.textCategoryXSmall,
+.textSizeSmall textarea.ui-input-text.textCategoryXSmall,
+.textSizeSmall .textCategoryXSmall .ui-btn .ui-btn-inner {
+    font-size: 8pt;
+}
+
+.textSizeLarge .textCategoryXSmall, 
+.textSizeLarge label.ui-select.textCategoryXSmall, 
+.textSizeLarge label.ui-input-text.textCategoryXSmall,
+.textSizeLarge .ui-btn-inner .ui-btn-txt.textCategoryXSmall,
+.textSizeLarge input.ui-input-text.textCategoryXSmall,
+.textSizeLarge textarea.ui-input-text.textCategoryXSmall,
+.textSizeLarge .textCategoryXSmall .ui-btn .ui-btn-inner {
+    font-size: 10pt;
+}
+
+.textBold {
+    font-weight: bold;
+}
