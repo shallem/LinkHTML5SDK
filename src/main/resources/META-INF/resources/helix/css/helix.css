@@ -896,7 +896,8 @@ li.hx-noicon-button div.ui-btn-inner {
 }
 
 .hx-noicon-button div.ui-btn-text {
-    width: 100%;
+    margin-left: 6px;
+    margin-right: 6px;
 }
 
 /* Datalist loader. */

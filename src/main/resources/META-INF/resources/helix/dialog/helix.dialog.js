@@ -133,7 +133,7 @@
         } else {
             if (this.options.hasForm) {
                 this.$mainDiv.popup({
-                    theme: 'a',
+                    theme: 'c',
                     corners: true
                 });
                 this.$mainDiv.append($('<div/>').attr({
@@ -141,7 +141,7 @@
                 }));
             } else {
                 this.$mainDiv.popup({
-                    theme: 'a',
+                    theme: 'c',
                     overlayTheme: 'c',
                     corners: true
                 });
@@ -162,8 +162,11 @@
             // Apply classes manually because jQM enhancement of headers/footers only happens
             // on page create
             $mainDiv.append($('<div/>').attr({
-                'class' : (dialog.titleStyleClass ? dialog.titleStyleClass : '') + ' ui-corner-top ui-header ui-bar-a'
+             'data-role' : 'header',
+             'data-theme' : 'd',
+             'class' : (dialog.titleStyleClass ? dialog.titleStyleClass : '') + ' ui-corner-top ui-header ui-bar-a'
             }).append($('<h1/>').attr({
+                'style' : 'margin-left: .5em', // remove icon empty margin
                 'class' : 'ui-title'
             }).append(dialog.options.title)));            
         }
@@ -186,9 +189,10 @@
                 dialog.options.bodyContent) {
             $contentDiv.attr('data-role', 'content');
             $contentDiv.attr('data-theme', 'd');
+            $contentDiv.attr('style', 'margin: .5em .5em .5em .5em');
         
             if (dialog.options.bodyHeader) {
-                $contentDiv.append($('<h3/>').attr({
+                $contentDiv.append($('<p/>').attr({
                     'class' : 'ui-title'
                 }).append(dialog.options.bodyHeader));
             }
@@ -223,7 +227,7 @@
             'data-inline' : 'true',
             'data-theme' : 'c',
             'data-corners' : 'false',
-            'data-shadow' : 'true',
+            'style' : 'width: 90px',
             'id' : dialog.name + '-cancel'
         }).append(dialog.options.dismissTitle)
             .on(Helix.clickEvent, function(ev) {
@@ -244,7 +248,7 @@
             'data-theme' : 'b',
             'data-transition' : 'flow',
             'data-corners' : 'false',
-            'data-shadow' : 'true',
+            'style' : 'width: 90px',
             'id' : dialog.name + '-confirm'
         }).append(dialog.options.confirmTitle)
             .on(Helix.clickEvent, function(ev) {

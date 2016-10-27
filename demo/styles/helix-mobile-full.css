@@ -2103,6 +2103,7 @@ label.ui-submit { font-size: 16px; line-height: 1.4; font-weight: normal; margin
 .ui-popup.ui-content,
 .ui-popup .ui-content {
 	overflow: visible;
+        margin: .5em .5em .5em .5em;
 }
 .ui-popup > p,
 .ui-popup > h1,

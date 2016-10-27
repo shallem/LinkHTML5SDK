@@ -2110,6 +2110,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-inline' : 'true',
         'data-theme' : 'c',
         'data-corners' : 'false',
+        'style' : 'width: 90px',
         'id' : popupId + "-cancel"
     });
     if (options.dismissText) {
@@ -2138,6 +2139,7 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-inline' : 'true',
         'data-theme' : 'b',
         'data-corners': 'false',
+        'style' : 'width: 90px',
         'id' : popupId + "-confirm"
     });
     if (options.confirmText) {
@@ -2163,14 +2165,18 @@ Helix.Layout.createConfirmDialog = function(options) {
     var titleStyleClass = options.titleStyleClass ? options.titleStyleClass : 'dialog-title';
     var header = $("<div/>").attr({
         'data-role' : 'header',
+        'data-theme' : 'd',
         'class' : titleStyleClass
-    }).append($('<h1/>').append(options.title));
-    
-    
+    }).append($('<h1/>').attr({
+               'style' : 'margin-left: .5em', // remove icon empty margin
+               'class' : 'ui-title'
+            }).append(options.title));
+        
     $(popup)
         .append(header)
         .append($('<div/>').attr({
             'data-role' : 'content',
+            'style' : 'margin: .5em .5em .5em .5em',
             'data-theme' : 'd',
             'class' : 'ui-corner-bottom ui-content'
         })
