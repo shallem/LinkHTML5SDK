@@ -889,6 +889,9 @@ a.hx-noicon-button div.ui-btn-inner {
     align-items: center;
     min-height: 32px;
     padding: 0;
+    margin-left: 1em;
+    margin-right: 1em;
+    min-width: 64px;
 }
 
 li.hx-noicon-button div.ui-btn-inner {
@@ -982,4 +985,10 @@ li.hx-noicon-button div.ui-btn-inner {
 .hx-datalist-loading-bar:nth-child(4) {
     background-color: #fceabb;
     animation-delay: 0.27s;
+}
+
+
+/* On dialogs, left justify the title */
+.ui-header.dialog-title .ui-title {
+    margin-left: 1em;
 }

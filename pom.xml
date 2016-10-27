@@ -241,6 +241,9 @@
 		    <!-- Form layout styles. -->
 		    <include>form/formStyles.css</include>
 
+		    <!-- Text styles. -->
+		    <include>css/textStyles.css</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>
