@@ -1616,6 +1616,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.viewDOM = $viewFieldContainer = $('<div />')
         .css("clear", "both")
         .css('-webkit-user-select', 'none')
+        .css('border-width', '0px 0px 1px 0px')
+        .css('padding', '3px 0px 3px 0px')
         .attr('id', containerID + "_view")
         .addClass('hx-form-container')
         .appendTo(parentDiv);
