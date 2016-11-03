@@ -251,3 +251,13 @@ textarea.ui-input-text {
     .hx-form-container .ui-field-contain .ui-select { width: initial; }
     .hx-form-container .ui-field-contain .ui-controlgroup-label { width: initial; }
 }
+
+
+.hx-aligned-text-container {
+    display: table;
+}
+
+.hx-align-middle {
+    display: table-cell;
+    vertical-align: middle;
+}
