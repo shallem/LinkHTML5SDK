@@ -884,12 +884,12 @@ a.ui-btn:not(.iconbutton) {
 
 /* Used by the JQM buttonMarkup changes we have made to align button text in the button container when
    there is no icon. */
-.hx-noicon-button {
+.hx-noicon-button:not(.hx-btn-inlabel) {
     min-height: 32px;
     padding: 0;
 }
 
-a.hx-noicon-button div.ui-btn-inner {
+a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     display: flex;
     align-items: center;
     min-height: 32px;

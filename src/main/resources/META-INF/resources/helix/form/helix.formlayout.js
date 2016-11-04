@@ -623,6 +623,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         
         if (formElem.fieldTitleType === 'button') {
             $(formElem.fieldTitle).button();
+            $(formElem.fieldTitle).addClass('hx-btn-inlabel');
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function() {
