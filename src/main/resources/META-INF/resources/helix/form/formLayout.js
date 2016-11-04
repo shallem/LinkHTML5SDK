@@ -273,17 +273,17 @@
         },
         
         setFooterContents: function(contents) {
-            this.$footerSection.empty();
+            /*this.$footerSection.empty();
             if (contents) {
                 this.$footerSection.append(contents);
                 this.$footerSection.show();
             } else {
                 this.$footerSection.hide();
-            }
+            }*/
         },
         
         hideFooter: function() {
-            this.$footerSection.hide();
+            //this.$footerSection.hide();
         },
 
         /**
@@ -302,16 +302,16 @@
             } else {
                 this.__copyValues(this.options.items, valuesMap);
             }
+            //this.$section = $('<section/>').appendTo(this.element).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
             this.rendered = true;
-            this.$section = $('<section/>').appendTo(this.element).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             for (var z = 0; z < this.options.items.length; ++z) {
                 this.options.items[z].parentForm = this;
             }
             /**
              * Append the footer.
              */
-            this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
+            //this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
                         
             $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
                 ev.data._isDirty = true;

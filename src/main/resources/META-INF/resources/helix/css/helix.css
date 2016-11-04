@@ -288,6 +288,13 @@
 .hx-horizontal-scroller-nozoom {
     overflow-x: scroll;
 }
+
+.hx-all-scroll {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Causing problems on iOS 6+. We are not supporting iOS 5. -webkit-overflow-scrolling: touch; */
 
 /**/
