@@ -302,6 +302,7 @@
             } else {
                 this.__copyValues(this.options.items, valuesMap);
             }
+            $(this.element).empty();
             this.$section = $('<section/>').appendTo(this.element);
             Helix.Utils.layoutForm(this.$section, this.options, this.page, this.layoutMini);
             this.rendered = true;
