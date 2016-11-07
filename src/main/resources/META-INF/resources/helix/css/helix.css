@@ -910,7 +910,8 @@ li.hx-noicon-button div.ui-btn-inner {
     width: 100%;
 }
 
-.hx-noicon-button div.ui-btn-text {
+.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-text {
+    width: 100%;
 }
 
 /* Datalist loader. */
