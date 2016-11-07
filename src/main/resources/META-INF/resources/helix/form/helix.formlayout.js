@@ -1394,6 +1394,54 @@ function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, u
     }
 }
 
+function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
+    var subPanelObj = formElem;
+    
+    // The panelMode field determines if the subPanel is in a fixed mode (edit or view), or it is the same/reverse
+    // of the main form.
+    if (!subPanelObj.panelMode) {
+        // Render in the same mode as the enclosing form.
+        subPanelObj.modes = formLayout.modes;
+        subPanelObj.currentMode = formLayout.currentMode;
+    } else if (subPanelObj.panelMode === 'reverse') {
+        // Opposite of the parent.
+        subPanelObj.currentMode = (formLayout.currentMode === 'edit' ? 'view' : 'edit');
+        subPanelObj.modes = subPanelObj.panelMode;
+    } else {
+        // Fixed value.
+        subPanelObj.currentMode = subPanelObj.panelMode;
+        subPanelObj.modes = subPanelObj.panelMode;
+    }
+    subPanelObj.titleStyleClass = formLayout.titleStyleClass;
+    subPanelObj.textStyleClass = formLayout.textStyleClass;
+    
+    ++Helix.Utils.nSubPanels;
+    var subPanelID = formElem.id;
+    if (!subPanelID) {
+        subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
+    }
+    var subPanelDiv = $('<div />').attr({
+        'id' : subPanelID,
+        'class' : 'hx-flex-horizontal'
+    }).appendTo($fieldContainer);
+
+    // Layout the elements in the sub-panel add a separator between elements
+    // but not between items in each element.
+    Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+    
+    // Determine if the sub-panel is visible based on the 'mode' field.
+    if (subPanelObj.mode && subPanelObj.mode !== 'all') {
+        if (subPanelObj.mode !== formLayout.currentMode) {
+            // Not visible.
+            $(subPanelDiv).hide();
+            return;
+        }
+    }
+    $(subPanelDiv).show();
+    
+    subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
+}
+
 function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     var subPanelObj = formElem;
     
@@ -1551,7 +1599,8 @@ Helix.Utils.noTitleLayouts = {
     "button" : true,
     "controlset" : true,
     "radio" : true,
-    "subPanel" : true
+    "subPanel" : true,
+    "horizontalBlock": true
 };
 
 Helix.Utils.fieldContainers = {
@@ -1882,6 +1931,19 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         $viewFieldContainer = $editFieldContainer = null;
         
         __appendSubPanel.call(formElem, 0, formLayout, formElem, parentDiv, useMiniLayout, page, parentDiv);
+    } else if (formElem.type === 'horizontalBlock') {
+        // horizontalBlocks should be attached directly to the parent div, not to a surrounding
+        // container. Otherwise the full screen styling won't work with subpanels because
+        // the margin around the collapsible container is masked by the surrounding div.
+        if ($viewFieldContainer) {
+            $viewFieldContainer.remove();
+        }
+        if ($editFieldContainer) {
+            $editFieldContainer.remove();
+        }
+        $viewFieldContainer = $editFieldContainer = null;
+        
+        __appendHorizontalBlockPanel.call(formElem, 0, formLayout, formElem, parentDiv, useMiniLayout, page, parentDiv);
     } else {
         separateElements = false;
     }
