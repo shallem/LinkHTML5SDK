@@ -6430,15 +6430,10 @@ $.widget( "mobile.listview", $.mobile.widget, $.extend( {
 							})
 							.find( ".ui-btn-inner" )
 								.append(
-                                                                // SAH: change shadow, corners to false
-									$( document.createElement( "span" ) ).buttonMarkup({
-										shadow: false,
-										corners: false,
-										theme: splittheme,
-										iconpos: "notext",
-										// link icon overrides list item icon overrides ul element overrides options
-										icon: linkIcon || icon || listspliticon || o.splitIcon
-									})
+                                                                // SAH: simplify split link rendering to make it easier to layout.
+									$( document.createElement( "span" ) ).attr({
+                                                                            'class': 'ui-icon ui-icon-' + (linkIcon || icon || listspliticon || o.splitIcon)
+                                                                        })
 								);
 					}
 				} else if ( isDivider ) {

@@ -296,6 +296,13 @@
 .hx-horizontal-scroller-nozoom {
     overflow-x: scroll;
 }
+
+.hx-all-scroll {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Causing problems on iOS 6+. We are not supporting iOS 5. -webkit-overflow-scrolling: touch; */
 
 /**/
@@ -392,6 +399,13 @@ a {
 .hx-main-content {
     height: 100%;
     width: 100%;
+}
+
+.hx-flex-horizontal {
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: row;
+    -webkit-flex-flow: row;
 }
 
 .hx-flex-vertical {
@@ -886,12 +900,12 @@ a.ui-btn:not(.iconbutton) {
 
 /* Used by the JQM buttonMarkup changes we have made to align button text in the button container when
    there is no icon. */
-.hx-noicon-button {
+.hx-noicon-button:not(.hx-btn-inlabel) {
     min-height: 32px;
     padding: 0;
 }
 
-a.hx-noicon-button div.ui-btn-inner {
+a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     display: flex;
     align-items: center;
     min-height: 32px;
@@ -914,11 +928,16 @@ li.hx-noicon-button div.ui-btn-inner {
     margin-bottom: 0.2em;
     margin-top: 0.2em;
 
-    background: rgba(210,255,82,1);
+    background: rgba(252,234,187,1);
+    background: -webkit-gradient(left top, right top, color-stop(0%, rgba(252,234,187,1)), color-stop(45%, rgba(251,223,147,1)), color-stop(100%, rgba(252,205,77,1)));
+    background: -webkit-linear-gradient(left, rgba(252,234,187,1) 0%, rgba(251,223,147,1) 45%, rgba(252,205,77,1) 100%);
+    background: linear-gradient(to right, rgba(252,234,187,1) 0%, rgba(251,223,147,1) 45%, rgba(252,205,77,1) 100%);
+    
+    /*background: rgba(210,255,82,1);
     background: -moz-linear-gradient(left, rgba(210,255,82,1) 0%, rgba(145,232,66,1) 43%, rgba(145,232,66,1) 100%);
     background: -webkit-gradient(left top, right top, color-stop(0%, rgba(210,255,82,1)), color-stop(43%, rgba(145,232,66,1)), color-stop(100%, rgba(145,232,66,1)));
     background: -webkit-linear-gradient(left, rgba(210,255,82,1) 0%, rgba(145,232,66,1) 43%, rgba(145,232,66,1) 100%);
-    background: linear-gradient(to right, rgba(210,255,82,1) 0%, rgba(145,232,66,1) 43%, rgba(145,232,66,1) 100%);
+    background: linear-gradient(to right, rgba(210,255,82,1) 0%, rgba(145,232,66,1) 43%, rgba(145,232,66,1) 100%);*/
 }
 
 .hx-datalist-loading {
@@ -980,21 +999,34 @@ li.hx-noicon-button div.ui-btn-inner {
 
 .hx-datalist-loading-bar:nth-child(2) {
     background-color: #c0392b;
-    animation-delay: 0.09s;
+    animation-delay: 0.15s;
 }
 
 .hx-datalist-loading-bar:nth-child(3) {
     background-color: #f1c40f;
-    animation-delay: 0.18s;
+    animation-delay: 0.30s;
 }
 
 .hx-datalist-loading-bar:nth-child(4) {
-    background-color: #fceabb;
-    animation-delay: 0.27s;
+    background-color: #228B22; //#fceabb;
+    animation-delay: 0.45s;
 }
 
 
 /* On dialogs, left justify the title */
 .ui-header.dialog-title .ui-title {
     margin-left: 1em;
+}
+
+/* Fix icon positioning for split links. */
+a.ui-li-link-alt.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
+    margin: 0;
+}
+
+.ui-li-link-alt .ui-btn-inner span.ui-icon {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 18px;
+    top: 5px;
 }

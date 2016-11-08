@@ -302,9 +302,10 @@
             } else {
                 this.__copyValues(this.options.items, valuesMap);
             }
-            Helix.Utils.layoutForm(this.element, this.options, this.page, this.layoutMini);
+            $(this.element).empty();
+            this.$section = $('<section/>').appendTo(this.element);
+            Helix.Utils.layoutForm(this.$section, this.options, this.page, this.layoutMini);
             this.rendered = true;
-            this.$section = $('<section/>').appendTo(this.element).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
             for (var z = 0; z < this.options.items.length; ++z) {
                 this.options.items[z].parentForm = this;
             }
@@ -708,7 +709,8 @@
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                if (nxtItem.type === "subPanel") {
+                if (nxtItem.type === "subPanel" ||
+                        nxtItem.type === 'horizontalBlock') {
                     if (!this.__refreshOneValue(mode,nxtItem,valuesMap)) {
                         for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                             var subitem = nxtItem.items[subidx];
