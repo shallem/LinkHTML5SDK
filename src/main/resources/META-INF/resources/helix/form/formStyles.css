@@ -93,6 +93,7 @@
     padding-right: 1em;
     padding-bottom: 0;
     padding-left: 1em;
+    font-weight: bold;
 }
 
 .hx-form-container .ui-field-contain label.ui-input-text {
@@ -102,6 +103,7 @@
     margin-right: 0;
     width: auto;
     line-height: 1;
+    font-weight: bold;
 }
 
 .hx-form-container .ui-field-contain label.ui-input-text .ui-btn {

@@ -1149,14 +1149,14 @@
             _self._sortContainer = $('<div/>').attr({
                 'data-role' : 'popup',
                 'id' : Helix.Utils.getUniqueID(),
-                'data-theme' : 'a',
+                'data-theme' : 'd',
                 'data-position-to' : 'origin',
                 'data-history': 'false'
             }).appendTo(_self.$wrapper);
             var sortsList = $('<ul />').attr({ 
                 'data-role' : 'listview',
                 'data-inset' : 'true',
-                'data-theme' : 'b'
+                'data-theme' : 'd'
             }).appendTo(_self._sortContainer);
             var sorts = JSON.parse(_self._currentSortsJSON);
             var currentSortItem = null;
@@ -1404,14 +1404,14 @@
             _self._globalFilterContainer = $('<div/>').attr({
                 'data-role' : 'popup',
                 'id' : Helix.Utils.getUniqueID(),
-                'data-theme' : 'a',
+                'data-theme' : 'd',
                 'data-position-to' : 'origin',
                 'data-history': 'false'
             }).appendTo(_self.$wrapper);
             var filtersList = $('<ul />').attr({ 
                 'data-role' : 'listview',
                 'data-inset' : 'true',
-                'data-theme' : 'b'
+                'data-theme' : 'd'
             }).appendTo(_self._globalFilterContainer);
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
@@ -1446,8 +1446,8 @@
                                         'data-field' : fldName,
                                         'data-corners' : "false",
                                         'data-native-menu': "false",
-                                        'data-theme': "a",
-                                        'data-overlay-theme' : "a"
+                                        'data-theme': "d",
+                                        'data-overlay-theme' : "d"
                                     })
                                     .appendTo(filtersList);
                     for (var i = 0; i < filterObj.values.length; ++i) {
@@ -1490,7 +1490,7 @@
             $('<li />').append($('<a />').attr({ 
                 'href' : 'javascript:void(0)',
                 'data-field': '__clear',
-                'data-theme': 'a',
+                'data-theme': 'd',
                 'data-mini' : 'true'
             }).append("Clear All"))
               .appendTo(filtersList)
@@ -2167,7 +2167,7 @@
                             idx++;
                         } else {
                             li = groupLIs[idx] = $('<li/>')
-                                    .attr('data-theme', 'c')
+                                    .attr('data-theme', 'd')
                                     .append($moreLink)
                                     .appendTo(_self.$parent);
                             idx++;
@@ -2599,7 +2599,7 @@
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
                     'class' : _self.options.rowStyleClass,
-                    'data-theme' : 'c'
+                    'data-theme' : 'd'
                 });
             }
             

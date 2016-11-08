@@ -231,7 +231,15 @@
     border-bottom-width: 0; 
 }
 
-.hx-listview li:not(.ui-btn-active) {
+.hx-listview li[data-role="list-divider"] {
+    background-color: #e0e0e0;
+}
+
+.hx-listview li .ui-btn-active {
+    background-color: rgba(44, 92, 255, 0.8);
+}
+
+.hx-listview li .ui-li.ui-btn {
     background-color: white;
 }
 
@@ -370,7 +378,7 @@ a {
 
 /* Highlight the current sort. */
 .hx-current-sort a.ui-link-inherit {
-    color: orange !important;
+    color: blue !important;
 }
 
 .hx-no-hscroll {
@@ -391,6 +399,7 @@ a {
     display: -webkit-flex;
     flex-flow: column;
     -webkit-flex-flow: column;
+    background-color: white;
 }
 
 .hx-flex-fill {
@@ -897,6 +906,7 @@ li.hx-noicon-button div.ui-btn-inner {
 }
 
 .hx-noicon-button div.ui-btn-text {
+   color: darkblue;
 }
 
 /* Datalist loader. */
