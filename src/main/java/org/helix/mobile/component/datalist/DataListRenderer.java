@@ -290,6 +290,11 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getHeaderText() != null) {
             writer.write(",headerText: '" + dlist.getHeaderText() + "'");
         }
+                
+        // Footer.
+        if (dlist.getFooterLoadingText() != null) {
+            writer.write(",footerLoadingText: '" + dlist.getFooterLoadingText() + "'");
+        }
         
         // Auto dividers.
         writer.write(",autodividers: '" + Boolean.toString(dlist.isAutodividers()) + "'");

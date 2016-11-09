@@ -333,6 +333,12 @@
             <description>Specify text to appear in a divider at the top of the list.</description>
         </attribute>
         <attribute>
+            <name>footerLoadingText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Specify text to appear in the footer loading animation.</description>
+        </attribute>
+        <attribute>
             <name>sortAscendingButton</name>
             <required>false</required>
             <type>java.lang.String</type>

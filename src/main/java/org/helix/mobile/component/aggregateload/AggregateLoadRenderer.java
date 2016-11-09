@@ -20,9 +20,8 @@ import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.helix.mobile.component.loadcommand.*;
+import org.helix.mobile.component.loadcommand.LoadCommandRenderer;
 import org.helix.mobile.model.AggregateObject;
-import org.helix.mobile.model.JSONSerializer;
 import org.helix.mobile.model.ParamObject;
 
 public class AggregateLoadRenderer extends LoadCommandRenderer {

@@ -1008,7 +1008,7 @@ li.hx-noicon-button div.ui-btn-inner {
 }
 
 .hx-datalist-loading-bar:nth-child(4) {
-    background-color: #228B22; //#fceabb;
+    background-color: #228B22; /*#fceabb;*/
     animation-delay: 0.45s;
 }
 
