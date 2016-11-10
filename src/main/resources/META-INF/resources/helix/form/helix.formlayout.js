@@ -1226,7 +1226,7 @@ function __makeIFrameMarkup(formElem) {
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (formElem.height === 'full') {
-        $fieldContainer.addClass('hx-layout-full-height');
+        $fieldContainer.addClass('hx-flex-fill');
     }
     if (formElem.computedStyle) {
         var combinedStyle = $fieldContainer.attr('style') + ' ' + formElem.computedStyle;
@@ -1290,7 +1290,7 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             $fieldContainer.addClass('hx-full-width');
         }            
     }
-    if (formElem.height) {
+    if (formElem.height && formElem.height !== 'full') {
         $fieldContainer.height(formElem.height);
         $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
     }
@@ -1317,13 +1317,17 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         )
     );
     editorDiv.editor({
-        'tabIndex' : formLayout.__tabIndex++
+        'tabIndex' : formLayout.__tabIndex++,
+        'parentElement' : $fieldContainer
     });
     $(editorDiv).editor('update', formElem.value);   
 }
 
 function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
     if (mode) {
+        if (formElem.height === 'full') {
+            $fieldContainer.addClass('hx-flex-fill');
+        }
         __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     } else {
         var isFullWidth = false;

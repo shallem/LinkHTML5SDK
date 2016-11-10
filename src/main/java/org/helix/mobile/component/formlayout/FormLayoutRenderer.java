@@ -34,9 +34,6 @@ public class FormLayoutRenderer extends CoreRenderer {
         if (layout.getWidth() != null) {
             writer.writeAttribute("style", "width: " + layout.getWidth() + ";", "width");
         }
-        if (layout.isFullScreen()) {
-            writer.writeAttribute("class", "hx-layout-full-height", "class");
-        }
         
         writer.endElement("div");
         
@@ -91,6 +88,7 @@ public class FormLayoutRenderer extends CoreRenderer {
             writer.write(", 'textStyleClass' : '" + layout.getTextStyleClass() + "'");
         }
         
+        writer.write(",fullScreen : " + Boolean.toString(layout.isFullScreen()));
         writer.write(",modes : '" + layout.getModes() + "'");
         writer.write(",currentMode: '" + layout.getCurrentMode() + "'");
         writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));

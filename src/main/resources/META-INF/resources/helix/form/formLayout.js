@@ -50,6 +50,11 @@
             separateElements: false,
             
             /**
+             * True if this layout should extend to the full screen height using a flex box.
+             */
+            fullScreen: false,
+            
+            /**
              * Object mapping device types to a constant, true or false, which indicates
              * if the form layout should be in "mini" mode for that device type. Supported
              * device types are "tablet", "phablet", and "phone". The default is { "phone" : true }.
@@ -304,6 +309,12 @@
             }
             $(this.element).empty();
             this.$section = $('<section/>').appendTo(this.element);
+            if (this.options.fullScreen) {
+                $(this.element).height('100%');
+                this.$section.height('100%');
+                this.$section.addClass('hx-flex-vertical');
+            }
+            
             Helix.Utils.layoutForm(this.$section, this.options, this.page, this.layoutMini);
             this.rendered = true;
             for (var z = 0; z < this.options.items.length; ++z) {

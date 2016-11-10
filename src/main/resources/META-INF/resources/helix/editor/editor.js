@@ -19,7 +19,8 @@
             font:        // font names in the font popup
             "Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
             "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
-            tabIndex: -1
+            tabIndex: -1,
+            parentElement: null
         },
 
         _create: function() {
@@ -41,6 +42,13 @@
                     .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width hx-flex-vertical')
                     .css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
                     .appendTo($parent);
+
+            if (this.options.parentElement) {
+                var evName = 'hxLayoutDone.' + editor.name;
+                $(this.page).off(evName).on(evName, this, function(ev) {
+                    $(ev.data.$main).height($(ev.data.options.parentElement).height());
+                });
+            }
 
             // Add the first group to the toolbar
             var $toolbar = editor.$toolbar = $(this.HEADER_TAG)
