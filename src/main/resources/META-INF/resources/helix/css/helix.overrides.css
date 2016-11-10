@@ -220,3 +220,13 @@
 	background-image:         linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/);
 	font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
 }
+
+/* Get rid of the grey background when a button was selected, but then you move on to another selection ...*/
+.ui-btn-down-d, .ui-btn-hover-d {
+    background: #fff;
+}
+
+/* Get rid of the white text when a button is selected. */
+.ui-btn-active a.ui-link-inherit {
+    color: #333;
+}

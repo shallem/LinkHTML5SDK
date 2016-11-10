@@ -923,6 +923,12 @@ li.hx-noicon-button div.ui-btn-inner {
    color: darkblue;
 }
 
+/* Make sure button text container fills the surrounding ui-btn-inner. This allows us to center the
+   button text. */
+div.ui-btn-text { 
+    width: 100%; 
+}
+
 /* Datalist loader. */
 .hx-datalist-loading-parent {
     margin-bottom: 0.2em;
