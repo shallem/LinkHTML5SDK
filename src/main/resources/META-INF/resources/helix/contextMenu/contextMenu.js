@@ -56,15 +56,15 @@
             name: null,
             
             /**
-             * Optional theme. Used to provide a color swatch for the menu. Defaults to jquery mobile theme 'b'.
+             * Optional theme. Used to provide a color swatch for the menu. Defaults to jquery mobile theme 'd'.
              */
-            theme: 'b',
+            theme: 'd',
             
             /**
              * Optional divider theme. Used to provide a color swatch for dividers in the menu. Default to jquery mobile
-             * theme 'a'.
+             * theme 'd'.
              */
-            dividerTheme: 'a'
+            dividerTheme: 'd'
         },
 
         _create: function() {
