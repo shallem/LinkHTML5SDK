@@ -212,7 +212,7 @@ Helix.Layout = {
         return contentHeight;
     },
     
-    layoutPageFullScreen: function(page) {
+    layoutPageFullScreen: function(page, oncomplete) {
         var contentHeight = Helix.Layout.resizePages(page);
         setTimeout(function() {
             var $content = page.find('.hx-main-content');
@@ -220,6 +220,10 @@ Helix.Layout = {
             
             // Overlays should always be the height of the underlying window.
             page.find('.hx-overlay-full-height').height($(window).height());
+        
+            if (oncomplete) {
+                oncomplete();
+            }
         }, 0);
     },
     
@@ -324,12 +328,12 @@ Helix.Layout.layoutPage = function(page, noTrigger) {
     }
     
     /* Reset the full screen layout of the page. */
-    Helix.Layout.layoutPageFullScreen(page);
-    
-    /* Trigger an event indicating that the page layout is done. */
-    if (!noTrigger) {
-        $(page).trigger("hxLayoutDone");
-    }
+    Helix.Layout.layoutPageFullScreen(page, function() {
+        /* Trigger an event indicating that the page layout is done. */
+        if (!noTrigger) {
+            $(page).trigger("hxLayoutDone");
+        }
+    });
 };
 
 /**
