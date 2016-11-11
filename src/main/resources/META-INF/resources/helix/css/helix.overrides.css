@@ -222,8 +222,13 @@
 }
 
 /* Get rid of the grey background when a button was selected, but then you move on to another selection ...*/
-.ui-btn-down-d, .ui-btn-hover-d {
-    background: #fff;
+.ui-btn-down-d {
+    background-color: rgba(44,92,255,0.8);
+}
+
+/* Background color of selected item in context menu */
+.ui-listview-inset .ui-li {
+    background: #fff; 
 }
 
 /* Get rid of the white text when a button is selected. */
