@@ -923,13 +923,17 @@ Helix.Ajax = {
                     if (!returnObj) {
                         // We go nothing back from the server. This happens when the network request is killed
                         // by the client (e.g., because the app was put to sleep).
-                        return;
+                        this.isCancelled = true;
                     }
                     
                     if (this.isCancelled) {
                         return;
                     }
                     
+                    // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
+                    // with a new AJAX request triggered in a callback.
+                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
+
                     var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
                     if (retCode === 0) {
                         if (params.success && !params.silentMode) {
@@ -957,6 +961,11 @@ Helix.Ajax = {
                     if (this.isCancelled) {
                         return;
                     }
+                    
+                    // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
+                    // with a new AJAX request triggered in a callback.
+                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
+                    
                     if (Helix.ignoreErrors) {
                         return;
                     }
@@ -983,7 +992,6 @@ Helix.Ajax = {
                     if (callbacks.complete) {
                         callbacks.complete.call(window);
                     }
-                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
                 },
                 dataType: 'json'
             });
