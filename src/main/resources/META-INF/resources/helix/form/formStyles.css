@@ -85,7 +85,7 @@
     flex-direction: row;
     overflow: hidden;
     border: none;
-    margin: 0.4em 0;
+    margin: 0 .5em .3em;
 }
 
 .hx-form-container .ui-field-contain label.ui-select {
