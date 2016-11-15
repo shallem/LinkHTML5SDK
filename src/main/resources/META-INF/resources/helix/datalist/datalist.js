@@ -3208,7 +3208,11 @@
         },
         
         hideList: function() {
-            this.$listWrapper.hide();
+            this.$wrapper.hide();
+        },
+        
+        showList: function() {
+            this.$wrapper.show();
         },
         
         /**
@@ -3320,5 +3324,6 @@
                 _self.$parent.listview( "refresh" );         
             }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
         }
+        
     });
 })(jQuery);
