@@ -496,7 +496,8 @@ function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayou
     if (formElem.fieldTitle) {
         var selectContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
-            'style' : formElem.computedStyle
+            'style' : formElem.computedStyle,
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
         })
         .append($('<label />').attr({
             'for' : inputID,

@@ -1497,9 +1497,13 @@ function initHelixDB() {
                     for (var i = 0; i < obj.length; ++i) {
                         var nxtOpaque = opaque;
                         if (opaque && opaque.params && $.isArray(opaque.params)) {
-                            nxtOpaque = $.extend({}, opaque, { params: opaque.params[i] });
+                            nxtOpaque = $.extend({}, opaque, { params: opaque.params[i], isDone: (i === (obj.length - 1)) ? true : false, callback: callback });
                         }    
-                        Helix.DB._synchronizeObject(obj[i], objSchema, callback, nxtOpaque, overrides);
+                        Helix.DB._synchronizeObject(obj[i], objSchema, function(finalObj, o) {
+                            if (o.isDone) {
+                                o.callback(finalObj, o);
+                            }
+                        }, nxtOpaque, overrides);
                     }
                 }
             } else if (obj.__hx_type === 1001) {
