@@ -499,7 +499,6 @@ function initPersistence(persistence) {
                     // getterCallback
                     return persistence.canonical(this)._data[f];
                 });
-                this._data[field] = defaultValue(meta.fields[field]);
             };
 
             function Entity (session, obj, noEvents) {

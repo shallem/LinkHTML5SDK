@@ -1362,6 +1362,7 @@ function initHelixDB() {
             objSchema.__indexingDirty = true;
             persistentObj.__hx_schema = objSchema;
             persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
+            persistentObj.__hx_indexed = false;
             
             /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
              * make a bunch of objects dirty and flush them over and over again as

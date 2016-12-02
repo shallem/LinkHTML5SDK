@@ -1619,6 +1619,14 @@
             var groupsToRender = [];
             if (_self.options.grouped) {
                 LIs = $(_self.$parent).find('li[data-role="list-divider"]');
+                // Remove any list rows that appear before the first divider, or the divider list is empty, remove the entire list.
+                // In a grouped list, we only rewrite the divider titles and the rows that lie in between dividers. This scenario can
+                // happen when we are switching a single list between grouped and ungrouped rendering.
+                if (LIs.length === 0) {
+                    $(_self.$parent).find('li').remove();
+                } else {
+                    $(LIs[0]).prevAll().remove();
+                }
             } else {
                 // Add not selector to make sure we handle auto dividers properly.
                 LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');

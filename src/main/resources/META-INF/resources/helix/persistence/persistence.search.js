@@ -272,7 +272,7 @@ persistence.search.config = function(persistence, dialect, options) {
             if (persistence.search.options.indexAsync) {
                 if (!('__hx_indexed' in Entity.meta.fields)) {
                     Entity.meta.fields['__hx_indexed'] = 'BOOL';
-                    //this.addField('__hx_indexed');
+                    this.addField('__hx_indexed');
                 }
             }
             
