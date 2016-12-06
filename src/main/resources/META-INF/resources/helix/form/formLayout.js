@@ -600,7 +600,7 @@
                 } else if (fldType === 'pickList' ||
                            fldType === 'picklist') {
                     if (mode) {
-                        __refreshSelectMenu(this.options, item);
+                        __refreshSelectMenu(this.options, item, this.layoutMini);
                     } else {
                         __refreshTextBox(mode, item);
                     }

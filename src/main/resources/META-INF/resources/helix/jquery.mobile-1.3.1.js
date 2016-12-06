@@ -9176,7 +9176,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 
 			// make sure open is idempotent
 			if( $.mobile.popup.active ) {
-				return;
+                            $.mobile.popup.active.close();
 			}
 
 			// set the global popup mutex

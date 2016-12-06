@@ -461,7 +461,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
 }
 
-function __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayout) {
+function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     var $fieldContainer = formElem.DOM;
     if ($fieldContainer) {
         $fieldContainer.empty();
@@ -546,7 +546,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
         
         formElem.tabIndex = formLayout.__tabIndex++;
             
-        __refreshSelectMenu(formLayout, formElem, $fieldContainer, useMiniLayout);
+        __refreshSelectMenu(formLayout, formElem, useMiniLayout);
     } else {
         __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
@@ -1355,6 +1355,10 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.computedStyleClass) {
             htmlDiv.addClass(formElem.computedStyleClass); 
         }
+        var textClass = formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass;
+        if (textClass) {
+            htmlDiv.addClass(textClass);
+        }
         $fieldContainer.append(htmlDiv);
         if (formElem.isScroller) {
             $fieldContainer.helixScrollingDiv({ width: width });
@@ -1669,13 +1673,12 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         formElem.mode !== 'edit') {
         /* View mode. */
         formElem.viewDOM = $viewFieldContainer = $('<div />')
-        .css("clear", "both")
-        .css('-webkit-user-select', 'none')
-        .css('border-width', '0px 0px 1px 0px')
-        .css('padding', '3px 0px 3px 0px')
-        .attr('id', containerID + "_view")
-        .addClass('hx-form-container')
-        .appendTo(parentDiv);
+            .attr('id', containerID + "_view")
+            .addClass('hx-form-container')
+            .appendTo(parentDiv);
+        if (formElem.type !== 'hidden') {
+            formElem.viewDOM.addClass('hx-form-view-border hx-form-view-item');
+        }        
         if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
             $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
         }

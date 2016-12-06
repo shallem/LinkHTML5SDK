@@ -3016,7 +3016,12 @@
                 }
             }
             if (this.options.selectAction && !noSelectAction) {
-                this.options.selectAction(this.selected, this.selectedGroup, this.strings);
+                if (this.options.itemContextMenuArgs) {
+                    var allArgs = [ this.selected, this.selectedGroup, this.strings ].concat(this.options.itemContextMenuArgs)
+                    this.options.selectAction.apply(this, allArgs);
+                } else {
+                    this.options.selectAction(this.selected, this.selectedGroup, this.strings);
+                }
             }          
         },
         selectNext: function(noSelectAction) {
