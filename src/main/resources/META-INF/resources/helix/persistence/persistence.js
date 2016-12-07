@@ -486,8 +486,13 @@ function initPersistence(persistence) {
                 ]);
                 session = args.session;
                 field = args.field;
+                props[field] = {
+                    enumerable: true,
+                    get: _makeGetter(field),
+                    set: _makeSetter(field)
+                }
 
-                var f = field; // Javascript scopes/closures SUCK
+                /*var f = field; // Javascript scopes/closures SUCK
                 persistence.defineProp(this, f, function(val) {
                     // setterCallback
                     // SAH - make sure we are tracking this object now that it is dirty.
@@ -498,7 +503,7 @@ function initPersistence(persistence) {
                 }, function() {
                     // getterCallback
                     return persistence.canonical(this)._data[f];
-                });
+                });*/
             };
 
             function Entity (session, obj, noEvents) {
