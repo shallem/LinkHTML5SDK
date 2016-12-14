@@ -15,8 +15,8 @@
  */
 (function() {
     window.OfflineSave = {
-        saveDoc: function ( name, lastModified, fullPathDigest, thumbURL, viewURL, editURL, success, fail) {
-            return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, fullPathDigest, thumbURL, viewURL, editURL]);
+        saveDoc: function ( name, lastModified, docUniqueID, thumbURL, viewURL, editURL, success, fail) {
+            return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, docUniqueID, thumbURL, viewURL, editURL]);
         },
         editDoc: function ( docID, component, success, fail ) {
             if (!component) {
@@ -180,5 +180,18 @@
                 return cordova.exec(success, failure, "HelixSystem", "clearAppBadge", [  ]);
             }
         });
+    }
+    
+    if (window.CordovaVersion >= 3 &&
+            window.CordovaRevision >= 5) {
+        window.HelixFiles = {
+            downloadFile: function(url, uniqueID, options, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "getDocument", [
+                   url,
+                   uniqueID,
+                   options
+                ]);
+            }
+        };
     }
 })();

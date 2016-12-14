@@ -10,88 +10,88 @@
 
 /* ie6 */
 * html .ui-growl {
-	position:absolute; 
+    position:absolute; 
 }
 * html .ui-growl-item {
-	padding-bottom:0;
+    padding-bottom:0;
 }
 * html .ui-growl-icon-close {
-	top:7px;
-	right:7px;
+    top:7px;
+    right:7px;
 }
 
 .ui-growl {
-	position:fixed;
-	top:60px;
-	right:20px;
-	width:301px;
-        z-index: 1002;
+    position:fixed;
+    top:60px;
+    right:20px;
+    width:301px;
+    z-index: 1002;
 }
 .ui-growl-item-container {
-	position:relative;
-	margin:0 0 10px 0;
-	opacity:0.85;
-	filter:alpha(opacity=85);
+    position:relative;
+    margin:0 0 10px 0;
+    opacity:0.85;
+    filter:alpha(opacity=85);
 }
 .ui-growl-item {
-	display:block;
-	padding:10px 15px;
+    display:block;
+    padding:10px 15px;
 }
 .ui-growl-item p {
-	padding:0;
-	margin:0;
+    padding:0;
+    margin:0;
 }
 .ui-growl-icon-close {
-	position:absolute;
-	top:5px;
-	right:3px;
-	cursor:pointer;
+    position:absolute;
+    top:5px;
+    right:3px;
+    cursor:pointer;
 }
 .ui-growl-title {
-	font-weight:bold;
-	padding:0 0 7px 0;
-	display:block;
+    font-weight:bold;
+    padding:0 0 7px 0;
+    display:block;
 }
 .ui-growl-image {
-	width:32px;
-	height:32px;
-	float:left;
+    width:32px;
+    height:32px;
+    float:left;
     margin:0;
     padding:0;
     display: block;
-    background: url("#{resource['helix:primefaces-images/messages.png']}") no-repeat;
+/*    background: url("#{resource['helix:primefaces-images/messages.png']}") no-repeat; */
 }
 
 .ui-growl-image-info {
-	background-position: 0 -264px;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC8klEQVRYR81XT1raUBD/DbZRV8IJiov2w1XxBA0bQ1fSG3iD4gkcTyC9gT2BsKpxY45AV6TtwngCcUVK1ek3eYmECiYBW/sWhO9778385s+b+Q2hwHrDbqsE2QVQJVAZQD2+3hfIEEAghO63g2Yvr1jKOljl8/Iafh4RqAWgDJGeEPXNvTvPfEu2/pJIHUQKcCiQbojV/YAbCmzuehRAjV0m4CMg14ISh3jZzRJoAP9qEe4YoA0hdPwD53AegpkAVMg6xucCbALU9nnnOMtTs/ZrfLYHSIeAixGsxizwDwC85rP6C4gqvwxh2VkWZwEzHhl7BLy6ATV+8E4cPnNzCkBs+YUAvRBWe1nlCbgYRAeQdyFWt9NypwDU2I3QPYXlf3om5QkZsLOd7N8D0IQD0A5hVZ/K8jkgAgAdnx3VZ0IwcT3tF0m4GrseIOJzs5GVC8m+JiZBjkawNtXQCECN3WOC2ANuVvMK0nNb7Ip+B+xk1pO03C0+DQTk+ezsJQCGizy3LT5tGwDNThHgiRcG7FRIy+sKcDKCVflbsZ+VC+sYX90CHyhyv0h5cNjUUvvPlskfBApA/2g8oqwsshbNgTjvVJ+tAPTtd58DAAG7pFYI7ho+v487W34fLOeBLzahdP78AJ4zBABa/0USLvwMl8sB1yOR/lKFaFEAce8xhSh+kwuW4sV6QcKUfHbK981IyYLPzc38j/AJm1FMFoKiDSmuovDZiVhxnpVYn/COKUKiDDjp03mEFT2TonyfpgjJhCy4fQJkHoMtqjB9PsW0yWcnGWgektI1jANATvIMFXkBTYYbNEZYrc8lpSpQafkKRGn0XC6fV7GeSywHpHKDUutRWp4ITnN5IbT9A+dzEaWTkBr+99iMkTmaKVMG5ApEHIrVy2JNEXga70JER7NKmgHPMiKTTE6GCrQI2BCIByLTupOviHmGIjaBbAGulWPkGW4yAaRRm/EcSt2UPWsVexvpBb7qRKy1/ZbI+85ON2/IfgPlw8zlgX2m8QAAAABJRU5ErkJggg==);
 }
 
 .ui-growl-image-warn {
-	background-position: 0 -396px;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACh0lEQVRYR8WWUZLSQBCGu4MlWkAmnkC4ATy6hFo8gbsnWDyB3EC8AZ5APMHiCZYtwvoIngBu4ExgS7GWtDWzhIKYZCZRJE8U1dP9dU//PY1w4g9PHB/+CkB4dlcmwFy/nzeR3AA/vj6r/toU5zLw08K69vzVz0UeiNwA3GM3QNsKIpDjitf/DWA5LrcDLNxYtFFBw9+V1mqUFSJXBbjH5gh0y1y/IwMKzx4Q4LnjitrRAWTjEWCPlUQVG8BlQJqCI+7ZAoF6WRsyUwVUoJXK/iNr+b39bMXY7hHgO1YWtRDMpBqZALalbjuuqMY55x5bINKQNX0lT5PPGGA1KdU39GSKVnBpny2Hcc79u8oFBdZ1AR8a5eb97J8ChLJzWqKd5piP2QgyyNKoAkmZ8TH7LmGclngRQplUaj8BIwAlO6Qv0bsVHqPHUSwO/IiJ3SfCNyay1AKo7kbs7ssuzCAJYCdLon5ULdHrSwWQ8379UJwi0oc4fScBbIdTlwjf62SZCqCTXRqAhFCyBBqFEzOueRMB9ud90ozXAZj4SASQskMgwVz/Ikl2OgBVBY0sYwH8SaVDZH3SvfMmAOHegBi8tZvLgbYJ0+Z99LAJgGrIRyVdsZJoRN+JPyqQJrsogCrv4yBKnY5psjwA0JXLZLYn2SRd6wEAH7NrQKg5rqibBFvelc+lXeVsdWtizz02A4K50xKXof0OwEQyeXsgPBcXYwfAPTZFoG9pQyNvD+yfE549JMCXjisa8n8FEK5ZxcK6nne9NrkCaaPG+6Y4szDoSlliFtmZBtHZHaxv6ukM8Mqygg4iqSXz2B8ROkFgDdCiz8g9xhGAHTtonH8COFwkTgGhXUiODfUb9IOPFUQlwu0AAAAASUVORK5CYII=);
 }
 
 .ui-growl-image-error {
-	background-position: 0 0;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACq0lEQVRYR8WWQW7TQBSG3ziuVKRKtBuQvSG5QbKD2Khlh2pXpCdoOQG5AeEG4QSUEzSodsWurbBTdgknSFYewaatVAQSiR+aIbYc12NPDCGziqLxvG/evP9/j8CKF1lxfPgrgMAy2uwCuut3y16kNAB9/rgKqjrigSeTmvbx87gMRHkA2zwDiDOImuM9+28A1DZ3AIABREH5b83xzheFKJUBahks9Rea6x+ygNQyjgBgW3P92tIBWOERIJ31tdvqVm94zQJeteqbP39tjBGws2hBLpQBFujHZGNEAN5qjtdJ3pbaZgcBXt1Tb2sRmEw2FgKYpXpHc/1q1uHUMsZIsKc7fS5PmSUN8G23WZ8qykAh0/2HJ5e9rMO/7j1phVg5roRh48Fpf/hPAehMdprjMQUIF7VNpgRpWUplQHSzwDavuBM63lZEJJOpJL0UAJMdEvyQfltqm8gO0xxv7pzAbnYJkhcysiwEYNUNCO2k7KIbiAAiWQKBblot6bfLBWB+j6o6AMQ3WfoWAbAgvFER8rpIlvkAfxxOLDvBE8QZsgzWoM4jx8yqXCFA0u9FHp+XAW7RiZ4hOiMP4AwRb3TXb4k0VwQwg8iVZSYA3W0egqK8K+rzUgDR3BCGL7XTPnvSuXUHIM/v0x/LAMyy0AHEg/W17410n7gDkCe7DADe/4vcMU+WcwDxmCVIl4y3C+tF8KwpBzOPAbCmO35dJhjde7rNM3Dy6UJmf2AbQwAy0h1vP9ofA8hIpmwNJJwzHuUiWcYAgWUMCMCXPNMoWwPJ7wLLYK38ke76DfY/B4jGLJhO6mXHa5kn4IpgsqyoQ8CwzWRJFpGdbJCifcnxjbDWCaAcKGF4iJUKHzKXvch0uhkqyhFA+J5Qy7wGAveXHTTzfISbwnlg2WArB/gNZMBsCbkmpQcAAAAASUVORK5CYII=);
 }
 
 .ui-growl-image-fatal {
-	background-position: 0 -228px;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACC0lEQVRYR+2XsVLCQBCG/73Yq40aGvUNbBVmhFZwxCdQ3wCfBH0C9QnAEWiFGcCWR4DGjFbSy61zgUQIIbmLI1h4FTPs7n27e7f3h7DiRSveH0YAb6eHRSnFGYj2AGQD8E0w94m5utPoPuompgXgnBxdshBlAjZ0AjPwQcwlu955iLOPBHg/OToYEVUmGcfFmv+fuW8xn281ur1FzgsBTLNetIFbDSmv7Ub3PswmFEBtDiHuzFOO8JDyKgxiDkCV/VOIZ91+60KqSqxJmQu2Yw7Ayaf7INrVDWxkx9y36539aZ8ZgNd8ukREZYOguYnts7ZPoBUzAE4+8wHCum4wu9Z2/Z1ChnV9VCtStfamZ+8DuEOGrYpuIGWXBED5CRqdbz+9VNVvH8DJp+9BdLEMAIa8TdW6pVmAQqYJ4HgZAABadq3tjvLvChj00YNM2oLp9v0D/KkKGB9CAMpHraA2iDvLIYcwwTWM22XxCxlyDZMMInWdJpsYXd/QQeSO1CWMYjCGdr3tK6vZt8BUBxCNe8/snYX4rkQ9RuMq/OpzPLDrHSVo/RUqSEYkmiavYnzaqkoYWiyzsYLErYJpK3QIdCWZF8uFIHHz40owhmBZMhKlHsREllcTSzTmgcVcTCTLp6tqXI2YrCMPYVQ71bAaMWUJ4iBEO7QYsmcRNz21o3M0tD7NdAIltVk5wBdlAgEwPA1GjQAAAABJRU5ErkJggg==);
 }
 
 .ui-growl-message {
-	padding:0 0 5px 0;
-	width:220px;
-	float:right;
+    padding:0 0 5px 0;
+    width:220px;
+    float:right;
 }
 
 .ui-growl-message p {
-	font-weight: normal;
+    font-weight: normal;
 }
 
 /* SAH: Added to make the background of the growl black. The original PrimeFaces
  * styles for doing so were not obvious to me.
  */
- .ui-growl-item-container {
+.ui-growl-item-container {
     background-color: black;
     color: white;
- }
+}
