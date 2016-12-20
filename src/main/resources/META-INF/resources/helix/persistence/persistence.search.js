@@ -498,12 +498,14 @@ persistence.search.config = function(persistence, dialect, options) {
         for (var prop in propMap) {
             var propID = propMap[prop];
             var rawText = obj[prop];
-            var occurrences = searchTokenizer(rawText);
-            var insertValues = null;
-            for(var word in occurrences) {
-                if(occurrences.hasOwnProperty(word)) {
-                    insertValues = id + "," + propID + "," + "'" + _real_escape_string(word.substring(1)) + "'," + occurrences[word];
-                    insertRows.push(insertValues);
+            if (rawText) {
+                var occurrences = searchTokenizer(rawText);
+                var insertValues = null;
+                for(var word in occurrences) {
+                    if(occurrences.hasOwnProperty(word)) {
+                        insertValues = id + "," + propID + "," + "'" + _real_escape_string(word.substring(1)) + "'," + occurrences[word];
+                        insertRows.push(insertValues);
+                    }
                 }
             }
         }
