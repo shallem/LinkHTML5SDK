@@ -30,38 +30,37 @@
 	-webkit-border-radius: 				9px;
 	border-radius: 						9px;
 }
-/* Alt icon color
------------------------------------------------------------------------------------------------------------*/
-/* Generated from http://csssprites.com/ */
-.ui-icon-alt .ui-icon,
-.ui-icon-alt .ui-icon-searchfield:after {
-	background-color: 						#fff;
-	background-color: 						rgba(255,255,255,.3);
-	background-image: url("#{resource['helix:images/hx-icons-18-black.png']}");
-        background-repeat: no-repeat;
+
+.ui-icon.ui-icon-hx-filter-black {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABEUlEQVRIS+2VWxHCMBBFTx0gAQcgARSABHCAA4oCwAESQAESAAdIwAHMZTad9LmdUv6ar06zuSd7N9kk/Hkkpp8C255ZOyCNAdIXqI8RdDLAFDgDS+D+IyGnFTKQZh+QkkYMEEQZnIBZh0wkfgXW5sbXiCJA/1ZWCy14tbRrBNwAFVYbzEYVIEA2lokHkbh2fiyK12UQ6MrEgzSKe4BwbBfAvMKuIH5pOt51FsU2ytNJXDib1IF4WM1qS9UGoMVvK2AspJvvrncDTFGAYmzVv1ImA8B1wA0YatDWIvUjtQ69GWH0ekzVWQ924dSOn/btbtANKNwcZSHQ3vqPu94NqGgyanJ6c9WLxt570QXgaebmP4CTPRlp6j61AAAAAElFTkSuQmCC) !important;
+    width: 24px !important;
+    height: 24px !important;
 }
 
-.ui-icon-hx-filter-black {
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABEUlEQVRIS+2VWxHCMBBFTx0gAQcgARSABHCAA4oCwAESQAESAAdIwAHMZTad9LmdUv6ar06zuSd7N9kk/Hkkpp8C255ZOyCNAdIXqI8RdDLAFDgDS+D+IyGnFTKQZh+QkkYMEEQZnIBZh0wkfgXW5sbXiCJA/1ZWCy14tbRrBNwAFVYbzEYVIEA2lokHkbh2fiyK12UQ6MrEgzSKe4BwbBfAvMKuIH5pOt51FsU2ytNJXDib1IF4WM1qS9UGoMVvK2AspJvvrncDTFGAYmzVv1ImA8B1wA0YatDWIvUjtQ69GWH0ekzVWQ924dSOn/btbtANKNwcZSHQ3vqPu94NqGgyanJ6c9WLxt570QXgaebmP4CTPRlp6j61AAAAAElFTkSuQmCC);
-    width: 24px;
-    height: 24px;
-}
-.ui-icon-hx-filter-black-filled {
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA9UlEQVRIS+2V7RHBQBCGn1RACTqgBCpBB1QgKqADVEIJSqEC5jU5E2cvGxFmzLh/ye29z37c7WZ8eGWFfg4sWmYtgfxrgAFwADotRXEGhsAxRCDdtiB3cYmWAfoWdf9mFKMiGzeZGKB/E2DTEDIFtuWzFqAp5Ek8FUFw4JVITHEPoP0ZsHLSNQfWKZtUisr2yuk4IbArapb0oQ4gRNKNVE5VngfbugC1kovhptpB5aoLsMTr1NB8B5ZHf4BXKrPAv1UD3XlrVri30DUokqdZoRfdj5LpnncNIkH1Jj26EI173jUwyq+Woeam4dTzrkcTgKf5sH8FiYQkGZigvVgAAAAASUVORK5CYII=);
-    width: 24px;
-    height: 24px;
+.ui-icon.ui-icon-hx-filter-black-filled {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA9UlEQVRIS+2V7RHBQBCGn1RACTqgBCpBB1QgKqADVEIJSqEC5jU5E2cvGxFmzLh/ye29z37c7WZ8eGWFfg4sWmYtgfxrgAFwADotRXEGhsAxRCDdtiB3cYmWAfoWdf9mFKMiGzeZGKB/E2DTEDIFtuWzFqAp5Ek8FUFw4JVITHEPoP0ZsHLSNQfWKZtUisr2yuk4IbArapb0oQ4gRNKNVE5VngfbugC1kovhptpB5aoLsMTr1NB8B5ZHf4BXKrPAv1UD3XlrVri30DUokqdZoRfdj5LpnncNIkH1Jj26EI173jUwyq+Woeam4dTzrkcTgKf5sH8FiYQkGZigvVgAAAAASUVORK5CYII=) !important;
+    width: 24px !important;
+    height: 24px !important;
 }
 
-.ui-icon-hx-sort-desc-black {
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA+ElEQVRIS72VYQ3CMBCFvzlAAg6wAErAARZAAg5AyUACDsABDiCX7JZLuVu3dVv/NE3T+/reXm8VM49q5vosDtgC34yqh9lfARvgCXy8c6mCXHGpYc/IhWpgB9z7AORAbthCowCRijfwSuiDAV0WnYFTKaDLIrl9sYIoRTY5VsRkFkXvZTAgssiNIDAKYD+0l5xJLfKSUwRILfKSUwxQi6LkFAGs/1FypMFJ/7k070J70Ro4Nn2pbXxpEWtRlBxRcAX2zXww8w2QdTs8QM53PawQXf8VT1uvrMWiXHLsBRXiFvcAYlFfBQpSi9w2v/gvM/ezGbw/u4Ifn0hIGQr+reQAAAAASUVORK5CYII=);
-    width: 24px;
-    height: 24px;
+.ui-icon.ui-icon-hx-sort-desc-black {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA+ElEQVRIS72VYQ3CMBCFvzlAAg6wAErAARZAAg5AyUACDsABDiCX7JZLuVu3dVv/NE3T+/reXm8VM49q5vosDtgC34yqh9lfARvgCXy8c6mCXHGpYc/IhWpgB9z7AORAbthCowCRijfwSuiDAV0WnYFTKaDLIrl9sYIoRTY5VsRkFkXvZTAgssiNIDAKYD+0l5xJLfKSUwRILfKSUwxQi6LkFAGs/1FypMFJ/7k070J70Ro4Nn2pbXxpEWtRlBxRcAX2zXww8w2QdTs8QM53PawQXf8VT1uvrMWiXHLsBRXiFvcAYlFfBQpSi9w2v/gvM/ezGbw/u4Ifn0hIGQr+reQAAAAASUVORK5CYII=) !important;
+    width: 24px !important;
+    height: 24px !important;
 }
  
-.ui-icon-hx-sort-asc-black {
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA9klEQVRIS9WUgQnCMBBFXzdwBDdwBZ1EN3AFHcENdJLqCG6gG7iBcpCUEC/JXaCCgVIKzX/5x88fmHkNM+vzc8AaeITHYm4BrIA78NI25A7ewBE4WNQBOdAIbICrBeB10AUQF7JuBhduQBQXbUsA3ADZEJc608xVFyB18Wwkyg1IxeWwrUS5AemIBNC6E12A3EUtUW6AJl5LlBuQj6iVqC5AyYWWKDegJJ4mSgpO+ucUQhC7aAnsQy9NxZff1tKI8kSdgS0g713yvoTv6T5qgJqLNFEREsW+xLV0tMTzPRGiimuA2ohKiYojUsvX0piG1i7/8v+ADyuTSBkCJOW4AAAAAElFTkSuQmCC);
-    width: 24px;
-    height: 24px;
+.ui-icon.ui-icon-hx-sort-asc-black {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA9klEQVRIS9WUgQnCMBBFXzdwBDdwBZ1EN3AFHcENdJLqCG6gG7iBcpCUEC/JXaCCgVIKzX/5x88fmHkNM+vzc8AaeITHYm4BrIA78NI25A7ewBE4WNQBOdAIbICrBeB10AUQF7JuBhduQBQXbUsA3ADZEJc608xVFyB18Wwkyg1IxeWwrUS5AemIBNC6E12A3EUtUW6AJl5LlBuQj6iVqC5AyYWWKDegJJ4mSgpO+ucUQhC7aAnsQy9NxZff1tKI8kSdgS0g713yvoTv6T5qgJqLNFEREsW+xLV0tMTzPRGiimuA2ohKiYojUsvX0piG1i7/8v+ADyuTSBkCJOW4AAAAAElFTkSuQmCC) !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.ui-icon.ui-icon-hx-filter-black,
+.ui-icon.ui-icon-hx-filter-black-filled,
+.ui-icon.ui-icon-hx-sort-desc-black,
+.ui-icon.ui-icon-hx-sort-asc-black {
+    top: 12px !important;
+    left: 17px !important;
 }
 
 /* HD/"retina" sprite
@@ -82,50 +81,12 @@
 		-webkit-background-size: 864px 18px;
 		background-size: 864px 18px;
 	}
-	.ui-icon-alt .ui-icon {
-                background-image: url("#{resource['helix:images/hx-icons-36-black.png']}");
-                -moz-background-size: 864px 86px;
-		-o-background-size: 864px 86px;
-		-webkit-background-size: 864px 86px;
-		background-size: 864px 86px;
-	}
 }
 
 /* loading icon */
 .ui-icon.ui-icon-loading {
         background: url("#{resource['helix:images/ajax-loader.gif']}");
 	background-size: 46px 46px;
-}
-
-/* Datebox */
-.ui-icon-datebox { 
-    background-image: url("#{resource['helix:images/datebox/datebox.png']}") !important; 
-    background-repeat: no-repeat !important; 
-    background-position: 99% 8px !important; 
-}
-.ui-icon-datebox-alt { 
-    background-image: url("#{resource['helix:images/datebox/datebox.png']}") !important; 
-    background-repeat: no-repeat !important; 
-    background-position: 99% -28px !important; 
-}
-
-/* Custom filter icon on regular and retina screens. Could convert to base64 to avoid a load .... */
-.ui-icon-filter {
-    background-image: url("#{resource['helix:images/filter-18.png']}") !important; 
-    background-repeat: no-repeat !important;
-}
-
-@media only screen and (-webkit-min-device-pixel-ratio: 1.3),
-       only screen and (min--moz-device-pixel-ratio: 1.3),
-       only screen and (min-resolution: 200dpi) {
-    .ui-icon-filter {
-        background-image: url("#{resource['helix:images/filter-36.png']}") !important; 
-        background-repeat: no-repeat !important;
-        -moz-background-size: 18px 18px;
-        -o-background-size: 18px 18px;
-        -webkit-background-size: 18px 18px;
-        background-size: 18px 18px;
-    }
 }
 
 @media (min-width: 28em) {

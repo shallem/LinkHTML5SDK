@@ -1151,7 +1151,8 @@
                 'id' : Helix.Utils.getUniqueID(),
                 'data-theme' : 'd',
                 'data-position-to' : 'origin',
-                'data-history': 'false'
+                'data-history': 'false',
+                'data-icon' : 'false'
             }).appendTo(_self.$wrapper);
             var sortsList = $('<ul />').attr({ 
                 'data-role' : 'listview',
@@ -1348,17 +1349,17 @@
                     
                 }, true, undefined, _self._resetGlobalFilters());
             } else {
-                if (_self._filterMap[gFilterField] &&
-                    _self._filterMap[gFilterField] === _filterValue) {
+                if (gFilterField in _self._filterMap) {
+                    if (_self._filterMap[gFilterField] === _filterValue) {
                     // The filter did not change ... do nothing.
-                    return;
-                } else if (_self._filterMap[gFilterField] &&
-                           _self._filterMap[gFilterField] !== _filterValue) {
-                    // The filter value changed. Apply the filter to the original list.
-                    _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(function() {
-                    
-                    }, true, undefined, _self._resetGlobalFilters());
+                        return;
+                    } else {
+                        // The filter value changed. Apply the filter to the original list.
+                        _self._filterMap[gFilterField] = _filterValue;
+                        _self._refreshData(function() {
+
+                        }, true, undefined, _self._resetGlobalFilters());
+                    }
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
@@ -1371,9 +1372,9 @@
         
         _clearGlobalFilterMenu: function() {
             for (var fField in this._filterMap) {
-                $('option[data-field="' + fField + '"]').removeAttr('selected');
-                $('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
-                $('select[data-field="' + fField + '"]').selectmenu('refresh');
+                this._globalFilterContainer.find('option[data-field="' + fField + '"]').removeAttr('selected');
+                this._globalFilterContainer.find('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
+                this._globalFilterContainer.find('select[data-field="' + fField + '"]').selectmenu('refresh');
             }
         },
         
@@ -1867,6 +1868,8 @@
                 _doRefresh = _self.options.onSearchClear.call(_self);
             }
             if (_doRefresh !== false) {
+                _self.unfilteredList = _self.originalList;
+                _self._clearGlobalFilterMenu();
                 _self._refreshData(function() {
                     _self.scrollToStart();
                     if (_self.options.afterSearchClear) {

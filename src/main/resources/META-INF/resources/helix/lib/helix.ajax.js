@@ -387,6 +387,17 @@ Helix.Ajax = {
         Helix.Utils.statusMessage("Action Failed", errorObj.msg, "error");
     },
 
+    getSchemaForCommand: function(commandConfig, oncomplete) {
+        if (commandConfig.schema) {
+            oncomplete(commandConfig.schema, commandConfig);
+        } else {
+            commandConfig.schemaFactory(function(schema, command) {
+                command.schema = schema;
+                oncomplete(schema, command);
+            }, [ commandConfig ]);
+        }
+    },
+
     /**
      * Used to run a single load command that turns the results of multiple other load commands.
      *
@@ -421,8 +432,7 @@ Helix.Ajax = {
                 return;
             }
             var nxtConfig = schemaFactories.pop();
-            nxtConfig.schemaFactory(function(schema, cfg) {
-                cfg.schema = schema;
+            Helix.Ajax.getSchemaForCommand(nxtConfig, function(schema, cfg) {
                 __doSchema();
             }, [nxtConfig], (schemaFactories.length > 1 ? true : false) /* No schema sync unless this is the last item. */);
         };
@@ -811,7 +821,8 @@ Helix.Ajax = {
     ajaxGet: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
             async: (params.async !== undefined) ? params.async : true,
-            silent: (params.silentMode !== undefined) ? params.silentMode : false
+            silent: (params.silentMode !== undefined) ? params.silentMode : false,
+            message : params.loadingMessage ? params.loadingMessage : ''
         };
         var page = $.mobile.activePage;
         $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate ]);
