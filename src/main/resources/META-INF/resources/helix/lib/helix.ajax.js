@@ -957,9 +957,9 @@ Helix.Ajax = {
                     } else {
                         if (!params.silentMode) {
                             if (params.error) {
-                                Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "severe");
+                                Helix.Utils.statusMessage("Error", params.error + ": " + returnObj.msg, "error");
                             } else if (!callbacks.error) {
-                                Helix.Utils.statusMessage("Error", returnObj.msg, "severe");
+                                Helix.Utils.statusMessage("Error", returnObj.msg, "error");
                             }
                         }
                         
