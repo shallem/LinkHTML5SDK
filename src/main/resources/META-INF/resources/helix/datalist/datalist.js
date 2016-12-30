@@ -929,9 +929,12 @@
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
          * and globalFilters with the format described in the options documentation.
          */
-        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions) {
+        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions,keepOverrides) {
             var _self = this;
             var _options = $.extend({}, _self.options, (overrideOptions ? overrideOptions : {}));
+            if (keepOverrides) {
+                _self.options = _options;
+            }
 
             // Prevent this function from being called again. Future calls should all go to refreshData.
             _self.isLoaded = true;            
@@ -996,7 +999,8 @@
             }
             
             /* Generate the actual data for the current page. */
-            _self._prependSearchBox();
+            _self._searchSortDirty = true;
+            _self._prependSearchBox(_options);
             _self._updateSortButtons();
             
             /* generate a clear selection button for multi select */
@@ -1586,6 +1590,14 @@
             }, _options.emptyMessage, oncomplete, noPaginate, _self.extraItems, _options);
         },
         
+        hasIndexedSearch: function() {
+            if (this.options.indexedSearch) {
+                return true;
+            }
+            
+            return false;
+        },
+        
         indexedSearchDone: function(displayCollection, oncomplete, optionsOverrides) {
             var _self = this;
             if (!oncomplete) {
@@ -1879,7 +1891,7 @@
             }
         },
         
-        _prependSearchBox: function() {
+        _prependSearchBox: function(options) {
             var _self = this;
             var useControlGroup = false;
             if (!_self._searchSortDirty) {
@@ -1888,17 +1900,17 @@
             
             _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
-            if (!_self.options.showSortButton && !_self.options.showFilterButton && !_self.options.indexedSearch) {
+            if (!options.showSortButton && !options.showFilterButton && !options.indexedSearch) {
                 _self.$searchSortDiv.hide();
                 return;
             }
 
             var _attachButtons = function() {
-                if (!_self.options.showSortButton && !_self.options.showFilterButton) {
+                if (!options.showSortButton && !options.showFilterButton) {
                     return;
                 }
                 
-                if (_self.options.showSortButton && _self.options.showFilterButton) {
+                if (options.showSortButton && options.showFilterButton) {
                     useControlGroup = true;
                 }
                 
@@ -1906,7 +1918,7 @@
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
-                if (_self.options.showSortButton) {
+                if (options.showSortButton) {
                     /* Ascending/descending sort buttons. */
                     var sAscendID = Helix.Utils.getUniqueID();
                     var sDescendID = Helix.Utils.getUniqueID();
@@ -1951,7 +1963,7 @@
                     });                    
                 }
                 
-                if (_self.options.showFilterButton) {
+                if (options.showFilterButton) {
                     /* Filter button. */
                     var sFilterID = Helix.Utils.getUniqueID();
                     this.$filter = $('<a/>').attr({
@@ -1973,8 +1985,8 @@
                     });                    
                 }
                 
-                if (this.options.externalButtonsCallback) {
-                    this.options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
+                if (options.externalButtonsCallback) {
+                    options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
                 }
                 
                 if (useControlGroup) {
@@ -1988,7 +2000,7 @@
                 var $searchDiv = $('<div/>').addClass('hx-almost-full-width').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
-                if (this.options.indexedSearchType !== 'search') {
+                if (options.indexedSearchType !== 'search') {
                     sboxType = 'text';
                 }
                 this.$searchBox = $('<input/>').attr({
@@ -1997,7 +2009,7 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
-                    'value': this.options.indexedSearchText
+                    'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
                 this.$searchLabel = $('<label/>').attr({
@@ -2012,7 +2024,7 @@
                 this.$searchBox.on('input', function() {                   
                     _self._doSearch();
                 });
-                if (this.options.indexedSearchText) {
+                if (options.indexedSearchText) {
                     _self.__searchClear = true;
                     this.$searchBox.on('focus', function() {
                         if (_self.__searchClear) {
@@ -2057,13 +2069,13 @@
                 });
             };
 
-            if (this.options.buttonPos === 'left') {
+            if (options.buttonPos === 'left') {
                 _attachButtons.call(this);
-                if (this.options.indexedSearch || this.options.localIndexedSearch) {
+                if (options.indexedSearch || options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }                
             } else {
-                if (this.options.indexedSearch  || this.options.localIndexedSearch) {
+                if (options.indexedSearch  || options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }
                 _attachButtons.call(this);
@@ -2697,9 +2709,11 @@
             
             return true;
         },
+        
         getSelected: function() {
             return this.selected;
         },
+        
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
@@ -2709,6 +2723,16 @@
                 this.selected = null;
                 this.selectedGroup = null;
             }
+        },
+        
+        clearSearchSort: function() {
+            this.options.indexedSearch = null;
+            this.options.localIndexedSearch = null;
+            this.options.indexedSearchText = null;
+            this.options.onSearchClear = null;
+            this.options.afterSearchClear = null;
+            
+            this._searchSortDirty = true;
         },
         
         removeElement: function(idx) {

@@ -541,6 +541,16 @@ Helix.Ajax = {
         Helix.Ajax.ajaxBeanLoad(loadCommandOptions, itemKey);
     },
 
+    loadInProgress: function(name) {
+        if (name in Helix.Ajax.inProgressLoads) {
+            return true;
+        }
+        
+        return false;
+    },
+
+    inProgressLoads : {},
+
     ajaxBeanLoad: function(loadCommandOptions,itemKey,nRetries) {
         // Set a default error handler if we do not have one.
         if (!loadCommandOptions.onerror) {
@@ -549,6 +559,7 @@ Helix.Ajax = {
         if (loadCommandOptions.onstart) {
             loadCommandOptions.onstart(loadCommandOptions.name);
         }
+        Helix.Ajax.inProgressLoads[loadCommandOptions.name] = loadCommandOptions;
 
         // Setup loader options and show the loader.
         Helix.Ajax.setLoaderOptions($.extend(
@@ -567,6 +578,7 @@ Helix.Ajax = {
             // Wait 2s and try again.
             if (nRetries > 3) {
                 alert("Failed to prepare the synchronization layer. Please contact your administrator.");
+                delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                 return;
             }
             setTimeout(function() {
@@ -580,6 +592,7 @@ Helix.Ajax = {
             if (!loadCommandOptions.params.push) {
                 // the request options are not an array ...
                 loadCommandOptions.onerror(Helix.Ajax.ERROR_INVALID_PARAMS);
+                delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                 return;
             }
             loadCommandOptions.requestOptions.params = loadCommandOptions.params;
@@ -606,16 +619,21 @@ Helix.Ajax = {
             if (itemKey) {
                 Helix.DB.synchronizeObjectByKey(itemKey,loadCommandOptions.schema,function(widget) {
                     window[loadCommandOptions.name] = widget;
+                    
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, widget);
                 },loadCommandOptions.syncOverrides);
             } else if (itemKey === null) {
                 /* An explicit null means load all objects. */
                 Helix.DB.loadAllObjects(loadCommandOptions.schema, function(widgetList) {
                     window[loadCommandOptions.name] = widgetList;
+                    
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     loadCommandOptions.oncomplete(null, loadCommandOptions.name, widgetList);
                 });
             } else {
                 /* itemKey is undefined. Nothing we can do when we are offline. */
+                delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                 loadCommandOptions.onerror(Helix.Ajax.ERROR_OFFLINE_ACCESS);
             }
             return;
@@ -638,6 +656,7 @@ Helix.Ajax = {
                 if (!data) {
                     // We go nothing back from the server. This happens when the network request is killed
                     // by the client (e.g., because the app was put to sleep).
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     return;
                 }
                 
@@ -658,6 +677,7 @@ Helix.Ajax = {
                         error.objects =  responseObj.error.objects;
                     }
                     loadCommandOptions.onerror(error);
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     return;
                 }
 				
@@ -678,6 +698,7 @@ Helix.Ajax = {
 			Helix.DB.synchronizeObject(syncObject, loadCommandOptions.schema, function(finalObj, o) {
                             var finalKey = o.key;
                             window[loadCommandOptions.name] = finalObj;
+                            delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                             if (loadCommandOptions.oncomplete) {
                                 loadCommandOptions.oncomplete(finalKey, loadCommandOptions.name, finalObj, false, (o.params !== undefined ? o.params : paramObject), loadCommandOptions);
                             }
@@ -686,21 +707,25 @@ Helix.Ajax = {
                             }
 			}, { key: itemKey, params: paramObject }, loadCommandOptions.syncOverrides);
                     } else {
+                        delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
 			loadCommandOptions.oncomplete(null, loadCommandOptions.name, null, false, paramObject);
 			if (window.CordovaInstalled) {
                             window.HelixSystem.allowSleep();
 			}
                     }
 		} else if (paramObject) {
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, null, false, paramObject);
                     if (window.CordovaInstalled) {
 			window.HelixSystem.allowSleep();
                     }
 		} else {
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     loadCommandOptions.oncomplete(itemKey, "success");
 		}
             },
             error: function(jqXHR, status, errorThrown) {
+                delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                 if (Helix.ignoreErrors || loadCommandOptions.silentMode) {
                     return;
                 }
@@ -986,9 +1011,9 @@ Helix.Ajax = {
                     }
                     if (!params.silentMode) {
                         if (params.fatal) {
-                            Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+                            Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "fatal");
                         } else if (!callbacks.fatal) {
-                            Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "severe");
+                            Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "fatal");
                         }
                     }
                     if (callbacks.fatal) {
