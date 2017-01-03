@@ -218,6 +218,11 @@
             indexedSearchText: '',
 
             /**
+             * Text to set the first time (and only the first time) the search box is displayed.
+             */
+            defaultSearchText: '',
+
+            /**
              * Type of box - is it a 'search' box or a 'filter' box.
              */
             indexedSearchType: 'search',
@@ -2018,6 +2023,9 @@
                 this.$searchBox.textinput({
                     clearBtn : true
                 });
+                if (options.defaultSearchText) {
+                    this.__searchText =  options.defaultSearchText;
+                }
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
