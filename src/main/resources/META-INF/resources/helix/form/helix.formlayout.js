@@ -2192,16 +2192,16 @@ Helix.Layout.createConfirmDialog = function(options) {
         $(closebtn).append("Dismiss");
     }
     if (options.ondismiss) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
+        $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(popupId + "-cancel"), popup, function(e) {
             e.preventDefault();
+            $(e.data).popup("close");
             options.ondismiss();
-            $(popup).popup("close");
             return false;
         });
     } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
+        $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(popupId + "-cancel"), popup, function(e) {
             e.preventDefault();
-            $(popup).popup("close");
+            $(e.data).popup("close");
             return false;
         });
     }
@@ -2221,16 +2221,16 @@ Helix.Layout.createConfirmDialog = function(options) {
         $(confirmbtn).append("Confirm");
     }
     if (options.onconfirm) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
+        $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(popupId + "-confirm"), popup, function(e) {
             e.preventDefault();
+            $(e.data).popup("close");
             options.onconfirm();
-            $(popup).popup("close");
             return false;
         });
     } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
+        $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(popupId + "-confirm"), popup, function(e) {
             e.preventDefault();
-            $(popup).popup("close");
+            $(e.data).popup("close");
             return false;
         });
     }
@@ -2256,19 +2256,17 @@ Helix.Layout.createConfirmDialog = function(options) {
             .append($('<p/>').append(options.message))
             .append(closebtn)
             .append(confirmbtn)
-    );
-    
-    $(document).on("popupafterclose", PrimeFaces.escapeClientId(popupId), function() {
-        $(this).remove();
-    });				
+    );			
 
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     $.mobile.activePage.append( popup ).trigger( "pagecreate" );
-    setTimeout(function() {
-        $(popup).popup("open");    
-    }, 200);
+    $(popup).popup({});
+    $(popup).on('popupafterclose', function() {
+        $(this).remove();
+    });
+    $(popup).popup("open");    
     $(window).on('navigate.popup', function (e) {
         e.preventDefault();
         $(window).off('navigate.popup');
-    });        
+    });
 };
