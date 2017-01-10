@@ -1698,9 +1698,9 @@
                 }
 
                 if (_self._renderSingleRow(LIs, groupIndex, _self._itemsPerPage, nxt, function() {
+                    ++_self.nRendered;
                     __renderGroup(groupIndex + 1);
                 })) {
-                    ++_self.nRendered;
                 }
             };
             
