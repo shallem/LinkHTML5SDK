@@ -129,6 +129,8 @@ public class LoadCommandAction {
     
     public String getAndSerialize(Object thisObject) throws IOException {
         Object gotten = null;
+        Date startTime = new Date();
+
         try {
             /* First check to see if an error occurred. If so, return an error object. */
             if (this.errorGetter != null) {
@@ -142,31 +144,30 @@ public class LoadCommandAction {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
              */
-            Date startTime = new Date();
             gotten = getter.invoke(thisObject, new Object[] {});
-            Date endTime = new Date();
-            
-            LOG.log(Level.FINE, "Get completed in {0} seconds.", (endTime.getTime() - startTime.getTime()) / 1000);
         } catch (IllegalAccessException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            throw new FacesException("Failed to invoke loader: " + ex.getMessage());
+            throw new FacesException("Failed to invoke getter: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            throw new FacesException("Failed to invoke loader: " + ex.getMessage());
+            throw new FacesException("Failed to invoke getter: " + ex.getMessage());
         } catch (InvocationTargetException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getMessage());
+            throw new FacesException("Failed to invoke getter: " + ex.getTargetException().getMessage());
         } catch (NoSuchMethodException nme) {
             LOG.log(Level.SEVERE, null, nme);
-            throw new FacesException("Failed to invoke loader: " + nme.getMessage());
+            throw new FacesException("Failed to invoke getter: " + nme.getMessage());
+        } finally {
+            Date endTime = new Date();            
+            LOG.log(Level.FINE, "Get completed in {0} seconds.", (endTime.getTime() - startTime.getTime()) / 1000);        
         }
+        
         if (gotten != null) {
-            JSONSerializer s = new JSONSerializer();
             try {
                 /* NOTE: we use an explicit list of catch blocks here so that application specific
                  * exceptions are not caught. This is intentional.
                  */
-                return s.serializeObject(gotten);
+                return JSONSerializer.serializeObject(gotten);
             } catch (IllegalAccessException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
@@ -175,7 +176,7 @@ public class LoadCommandAction {
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());
             } catch (InvocationTargetException ex) {
                 LOG.log(Level.SEVERE, null, ex);
-                throw new FacesException("Failed to invoke loader: " + ex.getTargetException().getMessage());
+                throw new FacesException("Failed to invoke getter: " + ex.getTargetException().getMessage());
             } catch (NoSuchMethodException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke getter: " + ex.getMessage());

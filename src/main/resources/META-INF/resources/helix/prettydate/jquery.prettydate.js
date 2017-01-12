@@ -151,14 +151,20 @@
                         }
 
 			messages = $.prettyDate.messages;
+                        var dayOfWeek = $.prettyDate.dayOfWeek;
 			return  dayDiff === 0 && targetDate.toString('h:mm tt') ||
-                                dayDiff < 7 && targetDate.toString('ddd h:mm tt') ||
+                                dayDiff === 1 && 'Yesterday' ||
+                                dayDiff < 7 && dayOfWeek[targetDate.getDay()] ||
                                 dayDiff <= 90 && targetDate.toString('MMM d') ||
                                 dayDiff > 90 && targetDate.toString('MMM d, yy');
 		}
 
 	};
 
+        $.prettyDate.dayOfWeek = [ 
+            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+            ];
+            
 	$.prettyDate.messages = {
 		now: 'just now',
 		minute: '1 minute ago',
