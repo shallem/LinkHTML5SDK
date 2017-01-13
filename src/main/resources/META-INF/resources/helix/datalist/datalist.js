@@ -1840,6 +1840,10 @@
             return this.$searchBox.val()
         },
         
+        setCurrentSearchText: function(searchQry) {
+            this.$searchBox.val(searchQry);
+        },
+        
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();            
@@ -1894,6 +1898,11 @@
                     }
                 }, true, _self.extraItems, _self.originalList);
             }
+        },
+        
+        refreshSearchBox: function() {
+            this._searchSortDirty = true;
+            this._prependSearchBox(this.options);
         },
         
         _prependSearchBox: function(options) {
@@ -2903,14 +2912,14 @@
                 components.subicon.remove();
             }
 
-            //var oldPfx = $(mainLink).find('[data-role="prefix"]');
             var oldPfx = components.prefix;
             if (rowComponents.prefix) {
                 if (oldPfx /*oldPfx.length*/) {
                     oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
                 } else {
-                    mainLink.append($('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix')));
-                    mainLink = $('<div/>').appendTo(mainLink);
+                    var pfx = $('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix'));
+                    mainLink.prepend(pfx);
+                    mainLink = $('<div/>').insertAfter(pfx);
                 }
             } else if (oldPfx) {
                 oldPfx.closest('div').next().remove();
@@ -2975,10 +2984,15 @@
             var bodyMarkup = components.body;
             if (rowComponents.body) {
                 if (rowComponents.header || rowComponents.subHeader) {
-                    //bodyMarkup = mainLink.find('p[data-role="body"]');
-                    if (bodyMarkup /*bodyMarkup.length*/) {
+                    if (headerMarkup && bodyMarkup /*bodyMarkup.length*/) {
+                        // we previously had a header and a body
                         bodyMarkup.empty().append(rowComponents.body).show();
                     } else {
+                        // we previously had no header or no body ... in this case our rendering of the body changes,
+                        // so we need to clear it out even if it did exist.
+                        if (bodyMarkup) {
+                            bodyMarkup.empty();
+                        }
                         mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
                     }
                 } else {
@@ -3055,7 +3069,7 @@
                     var allArgs = [ this.selected, this.selectedGroup, this.strings ].concat(this.options.itemContextMenuArgs)
                     this.options.selectAction.apply(this, allArgs);
                 } else {
-                    this.options.selectAction(this.selected, this.selectedGroup, this.strings);
+                    this.options.selectAction.call(this, this.selected, this.selectedGroup, this.strings);
                 }
             }          
         },
