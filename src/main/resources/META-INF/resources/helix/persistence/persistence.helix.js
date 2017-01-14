@@ -18,6 +18,11 @@
  * Integrates Persistence JS ORM with the PrimeFaces Mobile SDK.
  */
 
+// Global dictionary use to map class name to class dictionary 
+// in the JSON serialization;
+var JSONDictionary = [];
+
+
 function initHelixDB() {
     Helix.DB = {
         
@@ -1340,12 +1345,32 @@ function initHelixDB() {
             var asyncFields = [];
             var scalarFields = [];
             allSchemas[objSchema.__hx_schema_name] = objSchema;
+            var schema = objSchema.__hx_schema_name;
+            var idx = schema.lastIndexOf('.');
+            
+            if (idx > 0) {
+                schema = schema.substr(idx+1);
+            }
+            
+            // We need to translate the JSON field key into an actual field name
+            // Lookup the dictionary for this schema in the global JSON dictionary.
+            // The global dictionary is generated during compilation of the Java classes.
+            var classDict = JSONDictionary[schema];
+            
             for (var field in obj) {
                 if (!obj.hasOwnProperty(field)) {
                     continue;
                 }
                 if (field in Helix.DB.reservedFields) {
                     continue;
+                }
+                if (classDict && field in classDict) {
+                    // The class dictionary exists => translate field name
+                    // and replace field in object.
+                    var val = obj[field];
+                    delete obj[field];
+                    field = classDict[field];
+                    obj[field] = val;
                 }
                 if (Object.prototype.toString.call(obj[field]) === '[object Array]' ||
                     Object.prototype.toString.call(obj[field]) === '[object Object]') {
