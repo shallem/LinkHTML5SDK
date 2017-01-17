@@ -911,8 +911,7 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     align-items: center;
     min-height: 32px;
     padding: 0;
-    margin-left: 1em;
-    margin-right: 1em;
+    margin: 0 auto;
     min-width: 64px;
 }
 
