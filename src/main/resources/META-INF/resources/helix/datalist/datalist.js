@@ -256,11 +256,11 @@
             
             /**
              * Comma-delimited, ordered list of sort directions. Each direction is
-             * either ASCENDING or DESCENDING. If this list is shorter than the
+             * either ASC or DSC. If this list is shorter than the
              * sortBy list, then the final value in this list will apply to all
              * non-matching fields in the sortBy list.
              */
-            sortOrder: "ASCENDING",            
+            sortOrder: "ASC",            
 
             /**
              * Field to use for grouping. Grouping is intended to be used in conjunction with
@@ -272,7 +272,7 @@
             /**
              * Ordering for the groupBy field.
              */
-            groupByOrder: "ASCENDING",
+            groupByOrder: "ASC",
             
             /**
              * By default we do not sort case sensitive.
@@ -281,7 +281,7 @@
             
             /**
              * Callback to execute when the sort order changes. The first argument
-             * is the new sort field. The second is either ASCENDING or DESCENDING
+             * is the new sort field. The second is either ASC or DSC
              * to specify the new sort order. This callback is invoked before
              * the list is refreshed.
              */
@@ -1108,7 +1108,7 @@
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") === 0) {
+                if (this._currentSortOrder.toUpperCase().indexOf("DSC") === 0) {
                     // Show the descending button, reflecting the CURRENT order.
                     $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
@@ -1202,10 +1202,10 @@
                                 
                                 if (sortFld === newSortField) {
                                     // Reverse the direction.
-                                    if (sortOrder.toUpperCase() === "ASCENDING") {
-                                        curSortOrders[i] = "DESCENDING";
+                                    if (sortOrder.toUpperCase() === "ASC") {
+                                        curSortOrders[i] = "DSC";
                                     } else {
-                                        curSortOrders[i] = "ASCENDING";
+                                        curSortOrders[i] = "ASC";
                                     }
                                     found = true;
                                 }
@@ -2105,7 +2105,7 @@
             if (displayCollection && displayCollection.clearOrder) {
                 displayCollection = displayCollection.clearOrder();
                 if (this.options.groupBy) {
-                    if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
+                    if (this.options.groupByOrder.toUpperCase() === 'ASC') {
                         displayCollection = displayCollection.order(this.options.groupBy, true, false);                
                     } else {
                         displayCollection = displayCollection.order(this.options.groupBy, false, false);
@@ -2121,7 +2121,7 @@
                     for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                         var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
                         var nxtCase = (caseVals[oidx] === 'true' ? true : false);
-                        if (latestDirection.toUpperCase() === 'DESCENDING') {
+                        if (latestDirection.toUpperCase() === 'DSC') {
                             displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                         } else {
                             displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
