@@ -784,6 +784,7 @@
                         _self._rescrollList(listHeight);                        
                     });
                 }
+                _self._lastScrollPos = 0;
             };
             
             var _refreshUpDone = function() {
@@ -825,6 +826,8 @@
                 } else {
                     _self._atDataTop = true;
                 }
+                // Last scroll position is the very top of the list.
+                _self._lastScrollPos = _self.$parent.height() - _self.$listWrapper.height();
             }; 
 
             _self._prefetchedItems = _self._prefetchNext;
@@ -907,7 +910,7 @@
                         return;
                     }
                 }
-            } else if ((lastScroll < scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
+            } else if ((lastScroll <= scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
                 // Scrolling down.
                 if (scrollPos > (listHeight * .5)) {
                     if (!_self._prefetchNext) {
@@ -1898,6 +1901,15 @@
                     }
                 }, true, _self.extraItems, _self.originalList);
             }
+        },
+        
+        refreshSearchOptions: function(obj) {
+            this.options.indexedSearchType = obj.indexedSearchType;
+            this.options.indexedSearch = obj.indexedSearch;
+            this.options.localIndexedSearch = obj.localIndexedSearch;
+            this.options.onSearchClear = obj.onSearchClear;
+            this.options.afterSearchClear = obj.afterSearchClear; 
+            this._searchSortDirty = true;
         },
         
         refreshSearchBox: function() {

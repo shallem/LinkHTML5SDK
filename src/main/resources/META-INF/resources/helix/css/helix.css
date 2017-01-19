@@ -1036,3 +1036,7 @@ a.ui-li-link-alt.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     left: 18px;
     top: 5px;
 }
+
+.hx-clear-button {
+    background: transparent;
+}
