@@ -784,7 +784,8 @@
                         _self._rescrollList(listHeight);                        
                     });
                 }
-                _self._lastScrollPos = 0;
+                // Last scroll position is the very top of the list.
+                _self._lastScrollPos = _self.$parent.height() - _self.$listWrapper.height();
             };
             
             var _refreshUpDone = function() {
@@ -826,8 +827,7 @@
                 } else {
                     _self._atDataTop = true;
                 }
-                // Last scroll position is the very top of the list.
-                _self._lastScrollPos = _self.$parent.height() - _self.$listWrapper.height();
+                _self._lastScrollPos = 0;                
             }; 
 
             _self._prefetchedItems = _self._prefetchNext;
@@ -2271,7 +2271,7 @@
                     dividerLI.appendTo(_self.$parent);
                 } else {
                     dividerLI = LIs[arrIdx];
-                    $(dividerLI).text(groupName).show();
+                    $(dividerLI).empty().append(groupName).show();
                 }
                 if (groupOptions.search) {
                     $(dividerLI).append($('<div/>').attr({
@@ -2544,7 +2544,7 @@
             // Tap
             if (this.options.selectAction) {
                 /* Suppress tap and vclick so they don't propagate below this list. */
-                $(this.listWrapper).off('tap vclick').on('tap vclick', function (ev) {
+                $(this.listWrapper).off('tap vclick').on('tap vclick', 'li,a[data-origin="splitlink"],a.ui-link-inherit', function (ev) {
                     ev.stopImmediatePropagation();
                     return false;
                 });
@@ -2560,6 +2560,7 @@
                     _self._tapInstant = new Date().getTime();
                     _self._lastScrollTop = _self.$listWrapper.scrollTop();
                     _self._lastTapX = ev.changedTouches[0].clientX;
+                    _self._lastTapY = ev.changedTouches[0].clientY;
                     if (_self.options.itemContextMenu) {
                         _self._queueLongTap(ev);
                     }
@@ -2578,7 +2579,8 @@
                     var _tDiff = _now - _self._tapInstant;
                     var _yDiff = _self.$listWrapper.scrollTop() - _self._lastScrollTop;
                     var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
-                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10) {
+                    var _yTouchDiff = _self._lastTapY - ev.changedTouches[0].clientY;
+                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10 || Math.abs(_yTouchDiff) > 10) {
                         if (_self._nextTapTimer) {
                             clearTimeout(_self._nextTapTimer);
                             _self._nextTapTimer = null;
@@ -2609,6 +2611,7 @@
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
                     event.noButtonSelect = true;
                     event.stopImmediatePropagation();
+                    return false;
                 });
             }
             
