@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../misc/component.dtd" [
+]>
+<component>
+    <tag>contextMenuItemOption</tag>
+    <tagClass>org.helix.mobile.component.contextmenuitemoption.ContextMenuItemOptionTag</tagClass>
+    <componentClass>org.helix.mobile.component.contextmenuitemoption.ContextMenuItemOption</componentClass>
+    <componentType>org.helix.mobile.ContextMenuItemOption</componentType>
+    <componentFamily>org.helix.mobile.component</componentFamily>
+    <rendererType>org.helix.mobile.component.ContextMenuItemOptionRenderer</rendererType>
+    <rendererClass>org.helix.mobile.component.contextmenuitemoption.ContextMenuItemOptionRenderer</rendererClass>
+    <parent>javax.faces.component.UIOutput</parent>
+    <attributes>
+	<attribute>
+            <name>value</name>
+            <required>true</required>
+            <type>java.lang.Object</type>
+            <ignoreInComponent>true</ignoreInComponent>
+            <description>Value of the option.</description>
+        </attribute>
+        <attribute>
+            <name>label</name>
+            <required>true</required>
+            <type>java.lang.Object</type>
+            <description>Label of the option.</description>
+        </attribute>
+    </attributes>
+</component>

@@ -18,6 +18,13 @@
             <ignoreInComponent>true</ignoreInComponent>
             <description>Label of the menu item.</description>
         </attribute>
+	<attribute>
+            <name>type</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue>button</defaultValue>
+            <description>Type of menu item.</description>
+        </attribute>
         <attribute>
             <name>ontap</name>
             <required>true</required>

@@ -1959,8 +1959,9 @@
                         'data-icon' : 'hx-sort-asc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1976,8 +1977,9 @@
                         'data-icon' : 'hx-sort-desc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1998,8 +2000,9 @@
                         'data-icon' : 'hx-filter-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
