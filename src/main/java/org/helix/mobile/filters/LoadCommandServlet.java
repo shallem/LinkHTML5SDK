@@ -71,6 +71,10 @@ public class LoadCommandServlet extends HttpServlet {
                 } finally {
                     lca.postLoad(thisObj, req);
                 }
+                LOG.log(Level.FINER, "JSON serialized command length fo {0}: {1}", new Object[] {
+                    lca.getBeanName(),
+                    jsonToReturn.length()
+                });
                 LOG.log(Level.FINEST, "JSON to serialize for command {0}: {1}", new Object[] {
                     lca.getBeanName(),
                     jsonToReturn
