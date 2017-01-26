@@ -220,26 +220,8 @@
             });
         }
         
-        /* Cancel button. */
-        $contentDiv.append($('<a/>').attr({
-            'href' : 'javascript:void(0)',
-            'data-role' : 'button',
-            'data-inline' : 'true',
-            'data-theme' : 'c',
-            'data-corners' : 'false',
-            'style' : 'width: 90px',
-            'id' : dialog.name + '-cancel'
-        }).append(dialog.options.dismissTitle)
-            .on(Helix.clickEvent, function(ev) {
-                ev.stopImmediatePropagation();
-                if (dialog.options.onDismiss) {
-                    dialog.options.onDismiss.call(dialog);
-                }
-                $(dialog.$mainDiv).popup( "close" );
-                return false;
-            }).button()
-        );
-        
+        /* CONFIRM first */
+
         /* Confirm button. */
         $contentDiv.append($('<a/>').attr({
             'href' : 'javascript:void(0)',
@@ -264,6 +246,26 @@
                     args = args.concat(_self._callbackArgs);
                 }
                 dialog.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: dialog, args);
+                $(dialog.$mainDiv).popup( "close" );
+                return false;
+            }).button()
+        );
+        
+        /* Cancel button. */
+        $contentDiv.append($('<a/>').attr({
+            'href' : 'javascript:void(0)',
+            'data-role' : 'button',
+            'data-inline' : 'true',
+            'data-theme' : 'c',
+            'data-corners' : 'false',
+            'style' : 'width: 90px',
+            'id' : dialog.name + '-cancel'
+        }).append(dialog.options.dismissTitle)
+            .on(Helix.clickEvent, function(ev) {
+                ev.stopImmediatePropagation();
+                if (dialog.options.onDismiss) {
+                    dialog.options.onDismiss.call(dialog);
+                }
                 $(dialog.$mainDiv).popup( "close" );
                 return false;
             }).button()
