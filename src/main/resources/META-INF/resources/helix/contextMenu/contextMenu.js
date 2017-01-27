@@ -50,6 +50,14 @@
             beforeopen: null,
             
             /**
+             * Optional callback that is invoked after the context menu is opened. The 'this' variable
+             * in the call is determined by the object that opens this context menu. If that object specifies
+             * a 'this' object, then that specified object is relayed to the callback. Otherwise the context menu
+             * object is 'this' in the callback.
+             */
+            afteropen: null,
+            
+            /**
              * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
              * If no name is provided, one is generated. The getName method returns the name.
              */
@@ -408,6 +416,16 @@
             } else {
                 this._menuContainer.popup("open");
             }
+            
+            if (this.options.afteropen) {
+                if (this._thisArg) {
+                    var args = [ this ];
+                    args.push.apply(args, this._extraArgs);
+                    this.options.afteropen.apply(this._thisArg, args);
+                } else {
+                    this.options.afteropen.call(this);
+                }
+            }
         },
         hideGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').hide();
@@ -441,6 +459,13 @@
         },
         isActive: function() {
             return this.active;
+        },
+        getMenuElement: function() {
+            return this.optionsList;
+        },
+        getMenuItemElement: function(idx) {
+            var e = this.optionsList.find('li')[idx] 
+            return $(e);
         }
     });
 }(jQuery));

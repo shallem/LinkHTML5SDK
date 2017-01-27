@@ -882,6 +882,13 @@ function __refreshControl(subElem, noRefresh, mode) {
     }
 }
 
+function hxRefreshRadioButton(parentDOM, newValue) {
+    __refreshRadioButtons({
+        DOM: parentDOM,
+        value: newValue
+    });
+}
+
 function __refreshRadioButtons(formElem) {
     // Clear out all selections.
     $(formElem.DOM).find('input').removeAttr('checked').prop('checked', false);
