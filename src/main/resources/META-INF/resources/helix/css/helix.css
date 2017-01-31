@@ -746,7 +746,8 @@ li {
 }
 
 .ui-btn-active {
-    background-color: rgba(44, 92, 255, 0.8);
+    /*background-color: rgba(44, 92, 255, 0.8);*/
+    background-color: rgba(240, 240, 240, 1.0);
     background-image: -webkit-gradient(linear, left top, left bottom, from( rgba(0,0,0,0.37) /*{global-active-background-start}*/), to( #6facd5 /*{global-active-background-end}*/)); /* Saf4+, Chrome */
     background-image: -webkit-linear-gradient( rgba(0,0,0,0.37) /*{global-active-background-start}*/, #6facd5 /*{global-active-background-end}*/); /* Chrome 10+, Saf5.1+ */
     background-image:    -moz-linear-gradient( rgba(0,0,0,0.37) /*{global-active-background-start}*/, #6facd5 /*{global-active-background-end}*/); /* FF3.6 */

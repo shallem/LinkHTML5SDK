@@ -223,7 +223,8 @@
 
 /* Get rid of the grey background when a button was selected, but then you move on to another selection ...*/
 .ui-btn-down-d {
-    background-color: rgba(44,92,255,0.8);
+    /*background-color: rgba(44,92,255,0.8);*/
+    background-color: rgba(240, 240, 240, 1.0);
 }
 
 /* Background color of selected item in context menu */
