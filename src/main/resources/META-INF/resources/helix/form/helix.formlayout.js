@@ -882,6 +882,13 @@ function __refreshControl(subElem, noRefresh, mode) {
     }
 }
 
+function hxRefreshRadioButton(parentDOM, newValue) {
+    __refreshRadioButtons({
+        DOM: parentDOM,
+        value: newValue
+    });
+}
+
 function __refreshRadioButtons(formElem) {
     // Clear out all selections.
     $(formElem.DOM).find('input').removeAttr('checked').prop('checked', false);
@@ -2159,15 +2166,31 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
     if (refreshDone) {
         refreshDone();
     }
-}
+};
 
-Helix.Layout.createConfirmDialog = function(options) {
-    if (options.onclick && !options.onclick()) {
-        return;
-    }
-    
-    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
-    var popup = $('<div/>').attr({
+Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, action) {    
+    var btn = $('<a/>').attr({
+        'href' : 'javascript:void(0)',
+        'data-role' : 'button',
+        'data-inline' : 'true',
+        'data-theme' : theme,
+        'data-corners' : 'false',
+        'style' : 'width: ' + btnWidth + 'px',
+        'id' : btnId
+    }).append(text);
+    $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(btnId), [ popup, action], function(e) {
+        e.preventDefault();
+        $(e.data[0]).popup("close");
+        if (e.data[1]) {
+            (e.data[1])();
+        }
+        return false;
+    });
+    return btn;
+};
+
+Helix.Layout._createDialogPopup = function(popupId) {
+    return $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
         'data-overlay-theme' : 'c',
@@ -2176,65 +2199,9 @@ Helix.Layout.createConfirmDialog = function(options) {
         'data-history' : 'false',
         'style' : 'max-width: 300px'
     });
-    
-    var closebtn = $('<a/>').attr({
-        'href' : 'javascript:void(0)',
-        'data-role' : 'button',
-        'data-inline' : 'true',
-        'data-theme' : 'c',
-        'data-corners' : 'false',
-        'style' : 'width: 90px',
-        'id' : popupId + "-cancel"
-    });
-    if (options.dismissText) {
-        $(closebtn).append(options.dismissText);
-    } else {
-        $(closebtn).append("Dismiss");
-    }
-    if (options.ondismiss) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
-            e.preventDefault();
-            options.ondismiss();
-            $(popup).popup("close");
-            return false;
-        });
-    } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-cancel"), function(e) {
-            e.preventDefault();
-            $(popup).popup("close");
-            return false;
-        });
-    }
-    
-    var confirmbtn = $('<a/>').attr({
-        'href' : 'javascript:void(0)',
-        'data-role' : 'button',
-        'data-inline' : 'true',
-        'data-theme' : 'b',
-        'data-corners': 'false',
-        'style' : 'width: 90px',
-        'id' : popupId + "-confirm"
-    });
-    if (options.confirmText) {
-        $(confirmbtn).append(options.confirmText);
-    } else {
-        $(confirmbtn).append("Confirm");
-    }
-    if (options.onconfirm) {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
-            e.preventDefault();
-            options.onconfirm();
-            $(popup).popup("close");
-            return false;
-        });
-    } else {
-        $(document).on('tap', PrimeFaces.escapeClientId(popupId + "-confirm"), function(e) {
-            e.preventDefault();
-            $(popup).popup("close");
-            return false;
-        });
-    }
-    
+};
+
+Helix.Layout._layoutPopup = function(popup, options, buttons) {
     var titleStyleClass = options.titleStyleClass ? options.titleStyleClass : 'dialog-title';
     var header = $("<div/>").attr({
         'data-role' : 'header',
@@ -2244,31 +2211,62 @@ Helix.Layout.createConfirmDialog = function(options) {
                'style' : 'margin-left: .5em', // remove icon empty margin
                'class' : 'ui-title'
             }).append(options.title));
-        
-    $(popup)
-        .append(header)
-        .append($('<div/>').attr({
+    
+    var content = $('<div/>').attr({
             'data-role' : 'content',
             'style' : 'margin: .5em .5em .5em .5em',
             'data-theme' : 'd',
             'class' : 'ui-corner-bottom ui-content'
         })
-            .append($('<p/>').append(options.message))
-            .append(closebtn)
-            .append(confirmbtn)
-    );
-    
-    $(document).on("popupafterclose", PrimeFaces.escapeClientId(popupId), function() {
-        $(this).remove();
-    });				
+        .append($('<p/>')
+        .append(options.message));
+    for (var i = 0; i < buttons.length; ++i) {
+        content.append(buttons[i]);
+    }
+
+    $(popup)
+        .append(header)
+        .append(content);
 
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     $.mobile.activePage.append( popup ).trigger( "pagecreate" );
-    setTimeout(function() {
-        $(popup).popup("open");    
-    }, 200);
+    $(popup).popup({});
+    $(popup).on('popupafterclose', function() {
+        $(this).remove();
+    });
+    $(popup).popup("open");    
+    
     $(window).on('navigate.popup', function (e) {
         e.preventDefault();
         $(window).off('navigate.popup');
-    });        
+    }); 
+};
+
+Helix.Layout.createYesNoCancelDialog = function(options) {
+    if (options.onclick && !options.onclick()) {
+        return;
+    }
+    
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
+    var popup = Helix.Layout._createDialogPopup(popupId);
+    
+    var yesBtn = Helix.Layout._createButton(popupId + '-yes', '80', 'b', popup, options.yesText ? options.yesText : 'Yes', options.onYes);
+    var noBtn = Helix.Layout._createButton(popupId + '-no', '80', 'c', popup, options.noText ? options.noText : 'No', options.onNo);
+    var cancelBtn = Helix.Layout._createButton(popupId + '-cancel', '80', 'c', popup, options.cancelText ? options.cancelText : 'Cancel', options.onCancel);
+        
+    Helix.Layout._layoutPopup(popup, options, [ yesBtn, noBtn, cancelBtn ]);   
+};
+
+Helix.Layout.createConfirmDialog = function(options) {
+    if (options.onclick && !options.onclick()) {
+        return;
+    }
+    
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
+    var popup = Helix.Layout._createDialogPopup(popupId);
+    
+    var closebtn = Helix.Layout._createButton(popupId + '-cancel', '90', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
+    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '90', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
+        
+    Helix.Layout._layoutPopup(popup, options, [ confirmbtn, closebtn ]);   
 };

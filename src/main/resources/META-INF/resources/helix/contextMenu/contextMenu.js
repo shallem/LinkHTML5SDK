@@ -50,6 +50,14 @@
             beforeopen: null,
             
             /**
+             * Optional callback that is invoked after the context menu is opened. The 'this' variable
+             * in the call is determined by the object that opens this context menu. If that object specifies
+             * a 'this' object, then that specified object is relayed to the callback. Otherwise the context menu
+             * object is 'this' in the callback.
+             */
+            afteropen: null,
+            
+            /**
              * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
              * If no name is provided, one is generated. The getName method returns the name.
              */
@@ -72,10 +80,10 @@
 
             if (Helix.hasTouch) {
                 this.tapEvent = 'touchstart';
-                this.stopEvent = Helix.clickEvent + ' tap touchend click mousedown';
+                this.stopEvent = Helix.clickEvent + ' tap touchstart touchend vclick click mousedown';
             } else {
                 this.tapEvent = 'click';
-                this.stopEvent = '';
+                this.stopEvent = 'vclick click';
             }
             if (Helix.deviceType === 'phone') {
                 this._maxHeight = 300;
@@ -107,6 +115,7 @@
             }
             var target = items[0];
 
+            
             if (status === true) {
                 // show item
                 $(target).closest('li').show();
@@ -133,18 +142,36 @@
             }
             var target = items[0];
 
-            if (status === true) {
-                // Enable item
-                if (selected.enabled === false) {
-                    $(target).closest('li').removeClass('ui-disabled');
+            if ($.isArray(status)) {
+                var inputs = $(target).find('input[type="radio"]');
+                for (var i = 0; i < status.length; ++i) {
+                    var _input = inputs[i];
+                    if (status[i] === true) {
+                        $(_input).checkboxradio('enable');
+                    } else {
+                        $(_input).checkboxradio('disable');
+                    }
+                }
+            } else if (selected.type === 'checkbox') {
+                if (status === true) {
+                    $(items).checkboxradio('enable');
+                } else {
+                    $(items).checkboxradio('disable');
                 }
             } else {
-                // Disable item
-                // 'enabled' may be true, false or null/undefined
-                if (selected.enabled || (selected.enabled === undefined)) {
-                    var li = $(target).closest('li');
-                    $(li).addClass('ui-disabled');
-                }   
+                if (status === true) {
+                    // Enable item
+                    if (selected.enabled === false) {
+                        $(target).closest('li').removeClass('ui-disabled');
+                    }
+                } else {
+                    // Disable item
+                    // 'enabled' may be true, false or null/undefined
+                    if (selected.enabled || (selected.enabled === undefined)) {
+                        var li = $(target).closest('li');
+                        $(li).addClass('ui-disabled');
+                    }   
+                }
             }
 
             selected.enabled = status;
@@ -166,7 +193,8 @@
                 'data-role' : 'listview',
                 'data-inset' : 'true',
                 'id' : this.id + "-ul" 
-            }).appendTo(this._menuContainer);
+            });
+            this._menuContainer.append(this.optionsList);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
                 var nxtLI = $('<li />');
@@ -175,13 +203,85 @@
                     nxtLI.attr('data-role', 'list-divider');
                     nxtLI.append(nxtItem.display);
                 } else {
-                    var nxtLink = $('<a />').attr({
-                        'href' : 'javascript:void(0)',
-                        'data-index' : i,
-                        'id' : this.options.name + '-' + (nxtItem.name ? nxtItem.name: i)
-                    }).append(nxtItem.display);
+                    var nxtLink;
+                    var inputID = this.options.name + '-' + (nxtItem.name ? nxtItem.name: i);
+                    switch(nxtItem.type) {
+                        case 'radio':
+                            var form = $('<form/>').appendTo(nxtLI);
+                            var fieldSet = nxtLink = $('<fieldset/>').attr({
+                                        'data-role' : 'controlgroup',
+                                        'data-type' : 'horizontal',
+                                        'data-index' : i
+                                }).append($('<legend/>').append($('<span/>').css('font-weight', 'bold').append(nxtItem.display))).appendTo(form);
+                            for (var j = 0; j < nxtItem.options.length; ++j) {
+                                var _opt = nxtItem.options[j];
+                                var inputMarkup = $('<input/>').attr({
+                                    'type': 'radio',
+                                    'name': nxtItem.name,
+                                    'id': inputID + '-' + j + '-id',
+                                    'value': _opt.value
+                                });        
+                                fieldSet.append(inputMarkup)
+                                fieldSet.append($('<label/>').attr({
+                                    'for': inputID + '-' + j + '-id'
+                                }).append(_opt.label));             
+                                inputMarkup.checkboxradio({
+                                    mini: true
+                                });
+                                $(inputMarkup).change(nxtItem, function(ev) {
+                                    if ($(this).prop('checked')) {
+                                        _self.__runAction(ev, ev.data, $(this).attr('value'), true);
+                                    }
+                                });
+                            }
+                            fieldSet.controlgroup({ 
+                                mini : true,
+                                type: 'vertical'
+                            });
+                            break;
+                        case 'checkbox':
+                            var form = $('<form/>').appendTo(nxtLI);
+                            nxtLink = $('<input/>').attr({
+                                'name': nxtItem.name,
+                                'id' : inputID,
+                                'type' : 'checkbox',
+                                'tabindex' : -1,
+                                'data-index' : i
+                            }).appendTo(form);
+                            $('<label/>').attr({
+                                'for': inputID,
+                                'data-corners' : 'false'
+                            }).append(nxtItem.display).appendTo(form);
+                            nxtLink.checkboxradio({
+                                mini: true
+                            });
+                            $(nxtLink).change(nxtItem, function(ev) {
+                                if ($(this).prop('checked')) {
+                                    _self.__runAction(ev, ev.data, true, true);
+                                } else {
+                                    _self.__runAction(ev, ev.data, false, true);
+                                }
+                            });
+                            break;
+                        default:
+                            nxtLink = $('<a />').attr({
+                                'href' : 'javascript:void(0)',
+                                'data-index' : i,
+                                'id' : inputID
+                            }).append(nxtItem.display).appendTo(nxtLI);
+                            nxtLink.on(_self.tapEvent, function(evt) {
+                                return _self._handleClick(evt);
+                            });
+                            if (_self.stopEvent) {
+                                nxtLink.on(_self.stopEvent, function(evt) {
+                                    evt.stopImmediatePropagation();
+                                    return false;
+                                });
+                            }
+                            break;
+                    }
                     if (nxtItem.data) {
-                        nxtLink.attr('data-field', nxtItem.data);
+                        nxtLI.attr('data-field', nxtItem.data);
                     }
                     if (nxtItem.enabled === false) {
                         nxtLI.addClass('ui-disabled');
@@ -191,34 +291,22 @@
                     }
                     if (nxtItem.styleClass) {
                         nxtLI.addClass(nxtItem.styleClass);
-                    }
-                    nxtLI.append(nxtLink);
-                    nxtLink.on(_self.tapEvent, function(evt) {
-                        return _self._handleClick(evt);
-                    });
-                    if (_self.stopEvent) {
-                        nxtLink.on(_self.stopEvent, function(evt) {
-                            evt.stopImmediatePropagation();
-                            return false;
-                        });
-                    }
+                    }                            
                 }
                 this.optionsList.append(nxtLI);
             }
 
-            $(_self._menuContainer).on(_self.tapEvent, function(evt) {
+            /*$(_self._menuContainer).on(_self.tapEvent, function(evt) {
                 // Prevent these events from reaching whatever is below the menu.
                 evt.stopImmediatePropagation();
                 return false;
-            });
+            });            
             if (_self.stopEvent) {
                 $(_self._menuContainer).on(_self.stopEvent, function(evt) {
                     // Prevent these events from reaching whatever is below the menu.
                     evt.stopImmediatePropagation();
-                    return false;
                 });
-            }
-
+            }*/
             this.optionsList.listview({
                 theme: this.options.theme,
                 dividerTheme: this.options.dividerTheme
@@ -230,6 +318,28 @@
                 }
             });
         },
+        __runAction: function(evt, item, value, noClose) {
+            var _self = this;
+            var cbData = $(evt.target).closest('li').attr('data-field');
+            
+            var args = [ cbData, evt ];
+            args.push.apply(args, _self._extraArgs);
+            if (value !== undefined) {
+                args.push(value);
+            }
+            if (_self._thisArg) {
+                item.action.apply(_self._thisArg, args);
+            } else {
+                item.action.apply(_self, args);
+            }
+            // Do this asynchronously so that the screen overlay is still there until
+            // after touch end has completely made its way through the DOM.
+            setTimeout(function() {
+                if (!noClose) {
+                    _self.close();
+                }
+            }, 0);
+        },
         _handleClick : function(evt) {
             if (!this.active) {
                 return true;
@@ -237,36 +347,21 @@
             evt.stopImmediatePropagation();
             evt.preventDefault();
 
-            var cbData = $(evt.target).attr('data-field');
             var cbIndex = $(evt.target).attr('data-index');
 
             var _self = this;
             var item = this.options.items[cbIndex];
             if (item.action) {
-                var __runAction = function () {
-                    var args = [ cbData, evt ];
-                    args.push.apply(args, _self._extraArgs);
-                    if (_self._thisArg) {
-                        item.action.apply(_self._thisArg, args);
-                    } else {
-                        item.action.apply(_self, args);
-                    }
-                    // Do this asynchronously so that the screen overlay is still there until
-                    // after touch end has completely made its way through the DOM.
-                    setTimeout(function() {
-                        _self.close();
-                    }, 0);
-                };
                 if (Helix.hasTouch) {
                     // See if the user scrolls before we see touchend. If they do,
                     // then do not fire the event.
                     var scrollTop = $(this._menuContainer).scrollTop();
-                    $(evt.target).off('touchend').on('touchend', function (evt2) {
+                    $(evt.target).off('touchend').on('touchend', item, function (evt2) {
                         var cbIndex2 = $(evt2.target).attr('data-index');
                         if (cbIndex === cbIndex2 &&
                                 Math.abs(scrollTop - $(_self._menuContainer).scrollTop()) < 10) {
                             evt2.stopImmediatePropagation();
-                            __runAction();
+                            _self.__runAction(evt2, evt2.data);
                             return false;
                         }
                         return true;
@@ -276,7 +371,7 @@
                     }, 2500);
                     return true;
                 } else {
-                    __runAction();
+                    _self.__runAction(evt, item);
                     return false;
                 }
             }
@@ -321,6 +416,16 @@
             } else {
                 this._menuContainer.popup("open");
             }
+            
+            if (this.options.afteropen) {
+                if (this._thisArg) {
+                    var args = [ this ];
+                    args.push.apply(args, this._extraArgs);
+                    this.options.afteropen.apply(this._thisArg, args);
+                } else {
+                    this.options.afteropen.call(this);
+                }
+            }
         },
         hideGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').hide();
@@ -354,6 +459,13 @@
         },
         isActive: function() {
             return this.active;
+        },
+        getMenuElement: function() {
+            return this.optionsList;
+        },
+        getMenuItemElement: function(idx) {
+            var e = this.optionsList.find('li')[idx] 
+            return $(e);
         }
     });
 }(jQuery));

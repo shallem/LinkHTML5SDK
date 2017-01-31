@@ -266,6 +266,8 @@ html .fc,
 	color: #fff;               /* default TEXT color */
 	font-size: .85em;
 	cursor: default;
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
 	}
 
 a.fc-event {
@@ -290,7 +292,9 @@ a.fc-event,
 .fc-event-time,
 .fc-event-title {
 	padding: 0 1px;
-	}
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+}
 	
 .fc .ui-resizable-handle {
 	display: block;

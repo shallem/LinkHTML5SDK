@@ -30,7 +30,8 @@ public class ContextMenuItemRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         ContextMenuItem item = (ContextMenuItem) component; 
-
+        String itemType = item.getType();
+        
         /*writer.endElement("a");
         writer.endElement("li");*/
         writer.write("{");
@@ -38,6 +39,7 @@ public class ContextMenuItemRenderer extends CoreRenderer {
         writer.write(",'action' : " + item.getOntap());
         writer.write(",'enabled' : " + Boolean.toString(item.isEnabled()));
         writer.write(",'name' : '" + item.getClientId(context) + "'");
+        writer.write(",type: '" + itemType + "'");
         if (item.getGroup() != null) {
             writer.write(",'group' : '" + item.getGroup() + "'");
         }
@@ -47,6 +49,20 @@ public class ContextMenuItemRenderer extends CoreRenderer {
         if (item.getData() != null) {
             writer.write(",'data' : '" + item.getData() + "'");
         }
+        if (itemType.equals("radio")) {
+            writer.write(",'options': [");
+            boolean isFirst = true;
+            for (UIComponent c : item.getChildren()) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    writer.write(",\n");
+                }
+                c.encodeAll(context);
+            }
+            writer.write("]");
+        }
+        
         writer.write("}");
     }
     

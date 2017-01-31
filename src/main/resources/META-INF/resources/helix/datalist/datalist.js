@@ -218,6 +218,11 @@
             indexedSearchText: '',
 
             /**
+             * Text to set the first time (and only the first time) the search box is displayed.
+             */
+            defaultSearchText: '',
+
+            /**
              * Type of box - is it a 'search' box or a 'filter' box.
              */
             indexedSearchType: 'search',
@@ -779,6 +784,8 @@
                         _self._rescrollList(listHeight);                        
                     });
                 }
+                // Last scroll position is the very top of the list.
+                _self._lastScrollPos = _self.$parent.height() - _self.$listWrapper.height();
             };
             
             var _refreshUpDone = function() {
@@ -820,6 +827,7 @@
                 } else {
                     _self._atDataTop = true;
                 }
+                _self._lastScrollPos = 0;                
             }; 
 
             _self._prefetchedItems = _self._prefetchNext;
@@ -902,7 +910,7 @@
                         return;
                     }
                 }
-            } else if ((lastScroll < scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
+            } else if ((lastScroll <= scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
                 // Scrolling down.
                 if (scrollPos > (listHeight * .5)) {
                     if (!_self._prefetchNext) {
@@ -929,9 +937,12 @@
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,
          * and globalFilters with the format described in the options documentation.
          */
-        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions) {
+        refreshList: function(list,condition,sortFilterOptions,oncomplete,resetSelection,extraItems,overrideOptions,keepOverrides) {
             var _self = this;
             var _options = $.extend({}, _self.options, (overrideOptions ? overrideOptions : {}));
+            if (keepOverrides) {
+                _self.options = _options;
+            }
 
             // Prevent this function from being called again. Future calls should all go to refreshData.
             _self.isLoaded = true;            
@@ -996,7 +1007,8 @@
             }
             
             /* Generate the actual data for the current page. */
-            _self._prependSearchBox();
+            _self._searchSortDirty = true;
+            _self._prependSearchBox(_options);
             _self._updateSortButtons();
             
             /* generate a clear selection button for multi select */
@@ -1151,7 +1163,8 @@
                 'id' : Helix.Utils.getUniqueID(),
                 'data-theme' : 'd',
                 'data-position-to' : 'origin',
-                'data-history': 'false'
+                'data-history': 'false',
+                'data-icon' : 'false'
             }).appendTo(_self.$wrapper);
             var sortsList = $('<ul />').attr({ 
                 'data-role' : 'listview',
@@ -1348,17 +1361,17 @@
                     
                 }, true, undefined, _self._resetGlobalFilters());
             } else {
-                if (_self._filterMap[gFilterField] &&
-                    _self._filterMap[gFilterField] === _filterValue) {
+                if (gFilterField in _self._filterMap) {
+                    if (_self._filterMap[gFilterField] === _filterValue) {
                     // The filter did not change ... do nothing.
-                    return;
-                } else if (_self._filterMap[gFilterField] &&
-                           _self._filterMap[gFilterField] !== _filterValue) {
-                    // The filter value changed. Apply the filter to the original list.
-                    _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(function() {
-                    
-                    }, true, undefined, _self._resetGlobalFilters());
+                        return;
+                    } else {
+                        // The filter value changed. Apply the filter to the original list.
+                        _self._filterMap[gFilterField] = _filterValue;
+                        _self._refreshData(function() {
+
+                        }, true, undefined, _self._resetGlobalFilters());
+                    }
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
@@ -1371,9 +1384,9 @@
         
         _clearGlobalFilterMenu: function() {
             for (var fField in this._filterMap) {
-                $('option[data-field="' + fField + '"]').removeAttr('selected');
-                $('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
-                $('select[data-field="' + fField + '"]').selectmenu('refresh');
+                this._globalFilterContainer.find('option[data-field="' + fField + '"]').removeAttr('selected');
+                this._globalFilterContainer.find('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
+                this._globalFilterContainer.find('select[data-field="' + fField + '"]').selectmenu('refresh');
             }
         },
         
@@ -1585,6 +1598,14 @@
             }, _options.emptyMessage, oncomplete, noPaginate, _self.extraItems, _options);
         },
         
+        hasIndexedSearch: function() {
+            if (this.options.indexedSearch) {
+                return true;
+            }
+            
+            return false;
+        },
+        
         indexedSearchDone: function(displayCollection, oncomplete, optionsOverrides) {
             var _self = this;
             if (!oncomplete) {
@@ -1680,9 +1701,9 @@
                 }
 
                 if (_self._renderSingleRow(LIs, groupIndex, _self._itemsPerPage, nxt, function() {
+                    ++_self.nRendered;
                     __renderGroup(groupIndex + 1);
                 })) {
-                    ++_self.nRendered;
                 }
             };
             
@@ -1822,6 +1843,10 @@
             return this.$searchBox.val()
         },
         
+        setCurrentSearchText: function(searchQry) {
+            this.$searchBox.val(searchQry);
+        },
+        
         _doSearch: function() {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();            
@@ -1867,6 +1892,8 @@
                 _doRefresh = _self.options.onSearchClear.call(_self);
             }
             if (_doRefresh !== false) {
+                _self.unfilteredList = _self.originalList;
+                _self._clearGlobalFilterMenu();
                 _self._refreshData(function() {
                     _self.scrollToStart();
                     if (_self.options.afterSearchClear) {
@@ -1876,7 +1903,21 @@
             }
         },
         
-        _prependSearchBox: function() {
+        refreshSearchOptions: function(obj) {
+            this.options.indexedSearchType = obj.indexedSearchType;
+            this.options.indexedSearch = obj.indexedSearch;
+            this.options.localIndexedSearch = obj.localIndexedSearch;
+            this.options.onSearchClear = obj.onSearchClear;
+            this.options.afterSearchClear = obj.afterSearchClear; 
+            this._searchSortDirty = true;
+        },
+        
+        refreshSearchBox: function() {
+            this._searchSortDirty = true;
+            this._prependSearchBox(this.options);
+        },
+        
+        _prependSearchBox: function(options) {
             var _self = this;
             var useControlGroup = false;
             if (!_self._searchSortDirty) {
@@ -1885,17 +1926,17 @@
             
             _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
-            if (!_self.options.showSortButton && !_self.options.showFilterButton && !_self.options.indexedSearch) {
+            if (!options.showSortButton && !options.showFilterButton && !options.indexedSearch) {
                 _self.$searchSortDiv.hide();
                 return;
             }
 
             var _attachButtons = function() {
-                if (!_self.options.showSortButton && !_self.options.showFilterButton) {
+                if (!options.showSortButton && !options.showFilterButton) {
                     return;
                 }
                 
-                if (_self.options.showSortButton && _self.options.showFilterButton) {
+                if (options.showSortButton && options.showFilterButton) {
                     useControlGroup = true;
                 }
                 
@@ -1903,7 +1944,7 @@
                     'data-role' : 'none',
                     'data-type' : 'horizontal'
                 }).appendTo(_self.$searchSortDiv);
-                if (_self.options.showSortButton) {
+                if (options.showSortButton) {
                     /* Ascending/descending sort buttons. */
                     var sAscendID = Helix.Utils.getUniqueID();
                     var sDescendID = Helix.Utils.getUniqueID();
@@ -1918,8 +1959,9 @@
                         'data-icon' : 'hx-sort-asc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1935,8 +1977,9 @@
                         'data-icon' : 'hx-sort-desc-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1948,7 +1991,7 @@
                     });                    
                 }
                 
-                if (_self.options.showFilterButton) {
+                if (options.showFilterButton) {
                     /* Filter button. */
                     var sFilterID = Helix.Utils.getUniqueID();
                     this.$filter = $('<a/>').attr({
@@ -1957,8 +2000,9 @@
                         'data-icon' : 'hx-filter-black',
                         'data-iconpos' : 'notext',
                         'data-theme' : 'd',
+                        'data-corners' : 'false',
                         'data-mini' : (useControlGroup ? 'true' : 'false'),
-                        'class' : 'ui-icon-alt hx-icon-sort-filter'
+                        'class' : 'iconbutton ui-icon-alt hx-icon-sort-filter'
                     }).button()
                     .appendTo(_self.$sortDiv)
                     .on(_self.tapEvent, function(ev) {
@@ -1970,8 +2014,8 @@
                     });                    
                 }
                 
-                if (this.options.externalButtonsCallback) {
-                    this.options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
+                if (options.externalButtonsCallback) {
+                    options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
                 }
                 
                 if (useControlGroup) {
@@ -1985,7 +2029,7 @@
                 var $searchDiv = $('<div/>').addClass('hx-almost-full-width').appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
-                if (this.options.indexedSearchType !== 'search') {
+                if (options.indexedSearchType !== 'search') {
                     sboxType = 'text';
                 }
                 this.$searchBox = $('<input/>').attr({
@@ -1994,7 +2038,7 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
-                    'value': this.options.indexedSearchText
+                    'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
                 this.$searchLabel = $('<label/>').attr({
@@ -2003,13 +2047,16 @@
                 this.$searchBox.textinput({
                     clearBtn : true
                 });
+                if (options.defaultSearchText) {
+                    this.__searchText =  options.defaultSearchText;
+                }
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
                 this.$searchBox.on('input', function() {                   
                     _self._doSearch();
                 });
-                if (this.options.indexedSearchText) {
+                if (options.indexedSearchText) {
                     _self.__searchClear = true;
                     this.$searchBox.on('focus', function() {
                         if (_self.__searchClear) {
@@ -2054,13 +2101,13 @@
                 });
             };
 
-            if (this.options.buttonPos === 'left') {
+            if (options.buttonPos === 'left') {
                 _attachButtons.call(this);
-                if (this.options.indexedSearch || this.options.localIndexedSearch) {
+                if (options.indexedSearch || options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }                
             } else {
-                if (this.options.indexedSearch  || this.options.localIndexedSearch) {
+                if (options.indexedSearch  || options.localIndexedSearch) {
                     _attachSearchBox.call(this);
                 }
                 _attachButtons.call(this);
@@ -2227,7 +2274,7 @@
                     dividerLI.appendTo(_self.$parent);
                 } else {
                     dividerLI = LIs[arrIdx];
-                    $(dividerLI).text(groupName).show();
+                    $(dividerLI).empty().append(groupName).show();
                 }
                 if (groupOptions.search) {
                     $(dividerLI).append($('<div/>').attr({
@@ -2500,7 +2547,7 @@
             // Tap
             if (this.options.selectAction) {
                 /* Suppress tap and vclick so they don't propagate below this list. */
-                $(this.listWrapper).off('tap vclick').on('tap vclick', function (ev) {
+                $(this.listWrapper).off('tap vclick').on('tap vclick', 'li,a[data-origin="splitlink"],a.ui-link-inherit', function (ev) {
                     ev.stopImmediatePropagation();
                     return false;
                 });
@@ -2516,6 +2563,7 @@
                     _self._tapInstant = new Date().getTime();
                     _self._lastScrollTop = _self.$listWrapper.scrollTop();
                     _self._lastTapX = ev.changedTouches[0].clientX;
+                    _self._lastTapY = ev.changedTouches[0].clientY;
                     if (_self.options.itemContextMenu) {
                         _self._queueLongTap(ev);
                     }
@@ -2534,7 +2582,8 @@
                     var _tDiff = _now - _self._tapInstant;
                     var _yDiff = _self.$listWrapper.scrollTop() - _self._lastScrollTop;
                     var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
-                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10) {
+                    var _yTouchDiff = _self._lastTapY - ev.changedTouches[0].clientY;
+                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10 || Math.abs(_yTouchDiff) > 10) {
                         if (_self._nextTapTimer) {
                             clearTimeout(_self._nextTapTimer);
                             _self._nextTapTimer = null;
@@ -2565,6 +2614,7 @@
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
                     event.noButtonSelect = true;
                     event.stopImmediatePropagation();
+                    return false;
                 });
             }
             
@@ -2694,9 +2744,11 @@
             
             return true;
         },
+        
         getSelected: function() {
             return this.selected;
         },
+        
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
@@ -2706,6 +2758,16 @@
                 this.selected = null;
                 this.selectedGroup = null;
             }
+        },
+        
+        clearSearchSort: function() {
+            this.options.indexedSearch = null;
+            this.options.localIndexedSearch = null;
+            this.options.indexedSearchText = null;
+            this.options.onSearchClear = null;
+            this.options.afterSearchClear = null;
+            
+            this._searchSortDirty = true;
         },
         
         removeElement: function(idx) {
@@ -2868,14 +2930,14 @@
                 components.subicon.remove();
             }
 
-            //var oldPfx = $(mainLink).find('[data-role="prefix"]');
             var oldPfx = components.prefix;
             if (rowComponents.prefix) {
                 if (oldPfx /*oldPfx.length*/) {
                     oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
                 } else {
-                    mainLink.append($('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix')));
-                    mainLink = $('<div/>').appendTo(mainLink);
+                    var pfx = $('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix'));
+                    mainLink.prepend(pfx);
+                    mainLink = $('<div/>').insertAfter(pfx);
                 }
             } else if (oldPfx) {
                 oldPfx.closest('div').next().remove();
@@ -2940,10 +3002,15 @@
             var bodyMarkup = components.body;
             if (rowComponents.body) {
                 if (rowComponents.header || rowComponents.subHeader) {
-                    //bodyMarkup = mainLink.find('p[data-role="body"]');
-                    if (bodyMarkup /*bodyMarkup.length*/) {
+                    if (headerMarkup && bodyMarkup /*bodyMarkup.length*/) {
+                        // we previously had a header and a body
                         bodyMarkup.empty().append(rowComponents.body).show();
                     } else {
+                        // we previously had no header or no body ... in this case our rendering of the body changes,
+                        // so we need to clear it out even if it did exist.
+                        if (bodyMarkup) {
+                            bodyMarkup.empty();
+                        }
                         mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
                     }
                 } else {
@@ -3020,7 +3087,7 @@
                     var allArgs = [ this.selected, this.selectedGroup, this.strings ].concat(this.options.itemContextMenuArgs)
                     this.options.selectAction.apply(this, allArgs);
                 } else {
-                    this.options.selectAction(this.selected, this.selectedGroup, this.strings);
+                    this.options.selectAction.call(this, this.selected, this.selectedGroup, this.strings);
                 }
             }          
         },

@@ -2478,6 +2478,9 @@
             firstRowCellInners = bodyRows.eq(0).find('.fc-day > div');
             firstRowCellContentInners = bodyRows.eq(0).find('.fc-day-content > div');
 
+            colPositions = new HorizontalPositionCache(firstRowCellInners);
+            colContentPositions = new HorizontalPositionCache(firstRowCellContentInners);
+
             markFirstLast(head.add(head.find('tr'))); // marks first+last tr/th's
             markFirstLast(bodyRows); // marks first+last td's
             bodyRows.eq(0).addClass('fc-first');
@@ -2828,15 +2831,6 @@
 
 
         hoverListener = new HoverListener(coordinateGrid);
-
-        colPositions = new HorizontalPositionCache(function (col) {
-            return firstRowCellInners.eq(col);
-        });
-
-        colContentPositions = new HorizontalPositionCache(function (col) {
-            return firstRowCellContentInners.eq(col);
-        });
-
 
         function colLeft(col) {
             return colPositions.left(col);
@@ -3316,6 +3310,9 @@
             dayBodyCellInners = dayBodyCells.find('> div');
             dayBodyCellContentInners = dayBodyCells.find('.fc-day-content > div');
 
+            colPositions = new HorizontalPositionCache(dayBodyCellInners);
+            colContentPositions = new HorizontalPositionCache(dayBodyCellContentInners);
+
             dayBodyFirstCell = dayBodyCells.eq(0);
             dayBodyFirstCellStretcher = dayBodyCellInners.eq(0);
 
@@ -3681,15 +3678,6 @@
 
 
         hoverListener = new HoverListener(coordinateGrid);
-
-        colPositions = new HorizontalPositionCache(function (col) {
-            return dayBodyCellInners.eq(col);
-        });
-
-        colContentPositions = new HorizontalPositionCache(function (col) {
-            return dayBodyCellContentInners.eq(col);
-        });
-
 
         function colLeft(col) {
             return colPositions.left(col);
@@ -6378,7 +6366,7 @@
             ;
             ;
 
-            function HorizontalPositionCache(getElement) {
+            function HorizontalPositionCache(elems) {
 
                 var t = this,
                         elements = {},
@@ -6386,23 +6374,30 @@
                         rights = {};
 
                 function e(i) {
-                    return elements[i] = elements[i] || getElement(i);
+                    return elements[i];
                 }
 
                 t.left = function (i) {
-                    return lefts[i] = lefts[i] === undefined ? e(i).position().left : lefts[i];
+                    return lefts[i] = (!lefts[i]) ? e(i).position().left : lefts[i];
                 };
 
                 t.right = function (i) {
-                    return rights[i] = rights[i] === undefined ? t.left(i) + e(i).width() : rights[i];
+                    return rights[i] = (!rights[i]) ? t.left(i) + e(i).width() : rights[i];
                 };
 
                 t.clear = function () {
-                    elements = {};
                     lefts = {};
                     rights = {};
                 };
 
+                elems.each(function(i, elem) {
+                    // Populate the elements cache, the left, and the right cache at the time of 
+                    // construction of this cache. We do so to ensure that we create this cache when
+                    // the calendar is visible. If we "lazy load" this cache (as the original implementation did) and
+                    // the calendar is not on the page at the time of the lazy load, the left and right cache will be
+                    // populated with the position 0, which then prevents the proper rendering of *any* calendar events.
+                    elements[i] = $(elem);
+                });
             }
 
             ;

@@ -30,37 +30,37 @@
 	-webkit-border-radius: 				9px;
 	border-radius: 						9px;
 }
-/* Alt icon color
------------------------------------------------------------------------------------------------------------*/
-/* Generated from http://csssprites.com/ */
-.ui-icon-alt .ui-icon,
-.ui-icon-alt .ui-icon-searchfield:after {
-	background-color: 						#fff;
-	background-color: 						rgba(255,255,255,.3);
-	background-image: url("#{resource['helix:images/hx-icons-18-black.png']}");
-        background-repeat: no-repeat;
+
+.ui-icon.ui-icon-hx-filter-black {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAXCAYAAAAP6L+eAAABeUlEQVQ4Ee2UvyuEcRzHHReSxEQil8FA2Qx0q0m3GFgpwy3yJ1hZlI2yG8jCZqLLKFaDzo90JjIIJV6vq+fpoeeuO49Fedfr+jyf7/f9+T7P5z7Pk2qIV4r0IAxBL3RBG6hneIA7uIBL+IAvskAgzTOQgzG4hysowSO8gGqFTuiBAeiGU9iHbfDQstL8LoOnr8IENEOtcq8evdawVto73oJ3WILgrgh/JJ9mHZp027MOg1+Stco3eEawAZ6WVNbYhHML5eEN7M8KjEO9Pdaj1xrWyttj+1GAPXiC6FQUuS6BU/EKqgWCqcgQB1NxQOxITkM2GLd+Liy+AIdgvt45nsTjIGThBkKNEl3DVJipPdCj1xqxGiZbhPnY1fjkHOmqRQNbhsB/dQ18eSrJNfe4NwM1qZ1dO3AMfTEOc0ewC+6tW4s4bmE24jQ251oi2ffo18t4JFHFiPl74chSfNgYn06e/S8c9vDvtaLaKxs+FsEJBCNXiC5Uij8BudRL3qenNNMAAAAASUVORK5CYII=') !important;
+    width: 22px !important;
+    height: 23px !important;
 }
 
-.ui-icon-hx-filter-black {
-    background-position: 0px -19px;
-    border-radius: 0px !important;
-    border-radius: 0px !important;
-    width: 22px;
-    height: 22px;
+.ui-icon.ui-icon-hx-filter-black-filled {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA9UlEQVRIS+2V7RHBQBCGn1RACTqgBCpBB1QgKqADVEIJSqEC5jU5E2cvGxFmzLh/ye29z37c7WZ8eGWFfg4sWmYtgfxrgAFwADotRXEGhsAxRCDdtiB3cYmWAfoWdf9mFKMiGzeZGKB/E2DTEDIFtuWzFqAp5Ek8FUFw4JVITHEPoP0ZsHLSNQfWKZtUisr2yuk4IbArapb0oQ4gRNKNVE5VngfbugC1kovhptpB5aoLsMTr1NB8B5ZHf4BXKrPAv1UD3XlrVri30DUokqdZoRfdj5LpnncNIkH1Jj26EI173jUwyq+Woeam4dTzrkcTgKf5sH8FiYQkGZigvVgAAAAASUVORK5CYII=) !important;
+    width: 24px !important;
+    height: 24px !important;
 }
 
-.ui-icon-hx-sort-desc-black {
-    background-position: 0px -42px;
-    border-radius: 0px !important;
-    width: 22px;
-    height: 22px;
+.ui-icon.ui-icon-hx-sort-desc-black {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABIklEQVRIS9WVgU3CQBSGPyZAN3AD3ECcQDeADcAN3ADcQDdwBN1AN4ANYALI1/TM0XC9w7QQXtKkub6+7977e38H9ByDnutzFsAr8HBCJx/AeyL/BtjEz+zAheEJgDVwdyT/E3gCbmOIgHtAcmmsAK9mfNWTeAS8r6JLDZIAW8uN6A0wry2SgBINXoDlfwGls8/lXU6DH2CU2F7JaMKryQ56B+RmW/q8cw2egRngGJ1CE+BXt0tZhX4zzWx9DixqW/D0WlBP8953J8BagAeoaRWaWcrQYq45FvIseelRdqP9bIFxF1YRIDG4Ki4smF2wit+m3RYqHEP+igez20VFvmtyYd2DNCEKX+08dlN/OC4aCpUztTa4GhxYeRcatHZ7/YA9exZFuO7gO9wAAAAASUVORK5CYII=) !important;
+    width: 24px !important;
+    height: 24px !important;
 }
  
-.ui-icon-hx-sort-asc-black {
-    background-position: 0px -64px;
-    border-radius: 0px !important;
-    width: 22px;
-    height: 22px;
+.ui-icon.ui-icon-hx-sort-asc-black {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABJ0lEQVRIS9WVjU1CMRRGDxMIG+gEsoE4gW6AG6Ab6ATABriBI+gGjAAbyASY89Ka0lDgaR/GJi9pmtt77k/v93p0vHod++csgGfgJmQyB95+kVUf+Ezvm4EHF+HwAxj9EGBgd8AghQgYApJdyzyCFrD3UIlbwH2zavagCDC1WKIIfgUWLaLXtAhIe5ACHmoBWvopmv9dD3w514W4noDZiSkWM+gccGKAR82q9+AemACW0SrkAEu7zaWiFOYLoGal6xGYhsl3enWoprn3iY+BtQAHLUpFCeDlfSLoMOrIWfK7DNkoPxt1rYZUREgaXONcWBS7XCoOdXQNrDKDFPLtPIrd9uj72DXQ+dWeO0JsfBN5qqY2r80/QEclIbQHO9nV6MHBAvx/wBd7YkW4LmbfkgAAAABJRU5ErkJggg==) !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.ui-icon.ui-icon-hx-filter-black,
+.ui-icon.ui-icon-hx-filter-black-filled,
+.ui-icon.ui-icon-hx-sort-desc-black,
+.ui-icon.ui-icon-hx-sort-asc-black {
+    top: 12px !important;
+    left: 17px !important;
 }
 
 /* HD/"retina" sprite
@@ -81,50 +81,12 @@
 		-webkit-background-size: 864px 18px;
 		background-size: 864px 18px;
 	}
-	.ui-icon-alt .ui-icon {
-                background-image: url("#{resource['helix:images/hx-icons-36-black.png']}");
-                -moz-background-size: 864px 86px;
-		-o-background-size: 864px 86px;
-		-webkit-background-size: 864px 86px;
-		background-size: 864px 86px;
-	}
 }
 
 /* loading icon */
 .ui-icon.ui-icon-loading {
         background: url("#{resource['helix:images/ajax-loader.gif']}");
 	background-size: 46px 46px;
-}
-
-/* Datebox */
-.ui-icon-datebox { 
-    background-image: url("#{resource['helix:images/datebox/datebox.png']}") !important; 
-    background-repeat: no-repeat !important; 
-    background-position: 99% 8px !important; 
-}
-.ui-icon-datebox-alt { 
-    background-image: url("#{resource['helix:images/datebox/datebox.png']}") !important; 
-    background-repeat: no-repeat !important; 
-    background-position: 99% -28px !important; 
-}
-
-/* Custom filter icon on regular and retina screens. Could convert to base64 to avoid a load .... */
-.ui-icon-filter {
-    background-image: url("#{resource['helix:images/filter-18.png']}") !important; 
-    background-repeat: no-repeat !important;
-}
-
-@media only screen and (-webkit-min-device-pixel-ratio: 1.3),
-       only screen and (min--moz-device-pixel-ratio: 1.3),
-       only screen and (min-resolution: 200dpi) {
-    .ui-icon-filter {
-        background-image: url("#{resource['helix:images/filter-36.png']}") !important; 
-        background-repeat: no-repeat !important;
-        -moz-background-size: 18px 18px;
-        -o-background-size: 18px 18px;
-        -webkit-background-size: 18px 18px;
-        background-size: 18px 18px;
-    }
 }
 
 @media (min-width: 28em) {
