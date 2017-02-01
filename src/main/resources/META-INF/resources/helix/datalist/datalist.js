@@ -2729,7 +2729,7 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c ui-btn-hover-d ui-btn-down-d');
             /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }*/

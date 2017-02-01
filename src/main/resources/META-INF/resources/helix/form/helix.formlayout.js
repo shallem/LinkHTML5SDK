@@ -456,6 +456,14 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         $fieldContainer.append(inputMarkup);
     }
+    if (formElem.onclick) {
+        $(inputMarkup).on('vclick', function(ev) {
+            ev.stopImmediatePropagation();
+            formElem.onclick.call(formElem, ev);
+            return false;
+        });
+    }
+
     if (formLayout.textStyleClass || formElem.textStyleClass) {
         inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
     }
@@ -797,13 +805,13 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             }
             $fieldContainer.append(inputMarkup);
         }
-        if (formElem.onclick) {
-            $(inputMarkup).on('vclick', function(ev) {
-                ev.stopImmediatePropagation();
-                formElem.onclick.call(formElem, ev);
-                return false;
-            });
-        }
+    }
+    if (formElem.onclick) {
+        $(inputMarkup).on('vclick', function(ev) {
+            ev.stopImmediatePropagation();
+            formElem.onclick.call(formElem, ev);
+            return false;
+        });
     }
     if (formLayout.textStyleClass || formElem.textStyleClass) {
         inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
