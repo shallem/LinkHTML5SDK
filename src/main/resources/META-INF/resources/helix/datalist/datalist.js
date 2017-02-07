@@ -544,7 +544,8 @@
                 var callback = _self.options.autodividersSelectorCallback;
 
                 if (callback && $(elt).attr('data-index')) {
-                   return callback(elt, _self.displayList, _self._currentSort);
+                    var idx = Number($(elt).attr('data-index'));
+                    return callback(elt, _self.displayList, _self._currentSort, _self.displayList[idx]);
                 } 
 
                 return null;
@@ -562,7 +563,7 @@
                     reloadPage: false,
                     scrollTarget: listWrapper,
                     reloadEl: function() {
-                        if (!_self.refreshInProgress && _self._renderWindowStart == 0) {
+                        if (!_self.refreshInProgress && _self._renderWindowStart === 0) {
                             _self.options.pullToRefresh.call(this);
                             _self._clearGlobalFilterMenu();
                         }
@@ -1056,7 +1057,7 @@
                     oncomplete(_self);
                     _self.isDirty = false;
                 }
-            }, true, extraItems, _self.originalList, _options);
+            }, true, extraItems, _self.originalList, undefined, _options);
         },
         
         /**
@@ -1548,9 +1549,6 @@
         
             _self.refreshInProgress = true;
             
-            if (renderWindowStart !== undefined) {
-                _self.setRenderWindowStart(renderWindowStart);
-            }
             if (extraItems !== undefined) {
                 _self.extraItems = extraItems;
             }
@@ -1574,6 +1572,10 @@
             } else {
                 
             }
+            if (renderWindowStart !== undefined) {
+                _self.setRenderWindowStart(renderWindowStart);
+            }
+            
             var displayCollection = _self.itemList;
             if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
@@ -1843,8 +1845,11 @@
             return this.$searchBox.val()
         },
         
-        setCurrentSearchText: function(searchQry) {
+        setCurrentSearchText: function(searchQry, doSearch) {
             this.$searchBox.val(searchQry);
+            if (doSearch === true) {
+                this._doSearch();
+            }
         },
         
         _doSearch: function() {
@@ -2038,6 +2043,7 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
+                    
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
