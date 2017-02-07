@@ -2946,7 +2946,7 @@
                     mainLink = $('<div/>').insertAfter(pfx);
                 }
             } else if (oldPfx) {
-                oldPfx.closest('div').next().remove();
+                oldPfx.parent('div').remove();
             }
             
             var imgMarkup = components.image;
@@ -2978,7 +2978,7 @@
                     }
                 } else {
                     if (headerMarkup /*headerMarkup.length*/) {
-                        headerMarkup.empty().append(rowComponents.header);
+                        headerMarkup.empty().append(rowComponents.header).show();
                     } else {
                         mainLink.append($('<h3 />')
                             .attr('data-role', 'itemheader')
