@@ -1842,6 +1842,11 @@
         },
         
         getCurrentSearchText: function() {
+            if (!this.$searchBox) {
+                // Search is not enabled OR we have not yet displayed this list.
+                return '';
+            }
+            
             return this.$searchBox.val()
         },
         
