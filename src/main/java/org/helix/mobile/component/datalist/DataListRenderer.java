@@ -301,7 +301,7 @@ public class DataListRenderer extends CoreRenderer {
         
         // Auto dividers selector.
         if (dlist.getAutodividersSelectorCallback() != null) {
-            writer.write(",autodividersSelectorCallback: function(elt, list, sort) { return " + dlist.getAutodividersSelectorCallback() + "}");
+            writer.write(",autodividersSelectorCallback: function(elt, list, sort, obj) { return " + dlist.getAutodividersSelectorCallback() + "}");
         }
         
         // Turn off the select on pagination.

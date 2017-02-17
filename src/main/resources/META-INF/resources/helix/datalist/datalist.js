@@ -544,7 +544,8 @@
                 var callback = _self.options.autodividersSelectorCallback;
 
                 if (callback && $(elt).attr('data-index')) {
-                   return callback(elt, _self.displayList, _self._currentSort);
+                    var idx = Number($(elt).attr('data-index'));
+                    return callback(elt, _self.displayList, _self._currentSort, _self.displayList[idx]);
                 } 
 
                 return null;
@@ -562,7 +563,7 @@
                     reloadPage: false,
                     scrollTarget: listWrapper,
                     reloadEl: function() {
-                        if (!_self.refreshInProgress && _self._renderWindowStart == 0) {
+                        if (!_self.refreshInProgress && _self._renderWindowStart === 0) {
                             _self.options.pullToRefresh.call(this);
                             _self._clearGlobalFilterMenu();
                         }
@@ -1056,7 +1057,7 @@
                     oncomplete(_self);
                     _self.isDirty = false;
                 }
-            }, true, extraItems, _self.originalList, _options);
+            }, true, extraItems, _self.originalList, undefined, _options);
         },
         
         /**
@@ -1548,9 +1549,6 @@
         
             _self.refreshInProgress = true;
             
-            if (renderWindowStart !== undefined) {
-                _self.setRenderWindowStart(renderWindowStart);
-            }
             if (extraItems !== undefined) {
                 _self.extraItems = extraItems;
             }
@@ -1574,6 +1572,10 @@
             } else {
                 
             }
+            if (renderWindowStart !== undefined) {
+                _self.setRenderWindowStart(renderWindowStart);
+            }
+            
             var displayCollection = _self.itemList;
             if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
@@ -1840,11 +1842,19 @@
         },
         
         getCurrentSearchText: function() {
+            if (!this.$searchBox) {
+                // Search is not enabled OR we have not yet displayed this list.
+                return '';
+            }
+            
             return this.$searchBox.val()
         },
         
-        setCurrentSearchText: function(searchQry) {
+        setCurrentSearchText: function(searchQry, doSearch) {
             this.$searchBox.val(searchQry);
+            if (doSearch === true) {
+                this._doSearch();
+            }
         },
         
         _doSearch: function() {
@@ -2038,6 +2048,7 @@
                     'id' : sboxID,
                     'data-role' : 'none',
                     'data-mini' : true,
+                    
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
@@ -2729,7 +2740,7 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c ui-btn-hover-d ui-btn-down-d');
             /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }*/
@@ -2940,7 +2951,7 @@
                     mainLink = $('<div/>').insertAfter(pfx);
                 }
             } else if (oldPfx) {
-                oldPfx.closest('div').next().remove();
+                oldPfx.parent('div').remove();
             }
             
             var imgMarkup = components.image;
@@ -2976,7 +2987,7 @@
                     }
                 } else {
                     if (headerMarkup /*headerMarkup.length*/) {
-                        headerMarkup.empty().append(rowComponents.header);
+                        headerMarkup.empty().append(rowComponents.header).show();
                     } else {
                         if (rowComponents.header.attr('data-role') === 'itemheader') {
                              mainLink.append(rowComponents.header);                           
@@ -3106,7 +3117,7 @@
                 var nxt = this.selectedLI;
                 do {
                     nxt = nxt.next();
-                } while (nxt.is('li') && !nxt.is('li[data-index]'));
+                } while (nxt.is('li') && !nxt.is('li[data-index]') && !nxt.is('li[data-deleted="true"]'));
                 if (nxt.length) {
                     this.setSelected(nxt);
                     this.selectItem(noSelectAction);
@@ -3120,7 +3131,7 @@
                 var prev = this.selectedLI;
                 do {
                     prev = prev.prev();
-                } while (prev.is('li') && !prev.is('li[data-index]'));
+                } while (prev.is('li') && !prev.is('li[data-index]') && !prev.is('li[data-deleted="true"]'));
                 if (prev.length) {
                     this.setSelected(prev);
                     this.selectItem(noSelectAction);
@@ -3411,6 +3422,32 @@
                 }
                 _self.$parent.listview( "refresh" );         
             }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
+        },
+        
+        markDeleted: function(elems) {
+            $(elems).hide(400, 'linear');
+            $(elems).attr('data-deleted', 'true');
+            this.refreshListView();
+        },
+        
+        confirmDeleted: function(elems) {
+            var _self = this;
+            $.each(elems, function() {
+                var dataIndex = $(this).attr('data-index');
+                var groupIndex = $(this).attr('data-group-index');
+                if (_self.options.grouped) {
+                    _self.displayList[dataIndex].rows.splice(groupIndex, 1);
+                } else {
+                    _self.displayList.splice(dataIndex, 1);
+                }                
+            });
+            $(elems).remove();
+        },
+        
+        clearDeleted: function(elems) {
+            $(elems).show(400, 'linear');
+            $(elems).attr('data-deleted', '');
+            this.refreshListView();
         }
         
     });

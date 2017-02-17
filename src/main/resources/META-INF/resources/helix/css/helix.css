@@ -797,11 +797,6 @@ li {
     border: none;
 }
 
-/* Layout of split icons */
-.hx-listview .ui-li-link-alt {
-    width: 60px;
-}
-
 .hx-listview .ui-li-link-alt .ui-btn {
     right: 16px;
     border: none;
@@ -890,7 +885,7 @@ li {
 }
 
 /* Traditional JQM buttons with a 16px icon and text should be 32px high. */
-a.ui-btn:not(.iconbutton) {
+a.ui-btn:not(.iconbutton):not(.ui-li-link-alt) {
     max-height: 32px;
 }
 
@@ -910,8 +905,13 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     min-width: 64px;
 }
 
-li.hx-noicon-button div.ui-btn-inner {
-    width: 100%;
+/* Styling for lists with a split button. */
+.ui-li-has-alt .ui-btn-inner a.ui-link-inherit {
+    padding-right: 64px;
+}
+
+.hx-listview .ui-li-link-alt {
+    width: 64px;
 }
 
 .hx-noicon-button div.ui-btn-text {

@@ -364,7 +364,12 @@ function initPersistence(persistence) {
         };
         
         persistence.getRemoveKeyValuePair = function(removeID) {
-            return removeID.split('=');
+            var eqPos = removeID.indexOf('=');
+            if (eqPos > 0) {
+                return [ removeID.substring(0, eqPos), removeID.substring(eqPos + 1) ];
+            }
+            
+            return removeID;
         };
 
 
