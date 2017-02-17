@@ -599,7 +599,7 @@
                 this.strings = this.options.strings.split(",");            
             }
 
-            // Queued refershes - tracks refresh calls that occur during another refresh.
+            // Queued refreshes - tracks refresh calls that occur during another refresh.
             this._queuedRefreshes = [];
 
             if (this.options.itemList) {
@@ -2966,17 +2966,25 @@
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
-                        mainLink.append($('<h3 />')
-                            .attr('data-role', 'itemheader')
-                            .text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                        if (rowComponents.header.attr('data-role') === 'itemheader') {
+                             mainLink.append(Helix.Utils.escapeQuotes(rowComponents.header));                           
+                        } else {
+                            mainLink.append($('<h3 />')
+                                .attr('data-role', 'itemheader')
+                                .text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                        }
                     }
                 } else {
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.empty().append(rowComponents.header);
                     } else {
-                        mainLink.append($('<h3 />')
-                            .attr('data-role', 'itemheader')
-                            .append(rowComponents.header));
+                        if (rowComponents.header.attr('data-role') === 'itemheader') {
+                             mainLink.append(rowComponents.header);                           
+                        } else {
+                            mainLink.append($('<h3 />')
+                                .attr('data-role', 'itemheader')
+                                .append(rowComponents.header));
+                        }
                     }
                 }
             } else if (headerMarkup) {
