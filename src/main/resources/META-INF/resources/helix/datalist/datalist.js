@@ -2280,7 +2280,8 @@
                 var dividerLI;
                 if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
-                        'data-role' : 'list-divider'
+                        'data-role' : 'list-divider',
+                        'class' : 'hx-no-webkit-select'
                     }).append(groupName);
                     dividerLI.appendTo(_self.$parent);
                 } else {
