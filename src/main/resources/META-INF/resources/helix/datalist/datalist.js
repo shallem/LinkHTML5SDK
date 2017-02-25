@@ -2047,14 +2047,11 @@
                     'name' : 'search',
                     'id' : sboxID,
                     'data-role' : 'none',
-                    'data-mini' : true,
-                    
+                    'data-theme' : 'd',
+                    'data-mini' : true,                    
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
-                this.$searchLabel = $('<label/>').attr({
-                    'for': sboxID
-                }).append('Search').appendTo($searchDiv).hide();
                 this.$searchBox.textinput({
                     clearBtn : true
                 });
@@ -2740,7 +2737,7 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c ui-btn-hover-d ui-btn-down-d');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-d ui-btn-down-d ui-btn-hover-d ui-btn-down-d');
             /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }*/
@@ -2763,8 +2760,8 @@
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
-                this.selectedLI.removeClass('ui-btn-down-c');
-                this.selectedLI.addClass('ui-btn-up-c');
+                this.selectedLI.removeClass('ui-btn-down-d');
+                this.selectedLI.addClass('ui-btn-up-d');
                 this.selectedLI = null;
                 this.selected = null;
                 this.selectedGroup = null;
@@ -2915,7 +2912,7 @@
                 if (iconMarkup.length) {
                     // Manually update the icon itself.
                     iconMarkup.removeClass()
-                        .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
+                        .addClass('ui-icon ui-icon-' + rowComponents.icon);
                 }
             } else {
                 $(parentElement).attr('data-icon', 'false');

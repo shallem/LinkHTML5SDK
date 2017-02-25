@@ -1107,7 +1107,7 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
             'data-role' : 'button',
             'data-inline' : true,
             'data-shadow' : formElem.shadow ? 'true' : 'false',
-            'data-theme' : formElem.theme ? formElem.theme : 'b',
+            'data-theme' : formElem.theme ? formElem.theme : 'd',
             'data-corners' : formElem.iconCorners ? 'true' : 'false',
             'id': formElem.id
         }).append(formElem.fieldTitle);
@@ -2201,8 +2201,8 @@ Helix.Layout._createDialogPopup = function(popupId) {
     return $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
-        'data-overlay-theme' : 'c',
-        'data-theme' : 'c',
+        'data-overlay-theme' : 'd',
+        'data-theme' : 'd',
         'data-position-to' : 'window',
         'data-history' : 'false',
         'style' : 'max-width: 300px'

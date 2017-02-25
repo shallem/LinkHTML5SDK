@@ -633,8 +633,8 @@ li {
     display: -webkit-flex;
     align-items: center;
     -webkit-align-items: center;
-    margin: .2em;
-    height: 32px
+    margin: 2px;
+    height: 34px
 }
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
@@ -822,9 +822,6 @@ li {
 /**
  * Animations
  */
-.ui-header.ui-bar-d {
-    border-bottom: 0.25em solid #bbb;
-}
 
 .hx-loading {
     -webkit-animation: pulsating_border 1s infinite alternate;

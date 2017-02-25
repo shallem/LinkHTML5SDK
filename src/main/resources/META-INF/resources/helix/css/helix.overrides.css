@@ -159,10 +159,10 @@
     box-shadow: none;
 }
 
-/* Improved background coloring for ui-bar-d */
+/* Flat background coloring for ui-bar-d */
 .ui-bar-d {
-    background-image: linear-gradient( #FFF5F5 /*{d-bar-background-start}*/, #bbb /*{d-bar-background-end}*/);
-    background-image: -webkit-linear-gradient( #FFF5F5 /*{d-bar-background-start}*/, #bbb /*{d-bar-background-end}*/);
+    background-image: none;
+    background-color: #e0e0e0;
 }
 
 /* Make the active button class only apply on none-iconbuttons */
@@ -174,19 +174,12 @@
 	cursor: pointer;
 	text-shadow: 0 /*{global-active-shadow-x}*/ 1px /*{global-active-shadow-y}*/ 0 /*{global-active-shadow-radius}*/ #3373a5 /*{global-active-shadow-color}*/;
 	text-decoration: none;
-	background-image: -webkit-gradient(linear, left top, left bottom, from( rgba(83,147,191,0.1) /*{global-active-background-start}*/), to( rgba(111,172,213,0.25) /*{global-active-background-end}*/)); /* Saf4+, Chrome */
-	background-image: -webkit-linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/); /* Chrome 10+, Saf5.1+ */
-	background-image:    -moz-linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/); /* FF3.6 */
-	background-image:     -ms-linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/); /* IE10 */
-	background-image:      -o-linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/); /* Opera 11.10+ */
-	background-image:         linear-gradient( rgba(83,147,191,0.1) /*{global-active-background-start}*/, rgba(111,172,213,0.25) /*{global-active-background-end}*/);
 	font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
 }
 
 /* Get rid of the grey background when a button was selected, but then you move on to another selection ...*/
 .ui-btn-down-d {
-    /*background-color: rgba(44,92,255,0.8);*/
-    background-color: rgba(240, 240, 240, 1.0);
+    background-color:  #DCECF9;
 }
 
 /* Background color of selected item in context menu */
