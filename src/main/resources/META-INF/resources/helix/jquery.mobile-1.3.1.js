@@ -261,7 +261,8 @@
 		getScreenHeight: function() {
 			// Native innerHeight returns more accurate value for this across platforms,
 			// jQuery version is here as a normalized fallback for platforms like Symbian
-			return window.innerHeight || $.mobile.window.height();
+// FLA comment out			return window.innerHeight || $.mobile.window.height();
+			return $.mobile.window.height();
 		}
 	}, $.mobile );
 

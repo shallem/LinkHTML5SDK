@@ -577,7 +577,6 @@
                             $(item.SEPARATOR).hide();
                         }
                     }
-                    return;
                 } else if (fldType !== 'hidden') {
                     $(item.DOM).show();
                     if (item.SEPARATOR) {
