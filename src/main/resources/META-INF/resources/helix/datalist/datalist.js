@@ -543,7 +543,7 @@
             var ads = function(elt) { 
                 var callback = _self.options.autodividersSelectorCallback;
 
-                if (callback && $(elt).attr('data-index')) {
+                if (callback && $(elt).attr('data-index') && $(elt).attr('data-deleted') !== 'true') {
                     var idx = Number($(elt).attr('data-index'));
                     return callback(elt, _self.displayList, _self._currentSort, _self.displayList[idx]);
                 } 
@@ -3424,16 +3424,6 @@
         },
         
         confirmDeleted: function(elems) {
-            var _self = this;
-            $.each(elems, function() {
-                var dataIndex = $(this).attr('data-index');
-                var groupIndex = $(this).attr('data-group-index');
-                if (_self.options.grouped) {
-                    _self.displayList[dataIndex].rows.splice(groupIndex, 1);
-                } else {
-                    _self.displayList.splice(dataIndex, 1);
-                }                
-            });
             $(elems).remove();
         },
         
