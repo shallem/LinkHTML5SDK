@@ -611,8 +611,8 @@
         },
         
         setDefaultSort: function() {
-            this._currentSort = this.options.sortBy;
-            this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._currentSort = this.options.sortBy;            
+            this._currentSortOrder = (this.options.sortOrder.toUpperCase() === 'ASCENDING') ? 'ASC' : 'DSC';
             this._currentSortCase = '';
             this._updateSortButtons();
         },
