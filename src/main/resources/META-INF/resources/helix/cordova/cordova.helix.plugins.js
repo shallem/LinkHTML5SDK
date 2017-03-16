@@ -191,6 +191,13 @@
                    uniqueID,
                    options
                 ]);
+            },
+            uploadFile: function(url, uniqueID, options, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "uploadDocument", [
+                   url,
+                   uniqueID,
+                   options
+                ]);
             }
         };
     }
