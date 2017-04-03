@@ -181,22 +181,73 @@
             }
         });
     }
+
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 5) {
+        $.extend(window.HelixSystem, {
+            getAppsForCapabilities: function(capabilityArray, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "getAppsForCapabilities", [ capabilityArray ]);
+            },
+            getDeviceCapabilities: function(success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "getDeviceCapabilities", [ ]);
+            },
+            listMyFiles: function(tags, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "listMyFiles", [
+                    tags
+                ]);
+            },
+            listTags: function(success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "listTags", []);
+            }
+        });
+    }
     
     if (window.CordovaVersion >= 3 &&
             window.CordovaRevision >= 5) {
         window.HelixFiles = {
-            downloadFile: function(url, uniqueID, options, success, failure) {
+            downloadFile: function(url, docID, docName, options, success, failure) {
+                if (!options) {
+                    options = {};
+                }
                 return cordova.exec(success, failure, "DocumentDownload", "getDocument", [
                    url,
-                   uniqueID,
+                   docID,
+                   docName,
                    options
                 ]);
             },
-            uploadFile: function(url, uniqueID, options, success, failure) {
+            uploadFile: function(url, docID, docName, options, success, failure) {
+                if (!options) {
+                    options = {};
+                }
                 return cordova.exec(success, failure, "DocumentDownload", "uploadDocument", [
                    url,
-                   uniqueID,
+                   docID,
+                   docName,
                    options
+                ]);
+            },
+            openFile: function(docID, options, success, failure) {
+                if (!options) {
+                    options = {};
+                }
+                return cordova.exec(success, failure, "DocumentDownload", "openDocument", [
+                   docID,
+                   options
+                ]);
+            },
+            saveFile: function(docID, options, success, failure) {
+                if (!options) {
+                    options = {};
+                }
+                return cordova.exec(success, failure, "DocumentDownload", "saveDocument", [
+                   docID,
+                   options
+                ]);
+            },
+            discardFile: function(docID, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "deleteDocument", [
+                   docID
                 ]);
             }
         };
