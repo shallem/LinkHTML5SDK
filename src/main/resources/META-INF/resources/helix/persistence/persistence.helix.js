@@ -18,6 +18,12 @@
  * Integrates Persistence JS ORM with the PrimeFaces Mobile SDK.
  */
 
+// Global dictionary use to map class name to class dictionary 
+// in the JSON serialization;
+var JSONDictionary = [];
+var JSONKeyDictionary = [];
+
+
 function initHelixDB() {
     Helix.DB = {
         
@@ -808,7 +814,74 @@ function initHelixDB() {
         getKeyField: function(schema) {
             return schema.__hx_key;
         },
+        
+        getJSONKeyField: function(schema) {
+            // We need to translate the JSON field key into an actual field name
+            // Lookup the dictionary for this schema in the global JSON dictionary.
+            // The global dictionary is generated during compilation of the Java classes.
+            var sch = schema.__hx_schema_name; 
+            var key = JSONKeyDictionary[sch];
+            
+            if (!key) {
+                key = schema.__hx_key;
+                var classDict = this.getClassDictionary(schema);
+                
+                if (classDict) {
+                    for (var k in classDict) {
+                        if (classDict[k] === key) {
+                            key = k;
+                            break;
+                        }
+                    }
+                }
+                
+                JSONKeyDictionary[schema] = key;
+            }
+                
+            return key;
+        },
     
+        // If this object uses a JSON dictionary to reduce its serialized
+        // size, return the reverse mapped object (field names). Otherwise
+        // return the input object.
+        getJSONReverseMappedObject: function(obj, schema) {
+            var classDict = this.getClassDictionary(schema);
+            
+            if (!classDict) {
+                return obj;
+            }
+            
+            for (var field in obj) {
+                if (!obj.hasOwnProperty(field)) {
+                    continue;
+                }
+                if (field in Helix.DB.reservedFields) {
+                    continue;
+                }
+                if (field in classDict) {
+                    // The class dictionary exists => translate field name
+                    // and replace field in object.
+                    var val = obj[field];
+                    delete obj[field];
+                    field = classDict[field];
+                    obj[field] = val;
+                }
+            }
+                
+            return obj;
+        },
+        
+        getClassDictionary: function(schema) {
+            var sch = schema.__hx_schema_name; 
+            var idx = sch.lastIndexOf('.');
+
+            if (idx > 0) {
+                sch = sch.substr(idx+1);
+            }
+
+            return JSONDictionary[sch];
+        },
+        
         getSchemaForObject: function(obj) {
             if (obj.__hx_schema) {
                 return obj.__hx_schema;
@@ -1106,14 +1179,13 @@ function initHelixDB() {
                 }
                 oncomplete(field);
                 return true;
-            }
-            
+            }            
             
             var elemKeyField = Helix.DB.getKeyField(elemSchema);
             var elemMap = {};
             
             for (var i = 0; i < objArray.length; ++i) {
-                var curElem = objArray[i];
+                var curElem = this.getJSONReverseMappedObject(objArray[i], elemSchema);
                 if (curElem.__hx_type) {
                     // This is not a normal object array. Instead it is an array of delta objects or other
                     // special objects. Let SynchronizeObject handle it.
@@ -1148,7 +1220,8 @@ function initHelixDB() {
         },
     
         synchronizeDeltaField: function(allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
-            var keyField = this.getKeyField(elemSchema);
+            var _self = this;
+            var keyField = _self.getKeyField(elemSchema);
             
             // Defensively make sure the delta obj is well formed.
             if (!deltaObj.adds) {
@@ -1187,16 +1260,18 @@ function initHelixDB() {
             var syncFn = function(uidToEID) {
                 if (deltaObj.updates.length > 0) {
                     while (deltaObj.updates.length > 0) {
-                        var updatedObj = deltaObj.updates.pop();
-                        var toUpdateKey = updatedObj[keyField];
-                        var objId = uidToEID[toUpdateKey];
-                        if (objId) {
-                            Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                       var updatedObj = deltaObj.updates.pop();
+                       var toUpdateKey = updatedObj[_self.getJSONKeyField(elemSchema)];
+                       var objId = uidToEID[toUpdateKey];
+                       if (objId) {
+                           Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
                                 updateDone();
-                            },overrides);
-                        } else {
-                            Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,updateDone,uidToEID);
-                        }
+                               //syncFn(uidToEID);
+                               //syncFn(pObj);
+                           },overrides);
+                       } else {
+                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,uidToEID);
+                       }
                     }
                 } else {
                     /* Nothing more to sync. Done. */
@@ -1210,7 +1285,7 @@ function initHelixDB() {
                 } else {
                     while (deltaObj.adds.length > 0) {
                         var toAdd = deltaObj.adds.pop();
-                        var toAddKey = toAdd[keyField];
+                        var toAddKey = toAdd[_self.getJSONKeyField(elemSchema)];
 
                         var objId = uidToEID[toAddKey];
                         if (objId) {
@@ -1260,7 +1335,7 @@ function initHelixDB() {
             var prepareAdds = function() {
                 var addUniqueIDs = [];
                 for (var i = 0; i < deltaObj.adds.length; ++i) {
-                    addUniqueIDs.push(deltaObj.adds[i][keyField]);
+                    addUniqueIDs.push(deltaObj.adds[i][_self.getJSONKeyField(elemSchema)]);
                 }
                 createUIDToEIDMap();
             };
@@ -1352,12 +1427,26 @@ function initHelixDB() {
             var asyncFields = [];
             var scalarFields = [];
             allSchemas[objSchema.__hx_schema_name] = objSchema;
+            
+            // We need to translate the JSON field key into an actual field name
+            // Lookup the dictionary for this schema in the global JSON dictionary.
+            // The global dictionary is generated during compilation of the Java classes.
+            var classDict = this.getClassDictionary(objSchema);
+            
             for (var field in obj) {
                 if (!obj.hasOwnProperty(field)) {
                     continue;
                 }
                 if (field in Helix.DB.reservedFields) {
                     continue;
+                }
+                if (classDict && field in classDict) {
+                    // The class dictionary exists => translate field name
+                    // and replace field in object.
+                    var val = obj[field];
+                    delete obj[field];
+                    field = classDict[field];
+                    obj[field] = val;
                 }
                 if (Object.prototype.toString.call(obj[field]) === '[object Array]' ||
                     Object.prototype.toString.call(obj[field]) === '[object Object]') {

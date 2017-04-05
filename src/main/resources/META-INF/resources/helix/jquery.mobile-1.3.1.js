@@ -261,7 +261,8 @@
 		getScreenHeight: function() {
 			// Native innerHeight returns more accurate value for this across platforms,
 			// jQuery version is here as a normalized fallback for platforms like Symbian
-			return window.innerHeight || $.mobile.window.height();
+// FLA comment out			return window.innerHeight || $.mobile.window.height();
+			return $.mobile.window.height();
 		}
 	}, $.mobile );
 
@@ -3608,7 +3609,7 @@ if ( eventCaptureSupported ) {
 
 $.widget( "mobile.page", $.mobile.widget, {
 	options: {
-		theme: "c",
+		theme: "d",
 		domCache: false,
 		keepNativeDefault: ":jqmData(role='none'), :jqmData(role='nojs')"
 	},
@@ -3722,19 +3723,20 @@ var createHandler = function( sequential ) {
 			},
 
 			startIn = function() {
-
 				// Prevent flickering in phonegap container: see comments at #4024 regarding iOS
 				$to.css( "z-index", -10 );
-
 				$to.addClass( $.mobile.activePageClass + toPreClass );
+// FLA comment out
+//				// Send focus to page as it is now display: block
+//				$.mobile.focusPage( $to );
 
-				// Send focus to page as it is now display: block
-				$.mobile.focusPage( $to );
+// FLA comment out
+//				// Set to page height
+//				$to.height( screenHeight + toScroll );
 
-				// Set to page height
-				$to.height( screenHeight + toScroll );
-
-				scrollPage();
+// FLA comment out
+//				scrollPage();
+//    
 
 				// Restores visibility of the new page: added together with $to.css( "z-index", -10 );
 				$to.css( "z-index", "" );
@@ -3742,7 +3744,7 @@ var createHandler = function( sequential ) {
 				if ( !none ) {
 					$to.animationComplete( doneIn );
 				}
-
+                                
 				$to
 					.removeClass( toPreClass )
 					.addClass( name + " in" + reverseClass );
@@ -3761,7 +3763,8 @@ var createHandler = function( sequential ) {
 						cleanFrom();
 					}
 				}
-
+/*
+ FLA --- comment start
 				$to
 					.removeClass( "out in reverse " + name )
 					.height( "" );
@@ -3773,7 +3776,8 @@ var createHandler = function( sequential ) {
 				if ( $.mobile.window.scrollTop() !== toScroll ) {
 					scrollPage();
 				}
-
+FLA --- comment end
+*/
 				deferred.resolve( name, reverse, $to, $from, true );
 			};
 
@@ -3973,7 +3977,7 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 		if ( pageTitle.length ) {
 			pageTitle.focus();
 		} else{
-			page.focus();
+			//page.focus();
 		}
 	};
 
@@ -5663,7 +5667,7 @@ $.fn.buttonMarkup = function( options ) {
                     buttonClass += ' hx-noicon-button';
                 }
 
-		if ( o.iconpos ) {
+		if ( o.icon && o.iconpos ) {
 			buttonClass += " ui-btn-icon-" + o.iconpos;
 
 			if ( o.iconpos === "notext" && !el.attr( "title" ) ) {
@@ -6740,7 +6744,7 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 					icon: "delete",
 					iconpos: "notext",
 					corners: true,
-					shadow: true,
+					shadow: o.shadow || false,
 					mini: o.mini
 				})
                                         .addClass("ui-input-clear-hidden"); // SAH - make sure this doesn't flash and then go away.
@@ -8262,7 +8266,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		// Add counter for multi selects
 		if ( this.isMultiple ) {
 			this.buttonCount = $( "<span>" )
-				.addClass( "ui-li-count ui-btn-up-c ui-btn-corner-all" )
+				.addClass( "ui-li-count ui-btn-up-" + theme +" ui-btn-corner-all" )
 				.hide()
 				.appendTo( button.addClass('ui-li-has-count') );
 		}
@@ -10365,7 +10369,7 @@ $.widget( "mobile.panel", $.mobile.widget, {
 			animate: "ui-panel-animate"
 		},
 		animate: true,
-		theme: "c",
+		theme: "d",
 		position: "left",
 		dismissible: true,
 		display: "reveal", //accepts reveal, push, overlay

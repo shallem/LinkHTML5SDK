@@ -261,11 +261,11 @@
             
             /**
              * Comma-delimited, ordered list of sort directions. Each direction is
-             * either ASCENDING or DESCENDING. If this list is shorter than the
+             * either ASC or DSC. If this list is shorter than the
              * sortBy list, then the final value in this list will apply to all
              * non-matching fields in the sortBy list.
              */
-            sortOrder: "ASCENDING",            
+            sortOrder: "ASC",            
 
             /**
              * Field to use for grouping. Grouping is intended to be used in conjunction with
@@ -277,7 +277,7 @@
             /**
              * Ordering for the groupBy field.
              */
-            groupByOrder: "ASCENDING",
+            groupByOrder: "ASC",
             
             /**
              * By default we do not sort case sensitive.
@@ -286,7 +286,7 @@
             
             /**
              * Callback to execute when the sort order changes. The first argument
-             * is the new sort field. The second is either ASCENDING or DESCENDING
+             * is the new sort field. The second is either ASC or DSC
              * to specify the new sort order. This callback is invoked before
              * the list is refreshed.
              */
@@ -600,7 +600,7 @@
                 this.strings = this.options.strings.split(",");            
             }
 
-            // Queued refershes - tracks refresh calls that occur during another refresh.
+            // Queued refreshes - tracks refresh calls that occur during another refresh.
             this._queuedRefreshes = [];
 
             if (this.options.itemList) {
@@ -611,8 +611,8 @@
         },
         
         setDefaultSort: function() {
-            this._currentSort = this.options.sortBy;
-            this._currentSortOrder = this.options.sortOrder.toUpperCase();
+            this._currentSort = this.options.sortBy;            
+            this._currentSortOrder = (this.options.sortOrder.toUpperCase() === 'ASCENDING') ? 'ASC' : 'DSC';
             this._currentSortCase = '';
             this._updateSortButtons();
         },
@@ -1121,7 +1121,7 @@
         _updateSortButtons: function() {
             if ('ascending' in this.options.sortButtons &&
                 'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") === 0) {
+                if (this._currentSortOrder.toUpperCase().indexOf("DSC") === 0) {
                     // Show the descending button, reflecting the CURRENT order.
                     $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
@@ -1216,10 +1216,10 @@
                                 
                                 if (sortFld === newSortField) {
                                     // Reverse the direction.
-                                    if (sortOrder.toUpperCase() === "ASCENDING") {
-                                        curSortOrders[i] = "DESCENDING";
+                                    if (sortOrder.toUpperCase() === "ASC") {
+                                        curSortOrders[i] = "DSC";
                                     } else {
-                                        curSortOrders[i] = "ASCENDING";
+                                        curSortOrders[i] = "ASC";
                                     }
                                     found = true;
                                 }
@@ -2047,14 +2047,11 @@
                     'name' : 'search',
                     'id' : sboxID,
                     'data-role' : 'none',
-                    'data-mini' : true,
-                    
+                    'data-theme' : 'd',
+                    'data-mini' : true,                    
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
 
-                this.$searchLabel = $('<label/>').attr({
-                    'for': sboxID
-                }).append('Search').appendTo($searchDiv).hide();
                 this.$searchBox.textinput({
                     clearBtn : true
                 });
@@ -2163,7 +2160,7 @@
             if (displayCollection && displayCollection.clearOrder) {
                 displayCollection = displayCollection.clearOrder();
                 if (this.options.groupBy) {
-                    if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
+                    if (this.options.groupByOrder.toUpperCase() === 'ASC') {
                         displayCollection = displayCollection.order(this.options.groupBy, true, false);                
                     } else {
                         displayCollection = displayCollection.order(this.options.groupBy, false, false);
@@ -2179,7 +2176,7 @@
                     for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                         var latestDirection = ( (oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
                         var nxtCase = (caseVals[oidx] === 'true' ? true : false);
-                        if (latestDirection.toUpperCase() === 'DESCENDING') {
+                        if (latestDirection.toUpperCase() === 'DSC') {
                             displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                         } else {
                             displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
@@ -2741,7 +2738,7 @@
                 nxtSelection = this.displayList[enclosingIndex];
             }
             
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c ui-btn-hover-d ui-btn-down-d');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-d ui-btn-down-d ui-btn-hover-d ui-btn-down-d');
             /*if (this.selectedLI) {
                 this.selectedLI.removeClass('ui-btn-active');
             }*/
@@ -2764,8 +2761,8 @@
         clearSelected: function() {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
-                this.selectedLI.removeClass('ui-btn-down-c');
-                this.selectedLI.addClass('ui-btn-up-c');
+                this.selectedLI.removeClass('ui-btn-down-d');
+                this.selectedLI.addClass('ui-btn-up-d');
                 this.selectedLI = null;
                 this.selected = null;
                 this.selectedGroup = null;
@@ -2916,7 +2913,7 @@
                 if (iconMarkup.length) {
                     // Manually update the icon itself.
                     iconMarkup.removeClass()
-                        .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
+                        .addClass('ui-icon ui-icon-' + rowComponents.icon);
                 }
             } else {
                 $(parentElement).attr('data-icon', 'false');
@@ -2978,17 +2975,25 @@
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
-                        mainLink.append($('<h3 />')
-                            .attr('data-role', 'itemheader')
-                            .text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                        if (rowComponents.header.attr('data-role') === 'itemheader') {
+                             mainLink.append(Helix.Utils.escapeQuotes(rowComponents.header));                           
+                        } else {
+                            mainLink.append($('<h3 />')
+                                .attr('data-role', 'itemheader')
+                                .text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                        }
                     }
                 } else {
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.empty().append(rowComponents.header).show();
                     } else {
-                        mainLink.append($('<h3 />')
-                            .attr('data-role', 'itemheader')
-                            .append(rowComponents.header));
+                        if (rowComponents.header.attr('data-role') === 'itemheader') {
+                             mainLink.append(rowComponents.header);                           
+                        } else {
+                            mainLink.append($('<h3 />')
+                                .attr('data-role', 'itemheader')
+                                .append(rowComponents.header));
+                        }
                     }
                 }
             } else if (headerMarkup) {

@@ -161,13 +161,13 @@ public class LoadCommandRenderer extends CoreRenderer {
         }
         
         Object v = cmd.getValue();
-        JSONSerializer s = new JSONSerializer();
+        
         if (v == null) {
             throw new FacesException("LoadCommand '" + 
                     cmd.getName() + 
                     "': The value getter cannot ever return null. Return an empty object of the proper return type if no data is available.");
         }
-        String schema = s.serializeObjectSchema(v.getClass());
+        String schema = JSONSerializer.serializeObjectSchema(v.getClass());
         
         // Global variables populated by this load.
         String widgetName = "window." + cmd.resolveWidgetVar();

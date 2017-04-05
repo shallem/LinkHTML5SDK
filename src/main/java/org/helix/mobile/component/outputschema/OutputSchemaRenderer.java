@@ -41,7 +41,6 @@ public class OutputSchemaRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = os.getClientId();
         
-        JSONSerializer s = new JSONSerializer();
         Class<?> c = null;
         try {
             c = Class.forName(os.getName(), true, Thread.currentThread().getContextClassLoader());
@@ -56,7 +55,7 @@ public class OutputSchemaRenderer extends CoreRenderer {
                     os.getName() + 
                     "': The class was not found in the context class loader.");
         }
-        String schema = s.serializeObjectSchema(c);        
+        String schema = JSONSerializer.serializeObjectSchema(c);        
         
         
         writer.write("\n");
