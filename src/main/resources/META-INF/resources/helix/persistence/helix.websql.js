@@ -33,9 +33,27 @@ MobileHelixDatabase.createUUID = function() {
  * PRIVATE METHOD
  * @constructor
  */
-var MobileHelixDatabase_Rows = function() {
-    this.resultSet = [];    // results array
-    this.length = 0;        // number of rows
+var MobileHelixDatabase_Rows = function(data) {
+    if (window.CordovaVersion >= 3 &&
+            window.CordovaRevision >= 5) {
+        this.resultSet = [];    // results array
+        // Data is returned as an array of arrays for compactness' sake. The first array is the 
+        // array of field names. Each additional array is a data row, which we convert into an object.
+        this.fieldNames = data.items.shift();
+        for (var i = 0; i < data.items.length; ++i) {
+            var nxtArr = data.items[i];
+            var nxtObj = {};
+            for (var j = 0; j < nxtArr.length; ++j) {
+                nxtObj[this.fieldNames[j]] = nxtArr[j];
+            }
+            this.resultSet.push(nxtObj);
+        }
+
+        this.length = this.resultSet.length;
+    } else {
+        this.length = data.length;        // number of rows
+        this.resultSet = data.items;
+    }
 };
 
 /**
@@ -53,8 +71,8 @@ MobileHelixDatabase_Rows.prototype.item = function(row) {
  * PRIVATE METHOD
  * @constructor
  */
-var MobileHelixDatabase_Result = function() {
-    this.rows = new MobileHelixDatabase_Rows();
+var MobileHelixDatabase_Result = function(data) {
+    this.rows = new MobileHelixDatabase_Rows(data);
 };
 
 /**
@@ -78,9 +96,7 @@ function completeQuery(query, data) {
             if (tx && tx.queryList[query.id]) {
 
                 // Save query results
-                var r = new MobileHelixDatabase_Result();
-                r.rows.resultSet = data.items;
-                r.rows.length = data.length;
+                var r = new MobileHelixDatabase_Result(data);
                 try {
                     if (typeof query.successCallback === 'function') {
                         query.successCallback(query.tx, r);
