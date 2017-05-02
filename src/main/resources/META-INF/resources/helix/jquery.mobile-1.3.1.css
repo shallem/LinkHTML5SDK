@@ -966,14 +966,18 @@ a.ui-link-inherit {
 	height: 100%;
 }
 .ui-overlay-shadow {
+    /*
 	-moz-box-shadow: 0 0 12px 			rgba(0,0,0,.6);
 	-webkit-box-shadow: 0 0 12px 		rgba(0,0,0,.6);
 	box-shadow: 0 0 12px 				rgba(0,0,0,.6);
+    */
 }
 .ui-shadow {
-	-moz-box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 			rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
-	-webkit-box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 		rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
-	box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 				rgba(0,0,0,.2) /*{global-box-shadow-color}*/
+    /*
+	-moz-box-shadow: 0 1px 3px  			rgba(0,0,0,.2);
+	-webkit-box-shadow: 0 1px 3px 	                rgba(0,0,0,.2);
+	box-shadow: 0 1px 3px 				rgba(0,0,0,.2);
+    */
 }
 .ui-bar-a .ui-shadow,
 .ui-bar-b .ui-shadow ,

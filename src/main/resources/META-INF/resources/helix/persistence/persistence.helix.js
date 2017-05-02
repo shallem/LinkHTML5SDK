@@ -1232,8 +1232,11 @@ function initHelixDB() {
             }
 
             var nToAdd = deltaObj.adds.length;
+            var nToUpdate = deltaObj.updates.length;
             var nAddsDone = 0;
+            var nUpdatesDone = 0;
             var allAdds = [];
+
             var addDone = function(pObj, uidToEID) {
                 ++nAddsDone;
                 allAdds.push(pObj);
@@ -1246,18 +1249,29 @@ function initHelixDB() {
                 }
             };
             
+            var updateDone = function() {
+                ++nUpdatesDone;
+                if (nUpdatesDone >= nToUpdate) {
+                    /* Nothing more to add - we are done. */
+                    oncomplete(field, allAdds);
+                }
+            };
+            
             var syncFn = function(uidToEID) {
                 if (deltaObj.updates.length > 0) {
-                    var updatedObj = deltaObj.updates.pop();
-                    var toUpdateKey = updatedObj[_self.getJSONKeyField(elemSchema)];
-                    var objId = uidToEID[toUpdateKey];
-                    if (objId) {
-                        Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
-                            syncFn(uidToEID);
-                            //syncFn(pObj);
-                        },overrides);
-                    } else {
-                        Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,uidToEID);
+                    while (deltaObj.updates.length > 0) {
+                       var updatedObj = deltaObj.updates.pop();
+                       var toUpdateKey = updatedObj[_self.getJSONKeyField(elemSchema)];
+                       var objId = uidToEID[toUpdateKey];
+                       if (objId) {
+                           Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
+                                updateDone();
+                               //syncFn(uidToEID);
+                               //syncFn(pObj);
+                           },overrides);
+                       } else {
+                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,uidToEID);
+                       }
                     }
                 } else {
                     /* Nothing more to sync. Done. */
