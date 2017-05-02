@@ -3158,7 +3158,7 @@ Capture.prototype.captureImage = function(successCallback, errorCallback, option
  * @param {Function} errorCB
  * @param {CaptureImageOptions} options
  */
-Capture.prototype.captureImage = function(successCallback, errorCallback, options){
+Capture.prototype.selectImage = function(successCallback, errorCallback, options){
     _capture("selectImage", successCallback, errorCallback, options);
 };
 
