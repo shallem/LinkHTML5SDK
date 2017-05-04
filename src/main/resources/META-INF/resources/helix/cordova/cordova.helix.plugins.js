@@ -236,13 +236,11 @@
                    options
                 ]);
             },
-            saveFile: function(docID, options, success, failure) {
-                if (!options) {
-                    options = {};
-                }
+            saveFile: function(docID, docName, docTags, success, failure) {
                 return cordova.exec(success, failure, "DocumentDownload", "saveDocument", [
                    docID,
-                   options
+                   docName,
+                   docTags
                 ]);
             },
             discardFile: function(docID, success, failure) {
