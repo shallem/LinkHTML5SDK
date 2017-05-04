@@ -61,7 +61,7 @@
     <dependency>
       <groupId>org.helix</groupId>
       <artifactId>LinkSDKSerializer</artifactId>
-      <version>1.1.12</version>
+      <version>1.1.13</version>
     </dependency>
 
   </dependencies>
