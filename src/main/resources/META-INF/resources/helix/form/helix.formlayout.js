@@ -1093,15 +1093,10 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     var $buttonLink;
     if (formElem.iconClass) {
         $buttonLink = $('<a />').attr({
-            'data-role' : 'button',
-            'data-iconpos' : 'bottom',
-            'data-icon' : formElem.iconClass,
-            'data-iconshadow' : formElem.iconShadow ? 'true' : 'false',
-            'data-corners' : formElem.iconCorners ? 'true' : 'false',
-            'data-shadow' : formElem.shadow ? 'true' : 'false',
-            'class' : 'iconbutton',
+            'class' : 'ui-btn iconbutton',
             'id': formElem.id
-        }).append(formElem.fieldTitle).button();            
+        }).append($('<div/>').addClass('hx-btn-inner')
+                .append($('<div/>').addClass('hx-icon ui-icon-' + formElem.iconClass)));
     } else {
         $buttonLink = $('<a />').attr({
             'data-role' : 'button',
@@ -1111,6 +1106,7 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
             'data-corners' : formElem.iconCorners ? 'true' : 'false',
             'id': formElem.id
         }).append(formElem.fieldTitle);
+        $buttonLink.buttonMarkup({ mini : useMiniLayout });
     }
     if (formElem.computedWidth) {
         $buttonLink.width(formElem.computedWidth);
@@ -1121,7 +1117,6 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     } else {
         $buttonLink.attr('href', 'javascript:void(0);');
     }
-    $buttonLink.buttonMarkup({ mini : useMiniLayout });
     $buttonLink.appendTo($parent);
     if (formElem.onclick) {
         $buttonLink.on('vclick', function(ev) {
@@ -2239,7 +2234,10 @@ Helix.Layout._layoutPopup = function(popup, options, buttons) {
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     $.mobile.activePage.append( popup ).trigger( "pagecreate" );
     $(popup).popup({});
-    $(popup).on('popupafterclose', function() {
+    $(popup).on('popupafterclose', null, options, function(ev) {
+        if (ev.data.oncomplete) {
+            ev.data.oncomplete();
+        }
         $(this).remove();
     });
     $(popup).popup("open");    

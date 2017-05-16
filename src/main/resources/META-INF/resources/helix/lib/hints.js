@@ -9,7 +9,7 @@ $(document).on('hxGenerateSchemas', function (ev, schemasDone) {
     Helix.DB.createSchemaForTable('HelixHints', {
         isShown: "INT",
         hintTag: "TEXT"
-    });
+    }, [], 'hintTag');
     schemasDone.push('HelixHints');
 });
 

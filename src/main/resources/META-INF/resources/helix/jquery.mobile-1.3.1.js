@@ -3724,7 +3724,7 @@ var createHandler = function( sequential ) {
 
 			startIn = function() {
 				// Prevent flickering in phonegap container: see comments at #4024 regarding iOS
-				$to.css( "z-index", -10 );
+				//$to.css( "z-index", -10 );
 				$to.addClass( $.mobile.activePageClass + toPreClass );
 // FLA comment out
 //				// Send focus to page as it is now display: block
@@ -3739,7 +3739,7 @@ var createHandler = function( sequential ) {
 //    
 
 				// Restores visibility of the new page: added together with $to.css( "z-index", -10 );
-				$to.css( "z-index", "" );
+				//$to.css( "z-index", "" );
 
 				if ( !none ) {
 					$to.animationComplete( doneIn );
@@ -3763,13 +3763,14 @@ var createHandler = function( sequential ) {
 						cleanFrom();
 					}
 				}
+				toggleViewportClass();
+
+				$to
+					.removeClass( "out in reverse " + name );
 /*
  FLA --- comment start
-				$to
-					.removeClass( "out in reverse " + name )
 					.height( "" );
 
-				toggleViewportClass();
 
 				// In some browsers (iOS5), 3D transitions block the ability to scroll to the desired location during transition
 				// This ensures we jump to that spot after the fact, if we aren't there already.

@@ -601,6 +601,11 @@
         },
         
         _preloadPage: function (direction) {
+            if (this.options.grouped) {
+                // No preloading when we are dealing with a grouped list ...
+                return;
+            }
+            
             var displayCollection = this.itemList;
 
             /* Apply skip and limit. */

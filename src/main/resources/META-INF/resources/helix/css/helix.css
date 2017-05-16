@@ -123,6 +123,31 @@
     height: 60px;    
     padding: 0;
     margin: 0;
+    background: transparent;
+    border: none;
+}
+
+.hx-tab {
+    height: 48px;
+    width: auto;
+}
+
+.hx-btn-inner {
+    padding: 0;
+    width: auto;
+    height: 60px;
+    position: relative;    
+}
+
+.hx-btn-inner.hx-tab-inner {
+    height: 48px;
+}
+
+.hx-icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .iconbuttonHeight {
@@ -130,11 +155,6 @@
 }
 
 .hx-button-bar .iconbutton .ui-btn-inner {
-    border: none;
-}
-
-.iconbutton {
-    background: transparent;
     border: none;
 }
 
@@ -153,6 +173,7 @@
     display: none;
 }
 
+.hx-tab .ui-btn-inner .ui-icon,
 .iconbutton .ui-btn-inner .ui-icon {
     margin-left: 0px;
     border-radius: 0 0 0 0;
@@ -270,7 +291,7 @@
    
     for the source of the fix.
 */
-.hx-scrolling-page *:not(html) {
+.hx-scrolling-page *:not(html):not(.hx-icon) {
     -webkit-transform: translate3d(0, 0, 0);
 }
 
@@ -281,7 +302,7 @@
 }
 
 /* Attempt to fix webkit bug that makes part of the HTML in a page disappear by forcing hardware acceleration. */
-.hx-scroller-nozoom  * { 
+.hx-scroller-nozoom  *:not(.hx-icon) { 
     -webkit-transform: translate3d(0, 0, 0); 
 }
 
@@ -455,12 +476,9 @@ li {
     .ui-header .iconbutton .ui-btn-inner {
         height: 40px;
     }
-        
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-bars,
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-delete,
-    .ui-header .iconbutton .ui-btn-inner .ui-icon.ui-icon-check {
-        top: 7px;
-        left: 21px;
+    
+    .ui-header .hx-btn-inner {
+        height: 40px;
     }
 }
 
@@ -715,6 +733,14 @@ li {
         margin: 0;
     }
     
+    .hx-btn-inner {
+        height: 40px;
+    }
+    
+    .hx-tab.iconbutton {
+        width: auto;
+    }
+    
     .iconbuttonHeight {
         min-height: 40px;    
     }
@@ -882,7 +908,7 @@ li {
 }
 
 /* Traditional JQM buttons with a 16px icon and text should be 32px high. */
-a.ui-btn:not(.iconbutton):not(.ui-li-link-alt) {
+a.ui-btn:not(.iconbutton):not(.ui-li-link-alt):not(.hx-tab) {
     max-height: 32px;
 }
 
