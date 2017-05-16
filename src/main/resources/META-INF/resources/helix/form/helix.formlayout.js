@@ -1441,7 +1441,8 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     }
     var subPanelDiv = $('<div />').attr({
         'id' : subPanelID,
-        'class' : 'hx-flex-horizontal'
+        'class' : 'hx-flex-horizontal',
+        'style' : subPanelObj.computedStyle ? subPanelObj.computedStyle: ''
     }).appendTo($fieldContainer);
 
     // Layout the elements in the sub-panel add a separator between elements

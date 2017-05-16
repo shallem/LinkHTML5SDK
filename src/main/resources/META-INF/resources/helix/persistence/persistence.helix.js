@@ -1700,8 +1700,9 @@ function initHelixDB() {
                 };
                 syncComponent();
             } else {
-                var keyField = Helix.DB.getKeyField(objSchema);
-                objSchema.findBy(keyField, obj[keyField], function(persistentObj) {
+                var dbKeyField = Helix.DB.getKeyField(objSchema);
+                var objKeyField = Helix.DB.getJSONKeyField(objSchema);
+                objSchema.findBy(dbKeyField, obj[objKeyField], function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj) {
                         /* Store the schema in the final obj. */
                         finalObj.__hx_schema = objSchema;
