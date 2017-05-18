@@ -74,6 +74,8 @@
              */
             dividerTheme: 'd'
         },
+        
+        _refreshControlGroups: false,
 
         _create: function() {
             this.active = false;
@@ -146,12 +148,21 @@
                 var inputs = $(target).find('input[type="radio"]');
                 for (var i = 0; i < status.length; ++i) {
                     var _input = inputs[i];
-                    if (status[i] === true) {
+                    var nxt = status[i];
+                    var isEnabled = $.isArray(nxt) ? nxt[0] : nxt;
+                    var nxtVal = $.isArray(nxt) ? nxt[1] : false;
+                    if (isEnabled === true) {
                         $(_input).checkboxradio('enable');
                     } else {
                         $(_input).checkboxradio('disable');
                     }
+                    if (nxtVal === true) {
+                        $(_input).attr('checked', true);
+                    } else {
+                        $(_input).removeAttr('checked');
+                    }
                 }
+                this._refreshControlGroups = true;
             } else if (selected.type === 'checkbox') {
                 if (status === true) {
                     $(items).checkboxradio('enable');
@@ -417,6 +428,10 @@
                 this._menuContainer.popup("open");
             }
             
+            if (this._refreshControlGroups) {
+                $(this._menuContainer).find('fieldset').controlgroup('refresh');
+                this._refreshControlGroups = false;
+            }
             if (this.options.afteropen) {
                 if (this._thisArg) {
                     var args = [ this ];
