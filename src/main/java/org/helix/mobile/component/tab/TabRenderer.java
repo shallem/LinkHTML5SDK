@@ -27,31 +27,24 @@ public class TabRenderer extends CoreRenderer {
         writer.startElement("li", component);
         writer.startElement("a", component);
         writer.writeAttribute("href", "#" + tab.getPage(), null);
-        writer.writeAttribute("style", "max-height: 48px; height: 48px", null);
-        //writer.writeAttribute("data-icon", "custom", null);
-        String styleClass = "";
-        if (!tab.isCustomIcon()) {
-            writer.writeAttribute("data-icon", tab.getIcon(), null);
-        } else {
-            styleClass = "ui-icon-" + tab.getIcon();
-        }
-        if (tab.getTheme() != null) {
-            String theme = tab.getTheme();
-            writer.writeAttribute("data-theme", theme, null);
-        }
         if (isActive) {
-            writer.writeAttribute("class", styleClass + " ui-btn-active", null);
+            writer.writeAttribute("class", "hx-tab ui-btn-active ui-btn", null);
         } else {
-            writer.writeAttribute("class", styleClass, null);
+            writer.writeAttribute("class", "hx-tab ui-btn", null);
         }
-        if (tab.getName() != null) {
-            //writer.write(tab.getName());
-        }
+        
+        writer.startElement("div", component);
+        writer.writeAttribute("class", "hx-btn-inner hx-tab-inner", null);
+        
+        writer.startElement("div", component);
+        writer.writeAttribute("class", "hx-icon     ui-icon-" + tab.getIcon(), null);
     }
     
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
+        writer.endElement("div");
+        writer.endElement("div");
         writer.endElement("a");
         writer.endElement("li");
     }

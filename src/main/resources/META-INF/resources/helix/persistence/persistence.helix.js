@@ -956,15 +956,44 @@ function initHelixDB() {
             return null;
         },
     
-        createSchemaForTable: function(tableName, fields, indices) {
+        createSchemaForTable: function(tableName, fields, indices, keyField, hasManys) {
             var newSchema = persistence.define(tableName, fields);
             window.__pmAllSchemas[tableName] = newSchema;
             var i = 0;
+            if (keyField) {
+                newSchema.index(keyField, {
+                    unique: true
+                });
+            }
             if (indices) {
                 for (i = 0; i < indices.length; ++i) {
                     newSchema.index(indices[i]);
                 }            
             }
+            if (hasManys) {
+                for (i = 0; i < hasManys.length; ++i) {
+                    var nxt = hasManys[i];
+                    newSchema.hasMany(nxt[0], nxt[1], nxt[2]);
+                }
+            }
+	    var dirty = false;
+            var masterDBAdds = [];
+	    var allSchemas = [{
+		schema: newSchema,
+		fields: fields,
+		keyField: keyField,
+		sortFields: indices,
+		filterFields : [],
+		globalFilterFields: [],
+		textIndexFields: []
+	    }];
+            if (Helix.DB.doMigrations(tableName,allSchemas,masterDBAdds)) {
+                dirty = true;
+            }
+	    for (var t = 0; t < masterDBAdds.length; ++t) {
+                persistence.add(masterDBAdds[t]);
+            }
+                    
             return newSchema;
         },
     
@@ -1671,8 +1700,9 @@ function initHelixDB() {
                 };
                 syncComponent();
             } else {
-                var keyField = Helix.DB.getKeyField(objSchema);
-                objSchema.findBy(keyField, obj[keyField], function(persistentObj) {
+                var dbKeyField = Helix.DB.getKeyField(objSchema);
+                var objKeyField = Helix.DB.getJSONKeyField(objSchema);
+                objSchema.findBy(dbKeyField, obj[objKeyField], function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj) {
                         /* Store the schema in the final obj. */
                         finalObj.__hx_schema = objSchema;

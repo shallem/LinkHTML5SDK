@@ -55,6 +55,12 @@
             <description>Name of a function to call when the split view is refreshed. Passed a single argument which is a string, either 'full' or 'split.'</description>
         </attribute>
         <attribute>
+            <name>onPopRight</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Name of a function to call when the split view right pane is passed. Passed a single argument which is the div being popped.</description>
+        </attribute>
+        <attribute>
             <name>buttonBarSelector</name>
             <required>false</required>
             <type>java.lang.String</type>

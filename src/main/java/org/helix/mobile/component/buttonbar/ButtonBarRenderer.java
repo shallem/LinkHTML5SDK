@@ -40,13 +40,6 @@ public class ButtonBarRenderer extends CoreRenderer {
         for (UIComponent child : childButtons) {
 
             if (child.isRendered()) {
-                if (idx == childButtons.size()) {
-                    if (child instanceof IconButton) {
-                        IconButton ib = (IconButton) child;
-                        ib.setCorner(isLeft ? "right" : "left");
-                    }
-                }
-
                 child.encodeAll(context);
             }
             ++idx;
