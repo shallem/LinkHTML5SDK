@@ -1846,6 +1846,19 @@
             this._searchSortDirty = true;
             this._prependSearchBox(this.options);
         },
+        
+        _addSortFilterButton: function(id, icon, onclick) {
+            return $('<a/>').attr({
+                        'id': id,
+                        'class': 'ui-btn iconbutton hx-icon-sort-filter'
+                    }).append($('<div/>').attr({
+                        'class' : 'hx-btn-inner'
+                    }).append($('<div/>').attr({
+                        'class' : 'hx-icon ui-icon-' + icon
+                    }))).appendTo(this.$sortDiv)
+                        .on(this.tapEvent, onclick);
+        },
+        
         _prependSearchBox: function (options) {
             var _self = this;
             var useControlGroup = false;
@@ -1882,65 +1895,26 @@
                         'descending': PrimeFaces.escapeClientId(sDescendID)
                     };
 
-                    this.$sortAscending = $('<a/>').attr({
-                        'id': sAscendID,
-                        'data-role': 'none',
-                        'data-icon': 'hx-sort-asc-black',
-                        'data-iconpos': 'notext',
-                        'data-theme': 'd',
-                        'data-corners': 'false',
-                        'data-mini': (useControlGroup ? 'true' : 'false'),
-                        'class': 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
-                    }).button()
-                            .appendTo(_self.$sortDiv)
-                            .on(_self.tapEvent, function (ev) {
-                                ev.stopPropagation();
-                                ev.stopImmediatePropagation();
-                                ev.preventDefault();
-
-                                _self.displaySortMenu(this);
-                            });
-                    this.$sortDescending = $('<a/>').attr({
-                        'id': sDescendID,
-                        'data-role': 'none',
-                        'data-icon': 'hx-sort-desc-black',
-                        'data-iconpos': 'notext',
-                        'data-theme': 'd',
-                        'data-corners': 'false',
-                        'data-mini': (useControlGroup ? 'true' : 'false'),
-                        'class': 'iconbutton ui-icon-alt ui-icon-nodisc hx-icon-sort-filter'
-                    }).button()
-                            .appendTo(_self.$sortDiv)
-                            .on(_self.tapEvent, function (ev) {
-                                ev.stopPropagation();
-                                ev.stopImmediatePropagation();
-                                ev.preventDefault();
-
-                                _self.displaySortMenu(this);
-                            });
+                    this.$sortAscending = this._addSortFilterButton(sAscendID, 'hx-sort-asc-black', function(ev) {
+                        ev.stopImmediatePropagation();
+                        _self.displaySortMenu(this);
+                        return false;
+                    });
+                    this.$sortDescending = this._addSortFilterButton(sDescendID, 'hx-sort-desc-black', function(ev) {
+                        ev.stopImmediatePropagation();
+                        _self.displaySortMenu(this);
+                        return false;
+                    });
                 }
 
                 if (options.showFilterButton) {
                     /* Filter button. */
                     var sFilterID = Helix.Utils.getUniqueID();
-                    this.$filter = $('<a/>').attr({
-                        'id': sFilterID,
-                        'data-role': 'none',
-                        'data-icon': 'hx-filter-black',
-                        'data-iconpos': 'notext',
-                        'data-theme': 'd',
-                        'data-corners': 'false',
-                        'data-mini': (useControlGroup ? 'true' : 'false'),
-                        'class': 'iconbutton ui-icon-alt hx-icon-sort-filter'
-                    }).button()
-                            .appendTo(_self.$sortDiv)
-                            .on(_self.tapEvent, function (ev) {
-                                ev.stopPropagation();
-                                ev.stopImmediatePropagation();
-                                ev.preventDefault();
-
-                                _self.displayGlobalFilterMenu(this);
-                            });
+                    this.$filter = this._addSortFilterButton(sFilterID, 'hx-filter-black', function(ev) {
+                        ev.stopImmediatePropagation();
+                        _self.displayGlobalFilterMenu(this);
+                        return false;
+                    });
                 }
 
                 if (options.externalButtonsCallback) {

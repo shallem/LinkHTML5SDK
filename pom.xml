@@ -343,7 +343,7 @@
 		    <!-- <include>datagrid/datagrid.js</include> -->
 
 		    <!-- Panelgroup component. -->
-		    <include>panelgroup/panelgroup.js</include>
+		    <!-- <include>panelgroup/panelgroup.js</include> -->
 
 		    <!-- Data list. -->
 		    <include>datalist/datalist.js</include>

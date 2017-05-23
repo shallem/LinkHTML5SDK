@@ -9174,7 +9174,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 				.one( this.options.closeEvents, $.proxy( this, "_closePopup" ) );
 		},
 
-		// TODO no clear deliniation of what should be here and
+		// TODO no clear deliniation of what should be acdmnosthere and
 		// what should be in _open. Seems to be "visual" vs "history" for now
 		open: function( options ) {
 			var self = this, opts = this.options, url, hashkey, activePage, currentIsDialog, hasHash, urlHistory;

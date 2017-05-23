@@ -20,10 +20,13 @@ public class IconButtonRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         IconButton button = (IconButton) component;
         String clientId = button.getClientId(context);
-        boolean useStdButton = false;
         
         writer.startElement("a", button);
-        writer.writeAttribute("id", clientId, "id");
+        if (button.getId() != null) {
+            writer.writeAttribute("id", button.getId(), null);
+        } else {
+            writer.writeAttribute("id", clientId, "id");
+        }
         writer.writeAttribute("name", clientId, "name");
         
         

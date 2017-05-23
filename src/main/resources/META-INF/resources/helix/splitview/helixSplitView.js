@@ -79,8 +79,14 @@
             $(this.element).addClass('hx-full-height');
         
             // Get the left/right.
+            var _children = $(this.element).children();
             this.__left = $(this.element).children()[0];
             this.__right = $(this.element).children()[1];
+            if (_children.length > 2) {
+                this.__rightStack = _children.slice(2);
+                this.__rightStack.hide();
+                this.__rightStack = jQuery.makeArray(this.__rightStack);
+            }
             
             if (!this.options.buttonBarSelector && 
                     this.options.useHeaderToToggle) {
@@ -105,6 +111,7 @@
             
             this.__restoreMarkup = null;
             this.__current = null;
+            this.__pushCt = 0;
             this.refresh();
             var _self = this;
             $( document ).on( "orientationchange", function( event ) {
@@ -223,6 +230,9 @@
         },
         
         toggle: function() {
+            if (this.__pushCt > 0) {
+                this.popRight();
+            }
             if (!this.__current) {
                 return;
             }
@@ -284,6 +294,51 @@
         
         getRight: function() {
             return $(this.__right);
+        },
+        
+        pushRight: function() {
+            if (this.isSplitView()) {
+                // We have a left and a right, so we are on a large screen.
+                var rightDiv = this.__rightStack.pop();                
+                this.__rightStack.push(this.__right);
+                
+                $(rightDiv).width($(this.__right).width());
+                $(rightDiv).addClass('hx-split-right-area').addClass('hx-full-height');
+                $(this.__right).hide();
+                this.__right = rightDiv;
+                $(this.__right).show();
+            
+                // Change the button bar so that it looks like we are showing the right page.
+                ++this.__pushCt;
+                if (this.__pushCt === 1) {
+                    if (this.options.buttonBarSelector) {
+                        $(this.options.buttonBarSelector).addClass('hx-split-right-push');
+                        $(this.options.buttonBarSelector).addClass('hx-split-right');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-both');
+                    }
+                }
+            }
+        },
+        
+        popRight: function() {
+            if (this.isSplitView()) {
+                var rightDiv = this.__rightStack.pop();
+                $(this.__right).hide();
+                if (this.options.onPopRight) {
+                    this.options.onPopRight($(this.__right));
+                }
+                this.__right = rightDiv;
+                $(this.__right).show();
+                
+                --this.__pushCt;
+                if (this.__pushCt === 0) {
+                    if (this.options.buttonBarSelector) {
+                        $(this.options.buttonBarSelector).addClass('hx-split-both');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-right');
+                        $(this.options.buttonBarSelector).removeClass('hx-split-right-push');
+                    }
+                }
+            }
         }
     });
 }( jQuery ));

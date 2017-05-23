@@ -21,10 +21,6 @@ public class SplitViewRenderer extends CoreRenderer {
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         SplitView sview = (SplitView) component;
-
-        if (sview.getChildCount() > 2) {
-            throw new FacesException("Split view " + sview.getClientId() + " can only have a maximum of two children.");
-        }
         
         // Output a full-width div enclosing the children.
         writer.startElement("div", sview);
@@ -45,6 +41,9 @@ public class SplitViewRenderer extends CoreRenderer {
         writer.write(",splitThreshold: " + Integer.toString(sview.getSplitThreshold()));
         if (sview.getOnRefresh() != null) {
             writer.write(",onRefresh: " + sview.getOnRefresh());
+        }
+        if (sview.getOnPopRight() != null) {
+            writer.write(",onPopRight: " + sview.getOnPopRight());
         }
         if (sview.getButtonBarSelector() != null) {
             writer.write(",buttonBarSelector: '" + sview.getButtonBarSelector() + "'");
