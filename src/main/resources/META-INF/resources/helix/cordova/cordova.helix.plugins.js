@@ -196,7 +196,7 @@
     if (window.CordovaVersion >= 3 &&
             window.CordovaRevision >= 5) {
         window.HelixFiles = {
-            downloadFile: function(url, docID, docName, options, success, failure) {
+            downloadFile: function(url, docID, docName, docDigest, options, success, failure) {
                 if (!options) {
                     options = {};
                 }
@@ -204,6 +204,7 @@
                    url,
                    docID,
                    docName,
+                   docDigest,
                    options
                 ]);
             },
