@@ -2516,7 +2516,7 @@
                     event.stopImmediatePropagation();
 
                     _self.setSelected(event.target);
-                    _self.options.swipeLeftAction(_self.selected);
+                    _self.options.swipeLeftAction.call(_self, _self.selected);
                     return false;
                 });
             }
@@ -2526,7 +2526,7 @@
                     event.stopImmediatePropagation();
 
                     _self.setSelected(event.target);
-                    _self.options.swipeRightAction(_self.selected);
+                    _self.options.swipeRightAction.call(_self, _self.selected);
                     return false;
                 });
             }

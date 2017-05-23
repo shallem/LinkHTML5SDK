@@ -52,16 +52,7 @@
             }
         }
     };
-    
-    window.DocumentUpload = {
-        getDocument: function(success, fail) {
-            return cordova.exec(success, fail, "DocumentUpload", "getDocument", []);
-        },
-        clearDocument: function(docid, success, fail) {
-            return cordova.exec(success, fail, "DocumentUpload", "clearDocument", [ docid ]);
-        }
-    };
-    
+        
     window.HelixServices = {
         auth: function(client, username, password, success, fail) {
             return cordova.exec(success, fail, "HelixServices", "auth", [client, username, password]);
@@ -247,6 +238,11 @@
                 return cordova.exec(success, failure, "DocumentDownload", "deleteDocument", [
                    docID
                 ]);
+            },
+            checkDocumentStatus: function(docIDs, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "checkDocumentStatus", [
+                   docIDs
+                ]);                
             }
         };
     }
