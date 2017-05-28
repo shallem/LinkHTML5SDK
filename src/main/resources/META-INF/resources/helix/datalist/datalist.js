@@ -607,6 +607,10 @@
             }
             
             var displayCollection = this.itemList;
+            if ($.isArray(displayCollection)) {
+                // No preloading an array.
+                return;
+            }
 
             /* Apply skip and limit. */
             var _nextRenderWindow = (this._renderWindowStart + this._itemsPerPage);
