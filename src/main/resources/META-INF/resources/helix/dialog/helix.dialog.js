@@ -239,7 +239,7 @@
                 if (dialog.options.hasForm && dialog.form) {
                     args.push($(dialog.form).serialize());
                     $(dialog.form).find('input').blur();
-                } else {
+                } else if (_self._callbackThis) {
                     args.push(dialog);
                 }
                 if (_self._callbackArgs) {

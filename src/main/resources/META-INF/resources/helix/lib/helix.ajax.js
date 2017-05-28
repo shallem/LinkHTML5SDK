@@ -33,6 +33,9 @@ $(document).on('cordovaReady', function() {
  */
 $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate) {
     if (loadingDelegate) {
+        if (loadingDelegate === true) {
+            return;
+        }
         loadingDelegate.startLoading();
     } else {
         if (!Helix.Ajax.loadOptions.silent) {
@@ -88,6 +91,9 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelega
     }
 
     if (loadingDelegate) {
+        if (loadingDelegate === true) {
+            return;
+        }
         loadingDelegate.stopLoading();
     } else {
         /* Clear out the load options - this is meant as a per-load set of options. */

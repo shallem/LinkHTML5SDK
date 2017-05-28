@@ -659,14 +659,14 @@
                     for (var i = _prefetchedItems.length - 1; i >= 0; --i) {
                         var nxtRow = _prefetchedItems[i];
                         if (_self._renderRowMarkup([], nxtRow, i, function (elem) {
-                            toAdd.unshift(elem);                            
+                            toAdd.unshift(elem[0]);                            
                         })) {
                             _self.displayList.unshift(nxtRow);
                             ++_self.nRendered;
                         }
                     }
                     // Insert right before the first non-extra item in the list.
-                    $(toAdd).insertBefore(markerLI);
+                    $(toAdd).insertBefore($(markerLI));
                     
                     // Remove the last nElems LIs from the list.
                     var allLIs = _self.$wrapper.find('li[data-selected]');
@@ -693,18 +693,18 @@
                 var markerLI = _self._getLastDataLI();
                 var _addToEnd = function (_prefetchedItems) {
                     var nElems = _prefetchedItems.length;
+                    var toAdd = [];
                     for (var i = 0; i < _prefetchedItems.length; ++i) {
                         var nxtRow = _prefetchedItems[i];
-                        var toAdd = [];
                         if (_self._renderRowMarkup([], nxtRow, i, function (elem) {
-                            toAdd.push(elem);
+                            toAdd.push(elem[0]);
                         })) {
                             _self.displayList.push(nxtRow);
                             ++_self.nRendered;
                         }
                     }
                     // Insert after the last item in the list
-                    $(toAdd).insertAfter(markerLI);
+                    $(toAdd).insertAfter($(markerLI));
                     
                     if (nElems === 0) {
                         _self._atDataTop = true;
@@ -852,7 +852,7 @@
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
             
-            if (!_self.$parent.is(':visible')) {
+            if (_self._cancelAllScrolls || !_self.$parent.is(':visible')) {
                 return;
             }
 
@@ -998,10 +998,12 @@
             var __scrollHandler = function (ev) {
                 this.scrollHandler(ev);
             };
+            this._cancelAllScrolls = false;
             this.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, this));
         },
         
         _stopScrollHandler: function() {
+            this._cancelAllScrolls = true;
             this.$listWrapper.off('scroll');
         },
         
@@ -2870,11 +2872,12 @@
                     }
                 } else {
                     if (headerMarkup /*headerMarkup.length*/) {
-                        headerMarkup.empty().append(rowComponents.header).show();
+                        headerMarkup.replaceWith(rowComponents.header.attr('data-role', 'itemheader')).show();
                     } else {
-                        mainLink.append($('<h3 />')
+                        /*mainLink.append($('<h3 />')
                                 .attr('data-role', 'itemheader')
-                                .append(rowComponents.header));
+                                .append(rowComponents.header));*/
+                        mainLink.append(rowComponents.header.attr('data-role', 'itemheader'));
                     }
                 }
             } else if (headerMarkup) {

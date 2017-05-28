@@ -904,16 +904,15 @@
                     }
                 });
             } else {
-                e.append($('<a />').attr({
-                    'data-role' : 'button',
-                    'data-iconpos' : 'bottom',
-                    'data-icon' : buttonStr.icon,
-                    'data-iconshadow' : 'false',
-                    'data-corners' : 'false',
-                    'data-shadow' : 'false',
-                    'data-mini' : 'true',
-                    'class' : 'iconbutton'
-                }).button().on(Helix.clickEvent, buttonStr.action));
+                $('<a/>').attr({
+                    'id': Helix.Utils.getUniqueID(),
+                    'class' : 'ui-btn iconbutton'
+                }).append($('<div/>').attr({
+                    'class' : 'hx-btn-inner'
+                }).append($('<div/>').attr({
+                    'class' : 'hx-icon ui-icon-' + buttonStr.icon 
+                }))).appendTo(e)
+                .on(Helix.clickEvent, buttonStr.action);
             }
             return e;
         }
