@@ -669,16 +669,19 @@ li {
     flex: none;
 }
 
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .iconbutton {
+.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .iconbutton,
+.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .iconbutton {
     height: 30px;
     width: auto;
 }
 
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner {
+.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner,
+.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner{
     height: 30px;
 }
 
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner {
+.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner,
+.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner {
     padding: 0em 20px 0em 20px
 }
 
