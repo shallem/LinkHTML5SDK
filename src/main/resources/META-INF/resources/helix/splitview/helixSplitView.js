@@ -145,8 +145,6 @@
          */
         refresh: function() {            
             var curWidth = $(window).width();
-            var curLeftBtn = null;
-            var __self = this;
             if (curWidth > this.options.splitThreshold) {
                 // Show left AND right on large screens
                 var leftWidth = Math.floor((this.options.leftWidth / 100) * curWidth);
@@ -173,59 +171,68 @@
                     this.__current = "left";
                 }
                 
+                $(this.__left).css('width', '');
+                $(this.__right).css('width', '');
                 if (this.__current === "left") {
-                    $(this.__left).removeClass('hx-split-left-area');
-                    $(this.__left).addClass('hx-split-full');
-                    $(this.__left).css('width', '');
-                    $(this.__left).show();
-                    $(this.__right).hide();
-                    
-                    if (this.options.buttonBarSelector) {
-                        $(this.options.buttonBarSelector).addClass('hx-split-left');
-                        $(this.options.buttonBarSelector).removeClass('hx-split-right');
-                        $(this.options.buttonBarSelector).removeClass('hx-split-both');
-                    } else {
-                        this._restoreLeftHeaderButton();
-                    }
+                    this.__showLeft();
                 } else {
-                    $(this.__right).removeClass('hx-split-right-area');
-                    $(this.__right).addClass('hx-split-full');
-                    $(this.__right).css('width', '');
-                    $(this.__right).show();
-                    $(this.__left).hide();
-                    
-                    if (this.options.buttonBarSelector) {
-                        $(this.options.buttonBarSelector).addClass('hx-split-right');
-                        $(this.options.buttonBarSelector).removeClass('hx-split-left');
-                        $(this.options.buttonBarSelector).removeClass('hx-split-both');
-                    } else if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
-                        // Capture the current left button so that we can restore it.
-                        var theme;
-                        curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
-                        if (curLeftBtn.length > 0) {
-                            this.__restoreMarkup = $(curLeftBtn);
-                            theme = $(curLeftBtn).attr('data-theme');
-                            $(curLeftBtn).remove();
-                        }
-                        if (!theme) {
-                            theme = 'a';
-                        }
-                        
-                        // Insert or update the left button.
-                        $(this.__pageHeader).prepend($('<a/>').attr({
-                            'href' : 'javascript:void(0)',
-                            'class' : 'ui-btn-left',
-                            'data-theme' : theme,
-                            'data-icon' : 'back'
-                        }).append(this.options.headerToggleText).on(this.__clickEvent, function(ev) {
-                            __self.toggle();
-                            return false;
-                        }).button());
-                    }
+                    this.__showRight();
                 }
             }
             if (this.options.onRefresh) {
                 this.options.onRefresh((this.__current) ? "full" : "split");
+            }
+        },
+        
+        __showLeft: function() {
+            $(this.__left).removeClass('hx-split-left-area');
+            $(this.__left).addClass('hx-split-full');
+            $(this.__left).show();
+            $(this.__right).hide();
+
+            if (this.options.buttonBarSelector) {
+                $(this.options.buttonBarSelector).addClass('hx-split-left');
+                $(this.options.buttonBarSelector).removeClass('hx-split-right hx-split-both');
+            } else {
+                this._restoreLeftHeaderButton();
+            }
+        },
+        
+        __showRight: function() {
+            $(this.__right).removeClass('hx-split-right-area');
+            $(this.__right).addClass('hx-split-full');
+            $(this.__right).show();
+            $(this.__left).hide();
+                    
+            if (this.options.buttonBarSelector) {
+                $(this.options.buttonBarSelector).addClass('hx-split-right');
+                $(this.options.buttonBarSelector).removeClass('hx-split-left hx-split-both');
+            } else if (this.options.useHeaderToToggle && this.__pageHeader.length > 0) {
+                // Capture the current left button so that we can restore it.
+                var theme;
+                var curLeftBtn = null;
+                var __self = this;
+            
+                curLeftBtn = $(this.__pageHeader).find('.ui-btn-left');
+                if (curLeftBtn.length > 0) {
+                    this.__restoreMarkup = $(curLeftBtn);
+                    theme = $(curLeftBtn).attr('data-theme');
+                    $(curLeftBtn).remove();
+                }
+                if (!theme) {
+                    theme = 'a';
+                }
+
+                // Insert or update the left button.
+                $(this.__pageHeader).prepend($('<a/>').attr({
+                    'href': 'javascript:void(0)',
+                    'class': 'ui-btn-left',
+                    'data-theme': theme,
+                    'data-icon': 'back'
+                }).append(this.options.headerToggleText).on(this.__clickEvent, function (ev) {
+                    __self.toggle();
+                    return false;
+                }).button());
             }
         },
         
@@ -236,12 +243,13 @@
             if (!this.__current) {
                 return;
             }
-            if (this.__current === "left") {
-                this.__current = "right";
+            if (this.__current === 'left') {
+                this.__current = 'right';
+                this.__showRight();
             } else {
-                this.__current = "left";
+                this.__current = 'left';
+                this.__showLeft();
             }
-            this.refresh();
             
             Helix.Layout.refresh();
         },

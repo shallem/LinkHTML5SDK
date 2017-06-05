@@ -89,14 +89,6 @@
     }   
 }
 
-.ui-field-contain .ui-input-datebox {
-    width: auto;
-}
-
-.ui-input-datebox .ui-input-text {
-    width: auto;
-}
-
 /* Fixes the page header jumping to the middle of the screen. See:
     http://stackoverflow.com/questions/13514163/header-jump-to-the-middle-of-screen-jquerymobile
  */

@@ -133,12 +133,6 @@
     flex-direction: row;
 }
 
-.hx-form-container .ui-field-contain div.ui-input-text.hx-input-date {
-    margin-bottom: 0.15em;
-    margin-top: 0.15em;
-    border: none;
-}
-
 .hx-form-container .ui-field-contain div.ui-input-text.hx-input-date input {
     border: none;
 }

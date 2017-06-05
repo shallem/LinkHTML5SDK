@@ -277,8 +277,6 @@ Helix.Layout = {
                 renderers[i].call(this);
             }
         }
-        
-        //Helix.Layout.layoutPage($(page), noTrigger);
     },
     
     postRefresh: function(page) {
@@ -309,6 +307,17 @@ Helix.Layout = {
     setRegularViewMode: function() {
         $('.ui-page').addClass('hx-full-mode');
         $('.ui-page').removeClass('hx-mini-mode');
+    },
+    
+    makeIconButton: function(iconClass, buttonID) {
+        return $('<a/>').attr({
+            'id': buttonID ? buttonID : Helix.Utils.getUniqueID(),
+            'class': 'ui-btn iconbutton hx-icon-sort-filter'
+        }).append($('<div/>').attr({
+            'class': 'hx-btn-inner'
+        }).append($('<div/>').attr({
+            'class': 'hx-icon ui-icon-' + iconClass
+        })));
     }
 };
 
