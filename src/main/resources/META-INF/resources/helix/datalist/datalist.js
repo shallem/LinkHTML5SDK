@@ -96,7 +96,7 @@
             /**
              * Style class applied to each non-divider row.
              */
-            rowStyleClass: null,
+            rowStyleClass: '',
             /**
              * JavaScript condition that indicates if this data list is currently
              * visible.
@@ -226,7 +226,7 @@
              * sortBy list, then the final value in this list will apply to all
              * non-matching fields in the sortBy list.
              */
-            sortOrder: "ASCENDING",
+            sortOrder: "ASC",
             /**
              * Field to use for grouping. Grouping is intended to be used in conjunction with
              * auto dividers, so the groupBy field should be the primary grouping field. This is a
@@ -236,7 +236,7 @@
             /**
              * Ordering for the groupBy field.
              */
-            groupByOrder: "ASCENDING",
+            groupByOrder: "ASC",
             /**
              * By default we do not sort case sensitive.
              */
@@ -418,7 +418,7 @@
             /**
              * Append the data list.
              */
-            var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill').appendTo(this.$section);
+            var listWrapper = this.$listWrapper = $('<div/>').attr('class', 'hx-full-width hx-scroller-nozoom hx-flex-fill hx-no-hscroll').appendTo(this.$section);
 
             // Set context menu event to taphold for touch devices, dblclick for none-touch.
             this.contextEvent = Helix.contextEvent;
@@ -473,9 +473,15 @@
             var ad = this.options.autodividers;
             if (!ad) {
                 ad = false;
-            } else if (Helix.Utils.isString(ad) && (ad.toLowerCase() === 'false')) {
-                ad = false;
+            } else if (Helix.Utils.isString(ad)) {
+                if (ad.toLowerCase() === 'false'){
+                    ad = false;
+                } else {
+                    ad = true;
+                }
             }
+            this.hasAutodividers = ad;
+            
             var ads = function (elt) {
                 var callback = _self.options.autodividersSelectorCallback;
 
@@ -486,10 +492,11 @@
 
                 return null;
             };
+            this.autodividerSelector = ads;
 
             this.$parent.listview({
-                autodividers: ad,
-                autodividersSelector: ads,
+                //autodividers: ad,
+                //autodividersSelector: ads,
                 dividerTheme: 'd',
                 headerTheme: 'd'
             });
@@ -548,6 +555,32 @@
                 this.refreshList(this.options.itemList, this.options.condition, null, function () {
 
                 });
+            }
+        },
+        _refreshDividers: function() {
+            if (!this.hasAutodividers) {
+                return;
+            }
+            this.$parent.find( "li:jqmData(role='list-divider')" ).remove();
+
+            var lis = this.$parent.find( 'li' ),
+                    lastDividerText = null, li, dividerText;
+
+            for ( var i = 0; i < lis.length ; i++ ) {
+                    li = lis[i];
+                    dividerText = this.autodividerSelector( $( li ) );
+
+                    if ( dividerText && lastDividerText !== dividerText ) {
+                            var divider = document.createElement( 'li' );
+                            divider.appendChild( document.createTextNode( dividerText ) );
+                            divider.setAttribute( 'data-' + $.mobile.ns + 'role', 'list-divider' );
+                            divider.classList.add('ui-li-divider','ui-bar-d');
+                            li.parentNode.insertBefore( divider, li );
+                    }
+                    // SAH - blank means ignore
+                    if (dividerText) {
+                        lastDividerText = dividerText;
+                    }
             }
         },
         setDefaultSort: function () {
@@ -681,7 +714,8 @@
                     _self.displayList = _self.displayList.slice(0, _self.displayList.length - nElems);
 
                     _self._renderWindowStart = (_self._renderWindowStart) - nElems;
-                    _self.$parent.listview("refresh");
+                    _self._refreshDividers();
+                    //_self.$parent.listview("refresh");
                     _self._restoreScrollEvent();
                     _self._preloadPage(-1);
                 };
@@ -722,7 +756,8 @@
                         _self.displayList = _self.displayList.slice(nElems);
 
                         _self._renderWindowStart = (_self._renderWindowStart) + nElems;
-                        _self.$parent.listview("refresh");
+                        _self._refreshDividers();
+                        //_self.$parent.listview("refresh");
                     }
                     _self._restoreScrollEvent();
                     _self._preloadPage(1);
@@ -1069,7 +1104,7 @@
         _updateSortButtons: function () {
             if ('ascending' in this.options.sortButtons &&
                     'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder.toUpperCase().indexOf("DESCENDING") === 0) {
+                if (this._currentSortOrder.toUpperCase().indexOf("DSC") === 0) {
                     // Show the descending button, reflecting the CURRENT order.
                     $(this.options.sortButtons.descending).show();
                     $(this.options.sortButtons.ascending).hide();
@@ -1162,10 +1197,10 @@
 
                                 if (sortFld === newSortField) {
                                     // Reverse the direction.
-                                    if (sortOrder.toUpperCase() === "ASCENDING") {
-                                        curSortOrders[i] = "DESCENDING";
+                                    if (sortOrder.toUpperCase() === "ASC") {
+                                        curSortOrders[i] = "DSC";
                                     } else {
-                                        curSortOrders[i] = "ASCENDING";
+                                        curSortOrders[i] = "ASC";
                                     }
                                     found = true;
                                 }
@@ -1267,7 +1302,7 @@
                 'display': 'None',
                 'action': function () {
                     _self._refreshData(function () {
-                        _self.$parent.listview("refresh");
+                        //_self.$parent.listview("refresh");
                         _self.$listWrapper.scrollTop(0);
                     }, true, _self.extraItems, _self.unfilteredList);
                     _self._filterContextMenu.close();
@@ -1493,6 +1528,7 @@
             if (_self.options.headerText) {
                 if (!_self._headerLI) {
                     _self._headerLI = $('<li />').attr({
+                        'class' : 'ui-li-divider ui-bar-d',
                         'data-role': 'list-divider'
                     }).append(_options.headerText)
                             .appendTo(_self.$parent);
@@ -1527,7 +1563,8 @@
              */
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
                 finalCompletion.call(_self);
-                _self.$parent.listview("refresh");
+                _self._refreshDividers();
+                //_self.$parent.listview("refresh");
                 $(_self.$parent).trigger('refreshdone');
                 _self.refreshInProgress = false;
                 if (_self._queuedRefreshes.length) {
@@ -2059,7 +2096,7 @@
             if (displayCollection && displayCollection.clearOrder) {
                 displayCollection = displayCollection.clearOrder();
                 if (this.options.groupBy) {
-                    if (this.options.groupByOrder.toUpperCase() === 'ASCENDING') {
+                    if (this.options.groupByOrder.toUpperCase() === 'ASC') {
                         displayCollection = displayCollection.order(this.options.groupBy, true, false);
                     } else {
                         displayCollection = displayCollection.order(this.options.groupBy, false, false);
@@ -2075,7 +2112,7 @@
                     for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                         var latestDirection = ((oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
                         var nxtCase = (caseVals[oidx] === 'true' ? true : false);
-                        if (latestDirection.toUpperCase() === 'DESCENDING') {
+                        if (latestDirection.toUpperCase() === 'DSC') {
                             displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                         } else {
                             displayCollection = displayCollection.order(orderbyFields[oidx], true, nxtCase);
@@ -2277,9 +2314,11 @@
                 }
             } else {
                 if (this.setSelected(target)) {
-                    if ($(target).is('a')) {
+                    if ($(target).is('a[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
                             this.options.splitAction(this.selected, this.selectedGroup, this.strings);
+                        } else {
+                            this._runContextAction(target);
                         }
                     } else {
                         this.selectItem();
@@ -2297,8 +2336,9 @@
             }
 
             var touch = event.changedTouches[0];
-            var target = document.elementFromPoint(touch.clientX, touch.clientY);
-            target = $(target).closest('li,a[data-origin="splitlink"]');
+            //var target = document.elementFromPoint(touch.clientX, touch.clientY);
+            var target = event.target;
+            target = $(target).closest('li.hx-li,a[data-role="splitlink"]');
             if (target.length === 0) {
                 return false;
             }
@@ -2336,6 +2376,16 @@
                 }
             }, 0, this);
         },
+        _runContextAction: function(_tgtDiv) {
+            this.setSelected(_tgtDiv);
+            if (!this.options.itemContextMenuFilter || this.options.itemContextMenuFilter(this.selected)) {
+                this.options.itemContextMenu.open({
+                    positionTo: _tgtDiv,
+                    thisArg: this,
+                    extraArgs: this.options.itemContextMenuArgs
+                });
+            }
+        },
         _queueLongTap: function (ev) {
             if (this._longTouchTimer) {
                 clearTimeout(this._longTouchTimer);
@@ -2350,16 +2400,9 @@
 
                     var touch = this.data.changedTouches[0];
                     var _tgt = document.elementFromPoint(touch.clientX, touch.clientY);
-                    var _tgtDiv = $(_tgt).closest('div.ui-li');
+                    var _tgtDiv = $(_tgt).closest('li.hx-li');
                     if (_tgtDiv.length) {
-                        this.list.setSelected(_tgtDiv);
-                        if (!this.list.options.itemContextMenuFilter || this.list.options.itemContextMenuFilter(this.list.selected)) {
-                            this.list.options.itemContextMenu.open({
-                                positionTo: _tgtDiv,
-                                thisArg: this.list,
-                                extraArgs: this.list.options.itemContextMenuArgs
-                            });
-                        }
+                        this.list._runContextAction(_tgtDiv);
                     }
                 }, {
                     list: this,
@@ -2382,14 +2425,7 @@
 
                     // This allows the container to have taphold context menus that are not
                     // triggered when this event is triggered.
-                    _self.setSelected(event.target);
-                    if (!_self.options.itemContextMenuFilter || _self.options.itemContextMenuFilter(_self.selected)) {
-                        _self.options.itemContextMenu.open({
-                            positionTo: event.target,
-                            thisArg: _self,
-                            extraArgs: _self.options.itemContextMenuArgs
-                        });
-                    }
+                    _self._runContextAction(event.target);
                     event.stopImmediatePropagation();
                     return false;
                 });
@@ -2409,9 +2445,9 @@
 
             // Click
             if (this.options.selectAction) {
-                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function (event) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"]', this, function (event) {
                     var _self = event.data;
-                    var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
+                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"]');
                     if (_tgt.length) {
                         event.stopImmediatePropagation();
                         return _self._handleClick(event, _tgt);
@@ -2445,7 +2481,7 @@
             // Tap
             if (this.options.selectAction) {
                 /* Suppress tap and vclick so they don't propagate below this list. */
-                $(this.listWrapper).off('tap vclick').on('tap vclick', 'li,a[data-origin="splitlink"],a.ui-link-inherit', function (ev) {
+                $(this.listWrapper).off('tap vclick').on('tap vclick', 'a[data-role="splitlink"],.hx-li', function (ev) {
                     ev.stopImmediatePropagation();
                     return false;
                 });
@@ -2517,7 +2553,7 @@
             }
 
             if (this.options.swipeLeftAction) {
-                this.$listWrapper.off('swipeleft').on('swipeleft', 'div.ui-li', this, function (event) {
+                this.$listWrapper.off('swipeleft').on('swipeleft', '.hx-li', this, function (event) {
                     var _self = event.data;
                     event.stopImmediatePropagation();
 
@@ -2527,7 +2563,7 @@
                 });
             }
             if (this.options.swipeRightAction) {
-                $(this.$listWrapper).off('swiperight').on('swiperight', 'div.ui-li', this, function (event) {
+                $(this.$listWrapper).off('swiperight').on('swiperight', '.hx-li', this, function (event) {
                     var _self = event.data;
                     event.stopImmediatePropagation();
 
@@ -2549,8 +2585,7 @@
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class': _self.options.rowStyleClass,
-                    'data-theme': 'd'
+                    'class': _self.options.rowStyleClass + ' ui-li hx-li hx-flex-horizontal'
                 });
             }
 
@@ -2591,8 +2626,7 @@
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class': _self.options.rowStyleClass,
-                    'data-theme': 'd'
+                    'class': _self.options.rowStyleClass + ' ui-li hx-li hx-flex-horizontal'
                 });
             }
 
@@ -2649,7 +2683,7 @@
                 }
             }
 
-            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active ui-btn-hover-c ui-btn-down-c ui-btn-hover-d ui-btn-down-d');
+            this.$listWrapper.find('.ui-btn-active').removeClass('ui-btn-active');
             /*if (this.selectedLI) {
              this.selectedLI.removeClass('ui-btn-active');
              }*/
@@ -2668,8 +2702,6 @@
         clearSelected: function () {
             if (this.selected) {
                 this.selectedLI.removeClass('ui-btn-active');
-                this.selectedLI.removeClass('ui-btn-down-c');
-                this.selectedLI.addClass('ui-btn-up-c');
                 this.selectedLI = null;
                 this.selected = null;
                 this.selectedGroup = null;
@@ -2767,101 +2799,66 @@
             var roleAttr = elem.getAttribute('data-role');
             if (roleAttr) {
                 components[roleAttr] = $(elem);
-                return;
+                if (roleAttr !== 'bodyParent') {
+                    return;
+                }
             }
             for (var i = 0; i < elem.children.length; ++i) {
                 this._findRowComponents(elem.children[i], components);
             }
         },
         createListRow: function (parentElement, rowComponents, rowID) {
-            var isEnhanced = false;
-            if ($(parentElement).hasClass('ui-li')) {
-                // Already enhanced.
-                isEnhanced = true;
-            }
+            var components = {};
+            var lastComponent = null;
+            this._findRowComponents(parentElement[0], components);
+
             if (this.options.multiSelect) {
                 if (!rowComponents.disableMultiSelect) {
-                    $(parentElement).addClass('hx-multi-select-item');
-                } else {
-                    $(parentElement).removeClass('hx-multi-select-item');
+                    //$(parentElement).addClass('hx-multi-select-item');
+                    if ('multiselect' in components) {
+                        $(components['multiselect']).show();
+                        lastComponent = $(components['multiselect']);
+                    } else {
+                        lastComponent = $('<div/>').attr({
+                            'data-role': 'multiselect',
+                            'class' : 'hx-multi-select-parent'
+                        }).append($('<div/>').attr({
+                            'class' : 'hx-multi-select-button'
+                        }));
+                        $(parentElement).prepend(lastComponent);
+                    }
+                    parentElement.addClass('hx-multi-select-item');
+                } else if ('multiselect' in components) {
+                    $(components['multiselect']).hide();
+                    parentElement.removeClass('hx-multi-select-item');
                 }
             }
-
-            var mainLink = null;
-            if (isEnhanced) {
-                var m = $(parentElement)[0].getElementsByTagName('a');
-                if (m.length) {
-                    mainLink = $(m[0]);
-                }
-                //mainLink = $(parentElement).find('a').first();
-            }
-
-            if (!mainLink) {
-                mainLink = $('<a />').attr({
-                    'href': 'javascript:void(0)'
-                }).appendTo($(parentElement));
-            }
-
-            if (rowComponents.icon) {
-                $(parentElement).attr('data-icon', rowComponents.icon);
-                var iconMarkup = $(parentElement).find('span.ui-icon');
-                if (iconMarkup.length) {
-                    // Manually update the icon itself.
-                    iconMarkup.removeClass()
-                            .addClass('ui-icon ui-icon-' + rowComponents.icon + ' ui-icon-shadow');
-                }
-            } else {
-                $(parentElement).attr('data-icon', 'false');
-            }
-
-            var components = {};
-            this._findRowComponents(mainLink[0], components);
-
-            if (rowComponents.subIcon) {
-                // Elements to put underneath the icon.
-                $(rowComponents.subIcon).attr('data-role', 'subicon').addClass('hx-subicon');
-                /*if ($(parentElement).find('[data-role="subicon"]').length) {
-                 $(parentElement).find('[data-role="subicon"]').replaceWith(rowComponents.subIcon);
-                 } else {
-                 $(mainLink).append(rowComponents.subIcon);
-                 }*/
-                if (components.subicon) {
-                    components.subicon.replaceWith(rowComponents.subIcon);
-                } else {
-                    $(mainLink).append(rowComponents.subIcon);
-                }
-            } else if (components.subicon) {
-                components.subicon.remove();
-            }
-
+            
             var oldPfx = components.prefix;
             if (rowComponents.prefix) {
                 if (oldPfx /*oldPfx.length*/) {
                     oldPfx.replaceWith(rowComponents.prefix.attr('data-role', 'prefix'));
                 } else {
-                    var pfx = $('<div/>').append(rowComponents.prefix.attr('data-role', 'prefix'));
-                    mainLink.prepend(pfx);
-                    mainLink = $('<div/>').insertAfter(pfx);
+                    var pfx = rowComponents.prefix.attr('data-role', 'prefix');
+                    if (lastComponent) {
+                        pfx.insertAfter(lastComponent);
+                    } else {
+                        parentElement.append(pfx);
+                        lastComponent = pfx;
+                    }
                 }
             } else if (oldPfx) {
-		oldPfx.parent('div').remove();
+		oldPfx.hide();
             }
 
-            var imgMarkup = components.image;
-            if (rowComponents.image) {
-                //var imgMarkup = $(mainLink).find('img[data-role="image"]');
-                if (imgMarkup /*imgMarkup.length*/) {
-                    imgMarkup.attr('src', rowComponents.image).show();
-                } else {
-                    mainLink.append($('<img />').attr({
-                        'src': rowComponents.image,
-                        'data-role': 'image'
-                    }));
-                }
-            } else if (imgMarkup) {
-                //$(mainLink).find('img[data-role="image"]').hide();
-                imgMarkup.hide();
+            var bodyParent = components.bodyParent;
+            if (!bodyParent) {
+                bodyParent = $('<div />').attr({
+                    'data-role' : 'bodyParent',
+                    'class' : 'hx-flex-fill'
+                }).appendTo(parentElement);
             }
+            lastComponent = bodyParent;
 
             var headerMarkup = components.itemheader;
             if (rowComponents.header) {
@@ -2870,114 +2867,58 @@
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.text(Helix.Utils.escapeQuotes(rowComponents.header)).show();
                     } else {
-                        mainLink.append($('<h3 />')
+                        var hdr = $('<h3 />')
                                 .attr('data-role', 'itemheader')
-                                .text(Helix.Utils.escapeQuotes(rowComponents.header)));
+                                .text(Helix.Utils.escapeQuotes(rowComponents.header));
+                        bodyParent.append(hdr);
                     }
                 } else {
+                    var hdr = rowComponents.header.attr('data-role', 'itemheader');
                     if (headerMarkup /*headerMarkup.length*/) {
-                        headerMarkup.replaceWith(rowComponents.header.attr('data-role', 'itemheader')).show();
+                        headerMarkup.replaceWith(hdr).show();
                     } else {
-                        /*mainLink.append($('<h3 />')
-                                .attr('data-role', 'itemheader')
-                                .append(rowComponents.header));*/
-                        mainLink.append(rowComponents.header.attr('data-role', 'itemheader'));
+                        bodyParent.append(hdr);
                     }
                 }
             } else if (headerMarkup) {
-                //mainLink.find('h3[data-role="itemheader"]').hide();
                 headerMarkup.hide();
-            }
-
-            var subheaderMarkup = components.subheader; //mainLink.find('p[data-role="subheader"]');
-            if (rowComponents.subHeader) {
-                if (subheaderMarkup /*subheaderMarkup.length*/) {
-                    subheaderMarkup.text(rowComponents.subHeader).show();
-                } else {
-                    mainLink.append($('<p />')
-                            .attr('data-role', 'subheader')
-                            .append($('<strong />')
-                                    .text(rowComponents.subHeader)));
-                }
-            } else if (subheaderMarkup) {
-                //mainLink.find('p[data-role="subheader"]').hide();
-                subheaderMarkup.hide();
             }
 
             var bodyMarkup = components.body;
             if (rowComponents.body) {
-                if (rowComponents.header || rowComponents.subHeader) {
-                    if (headerMarkup && bodyMarkup /*bodyMarkup.length*/) {
-                        // we previously had a header and a body
-                        bodyMarkup.empty().append(rowComponents.body).show();
-                    } else {
-                        // we previously had no header or no body ... in this case our rendering of the body changes,
-                        // so we need to clear it out even if it did exist.
-                        if (bodyMarkup) {
-                            bodyMarkup.empty();
-                        }
-                        mainLink.append($('<p />').attr('data-role', 'body').append(rowComponents.body));
-                    }
+                var body = rowComponents.body.attr('data-role', 'body');
+                if (bodyMarkup) {
+                    bodyMarkup.replaceWith(body).show();
                 } else {
-                    //bodyMarkup = mainLink.find('[data-role="body"]');
-                    if (bodyMarkup /*bodyMarkup.length*/) {
-                        mainLink.empty();
-                    }
-                    $(rowComponents.body).attr('data-role', 'body');
-                    mainLink.append(rowComponents.body);
+                    bodyParent.append(body);
                 }
             } else if (bodyMarkup) {
-                //mainLink.find('[data-role="body"]').hide();
                 bodyMarkup.hide();
-            }
-
-            if (rowComponents.aside) {
-                var asideMarkup = mainLink.find('p.ui-li-aside');
-                if (asideMarkup.length) {
-                    asideMarkup.empty().append(rowComponents.aside).show();
-                } else {
-                    mainLink.append($('<p />').attr({
-                        'class': 'ui-li-aside'
-                    }).append(rowComponents.aside));
-                }
-            } else {
-                mainLink.find('p.ui-li-aside').hide();
             }
 
             if (rowComponents.key) {
                 $(parentElement).attr('data-key', rowComponents.key);
             }
 
+            var splitLink = components.splitlink;
             if (rowComponents.splitLink) {
-                var hasSplit = false;
-                if (isEnhanced) {
-                    var splitSet = $(parentElement).find('[data-origin="splitlink"]');
-                    if (splitSet.length) {
-                        splitSet.show()
-                        hasSplit = true;
-                    } else {
-                        // Need to remove .ui-li from the parent li otherwise jQM won't enhance the split button markup
-                        $(parentElement).removeClass('ui-li');
-                    }
+                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr({
+                    'data-role' : 'splitlink',
+                    'class' : 'hx-splitview-link'
+                }); 
+                if (splitLink) {
+                    splitLink.replaceWith(_newSplit);
+                } else {
+                    _newSplit.insertAfter(lastComponent);
                 }
-
-                if (hasSplit === false) {
-                    $('<a />').attr({
-                        'href': 'javascript:void(0)',
-                        'data-role': 'button',
-                        'data-origin': 'splitlink',
-                        'data-icon': rowComponents.splitLink,
-                        'data-theme': 'd'
-                    }).appendTo(parentElement);
-                }
-            } else {
-                $(parentElement).find('[data-origin="splitlink"]').hide();
+            } else if (splitLink) {
+                $(splitLink).hide();
             }
 
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
             }
-            return mainLink;
+            return parentElement;
         },
         selectItem: function (noSelectAction) {
             if (!this.selected) {
@@ -3266,7 +3207,7 @@
          * Refresh the listview component that is the rendering of the data list.
          */
         refreshListView: function () {
-            this.$parent.listview("refresh");
+            //this.$parent.listview("refresh");
         },
         /**
          * Re-render the list view if some attributes of the underlying data have changed (but not
@@ -3278,7 +3219,7 @@
                 if (finalCompletion) {
                     finalCompletion();
                 }
-                _self.$parent.listview("refresh");
+                //_self.$parent.listview("refresh");
             }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
         },
 

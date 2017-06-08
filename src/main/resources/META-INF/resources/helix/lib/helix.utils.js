@@ -292,7 +292,7 @@ Helix.Utils =  {
         return ret;
     },
     
-    throttle: function(fn, threshhold, scope) {
+    throttle: function(fn, threshhold, scope, queueThrottled) {
         threshhold || (threshhold = 250);
         var last,
                 deferTimer;
@@ -301,11 +301,13 @@ Helix.Utils =  {
             var now = +new Date,
                     args = arguments;
             if (last && now < last + threshhold) {
-                clearTimeout(deferTimer);
-                deferTimer = setTimeout(function() {
-                    last = now;
-                    fn.apply(context, args);
-                }, threshhold + last - now);
+                if (queueThrottled === true) {
+                    clearTimeout(deferTimer);
+                    deferTimer = setTimeout(function() {
+                        last = now;
+                        fn.apply(context, args);
+                    }, threshhold + last - now);
+                }
             } else {
                 last = now;
                 fn.apply(context, args);

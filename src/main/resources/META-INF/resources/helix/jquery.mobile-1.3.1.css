@@ -2608,7 +2608,7 @@ ol.ui-listview, ol.ui-listview .ui-li-divider { counter-reset: listnumbering; }
 .ui-content .ui-listview-inset, .ui-panel-inner .ui-listview-inset { margin: 1em 0; }
 .ui-collapsible-content .ui-listview-inset { margin: .5em 0; }
 .ui-listview, .ui-li { list-style: none; padding: 0; }
-.ui-li, .ui-li.ui-field-contain { display: block; margin: 0; position: relative; overflow: visible; text-align: left; border-width: 0; border-top-width: 1px; }
+.ui-li, .ui-li.ui-field-contain { display: block; margin: 0; position: relative; overflow: visible; text-align: left; border-width: 0; }
 .ui-li.ui-btn, .ui-li.ui-field-contain, .ui-li-divider, .ui-li-static { margin: 0; }
 .ui-listview-inset .ui-li { border-right-width: 1px; border-left-width: 1px; }
 .ui-li.ui-last-child, .ui-li.ui-field-contain.ui-last-child { border-bottom-width: 1px; }

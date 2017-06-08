@@ -1,0 +1,98 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 8, 2017, 1:15:26 AM
+    Author     : v3devel
+*/
+
+.hx-listview {
+   border-top: 1px solid #bbb /*{d-bup-border}; */;
+}
+
+.hx-listview li[data-role="list-divider"] {
+    background-color: #e0e0e0;
+}
+
+.hx-listview li .hx-btn-active {
+    background-color: rgba(44, 92, 255, 0.8);
+}
+
+.hx-listview li.hx-li {
+    background-color: white;
+    font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
+    text-decoration: none;
+    border-bottom: 1px solid #bbb /*{d-bup-border}; */; 
+    background: #fff /*{d-bup-background-color}*/;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 0 /*{d-bup-shadow-x}*/ 1px /*{d-bup-shadow-y}*/ 0 /*{d-bup-shadow-radius}*/ #fff /*{d-bup-shadow-color}*/;
+}
+
+.hx-listview li[data-role="empty-group"] {
+    color: black;
+}
+
+/**
+ * bullets on multi select lista
+ */
+
+.hx-multi-select-parent {
+    width: 24px;    
+}
+
+.hx-multi-select-button {
+    /*Now position it on the left of the list item, and center it vertically
+    (so that it will work with multiple line list-items)*/
+    position: absolute;
+    left: 3px;
+    top: 40%;
+    margin-top: -8px;
+}
+
+/*.hx-listview.hxMultiSelect li.hx-multi-select-item:before,*/
+.hx-listview.hxMultiSelect li div.hx-multi-select-button:before {
+    /*fill it with a blank space*/
+    content:"\00a0";
+
+    /*make it a block element*/
+    display: block;
+    width: 0;
+    height: 0;
+    
+    /*adding an 8px round border to a 0x0 element creates an 8px circle*/
+    border: solid 9px #e0e0e0;
+    border-radius: 9px;
+    -moz-border-radius: 9px;
+    -webkit-border-radius: 9px;
+}
+
+/*.hx-listview.hxMultiSelect li.hx-multi-select-item.hx-selected:after,*/
+.hx-listview.hxMultiSelect li.hx-selected div.hx-multi-select-button:after {
+    /*Add another block-level blank space*/
+    content:"\00a0";
+    display:block;
+
+    /*Make it a small rectangle so the border will create an L-shape*/
+    width: 3px;
+    height: 6px;
+
+    /*Add a white border on the bottom and left, creating that 'L' */
+    border: solid #b20000;
+    border-width: 0 2px 2px 0;
+
+    /*Position it on top of the circle*/
+    margin-top: -14px;
+    margin-left: 6px;
+    
+    /*Rotate the L 45 degrees to turn it into a checkmark*/
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+}
+
+.hx-splitview-link {
+    margin-top: 0.25em;
+}

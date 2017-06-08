@@ -244,6 +244,9 @@
 		    <!-- Text styles. -->
 		    <include>css/textStyles.css</include>
 
+		    <!-- Datalist styles -->
+		    <include>datalist/datalist.css</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>
