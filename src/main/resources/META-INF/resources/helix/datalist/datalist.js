@@ -646,7 +646,7 @@
             }
 
             /* Apply skip and limit. */
-            var _nextRenderWindow = (this._renderWindowStart + this._itemsPerPage);
+            var _nextRenderWindow = (this._renderWindowStart + (direction * this._itemsPerPage));
             if (_nextRenderWindow <= 0) {
                 _nextRenderWindow = 0;
             }
@@ -894,6 +894,11 @@
             if (_self._cancelAllScrolls || !_self.$parent.is(':visible')) {
                 return;
             }
+            _self._lastScrollPos = scrollPos;
+            if (_self._lastScrollPos === 0 || _self._lastScrollPost === listHeight) {
+                // We just rescrolled. Don't do it again.
+                return;
+            }
 
             if ((lastScroll > scrollPos || scrollPos <= 0) && _self._renderWindowStart > 0) {
                 // We are scrolling up ...
@@ -901,12 +906,14 @@
                     // stop tracking scroll events
                     _self._stopScrollHandler();
                     _self._nextPage(-1);
+                    _self._lastScrollPos = listHeight;
                 }
             } else if ((lastScroll <= scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
                 // Scrolling down.
                 if (scrollPos > (listHeight * .6)) {
                     _self._stopScrollHandler();
                     _self._nextPage(1);
+                    _self._lastScrollPos = 0;
                 }
             }
         },
@@ -1034,11 +1041,14 @@
             }, true, extraItems, _self.originalList, undefined, _options);
         },
         _restoreScrollEvent: function () {
-            var __scrollHandler = function (ev) {
-                this.scrollHandler(ev);
-            };
-            this._cancelAllScrolls = false;
-            this.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, this));
+            var _self = this;
+            setTimeout(function() {
+                var __scrollHandler = function (ev) {
+                    _self.scrollHandler(ev);
+                };
+                _self._cancelAllScrolls = false;
+                _self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
+            }, 250);
         },
         
         _stopScrollHandler: function() {
@@ -2663,7 +2673,7 @@
             }
 
             var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
-            if (renderer.call(rendererContext, this.selectedLI.find('.ui-li'), this, this.selected, this.selectedIndex, this.options.strings)) {
+            if (renderer.call(rendererContext, this.selectedLI, this, this.selected, this.selectedIndex, this.options.strings)) {
                 this.selectedLI.show();
                 return true;
             } else {
