@@ -446,6 +446,15 @@
         <updatePolicy>never</updatePolicy>
       </releases>
     </pluginRepository>
+    <pluginRepository>
+      <id>project.local</id>
+      <name>project</name>
+      <url>file:${project.basedir}/repo</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
   </pluginRepositories>  
 
 </project>

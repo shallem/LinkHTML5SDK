@@ -24,6 +24,15 @@
       <arg value="-Dversion=1.1.13"/>
       <arg value="-Dpackaging=jar"/>
     </execute-mvn>
+    <execute-mvn dir="${build.basedir}" failonerror="true">
+      <arg value="org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file"/>
+      <arg value="-DlocalRepositoryPath=${build.basedir}/repo"/>
+      <arg value="-Dfile=${rootdir}/3rd-Party-packages/java-lib/maven-jsf-plugin-1.2.3.jar"/>
+      <arg value="-DgroupId=org.helix"/>
+      <arg value="-DartifactId=maven-jsf-plugin"/>
+      <arg value="-Dversion=1.2.3"/>
+      <arg value="-Dpackaging=jar"/>
+    </execute-mvn>
   </target>
 
 </project>
