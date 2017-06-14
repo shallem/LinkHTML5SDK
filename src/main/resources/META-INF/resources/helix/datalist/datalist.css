@@ -14,6 +14,8 @@ and open the template in the editor.
 
 .hx-listview li[data-role="list-divider"] {
     background-color: #e0e0e0;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
 }
 
 .hx-listview li .hx-btn-active {

@@ -433,7 +433,7 @@
             /**
              * Append the footer.
              */
-            this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
+            this.$footerSection = $('<footer/>').addClass('hx-no-webkit-select').appendTo(this.$section).hide();
 
             /**
              * Append the hook div if we have pull to refresh setup.
@@ -3067,10 +3067,11 @@
                         .append(loader)
                         .append($('<div/>').addClass('hx-datalist-loading-text').append(text));
             }
+            this._restoreFooter = this.$footerSection.children();
             this.setFooterContents(loader);
         },
         stopLoading: function () {
-            this.setFooterContents();
+            this.setFooterContents(this._restoreFooter);
         },
         setFooterContents: function (contents) {
             this.$footerSection.empty();

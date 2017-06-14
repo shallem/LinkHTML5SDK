@@ -31,12 +31,12 @@ $(document).on('cordovaReady', function() {
 /**
  * Show a loader pre-request.
  */
-$(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate) {
+$(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate, loadingMessage) {
     if (loadingDelegate) {
         if (loadingDelegate === true) {
             return;
         }
-        loadingDelegate.startLoading();
+        loadingDelegate.startLoading(loadingMessage);
     } else {
         if (!Helix.Ajax.loadOptions.silent) {
             if (!Helix.Ajax.loadOptions.async) {
@@ -649,7 +649,8 @@ Helix.Ajax = {
         $(document).trigger('prerequest', [ page, 
             loadCommandOptions.requestOptions.postBack, 
             loadCommandOptions.requestOptions.suspendSleep,
-            loadCommandOptions.loadingDelegate
+            loadCommandOptions.loadingDelegate,
+            loadCommandOptions.loadingMessage
         ]);
         /* Give the browser a change to handle the event and show the loader. */
         $.ajax({
@@ -856,7 +857,7 @@ Helix.Ajax = {
             message : params.loadingMessage ? params.loadingMessage : ''
         };
         var page = $.mobile.activePage;
-        $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate ]);
+        $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage ]);
         var args = '';
         for (var key in params.params) {
             var nxtArg = key + '=' + encodeURIComponent(params.params[key]);
@@ -946,7 +947,7 @@ Helix.Ajax = {
         }
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
-            $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate ]);
+            $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage ]);
             var ret = {
                 isCancelled : false,
                 cancel: function() {
