@@ -969,14 +969,13 @@ Helix.Ajax = {
                         this.isCancelled = true;
                     }
                     
-                    if (this.isCancelled) {
-                        return;
-                    }
-                    
                     // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
                     // with a new AJAX request triggered in a callback.
                     $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
 
+                    if (this.isCancelled) {
+                        return;
+                    }
                     var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
                     if (retCode === 0) {
                         if (params.success && !params.silentMode) {
@@ -1001,14 +1000,13 @@ Helix.Ajax = {
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    if (this.isCancelled) {
-                        return;
-                    }
-                    
                     // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
                     // with a new AJAX request triggered in a callback.
                     $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
                     
+                    if (this.isCancelled) {
+                        return;
+                    }
                     if (Helix.ignoreErrors) {
                         return;
                     }
@@ -1028,10 +1026,6 @@ Helix.Ajax = {
                     }
                 },
                 complete: function() {
-                    if (this.isCancelled) {
-                        $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
-                        return;
-                    }
                     if (callbacks.complete) {
                         callbacks.complete.call(window);
                     }

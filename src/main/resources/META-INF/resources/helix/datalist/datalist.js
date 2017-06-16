@@ -2912,10 +2912,7 @@
 
             var splitLink = components.splitlink;
             if (rowComponents.splitLink) {
-                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr({
-                    'data-role' : 'splitlink',
-                    'class' : 'hx-splitview-link'
-                }); 
+                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link'); 
                 if (splitLink) {
                     splitLink.replaceWith(_newSplit);
                 } else {

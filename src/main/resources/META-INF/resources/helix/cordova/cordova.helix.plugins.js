@@ -240,6 +240,13 @@
                    docID
                 ]);
             },
+            discardFileByID: function(uniqueID, digest, editableOnly, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "deleteDocumentWithID", [
+                   uniqueID,
+                   digest,
+                   editableOnly
+                ]);
+            },
             checkDocumentStatus: function(docIDs, success, failure) {
                 return cordova.exec(success, failure, "DocumentDownload", "checkDocumentStatus", [
                    docIDs

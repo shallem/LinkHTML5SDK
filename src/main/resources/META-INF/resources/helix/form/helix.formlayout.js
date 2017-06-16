@@ -2183,7 +2183,7 @@ Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, actio
         'id' : btnId
     }).append(text);
     $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(btnId), [ popup, action], function(e) {
-        e.preventDefault();
+        e.stopImmediatePropagation();
         $(e.data[0]).popup("close");
         if (e.data[1]) {
             (e.data[1])();
