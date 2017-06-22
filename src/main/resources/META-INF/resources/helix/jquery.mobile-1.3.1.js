@@ -8605,7 +8605,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			var ui = {
 					screen: $( "<div class='ui-screen-hidden ui-popup-screen'></div>" ),
 					placeholder: $( "<div style='display: none;'><!-- placeholder --></div>" ),
-					container: $( "<div class='ui-popup-container ui-popup-hidden'></div>" )
+					container: $( "<div class='ui-popup-container hx-popup-container ui-popup-hidden'></div>" )
 				},
 				thisPage = this.element.closest( ".ui-page" ),
 				myId = this.element.attr( "id" ),
@@ -8969,8 +8969,13 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			// We only care about position-related parameters for repositioning
 			o = { x: o.x, y: o.y, positionTo: o.positionTo };
 			this._trigger( "beforeposition", o );
-			this._ui.container.offset( this._placementCoords( this._desiredCoords( o ) ) );
-		},
+                    /* SAH - for origin positioning, use % positioning transform. */    
+                    if (o.positionTo === 'origin') {
+                            this._ui.container.addClass('hx-center-to-origin');
+                        } else {
+			    this._ui.container.offset( this._placementCoords( this._desiredCoords( o ) ) );
+                        }
+                    },
 
 		reposition: function( o ) {
 			if ( this._isOpen ) {
@@ -10624,9 +10629,6 @@ $.widget( "mobile.panel", $.mobile.widget, {
 	_modalOpenClasses: null,
 
 	open: function( immediate ) {
-            if (this._open) {
-                this.close();
-            }
                     var self = this,
                             o = self.options,
                             _openPanel = function() {
@@ -10678,6 +10680,10 @@ $.widget( "mobile.panel", $.mobile.widget, {
 
                                     self._trigger( "open" );
                             };
+                    if (self.element.is(o.classes.panelOpen)) {
+                        // We are already open.
+                        self.close();
+                    }
 
                     if ( this.element.closest( ".ui-page-active" ).length < 0 ) {
                             immediate = true;
@@ -10697,7 +10703,7 @@ $.widget( "mobile.panel", $.mobile.widget, {
 	},
 
 	close: function( immediate ) {
-		if ( this._open ) {
+                if (this.element.is(this.options.classes.panelOpen)) {
 			var o = this.options,
 				self = this,
 				_closePanel = function() {

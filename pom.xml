@@ -342,12 +342,6 @@
 		    <!-- Pretty dates. -->
 		    <include>prettydate/jquery.prettydate.js</include>
 
-		    <!-- Datagrid component. -->
-		    <!-- <include>datagrid/datagrid.js</include> -->
-
-		    <!-- Panelgroup component. -->
-		    <!-- <include>panelgroup/panelgroup.js</include> -->
-
 		    <!-- Data list. -->
 		    <include>datalist/datalist.js</include>
 

@@ -78,7 +78,7 @@
 /* loading icon */
 .ui-icon.ui-icon-loading {
         background: url("#{resource['helix:images/ajax-loader.gif']}");
-	background-size: 46px 46px;
+	background-size: 32px 32px;
 }
 
 @media (min-width: 28em) {
@@ -174,4 +174,10 @@
 /* Get rid of the white text when a button is selected. */
 .ui-btn-active a.ui-link-inherit {
     color: #333;
+}
+
+/* Our loader gif is 32x32, not 44x44 */
+.ui-loader .ui-icon {
+    width: 32px;
+    height: 32px;
 }

@@ -409,6 +409,10 @@ a {
     -webkit-flex-flow: row;
 }
 
+.hx-flex-justify-center {
+    justify-content: center;
+}
+
 .hx-flex-vertical {
     display: flex;
     display: -webkit-flex;
@@ -981,12 +985,6 @@ div.ui-btn-text {
     animation-delay: 0.45s;
 }
 
-
-/* On dialogs, left justify the title */
-.ui-header.dialog-title .ui-title {
-    margin-left: 1em;
-}
-
 /* Fix icon positioning for split links. */
 a.ui-li-link-alt.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     margin: 0;
@@ -1007,4 +1005,41 @@ a.ui-li-link-alt.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
 /* Menu styling. */
 .ui-popup .ui-li {
     border-bottom-width: 1px;
+}
+
+/* Dialog styling. */
+div.hx-dialog-header.ui-header {
+    background-color: white;
+}
+
+div.hx-dialog-header.ui-header h1 {
+    margin-left: 0em;
+    margin-right: 0em;
+    width: 100%;
+}
+
+div.hx-dialog-content {
+    color: #797979;
+}
+
+div.hx-dialog-content p {
+    text-align: center;
+}
+
+div.hx-dialog-content ul {
+    margin-top: 0em;
+}
+
+.hx-noicon-button {
+    border-radius: 5px;
+}
+
+.hx-noicon-button.ui-btn-up-b {
+    background: #DCECF9;
+}
+
+.hx-popup-container.hx-center-to-origin {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

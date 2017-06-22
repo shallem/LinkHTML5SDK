@@ -2179,6 +2179,7 @@ Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, actio
         'data-inline' : 'true',
         'data-theme' : theme,
         'data-corners' : 'false',
+        'data-shadow' : 'false',
         'style' : 'width: ' + btnWidth + 'px',
         'id' : btnId
     }).append(text);
@@ -2194,6 +2195,8 @@ Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, actio
 };
 
 Helix.Layout._createDialogPopup = function(popupId) {
+    var _width = Helix.screenWidth * 0.8;
+    _width = Math.min(_width, 400);
     return $('<div/>').attr({
         'data-role' : 'popup',
         'id' : popupId,
@@ -2201,7 +2204,7 @@ Helix.Layout._createDialogPopup = function(popupId) {
         'data-theme' : 'd',
         'data-position-to' : 'window',
         'data-history' : 'false',
-        'style' : 'max-width: 300px'
+        'style' : 'width: 300px'
     });
 };
 
@@ -2210,9 +2213,8 @@ Helix.Layout._layoutPopup = function(popup, options, buttons) {
     var header = $("<div/>").attr({
         'data-role' : 'header',
         'data-theme' : 'd',
-        'class' : titleStyleClass
+        'class' : 'hx-dialog-header ' + titleStyleClass
     }).append($('<h1/>').attr({
-               'style' : 'margin-left: .5em', // remove icon empty margin
                'class' : 'ui-title'
             }).append(options.title));
     
@@ -2220,12 +2222,15 @@ Helix.Layout._layoutPopup = function(popup, options, buttons) {
             'data-role' : 'content',
             'style' : 'margin: .5em .5em .5em .5em',
             'data-theme' : 'd',
-            'class' : 'ui-corner-bottom ui-content'
+            'class' : 'ui-corner-bottom ui-content hx-dialog-content'
         })
         .append($('<p/>')
         .append(options.message));
+    var buttonContainer = $('<div/>').attr({
+        'class' : 'hx-flex-horizontal hx-flex-justify-center'
+    }).appendTo(content);
     for (var i = 0; i < buttons.length; ++i) {
-        content.append(buttons[i]);
+        buttonContainer.append(buttons[i]);
     }
 
     $(popup)
