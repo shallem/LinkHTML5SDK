@@ -10680,7 +10680,7 @@ $.widget( "mobile.panel", $.mobile.widget, {
 
                                     self._trigger( "open" );
                             };
-                    if (self.element.is(o.classes.panelOpen)) {
+                    if (self.element.is('.' + o.classes.panelOpen)) {
                         // We are already open.
                         self.close();
                     }
@@ -10703,7 +10703,7 @@ $.widget( "mobile.panel", $.mobile.widget, {
 	},
 
 	close: function( immediate ) {
-                if (this.element.is(this.options.classes.panelOpen)) {
+                if (this.element.is('.' + this.options.classes.panelOpen)) {
 			var o = this.options,
 				self = this,
 				_closePanel = function() {
