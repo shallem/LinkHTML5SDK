@@ -26,12 +26,6 @@
             <description>Title text for the dialog box.</description>
         </attribute>
         <attribute>
-            <name>bodyHeader</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Header text for the body of the dialog. Does not apply if hasForm is true.</description>
-        </attribute>
-        <attribute>
             <name>bodyContent</name>
             <required>false</required>
             <type>java.lang.String</type>
@@ -73,30 +67,6 @@
             <type>java.lang.Boolean</type>
             <defaultValue>false</defaultValue>
             <description>Set to true if the dialog contains a form. If so, supply a form layout object to the show method.</description>
-        </attribute>
-        <attribute>
-            <name>style</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Inline style of the main container.</description>
-        </attribute>
-        <attribute>
-            <name>styleClass</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Style class of the main container.</description>
-        </attribute>
-        <attribute>
-            <name>titleStyleClass</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Style class of the dialog title.</description>
-        </attribute>
-        <attribute>
-            <name>contentStyleClass</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Style class of the dialog contents.</description>
         </attribute>
     </attributes>
 </component>

@@ -96,5 +96,7 @@ and open the template in the editor.
 }
 
 .hx-splitview-link {
-    margin-top: 0.25em;
+    border-width: 1px;
+    border-left: solid;
+    border-left-color: lightgrey;
 }

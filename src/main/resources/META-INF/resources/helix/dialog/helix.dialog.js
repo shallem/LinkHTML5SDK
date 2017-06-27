@@ -23,7 +23,8 @@
             onDismiss: null,
             confirmTitle: "Confirm",
             dismissTitle: "Dismiss",
-            positionTo: 'origin'
+            positionTo: 'origin',
+            noOpen: true
         }
     };
     
@@ -122,156 +123,70 @@
         $(this.$mainDiv).popup( "close" );
     }
     
-    function refresh(isCreate) {
+    function refresh(dialog, isCreate) {
         this.$mainDiv.empty();
-            
-        encodeHeader(this, this.$mainDiv);
-        encodeContent(this, this.$mainDiv);
+        if (this.options.hasForm) {
+            this.form = $('<form/>').attr({
+                'id' : this.name + "-form"
+            });
+        }
+        
+        if (isCreate) {
+            this.$mainDiv.popup({
+                theme: 'd',
+                overlayTheme: 'd',
+                corners: true
+            });
+            this.$mainDiv.width('300px');
+        }
+        
+        var _self = this;
+        var onclose = function() {
+            if (_self.options.onDismiss) {
+                _self.options.onDismiss.call(_self);
+            }
+        };
+        var closebtn = Helix.Layout._createButton(this.name + '-cancel', '90', 'c', this.$mainDiv, this.dismissText ? this.dismissText : 'Dismiss', onclose);
+        
+        var onconfirm = function() {
+            var args = [];
+            if (_self.options.hasForm && _self.form) {
+                args.push($(_self.form).serialize());
+                $(_self.form).find('input').blur();
+            } else if (_self._callbackThis) {
+                args.push(_self);
+            }
+            if (_self._callbackArgs) {
+                args = args.concat(_self._callbackArgs);
+            }
+            _self.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: _self, args);
+        };
+        var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.confirmText ? this.confirmText : 'Confirm', onconfirm);
+         
+        Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
+        if (this.form) {
+            $(this.form).on('submit', function(ev) {
+                ev.stopImmediatePropagation();
+                var args = [];
+                args.push($(_self.form).serialize());
+                if (_self._callbackArgs) {
+                    args = args.concat(_self._callbackArgs);
+                }
+                $(_self.form).find('input').blur();
+                _self.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: _self, args);
+                $(_self.$mainDiv).popup( "close" );
+                return false;
+            });
+        }
         
         if (!isCreate) {
             this.$mainDiv.popup('refresh');
-        } else {
-            if (this.options.hasForm) {
-                this.$mainDiv.popup({
-                    theme: 'c',
-                    corners: true
-                });
-                this.$mainDiv.append($('<div/>').attr({
-                    'style' : 'padding: 10px 20px;'
-                }));
-            } else {
-                this.$mainDiv.popup({
-                    theme: 'c',
-                    overlayTheme: 'c',
-                    corners: true
-                });
-            }
         }
     }
 
     function updateBody(dialog,newBody) {
         this.options.bodyContent = newBody;
         this.refresh(false);
-    }
-
-    function encodeHeader(dialog,$mainDiv) {
-        
-        if (dialog.options.hasForm) {
-            $mainDiv.append($('<h3/>').append(dialog.options.title));
-        } else {
-            // Apply classes manually because jQM enhancement of headers/footers only happens
-            // on page create
-            $mainDiv.append($('<div/>').attr({
-             'data-role' : 'header',
-             'data-theme' : 'd',
-             'class' : (dialog.titleStyleClass ? dialog.titleStyleClass : '') + ' ui-corner-top ui-header ui-bar-a'
-            }).append($('<h1/>').attr({
-                'style' : 'margin-left: .5em', // remove icon empty margin
-                'class' : 'ui-title'
-            }).append(dialog.options.title)));            
-        }
-    }
-    
-    function encodeContent(dialog,$mainDiv) {
-        var _self = dialog;
-        var dialogContentClass = dialog.options.contentStyleClass;
-        if (dialog.options.hasForm) {
-            dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content";
-        } else {
-            dialogContentClass = dialogContentClass + " ui-corner-bottom ui-content ui-body-d";
-        }
-        var $contentDiv = $('<div/>').attr({
-            'class' : (dialogContentClass ? dialogContentClass : ''),
-            'id' : dialog.options.id + "_content"
-        });
-        
-        if (dialog.options.bodyHeader ||
-                dialog.options.bodyContent) {
-            $contentDiv.attr('data-role', 'content');
-            $contentDiv.attr('data-theme', 'd');
-            $contentDiv.attr('style', 'margin: .5em .5em .5em .5em');
-        
-            if (dialog.options.bodyHeader) {
-                $contentDiv.append($('<p/>').attr({
-                    'class' : 'ui-title'
-                }).append(dialog.options.bodyHeader));
-            }
-            if (dialog.options.bodyContent) {
-                $contentDiv.append($('<p/>').append(dialog.options.bodyContent));
-            }
-        } 
-        
-        if (dialog.options.hasForm) {
-            dialog.form = $('<form/>').attr({
-                'id' : dialog.name + "-form"
-            });
-            $contentDiv.append(dialog.form);
-            $(dialog.form).on('submit', function(ev) {
-                ev.preventDefault();
-                var args = [];
-                args.push($(dialog.form).serialize());
-                if (_self._callbackArgs) {
-                    args = args.concat(_self._callbackArgs);
-                }
-                $(dialog.form).find('input').blur();
-                dialog.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: dialog, args);
-                $(dialog.$mainDiv).popup( "close" );
-                return false;
-            });
-        }
-        
-        /* CONFIRM first */
-
-        /* Confirm button. */
-        $contentDiv.append($('<a/>').attr({
-            'href' : 'javascript:void(0)',
-            'data-role' : 'button',
-            'data-inline' : 'true',
-            'data-theme' : 'b',
-            'data-transition' : 'flow',
-            'data-corners' : 'false',
-            'style' : 'width: 90px',
-            'id' : dialog.name + '-confirm'
-        }).append(dialog.options.confirmTitle)
-            .on(Helix.clickEvent, function(ev) {
-                ev.preventDefault();
-                var args = [];
-                if (dialog.options.hasForm && dialog.form) {
-                    args.push($(dialog.form).serialize());
-                    $(dialog.form).find('input').blur();
-                } else if (_self._callbackThis) {
-                    args.push(dialog);
-                }
-                if (_self._callbackArgs) {
-                    args = args.concat(_self._callbackArgs);
-                }
-                dialog.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: dialog, args);
-                $(dialog.$mainDiv).popup( "close" );
-                return false;
-            }).button()
-        );
-        
-        /* Cancel button. */
-        $contentDiv.append($('<a/>').attr({
-            'href' : 'javascript:void(0)',
-            'data-role' : 'button',
-            'data-inline' : 'true',
-            'data-theme' : 'c',
-            'data-corners' : 'false',
-            'style' : 'width: 90px',
-            'id' : dialog.name + '-cancel'
-        }).append(dialog.options.dismissTitle)
-            .on(Helix.clickEvent, function(ev) {
-                ev.stopImmediatePropagation();
-                if (dialog.options.onDismiss) {
-                    dialog.options.onDismiss.call(dialog);
-                }
-                $(dialog.$mainDiv).popup( "close" );
-                return false;
-            }).button()
-        );
-
-        $mainDiv.append($contentDiv);
     }
     
 })(jQuery);

@@ -39,9 +39,6 @@ public class DialogRenderer extends CoreRenderer {
         writer.writeAttribute("data-role", "popup", null);
         writer.writeAttribute("data-history", "false", null);
         
-        writer.writeAttribute("class", (dialog.getStyleClass() != null ? dialog.getStyleClass() : "") + " ui-corner-all", null);
-        writer.writeAttribute("style", (dialog.getStyle() != null ? dialog.getStyle() : ""), null);
-        
         writer.endElement("div");
         
         encodeScript(context, dialog);
@@ -64,19 +61,13 @@ public class DialogRenderer extends CoreRenderer {
             writer.write("onDismiss:" + dialog.getOnDismiss() + ",");
         }
         if (dialog.getConfirmTitle() != null) {
-            writer.write("confirmTitle:'" + dialog.getConfirmTitle() + "',");
+            writer.write("confirmText:'" + dialog.getConfirmTitle() + "',");
         }
         if (dialog.getDismissTitle() != null) {
-            writer.write("dismissTitle:'" + dialog.getDismissTitle() + "',");
-        }
-        writer.write("styleClass:'" + (dialog.getStyleClass() != null ? dialog.getStyleClass() : "") + "',");
-        writer.write("titleStyleClass:'" + (dialog.getTitleStyleClass() != null ? dialog.getTitleStyleClass() : "") + "',");
-        writer.write("contentStyleClass:'" + (dialog.getContentStyleClass() != null ? dialog.getContentStyleClass() : "") + "',");
-        if (dialog.getBodyHeader() != null) {
-            writer.write("bodyHeader:'" + dialog.getBodyHeader() + "',");
+            writer.write("dismissText:'" + dialog.getDismissTitle() + "',");
         }
         if (dialog.getBodyContent() != null) {
-            writer.write("bodyContent:'" + dialog.getBodyContent() + "',");
+            writer.write("message:'" + dialog.getBodyContent() + "',");
         }
         writer.write("name: '" + dialog.resolveWidgetVar() + "',");
         writer.write("id:'" + clientId + "'");

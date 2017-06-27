@@ -2381,7 +2381,10 @@ label.ui-submit { font-size: 16px; line-height: 1.4; font-weight: normal; margin
 }
 .ui-popup > .ui-btn-left { left: -9px; }
 .ui-popup > .ui-btn-right { right: -9px; }
-.ui-popup-hidden { top: -99999px; left: -9999px; }
+// SAH: this change knowingly ruins all popup transitions. We have transitions on pages and
+// panels. We will forego them on popups.
+//.ui-popup-hidden { top: -99999px; left: -9999px; }
+.ui-popup-hidden { display: none; }
 .ui-checkbox, .ui-radio { position: relative; clear: both; margin: 0; z-index: 1; }
 .ui-checkbox .ui-btn, .ui-radio .ui-btn { text-align: left; z-index: 2; }
 .ui-controlgroup .ui-checkbox .ui-btn, .ui-controlgroup .ui-radio .ui-btn { margin: 0; }
