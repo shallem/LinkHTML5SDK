@@ -2146,7 +2146,8 @@
                         $emptyElem.show();
                     } else {
                         $('<li />').attr({
-                            'data-group': rowIndex
+                            'data-group': rowIndex,
+                            'data-role' : 'empty-group'
                         }).append(_self.options.emptyGroupMessage)
                                 .insertAfter(dividerLI);
                     }
@@ -2159,7 +2160,8 @@
                         var $moreMarkup = $('<div/>')
                                 .append(_self.options.groupOverflowText);
                         var $moreLink = $('<a/>').attr({
-                            'href': 'javascript:void(0)'
+                            'href': 'javascript:void(0)',
+                            'class' : 'ui-btn ui-btn-up-c'
                         }).append($moreMarkup);
                         if (_self.options.groupOverflowTextClass) {
                             $moreMarkup.addClass(_self.options.groupOverflowTextClass);
