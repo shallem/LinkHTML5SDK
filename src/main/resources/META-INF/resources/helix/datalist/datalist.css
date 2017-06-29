@@ -94,9 +94,3 @@ and open the template in the editor.
     -moz-transform: rotate(45deg);
     -o-transform: rotate(45deg);
 }
-
-.hx-splitview-link {
-    border-width: 1px;
-    border-left: solid;
-    border-left-color: lightgrey;
-}

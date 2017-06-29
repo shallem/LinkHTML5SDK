@@ -2350,7 +2350,7 @@
             var touch = event.changedTouches[0];
             //var target = document.elementFromPoint(touch.clientX, touch.clientY);
             var target = event.target;
-            target = $(target).closest('li.hx-li,a[data-role="splitlink"]');
+            target = $(target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
             if (target.length === 0) {
                 return false;
             }
