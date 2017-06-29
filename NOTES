@@ -1,0 +1,7 @@
+NOTE: on occasion, we are no longer able to download libraries from repository.primefaces.org. This seems to be because Java does not trust the signing authority used by primefaces (at least Java 7 does not).
+
+To resolve, one can trust the primefaces repo directly:
+
+echo -n | openssl s_client -connect repository.primefaces.org:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > /tmp/prime.cert
+
+sudo keytool -import -trustcacerts -keystore /usr/lib/jvm/java-7-oracle/jre/lib/security/cacerts -noprompt -alias primefaces -file /tmp/prime.cert
