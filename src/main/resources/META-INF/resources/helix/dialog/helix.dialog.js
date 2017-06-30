@@ -21,8 +21,8 @@
             hasForm: false,
             onConfirm: null,
             onDismiss: null,
-            confirmTitle: "Confirm",
-            dismissTitle: "Dismiss",
+            confirmText: "Confirm",
+            dismissText: "Dismiss",
             positionTo: 'origin',
             noOpen: true
         }
@@ -146,7 +146,7 @@
                 _self.options.onDismiss.call(_self);
             }
         };
-        var closebtn = Helix.Layout._createButton(this.name + '-cancel', '90', 'c', this.$mainDiv, this.dismissText ? this.dismissText : 'Dismiss', onclose);
+        var closebtn = Helix.Layout._createButton(this.name + '-cancel', '90', 'c', this.$mainDiv, this.options.dismissText ? this.options.dismissText : 'Dismiss', onclose);
         
         var onconfirm = function() {
             var args = [];
@@ -161,7 +161,7 @@
             }
             _self.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: _self, args);
         };
-        var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.confirmText ? this.confirmText : 'Confirm', onconfirm);
+        var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.options.confirmText ? this.options.confirmText : 'Confirm', onconfirm);
          
         Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
         if (this.form) {
