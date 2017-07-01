@@ -2182,6 +2182,7 @@
                         }
                         $(li).attr('data-overflow', '1'); // Mark this as overflow
                         $(li).attr('data-group', rowIndex);
+                        $(li).data('group', curRow);
                     }
                     oncomplete();
                     for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
@@ -2687,10 +2688,13 @@
             var enclosingLI = $(targetElem).closest("li");
             var nxtSelection = $(enclosingLI).data('data');
             if (this.options.grouped) {
+                this.selectedGroup = $(enclosingLI).data('group');
+            }
+            if (this.options.grouped) {
                 var isOverflow = $(enclosingLI).attr('data-overflow');
                 if (Number(isOverflow) === 1) {
                     // Overflow
-                    this.options.groupOverflowFn.call(this, nxtSelection);
+                    this.options.groupOverflowFn.call(this, this.selectedGroup);
                     return false; // so that normal click handlers are not invoked.
                 }
             }
@@ -2699,9 +2703,6 @@
             /*if (this.selectedLI) {
              this.selectedLI.removeClass('ui-btn-active');
              }*/
-            if (this.options.grouped) {
-                this.selectedGroup = $(enclosingLI).data('group');
-            }
             this.selectedLI = enclosingLI;
             this.selectedLI.addClass('ui-btn-active');
             this.selected = nxtSelection;
