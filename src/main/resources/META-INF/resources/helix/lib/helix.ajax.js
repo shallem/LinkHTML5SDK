@@ -247,6 +247,7 @@ Helix.Ajax = {
     ERROR_OFFLINE_ACCESS : { code: 0, msg: "Cannot load this object while offline." },
     ERROR_INVALID_PARAMS : { code : 1, msg: "Parameters to an AJAX bean load must be an array of objects, each of the form { name:'<name>', value:<value> }." },
     ERROR_AJAX_LOAD_FAILED : { code : 2, msg : "AJAX load error." },
+    ERROR_AJAX_LOAD_TIMEOUT : { code: 3, msgTitle: 'Network Unreachable' , msg: 'Sorry! We are unable to reach the network right now. Please try again in a few moments.', severity: 'warn' },
 
     /**
      * Count of on-going loads.
@@ -390,7 +391,9 @@ Helix.Ajax = {
     },
 
     defaultOnError: function(errorObj) {
-        Helix.Utils.statusMessage("Action Failed", errorObj.msg, "error");
+        var title = errorObj.msgTitle ? errorObj.msgTitle : 'Action Failed';
+        var severity = errorObj.severity ? errorObj.severity : 'error';
+        Helix.Utils.statusMessage(title, errorObj.msg, severity);
     },
 
     getSchemaForCommand: function(commandConfig, oncomplete) {
@@ -740,15 +743,14 @@ Helix.Ajax = {
                     // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                     return;
                 }
+                var error;
                 if (jqXHR.status === 404 || jqXHR.status === 408) {
-                    // Retry 3 times.
-                    
                     // This generally happens because of a network error.
-                    Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
-                    return;
+                    error = Helix.Ajax.ERROR_AJAX_LOAD_TIMEOUT;
+                } else {
+                    error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
+                    error.msg = status;
                 }
-                var error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
-                error.msg = status;
                 loadCommandOptions.onerror(error);
             },
             complete: function(xhr) {

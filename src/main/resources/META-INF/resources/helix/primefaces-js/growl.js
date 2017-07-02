@@ -79,7 +79,7 @@
         },
     
         renderMessage: function(msg) {
-            var markup = '<div class="ui-growl-item-container ui-state-highlight ui-corner-all ui-helper-hidden ui-shadow">';
+            var markup = '<div class="ui-growl-item-container ui-state-highlight ui-corner-all ui-helper-hidden ui-shadow hx-no-webkit-select">';
             markup += '<div class="ui-growl-item">';
             markup += '<div class="ui-growl-icon-close ui-icon ui-icon-delete" style="display:none"></div>';
             markup += '<span class="ui-growl-image ui-growl-image-' + msg.severity + '" />';
