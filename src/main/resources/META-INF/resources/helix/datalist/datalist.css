@@ -65,10 +65,10 @@ and open the template in the editor.
     height: 0;
     
     /*adding an 8px round border to a 0x0 element creates an 8px circle*/
-    border: solid 9px #e0e0e0;
-    border-radius: 9px;
-    -moz-border-radius: 9px;
-    -webkit-border-radius: 9px;
+    border: solid 8px #e0e0e0;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
 }
 
 /*.hx-listview.hxMultiSelect li.hx-multi-select-item.hx-selected:after,*/
