@@ -647,6 +647,9 @@
                 } else {
                     if (value === undefined) {
                         value = "";
+                    } else if ($.isPlainObject(value) ||
+                            $.isArray(value)) {
+                        value = JSON.stringify(value);
                     }
                     if (mode) {
                         thisField = $(item.DOM).find('[name="' + searchName + '"]');

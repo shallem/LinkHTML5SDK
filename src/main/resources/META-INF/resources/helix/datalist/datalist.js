@@ -3072,14 +3072,13 @@
         },
         stopLoading: function () {
             this.setFooterContents(this._restoreFooter);
+            this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
         },
         setFooterContents: function (contents) {
             this.$footerSection.empty();
             if (contents) {
                 this.$footerSection.append(contents);
                 this.$footerSection.show();
-            } else {
-                this.$footerSection.hide();
             }
         },
         hideFooter: function () {

@@ -184,7 +184,9 @@
             },
             listMyFiles: function(tags, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "listMyFiles", [
-                    tags
+                    tags,
+                    1, /* Order by name. */
+                    1 /* Order ascending. */
                 ]);
             },
             listTags: function(success, failure) {
