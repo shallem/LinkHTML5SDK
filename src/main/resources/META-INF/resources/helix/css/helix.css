@@ -529,6 +529,11 @@ li {
     max-width: 90% !important;
 }
 
+/* Header border so that a pulsating header doesn't cause the screen to jump. We use jquery's 'd' theme for the color. */
+.ui-header {
+    border-bottom: 0.25em solid #e0e0e0; 
+}
+
 /* Styles for headers with multiple buttons on each side of the header text */
 .ui-header .hx-button-bar h1 {
     display: inline-block;

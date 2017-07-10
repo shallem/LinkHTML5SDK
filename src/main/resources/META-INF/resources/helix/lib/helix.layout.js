@@ -312,7 +312,7 @@ Helix.Layout = {
     makeIconButton: function(iconClass, buttonID) {
         return $('<a/>').attr({
             'id': buttonID ? buttonID : Helix.Utils.getUniqueID(),
-            'class': 'ui-btn iconbutton hx-icon-sort-filter'
+            'class': 'ui-btn iconbutton hx-no-webkit-select hx-icon-sort-filter'
         }).append($('<div/>').attr({
             'class': 'hx-btn-inner'
         }).append($('<div/>').attr({

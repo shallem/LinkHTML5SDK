@@ -53,7 +53,7 @@ public class IconButtonRenderer extends CoreRenderer {
         writer.writeAttribute("href", button.getHref(), null);
         
         // ui-btn ui-btn-up-d ui-mini ui-btn-inline
-        String aClass = "ui-btn iconbutton"; 
+        String aClass = "ui-btn iconbutton hx-no-webkit-select"; 
         if (button.getStyleClass() != null) {
             aClass = aClass + " " + button.getStyleClass();
         }
