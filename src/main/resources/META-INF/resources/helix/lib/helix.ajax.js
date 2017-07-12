@@ -390,8 +390,12 @@ Helix.Ajax = {
         }
     },
 
-    defaultOnError: function(errorObj) {
-        var title = errorObj.msgTitle ? errorObj.msgTitle : 'Action Failed';
+    defaultOnError: function(errorObj, isSilentMode) {
+        if (isSilentMode) {
+            return;
+        }
+        
+        var title = errorObj.msgTitle ? errorObj.msgTitle : 'An unexpected error has occured';
         var severity = errorObj.severity ? errorObj.severity : 'error';
         Helix.Utils.statusMessage(title, errorObj.msg, severity);
     },
@@ -736,7 +740,7 @@ Helix.Ajax = {
             },
             error: function(jqXHR, status, errorThrown) {
                 delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
-                if (Helix.ignoreErrors || loadCommandOptions.silentMode) {
+                if (Helix.ignoreErrors) {
                     return;
                 }
                 if (jqXHR.status < 0 || jqXHR.status >= 600) {
@@ -751,7 +755,7 @@ Helix.Ajax = {
                     error = Helix.Ajax.ERROR_AJAX_LOAD_FAILED;
                     error.msg = status;
                 }
-                loadCommandOptions.onerror(error);
+                loadCommandOptions.onerror(error, loadCommandOptions.silentMode);
             },
             complete: function(xhr) {
                 $(document).trigger('postrequest', 

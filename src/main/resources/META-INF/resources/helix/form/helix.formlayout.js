@@ -1688,7 +1688,11 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             .addClass('hx-form-container')
             .appendTo(parentDiv);
         if (formElem.type !== 'hidden') {
-            formElem.viewDOM.addClass('hx-form-view-border hx-form-view-item');
+            if (!formElem.noBorder) {
+                formElem.viewDOM.addClass('hx-form-view-border hx-form-view-item');
+            } else {
+                formElem.viewDOM.addClass('hx-form-view-item');
+            }
         }        
         if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
             $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
