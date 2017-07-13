@@ -59,9 +59,8 @@
         this.options = options = $.extend({}, $.helixDialog.defaultOptions, options);        
         this.$mainDiv = $(parent);
         this.name = options.name ? options.name : Helix.Utils.getUniqueID();
-
-        this.refresh(true);
-    }
+        this.isReady = false;
+    };
     
     //===============
     // Public Methods
@@ -95,6 +94,12 @@
      * Call this function to show the dialog.
      */
     function show(dialog,formElems,callbackThis,callbackArgs) {
+        if (!this.isReady) {
+            this.refresh(true);
+            this.$mainDiv.closest('.ui-page').trigger( "pagecreate" );
+            this.isReady = true;
+        }
+        
         if (dialog.options.hasForm && formElems) {
             /* Layout the form dynamically. */
             Helix.Utils.layoutForm($(dialog.form), formElems);
