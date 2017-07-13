@@ -442,6 +442,10 @@ li {
 
 .hx-empty-message {
     color: black;
+    text-align: center;
+    font-weight: bold;
+    padding-top: 1em;
+    font-size: large;
 }
 
 /**

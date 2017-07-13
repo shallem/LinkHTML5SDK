@@ -574,7 +574,7 @@
                             var divider = document.createElement( 'li' );
                             divider.appendChild( document.createTextNode( dividerText ) );
                             divider.setAttribute( 'data-' + $.mobile.ns + 'role', 'list-divider' );
-                            divider.classList.add('ui-li-divider','ui-bar-d');
+                            divider.classList.add('ui-li-divider','ui-bar-d','hx-no-webkit-select');
                             li.parentNode.insertBefore( divider, li );
                     }
                     // SAH - blank means ignore
@@ -1538,7 +1538,7 @@
             if (_self.options.headerText) {
                 if (!_self._headerLI) {
                     _self._headerLI = $('<li />').attr({
-                        'class' : 'ui-li-divider ui-bar-d',
+                        'class' : 'ui-li-divider ui-bar-d hx-no-webkit-select',
                         'data-role': 'list-divider'
                     }).append(_options.headerText)
                             .appendTo(_self.$parent);
@@ -2224,7 +2224,7 @@
                 if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
                         'data-role': 'list-divider',
-			'class' : 'hx-no-webkit-select'
+			'class' : 'ui-li-divider ui-bar-d hx-no-webkit-select'
                     }).append(groupName);
                     dividerLI.appendTo(_self.$parent);
                 } else {
