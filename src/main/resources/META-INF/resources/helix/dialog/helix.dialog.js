@@ -96,7 +96,6 @@
     function show(dialog,formElems,callbackThis,callbackArgs) {
         if (!this.isReady) {
             this.refresh(true);
-            this.$mainDiv.closest('.ui-page').trigger( "pagecreate" );
             this.isReady = true;
         }
         
@@ -184,9 +183,7 @@
             });
         }
         
-        if (!isCreate) {
-            this.$mainDiv.popup('refresh');
-        }
+        _self.$mainDiv.trigger('create');
     }
 
     function updateBody(dialog,newBody) {

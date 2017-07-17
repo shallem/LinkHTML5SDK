@@ -8482,6 +8482,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			e.stopImmediatePropagation();
 			if ( this.options.dismissible ) {
 				this.close();
+                                this._trigger( "cancel" );
 			}
 			return false;
 		},

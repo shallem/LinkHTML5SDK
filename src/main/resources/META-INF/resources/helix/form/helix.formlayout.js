@@ -2256,6 +2256,13 @@ Helix.Layout._layoutPopup = function(popup, options, buttons, form) {
         });
         $(popup).popup("open");    
     }
+    if (options.popupDismiss) {
+        $(popup).on('popupdismiss', null, options, function(ev) {
+            if (ev.data.popupDismiss) {
+                eve.data.popupDismiss();
+            }
+        });
+    }
     
     $(window).on('navigate.popup', function (e) {
         e.preventDefault();
