@@ -411,7 +411,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }).append(formElem.value);
         var lbl = $('<label />').attr({
             'for' : inputID,
-            'class' : formLayout.titleStyleClass
+            'class' : formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
             })
         .append(formElem.fieldTitle);
         if (!formElem.fieldTitle) {
@@ -612,16 +612,19 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         var textContainer = $('<div />').attr({
             'data-role' : 'fieldcontain',
             'style' : formLayout.computedFieldStyle,
-            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass
         })
         .append($('<label />').attr({
             'for' : inputID,
-            'class' : formLayout.titleStyleClass
+            'class' : formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
             })
             .append(formElem.fieldTitle)
         )
         .append(inputMarkup);
         $fieldContainer.append(textContainer);
+        if (formElem.computedStyleClass) {
+            $fieldContainer.addClass(formElem.computedStyleClass);
+        }
         textContainer.fieldcontain();
         $(inputMarkup).textinput({
             disabled: formElem.inputDisabled ? true : false
@@ -1441,7 +1444,7 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     }
     var subPanelDiv = $('<div />').attr({
         'id' : subPanelID,
-        'class' : 'hx-flex-horizontal ' + subPanelObj.computedStyleClass,
+        'class' : 'hx-flex-horizontal hx-full-width ' + subPanelObj.computedStyleClass,
         'style' : subPanelObj.computedStyle ? subPanelObj.computedStyle: ''
     }).appendTo($fieldContainer);
 
@@ -1490,16 +1493,42 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
         subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
     }
     var subPanelDiv = $('<div />').attr({
-        'id' : subPanelID
+        'id' : subPanelID,
+        'class' : 'hx-collapsible'
     }).appendTo($fieldContainer);
 
+    var iconClass = (subPanelObj.noCollapse ? 'ui-icon-collapse' : 'ui-icon-expand');
+    var heading = $('<div/>').addClass('hx-collapsible-heading')
+            .append($('<div/>').addClass(iconClass + ' hx-collapsible-button'))
+            .append($('<div/>').addClass('hx-collapsible-label ' + (subPanelObj.titleStyleClass ? subPanelObj.titleStyleClass : '')).append(formElem.fieldTitle));
+    heading.on(Helix.clickEvent, function(ev) {
+        ev.stopImmediatePropagation();
+        if ($(this).next()[0].classList.contains('hx-collapsed')) {
+            // Was collapsed, expand
+            $(this).find('.ui-icon-expand').removeClass('ui-icon-expand').addClass('ui-icon-collapse');
+        } else {
+            // Was expanded, collapse
+            $(this).find('.ui-icon-collapse').removeClass('ui-icon-collapse').addClass('ui-icon-expand');            
+        }
+        $(this).next().toggleClass('hx-collapsed');
+        $(this).next().fadeToggle('fast');
+        return false;
+    });
+    subPanelDiv.append(heading);
+
+    var body = $('<div/>').addClass('hx-collapsible-content ' + (subPanelObj.noCollapse ? '' : 'hx-collapsed'))
+            .appendTo(subPanelDiv);
+    if (!subPanelObj.noCollapse) {
+        // Start out hidden - we don't use a CSS class b/c we animate the transition with fadeToggle
+        body.css('display', 'none');
+    }
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
-    Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+    Helix.Utils.layoutForm(body, subPanelObj, page, useMiniLayout);
 
     // Prepend here rather than appending before the layoutForm call because layoutForm
     // empties the parent div.
-    subPanelDiv.prepend($('<h3 />').append(formElem.fieldTitle));
+    //subPanelDiv.prepend($('<h3 />').append(formElem.fieldTitle));
 
     // Make sure we have a dynamic page used to create new items in this 
     // subpanel.
@@ -1525,10 +1554,12 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
 
     // Create the collapsible content.
-    subPanelDiv.collapsible({
+    /*subPanelDiv.collapsible({
         collapsed: !subPanelObj.noCollapse,
-        mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false))
-    });
+        mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false)),
+        collapsedIcon: 'expand',
+        expandedIcon: 'collapse'
+    });*/
     
     // Determine if the sub-panel is visible based on the 'mode' field.
     if (subPanelObj.mode && subPanelObj.mode !== 'all') {

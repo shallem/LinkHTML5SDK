@@ -217,7 +217,8 @@ public class FormFieldRenderer extends CoreRenderer {
             if (ffield.getDataType() != null) {
                 writer.write(",'dataType': '" + ffield.getDataType() + "'");
             }
-        } else if (ffield.getType().equals("subPanel")) {
+        } else if (ffield.getType().equals("subPanel") ||
+                ffield.getType().equals(("horizontalBlock"))) {
             writer.write(", 'items': [");
             int idx = 0;
             for (UIComponent c : ffield.getChildren()) {
