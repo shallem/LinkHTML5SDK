@@ -1035,10 +1035,10 @@ function initHelixDB() {
             });
         },
     
-        cascadingRemove: function(elemSchema, persistentObj, oncomplete, overrides) {
+        cascadingRemove: function(elemSchema, persistentObj, oncomplete, overrides, opaque) {
             var recurseDown = function(toCascade) {
                 if (toCascade.length === 0) {
-                    oncomplete(persistentObj, "remove");
+                    oncomplete(persistentObj, "remove", opaque);
                     return;
                 }
                 
@@ -1235,7 +1235,7 @@ function initHelixDB() {
             return true;
         },
     
-        updateOneObject: function(allSchemas, persistentObjID, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides) {
+        updateOneObject: function(allSchemas, persistentObjID, updatedObj, keyField, toUpdateKey, elemSchema, oncomplete, overrides, opaque) {
             // To truly "update" an object we would need to actually retrieve that object, then, one by one, update
             // each field of that object. This is incredibly inefficient. Instead, we use the entity ID of this object
             // from the DB to add it to the session and mark all properties in the object dirty (except those that the
@@ -1247,110 +1247,114 @@ function initHelixDB() {
                 if (overrides.updateHook) {
                     overrides.updateHook(newObj);
                 }
-                oncomplete(newObj);
+                oncomplete(newObj, opaque);
             }, overrides);
             //});
         },
     
-        synchronizeDeltaField: function(allSchemas, deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
+        synchronizeDeltaField: function(allSchemas, _deltaObj, parentCollection, elemSchema, field, oncomplete, overrides) {
             var _self = this;
             var keyField = _self.getKeyField(elemSchema);
             
             // Defensively make sure the delta obj is well formed.
-            if (!deltaObj.adds) {
-                deltaObj.adds = [];
+            if (!_deltaObj.adds) {
+                _deltaObj.adds = [];
             }
-            if (!deltaObj.updates) {
-                deltaObj.updates = [];
+            if (!_deltaObj.updates) {
+                _deltaObj.updates = [];
             }
 
-            var nToAdd = deltaObj.adds.length;
-            var nToUpdate = deltaObj.updates.length;
-            var nAddsDone = 0;
-            var nUpdatesDone = 0;
-            var allAdds = [];
+            var args = {
+                nToAdd: _deltaObj.adds.length,
+                nToUpdate: _deltaObj.updates.length,
+                nAddsDone: 0,
+                nUpdatesDone: 0,
+                allAdds: [],
+                deltaObj: _deltaObj,
+                oncomplete: oncomplete
+            };
 
-            var addDone = function(pObj, uidToEID) {
-                ++nAddsDone;
-                allAdds.push(pObj);
-                if (pObj && uidToEID) {
-                    uidToEID[pObj[keyField]] = pObj.id;
+            var addDone = function(pObj, args) {
+                ++args.nAddsDone;
+                args.allAdds.push(pObj);
+                if (pObj && args.uidToEID) {
+                    args.uidToEID[pObj[keyField]] = pObj.id;
                 }
-                if (nAddsDone === nToAdd) {
+                if (args.nAddsDone === args.nToAdd) {
                     /* Nothing more to add - we are done. */
-                    syncFn(uidToEID);
+                    syncFn(args);
                 }
             };
             
-            var updateDone = function() {
-                ++nUpdatesDone;
-                if (nUpdatesDone >= nToUpdate) {
+            var updateDone = function(args) {
+                ++args.nUpdatesDone;
+                if (args.nUpdatesDone >= args.nToUpdate) {
                     /* Nothing more to add - we are done. */
-                    oncomplete(field, allAdds);
+                    args.oncomplete(field, args.allAdds);
                 }
             };
             
-            var syncFn = function(uidToEID) {
-                if (deltaObj.updates.length > 0) {
-                    while (deltaObj.updates.length > 0) {
-                       var updatedObj = deltaObj.updates.pop();
+            var syncFn = function(args) {
+                if (args.deltaObj.updates.length > 0) {
+                    while (args.deltaObj.updates.length > 0) {
+                       var updatedObj = args.deltaObj.updates.pop();
                        var toUpdateKey = updatedObj[_self.getJSONKeyField(elemSchema, updatedObj)];
-                       var objId = uidToEID[toUpdateKey];
+                       var objId = args.uidToEID[toUpdateKey];
                        if (objId) {
-                           Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj) {
-                                updateDone();
+                           Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj,_args) {
+                                updateDone(_args);
                                //syncFn(uidToEID);
                                //syncFn(pObj);
-                           },overrides);
+                           },overrides,args);
                        } else {
-                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,uidToEID);
+                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,args);
                        }
                     }
                 } else {
                     /* Nothing more to sync. Done. */
-                    oncomplete(field, allAdds);
+                    oncomplete(field, args.allAdds);
                 }
             };
 
-            var doAdds = function(uidToEID) {
-                if (deltaObj.adds.length === 0) {
-                    syncFn(uidToEID);
+            var doAdds = function(args) {
+                if (args.deltaObj.adds.length === 0) {
+                    syncFn(args);
                 } else {
-                    while (deltaObj.adds.length > 0) {
-                        var toAdd = deltaObj.adds.pop();
+                    while (args.deltaObj.adds.length > 0) {
+                        var toAdd = args.deltaObj.adds.pop();
                         var toAddKey = toAdd[_self.getJSONKeyField(elemSchema, toAdd)];
 
-                        var objId = uidToEID[toAddKey];
+                        var objId = args.uidToEID[toAddKey];
                         if (objId) {
-                            Helix.DB.updateOneObject(allSchemas,objId,toAdd,keyField,toAddKey,elemSchema,function(pObj) {
+                            Helix.DB.updateOneObject(allSchemas,objId,toAdd,keyField,toAddKey,elemSchema,function(pObj,_args) {
                                 parentCollection.add(pObj);
-                                addDone(pObj, uidToEID);
-                            },overrides);
+                                addDone(pObj, _args);
+                            },overrides,args);
                         } else {
-                            Helix.DB.addObjectToQueryCollection(allSchemas,toAdd,elemSchema, parentCollection,overrides,addDone,uidToEID);
+                            Helix.DB.addObjectToQueryCollection(allSchemas,toAdd,elemSchema, parentCollection,overrides,addDone,args);
                         }                        
                     }                                     
                 }
             };
 
-            var createUIDToEIDMap = function() {
-                var uidToEID = {};
-                if (deltaObj.adds.length === 0 &&
-                    deltaObj.updates.length === 0) {
+            var createUIDToEIDMap = function(args) {
+                args.uidToEID = {};
+                if (args.deltaObj.adds.length === 0 &&
+                    args.deltaObj.updates.length === 0) {
                     // Skip to the finish line ...
-                    syncFn(null);
+                    syncFn(args);
                 } else {
                     persistence.transaction(function(tx) {
                         var sql = 'SELECT id, ' + keyField + ' FROM `' + elemSchema.meta.name + '`;';
                         tx.executeSql(sql, null, function(rows) {
                             for ( var i = 0; i < rows.length; i++) {
                                 var r = rows[i];
-                                uidToEID[r[keyField]] = r.id;
+                                args.uidToEID[r[keyField]] = r.id;
                             }
-                            doAdds(uidToEID);
+                            doAdds(args);
                         }, function(t, e, badSQL, badArgs) {
                             persistence.errorHandler(e.message, e.code, badSQL, badArgs);
-                            doAdds(uidToEID);
+                            doAdds(args);
                         });
                     });
                     /*
@@ -1365,16 +1369,16 @@ function initHelixDB() {
                 }
             };
             
-            var prepareAdds = function() {
+            var prepareAdds = function(args) {
                 var addUniqueIDs = [];
-                for (var i = 0; i < deltaObj.adds.length; ++i) {
-                    var toAdd = deltaObj.adds[i];
+                for (var i = 0; i < args.deltaObj.adds.length; ++i) {
+                    var toAdd = args.deltaObj.adds[i];
                     addUniqueIDs.push(toAdd[_self.getJSONKeyField(elemSchema, toAdd)]);
                 }
-                createUIDToEIDMap();
+                createUIDToEIDMap(args);
             };
             
-            var removeFn = function(persistentObj) {
+            var removeFn = function(persistentObj, args) {
                 if (persistentObj) {
                     parentCollection.remove(persistentObj);
                     persistence.remove(persistentObj);
@@ -1383,47 +1387,49 @@ function initHelixDB() {
                     }
                 }
 
-                if (deltaObj.deletes && deltaObj.deletes.length > 0) {
-                    var toDeleteKey = deltaObj.deletes.pop();
+                if (args.deltaObj.deletes && args.deltaObj.deletes.length > 0) {
+                    var toDeleteKey = args.deltaObj.deletes.pop();
                     parentCollection.filter(keyField, "=", toDeleteKey).noFlush().newEach({
                         eachFn: function(elem) { 
                             if (elem) {
-                                Helix.DB.cascadingRemove(elemSchema,elem,removeFn,overrides);
+                                Helix.DB.cascadingRemove(elemSchema,elem,function(_obj, _op, _args) {
+                                    removeFn(_obj, _args);
+                                },overrides, args);
                             }
                         },
                         startFn: function(ct) {
                             if (ct === 0) {
-                                removeFn();
+                                removeFn(null, args);
                             }
                         }
                     });
-                } else if (deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) {
-                    var nxt = deltaObj.deleteSpec.pop();
+                } else if (args.deltaObj.deleteSpec && args.deltaObj.deleteSpec.length > 0) {
+                    var nxt = args.deltaObj.deleteSpec.pop();
                     if (nxt.op === 'CLEAR' && parentCollection) {
                         parentCollection.destroyAll(function() {
-                            removeFn();
+                            removeFn(null, args);
                         });
                     } else {
                         elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
-                            removeFn();
+                            removeFn(null, args);
                         });
                     }
                 } else {
                     /* Make sure all deletes are in the DB. */
                     persistence.flush(function() {
                         /* Nothing more to remove. Add in any new objects. */
-                        prepareAdds();                
+                        prepareAdds(args);                
                     });
                 }
             };
 
-            if ((deltaObj.deleteSpec && deltaObj.deleteSpec.length > 0) ||
-                    (deltaObj.deletes && deltaObj.deletes.length > 0)) {
+            if ((_deltaObj.deleteSpec && _deltaObj.deleteSpec.length > 0) ||
+                    (_deltaObj.deletes && _deltaObj.deletes.length > 0)) {
                 /* Handle deletes, then sync. Then we handle modifications and adds. */
-                removeFn();
+                removeFn(null, args);
             } else {
                 /* Nothing to remove; move on to adds ... */
-                prepareAdds();
+                prepareAdds(args);
             }
         },
     
@@ -1449,7 +1455,7 @@ function initHelixDB() {
          * Synchronizes the object fields against either (a) a fresh object, or (b) a 
          * populated object read from the database.
          */
-        synchronizeObjectFields: function(allSchemas, obj, persistentObj, objSchema, oncomplete, overrides) {
+        synchronizeObjectFields: function(allSchemas, obj, persistentObj, objSchema, oncomplete, overrides, opaque) {
             /* First determine what fields we will need to handle asynchronously. We are going
              * to execute a recursive descent algorithm, going into sub-arrays and sub-objects of
              * obj and synchronizing them before we synchronize obj itself. The reason is that
@@ -1522,7 +1528,7 @@ function initHelixDB() {
                     overrides.addHook(persistentObj);
                 }
                 
-                oncomplete(persistentObj);
+                oncomplete(persistentObj, opaque);
             };
             
             /* Now handle relationship fields. We must handle them ONE at a time. Otherwise we get multiple asynchronous
