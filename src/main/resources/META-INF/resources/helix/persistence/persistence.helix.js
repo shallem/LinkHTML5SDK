@@ -1349,7 +1349,9 @@ function initHelixDB() {
                         tx.executeSql(sql, null, function(rows) {
                             for ( var i = 0; i < rows.length; i++) {
                                 var r = rows[i];
-                                args.uidToEID[r[keyField]] = r.id;
+                                if (r[keyField]) {
+                                    args.uidToEID[r[keyField]] = r.id;
+                                }
                             }
                             doAdds(args);
                         }, function(t, e, badSQL, badArgs) {
