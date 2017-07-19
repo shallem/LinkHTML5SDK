@@ -20,9 +20,7 @@
 
 // Global dictionary use to map class name to class dictionary 
 // in the JSON serialization;
-var JSONDictionary = [];
 var JSONKeyDictionary = [];
-
 
 function initHelixDB() {
     Helix.DB = {
@@ -48,6 +46,8 @@ function initHelixDB() {
             "__hx_schema_type" : true,
             "__hx_global_filters" : true
         },
+
+        JSONDictionary: {},
 
         generatePersistenceFields: function(schemaTemplate,name,allVisited,recursiveFields,allSchemas) {
             var schemaFields = {};
@@ -883,7 +883,7 @@ function initHelixDB() {
                 sch = sch.substr(idx+1);
             }
 
-            return JSONDictionary[sch];
+            return Helix.DB.JSONDictionary[sch];
         },
         
         getSchemaForObject: function(obj) {
@@ -1849,6 +1849,10 @@ function initHelixDB() {
             persistence.search.config(persistence, persistence.store.websql.sqliteDialect, {
                 indexAsync : true
             });
+            
+            if (window.__hxInitJSONDictionary) {
+                Helix.DB.JSONDictionary = window.__hxInitJSONDictionary();
+            }
             
             /* Keep a master list of all widget schemas we have attempted to create. This ensures we
              * don't recreate the schema each time we run a load command.
