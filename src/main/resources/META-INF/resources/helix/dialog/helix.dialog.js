@@ -166,7 +166,8 @@
             _self.options.onConfirm.apply(_self._callbackThis ? _self._callbackThis: _self, args);
         };
         var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.options.confirmText ? this.options.confirmText : 'Confirm', onconfirm);
-         
+        
+        this.options.titleStyleClass = 'ui-header';
         Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
         if (this.form) {
             $(this.form).on('submit', function(ev) {

@@ -2258,9 +2258,12 @@ Helix.Layout._layoutPopup = function(popup, options, buttons, form) {
             'style' : 'margin: .5em .5em .5em .5em',
             'data-theme' : 'd',
             'class' : 'ui-corner-bottom ui-content hx-dialog-content'
-        })
-        .append($('<p/>')
-        .append(options.message ? options.message : ''));
+        });
+    if (options.message) {
+        content
+            .append($('<p/>')
+            .append(options.message ? options.message : ''));
+    }
     if (form) {
         content.append(form);
     }
