@@ -908,7 +908,7 @@ Helix.Ajax = {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                if (Helix.ignoreErrors || params.silentMode) {
+                if (Helix.ignoreErrors) {
                     return;
                 }
                 if (jqXHR.status < 0 || jqXHR.status >= 600) {
