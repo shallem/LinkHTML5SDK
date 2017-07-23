@@ -181,3 +181,7 @@
     width: 32px;
     height: 32px;
 }
+
+.ui-btn .ui-btn-text {
+    font-weight: normal !important;
+}
