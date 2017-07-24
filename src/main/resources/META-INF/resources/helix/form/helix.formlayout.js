@@ -779,7 +779,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 'class' : 'ui-input-text hx-full-width'
             }).append(formElem.value);
             var valSpan = $('<div/>').attr({
-                'class': 'hx-mini-fieldcontain ui-field-contain ui-body ui-br'
+                'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + 'ui-field-contain ui-body ui-br'
             })
             .append($('<label/>').attr({
                 'for' : formElem.name,
