@@ -885,7 +885,7 @@ Helix.Ajax = {
                 }
                 
                 var retCode = (returnObj.status !== undefined ? returnObj.status : returnObj.code);
-                if (retCode === 0) {
+                if (Number(retCode) === 0) {
                     if (params.success && !params.silentMode) {
                         Helix.Utils.statusMessage("Success", params.success, "info");
                     }

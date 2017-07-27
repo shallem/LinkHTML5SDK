@@ -191,6 +191,12 @@
             },
             listTags: function(success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "listTags", []);
+            },
+            sendEmail: function(attachments, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "sendEmail", [ attachments ]);
+            },
+            convertDocument: function(url, attachments, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "convertDocument", [ url, attachments ]);
             }
         });
     }
