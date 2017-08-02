@@ -295,7 +295,9 @@ Helix.Ajax = {
      * @returns {undefined}
      */
     postedOfflineActionsCallback: function(elem) {
-        if (elem.json) {
+        if (elem.docid) {
+            /* Ignore for now. */
+        } else if (elem.json) {
             var refreshObj = $.parseJSON(elem.json);
             if (refreshObj.type) {
                 var schema = Helix.DB.getSchemaForTable(refreshObj.type);

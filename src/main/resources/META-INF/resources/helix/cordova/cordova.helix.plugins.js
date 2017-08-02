@@ -194,9 +194,6 @@
             },
             sendEmail: function(attachments, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "sendEmail", [ attachments ]);
-            },
-            convertDocument: function(url, attachments, success, failure) {
-                return cordova.exec(success, failure, "HelixSystem", "convertDocument", [ url, attachments ]);
             }
         });
     }
@@ -260,6 +257,9 @@
                 return cordova.exec(success, failure, "DocumentDownload", "checkDocumentStatus", [
                    docIDs
                 ]);                
+            },
+            convertDocument: function(url, attachments, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "convertDocument", [ url, attachments ]);
             }
         };
     }
