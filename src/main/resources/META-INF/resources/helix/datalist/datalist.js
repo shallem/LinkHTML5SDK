@@ -2825,6 +2825,8 @@
             var lastComponent = null;
             this._findRowComponents(parentElement[0], components);
 
+            // Hide the parent to avoid contant recomputation of the DOM.
+            parentElement[0].style.visibility = 'hidden';
             if (this.options.multiSelect) {
                 if (!rowComponents.disableMultiSelect) {
                     //$(parentElement).addClass('hx-multi-select-item');
@@ -2928,6 +2930,7 @@
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
             }
+            parentElement[0].style.visibility = '';
             return parentElement;
         },
         selectItem: function (noSelectAction) {
