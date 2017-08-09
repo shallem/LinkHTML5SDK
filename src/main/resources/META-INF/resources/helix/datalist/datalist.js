@@ -785,8 +785,8 @@
                             _self.displayList = _self.displayList.slice(nElems);
                         
                             _self.$listWrapper.scrollTop(_self.$listWrapper.scrollTop() - offsetOfLastRemoved);
-                            _self._renderWindowStart = (_self._renderWindowStart) + nElems;
                         }
+                        _self._renderWindowStart = (_self._renderWindowStart) + nElems;
 
                         _self._refreshDividers();
                     }
@@ -2896,7 +2896,7 @@
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
             }
-            parentElement[0].style.visibility = '';
+            parentElement[0].style.visibility = 'visible';
             return parentElement;
         },
         selectItem: function (noSelectAction) {
@@ -3203,9 +3203,12 @@
         },
 
         markDeleted: function(elems) {
-            $(elems).hide(400, 'linear');
+            //$(elems).hide(400, 'linear');
             $(elems).attr('data-deleted', 'true');
-            this.refreshListView();
+            $(elems).addClass('hx-deleted');
+            setTimeout(function() {
+                this.refreshListView();            
+            }, 2000);
         },
         
         confirmDeleted: function(elems) {
@@ -3213,8 +3216,7 @@
         },
         
         clearDeleted: function(elems) {
-            $(elems).show(400, 'linear');
-            $(elems).attr('data-deleted', '');
+            $(elems).attr('data-deleted', '').removeClass('hx-deleted');
             this.refreshListView();
         }
 

@@ -94,3 +94,20 @@ and open the template in the editor.
     -moz-transform: rotate(45deg);
     -o-transform: rotate(45deg);
 }
+
+.hx-listview li {
+  transition: all 2s ease-out;
+  opacity: 0;
+}
+
+.hx-listview li:not(.hx-deleted) {
+  opacity: 1;
+}
+
+.hx-listview li.hx-deleted {
+    list-style: none;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
