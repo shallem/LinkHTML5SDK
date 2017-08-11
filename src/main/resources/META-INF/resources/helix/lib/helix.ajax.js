@@ -79,28 +79,30 @@ $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelega
  * Hide the loader post-request.
  */
 $(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelegate) {
-    if (!Helix.Ajax.loadOptions.pin) {
-        if (!Helix.Ajax.loadOptions.async) {
-            /* Hide the loader. */
-            Helix.Ajax.hideLoader();
-        }
-    }
-    
-    if (window.CordovaInstalled && resumeSleep) {
-        window.HelixSystem.allowSleep();
-    }
-
     if (loadingDelegate) {
         if (loadingDelegate === true) {
             return;
         }
         loadingDelegate.stopLoading();
     } else {
-        /* Clear out the load options - this is meant as a per-load set of options. */
         Helix.Ajax.loadCt--;
-        if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
-            $('.hx-loading').removeClass('hx-loading');
+        if (!Helix.Ajax.loadOptions.silent) {
+            if (!Helix.Ajax.loadOptions.async) {
+                if (!Helix.Ajax.loadOptions.pin) {
+                    /* Hide the loader. */
+                    Helix.Ajax.hideLoader();
+                }
+            } else {
+                /* Clear out the load options - this is meant as a per-load set of options. */
+                if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
+                    $('.hx-loading').removeClass('hx-loading');
+                }
+            }
         }
+    }
+    
+    if (window.CordovaInstalled && resumeSleep) {
+        window.HelixSystem.allowSleep();
     }
 });
 

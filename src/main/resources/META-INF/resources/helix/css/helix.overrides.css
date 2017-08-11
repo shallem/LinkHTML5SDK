@@ -189,3 +189,7 @@
 .ui-panel-content-wrap {
     -webkit-touch-callout: none !important;
 }
+
+.ui-loader h1 {
+    word-break: break-all;
+}

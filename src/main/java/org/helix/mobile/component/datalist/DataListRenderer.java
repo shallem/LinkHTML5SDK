@@ -260,6 +260,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getDoGlobalFilter() != null) {
             writer.write(",doGlobalFilter: " + dlist.getDoGlobalFilter());
         }
+        if (dlist.getOnFilterDone() != null) {
+            writer.write(",filterDone: " + dlist.getOnFilterDone());
+        }
         
         // Localizable strings.
         if (dlist.getStrings() != null) {

@@ -49,6 +49,9 @@
             this.element.css('z-index', ++PrimeFaces.zindex);
 
             //clear previous messages
+            if (this._timeout) {
+                clearTimeout(this._timeout);
+            }
             this.removeAll();
 
             this.renderMessage(msg, doAction, undoAction, lifetime);
@@ -92,10 +95,12 @@
     
         bindEvents: function(message, doAction, undoAction, lifetime) {
             var _self = this;
-            var _timeout = this.setRemovalTimeout(doAction, lifetime);
+            this._timeout = this.setRemovalTimeout(doAction, lifetime);
 
             //remove message on click of close icon
-            message.on(Helix.hasTouch ? 'touchstart' : Helix.clickEvent, _timeout, function(ev) {
+            var _bindTo = Helix.hasTouch ? 'touchstart' : Helix.clickEvent;
+            message.on(_bindTo, this._timeout, function(ev) {
+                message.off(_bindTo);
                 _self.removeAll();
                 undoAction.call(_self);
                 clearTimeout(ev.data);

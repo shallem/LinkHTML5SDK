@@ -196,6 +196,12 @@
             <description>Callback to invoke to filter the list based on a specific field and value. Accepts the current query collection, the sort field, and the selected value as arguments. Returns the filtered query collection.</description>
         </attribute>
         <attribute>
+            <name>onFilterDone</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Callback to invoke when filtering is complete.</description>
+        </attribute>
+        <attribute>
             <name>grouped</name>
             <required>false</required>
             <type>java.lang.Boolean</type>

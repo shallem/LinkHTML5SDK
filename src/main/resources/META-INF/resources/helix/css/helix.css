@@ -275,19 +275,10 @@
    
     for the source of the fix.
 */
-.hx-scrolling-page *:not(html):not(.hx-icon) {
-    -webkit-transform: translate3d(0, 0, 0);
-}
-
 /* Scrolling elements should have this style. */
 .hx-scroller-nozoom {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
-}
-
-/* Attempt to fix webkit bug that makes part of the HTML in a page disappear by forcing hardware acceleration. */
-.hx-scroller-nozoom  *:not(.hx-icon) { 
-    -webkit-transform: translate3d(0, 0, 0); 
 }
 
 .hx-no-scroll {
@@ -424,15 +415,6 @@ a {
 .hx-flex-fill {
     flex: 2;
     -webkit-flex: 2;
-}
-
-/* On iOS, scrolling blocks can show a very distracting flicker. According to this site:
-    https://gist.github.com/bdalziel/3005482
-   the CSS below fixes the flicker. It does seem to work.
-*/
-li {
-    -webkit-backface-visibility: hidden;
-    -webkit-transform: translate3d(0,0,0);
 }
 
 .ui-header.hx-text-left .ui-title {
@@ -1051,4 +1033,14 @@ div.hx-dialog-content ul {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.hx-accelerate {
+    /*  On iOS, scrolling blocks can show a very distracting flicker. According to this site:
+        https://gist.github.com/bdalziel/3005482
+        the CSS below fixes the flicker. It does seem to work. This also triggers hardware acceleration on
+        iOS / Android.
+    */
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
 }

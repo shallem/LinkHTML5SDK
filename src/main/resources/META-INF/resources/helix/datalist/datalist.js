@@ -309,6 +309,12 @@
              */
             doGlobalFilter: null,
             /**
+             * Function to call when a filtering operation is done.
+             */
+            filterDone: function() {
+                
+            },
+            /**
              * List of data to display in the list. Must be a PersistenceJS
              * QueryCollection object.
              */
@@ -1305,9 +1311,7 @@
                 // Clear out this field, then starting from the unfiltered list re-instate all
                 // remaining fields.
                 delete _self._filterMap[gFilterField];
-                _self._refreshData(function () {
-
-                }, true, undefined, _self._resetGlobalFilters());
+                _self._refreshData(_self.options.filterDone, true, undefined, _self._resetGlobalFilters());
             } else {
                 if (gFilterField in _self._filterMap) {
                     if (_self._filterMap[gFilterField] === _filterValue) {
@@ -1316,16 +1320,12 @@
                     } else {
                         // The filter value changed. Apply the filter to the original list.
                         _self._filterMap[gFilterField] = _filterValue;
-                        _self._refreshData(function () {
-
-                        }, true, undefined, _self._resetGlobalFilters());
+                        _self._refreshData(_self.options.filterDone, true, undefined, _self._resetGlobalFilters());
                     }
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(function () {
-
-                    }, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
+                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
                 }
             }
         },
@@ -1884,7 +1884,7 @@
 
             _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
-            if (!options.showSortButton && !options.showFilterButton && !options.indexedSearch) {
+            if (options.grouped || (!options.showSortButton && !options.showFilterButton && !options.indexedSearch)) {
                 _self.$searchSortDiv.hide();
                 return;
             }
@@ -2398,7 +2398,7 @@
         _installNoTouchActionHandlers: function () {
             // Right-click
             if (this.options.itemContextMenu) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
                     var _self = event.data;
 
                     // This allows the container to have taphold context menus that are not
@@ -2408,7 +2408,7 @@
                     return false;
                 });
             } else if (this.options.holdAction) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
@@ -2443,12 +2443,24 @@
 
             // Tap-hold
             if (this.options.holdAction) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'div.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
                     }
                     _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self._cancelNextTap = true;
+
+                    event.stopImmediatePropagation();
+                    return false;
+                });
+            } else if (this.options.doThisFilter) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
+                    var _self = event.data;
+                    if (_self.setSelected(event.target)) {
+                        _self.selectItem(true);
+                    }
+                    _self.displayFilterMenu();
                     _self._cancelNextTap = true;
 
                     event.stopImmediatePropagation();
@@ -2792,7 +2804,7 @@
             this._findRowComponents(parentElement[0], components);
 
             // Hide the parent to avoid contant recomputation of the DOM.
-            parentElement[0].style.visibility = 'hidden';
+            //parentElement[0].style.display = 'none';
             if (this.options.multiSelect) {
                 if (!rowComponents.disableMultiSelect) {
                     //$(parentElement).addClass('hx-multi-select-item');
@@ -2896,7 +2908,7 @@
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
             }
-            parentElement[0].style.visibility = 'visible';
+            //parentElement[0].style.display = '';
             return parentElement;
         },
         selectItem: function (noSelectAction) {
@@ -3206,9 +3218,6 @@
             //$(elems).hide(400, 'linear');
             $(elems).attr('data-deleted', 'true');
             $(elems).addClass('hx-deleted');
-            setTimeout(function() {
-                this.refreshListView();            
-            }, 2000);
         },
         
         confirmDeleted: function(elems) {

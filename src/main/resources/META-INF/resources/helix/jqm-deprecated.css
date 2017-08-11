@@ -1,0 +1,20 @@
+/*
+Deprecated JQM styles. Not included in the SDK build.
+*/
+/* 
+    Created on : Aug 11, 2017, 12:47:58 AM
+    Author     : v3devel
+*/
+
+.ui-focus,
+.ui-btn:focus {
+	-moz-box-shadow: inset 0 0 3px 		#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
+	-webkit-box-shadow: inset 0 0 3px 	#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
+	box-shadow: inset 0 0 3px 			#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
+}
+.ui-input-text.ui-focus,
+.ui-input-search.ui-focus {
+	-moz-box-shadow: 0 0 12px 			#387bbe /*{global-active-background-color}*/;
+	-webkit-box-shadow: 0 0 12px 		#387bbe /*{global-active-background-color}*/;
+	box-shadow: 0 0 12px 					#387bbe /*{global-active-background-color}*/;	
+}
