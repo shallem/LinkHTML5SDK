@@ -300,10 +300,14 @@ Helix.Ajax = {
         if (elem.docid) {
             /* Ignore for now. */
         } else if (elem.json) {
-            var refreshObj = $.parseJSON(elem.json);
-            if (refreshObj.type) {
-                var schema = Helix.DB.getSchemaForTable(refreshObj.type);
-                schema.all().filter(refreshObj.key, '=', refreshObj.value).destroyAll();
+            try {
+                var refreshObj = $.parseJSON(elem.json);
+                if (refreshObj.type) {
+                    var schema = Helix.DB.getSchemaForTable(refreshObj.type);
+                    schema.all().filter(refreshObj.key, '=', refreshObj.value).destroyAll();
+                }
+            } catch(e) {
+                // Something was unexpected in the format of the object from the native layer. Ignore.
             }
         }
     },
