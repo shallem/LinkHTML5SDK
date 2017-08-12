@@ -1973,6 +1973,7 @@
                     this.$searchBox.val(this.__searchText);
                 }
                 this.$searchBox.on('input', function () {
+                    _self.__searchClear = false;
                     _self._doSearch();
                 });
                 if (options.indexedSearchText) {

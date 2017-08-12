@@ -950,6 +950,96 @@ Helix.Ajax = {
         });
     },
 
+    ajaxOfflineQueue: function(params, callbacks) {
+        // Collect the data we will need to continue this offline draft. Not always used or applicable.
+        var refreshValues = null;
+        if (params.form) {
+            refreshValues = params.form.getValues();
+            if (params.type) {
+                refreshValues['__type'] = params.type;
+            }
+        } else if (params.lookup) {
+            refreshValues = params.lookup;
+        }
+
+        // Queue a post for the next time the container is online.
+        if (params.disableOffline) {
+            Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
+        } else if (!window.CordovaInstalled) {
+            if (params.id) {
+                Helix.Ajax.offlineNetworkQueue.all().filter('id', '=', params.id).one(function(obj) {
+                    if (obj) {
+                        obj.url = params.url;
+                        obj.body = params.body;
+                        obj.json = refreshValues ? JSON.stringify(refreshValues) : '';
+                    } else {
+                        obj = new Helix.Ajax.offlineNetworkQueue({
+                            'url': params.url,
+                            'body': params.body,
+                            'json' : refreshValues ? JSON.stringify(refreshValues) : ''
+                        });
+                        persistence.add(obj);
+                    }
+                    persistence.flush(function() {
+                        if (callbacks && callbacks.offlineSuccess) {
+                            callbacks.offlineSuccess.call(window, obj.id);
+                        }
+                    });
+                });
+            } else {
+                var offlineOp = new Helix.Ajax.offlineNetworkQueue({
+                    'url': params.url,
+                    'body': params.body,
+                    'json' : refreshValues ? JSON.stringify(refreshValues) : ''
+                });
+                persistence.add(offlineOp);
+                persistence.flush(function() {
+                    if (callbacks && callbacks.offlineSuccess) {
+                        callbacks.offlineSuccess.call(window, offlineOp.id);
+                    }
+                });
+            }
+        } else {
+            window.OfflinePost.savePost(params.url,
+                'application/x-www-form-urlencoded',
+                params.body,
+                refreshValues ? JSON.stringify(refreshValues) : '',
+                params.id ? params.id : 0,
+                function(rowid) {
+                    if (!params.silentMode) {
+                        if (params.offlineSuccess) {
+                            Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
+                        } else {
+                            Helix.Utils.statusMessage("Action Queued",
+                                "This action will be completed the next time you login to Link online.", "info");
+                        }
+                    }
+                    if (callbacks.offlineSuccess) {
+                        callbacks.offlineSuccess.call(window, rowid ? Number(rowid) : 0);
+                    }
+                    if (callbacks.complete) {
+                        callbacks.complete.call(window);
+                    }
+                },
+                function(msg) {
+                    if (!params.silentMode && !callbacks.fatal) {
+                        if (params.fatal) {
+                            Helix.Utils.statusMessage("Error", params.fatal + ": " + msg, 'error');
+                        } else if (!callbacks.fatal) {
+                            Helix.Utils.statusMessage("Error in Offline Queue", msg, 'error');
+                        }
+                    }
+                    if (callbacks.fatal) {
+                        callbacks.fatal.call(window, "Error in Offline Queue", msg);
+                    }
+                    if (callbacks.complete) {
+                        callbacks.complete.call(window);
+                    }
+                }
+            );
+        }
+    },
+
     ajaxPost: function(params, callbacks) {
         Helix.Ajax.loadOptions = {
             async: (params.async !== undefined) ? params.async : true,
@@ -1028,6 +1118,14 @@ Helix.Ajax = {
                         // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
                         return;
                     }
+                    if (jqXHR.status >= 400 &&
+                            jqXHR.status < 600) {
+                        // Something went wrong on the server. Rather than just drop a potentially important operation,
+                        // treat this is if we are offline ...
+                        Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+                        return;
+                    }
+                    
                     if (!params.silentMode) {
                         if (params.fatal) {
                             Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "fatal");
@@ -1048,86 +1146,7 @@ Helix.Ajax = {
             });
             return ret;
         } else {
-            // Collect the data we will need to continue this offline draft. Not always used or applicable.
-            var refreshValues = null;
-            if (params.form) {
-                refreshValues = params.form.getValues();
-                if (params.type) {
-                    refreshValues['__type'] = params.type;
-                }
-            } else if (params.lookup) {
-                refreshValues = params.lookup;
-            }
-            
-            // Queue a post for the next time the container is online.
-            if (params.disableOffline) {
-                Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
-            } else if (!window.CordovaInstalled) {
-                if (params.id) {
-                    Helix.Ajax.offlineNetworkQueue.all().filter('id', '=', params.id).one(function(obj) {
-                        if (obj) {
-                            obj.url = params.url;
-                            obj.body = params.body;
-                            obj.json = refreshValues ? JSON.stringify(refreshValues) : '';
-                        } else {
-                            obj = new Helix.Ajax.offlineNetworkQueue({
-                                'url': params.url,
-                                'body': params.body,
-                                'json' : refreshValues ? JSON.stringify(refreshValues) : ''
-                            });
-                            persistence.add(obj);
-                        }
-                        persistence.flush(function() {
-                            if (callbacks && callbacks.offlineSuccess) {
-                                callbacks.offlineSuccess.call(window, obj.id);
-                            }
-                        });
-                    });
-                } else {
-                    var offlineOp = new Helix.Ajax.offlineNetworkQueue({
-                        'url': params.url,
-                        'body': params.body,
-                        'json' : refreshValues ? JSON.stringify(refreshValues) : ''
-                    });
-                    persistence.add(offlineOp);
-                    persistence.flush(function() {
-                        if (callbacks && callbacks.offlineSuccess) {
-                            callbacks.offlineSuccess.call(window, offlineOp.id);
-                        }
-                    });
-                }
-            } else {
-                window.OfflinePost.savePost(params.url,
-                    'application/x-www-form-urlencoded',
-                    params.body,
-                    refreshValues ? JSON.stringify(refreshValues) : '',
-                    params.id ? params.id : 0,
-                    function(rowid) {
-                        if (!params.silentMode) {
-                            if (params.offlineSuccess) {
-                                Helix.Utils.statusMessage("Action Queued", params.offlineSuccess, "info");
-                            } else {
-                                Helix.Utils.statusMessage("Action Queued",
-                                    "This action will be completed the next time you login to Link online.", "info");
-                            }
-                        }
-                        if (callbacks.offlineSuccess) {
-                            callbacks.offlineSuccess.call(window, rowid ? Number(rowid) : 0);
-                        }
-                        if (callbacks.complete) {
-                            callbacks.complete.call(window);
-                        }
-                    },
-                    function(msg) {
-                        if (callbacks.fatal) {
-                            callbacks.fatal.call(window, "Action Save Error", msg);
-                        }
-                        if (callbacks.complete) {
-                            callbacks.complete.call(window);
-                        }
-                    }
-                );
-            }
+            Helix.Ajax.ajaxOfflineQueue(params, callbacks);
             Helix.Ajax.hideLoader();
         }
         return null;
