@@ -83,7 +83,12 @@
             /**
              * Style class for all text inputs.
              */
-            textStyleClass: ''
+            textStyleClass: '',
+            
+            /**
+             * Form style class - style class for the form container
+             */
+            formStyleClass: ''
         },
 
         _create: function() {
@@ -97,12 +102,20 @@
             /* Determine if we should use the mini layout based on the device
              * type
              */
+            var formStyleClass = '';
             this.layoutMini = false;
             if (("all" in this.options.useMiniLayout) ||
                 (Helix.deviceType in this.options.useMiniLayout &&
                  this.options.useMiniLayout[Helix.deviceType])) {
-                $(this.element).addClass('hx-form-mini');
+                formStyleClass = 'hx-form-mini';
                 this.layoutMini = true;
+            }
+            
+            if (this.options.formStyleClass) {
+                formStyleClass = formStyleClass + ' ' + this.options.formStyleClass;
+            }
+            if (formStyleClass) {
+                $(this.element).addClass(formStyleClass);
             }
 
             /* Attach a namespace to each element. Also create a mapping from field names (no namespace)

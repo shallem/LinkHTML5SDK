@@ -88,6 +88,12 @@
             <description>Optional style class to be applied to all value (not title) elements containing text.</description>
         </attribute>
         <attribute>
+            <name>formStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class to be applied to the form container object.</description>
+        </attribute>
+        <attribute>
             <name>width</name>
             <required>false</required>
             <type>java.lang.String</type>
