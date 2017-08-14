@@ -2933,7 +2933,7 @@
                 var nxt = this.selectedLI;
                 do {
                     nxt = nxt.next();
-                } while (nxt.is('li') && !nxt.data('data') && !nxt.is('li[data-deleted="true"]'));
+                } while (nxt.is('li') && (!nxt.data('data') || nxt.is('li[data-deleted="true"]')));
                 if (nxt.length) {
                     this.setSelected(nxt);
                     this.selectItem(noSelectAction);
@@ -2950,7 +2950,7 @@
                 var prev = this.selectedLI;
                 do {
                     prev = prev.prev();
-                } while (prev.is('li') && !prev.data('data') && !prev.is('li[data-deleted="true"]'));
+                } while (prev.is('li') && (!prev.data('data') || prev.is('li[data-deleted="true"]')));
                 if (prev.length) {
                     this.setSelected(prev);
                     this.selectItem(noSelectAction);

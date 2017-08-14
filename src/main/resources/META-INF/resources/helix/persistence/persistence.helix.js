@@ -837,9 +837,10 @@ function initHelixDB() {
                             }
                         }
                     }
+                    // Store the mapping ...
+                    JSONKeyDictionary[sch] = key;
                 }
                 
-                JSONKeyDictionary[sch] = key;
             }
                 
             return key;

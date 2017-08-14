@@ -66,18 +66,19 @@ Helix.Utils =  {
         }
     },
 
-    undoMessage: function(msg, doAction, undoAction, lifetime) {
+    undoMessage: function(msg, doAction, undoAction, lifetime, args) {
         if (!lifetime) {
             lifetime = 4000;
         }
         if (Helix.Utils.undoBox) {
-            Helix.Utils.undoBox.show(msg, doAction, undoAction, lifetime);
+            Helix.Utils.undoBox.show(msg, doAction, undoAction, lifetime, args);
         } else {
             Helix.Utils.undoBox = $('<div/>').helixUndo({
                 msg : msg,
                 doAction: doAction,
                 undoAction: undoAction,
-                life: lifetime
+                life: lifetime,
+                callbackArgs: args
             }).data('helix-helixUndo');
         }
     },

@@ -45,16 +45,18 @@
             this.show(this.options.msg, this.options.doAction, this.options.undoAction);
         },
     
-        show: function(msg, doAction, undoAction, lifetime) {
+        show: function(msg, doAction, undoAction, lifetime, args) {
             this.element.css('z-index', ++PrimeFaces.zindex);
 
             //clear previous messages
             if (this._timeout) {
+                // Before we clear the old timeout, invoke the action (not the undo ...)
+                doAction.apply(this, args);
                 clearTimeout(this._timeout);
             }
             this.removeAll();
 
-            this.renderMessage(msg, doAction, undoAction, lifetime);
+            this.renderMessage(msg, doAction, undoAction, lifetime, args);
         },
     
         removeAll: function() {
@@ -67,10 +69,10 @@
             this.element.appendTo($(document.body));
 
             //render messages
-            this.show(this.options.msg, this.options.doAction, this.options.undoAction, this.options.life);
+            this.show(this.options.msg, this.options.doAction, this.options.undoAction, this.options.life, this.options.callbackArgs);
         },
     
-        renderMessage: function(msg, doAction, undoAction, lifetime) {
+        renderMessage: function(msg, doAction, undoAction, lifetime, args) {
             if (!doAction) {
                 doAction = this.options.doAction;
             }
@@ -90,31 +92,31 @@
             msgEL.html(msg);
 
             message.appendTo(this.element).fadeIn();
-            this.bindEvents(message, doAction, undoAction, lifetime);
+            this.bindEvents(message, doAction, undoAction, lifetime, args);
         },
     
-        bindEvents: function(message, doAction, undoAction, lifetime) {
+        bindEvents: function(message, doAction, undoAction, lifetime, args) {
             var _self = this;
-            this._timeout = this.setRemovalTimeout(doAction, lifetime);
+            this._timeout = this.setRemovalTimeout(doAction, lifetime, args);
 
             //remove message on click of close icon
             var _bindTo = Helix.hasTouch ? 'touchstart' : Helix.clickEvent;
-            message.on(_bindTo, this._timeout, function(ev) {
+            message.on(_bindTo, [this._timeout, args], function(ev) {
                 message.off(_bindTo);
                 _self.removeAll();
-                undoAction.call(_self);
-                clearTimeout(ev.data);
+                undoAction.apply(_self, ev.data[1]);
+                clearTimeout(ev.data[0]);
                 ev.stopImmediatePropagation();
                 return false;
             });
         },
     
-        setRemovalTimeout: function(doAction, lifetime) {
+        setRemovalTimeout: function(doAction, lifetime, args) {
             var _self = this;
 
             var timeout = setTimeout(function() {
                 _self.removeAll();
-                doAction.call(_self);
+                doAction.apply(_self, args);
             }, lifetime);
 
             return timeout;
