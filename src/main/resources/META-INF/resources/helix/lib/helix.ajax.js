@@ -184,7 +184,7 @@ $(document).on('helixready', function() {
                             if (doneQueuedActions === nQueuedActions) {
                                 // We have processed all actions. See if there are errors and, if so, print a message.
                                 if (Helix.Ajax.failedOfflineActions.length > 0) {
-                                    Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
+                                    //Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
                                     if (Helix.Ajax.failedOfflineActionsCallback) {
                                         Helix.Ajax.failedOfflineActionsCallback.call(window, Helix.Ajax.failedOfflineActions);
                                     }
@@ -1024,9 +1024,9 @@ Helix.Ajax = {
                 function(msg) {
                     if (!params.silentMode && !callbacks.fatal) {
                         if (params.fatal) {
-                            Helix.Utils.statusMessage("Error", params.fatal + ": " + msg, 'error');
+                            //Helix.Utils.statusMessage("Error", params.fatal + ": " + msg, 'error');
                         } else if (!callbacks.fatal) {
-                            Helix.Utils.statusMessage("Error in Offline Queue", msg, 'error');
+                            //Helix.Utils.statusMessage("Error in Offline Queue", msg, 'error');
                         }
                     }
                     if (callbacks.fatal) {
