@@ -224,7 +224,7 @@ $(document).on('helixready', function() {
                         }
                     }
                     if (Helix.Ajax.failedOfflineActions.length > 0) {
-                        Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
+                        //Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
                         if (Helix.Ajax.failedOfflineActionsCallback) {
                             Helix.Ajax.failedOfflineActionsCallback.call(window, Helix.Ajax.failedOfflineActions);
                         }
