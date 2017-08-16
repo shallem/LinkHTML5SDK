@@ -46,6 +46,7 @@ $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelega
                     Helix.Ajax.loadOptions.color = "#FF8000";
                 }
 
+                Helix.Ajax.loadCt++;
                 if (Helix.compatibility.animation) {
                     page.find('[data-role="header"]').addClass('hx-loading');
                 } else {
@@ -68,7 +69,6 @@ $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelega
                 }
             }
         }
-        Helix.Ajax.loadCt++;
     }
     if (window.CordovaInstalled && suspendSleep) {
         window.HelixSystem.suspendSleep();
@@ -85,7 +85,6 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelega
         }
         loadingDelegate.stopLoading();
     } else {
-        Helix.Ajax.loadCt--;
         if (!Helix.Ajax.loadOptions.silent) {
             if (!Helix.Ajax.loadOptions.async) {
                 if (!Helix.Ajax.loadOptions.pin) {
@@ -93,6 +92,7 @@ $(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelega
                     Helix.Ajax.hideLoader();
                 }
             } else {
+                Helix.Ajax.loadCt--;
                 /* Clear out the load options - this is meant as a per-load set of options. */
                 if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
                     $('.hx-loading').removeClass('hx-loading');

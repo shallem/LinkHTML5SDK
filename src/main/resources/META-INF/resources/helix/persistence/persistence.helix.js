@@ -877,7 +877,12 @@ function initHelixDB() {
         },
         
         getClassDictionary: function(schema) {
-            var sch = schema.__hx_schema_name; 
+            var sch;
+            if (Helix.Utils.isString(schema)) {
+                sch = schema;
+            } else {    
+                sch = schema.__hx_schema_name; 
+            }
             var idx = sch.lastIndexOf('.');
 
             if (idx > 0) {
