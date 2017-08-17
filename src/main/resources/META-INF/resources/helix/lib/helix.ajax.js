@@ -31,19 +31,25 @@ $(document).on('cordovaReady', function() {
 /**
  * Show a loader pre-request.
  */
-$(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate, loadingMessage) {
+$(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelegate, loadingMessage, loadingOptions) {
     if (loadingDelegate) {
         if (loadingDelegate === true) {
             return;
         }
         loadingDelegate.startLoading(loadingMessage);
     } else {
-        if (!Helix.Ajax.loadOptions.silent) {
-            if (!Helix.Ajax.loadOptions.async) {
-                $.mobile.loading( 'show', Helix.Ajax.loadOptions);
+        if (!loadingOptions) {
+            loadingOptions = {
+                async: true
+            };
+        }
+        
+        if (!loadingOptions.silent) {
+            if (!loadingOptions.async) {
+                $.mobile.loading( 'show', loadingOptions);
             } else {
-                if (!Helix.Ajax.loadOptions.color) {
-                    Helix.Ajax.loadOptions.color = "#FF8000";
+                if (!loadingOptions.color) {
+                    loadingOptions.color = "#FF8000";
                 }
 
                 Helix.Ajax.loadCt++;
@@ -54,11 +60,11 @@ $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelega
                     var origBG = $(header).css('background');
                     var animateColor = function(doReverse) {
                         $(header).animate({
-                            'background': (doReverse ? origBG : Helix.Ajax.loadOptions.color)
+                            'background': (doReverse ? origBG : loadingOptions.color)
                         }, {
                             duration: 1200,
                             complete: function() {
-                                if (Helix.Ajax.loadCt >  0 || Helix.Ajax.loadOptions.pin) {
+                                if (Helix.Ajax.loadCt >  0 || loadingOptions.pin) {
                                     animateColor(!doReverse);
                                 } else {
                                     $(header).css('background', '');
@@ -78,23 +84,28 @@ $(document).on('prerequest', function(ev, page, url, suspendSleep, loadingDelega
 /**
  * Hide the loader post-request.
  */
-$(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelegate) {
+$(document).on('postrequest', function(ev, page, url, resumeSleep, loadingDelegate, loadingOptions) {
     if (loadingDelegate) {
         if (loadingDelegate === true) {
             return;
         }
         loadingDelegate.stopLoading();
     } else {
-        if (!Helix.Ajax.loadOptions.silent) {
-            if (!Helix.Ajax.loadOptions.async) {
-                if (!Helix.Ajax.loadOptions.pin) {
+        if (!loadingOptions) {
+            loadingOptions = {
+                async: true
+            };
+        }
+        if (!loadingOptions.silent) {
+            if (!loadingOptions.async) {
+                if (!loadingOptions.pin) {
                     /* Hide the loader. */
                     Helix.Ajax.hideLoader();
                 }
             } else {
                 Helix.Ajax.loadCt--;
                 /* Clear out the load options - this is meant as a per-load set of options. */
-                if (Helix.compatibility.animation && Helix.Ajax.loadCt ===  0 && !Helix.Ajax.loadOptions.pin) {
+                if (Helix.compatibility.animation && Helix.Ajax.loadCt <=  0 && !loadingOptions.pin) {
                     $('.hx-loading').removeClass('hx-loading');
                 }
             }
@@ -363,12 +374,13 @@ Helix.Ajax = {
      * Helper used to set loader options.
      */
     setLoaderOptions: function(loadingOptions) {
+        var loaderOptions;
         if (!loadingOptions.theme) {
             loadingOptions.theme = "a";
         }
         if (!loadingOptions.async) {
             if (loadingOptions.message) {
-                Helix.Ajax.loadOptions= {
+                loaderOptions= {
                     aync: false,
                     text: loadingOptions.message,
                     textVisible: true,
@@ -376,26 +388,27 @@ Helix.Ajax = {
                     textonly: false
                 };
             } else {
-                Helix.Ajax.loadOptions = {
+                loaderOptions = {
                     async: false,
                     textVisible: false,
                     theme: loadingOptions.theme
                 };
             }
         } else {
-            Helix.Ajax.loadOptions = {
+            loaderOptions = {
                 async : true,
                 color : loadingOptions.color
             };
         }
         if (loadingOptions.pin) {
-            Helix.Ajax.loadOptions.pin = true;
+            loaderOptions.pin = true;
         }
         if (loadingOptions.silent) {
-            Helix.Ajax.loadOptions.silent = true;
+            loaderOptions.silent = true;
         } else {
-            Helix.Ajax.loadOptions.silent = false;
+            loaderOptions.silent = false;
         }
+        return loaderOptions;
     },
 
     defaultOnError: function(errorObj, isSilentMode) {
@@ -583,7 +596,7 @@ Helix.Ajax = {
         Helix.Ajax.inProgressLoads[loadCommandOptions.name] = loadCommandOptions;
 
         // Setup loader options and show the loader.
-        Helix.Ajax.setLoaderOptions($.extend(
+        var loadingOptions = Helix.Ajax.setLoaderOptions($.extend(
             {}, 
             loadCommandOptions.loadingOptions, 
             { 
@@ -665,7 +678,8 @@ Helix.Ajax = {
             loadCommandOptions.requestOptions.postBack, 
             loadCommandOptions.requestOptions.suspendSleep,
             loadCommandOptions.loadingDelegate,
-            loadCommandOptions.loadingMessage
+            loadCommandOptions.loadingMessage,
+            loadingOptions
         ]);
         /* Give the browser a change to handle the event and show the loader. */
         $.ajax({
@@ -770,7 +784,8 @@ Helix.Ajax = {
                     [   page, 
                         loadCommandOptions.requestOptions.postBack, 
                         loadCommandOptions.requestOptions.suspendSleep,
-                        loadCommandOptions.loadingDelegate
+                        loadCommandOptions.loadingDelegate,
+                        loadingOptions
                     ]);
             }
         });
@@ -778,7 +793,7 @@ Helix.Ajax = {
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
         var page = $.mobile.activePage;
-        $(document).trigger('prerequest', [ page, url, false ]);
+        $(document).trigger('prerequest', [ page, url, false, null, null, null ]);
         if (actions && actions.beforeSubmit) {
             actions.beforeSubmit();
         }
@@ -865,13 +880,13 @@ Helix.Ajax = {
     },
 
     ajaxGet: function(params, callbacks) {
-        Helix.Ajax.loadOptions = {
+        var loadingOptions = Helix.Ajax.setLoaderOptions({
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false,
             message : params.loadingMessage ? params.loadingMessage : ''
-        };
+        });
         var page = $.mobile.activePage;
-        $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage ]);
+        $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage, loadingOptions ]);
         var args = '';
         for (var key in params.params) {
             var nxtArg = key + '=' + encodeURIComponent(params.params[key]);
@@ -944,7 +959,7 @@ Helix.Ajax = {
                 if (callbacks.complete) {
                     callbacks.complete.call(window);
                 }
-                $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
+                $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate, loadingOptions ]);
             },
             dataType: 'json'
         });
@@ -1041,17 +1056,14 @@ Helix.Ajax = {
     },
 
     ajaxPost: function(params, callbacks) {
-        Helix.Ajax.loadOptions = {
+        var loadingOptions = Helix.Ajax.setLoaderOptions({
             async: (params.async !== undefined) ? params.async : true,
-            silent: (params.silentMode !== undefined) ? params.silentMode : false
-        };
-        if (!Helix.Ajax.loadOptions.async) {
-            Helix.Ajax.loadOptions.text = params.loadingMessage;
-            Helix.Ajax.loadOptions.textVisible = true;
-        }
+            silent: (params.silentMode !== undefined) ? params.silentMode : false,
+            message: params.loadingMessage
+        });
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
-            $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage ]);
+            $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage, loadingOptions ]);
             var ret = {
                 isCancelled : false,
                 cancel: function() {
@@ -1075,7 +1087,7 @@ Helix.Ajax = {
                     
                     // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
                     // with a new AJAX request triggered in a callback.
-                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
+                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate, loadingOptions ]);
 
                     if (this.isCancelled) {
                         return;
@@ -1106,7 +1118,7 @@ Helix.Ajax = {
                 error: function(jqXHR, textStatus, errorThrown) {
                     // Call postrequest before any callbacks are called. Otherwise we can overwrite the loading options
                     // with a new AJAX request triggered in a callback.
-                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate ]);
+                    $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate, loadingOptions ]);
                     
                     if (this.isCancelled) {
                         return;

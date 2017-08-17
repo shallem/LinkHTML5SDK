@@ -652,16 +652,19 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         if (formElem.onspace) {
             $(inputMarkup).on("keydown", function (e) {
                 if (e.which === 32) {
-                    formElem.onspace.apply(this);
+                    formElem.onspace.apply(this, formElem);
                 }
             });
         }
         if (formElem.onenter) {
-            $(inputMarkup).on("keydown", function (e) {
+            $(inputMarkup).on("keydown", $.proxy(function (e) {
                 if (e.which === 13) {
-                    formElem.onenter.apply(this);
+                    this.onenter.apply(e.target, this);
+                    if (this.dismissAutoComplete) {
+                        this.dismissAutoComplete();
+                    }
                 }
-            });
+            }, formElem));
         }
         
         // Apply styling to the input text div ...
@@ -694,6 +697,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                              .css('background-color', '#f9f9f9')
                                              .appendTo($fieldContainer).listview({ inset : true });
             formElem.autocompleteList = autoCompleteList;
+            formElem.dismissAutoComplete = function() {
+                this.autocompleteList.empty();
+                this.autocompleteList.hide();
+                this.__noblur = false;
+            };
             $(inputMarkup).on('input', function() {
                 if (formElem.__autocompleteTimeout) {
                     clearTimeout(formElem.__autocompleteTimeout);
@@ -725,12 +733,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // item that is exactly the same as the input text.
                                     formElem.__noblur = false;                                
                                 } else {
-                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', function() {
-                                        autoCompleteList.empty();
-                                        autoCompleteList.hide();
-                                        formElem.__noblur = false;
+                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function() {
+                                        this.dismissAutoComplete();
                                         return false;
-                                    }).appendTo(autoCompleteList);
+                                    }, formElem)).appendTo(autoCompleteList);
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
