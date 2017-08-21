@@ -332,6 +332,7 @@
             if (this.isSplitView()) {
                 var rightDiv = this.__rightStack.pop();
                 $(this.__right).hide();
+                this.__rightStack.push(this.__right);
                 if (this.options.onPopRight) {
                     this.options.onPopRight($(this.__right));
                 }

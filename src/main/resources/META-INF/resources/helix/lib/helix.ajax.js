@@ -408,6 +408,7 @@ Helix.Ajax = {
         } else {
             loaderOptions.silent = false;
         }
+        Helix.Ajax.loadOptions = loaderOptions;
         return loaderOptions;
     },
 

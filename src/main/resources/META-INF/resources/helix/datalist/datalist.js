@@ -1058,7 +1058,7 @@
                 displayCollection = _self._resetGlobalFilters(list);
             }
             var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
-            _self._refreshData(function () {
+            _self._refreshData(function () {                
                 if (selectedID) {
                     _self.setSelected(_self.$listWrapper.find('li[data-id="' + selectedID + '"]'));
                 } else {
@@ -1490,9 +1490,8 @@
             }
 
             _self.refreshInProgress = true;
-
-            if (extraItems !== undefined) {
-                _self.extraItems = extraItems;
+            if (!extraItems) {
+                extraItems = _self.extraItems;
             }
 
             if (_self.options.headerText) {
@@ -1544,7 +1543,7 @@
                     }, 0);
                 }
                 _self._preloadPage(1); // Preload the next page of data from the DB.
-            }, _options.emptyMessage, oncomplete, noPaginate, _self.extraItems, _options);
+            }, _options.emptyMessage, oncomplete, noPaginate, extraItems, _options);
         },
         hasIndexedSearch: function () {
             if (this.options.indexedSearch) {
@@ -1582,7 +1581,7 @@
             _self.nRendered = 0;
             var LIs = [];
             var groupsToRender = [];
-            if (_self.options.grouped) {
+            if (_options.grouped) {
                 LIs = $(_self.$parent).find('li[data-role="list-divider"]');
                 // Remove any list rows that appear before the first divider, or the divider list is empty, remove the entire list.
                 // In a grouped list, we only rewrite the divider titles and the rows that lie in between dividers. This scenario can
@@ -1600,7 +1599,7 @@
 
             /* Functions used in processing each item. */
             var __processRow = function (curRow) {
-                if (_self.options.grouped) {
+                if (_options.grouped) {
                     groupsToRender.push(curRow);
                 } else {
                     if (_self.nRendered >= _self._itemsPerPage) {
@@ -1610,7 +1609,7 @@
                     ++rowIndex;
                     if (_self._renderSingleRow(LIs, rowIndex - 1, _self._itemsPerPage, curRow, function () {
                         // Nothing to do.
-                    })) {
+                    }, false, _options)) {
                         ++_self.nRendered;
                         return true;
                     }
@@ -1647,13 +1646,13 @@
                 if (_self._renderSingleRow(LIs, groupIndex, _self._itemsPerPage, nxt, function () {
                     ++_self.nRendered;
                     __renderGroup(groupIndex + 1);
-                })) {
+                }, true, _options)) {
                 }
             };
 
             var __processDone = function (count, startIdx) {
                 var _ridx;
-                if (!_self.options.grouped) {
+                if (!_options.grouped) {
                     /* We did not render any rows. Call completion. */
                     if (!startIdx) {
                         startIdx = _self.nRendered;
@@ -2096,10 +2095,10 @@
             }
             return displayCollection;
         },
-        _renderSingleRow: function (LIs, rowIndex, itemsPerPage, curRow, oncomplete) {
+        _renderSingleRow: function (LIs, rowIndex, itemsPerPage, curRow, oncomplete, isGrouped, _options) {
             var _self = this;
             var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
-            if (_self.options.grouped) {
+            if (isGrouped) {
                 var __renderEmptyGroup = function (dividerLI) {
                     // Hide all elements in this group index.
                     _self.$parent.find('li[data-group="' + rowIndex + '"]').hide();
@@ -2449,7 +2448,7 @@
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
                     }
-                    _self.options.holdAction(_self.selected, _self.selectedGroup, _self.options.strings);
+                    _self.options.holdAction.call(_self, _self.selected, _self.selectedGroup, _self.options.strings);
                     _self._cancelNextTap = true;
 
                     event.stopImmediatePropagation();
@@ -2669,7 +2668,7 @@
             if (this.options.grouped) {
                 this.selectedGroup = $(enclosingLI).data('group');
             }
-            if (this.options.grouped) {
+            if (this.selectedGroup) {
                 var isOverflow = $(enclosingLI).attr('data-overflow');
                 if (Number(isOverflow) === 1) {
                     // Overflow
@@ -2864,14 +2863,14 @@
                         var hdr = $('<h3 />')
                                 .attr('data-role', 'itemheader')
                                 .text(Helix.Utils.escapeQuotes(rowComponents.header));
-                        bodyParent.append(hdr);
+                        bodyParent.prepend(hdr);
                     }
                 } else {
                     var hdr = rowComponents.header.attr('data-role', 'itemheader');
                     if (headerMarkup /*headerMarkup.length*/) {
                         headerMarkup.replaceWith(hdr).show();
                     } else {
-                        bodyParent.append(hdr);
+                        bodyParent.prepend(hdr);
                     }
                 }
             } else if (headerMarkup) {
@@ -2963,7 +2962,7 @@
             if (!this.selected) {
                 this.selectFirst();
             }
-            this.options.holdAction(this.selected, this.selectedGroup, this.strings);
+            this.options.holdAction.call(this, this.selected, this.selectedGroup, this.strings);
         },
         /* Display sort and filter menus. */
         displaySortMenu: function (selector) {
@@ -3178,6 +3177,23 @@
             return this.$headerSection;
         },
         /**
+         * Overlay content on top of the header section.
+         */
+        overlayHeader: function(markup) {
+            this.restoreHeaderMarkup = this.$headerSection.children();
+            this.restoreHeaderMarkup.detach();
+            this.$headerSection.append(markup);
+        },
+        
+        restoreHeader: function() {
+            if (this.restoreHeaderMarkup) {
+                this.$headerSection.empty();
+                this.$headerSection.append(this.restoreHeaderMarkup);
+                this.restoreHeaderMarkup = null;
+            }
+        },
+        
+        /**
          * Return the options object.
          */
         getOptions: function () {
@@ -3211,7 +3227,7 @@
                 if (finalCompletion) {
                     finalCompletion();
                 }
-                //_self.$parent.listview("refresh");
+                _self._refreshDividers();
             }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
         },
 
