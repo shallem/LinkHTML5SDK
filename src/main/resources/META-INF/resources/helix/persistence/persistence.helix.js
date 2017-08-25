@@ -1101,10 +1101,10 @@ function initHelixDB() {
             overrides,
             oncomplete,
             opaque) {
-            Helix.DB.synchronizeObjectFields(allSchemas, obj, null, elemSchema, function(finalObj) {
+            Helix.DB.synchronizeObjectFields(allSchemas, obj, null, elemSchema, function(finalObj, _opaque) {
                 queryCollection.add(finalObj);
-                oncomplete(finalObj, opaque);
-            }, overrides);
+                oncomplete(finalObj, _opaque);
+            }, overrides, opaque);
         },
     
         synchronizeQueryCollection: function(allSchemas,
@@ -1249,12 +1249,12 @@ function initHelixDB() {
             //elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) {
             var toUpdateObj = new elemSchema();
             toUpdateObj.markPersistent(persistentObjID);
-            Helix.DB.synchronizeObjectFields(allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj) {
+            Helix.DB.synchronizeObjectFields(allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj, _opaque) {
                 if (overrides.updateHook) {
                     overrides.updateHook(newObj);
                 }
-                oncomplete(newObj, opaque);
-            }, overrides);
+                oncomplete(newObj, _opaque);
+            }, overrides, opaque);
             //});
         },
     
@@ -1309,11 +1309,11 @@ function initHelixDB() {
                        if (objId) {
                            Helix.DB.updateOneObject(allSchemas,objId,updatedObj,keyField,toUpdateKey,elemSchema,function(pObj,_args) {
                                 updateDone(_args);
-                               //syncFn(uidToEID);
-                               //syncFn(pObj);
                            },overrides,args);
                        } else {
-                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,syncFn,args);
+                           Helix.DB.addObjectToQueryCollection(allSchemas,updatedObj,elemSchema,parentCollection,overrides,function(pObj,_args) {
+                                syncFn(_args);
+                           },args);
                        }
                     }
                 } else {

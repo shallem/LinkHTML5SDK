@@ -51,8 +51,9 @@
             //clear previous messages
             if (this._timeout) {
                 // Before we clear the old timeout, invoke the action (not the undo ...)
-                doAction.apply(this, this.__doActionArgs);
                 clearTimeout(this._timeout);
+                this._timeout = 0;
+                doAction.apply(this, this.__doActionArgs);
             }
             this.removeAll();
 
@@ -106,6 +107,8 @@
                 _self.removeAll();
                 undoAction.apply(_self, ev.data[1]);
                 clearTimeout(ev.data[0]);
+                _self._timeout = 0;
+
                 ev.stopImmediatePropagation();
                 return false;
             });
@@ -117,6 +120,7 @@
             this.__doActionArgs = args;
             var timeout = setTimeout(function() {
                 _self.removeAll();
+                _self._timeout = 0;
                 doAction.apply(_self, args);
             }, lifetime);
 
