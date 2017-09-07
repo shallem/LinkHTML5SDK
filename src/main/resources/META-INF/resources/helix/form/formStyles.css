@@ -102,6 +102,7 @@
     margin-right: 0;
     width: auto;
     line-height: 1;
+    -webkit-user-select: none !important;
 }
 
 .hx-form-container .ui-field-contain label.ui-input-text .ui-btn {
@@ -318,6 +319,7 @@ textarea.ui-input-text {
     border-radius: 0px;
     padding: 0;
     display: block;
+    -webkit-user-select: none !important;
 }
 
 .hx-collapsible-button {
@@ -349,4 +351,5 @@ textarea.ui-input-text {
 
 .buttonBarMaster.buttonbar {
     margin: 0;
+    -webkit-user-select: none !important;
 }

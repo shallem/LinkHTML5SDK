@@ -56,6 +56,9 @@ public class ContextMenuRenderer extends CoreRenderer {
         if (menu.getBeforeOpen() != null) {
             writer.write(",beforeopen: " + menu.getBeforeOpen());
         }
+        if (menu.getAfterClose() != null) {
+            writer.write(",afterclose: " + menu.getAfterClose());
+        }
         if (menu.getTheme() != null) {
             writer.write(",theme: '" + menu.getTheme() + "'");
         }

@@ -16,27 +16,29 @@ import org.primefaces.renderkit.CoreRenderer;
  */
 public class ContextMenuItemRenderer extends CoreRenderer {
     /*@Override
-    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        ContextMenuItem item = (ContextMenuItem) component; 
-        writer.startElement("li", item);
-        writer.startElement("a", null);
-        writer.writeAttribute("href", "javascript:void(0);", null);
-        writer.writeAttribute("onclick", item.getOntap(), null);
-        writer.write((String)item.getValue());
-    }*/
+     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+     ResponseWriter writer = context.getResponseWriter();
+     ContextMenuItem item = (ContextMenuItem) component; 
+     writer.startElement("li", item);
+     writer.startElement("a", null);
+     writer.writeAttribute("href", "javascript:void(0);", null);
+     writer.writeAttribute("onclick", item.getOntap(), null);
+     writer.write((String)item.getValue());
+     }*/
 
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-        ContextMenuItem item = (ContextMenuItem) component; 
+        ContextMenuItem item = (ContextMenuItem) component;
         String itemType = item.getType();
-        
+
         /*writer.endElement("a");
-        writer.endElement("li");*/
+         writer.endElement("li");*/
         writer.write("{");
         writer.write("'display' : '" + item.getValue() + "'");
-        writer.write(",'action' : " + item.getOntap());
+        if (item.getOntap() != null) {
+            writer.write(",'action' : " + item.getOntap());
+        }
         writer.write(",'enabled' : " + Boolean.toString(item.isEnabled()));
         writer.write(",'name' : '" + item.getClientId(context) + "'");
         writer.write(",type: '" + itemType + "'");
@@ -62,15 +64,15 @@ public class ContextMenuItemRenderer extends CoreRenderer {
             }
             writer.write("]");
         }
-        
+
         writer.write("}");
     }
-    
+
     @Override
     public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
         //Rendering happens on encodeEnd
     }
-    
+
     @Override
     public boolean getRendersChildren() {
         return true;

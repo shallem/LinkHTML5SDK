@@ -191,5 +191,11 @@
 }
 
 .ui-loader h1 {
-    word-break: break-all;
+    word-break: break-word;
+}
+
+div.ui-input-text input.ui-input-text, 
+div.ui-input-text textarea.ui-input-text,
+.ui-input-search input.ui-input-text {
+    -webkit-user-select: text !important;
 }

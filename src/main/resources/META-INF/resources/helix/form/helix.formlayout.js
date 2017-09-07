@@ -25,22 +25,22 @@ function __mkTZOption(tzOffsetHours, curTime, text, val) {
     // Determine if the current time is in this time zone.
     var selected = false;
     if (Helix.Utils.isString(curTime)) {
-        selected = (curTime === val);    
+        selected = (curTime === val);
     } else {
         var tzOffset = tzOffsetHours * 60;
         if ((-tzOffset) == curTime.getTimezoneOffset()) {
             selected = true;
-        }        
+        }
     }
 
     var tzO = $('<option />').attr({
         value: val,
-        'data-offset' : tzOffsetHours
+        'data-offset': tzOffsetHours
     }).append(text);
     if (selected) {
         tzO.attr("selected", true);
     }
-    
+
     return tzO;
 }
 
@@ -63,20 +63,20 @@ function __getTZSelect(tabIndex, name, id, curTime) {
     } else if (!Helix.Utils.isString(curTime)) {
         date = new Date(curTime);
     }
-    
+
     var tzSelect = $('<select />').attr({
-        'name' : name,
-        'id' : id,
-        'tabIndex' : tabIndex
+        'name': name,
+        'id': id,
+        'tabIndex': tabIndex
     });
     __mkTZOption(-12.0, date, "(GMT -12:00) Eniwetok, Kwajalein", "ENIWETOK").appendTo(tzSelect);
     __mkTZOption(-11.0, date, "(GMT -11:00) Midway Island, Samoa", "MIDWAY_ISLAND").appendTo(tzSelect);
     __mkTZOption(-10.0, date, "(GMT -10:00) Hawaii", "HAWAII").appendTo(tzSelect);
-    
+
     if (date.dst()) {
         __mkTZOption(-8.0, date, "(GMT -8:00) Alaska Daylight Time", "ALASKA").appendTo(tzSelect);
         __mkTZOption(-7.0, date, "(GMT -7:00) Pacific Daylight Time (US &amp; Canada)", "PACIFIC").appendTo(tzSelect);
-        __mkTZOption(-6.0, date, "(GMT -6:00) Mountain Daylight Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);              
+        __mkTZOption(-6.0, date, "(GMT -6:00) Mountain Daylight Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);
         __mkTZOption(-5.0, date, "(GMT -5:00) Central Daylight Time (US &amp; Canada), Mexico City", "CENTRAL").appendTo(tzSelect);
         __mkTZOption(-4.5, date, "(GMT -4:30) Venezuela Standard Time, Caracas", "CARACAS").appendTo(tzSelect);
         __mkTZOption(-4.0, date, "(GMT -4:00) Eastern Daylight Time (US &amp; Canada), Bogota, Lima", "EASTERN").appendTo(tzSelect);
@@ -86,7 +86,7 @@ function __getTZSelect(tabIndex, name, id, curTime) {
     } else {
         __mkTZOption(-9.0, date, "(GMT -9:00) Alaska", "ALASKA").appendTo(tzSelect);
         __mkTZOption(-8.0, date, "(GMT -8:00) Pacific Time (US &amp; Canada)", "PACIFIC").appendTo(tzSelect);
-        __mkTZOption(-7.0, date, "(GMT -7:00) Mountain Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);        
+        __mkTZOption(-7.0, date, "(GMT -7:00) Mountain Time (US &amp; Canada)", "MOUNTAIN").appendTo(tzSelect);
         __mkTZOption(-6.0, date, "(GMT -6:00) Central Time (US &amp; Canada), Mexico City", "CENTRAL").appendTo(tzSelect);
         __mkTZOption(-5.0, date, "(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima", "EASTERN").appendTo(tzSelect);
         __mkTZOption(-4.5, date, "(GMT -4:30) Venezuela Standard Time, Caracas", "CARACAS").appendTo(tzSelect);
@@ -146,7 +146,7 @@ function __refreshDate(mode, formElem) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
         if (formElem.type === 'date' ||
-            formElem.type === 'exactdate') {
+                formElem.type === 'exactdate') {
             newDateStr = newDateStr.substring(0, 10);
         }
         $(thisField).val(newDateStr);
@@ -160,7 +160,7 @@ function __refreshDate(mode, formElem) {
         var selector = 'span' + dataNameAttr + ',div' + dataNameAttr;
         if (formElem.value) {
             if (formElem.type === 'date' ||
-                formElem.type === 'exactdate') {
+                    formElem.type === 'exactdate') {
                 if (formElem.type === 'date') {
                     var dateMarkup = $('<a />').attr({
                         'title': displayDate.toISOString()
@@ -192,15 +192,15 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
 
         /* Edit */
         var dateDiv = $('<div />').attr({
-            'style' : formLayout.computedFieldStyle,
-            'class' : 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
+            'style': formLayout.computedFieldStyle,
+            'class': 'ui-field-contain ui-body ui-br ' + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
-        .append($('<label />').attr({
-            'for' : formElem.name,
-            'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
-            })
-            .append(formElem.fieldTitle)
-        );
+                .append($('<label />').attr({
+                    'for': formElem.name,
+                    'class': 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
+                })
+                        .append(formElem.fieldTitle)
+                        );
         var inputType;
         var valueString;
         var stepStr = formElem.dateStep ? formElem.dateStep : '300';
@@ -208,7 +208,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             // Date and time
             inputType = 'datetime-local';
         } else if (formElem.type === 'date' ||
-                   formElem.type === 'exactdate') {
+                formElem.type === 'exactdate') {
             inputType = 'date';
         } else {
             // Just date
@@ -220,9 +220,9 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         dateInput = $('<input />').attr({
             'name': formElem.name,
             'id': inputID,
-            'data-role' : 'none',
-            'type' : inputType,
-            'step' : stepStr
+            'data-role': 'none',
+            'type': inputType,
+            'step': stepStr
         }).appendTo(inputWrapper);
         if (formElem.onfocus) {
             dateInput.focus(formElem.onfocus);
@@ -241,7 +241,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         }
         var dateMarkup;
         if (formElem.type === 'date' ||
-            formElem.type === 'exactdate') {
+                formElem.type === 'exactdate') {
             if (displayDate && formElem.type === 'date') {
                 dateMarkup = $('<a />').attr({
                     'title': displayDate.toISOString()
@@ -251,15 +251,15 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             }
             if (formElem.fieldTitle) {
                 dateInput = $('<span/>').attr({
-                    'style' : formElem.computedStyle,
-                    'class' : formElem.computedStyleClass,
-                    'data-name' : formElem.name
-                }).text(" " + $(dateMarkup).text()); 
+                    'style': formElem.computedStyle,
+                    'class': formElem.computedStyleClass,
+                    'data-name': formElem.name
+                }).text(" " + $(dateMarkup).text());
             } else {
                 dateInput = $('<div />').attr({
-                    'style' : formElem.computedStyle,
-                    'class' : formElem.computedStyleClass,
-                    'data-name' : formElem.name
+                    'style': formElem.computedStyle,
+                    'class': formElem.computedStyleClass,
+                    'data-name': formElem.name
                 }).text($(dateMarkup).text());
             }
             formElem.DOM.append(dateInput);
@@ -269,7 +269,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 dateInput.attr('style', formElem.computedStyle);
             }
             if (formElem.computedStyleClass) {
-                dateInput.addClass(formElem.computedStyleClass); 
+                dateInput.addClass(formElem.computedStyleClass);
             }
             if (formElem.fieldTitle) {
                 formElem.DOM.append(dateInput);
@@ -280,7 +280,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
     }
     if (formLayout.textStyleClass || formElem.textStyleClass) {
         dateInput.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
-    }     
+    }
 }
 
 function __refreshTZSelector(mode, formElem) {
@@ -290,13 +290,13 @@ function __refreshTZSelector(mode, formElem) {
         var tzOffsetHours = -(curTime.getTimezoneOffset() / 60.0);
         formElem.value = $(formElem.DOM).find('option[data-offset="' + tzOffsetHours + '"]').attr('value');
     }
-    
+
     if (mode) {
-        $(formElem.DOM).find('option').prop({ selected : false });
-        $(formElem.DOM).find('option[value="' + formElem.value + '"]').prop({ selected : true });
+        $(formElem.DOM).find('option').prop({selected: false});
+        $(formElem.DOM).find('option[value="' + formElem.value + '"]').prop({selected: true});
         $(formElem.DOM).find('select').selectmenu('refresh');
     } else {
-        $('p[data-name="'+ formElem.name + '"]').empty().append(formElem.value);
+        $('p[data-name="' + formElem.name + '"]').empty().append(formElem.value);
     }
 }
 
@@ -320,26 +320,26 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         }
         var inputID = Helix.Utils.getUniqueID();
         var dateDiv = $('<div />').attr({
-            'data-role' : 'fieldcontain',
-            'style' : formLayout.computedFieldStyle,
-            'class' : 'hx-tz-selector ' + (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'data-role': 'fieldcontain',
+            'style': formLayout.computedFieldStyle,
+            'class': 'hx-tz-selector ' + (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
-        .append($('<label />').attr({
-            'for' : inputID,
-            'style' : labelWidthOverride,
-            'class' : 'ui-input-text ' + formLayout.titleStyleClass
-            })
-            .append(formElem.fieldTitle)
-        );
-        
+                .append($('<label />').attr({
+                    'for': inputID,
+                    'style': labelWidthOverride,
+                    'class': 'ui-input-text ' + formLayout.titleStyleClass
+                })
+                        .append(formElem.fieldTitle)
+                        );
+
         var tzSelect = __getTZSelect(formLayout.__tabIndex++, formElem.name, inputID, defaultValue).appendTo(dateDiv);
         if (formElem.onchange) {
-            $(tzSelect).change(function() {
+            $(tzSelect).change(function () {
                 var newVal = $(this).find("option:selected");
                 formElem.onchange.call(this, newVal.val(), newVal);
             });
         }
-        
+
         // 'value' : defaultValueText,
         $fieldContainer.append(dateDiv);
         tzSelect.selectmenu({
@@ -353,7 +353,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
                 uiSelect.attr('style', formElem.computedStyle);
             }
             if (formElem.computedStyleClass) {
-                uiSelect.addClass(formElem.computedStyleClass); 
+                uiSelect.addClass(formElem.computedStyleClass);
             }
         }
 
@@ -364,7 +364,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
 
 function __refreshTextArea(mode, formElem) {
     if (mode) {
-        var $input = $(formElem.DOM).find('textarea[name="'+formElem.name+'"]');
+        var $input = $(formElem.DOM).find('textarea[name="' + formElem.name + '"]');
         $input.val(formElem.value);
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
@@ -383,13 +383,13 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
     if (!formElem.value) {
         formElem.value = "";
     }
-    
+
     if (!formElem.name) {
         /* No field name. We cannot use this field in a form layout. */
         console.log("Cannot use a text area field with no name in a form layout.");
         return;
     }
-    
+
     var inputMarkup;
     if (mode) {
         /* Edit */
@@ -404,28 +404,28 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
-            'id' : inputID,
+            'id': inputID,
             'style': computedStyle,
-            'class' : formElem.computedStyleClass,
-            'tabindex' : formLayout.__tabIndex++
+            'class': formElem.computedStyleClass,
+            'tabindex': formLayout.__tabIndex++
         }).append(formElem.value);
         var lbl = $('<label />').attr({
-            'for' : inputID,
-            'class' : formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
-            })
-        .append(formElem.fieldTitle);
+            'for': inputID,
+            'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
+        })
+                .append(formElem.fieldTitle);
         if (!formElem.fieldTitle) {
             lbl.hide();
         }
 
         var textContainer = $('<div />').attr({
-            'data-role' : 'fieldcontain',
-            'style' : formLayout.computedFieldStyle,
-            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'data-role': 'fieldcontain',
+            'style': formLayout.computedFieldStyle,
+            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
         })
-        .append(lbl)
-        .append(inputMarkup);
-        
+                .append(lbl)
+                .append(inputMarkup);
+
         $fieldContainer.append(textContainer);
         textContainer.fieldcontain();
         $(inputMarkup).textinput();
@@ -433,19 +433,19 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             $(formElem.fieldTitle).button();
         }
         if (formElem.onblur) {
-            $(inputMarkup).blur(function() {
+            $(inputMarkup).blur(function () {
                 formElem.onblur.apply(this);
             });
         }
         if (formElem.onchange) {
-            $(inputMarkup).change(function() {
+            $(inputMarkup).change(function () {
                 formElem.onchange.call(this, formElem);
             });
         }
         if (formElem.onfocus) {
             $(inputMarkup).focus(formElem.onfocus);
         }
-        $(inputMarkup).on('input', function() {
+        $(inputMarkup).on('input', function () {
             $(this).trigger('change');
         });
     } else {
@@ -457,7 +457,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         $fieldContainer.append(inputMarkup);
     }
     if (formElem.onclick) {
-        $(inputMarkup).on('vclick', function(ev) {
+        $(inputMarkup).on('vclick', function (ev) {
             ev.stopImmediatePropagation();
             formElem.onclick.call(formElem, ev);
             return false;
@@ -474,12 +474,12 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     if ($fieldContainer) {
         $fieldContainer.empty();
     }
-    
+
     var inputID = Helix.Utils.getUniqueID();
     var inputMarkup = $('<select />').attr({
         'name': formElem.name,
-        'id' : inputID,
-        'tabindex' : formElem.tabIndex
+        'id': inputID,
+        'tabindex': formElem.tabIndex
     });
     if (formElem.computedWidth) {
         $(inputMarkup).attr('width', formElem.computedWidth);
@@ -503,17 +503,17 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
 
     if (formElem.fieldTitle) {
         var selectContainer = $('<div />').attr({
-            'data-role' : 'fieldcontain',
-            'style' : formElem.computedStyle,
-            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
+            'data-role': 'fieldcontain',
+            'style': formElem.computedStyle,
+            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
         })
-        .append($('<label />').attr({
-            'for' : inputID,
-            'class' : formLayout.titleStyleClass
-            })
-            .append(formElem.fieldTitle)
-        )
-        .append(inputMarkup);
+                .append($('<label />').attr({
+                    'for': inputID,
+                    'class': formLayout.titleStyleClass
+                })
+                        .append(formElem.fieldTitle)
+                        )
+                .append(inputMarkup);
         $fieldContainer.append(selectContainer);
         selectContainer.fieldcontain();
         if (formElem.selectWidth) {
@@ -534,7 +534,7 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
         $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
     }
     if (formElem.onchange) {
-        $(inputMarkup).change(function() {
+        $(inputMarkup).change(function () {
             formElem.onchange.call(this, formElem);
         });
     }
@@ -551,9 +551,9 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
         if (!formElem.options) {
             return;
         }
-        
+
         formElem.tabIndex = formLayout.__tabIndex++;
-            
+
         __refreshSelectMenu(formLayout, formElem, useMiniLayout);
     } else {
         __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
@@ -562,7 +562,7 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
 
 function __refreshTextBox(mode, formElem) {
     if (mode && !formElem.viewOnly) {
-        var $input = $(formElem.DOM).find('input[name="'+formElem.name+'"]');
+        var $input = $(formElem.DOM).find('input[name="' + formElem.name + '"]');
         $input.val(formElem.value);
         if (formElem.autocompleteList) {
             formElem.autocompleteList.hide();
@@ -584,7 +584,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
     if (!formElem.value) {
         formElem.value = "";
     }
-    
+
     var inputMarkup = null;
     if (mode && !formElem.viewOnly) {
         /* Edit */
@@ -601,26 +601,26 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         var capitalization = (formElem.autocapitalize ? formElem.autocapitalize : 'sentences');
         formElem.inputMarkup = inputMarkup = $('<input />').attr({
             'name': formElem.name,
-            'id' : inputID,
+            'id': inputID,
             'type': formElem.dataType,
             'value': (formElem.value),
-            'tabindex' : formLayout.__tabIndex++,
-            'autocapitalize' : capitalization
+            'tabindex': formLayout.__tabIndex++,
+            'autocapitalize': capitalization
         });
-        
+
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
         var textContainer = $('<div />').attr({
-            'data-role' : 'fieldcontain',
-            'style' : formLayout.computedFieldStyle,
-            'class' : (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass
+            'data-role': 'fieldcontain',
+            'style': formLayout.computedFieldStyle,
+            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass
         })
-        .append($('<label />').attr({
-            'for' : inputID,
-            'class' : formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
-            })
-            .append(formElem.fieldTitle)
-        )
-        .append(inputMarkup);
+                .append($('<label />').attr({
+                    'for': inputID,
+                    'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
+                })
+                        .append(formElem.fieldTitle)
+                        )
+                .append(inputMarkup);
         $fieldContainer.append(textContainer);
         if (formElem.computedStyleClass) {
             $fieldContainer.addClass(formElem.computedStyleClass);
@@ -632,20 +632,20 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         if (formElem.width && formElem.type === 'search') {
             $(inputMarkup).parent('.ui-input-search').width(formElem.width);
         }
-        
+
         if (formElem.fieldTitleType === 'button') {
             $(formElem.fieldTitle).button();
             $(formElem.fieldTitle).addClass('hx-btn-inlabel');
         }
         if (formElem.onblur) {
-            $(inputMarkup).blur(function() {
+            $(inputMarkup).blur(function () {
                 if (!formElem.__noblur) {
                     formElem.onblur.apply(this);
                 }
             });
         }
         if (formElem.onchange) {
-            $(inputMarkup).on('input', function() {
+            $(inputMarkup).on('input', function () {
                 formElem.onchange.call(this, formElem);
             });
         }
@@ -666,7 +666,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 }
             }, formElem));
         }
-        
+
         // Apply styling to the input text div ...
         if (formElem.computedStyle || formElem.computedStyleClass) {
             var uiInputText = textContainer.find('div.ui-input-text');
@@ -677,7 +677,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 $(uiInputText).addClass(formElem.computedStyleClass);
             }
         }
-        
+
         // Add in autocomplete.
         if (formElem.autocomplete && formElem.autocompleteSelect) {
             if (formElem.autocompleteThreshold === undefined) {
@@ -689,24 +689,24 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
-                                             .css('width', '90%')
-                                             //.css('position', 'absolute')
-                                             .css('max-height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
-                                             .css('overflow-y', 'scroll')
-                                             .css('display', 'none')
-                                             .css('background-color', '#f9f9f9')
-                                             .appendTo($fieldContainer).listview({ inset : true });
+                    .css('width', '90%')
+                    //.css('position', 'absolute')
+                    .css('max-height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                    .css('overflow-y', 'scroll')
+                    .css('display', 'none')
+                    .css('background-color', '#f9f9f9')
+                    .appendTo($fieldContainer).listview({inset: true});
             formElem.autocompleteList = autoCompleteList;
-            formElem.dismissAutoComplete = function() {
+            formElem.dismissAutoComplete = function () {
                 this.autocompleteList.empty();
                 this.autocompleteList.hide();
                 this.__noblur = false;
             };
-            $(inputMarkup).on('input', function() {
+            $(inputMarkup).on('input', function () {
                 if (formElem.__autocompleteTimeout) {
                     clearTimeout(formElem.__autocompleteTimeout);
                 }
-                
+
                 var text = $(this).val();
                 var _self = $(this);
                 if (text.length < formElem.autocompleteThreshold) {
@@ -714,13 +714,13 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                     autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
-                    var __doAutocomplete = function() {
-                        formElem.autocomplete.call(formElem, text, function(LIs, queryText) {
+                    var __doAutocomplete = function () {
+                        formElem.autocomplete.call(formElem, text, function (LIs, queryText) {
                             if (queryText !== _self.val()) {
                                 // The user has changed the text further since we ran this query.
                                 return;
                             }
-                            
+
                             // Set __noblur to prevent the user's clicking on an autocomplete list
                             // item from triggering a blur event, which doesn't make sense because
                             // the value supplied to the blur event should be the value clicked upon,
@@ -731,16 +731,16 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                 if (LIs.length === 1 && LIs[0] === _self.val()) {
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
-                                    formElem.__noblur = false;                                
+                                    formElem.__noblur = false;
                                 } else {
-                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function() {
+                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function () {
                                         this.dismissAutoComplete();
                                         return false;
                                     }, formElem)).appendTo(autoCompleteList);
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function() {
+                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function () {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem);
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
@@ -768,30 +768,30 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             }
                         });
                     };
-                    
+
                     // Wait 1 second for the user to pause typing before we do anything.
-                    formElem.__autocompleteTimeout = setTimeout(function() {
+                    formElem.__autocompleteTimeout = setTimeout(function () {
                         __doAutocomplete();
-                    }, formElem.autocompleteTimeout * 1000);                    
+                    }, formElem.autocompleteTimeout * 1000);
                 }
             });
         }
     } else {
-        var hasTitle = formElem.fieldTitle && (typeof formElem.fieldTitle === "string"); 
+        var hasTitle = formElem.fieldTitle && (typeof formElem.fieldTitle === "string");
         if (hasTitle && mode) {
             inputMarkup = $('<div/>').attr({
-                'data-name' : formElem.name,
-                'id' : formElem.name,
-                'class' : 'ui-input-text hx-full-width'
+                'data-name': formElem.name,
+                'id': formElem.name,
+                'class': 'ui-input-text hx-full-width'
             }).append(formElem.value);
             var valSpan = $('<div/>').attr({
                 'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + 'ui-field-contain ui-body ui-br'
             })
-            .append($('<label/>').attr({
-                'for' : formElem.name,
-                'class' : 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
-            }).append(formElem.fieldTitle))
-            .append(inputMarkup);
+                    .append($('<label/>').attr({
+                        'for': formElem.name,
+                        'class': 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
+                    }).append(formElem.fieldTitle))
+                    .append(inputMarkup);
             if (formElem.computedStyle) {
                 valSpan.attr('style', formElem.computedStyle);
             }
@@ -801,7 +801,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             $fieldContainer.append(valSpan);
         } else {
             inputMarkup = $('<span />').attr({
-                'data-name' : formElem.name
+                'data-name': formElem.name
             }).text(' ' + formElem.value);
             if (!mode && hasTitle) {
                 inputMarkup.addClass('ui-input-text');
@@ -816,7 +816,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         }
     }
     if (formElem.onclick) {
-        $(inputMarkup).on('vclick', function(ev) {
+        $(inputMarkup).on('vclick', function (ev) {
             ev.stopImmediatePropagation();
             formElem.onclick.call(formElem, ev);
             return false;
@@ -833,19 +833,19 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         console.log("Invalid checkbox in form layout. No field name specified.");
         return null;
     }
-    
+
     var type = 'checkbox';
     if (formElem.type === 'radio') {
         type = 'radio';
     }
-    
+
     var inputID = Helix.Utils.getUniqueID();
     var inputMarkup = $('<input/>').attr({
         'name': formElem.name,
-        'id' : inputID,
-        'type' : type,
-        'tabindex' : -1,
-        'data-corners' : 'false'
+        'id': inputID,
+        'type': type,
+        'tabindex': -1,
+        'data-corners': 'false'
     });
     var lbl = $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
     if (formLayout.textStyleClass || formElem.textStyleClass) {
@@ -853,19 +853,19 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     $(inputMarkup).appendTo($fieldContainer);
     __refreshControl(formElem, true);
-    $(inputMarkup).checkboxradio({ 
+    $(inputMarkup).checkboxradio({
         mini: useMiniLayout
     });
     $fieldContainer.find('label').removeClass('ui-btn-corner-all');
     if (formElem.onchange) {
-        $(inputMarkup).change(function() {
+        $(inputMarkup).change(function () {
             formElem.onchange.call(this, formElem);
         });
     }
     if (!mode) {
         /* View */
         $(inputMarkup).checkboxradio("disable");
-    }        
+    }
     return inputMarkup;
 }
 
@@ -876,10 +876,10 @@ function __refreshControl(subElem, noRefresh, mode) {
     } else {
         DOM = $(subElem.DOM).find('input');
     }
-    
+
     if (subElem.value) {
         if (typeof subElem.value === "boolean" &&
-            subElem.value) {
+                subElem.value) {
             $(DOM).prop('checked', true);
         } else if (subElem.value === "true") {
             $(DOM).prop('checked', true);
@@ -918,7 +918,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         console.log("Skipping radio button because it has no name.");
         return;
     }
-    
+
     var fieldMarkup = $('<div />').appendTo($fieldContainer);
     if (formElem.computedWidth) {
         fieldMarkup.css('width', formElem.computedWidth);
@@ -932,7 +932,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
-            'class' : formLayout.titleStyleClass
+            'class': formLayout.titleStyleClass
         }).append(formElem.fieldTitle));
     }
 
@@ -963,15 +963,15 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
             $(inputMarkup).attr('checked', 'true');
         }
         if (formElem.onchange) {
-            $(inputMarkup).change(function() {
+            $(inputMarkup).change(function () {
                 if ($(this).attr('checked') !== 'true') {
                     formElem.onchange($(this).attr('data-value'));
                 }
             });
         }
     }
-    $(wrapperMarkup).controlgroup({ 
-        mini : useMiniLayout,
+    $(wrapperMarkup).controlgroup({
+        mini: useMiniLayout,
         type: (formElem.direction ? formElem.direction : "horizontal")
     });
     $(fieldMarkup).fieldcontain();
@@ -990,7 +990,7 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
         console.log("Skipping on/off slider because it has no name.");
         return;
     }
-    
+
     var fieldMarkup = $('<div />').appendTo($fieldContainer);
     if (useMiniLayout) {
         $(fieldMarkup).addClass('hx-mini-fieldcontain');
@@ -1001,29 +1001,29 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
         fieldMarkup.append($('<label/>').addClass('ui-input-text').append(formElem.fieldTitle));
     }
 
-    if (mode) {        
+    if (mode) {
         var switchContainer = $('<div/>').addClass('hxonoff').appendTo(fieldMarkup);
         var switchInput = $('<input/>').attr({
-            'name' : formElem.name,
-            'type' : 'checkbox',
-            'class' : 'hxonoff-checkbox',
-            'id' : formElem.name
+            'name': formElem.name,
+            'type': 'checkbox',
+            'class': 'hxonoff-checkbox',
+            'id': formElem.name
         }).appendTo(switchContainer);
         if (formElem.onchange) {
-            switchInput.change(function() {
+            switchInput.change(function () {
                 formElem.onchange.call(this, formElem);
             });
         }
         if (formElem.value === true) {
             switchInput.prop('checked', true);
         }
-        
+
         switchContainer.append($('<label/>').attr({
             'class': 'hxonoff-label',
-            'for' : formElem.name
+            'for': formElem.name
         }).append($('<span/>').addClass('hxonoff-inner'))
                 .append($('<span/>').addClass('hxonoff-switch'))
-        );
+                );
     } else {
         fieldMarkup.append($('<div/>').append(formElem.value ? 'on' : 'off'));
     }
@@ -1031,8 +1031,8 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
 
 function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var fieldMarkup = $('<div />').attr({
-        'style' : 'width: auto'
-        /*'data-role' : 'fieldcontain'*/
+        'style': 'width: auto'
+                /*'data-role' : 'fieldcontain'*/
     }).appendTo($fieldContainer);
 
     if (useMiniLayout) {
@@ -1040,14 +1040,14 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     }
 
     var wrapperMarkup = $('<fieldset/>').attr({
-    /*    'data-role' : 'controlgroup',
-        'data-type' : 'horizontal',
-        'data-mini' : (useMiniLayout ? 'true' : 'false') */
+        /*    'data-role' : 'controlgroup',
+         'data-type' : 'horizontal',
+         'data-mini' : (useMiniLayout ? 'true' : 'false') */
     }).appendTo(fieldMarkup).addClass('hx-full-width');
 
     if (formElem.fieldTitle) {
         wrapperMarkup.append($('<legend/>').attr({
-            'class' : formLayout.titleStyleClass
+            'class': formLayout.titleStyleClass
         }).append(formElem.fieldTitle));
     }
 
@@ -1065,15 +1065,15 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
         subElem.DOM = inputMarkup;
     }
-    $(wrapperMarkup).controlgroup({ 
-        mini : useMiniLayout,
-        type: "horizontal" 
+    $(wrapperMarkup).controlgroup({
+        mini: useMiniLayout,
+        type: "horizontal"
     });
     $(fieldMarkup).fieldcontain();
     if (formLayout.textStyleClass) {
         $fieldContainer.find('.ui-btn-text').addClass(formLayout.textStyleClass);
     }
-    
+
     // After enhancement, hide any hidden controls
     for (i = 0; i < formElem.controls.length; ++i) {
         subElem = formElem.controls[i];
@@ -1102,25 +1102,25 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     var $buttonLink;
     if (formElem.iconClass) {
         $buttonLink = $('<a />').attr({
-            'class' : 'ui-btn iconbutton',
+            'class': 'ui-btn iconbutton',
             'id': formElem.id
         }).append($('<div/>').addClass('hx-btn-inner')
                 .append($('<div/>').addClass('hx-icon ui-icon-' + formElem.iconClass)));
     } else {
         $buttonLink = $('<a />').attr({
-            'data-role' : 'button',
-            'data-inline' : true,
-            'data-shadow' : formElem.shadow ? 'true' : 'false',
-            'data-theme' : formElem.theme ? formElem.theme : 'd',
-            'data-corners' : formElem.iconCorners ? 'true' : 'false',
+            'data-role': 'button',
+            'data-inline': true,
+            'data-shadow': formElem.shadow ? 'true' : 'false',
+            'data-theme': formElem.theme ? formElem.theme : 'd',
+            'data-corners': formElem.iconCorners ? 'true' : 'false',
             'id': formElem.id
         }).append(formElem.fieldTitle);
-        $buttonLink.buttonMarkup({ mini : useMiniLayout });
+        $buttonLink.buttonMarkup({mini: useMiniLayout});
     }
     if (formElem.computedWidth) {
         $buttonLink.width(formElem.computedWidth);
     }
-    
+
     if (formElem.href) {
         $buttonLink.attr('href', formElem.href);
     } else {
@@ -1128,7 +1128,7 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     }
     $buttonLink.appendTo($parent);
     if (formElem.onclick) {
-        $buttonLink.on('vclick', function(ev) {
+        $buttonLink.on('vclick', function (ev) {
             return formElem.onclick.call(this, ev);
         });
     }
@@ -1149,13 +1149,13 @@ function __refreshIFrame(formElem) {
         $frame.replaceWith(formElem.$frame);
         $frame = formElem.$frame;
     }
-    
+
     $frame.hide();
-    
+
     // Load the iframe document content
     var contentWindow = $frame[0].contentWindow;
     //contentWindow.scrollTo(0, 0);
-    
+
     var doc = contentWindow.document;
     doc.open();
     if (!formElem.noHTML) {
@@ -1172,11 +1172,11 @@ function __refreshIFrame(formElem) {
         } else {
             formElem.bodyStyle = ' ' + formElem.bodyStyle;
         }
-        doc.write('<body style="height: 100%;' + formElem.bodyStyle + '">');
+        doc.write('<body style="' + formElem.bodyStyle + '">');
     }
     /*if (formElem.isScroller) {
-        $(doc.body).css('overflow-y', 'scroll');
-    }*/
+     $(doc.body).css('overflow-y', 'scroll');
+     }*/
     doc.write(formElem.value);
     if (!formElem.noBody) {
         doc.write('</body>');
@@ -1185,9 +1185,9 @@ function __refreshIFrame(formElem) {
         doc.write('</html>');
     }
     if (formElem.onload) {
-        doc.body.onload = function() {
-            setTimeout(function() {
-                window[formElem.onload].call(window, frameID);            
+        doc.body.onload = function () {
+            setTimeout(function () {
+                window[formElem.onload].call(window, frameID);
             }, 250);
         };
     }
@@ -1195,7 +1195,7 @@ function __refreshIFrame(formElem) {
     if (!formElem.isScroller) {
         $(doc.body).parent().css('overflow', 'hidden');
     }
-    
+
     $frame.show();
 }
 
@@ -1203,10 +1203,10 @@ function __refreshHTMLFrame(formElem, mode) {
     if ($(formElem.editDOM).is(':visible') || mode === 1) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
-            $(elem).editor('update', ''); 
+            $(elem).editor('update', '');
         } else {
             $(elem).editor('update', formElem.value);
-        }        
+        }
     } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
         __refreshIFrame(formElem);
@@ -1230,16 +1230,19 @@ function __makeIFrameMarkup(formElem) {
     var onloadAttr = null; // (formElem.onload ? (' onload="' + formElem.onload + '(\'' + frameID + '\')"') : '');
 
     if (!formElem.height || (formElem.height === 'full')) {
-        iFrameMarkup = '<iframe id="' + frameID + 
-            '" src="javascript:true;"' +
-            iFrameWidth +
-            onloadAttr +
-            iFrameStyle + '>';
+        iFrameMarkup = '<iframe id="' + frameID +
+                '" src="javascript:true;"' +
+                iFrameWidth +
+                onloadAttr +
+                iFrameStyle +
+                (formElem.isSandboxed ? 'sandbox="allow-same-origin"' : '') + '>';
     } else {
         iFrameMarkup = '<iframe id="' + frameID + '" src="javascript:true;" height="' + formElem.height + '"' +
-            iFrameWidth +
-            onloadAttr +
-            iFrameStyle + '>';
+                iFrameWidth +
+                onloadAttr +
+                iFrameStyle +
+                (formElem.isSandboxed ? 'sandbox="allow-same-origin"' : '') +
+                '>';
     }
     return iFrameMarkup;
 }
@@ -1258,11 +1261,11 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.computedWidth) {
         $fieldContainer.width(formElem.computedWidth);
     }
-    
+
     if (!mode) {
         if (formElem.isScroller) {
             $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
-        }        
+        }
         var newFrameMarkup = __makeIFrameMarkup(formElem);
         formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
@@ -1277,14 +1280,14 @@ function __refreshButtonGroup(formElem) {
         return;
     }
     var $buttonBar = $(formElem.DOM).find('.buttonBarMaster').empty();
-    
+
     var formButton;
     var formButtonIdx;
     for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
         formButton = formElem.buttons[formButtonIdx];
         __makeButtonMarkup(formButton, formButton.mini, $buttonBar);
     }
-    $buttonBar.controlgroup({ 
+    $buttonBar.controlgroup({
         type: (formElem.orientation ? formElem.orientation : "horizontal"),
         shadow: (formElem.shadow ? true : false)
     });
@@ -1294,10 +1297,10 @@ function __refreshHTMLArea(formElem) {
     if ($(formElem.editDOM).is(':visible')) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
-            $(elem).editor('update', ''); 
+            $(elem).editor('update', '');
         } else {
             $(elem).editor('update', formElem.value);
-        }        
+        }
     } else if ($(formElem.viewDOM).is(':visible')) {
         var viewContainer = $(formElem.viewDOM).find('div[data-name="' + formElem.name + '"]').empty();
         viewContainer.append(formElem.value);
@@ -1308,7 +1311,7 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.computedWidth) {
         if (formElem.computedWidth === "100%") {
             $fieldContainer.addClass('hx-full-width');
-        }            
+        }
     }
     if (formElem.height && formElem.height !== 'full') {
         $fieldContainer.height(formElem.height);
@@ -1323,24 +1326,24 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
 
     var editorID = Helix.Utils.getUniqueID();
     var editorDiv = $('<div />').attr({
-        'name' : formElem.name,
-        'id' : editorID,
-        'tabIndex' : -1,
-        'class' : 'hx-full-height'
+        'name': formElem.name,
+        'id': editorID,
+        'tabIndex': -1,
+        'class': 'hx-full-height'
     });
     $fieldContainer.append(editorDiv
-        .append($('<label />').attr({
-            'for' : editorID,
-            'class' : formLayout.titleStyleClass
+            .append($('<label />').attr({
+                'for': editorID,
+                'class': formLayout.titleStyleClass
             })
-            .append(formElem.fieldTitle)
-        )
-    );
+                    .append(formElem.fieldTitle)
+                    )
+            );
     editorDiv.editor({
-        'tabIndex' : formLayout.__tabIndex++,
-        'parentElement' : $fieldContainer
+        'tabIndex': formLayout.__tabIndex++,
+        'parentElement': $fieldContainer
     });
-    $(editorDiv).editor('update', formElem.value);   
+    $(editorDiv).editor('update', formElem.value);
 }
 
 function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
@@ -1354,9 +1357,9 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.computedWidth) {
             if (formElem.computedWidth === "100%") {
                 isFullWidth = true;
-            }            
+            }
         }
-        
+
         var width = "98%";
         if (isFullWidth) {
             width = "100%";
@@ -1366,13 +1369,13 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (!formElem.name) {
             formElem.name = Helix.Utils.getUniqueID();
         }
-        
+
         var htmlDiv = $('<div />').attr('data-name', formElem.name).append(formElem.value);
         if (formElem.computedStyle) {
             htmlDiv.attr('style', formElem.computedStyle);
         }
         if (formElem.computedStyleClass) {
-            htmlDiv.addClass(formElem.computedStyleClass); 
+            htmlDiv.addClass(formElem.computedStyleClass);
         }
         var textClass = formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass;
         if (textClass) {
@@ -1380,7 +1383,7 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         $fieldContainer.append(htmlDiv);
         if (formElem.isScroller) {
-            $fieldContainer.helixScrollingDiv({ width: width });
+            $fieldContainer.helixScrollingDiv({width: width});
         } else {
             $fieldContainer.css('overflow', 'none');
             $fieldContainer.width(width);
@@ -1390,7 +1393,7 @@ function __appendHTMLArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
 
 function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var $buttonBar = $('<div />').attr({
-        'class' : 'buttonBarMaster buttonbar ' + formElem.computedStyleClass
+        'class': 'buttonBarMaster buttonbar ' + formElem.computedStyleClass
     }).appendTo($fieldContainer);
     if (formElem.onclick) {
         $buttonBar.on(Helix.clickEvent, formElem.onclick);
@@ -1403,7 +1406,7 @@ function __appendButtonGroup(mode, formLayout, formElem, $fieldContainer, useMin
 
 function __refreshHorizontalScroll(formElem) {
     var hscroll = $(formElem.DOM).find('div[data-name="' + formElem.name + '"]');
-    $(hscroll).empty(); 
+    $(hscroll).empty();
     if (formElem.value) {
         $(hscroll).append(formElem.value);
     }
@@ -1411,8 +1414,8 @@ function __refreshHorizontalScroll(formElem) {
 
 function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
     var hscroll = $('<div />').attr({
-        'class' : 'hx-horizontal-scroller-nozoom hx-full-width ' + formElem.computedStyleClass,
-        'data-name' : formElem.name
+        'class': 'hx-horizontal-scroller-nozoom hx-full-width ' + formElem.computedStyleClass,
+        'data-name': formElem.name
     }).appendTo($fieldContainer);
     if (formElem.computedStyle) {
         hscroll.attr('style', formElem.computedStyle);
@@ -1424,7 +1427,7 @@ function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, u
 
 function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     var subPanelObj = formElem;
-    
+
     // The panelMode field determines if the subPanel is in a fixed mode (edit or view), or it is the same/reverse
     // of the main form.
     if (!subPanelObj.panelMode) {
@@ -1442,22 +1445,22 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     }
     subPanelObj.titleStyleClass = formLayout.titleStyleClass;
     subPanelObj.textStyleClass = formLayout.textStyleClass;
-    
+
     ++Helix.Utils.nSubPanels;
     var subPanelID = formElem.id;
     if (!subPanelID) {
         subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
     }
     var subPanelDiv = $('<div />').attr({
-        'id' : subPanelID,
-        'class' : 'hx-flex-horizontal hx-full-width ' + subPanelObj.computedStyleClass,
-        'style' : subPanelObj.computedStyle ? subPanelObj.computedStyle: ''
+        'id': subPanelID,
+        'class': 'hx-flex-horizontal hx-full-width ' + subPanelObj.computedStyleClass,
+        'style': subPanelObj.computedStyle ? subPanelObj.computedStyle : ''
     }).appendTo($fieldContainer);
 
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
-    
+
     // Determine if the sub-panel is visible based on the 'mode' field.
     if (subPanelObj.mode && subPanelObj.mode !== 'all') {
         if (subPanelObj.mode !== formLayout.currentMode) {
@@ -1467,13 +1470,13 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
         }
     }
     $(subPanelDiv).show();
-    
+
     subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 }
 
 function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     var subPanelObj = formElem;
-    
+
     // The panelMode field determines if the subPanel is in a fixed mode (edit or view), or it is the same/reverse
     // of the main form.
     if (!subPanelObj.panelMode) {
@@ -1491,30 +1494,30 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     subPanelObj.titleStyleClass = formLayout.titleStyleClass;
     subPanelObj.textStyleClass = formLayout.textStyleClass;
-    
-    
+
+
     ++Helix.Utils.nSubPanels;
     var subPanelID = formElem.id;
     if (!subPanelID) {
         subPanelID = 'subpanel' + Helix.Utils.nSubPanels;
     }
     var subPanelDiv = $('<div />').attr({
-        'id' : subPanelID,
-        'class' : 'hx-collapsible'
+        'id': subPanelID,
+        'class': 'hx-collapsible'
     }).appendTo($fieldContainer);
 
     var iconClass = (subPanelObj.noCollapse ? 'ui-icon-collapse' : 'ui-icon-expand');
     var heading = $('<div/>').addClass('hx-collapsible-heading')
             .append($('<div/>').addClass(iconClass + ' hx-collapsible-button'))
             .append($('<div/>').addClass('hx-collapsible-label ' + (subPanelObj.titleStyleClass ? subPanelObj.titleStyleClass : '')).append(formElem.fieldTitle));
-    heading.on(Helix.clickEvent, function(ev) {
+    heading.on(Helix.clickEvent, function (ev) {
         ev.stopImmediatePropagation();
         if ($(this).next()[0].classList.contains('hx-collapsed')) {
             // Was collapsed, expand
             $(this).find('.ui-icon-expand').removeClass('ui-icon-expand').addClass('ui-icon-collapse');
         } else {
             // Was expanded, collapse
-            $(this).find('.ui-icon-collapse').removeClass('ui-icon-collapse').addClass('ui-icon-expand');            
+            $(this).find('.ui-icon-collapse').removeClass('ui-icon-collapse').addClass('ui-icon-expand');
         }
         $(this).next().toggleClass('hx-collapsed');
         $(this).next().fadeToggle('fast');
@@ -1540,33 +1543,33 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     // subpanel.
     //var dialogId;
     if (subPanelObj.dialog &&
-        (subPanelObj.dialog.activeMode === -1 ||
-            mode === subPanelObj.dialog.activeMode )) {
+            (subPanelObj.dialog.activeMode === -1 ||
+                    mode === subPanelObj.dialog.activeMode)) {
         var dialogObj = Helix.Utils.createDialog(subPanelObj.dialog, subPanelObj.dialog.uniqueID, formElem.fieldTitle, page);
 
         // Add a button to open the dialog.
         $('<a />').attr({
-            'href' : 'javascript:void(0)',
-            'data-role' : 'button',
-            'data-inline' : 'true',
-            'data-theme' : 'b'
+            'href': 'javascript:void(0)',
+            'data-role': 'button',
+            'data-inline': 'true',
+            'data-theme': 'b'
         })
-        .append(subPanelObj.dialog.dialogTitle)
-        .appendTo(subPanelDiv)
-        .on('tap', function() {
-            $.mobile.changePage(PrimeFaces.escapeClientId(dialogObj.id), {});
-        })
-        .button();
+                .append(subPanelObj.dialog.dialogTitle)
+                .appendTo(subPanelDiv)
+                .on('tap', function () {
+                    $.mobile.changePage(PrimeFaces.escapeClientId(dialogObj.id), {});
+                })
+                .button();
     }
 
     // Create the collapsible content.
     /*subPanelDiv.collapsible({
-        collapsed: !subPanelObj.noCollapse,
-        mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false)),
-        collapsedIcon: 'expand',
-        expandedIcon: 'collapse'
-    });*/
-    
+     collapsed: !subPanelObj.noCollapse,
+     mini: (subPanelObj.mini ? subPanelObj.mini : (formLayout.mini ? true : false)),
+     collapsedIcon: 'expand',
+     expandedIcon: 'collapse'
+     });*/
+
     // Determine if the sub-panel is visible based on the 'mode' field.
     if (subPanelObj.mode && subPanelObj.mode !== 'all') {
         if (subPanelObj.mode !== formLayout.currentMode) {
@@ -1576,7 +1579,7 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
     }
     $(subPanelDiv).show();
-    
+
     subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 }
 
@@ -1584,31 +1587,31 @@ function __preprocessFormElement(formLayout, formElem) {
     formElem.computedFieldStyleClass = '';
     if (formElem.fieldStyleClass) {
         if (!Helix.Utils.isString(formElem.fieldStyleClass)) {
-            formElem.computedFieldStyleClass = 
-                (formElem.fieldStyleClass[Helix.deviceType] ?  formElem.fieldStyleClass[Helix.deviceType] : formElem.fieldStyleClass['default']);
+            formElem.computedFieldStyleClass =
+                    (formElem.fieldStyleClass[Helix.deviceType] ? formElem.fieldStyleClass[Helix.deviceType] : formElem.fieldStyleClass['default']);
         } else {
             formElem.computedFieldStyleClass = formElem.fieldStyleClass;
         }
         if (formElem.computedFieldStyleClass) {
             formElem.computedFieldStyleClass = ' ' + formElem.computedFieldStyleClass;
         }
-    }    
-    
+    }
+
     formElem.computedStyleClass = '';
     if (formElem.styleClass) {
         if (!Helix.Utils.isString(formElem.styleClass)) {
-            formElem.computedStyleClass = 
-                (formElem.styleClass[Helix.deviceType] ?  formElem.styleClass[Helix.deviceType] : formElem.styleClass['default']);
+            formElem.computedStyleClass =
+                    (formElem.styleClass[Helix.deviceType] ? formElem.styleClass[Helix.deviceType] : formElem.styleClass['default']);
         } else {
             formElem.computedStyleClass = formElem.styleClass;
         }
     }
-    
+
     formElem.computedStyle = '';
     if (formElem.style) {
         if (!Helix.Utils.isString(formElem.style)) {
-            formElem.computedStyle = 
-                (formElem.style[Helix.deviceType] ?  formElem.style[Helix.deviceType] : formElem.style['default']) + ";";
+            formElem.computedStyle =
+                    (formElem.style[Helix.deviceType] ? formElem.style[Helix.deviceType] : formElem.style['default']) + ";";
         } else {
             formElem.computedStyle = formElem.style + ";";
         }
@@ -1617,7 +1620,7 @@ function __preprocessFormElement(formLayout, formElem) {
     if (formElem.width) {
         if (!Helix.Utils.isString(formElem.width)) {
             /* Mapping from device type to width. */
-            formElem.computedWidth = (formElem.width[Helix.deviceType] ?  formElem.width[Helix.deviceType] : formElem.width['default']);
+            formElem.computedWidth = (formElem.width[Helix.deviceType] ? formElem.width[Helix.deviceType] : formElem.width['default']);
         } else {
             formElem.computedWidth = (formElem.width === 'full' ? '100%' : formElem.width);
         }
@@ -1629,16 +1632,16 @@ function __preprocessFormElement(formLayout, formElem) {
     } else if (formElem.computedWidth) {
         formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
     }
-    
+
     if (!formElem.mode) {
         formElem.mode = 'all';
     }
-    
+
     if (!formElem.value) {
         // Set to the default.
         formElem.value = formElem.defaultValue;
     }
-    
+
     /**
      * Check if this element is disabled on this device.
      */
@@ -1648,46 +1651,46 @@ function __preprocessFormElement(formLayout, formElem) {
             return;
         }
     }
-    
+
     formElem.disabled = false;
 }
 
 Helix.Utils.noTitleLayouts = {
-    "button" : true,
-    "controlset" : true,
-    "radio" : true,
-    "subPanel" : true,
+    "button": true,
+    "controlset": true,
+    "radio": true,
+    "subPanel": true,
     "horizontalBlock": true
 };
 
 Helix.Utils.fieldContainers = {
-    'text' : true,
-    'search' : true,
-    'date' : true,
-    'exactdate' : true,
-    'datetime' : true,
-    'pickList' : true
+    'text': true,
+    'search': true,
+    'date': true,
+    'exactdate': true,
+    'datetime': true,
+    'pickList': true
 };
 
 Helix.Utils.oneContainerLayouts = {
-    'controlset' : true,
-    'checkbox' : true
+    'controlset': true,
+    'checkbox': true
 };
 
-Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, useMiniLayout) {
+Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page, useMiniLayout) {
     var supportedModes = formLayout.modes;
     var currentMode = formLayout.currentMode;
     var renderFn = null;
     var oneContainer = false;
-    
+
     var separateElements = formLayout.separateElements;
-    
+
     __preprocessFormElement(formLayout, formElem);
-    
+
     if (formElem.disabled) {
         return;
     }
-    
+
     if (formElem.type === 'separator') {
         if (formElem.mode === 'all') {
             formElem.viewDOM = $('<hr />').appendTo(parentDiv);
@@ -1705,10 +1708,10 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         }
 
         return;
-    } 
-    
+    }
+
     var $viewFieldContainer, $editFieldContainer;
-    var containerID = null;    
+    var containerID = null;
     if (formElem.id) {
         containerID = formElem.id + "_container";
     } else if (formElem.name) {
@@ -1716,21 +1719,21 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     } else {
         containerID = Helix.Utils.getUniqueID();
     }
-    
+
     if (supportedModes !== 'edit' &&
-        formElem.mode !== 'edit') {
+            formElem.mode !== 'edit') {
         /* View mode. */
         formElem.viewDOM = $viewFieldContainer = $('<div />')
-            .attr('id', containerID + "_view")
-            .addClass('hx-form-container')
-            .appendTo(parentDiv);
+                .attr('id', containerID + "_view")
+                .addClass('hx-form-container')
+                .appendTo(parentDiv);
         if (formElem.type !== 'hidden') {
             if (!formElem.noBorder) {
                 formElem.viewDOM.addClass('hx-form-view-border hx-form-view-item');
             } else {
                 formElem.viewDOM.addClass('hx-form-view-item');
             }
-        }        
+        }
         if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
             $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
         }
@@ -1743,31 +1746,31 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
             if (formElem.titleStyleClass) {
                 $viewFieldContainer.append($('<span />').attr({
-                    'class' : formElem.titleStyleClass + ' ui-input-text'
+                    'class': formElem.titleStyleClass + ' ui-input-text'
                 }).append(formElem.fieldTitle));
             } else if (formLayout.titleStyleClass) {
                 $viewFieldContainer.append($('<span />').attr({
-                    'class' : formLayout.titleStyleClass + ' ui-input-text'
+                    'class': formLayout.titleStyleClass + ' ui-input-text'
                 }).append(formElem.fieldTitle));
             } else {
                 $viewFieldContainer.append(formElem.fieldTitle);
             }
             if (formElem.type in Helix.Utils.fieldContainers) {
                 if (formElem.mini) {
-                    $viewFieldContainer.addClass('hx-mini-fieldview'); 
+                    $viewFieldContainer.addClass('hx-mini-fieldview');
                 } else {
-                    $viewFieldContainer.addClass('hx-fieldview'); 
+                    $viewFieldContainer.addClass('hx-fieldview');
                 }
-                
-                $viewFieldContainer.addClass('ui-fieldcontain'); 
-                $viewFieldContainer.addClass('ui-body'); 
+
+                $viewFieldContainer.addClass('ui-fieldcontain');
+                $viewFieldContainer.addClass('ui-body');
                 $viewFieldContainer.addClass('ui-br');
             }
         }
-    } 
-    
+    }
+
     if (supportedModes !== 'view' &&
-        formElem.mode !== 'view') {
+            formElem.mode !== 'view') {
         if ((formElem.type in Helix.Utils.oneContainerLayouts) &&
                 $viewFieldContainer) {
             formElem.editDOM = $editFieldContainer = $viewFieldContainer;
@@ -1775,9 +1778,9 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         } else {
             /* Edit mode. */
             formElem.editDOM = $editFieldContainer = $('<div />').attr({
-                'id' : containerID + "_edit",
-                'class' : 'hx-form-container'
-            }).appendTo(parentDiv);            
+                'id': containerID + "_edit",
+                'class': 'hx-form-container'
+            }).appendTo(parentDiv);
             if (formLayout.computedWidth) {
                 $editFieldContainer.width(formLayout.computedWidth);
             }
@@ -1788,8 +1791,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     } else {
         formElem.DOM = $editFieldContainer;
     }
-    
-    if ((formElem.type === 'text')  || (formElem.type === 'search')) {
+
+    if ((formElem.type === 'text') || (formElem.type === 'search')) {
         renderFn = __appendTextBox;
     } else if (formElem.type === 'textarea') {
         renderFn = __appendTextArea;
@@ -1812,12 +1815,12 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
     } else if (formElem.type === 'buttonGroup') {
         renderFn = __appendButtonGroup;
     } else if (formElem.type === 'date' ||
-               formElem.type === 'exactdate' ||
-               formElem.type === 'datetime') {
+            formElem.type === 'exactdate' ||
+            formElem.type === 'datetime') {
         renderFn = __appendDate;
     } else if (formElem.type === 'tzSelector') {
         renderFn = __appendTZSelector;
-    } else if (formElem.type === 'dialog') {        
+    } else if (formElem.type === 'dialog') {
         var elemIdx;
         for (elemIdx = 0; elemIdx < formElem.controls.length; ++elemIdx) {
             var subElem = formElem.controls[elemIdx];
@@ -1829,15 +1832,15 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
         if (!buttonTitle) {
             buttonTitle = formElem.dialogTitle;
         }
-        
+
         $('<div />').attr({
-            'class' : 'ui-block-b'
+            'class': 'ui-block-b'
         }).append($('<button />').attr({
-            'data-theme' : 'b',
-            'type' : 'submit'
-            }).append(buttonTitle)
-              .button()
-              .on('tap', function(e) {
+            'data-theme': 'b',
+            'type': 'submit'
+        }).append(buttonTitle)
+                .button()
+                .on('tap', function (e) {
                     e.stopPropagation();
                     e.preventDefault();
                     if (formElem.dialogSubmit) {
@@ -1845,8 +1848,8 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                     }
                     $.mobile.changePage(formElem.doneLink, {});
                 })
-        )
-        .appendTo(parentDiv);
+                )
+                .appendTo(parentDiv);
         separateElements = false;
     } else if (formElem.type === 'hidden') {
         if ($editFieldContainer) {
@@ -1855,11 +1858,11 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                 /* No field name. We cannot include this field in the form. */
                 return;
             }
-            
+
             $editFieldContainer.append($('<input />').attr({
-                    'name': formElem.name,
-                    'type': 'hidden',
-                    'value': formElem.value
+                'name': formElem.name,
+                'type': 'hidden',
+                'value': formElem.value
             }));
             $editFieldContainer.hide();
         }
@@ -1874,42 +1877,39 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
 
             /* Append a span with a message indicating what the user should do. */
             $('<span/>').attr({
-                'class' : styleClass
+                'class': styleClass
             }).append(formElem.fieldTitle)
-                .appendTo($editFieldContainer);   
+                    .appendTo($editFieldContainer);
 
             var uploadId = Helix.Utils.getUniqueID();
-            var uploadDiv= $('<div/>').attr({
-                'id' : uploadId,
-                'class' : "mh-uploads"
+            var uploadDiv = $('<div/>').attr({
+                'id': uploadId,
+                'class': "mh-uploads"
             }).appendTo($editFieldContainer);
 
 
-            $(page).on('pagecreate', function() {
-               var dropbox = $editFieldContainer;
-               dropbox.filedrop(uploadDiv, {
+            $(page).on('pagecreate', function () {
+                var dropbox = $editFieldContainer;
+                dropbox.filedrop(uploadDiv, {
                     // The name of the $_FILES entry:
-                    paramname:'file',
-
+                    paramname: 'file',
                     maxfiles: 1,
                     maxfilesize: 20, // in mb
                     url: formElem.options.url,
                     headers: formElem.options.headers,
-                    
                     /* '/clientws/sharepoint/upload' */
                     /*
                      * {
-                        'listUUID' : currentList.uuidName,
-                        'siteURL' : currentSite.siteURL
-                        }
+                     'listUUID' : currentList.uuidName,
+                     'siteURL' : currentSite.siteURL
+                     }
                      */
 
-                    uploadFinished:function(i,file,response){
+                    uploadFinished: function (i, file, response) {
                         Helix.Utils.statusMessage("Upload Complete", response.msg, "info");
                     },
-
-                    error: function(err, file) {
-                        switch(err) {
+                    error: function (err, file) {
+                        switch (err) {
                             case 'BrowserNotSupported':
                                 Helix.Utils.statusMessage('Unsupported Operation', 'Your browser does not support HTML5 file uploads!', 'severe');
                                 break;
@@ -1917,65 +1917,64 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
                                 Helix.Utils.statusMessage('Error', 'Too many files! Please select 1 at most!', 'severe');
                                 break;
                             case 'FileTooLarge':
-                                Helix.Utils.statusMessage(file.name+' is too large! Please upload files up to 2mb.');
+                                Helix.Utils.statusMessage(file.name + ' is too large! Please upload files up to 2mb.');
                                 break;
                             default:
                                 break;
                         }
                     },
-
                     // Called before each upload is started
-                    beforeEach: function(file){
+                    beforeEach: function (file) {
                         if (!formElem.name) {
                             this.headers['fileName'] = file.name;
                         } else {
                             this.headers['fileName'] = formElem.name;
                         }
                     }
-                });           
+                });
             });
-        }   
+        }
     } else if (formElem.type === "image") {
-       if ($viewFieldContainer) {
-           styleClass = "";
-           if (formElem.computedStyleClass) {
-               styleClass = formElem.computedStyleClass;
-           }
-           if (!formElem.target) {
-               formElem.target = "";
-           }
-           
-           /* Only show images in view mode. */
-           var surroundingDiv = $('<div/>').attr({
-               'class' : styleClass
-           }).appendTo($viewFieldContainer);
-           
-           var imgTag = $('<img/>').attr({
-               'src': formElem.src,
-               'width' : formElem.computedWidth,
-               'height' : formElem.height,
-               'style' : formElem.computedStyle,
-               'alt' : formElem.name,
-               'title' : formElem.name,
-               'target' : formElem.target
-           });
-           var txtElem = $('<span/>').attr({ 'style' : 'float:left' }).append('Tap to open ' + formElem.name);
-           if (formElem.link) {
-               surroundingDiv.append($('<a/>').attr({
-                   'href' : formElem.link
-               }).append(imgTag).append(txtElem));
-           } else if (formElem.click) {
-               $(imgTag).on('tap', function(e) {
-                   formElem.click.apply(this, [e]);
-               });
-               surroundingDiv.append(imgTag).append(txtElem);
-           } else {
-               surroundingDiv.append(imgTag).append(txtElem);
-           }
-           $(imgTag).load(function() {
-               $(txtElem).hide();
-           });
-       }
+        if ($viewFieldContainer) {
+            styleClass = "";
+            if (formElem.computedStyleClass) {
+                styleClass = formElem.computedStyleClass;
+            }
+            if (!formElem.target) {
+                formElem.target = "";
+            }
+
+            /* Only show images in view mode. */
+            var surroundingDiv = $('<div/>').attr({
+                'class': styleClass
+            }).appendTo($viewFieldContainer);
+
+            var imgTag = $('<img/>').attr({
+                'src': formElem.src,
+                'width': formElem.computedWidth,
+                'height': formElem.height,
+                'style': formElem.computedStyle,
+                'alt': formElem.name,
+                'title': formElem.name,
+                'target': formElem.target
+            });
+            var txtElem = $('<span/>').attr({'style': 'float:left'}).append('Tap to open ' + formElem.name);
+            if (formElem.link) {
+                surroundingDiv.append($('<a/>').attr({
+                    'href': formElem.link
+                }).append(imgTag).append(txtElem));
+            } else if (formElem.click) {
+                $(imgTag).on('tap', function (e) {
+                    formElem.click.apply(this, [e]);
+                });
+                surroundingDiv.append(imgTag).append(txtElem);
+            } else {
+                surroundingDiv.append(imgTag).append(txtElem);
+            }
+            $(imgTag).load(function () {
+                $(txtElem).hide();
+            });
+        }
     } else if (formElem.type === 'horizontalScroll') {
         renderFn = __appendHorizontalScroll;
     } else if (formElem.type === 'subPanel') {
@@ -1989,7 +1988,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             $editFieldContainer.remove();
         }
         $viewFieldContainer = $editFieldContainer = null;
-        
+
         __appendSubPanel.call(formElem, 0, formLayout, formElem, parentDiv, useMiniLayout, page, parentDiv);
     } else if (formElem.type === 'horizontalBlock') {
         // horizontalBlocks should be attached directly to the parent div, not to a surrounding
@@ -2002,12 +2001,12 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             $editFieldContainer.remove();
         }
         $viewFieldContainer = $editFieldContainer = null;
-        
+
         __appendHorizontalBlockPanel.call(formElem, 0, formLayout, formElem, parentDiv, useMiniLayout, page, parentDiv);
     } else {
         separateElements = false;
     }
-    
+
     if ($viewFieldContainer) {
         if (renderFn) {
             renderFn.call(formElem, 0, formLayout, formElem, $viewFieldContainer, useMiniLayout, page, parentDiv);
@@ -2024,7 +2023,7 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
             $editFieldContainer.hide();
         }
     }
-    
+
     if (separateElements && !formElem.noSeparator) {
         formElem.SEPARATOR = $('<hr />').insertAfter(formElem.editDOM ? formElem.editDOM : formElem.viewDOM);
     }
@@ -2043,43 +2042,43 @@ Helix.Utils.layoutFormElement = function(formLayout, formElem, parentDiv, page, 
 }
 
 function __preprocessFormLayout(formLayout) {
-   formLayout.computedFieldStyleClass = '';
+    formLayout.computedFieldStyleClass = '';
     if (formLayout.fieldStyleClass) {
         if (!Helix.Utils.isString(formLayout.fieldStyleClass)) {
-            formLayout.computedFieldStyleClass = 
-                (formLayout.fieldStyleClass[Helix.deviceType] ?  formLayout.fieldStyleClass[Helix.deviceType] : formLayout.fieldStyleClass['default']);
+            formLayout.computedFieldStyleClass =
+                    (formLayout.fieldStyleClass[Helix.deviceType] ? formLayout.fieldStyleClass[Helix.deviceType] : formLayout.fieldStyleClass['default']);
         } else {
             formLayout.computedFieldStyleClass = formLayout.fieldStyleClass;
         }
     }
-    
+
     formLayout.computedFieldStyle = '';
     if (formLayout.fieldStyle) {
         if (!Helix.Utils.isString(formLayout.fieldStyle)) {
-            formLayout.computedFieldStyle = 
-                (formLayout.fieldStyle[Helix.deviceType] ?  formLayout.fieldStyle[Helix.deviceType] : formLayout.fieldStyle['default']);
+            formLayout.computedFieldStyle =
+                    (formLayout.fieldStyle[Helix.deviceType] ? formLayout.fieldStyle[Helix.deviceType] : formLayout.fieldStyle['default']);
         } else {
             formLayout.computedFieldStyle = formLayout.fieldStyle + ";";
         }
     }
-    
+
     formLayout.computedWidth = '';
     if (formLayout.width) {
         if (!Helix.Utils.isString(formLayout.width)) {
             /* Mapping from device type to width. */
-            formLayout.computedWidth = (formLayout.width[Helix.deviceType] ?  formLayout.width[Helix.deviceType] : formLayout.width['default']);
+            formLayout.computedWidth = (formLayout.width[Helix.deviceType] ? formLayout.width[Helix.deviceType] : formLayout.width['default']);
         } else {
             formLayout.computedWidth = (formLayout.width === 'full' ? "100%" : formLayout.width);
         }
-    }    
-    
+    }
+
     if (!formLayout.titleStyleClass) {
         formLayout.titleStyleClass = '';
     }
     if (!formLayout.textStyleClass) {
         formLayout.textStyleClass = '';
     }
-    
+
     formLayout.__tabIndex = 1;
 }
 
@@ -2088,15 +2087,15 @@ function __preprocessFormLayout(formLayout) {
  */
 Helix.Utils.nSubPanels = 0;
 Helix.Utils.dynamicDialogs = {};
-Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
+Helix.Utils.layoutForm = function (parentDiv, formLayout, page, useMiniLayout) {
     __preprocessFormLayout(formLayout);
     if (!page) {
         page = $.mobile.activePage;
     }
-    
+
     // Clear out whatever is currently inside of the parent div.
     $(parentDiv).empty();
-    
+
     var formElem;
     var elemIdx;
     var formElements = formLayout.items;
@@ -2110,55 +2109,55 @@ Helix.Utils.layoutForm = function(parentDiv, formLayout, page, useMiniLayout) {
     }
 }
 
-Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page, useMiniLayout) {
+Helix.Utils.createDialog = function (dialogFields, dialogName, dialogTitle, page, useMiniLayout) {
     var dialogId = Helix.Utils.getUniqueID();
     var dialogObj = Helix.Utils.dynamicDialogs[dialogName];
     var isCreated = false;
     if (!dialogObj) {
         dialogObj = Helix.Utils.dynamicDialogs[dialogName] = {
-            'id' : dialogId,
-            'page' : $('<div />').attr({
-                'data-role' : 'page',
-                'id' : dialogId,
-                'data-history' : false
+            'id': dialogId,
+            'page': $('<div />').attr({
+                'data-role': 'page',
+                'id': dialogId,
+                'data-history': false
             }).append($('<div />').attr({
-                'data-role' : 'header',
-                'data-position' : 'fixed'
-                }).append($('<h1 />')
+                'data-role': 'header',
+                'data-position': 'fixed'
+            }).append($('<h1 />')
                     .append(dialogTitle)
-                ).append($('<a />').attr({
-                    'data-iconpos' : 'left',
-                    'data-icon' : 'back',
-                    'class' : 'ui-btn-left',
-                    'href' : PrimeFaces.escapeClientId($(page).attr('id'))
-                    }).append('Back')
-                ).append($('<a />').attr({
-                    'data-iconpos' : 'right',
-                    'data-icon' : 'check',
-                    'data-theme' : 'b',
-                    'class' : 'ui-btn-right' 
-                }).on(Helix.clickEvent, function(ev) {
-                    dialogFields.saveButton.onclick(ev);
-                }).append(dialogFields.saveButton.title))
-            ).append($('<div />').attr({
-                'data-role' : 'content',
-                'style' : 'overflow-y: auto;',
-                'class' : 'hx-main-content'
-                }).append($('<form />').attr({
-                    'width': '100%',
-                    'height': '100%',
-                    'class': 'hx-layout-full-height'
-                }))
-            ),
-            'fields' : dialogFields
+                    ).append($('<a />').attr({
+                'data-iconpos': 'left',
+                'data-icon': 'back',
+                'class': 'ui-btn-left',
+                'href': PrimeFaces.escapeClientId($(page).attr('id'))
+            }).append('Back')
+                    ).append($('<a />').attr({
+                'data-iconpos': 'right',
+                'data-icon': 'check',
+                'data-theme': 'b',
+                'class': 'ui-btn-right'
+            }).on(Helix.clickEvent, function (ev) {
+                dialogFields.saveButton.onclick(ev);
+            }).append(dialogFields.saveButton.title))
+                    ).append($('<div />').attr({
+                'data-role': 'content',
+                'style': 'overflow-y: auto;',
+                'class': 'hx-main-content'
+            }).append($('<form />').attr({
+                'width': '100%',
+                'height': '100%',
+                'class': 'hx-layout-full-height'
+            }))
+                    ),
+            'fields': dialogFields
         };
         isCreated = true;
     }
-    
+
     if (!isCreated) {
         Helix.Utils.refreshDialogValues(dialogFields, dialogObj, null);
     } else {
-        var dialogForm = $(dialogObj.page).find('form'); 
+        var dialogForm = $(dialogObj.page).find('form');
         $(dialogForm).empty();
         $(dialogForm).data("DIALOG", dialogFields);
         $(dialogForm).width('100%');
@@ -2177,13 +2176,13 @@ Helix.Utils.createDialog = function(dialogFields, dialogName, dialogTitle, page,
 
         Helix.Utils.layoutForm(dialogForm, dialogFields, dialogObj.page, useMiniLayout);
     }
-    
+
     return dialogObj;
 }
 
-Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone) {
+Helix.Utils.refreshDialogValues = function (dialogFields, dialogObj, refreshDone) {
     var dialogForm = $(dialogObj.page).find('form');
-    
+
     var idx = 0;
     for (idx = 0; idx < dialogFields.items.length; ++idx) {
         var formElem = dialogFields.items[idx];
@@ -2202,8 +2201,8 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
                 }
                 $(inputElem).val(dateValue.toISOString());
                 //$(inputElem).trigger('datebox', {'method':'set', 'value': dateValue});
-            } else if (formElem.type === "text" || formElem.type === "search" || 
-                       formElem.type === "hidden") {
+            } else if (formElem.type === "text" || formElem.type === "search" ||
+                    formElem.type === "hidden") {
                 $(inputElem).val(formElem.value);
             }
         }
@@ -2213,18 +2212,18 @@ Helix.Utils.refreshDialogValues = function(dialogFields, dialogObj, refreshDone)
     }
 };
 
-Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, action) {    
+Helix.Layout._createButton = function (btnId, btnWidth, theme, popup, text, action) {
     var btn = $('<a/>').attr({
-        'href' : 'javascript:void(0)',
-        'data-role' : 'button',
-        'data-inline' : 'true',
-        'data-theme' : theme,
-        'data-corners' : 'false',
-        'data-shadow' : 'false',
-        'style' : 'width: ' + btnWidth + 'px',
-        'id' : btnId
+        'href': 'javascript:void(0)',
+        'data-role': 'button',
+        'data-inline': 'true',
+        'data-theme': theme,
+        'data-corners': 'false',
+        'data-shadow': 'false',
+        'style': 'width: ' + btnWidth + 'px',
+        'id': btnId
     }).append(text);
-    $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(btnId), [ popup, action], function(e) {
+    $(document).on(Helix.clickEvent, PrimeFaces.escapeClientId(btnId), [popup, action], function (e) {
         e.stopImmediatePropagation();
         $(e.data[0]).popup("close");
         if (e.data[1]) {
@@ -2235,75 +2234,75 @@ Helix.Layout._createButton = function(btnId, btnWidth, theme, popup, text, actio
     return btn;
 };
 
-Helix.Layout._createDialogPopup = function(popupId) {
+Helix.Layout._createDialogPopup = function (popupId) {
     var _width = Helix.screenWidth * 0.8;
     _width = Math.min(_width, 400);
     return $('<div/>').attr({
-        'data-role' : 'popup',
-        'id' : popupId,
-        'data-overlay-theme' : 'd',
-        'data-theme' : 'd',
-        'data-position-to' : 'window',
-        'data-history' : 'false',
-        'style' : 'width: 300px'
+        'data-role': 'popup',
+        'id': popupId,
+        'data-overlay-theme': 'd',
+        'data-theme': 'd',
+        'data-position-to': 'window',
+        'data-history': 'false',
+        'style': 'width: 300px'
     });
 };
 
-Helix.Layout._layoutPopup = function(popup, options, buttons, form) {
+Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
     var titleStyleClass = options.titleStyleClass ? options.titleStyleClass : 'dialog-title';
     var header = $("<div/>").attr({
-        'data-role' : 'header',
-        'data-theme' : 'd',
-        'class' : 'hx-dialog-header ' + titleStyleClass
+        'data-role': 'header',
+        'data-theme': 'd',
+        'class': 'hx-dialog-header ' + titleStyleClass
     }).append($('<h1/>').attr({
-               'class' : 'ui-title'
-            }).append(options.title));
-    
+        'class': 'ui-title'
+    }).append(options.title));
+
     var content = $('<div/>').attr({
-            'data-role' : 'content',
-            'style' : 'margin: .5em .5em .5em .5em',
-            'data-theme' : 'd',
-            'class' : 'ui-corner-bottom ui-content hx-dialog-content'
-        });
+        'data-role': 'content',
+        'style': 'margin: .5em .5em .5em .5em',
+        'data-theme': 'd',
+        'class': 'ui-corner-bottom ui-content hx-dialog-content'
+    });
     if (options.message) {
         content
-            .append($('<p/>')
-            .append(options.message ? options.message : ''));
+                .append($('<p/>')
+                        .append(options.message ? options.message : ''));
     }
     if (form) {
         content.append(form);
     }
     var buttonContainer = $('<div/>').attr({
-        'class' : 'hx-flex-horizontal hx-flex-justify-center'
+        'class': 'hx-flex-horizontal hx-flex-justify-center'
     }).appendTo(content);
     for (var i = 0; i < buttons.length; ++i) {
         buttonContainer.append(buttons[i]);
     }
 
     $(popup)
-        .append(header)
-        .append(content);
+            .append(header)
+            .append(content);
 
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     if (options.noOpen !== true) {
-        $.mobile.activePage.append( popup ).trigger( "pagecreate" );
+        $.mobile.activePage.append(popup).trigger("pagecreate");
         $(popup).popup({});
-        $(popup).on('popupafterclose', null, options, function(ev) {
+        $(popup).on('popupafterclose', null, options, function (ev) {
             if (ev.data.oncomplete) {
                 ev.data.oncomplete();
             }
             $(this).remove();
         });
-        $(popup).popup("open");    
+        $(popup).popup("open");
     }
     if (options.popupDismiss) {
-        $(popup).on('popupdismiss', null, options, function(ev) {
+        $(popup).on('popupdismiss', null, options, function (ev) {
             if (ev.data.popupDismiss) {
                 eve.data.popupDismiss();
             }
         });
     }
-    
+
     $(window).on('navigate.popup', function (e) {
         e.preventDefault();
         $(window).off('navigate.popup');
@@ -2311,31 +2310,31 @@ Helix.Layout._layoutPopup = function(popup, options, buttons, form) {
     return $(popup);
 };
 
-Helix.Layout.createYesNoCancelDialog = function(options) {
+Helix.Layout.createYesNoCancelDialog = function (options) {
     if (options.onclick && !options.onclick()) {
         return;
     }
-    
+
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
-    
+
     var yesBtn = Helix.Layout._createButton(popupId + '-yes', '80', 'b', popup, options.yesText ? options.yesText : 'Yes', options.onYes);
     var noBtn = Helix.Layout._createButton(popupId + '-no', '80', 'c', popup, options.noText ? options.noText : 'No', options.onNo);
     var cancelBtn = Helix.Layout._createButton(popupId + '-cancel', '80', 'c', popup, options.cancelText ? options.cancelText : 'Cancel', options.onCancel);
-        
-    Helix.Layout._layoutPopup(popup, options, [ yesBtn, noBtn, cancelBtn ]);   
+
+    Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
 };
 
-Helix.Layout.createConfirmDialog = function(options) {
+Helix.Layout.createConfirmDialog = function (options) {
     if (options.onclick && !options.onclick()) {
         return;
     }
-    
+
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
-    
+
     var closebtn = Helix.Layout._createButton(popupId + '-cancel', '90', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
     var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '90', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
-        
-    return Helix.Layout._layoutPopup(popup, options, [ confirmbtn, closebtn ]);   
+
+    return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn]);
 };

@@ -192,8 +192,11 @@
             listTags: function(success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "listTags", []);
             },
-            sendEmail: function(attachments, success, failure) {
-                return cordova.exec(success, failure, "HelixSystem", "sendEmail", [ attachments ]);
+            sendEmail: function(attachments, params, success, failure) {
+                if (!params) {
+                    params = {};
+                }
+                return cordova.exec(success, failure, "HelixSystem", "sendEmail", [ attachments, params ]);
             }
         });
     }

@@ -52,6 +52,12 @@
             <description>Optional callback to be invoked before the context menu opens on screen.</description>
         </attribute>
         <attribute>
+            <name>afterClose</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional callback to be invoked after the context menu closes.</description>
+        </attribute>
+        <attribute>
             <name>id</name>
             <required>false</required>
             <type>java.lang.String</type>

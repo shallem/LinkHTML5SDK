@@ -27,7 +27,7 @@
         </attribute>
         <attribute>
             <name>ontap</name>
-            <required>true</required>
+            <required>false</required>
             <type>java.lang.Object</type>
             <description>Javascript to execute when the menu item is tapped.</description>
         </attribute>
