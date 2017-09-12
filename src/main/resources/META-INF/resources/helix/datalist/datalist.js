@@ -754,6 +754,8 @@
                         this.prevPage.then(_addToBottom);
                         this.prevPage = null;
                     }
+                } else {
+                    this._restoreScrollEvent();
                 }
             } else {
                 var markerLI = _self.displayLIs[_self.displayLIs.length - 1];
@@ -812,6 +814,8 @@
                         this.nextPage.then(_addToEnd);
                         this.nextPage = null;
                     }
+                } else {
+                    this._restoreScrollEvent();
                 }
             }
         },
