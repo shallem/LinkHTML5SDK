@@ -172,9 +172,6 @@ public class DataListRenderer extends CoreRenderer {
         // Pagination
         if (dlist.getItemsPerPage() != null) {
             writer.write(",itemsPerPage: " + dlist.getItemsPerPage());
-            if (dlist.getPaginatorTemplate() != null) {
-                writer.write(",paginatorTemplate: '" + dlist.getPaginatorTemplate() + "'");
-            }
         }
 
         // Selection
@@ -282,11 +279,6 @@ public class DataListRenderer extends CoreRenderer {
         // Push to get more
         if (dlist.getPushToRefresh() != null) {
             writer.write(",pushToRefresh: " + dlist.getPushToRefresh());
-        }
-        
-        // Custom paginator template.
-        if (dlist.getCustomPaginatorTemplate() != null) {
-            writer.write(",customPaginatorTemplate: " + dlist.getCustomPaginatorTemplate());
         }
         
         // Header.

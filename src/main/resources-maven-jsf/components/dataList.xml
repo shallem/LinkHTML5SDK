@@ -21,13 +21,6 @@
     <attributes>
 		&widget_var_attribute;
         <attribute>
-            <name>paginatorTemplate</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <defaultValue>{PreviousPageLink} {CurrentPageReport} {NextPageLink}</defaultValue>
-            <description>Template of the paginator.</description>
-        </attribute>
-        <attribute>
             <name>selectAction</name>
             <required>false</required>
             <type>java.lang.Object</type>
@@ -367,12 +360,6 @@
             <required>false</required>
             <type>java.lang.String</type>
             <description>Function name to call when the user pushes down on the list bottom to get more items.</description>
-        </attribute>
-        <attribute>
-            <name>customPaginatorTemplate</name>
-            <required>false</required>
-            <type>java.lang.String</type>
-            <description>Function name to call as the components of the paginator are rendered.</description>
         </attribute>
       <attribute>
          <name>autodividers</name>
