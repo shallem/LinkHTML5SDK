@@ -640,7 +640,7 @@
             }
         },
         
-        _preloadPage: function (direction) {
+        _preloadPage: function (direction, pageCt) {
             if (this.options.grouped) {
                 // No preloading when we are dealing with a grouped list ...
                 return;
@@ -651,47 +651,60 @@
                 // No preloading an array.
                 return;
             }
-
-            /* Apply skip and limit. */
-            var nElems = Math.floor(this._itemsPerPage / 2);
-            var _nextRenderWindow = (this._renderWindowStart + (direction * this._itemsPerPage));
-            if (_nextRenderWindow < nElems) {
-                nElems = nElems + _nextRenderWindow;
-                _nextRenderWindow = 0;
+            if (this._preloadHitDataTop === true) {
+                if (direction > 0) {
+                    return;
+                } else {
+                    this._preloadHitDataTop = false;
+                }
             }
-            if (_nextRenderWindow <= 0) {
-                _nextRenderWindow = 0;
+            if (this._preloadWindowStart === 0 && direction < 0) {
+                return;
             }
             
-            // Skip _nextRenderWindow - 1 items, so the first one we see is at the _nextRenderWindow position
-            displayCollection = displayCollection.skip(_nextRenderWindow);
-            displayCollection = displayCollection.limit(nElems); // We move forward/back in half pages
-
-            var _prefetchedItems = [];
-            var _self = this;
+            var nElems = pageCt * this._itemsPerPage;
+            displayCollection = displayCollection.limit(nElems);
+            
+            var skip = 0;
             if (direction < 0) {
-                _self.prevPage = new Promise(function (resolve, reject) {
-                    displayCollection.newEach({
-                        eachFn: function (row) {
-                            _prefetchedItems.push(row);
-                        },
-                        doneFn: function () {
-                            resolve(_prefetchedItems);
-                        }
-                    });
-                });
-            } else {
-                _self.nextPage = new Promise(function (resolve, reject) {
-                    displayCollection.newEach({
-                        eachFn: function (row) {
-                            _prefetchedItems.push(row);
-                        },
-                        doneFn: function () {
-                            resolve(_prefetchedItems);
-                        }
-                    })
-                });
+                skip = Math.max(0, this._preloadWindowStart - nElems);
+            } else if (direction > 0) {
+                skip = this._preloadWindowStart + this._prefetchedData.length;
             }
+            displayCollection = displayCollection.skip(skip);
+            
+            var _self = this;
+            _self._preloadPromise = new Promise(function (resolve, reject) {
+                var _prefetchedItems = [];
+                displayCollection.newEach({
+                    startFn: function(ct) {
+                        // if we don't get the full number of elems we asked for, we have run out of
+                        // data
+                        if (ct < nElems) {
+                            _self._preloadHitDataTop = true;
+                        }
+                    },
+                    eachFn: function (row) {
+                        _prefetchedItems.push(row);
+                    },
+                    doneFn: function (ct) {
+                        if (direction === 0) {
+                            _self._prefetchedData = _prefetchedItems;
+                        } else if (direction < 0) {
+                            var remainder = Math.max(0, ct - _self._preloadWindowStart);
+                            _self._preloadWindowStart = Math.max(0, _self._preloadWindowStart - ct);
+                            // Keep the first ct elems of the existing prefetched array.
+                            _self._prefetchedData = _prefetchedItems.concat(_self._prefetchedData.slice(remainder, ct + remainder));
+                        } else {
+                            // Negative slice means slice ct elems off the start
+                            _self._prefetchedData = _self._prefetchedData.slice(ct).concat(_prefetchedItems);
+                            _self._preloadWindowStart += ct;
+                        }
+                        resolve();
+                        _self._preloadPromise = null;
+                    }
+                });
+            });
         },
         /**
          * Called during scrolling to prefetch a new set of data.
@@ -701,144 +714,120 @@
         _nextPage: function (direction) {
             var _self = this;
             if (direction < 0) {
+                var _addToBottom = function (toReverse) {
+                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
+                    if (startIdx - toReverse >= 0) {
+                        var lastLI = _self.displayLIs[0];
+                        var lastID = lastLI.attributes['data-id'].nodeValue;
+                        startIdx -= toReverse;
+                        _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
+                            _self._renderWindowStart -= toReverse;
+                            if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                                _self._preloadPage(-1, 2);
+                            }
+                            
+                            _self._refreshDividers();
+                            var i;
+                            var delta = 0;
+                            for (i = 0; i < _self.displayLIs.length; ++i) {
+                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
+                                    delta = _self.displayLIs[i].offsetTop - _self.displayLIs[0].offsetTop;
+                                    break;
+                                }
+                            }
+                            
+                            _self.$listWrapper.scrollTop(delta);
+                            _self._restoreScrollEvent();
+                        }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
+                        return;
+                    } else if (_self._preloadPromise) {
+                        _self._preloadPromise.then(_addToBottom);
+                        return;
+                    } else {
+                        _addToBottom(startIdx);
+                    }
+                };
+                _addToBottom(Math.floor(_self._itemsPerPage / 3));
+                
+                /*
                 var markerLI = _self.displayLIs[0];
-                var _addToBottom = function (_prefetchedItems) {
-                    var nElems = _prefetchedItems.length;
-                    var toAdd = [];
-                    for (var i = _prefetchedItems.length - 1; i >= 0; --i) {
-                        var nxtRow = _prefetchedItems[i];
-                        if (_self._renderRowMarkup([], nxtRow, i, function (elem) {
-                            toAdd.unshift(elem[0]);
+                var _addToBottom = function () {
+                    var startIdx = _self._renderWindowStart - _self._preloadWindowStart;
+                    var idx = startIdx;
+                    var toAddElems = [];
+                    while (toAddElems.length < 10 && idx > 0) {
+                        var nxtRow = _self._prefetchedData[idx--];
+                        if (_self._renderRowMarkup([], nxtRow, 0, function (elem) {
+                            toAddElems.unshift(elem[0]);
                             _self.displayLIs.unshift(elem[0]);
                         })) {
                             _self.displayList.unshift(nxtRow);
-                            ++_self.nRendered;
                         }
                     }
-                    if (nElems > 0) {
+                    var delta = idx - startIdx;
+                    _self.displayList = _self.displayList.slice(0, delta);
+                    _self._renderWindowStart += delta;
+
+                    if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                        _self._preloadPage(-1, 2);
+                    }
+                    
+                    if (toAddElems.length > 0) {
                         // Insert right before the first non-extra item in the list.
-                        var lastIDX = _self.displayLIs.length - nElems;
-                        var offsetOfFirstRemoved = _self.displayLIs[lastIDX].offsetTop - _self.displayLIs[lastIDX].offsetHeight;    
-                        var scrollHeight = _self.$listWrapper[0].scrollHeight;
-                        var scrollDelta = scrollHeight - offsetOfFirstRemoved;
-                        $(toAdd).insertBefore($(markerLI));
+                        $(toAddElems).insertBefore($(markerLI));
+                        _self._restoreScrollEvent();
 
                         // Remove the last nElems LIs from the list.
-                        var toRemove = _self.displayLIs.slice(lastIDX);
+                        var toRemove = _self.displayLIs.slice(0 - toAddElems.length);
                         $(toRemove).remove();
-                        _self.displayLIs = _self.displayLIs.slice(0, lastIDX);
-
-                        // Slice the last nElems items off of display list. Make that nextPage
-                        var lastDataIDX = _self.displayList.length - nElems;
-                        _self.nextPage = _self.displayList.slice(lastDataIDX);
-                        _self.displayList = _self.displayList.slice(0, lastDataIDX);
-
-                        _self._renderWindowStart = (_self._renderWindowStart) - nElems;
+                        _self.displayLIs = _self.displayLIs.slice(0, -toAddElems.length);
                         _self._refreshDividers();
-                        _self.$listWrapper.scrollTop(_self.$listWrapper.scrollTop() +  scrollDelta);
-                        if (_self._renderWindowStart > 0) {
-                            _self._preloadPage(-1);
-                        } else {
-                            _self.prevPage = [];
-                        }
+                    }  else if (_self._preloadPromise) {
+                        _self._preloadPromise.then(_addToBottom);
+                        return;
                     }
                     _self._restoreScrollEvent();
-                };
-
-                if (this.prevPage) {
-                    _self._atDataTop = false;
-                    if ($.isArray(this.prevPage)) {
-                        _addToBottom(this.prevPage);
-                    } else {
-                        // Prev page is a promise - make sure only one call gets through the promise
-                        this.prevPage.then(_addToBottom);
-                        this.prevPage = null;
-                    }
-                } else {
-                    this._restoreScrollEvent();
-                }
+                };  
+                _addToBottom();*/
             } else {
-                var markerLI = _self.displayLIs[_self.displayLIs.length - 1];
-                var _addToEnd = function (_prefetchedItems) {
-                    var nElems = _prefetchedItems.length;
-                    var toAdd = [];
-                    for (var i = 0; i < _prefetchedItems.length; ++i) {
-                        var nxtRow = _prefetchedItems[i];
-                        if (_self._renderRowMarkup([], nxtRow, i, function (elem) {
-                            toAdd.push(elem[0]);
-                            _self.displayLIs.push(elem[0]);
-                        })) {
-                            _self.displayList.push(nxtRow);
-                            ++_self.nRendered;
-                        }
-                    }
-                    // Insert after the last item in the list
-                    $(toAdd).insertAfter($(markerLI));
-                    
-                    if (nElems === 0) {
-                        _self._atDataTop = true;
-                    } else {                        
-                        if (nElems === Math.floor(_self._itemsPerPage / 2)) {
-                            // Remove the first nElems LIs from the list
-                            var offsetOfLastRemoved = _self.displayLIs[nElems - 1].offsetTop;
-                            var toRemoveLIs = _self.displayLIs.slice(0, nElems);
-                            _self.displayLIs = _self.displayLIs.slice(nElems);
-                            // 
-                            // This is a full page. Otherwise, it is a partial page. We simply
-                            // extend the list without chopping off the front of it.
-                            $(toRemoveLIs).remove();
-
-                            // Take the first nElems items off of displayList and make them prevPage
-                            _self.prevPage = _self.displayList.slice(0, nElems);
-                            _self.displayList = _self.displayList.slice(nElems);
-                        
-                            _self.$listWrapper.scrollTop(_self.$listWrapper.scrollTop() - offsetOfLastRemoved);
-                        }
-                        _self._renderWindowStart = (_self._renderWindowStart) + nElems;
-
-                        _self._refreshDividers();
-                    }
-                    _self._restoreScrollEvent();
-                    if (!_self._atDataTop) {
-                        _self._preloadPage(1);
+                var _addToEnd = function (toAdd) {
+                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
+                    if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
+                        var lastLI = _self.displayLIs[_self.displayLIs.length - 1];
+                        var lastTop = _self.displayLIs[_self.displayLIs.length - 1].offsetTop;
+                        var lastID = lastLI.attributes['data-id'].nodeValue;
+                        startIdx += toAdd;
+                        _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
+                            var tgtID = args[0];
+                            var origTop = args[1];
+                            _self._renderWindowStart += toAdd;
+                            if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                                _self._preloadPage(1, 2);
+                            }
+                            
+                            _self._refreshDividers();
+                            var i;
+                            var delta = 0;
+                            for (i = _self.displayLIs.length - 1; i > 0; --i) {
+                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
+                                    delta = _self.displayLIs[i].offsetTop - origTop;
+                                    break;
+                                }
+                            }
+                            
+                            _self.$listWrapper.scrollTop(_self.$listWrapper[0].scrollTop + delta);
+                            _self._restoreScrollEvent();
+                        }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
+                        return;
+                    } else if (_self._preloadPromise) {
+                        _self._preloadPromise.then(_addToEnd);
+                        return;
                     } else {
-                        _self.nextPage = [];
+                        _addToEnd(_self._prefetchedData.length - (startIdx + _self._itemsPerPage));
                     }
                 };
-
-                if (this.nextPage) {
-                    if ($.isArray(this.nextPage)) {
-                        _addToEnd(this.nextPage);
-                    } else {
-                        // Prev page is a promise
-                        this.nextPage.then(_addToEnd);
-                        this.nextPage = null;
-                    }
-                } else {
-                    this._restoreScrollEvent();
-                }
+                _addToEnd(Math.floor(_self._itemsPerPage / 3));
             }
-        },
-        
-        /**
-         * Handlers for infinite scrolling.
-         */
-        _refreshListOnScroll: function (oncomplete) {
-            var _self = this;
-            var doRescroll = (_self._prefetchedItems.length >= 20) ? true : false;
-            _self._prefetchPrev = null;
-            _self._prefetchPrevDone = false;
-            _self._prefetchNext = null;
-            _self._prefetchNextDone = false;
-            _self._prefetchNextPromise = null;
-            _self._prefetchPrevPromise = null;
-
-            $.mobile.loading('show', {});
-            _self._refreshData(function () {
-                $.mobile.loading('hide', {});
-                _self.clearSelected();
-                oncomplete(doRescroll);
-            }, false);
         },
         _setScrollTimer: function (scrollAction) {
             this._rescrollInProgress = true;
@@ -850,41 +839,32 @@
                 _self._rescrollInProgress = false;
             }, 500);
         },
-        _rescrollList: function (rescrollTarget) {
-            this._lastScrollPos = rescrollTarget;
-            //this.$listWrapper.scrollTop(rescrollTarget);
-            this.$listWrapper[0].scrollTop = rescrollTarget;
-        },
+        
         scrollHandler: function (ev) {
             var _self = this;
+            if (_self._cancelAllScrolls) {
+                return;
+            }
+            
             var scrollPos = _self.$listWrapper.scrollTop();
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
-            
-            if (_self._cancelAllScrolls || !_self.$parent.is(':visible')) {
-                return;
-            }
             _self._lastScrollPos = scrollPos;
-            if (lastScroll === 0 || lastScroll >= listHeight) {
-                // We just rescrolled. Don't do it again.
+            
+            if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
 
-            if ((lastScroll > scrollPos || scrollPos <= 0) && _self._renderWindowStart > 0) {
-                // We are scrolling up ...
-                if (scrollPos < (listHeight * .4)) {
+            if (scrollPos <= 0 && _self._renderWindowStart > 0) {
                     // stop tracking scroll events
                     _self._stopScrollHandler();
+                    _self._lastScrollPos = Number.MIN_VALUE;
                     _self._nextPage(-1);
-                    _self._lastScrollPos = listHeight;
-                }
-            } else if ((lastScroll <= scrollPos || scrollPos >= listHeight) && !_self._atDataTop) {
+            } else if (scrollPos >= listHeight && !_self._atDataTop) {
                 // Scrolling down.
-                if (scrollPos > (listHeight * .6)) {
-                    _self._stopScrollHandler();
-                    _self._nextPage(1);
-                    _self._lastScrollPos = 0;
-                }
+                _self._stopScrollHandler();
+                _self._lastScrollPos = Number.MIN_VALUE;
+                _self._nextPage(1);
             }
         },
         /**
@@ -1010,15 +990,15 @@
                 }
             }, true, extraItems, _self.originalList, undefined, _options);
         },
+        
         _restoreScrollEvent: function () {
             var _self = this;
-            setTimeout(function() {
-                var __scrollHandler = function (ev) {
-                    _self.scrollHandler(ev);
-                };
-                _self._cancelAllScrolls = false;
-                _self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
-            }, 250);
+            var __scrollHandler = function (ev) {
+                _self.scrollHandler(ev);
+            };
+            _self._cancelAllScrolls = false;
+            //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
+            _self.$listWrapper.scroll(__scrollHandler);
         },
         
         _stopScrollHandler: function() {
@@ -1476,6 +1456,8 @@
         _resetPaging: function () {
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
+            this._preloadWindowStart = 0;
+            this._preloadHitDataTop = false;
             this._itemsPerPage = this.options.itemsPerPage;
             this._atDataTop = false;
             this._rescrollInProgress = false;
@@ -1546,7 +1528,7 @@
                         _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4], refreshArgs[5]);
                     }, 0);
                 }
-                _self._preloadPage(1); // Preload the next page of data from the DB.
+                _self._preloadPage(0, 4); // Preload the 4 pages from the DB.
             }, _options.emptyMessage, oncomplete, noPaginate, extraItems, _options);
         },
         hasIndexedSearch: function () {
