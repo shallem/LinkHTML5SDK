@@ -365,7 +365,11 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
 function __refreshTextArea(mode, formElem) {
     if (mode) {
         var $input = $(formElem.DOM).find('textarea[name="' + formElem.name + '"]');
-        $input.val(formElem.value);
+        if (formElem.type === 'rawTextarea') {
+            $input[0].value = formElem.value;
+        } else {
+            $input.append(formElem.value);
+        }
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',p' + dataNameAttr;
@@ -408,7 +412,13 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'style': computedStyle,
             'class': formElem.computedStyleClass,
             'tabindex': formLayout.__tabIndex++
-        }).append(formElem.value);
+        });
+
+        if (formElem.type === 'rawTextarea') {
+            inputMarkup[0].value = formElem.value;
+        } else {
+            inputMarkup.append(formElem.value);
+        }
         var lbl = $('<label />').attr({
             'for': inputID,
             'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
@@ -449,10 +459,18 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             $(this).trigger('change');
         });
     } else {
+        var toAppend;
         if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
-            inputMarkup = $('<span />').attr('data-name', formElem.name).append("&nbsp;" + formElem.value);
+            toAppend = "&nbsp;" + formElem.value;
+            inputMarkup = $('<span />').attr('data-name', formElem.name);
         } else {
-            inputMarkup = $('<p />').attr('data-name', formElem.name).append(formElem.value);
+            toAppend = formElem.value;
+            inputMarkup = $('<p />').attr('data-name', formElem.name);
+        }
+        if (formElem.type === 'rawTextarea') {
+            inputMarkup[0].innerHTML = formElem.value;
+        } else {
+            inputMarkup.append(formElem.value);
         }
         $fieldContainer.append(inputMarkup);
     }
@@ -563,7 +581,11 @@ function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMini
 function __refreshTextBox(mode, formElem) {
     if (mode && !formElem.viewOnly) {
         var $input = $(formElem.DOM).find('input[name="' + formElem.name + '"]');
-        $input.val(formElem.value);
+        if (formElem.type === 'rawText') {
+            $input[0].value = formElem.value;
+        } else {
+            $input.val(formElem.value);
+        }
         if (formElem.autocompleteList) {
             formElem.autocompleteList.hide();
         }
@@ -571,10 +593,9 @@ function __refreshTextBox(mode, formElem) {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
         var selector = 'span' + dataNameAttr + ',p' + dataNameAttr + ",div" + dataNameAttr;
         var $span = $(formElem.DOM).find(selector);
-        if ($span.is('span')) {
-            $span.text(' ' + formElem.value);
+        if (formElem.type === 'rawText') {
+            $span[0].innerHTML = ' ' + formElem.value;
         } else {
-            /* Should be a 'p' tag or a 'div' tag. */
             $span.text(' ' + formElem.value);
         }
     }
@@ -1792,9 +1813,9 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
         formElem.DOM = $editFieldContainer;
     }
 
-    if ((formElem.type === 'text') || (formElem.type === 'search')) {
+    if ((formElem.type === 'text') || (formElem.type === 'search') || (formElem.type === 'rawText')) {
         renderFn = __appendTextBox;
-    } else if (formElem.type === 'textarea') {
+    } else if (formElem.type === 'textarea' || formElem.type === 'rawTextarea') {
         renderFn = __appendTextArea;
     } else if (formElem.type === 'pickList' || formElem.type === 'picklist') {
         renderFn = __appendSelectMenu;
