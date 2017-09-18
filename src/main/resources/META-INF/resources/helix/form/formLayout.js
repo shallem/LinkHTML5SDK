@@ -628,9 +628,9 @@
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
                     __refreshButtonGroup(item);
-                } else if ((fldType === 'text') || (fldType === 'search')) {
+                } else if ((fldType === 'text') || (fldType === 'search') || (fldType === 'rawText')) {
                     __refreshTextBox(mode, item);
-                } else if (fldType === 'textarea') {
+                } else if (fldType === 'textarea' || fldType === 'rawTextarea') {
                     __refreshTextArea(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
