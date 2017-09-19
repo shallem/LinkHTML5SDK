@@ -368,7 +368,7 @@ function __refreshTextArea(mode, formElem) {
         if (formElem.type === 'rawTextarea') {
             $input[0].value = formElem.value;
         } else {
-            $input.append(formElem.value);
+            $input.text(formElem.value);
         }
     } else {
         var dataNameAttr = '[data-name="' + formElem.name + '"]';
