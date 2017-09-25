@@ -1417,14 +1417,14 @@
                     filterItem.selectmenu({mini: true});
 
                     filterItem.change(function (evt) {
-                        evt.stopImmediatePropagation();
-                        evt.preventDefault();
                         $(this).find("option:selected").each(function () {
                             var gFilterField = $(this).attr('data-field');
                             var gFilterValue = $(this).val();
                             _self._doGlobalFilter(gFilterField, gFilterValue);
                             $(_self._globalFilterContainer).popup("close");
                         });
+                        evt.stopImmediatePropagation();
+                        return false;
                     });
                 }
             }

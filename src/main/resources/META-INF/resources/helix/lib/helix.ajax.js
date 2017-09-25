@@ -1139,14 +1139,21 @@ Helix.Ajax = {
                             Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "fatal");
                         }
                     }
-                    if (callbacks.fatal) {
-                        callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+                    if (jqXHR.status === 408 ||
+                            jqXHR.status === 407) {
+                        // Specifically a timeout or the end of the session.
+                        Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
                     } else {
-                        if (jqXHR.status >= 400 &&
-                            jqXHR.status < 600) {
-                            // Something went wrong on the server. Rather than just drop a potentially important operation,
-                            // treat this is if we are offline ...
-                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+                        if (callbacks.fatal) {
+                            callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+                        } else {
+                            // In the absence of any other handling, queue operations that fail to be retried again later.
+                            if (jqXHR.status >= 400 &&
+                                jqXHR.status < 600) {
+                                // Something went wrong on the server. Rather than just drop a potentially important operation,
+                                // treat this is if we are offline ...
+                                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+                            }
                         }
                     }
                 },
