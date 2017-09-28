@@ -55,7 +55,7 @@ var defaultTypeMapper = {
                     return new Date(parseInt(val, 10) * 1000);
                 }
             case 'BOOL':
-                return val === 1 || val === '1';
+                return val === 1 || val === '1' || val === 'true';
                 break;
             case 'INT':
                 return +val;
