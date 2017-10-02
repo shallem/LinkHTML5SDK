@@ -8295,8 +8295,8 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		var self = this;
 
 		this.select
-			.appendTo( self.button )
-			.bind( "vmousedown", function() {
+			.appendTo( self.button );
+			/*SAH.bind( "vmousedown", function() {
 				// Add active class to button
 				self.button.addClass( $.mobile.activeBtnClass );
 			})
@@ -8348,7 +8348,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 			if ( self.options.preventFocusZoom ) {				
 				$.mobile.zoom.enable( true );
 			}
-		});
+		});*/
 
 	},
 

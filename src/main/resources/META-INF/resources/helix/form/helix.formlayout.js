@@ -344,7 +344,8 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
         $fieldContainer.append(dateDiv);
         tzSelect.selectmenu({
             corners: false,
-            mini: useMiniLayout
+            mini: useMiniLayout,
+            preventFocusZoom: false
         });
         dateDiv.fieldcontain();
         if (formElem.computedStyle || formElem.computedStyleClass) {
@@ -542,7 +543,8 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     }
     $(inputMarkup).selectmenu({
         corners: false,
-        mini: useMiniLayout
+        mini: useMiniLayout,
+        preventFocusZoom: false
     });
     // SAH: migrated to flex box ...
     // if (formElem.computedWidth) {
