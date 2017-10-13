@@ -4209,7 +4209,8 @@
                 if (eventElement = seg.element) {
                     eventElement[0].style.width = Math.max(0, seg.outerWidth - seg.hsides) + 'px';
                     height = Math.max(0, seg.outerHeight - seg.vsides);
-                    eventElement[0].style.height = height + 'px';
+                    // SAH: 25px ~ 2 lines of text (at 10px font size)
+                    eventElement[0].style.height = Math.max(height, 25) + 'px';
                     event = seg.event;
                     if (1 || (seg.contentTop !== undefined && height - seg.contentTop < 10)) {
                         /* SAH: make this the default behavior. Even on tablets the extra real estate is valuable. */
