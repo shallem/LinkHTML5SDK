@@ -263,6 +263,9 @@
             },
             convertDocument: function(url, attachments, success, failure) {
                 return cordova.exec(success, failure, "DocumentDownload", "convertDocument", [ url, attachments ]);
+            },
+            renameDocument: function(docid, name, success, failure) {
+                return cordova.exec(success, failure, "DocumentDownload", "updateName", [ docid, name ]);
             }
         };
     }
