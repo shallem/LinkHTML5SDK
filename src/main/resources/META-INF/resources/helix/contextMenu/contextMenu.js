@@ -97,8 +97,23 @@
             this.id = Helix.Utils.getUniqueID();
             this.refresh();
         },
+        // Update the label with a runtime override
+        updateOverrideLabel: function(selected, target, overrideLabel) {
+            if (overrideLabel) {
+                if (selected.type === 'radio') {
+                    $(target).find('legend.span').text(overrideLabel);
+                } else if (selected.type === 'checkbox') {
+                    $(target).find('span.ui-btn-text').text(overrideLabel);
+                } else if (selected.type === 'text') {
+                    $(target).find('label').text(overrideLabel);
+                } else {
+                    $(target).text(overrideLabel);
+                }
+            }
+        },
+        
         // showItem, status = true or false
-        showItem: function (itemIndex, status) {
+        showItem: function (itemIndex, status, overrideLabel) {
             if (itemIndex >= this.options.items.length) {
                 return false;
             }
@@ -119,12 +134,13 @@
                 // hide item
                 $(target).closest('li').hide();
             }
-
+            
+            this.updateOverrideLabel(selected, target, overrideLabel);
             selected.enabled = status;
             return true;
         },
         // status = true or false
-        enableItem: function (itemIndex, status) {
+        enableItem: function (itemIndex, status, overrideLabel) {
             if (itemIndex >= this.options.items.length) {
                 return false;
             }
@@ -187,6 +203,7 @@
                 }
             }
 
+            this.updateOverrideLabel(selected, target, overrideLabel);
             selected.enabled = status;
             return true;
         },
