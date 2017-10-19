@@ -8189,7 +8189,17 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		/* if ( $el[0].className.length ) {
 			classes = $el[0].className;
 		} */
-		if ( !!~this.element[0].className.indexOf( "ui-btn-left" ) ) {
+                /* SAH rewrite. */ 
+                this.select = this.element.wrap( "<div class='hx-form-container hx-select " + classes + "'>" );
+		this.selectID  = this.select.attr( "id" );
+		this.label = $( "label[for='"+ this.selectID +"']" );
+		this.isMultiple = this.select[ 0 ].multiple;
+		if ( !this.options.theme ) {
+			this.options.theme = $.mobile.getInheritedTheme( this.select, "c" );
+		}
+                
+                /*
+                if ( !!~this.element[0].className.indexOf( "ui-btn-left" ) ) {
 			classes = " ui-btn-left";
 		}
 
@@ -8203,15 +8213,15 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		this.isMultiple = this.select[ 0 ].multiple;
 		if ( !this.options.theme ) {
 			this.options.theme = $.mobile.getInheritedTheme( this.select, "c" );
-		}
+		}*/
 	},
 
 	_destroy: function() {
-		var wrapper = this.element.parents( ".ui-select" );
+		var wrapper = this.element.parents( ".hx-select" );
 		if ( wrapper.length > 0 ) {
-			if ( wrapper.is( ".ui-btn-left, .ui-btn-right" ) ) {
+			/*if ( wrapper.is( ".ui-btn-left, .ui-btn-right" ) ) {
 				this.element.addClass( wrapper.is( ".ui-btn-left" ) ? "ui-btn-left" : "ui-btn-right" );
-			}
+			}*/
 			this.element.insertAfter( wrapper );
 			wrapper.remove();
 		}
@@ -8225,7 +8235,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		// TODO explore plugin registration
 		this._trigger( "beforeCreate" );
 
-		this.button = this._button();
+		//this.button = this._button();
 
 		var self = this,
 
@@ -8238,8 +8248,9 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 			// IE throws an exception at options.item() function when
 			// there is no selected item
 			// select first in this case
-			selectedIndex = this.select[ 0 ].selectedIndex === -1 ? 0 : this.select[ 0 ].selectedIndex,
+			selectedIndex = this.select[ 0 ].selectedIndex === -1 ? 0 : this.select[ 0 ].selectedIndex;
 
+/* SAH remove button
 			// TODO values buttonId and menuId are undefined here
 			button = this.button
 				.insertBefore( this.select )
@@ -8254,7 +8265,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 					mini: mini
 				});
 
-		this.setButtonText();
+		//this.setButtonText();
 
 		// Opera does not properly support opacity on select elements
 		// In Mini, it hides the element, but not its text
@@ -8262,15 +8273,15 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		// for these reasons, using the nativeMenu option results in a full native select in Opera
 		if ( options.nativeMenu && window.opera && window.opera.version ) {
 			button.addClass( "ui-select-nativeonly" );
-		}
+		}  */
 
 		// Add counter for multi selects
-		if ( this.isMultiple ) {
+		/*if ( this.isMultiple ) {
 			this.buttonCount = $( "<span>" )
 				.addClass( "ui-li-count ui-btn-up-" + theme +" ui-btn-corner-all" )
 				.hide()
 				.appendTo( button.addClass('ui-li-has-count') );
-		}
+		}*/
 
 		// Disable if specified
 		if ( options.disabled || this.element.attr('disabled')) {
@@ -8281,9 +8292,9 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		this.select.change(function() {
 			self.refresh();
 			
-			if ( !!options.nativeMenu ) {
+			/*if ( !!options.nativeMenu ) {
 				this.blur();
-			}
+			}*/
 		});
 
 		this._handleFormReset();
@@ -8292,11 +8303,11 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 	},
 
 	build: function() {
-		var self = this;
+		/*SAHvar self = this;
 
 		this.select
 			.appendTo( self.button );
-			/*SAH.bind( "vmousedown", function() {
+			.bind( "vmousedown", function() {
 				// Add active class to button
 				self.button.addClass( $.mobile.activeBtnClass );
 			})
@@ -8365,7 +8376,7 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 	},
 
 	setButtonText: function() {
-		var self = this,
+		/*SAH var self = this,
 			selected = this.selected(),
 			text = this.placeholder,
 			span = $( document.createElement( "span" ) );
@@ -8383,16 +8394,17 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 			return span.text( text )
 				.addClass( self.select.attr( "class" ) )
 				.addClass( selected.attr( "class" ) );
-		});
+		});*/
 	},
 
 	setButtonCount: function() {
-		var selected = this.selected();
+	/*SAH	
+            var selected = this.selected();
 
 		// multiple count inside button
 		if ( this.isMultiple ) {
 			this.buttonCount[ selected.length > 1 ? "show" : "hide" ]().text( selected.length );
-		}
+		}*/
 	},
 
 	_reset: function() {
@@ -8411,12 +8423,12 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 
 	disable: function() {
 		this._setDisabled( true );
-		this.button.addClass( "ui-disabled" );
+		/*SAH this.button.addClass( "ui-disabled" ); */
 	},
 
 	enable: function() {
 		this._setDisabled( false );
-		this.button.removeClass( "ui-disabled" );
+		/*SAH this.button.removeClass( "ui-disabled" ); */
 	}
 }, $.mobile.behaviors.formReset ) );
 
@@ -9841,12 +9853,12 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 
 	// issue #3894 - core doesn't trigger events on disabled delegates
 	$.mobile.document.bind( "selectmenubeforecreate", function( event ) {
-		var selectmenuWidget = $( event.target ).data( "mobile-selectmenu" );
+		/*var selectmenuWidget = $( event.target ).data( "mobile-selectmenu" );
 
 		if ( !selectmenuWidget.options.nativeMenu &&
 				selectmenuWidget.element.parents( ":jqmData(role='popup')" ).length === 0 ) {
 			extendSelect( selectmenuWidget );
-		}
+		}*/
 	});
 })( jQuery );
 
