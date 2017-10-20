@@ -55,7 +55,7 @@
 		ajaxEnabled: true,
 
 		// Automatically load and show pages based on location.hash
-		hashListeningEnabled: true,
+		hashListeningEnabled: false,
 
 		// disable to prevent jquery from bothering with links
 		linkBindingEnabled: true,
@@ -8289,13 +8289,13 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 		}
 
 		// Events on native select
-		this.select.change(function() {
-			self.refresh();
+		//this.select.change(function() {
+		//	self.refresh();
 			
 			/*if ( !!options.nativeMenu ) {
 				this.blur();
 			}*/
-		});
+		//});
 
 		this._handleFormReset();
 

@@ -748,47 +748,6 @@
                     }
                 };
                 _addToBottom(Math.floor(_self._itemsPerPage / 3));
-                
-                /*
-                var markerLI = _self.displayLIs[0];
-                var _addToBottom = function () {
-                    var startIdx = _self._renderWindowStart - _self._preloadWindowStart;
-                    var idx = startIdx;
-                    var toAddElems = [];
-                    while (toAddElems.length < 10 && idx > 0) {
-                        var nxtRow = _self._prefetchedData[idx--];
-                        if (_self._renderRowMarkup([], nxtRow, 0, function (elem) {
-                            toAddElems.unshift(elem[0]);
-                            _self.displayLIs.unshift(elem[0]);
-                        })) {
-                            _self.displayList.unshift(nxtRow);
-                        }
-                    }
-                    var delta = idx - startIdx;
-                    _self.displayList = _self.displayList.slice(0, delta);
-                    _self._renderWindowStart += delta;
-
-                    if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
-                        _self._preloadPage(-1, 2);
-                    }
-                    
-                    if (toAddElems.length > 0) {
-                        // Insert right before the first non-extra item in the list.
-                        $(toAddElems).insertBefore($(markerLI));
-                        _self._restoreScrollEvent();
-
-                        // Remove the last nElems LIs from the list.
-                        var toRemove = _self.displayLIs.slice(0 - toAddElems.length);
-                        $(toRemove).remove();
-                        _self.displayLIs = _self.displayLIs.slice(0, -toAddElems.length);
-                        _self._refreshDividers();
-                    }  else if (_self._preloadPromise) {
-                        _self._preloadPromise.then(_addToBottom);
-                        return;
-                    }
-                    _self._restoreScrollEvent();
-                };  
-                _addToBottom();*/
             } else {
                 var _addToEnd = function (toAdd) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
@@ -1315,11 +1274,82 @@
         },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
-                this._globalFilterContainer.find('option[data-field="' + fField + '"]').removeAttr('selected');
-                this._globalFilterContainer.find('option[value="__hx_clear"][data-field="' + fField + '"]').prop('selected', 'true');
-                this._globalFilterContainer.find('select[data-field="' + fField + '"]').selectmenu('refresh');
+                this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
+                this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
             }
         },
+        _makeFilterRadioDOM: function(filtersList, filterObj, fldName) {
+            var radioMarkup = $('<li />').addClass('hx-full-width');
+            var formMarkup = $("<form />").addClass('hx-full-width').appendTo(radioMarkup);
+            var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup).addClass('hx-full-width');
+            var _self = this;
+
+            for (var i = 0; i < filterObj.values.length; ++i) {
+                var filterName = filterObj.valueNames[i];
+                if (!filterName || !filterName.trim()) {
+                    continue;
+                }
+
+                var inputID = Helix.Utils.getUniqueID();
+                $('<label />').attr({
+                    'for': inputID,
+                    'data-corners': 'false'
+                }).append(filterName)
+                        .appendTo(wrapperMarkup);
+                var inputMarkup = $('<input/>').attr({
+                    'name': fldName,
+                    'id': inputID,
+                    'type': 'radio',
+                    'tabindex': -1,
+                    'data-corners': 'false',
+                    'data-value': filterObj.values[i],
+                    'data-field' : fldName
+                }).appendTo(wrapperMarkup);
+                $(inputMarkup).change(function (evt) {
+                    if (this.checked === true) {
+                        var gFilterField = $(this).attr('data-field');
+                        _self._doGlobalFilter(gFilterField, Number($(this).attr('data-value')));
+                    }
+                    $(_self._globalFilterContainer).popup("close");
+                    evt.stopImmediatePropagation();
+                    return false;
+                });
+            }
+            $('<input/>').attr({
+                'name': fldName,
+                'id': 'clear',
+                'type': 'radio',
+                'tabindex': -1,
+                'data-corners': 'false',
+                'data-value': '__hx_clear',
+                'data-field' : fldName,
+                'checked' : 'true'
+            }).appendTo(wrapperMarkup)
+                    .change(function (evt) {
+                    if (this.checked === true) {
+                        var gFilterField = $(this).attr('data-field');
+                        _self._doGlobalFilter(gFilterField, '__hx_clear');
+                    }
+                    $(_self._globalFilterContainer).popup("close");
+                    evt.stopImmediatePropagation();
+                    return false;
+                });
+            $('<label />').attr({
+                'for': 'clear',
+                'data-corners': 'false'
+            }).append('Any')
+                .appendTo(wrapperMarkup);
+            wrapperMarkup.appendTo(filtersList);
+            wrapperMarkup.find('input').checkboxradio({
+                    mini: true
+                });
+            $(wrapperMarkup).controlgroup({
+                mini: true,
+                type: 'horizontal'
+            });
+            return radioMarkup;
+        },
+        
         _refreshGlobalFilterContainer: function (filters) {
             var _self = this;
 
@@ -1364,7 +1394,8 @@
                         'href': 'javascript:void(0)',
                         'data-field': fldName,
                         'data-value': filterObj.values[0]
-                    }).append(filterObj.valueNames[0]));
+                    }).appendTo(filtersList)
+                            .append(filterObj.valueNames[0]));
                     filtersList.append(filterItem);
 
                     // Execute the global filter.
@@ -1378,54 +1409,10 @@
                         $(_self._globalFilterContainer).popup("close");
                     });
                 } else {
-                    var selectID = Helix.Utils.getUniqueID();
-                    $('<label/>').attr({
-                        'for': selectID
-                    }).append(filterObj.display).appendTo(filtersList);
-                    filterItem = $('<select/>')
-                            .attr({
-                                'name': selectID,
-                                'id': selectID,
-                                'data-field': fldName,
-                                'data-corners': "false",
-                                'data-native-menu': "false",
-                                'data-theme': "d",
-                                'data-overlay-theme': "d"
-                            })
-                            .appendTo(filtersList);
-                    for (var i = 0; i < filterObj.values.length; ++i) {
-                        var filterName = filterObj.valueNames[i];
-                        if (!filterName || !filterName.trim()) {
-                            continue;
-                        }
-
-                        $('<option/>').attr({
-                            'value': filterObj.values[i],
-                            'data-field': fldName
-                        })
-                                .append(filterName)
-                                .appendTo(filterItem);
-                    }
-                    // add a special 'clear' value, which is the default value.
-                    $('<option/>').attr({
-                        'value': '__hx_clear',
-                        'data-field': fldName,
-                        'selected': 'true'
-                    }).append('Clear')
-                            .appendTo(filterItem);
-
-                    filterItem.selectmenu({mini: true});
-
-                    filterItem.change(function (evt) {
-                        $(this).find("option:selected").each(function () {
-                            var gFilterField = $(this).attr('data-field');
-                            var gFilterValue = $(this).val();
-                            _self._doGlobalFilter(gFilterField, gFilterValue);
-                            $(_self._globalFilterContainer).popup("close");
-                        });
-                        evt.stopImmediatePropagation();
-                        return false;
-                    });
+                    // Make the filter name a list divider.
+                    var nxtLI = $('<li />').appendTo(filtersList);
+                    nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
+                    _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
                 }
             }
 
