@@ -675,7 +675,7 @@
             }
         },
         
-        __copyOneValue : function(item, valuesMap) {
+        __copyOneValue: function(item, valuesMap) {
             var fieldID = item.name;
             var strippedFieldID = this._stripNamespace(fieldID);
             if (!item.readOnly) {

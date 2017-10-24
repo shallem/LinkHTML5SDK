@@ -456,6 +456,10 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.onfocus) {
             $(inputMarkup).focus(formElem.onfocus);
         }
+        if (formElem.onclick) {
+            $(inputMarkup).on(Helix.clickEvent, formElem.onclick);
+            $(lbl).css('color', 'blue').on(Helix.clickEvent, formElem.onclick);
+        }
         $(inputMarkup).on('input', function () {
             $(this).trigger('change');
         });
