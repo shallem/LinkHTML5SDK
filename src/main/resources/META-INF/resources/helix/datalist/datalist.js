@@ -1741,11 +1741,10 @@
         },
         _doRemoteSearch: function (searchText, localResultsColl) {
             var _self = this;
+            if (_self.__searchReadyTimeout) {
+                clearTimeout(_self.__searchReadyTimeout);
+            }
             _self.__searchReadyTimeout = setTimeout(function () {
-                if (_self.__searchReadyTimeout) {
-                    clearTimeout(_self.__searchReadyTimeout);
-                }
-
                 if (searchText) {
                     _self.options.indexedSearch.call(_self, searchText, function (displayCollection, oncomplete, optionsOverrides) {
                         _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);

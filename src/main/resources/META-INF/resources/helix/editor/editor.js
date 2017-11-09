@@ -166,17 +166,17 @@
         //==================
 
         _attachEditFrameEvents: function() {
-            var _self = this;
             var lastClick = null;
             $(document).on('mousedown touchstart', function(ev) {
                 lastClick = ev.target;
             });
-            $(this.$editFrame).on('keypress', function(ev) {
+            $(this.$editFrame).on('keypress', null, this, function(ev) {
                 var typed = String.fromCharCode(ev.keyCode);
                 return true;
             });
             
-            $(document).on('selectionchange', function() {
+            $(document).on('selectionchange', null, this, function(ev) {
+                var _self = ev.data;
                 if (window.getSelection().rangeCount > 0) {
                     var _last = window.getSelection().getRangeAt(0);
                     if ($(_last.commonAncestorContainer).closest(Helix.Utils.escapeClientId(_self.name)).length) {
@@ -185,7 +185,8 @@
                 }
             });
             
-            $(this.$editFrame).on('input', function() {
+            $(this.$editFrame).on('input', null, this, function(ev) {
+                var _self = ev.data;
                 if (window.getSelection().rangeCount > 0) {
                     _self._lastInputRange = window.getSelection().getRangeAt(0);
                 }
@@ -202,7 +203,8 @@
                 $(this).trigger('change');
             });
             
-            $(this.$editFrame).on('blur', function() {
+            $(this.$editFrame).on('blur', null, this, function(ev) {
+                var _self = ev.data;
                 // Make sure the last click was not on a toolbar element.
                 if ($(lastClick).closest('.hx-editor-button').length) {
                     return;
@@ -217,7 +219,8 @@
                 _self.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
             });
 
-            $(this.$editFrame).on('focus', function() {
+            $(this.$editFrame).on('focus', null, this, function(ev) {
+                var _self = ev.data;
                 _self.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
                 _self.$toolbarEnabled = true;
                 if (_self.isFirstTyping) {
@@ -225,6 +228,11 @@
                     _self.styleChanges.push(['firstcap', null]);
                     _self.isFirstTyping = false;
                 }
+                setTimeout(function() {
+                    if (window.getSelection() && window.getSelection().focusNode) {
+                        _self._lastInputNode = window.getSelection().focusNode;
+                    }
+                }, 1000);
             });
         },
         
@@ -318,6 +326,7 @@
         },
         
         _executeAction: function(menuName, action, actionArg) {
+            this.menuPopups[menuName].popup('close');
             switch(action) {
                 case 'undo':
                 case 'redo':
@@ -332,14 +341,17 @@
                 default:
                     return false;
             }
-            this.menuPopups[menuName].popup('close');
             return true;
         },
         
         _appendList: function(listTag) {
+            this.focus();
+            
             var $parent = this.$editFrame;
             if (this._lastInputRange) {
                 $parent = $(this._lastInputRange.commonAncestorContainer);
+            } else if (this._lastInputNode) {
+                $parent = $(this._lastInputNode);
             }
             
             var _list = $(listTag);
