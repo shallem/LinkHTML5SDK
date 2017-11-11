@@ -84,33 +84,23 @@ var MobileHelixDatabase_Result = function(data) {
  */
 function completeQuery(query, data) {
     if (query) {
-        try {
-            delete MobileHelixDatabase.queryQueue[query.id];
+        delete MobileHelixDatabase.queryQueue[query.id];
 
-            // Get transaction
-            var tx = query.tx;
+        // Get transaction
+        var tx = query.tx;
 
-            // If transaction hasn't failed
-            // Note: We ignore all query results if previous query
-            //       in the same transaction failed.
-            if (tx && tx.queryList[query.id]) {
+        // If transaction hasn't failed
+        // Note: We ignore all query results if previous query
+        //       in the same transaction failed.
+        if (tx && tx.queryList[query.id]) {
 
-                // Save query results
-                var r = new MobileHelixDatabase_Result(data);
-                try {
-                    if (typeof query.successCallback === 'function') {
-                        query.successCallback(query.tx, r);
-                    }
-                } catch (ex) {
-                    console.log("executeSql error calling user success callback: "+ex);
-                    throw ex;
-                }
-
-                tx.queryComplete(query.id);
+            // Save query results
+            var r = new MobileHelixDatabase_Result(data);
+            if (typeof query.successCallback === 'function') {
+                query.successCallback(query.tx, r);
             }
-        } catch (e) {
-            console.log("executeSql error: "+e);
-            throw e;
+
+            tx.queryComplete(query.id);
         }
     }
 }
