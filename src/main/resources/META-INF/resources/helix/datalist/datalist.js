@@ -311,8 +311,8 @@
             /**
              * Function to call when a filtering operation is done.
              */
-            filterDone: function() {
-                
+            filterDone: function () {
+
             },
             /**
              * List of data to display in the list. Must be a PersistenceJS
@@ -480,14 +480,14 @@
             if (!ad) {
                 ad = false;
             } else if (Helix.Utils.isString(ad)) {
-                if (ad.toLowerCase() === 'false'){
+                if (ad.toLowerCase() === 'false') {
                     ad = false;
                 } else {
                     ad = true;
                 }
             }
             this.hasAutodividers = ad;
-            
+
             var ads = function (elt) {
                 var callback = _self.options.autodividersSelectorCallback;
 
@@ -564,30 +564,30 @@
                 });
             }
         },
-        _refreshDividers: function() {
+        _refreshDividers: function () {
             if (!this.hasAutodividers) {
                 return;
             }
-            this.$parent.find( "li:jqmData(role='list-divider')" ).remove();
+            this.$parent.find("li:jqmData(role='list-divider')").remove();
 
-            var lis = this.$parent.find( 'li' ),
+            var lis = this.$parent.find('li'),
                     lastDividerText = null, li, dividerText;
 
-            for ( var i = 0; i < lis.length ; i++ ) {
-                    li = lis[i];
-                    dividerText = this.autodividerSelector( $( li ) );
+            for (var i = 0; i < lis.length; i++) {
+                li = lis[i];
+                dividerText = this.autodividerSelector($(li));
 
-                    if ( dividerText && lastDividerText !== dividerText ) {
-                            var divider = document.createElement( 'li' );
-                            divider.appendChild( document.createTextNode( dividerText ) );
-                            divider.setAttribute( 'data-' + $.mobile.ns + 'role', 'list-divider' );
-                            divider.classList.add('ui-li-divider','ui-bar-d','hx-no-webkit-select');
-                            li.parentNode.insertBefore( divider, li );
-                    }
-                    // SAH - blank means ignore
-                    if (dividerText) {
-                        lastDividerText = dividerText;
-                    }
+                if (dividerText && lastDividerText !== dividerText) {
+                    var divider = document.createElement('li');
+                    divider.appendChild(document.createTextNode(dividerText));
+                    divider.setAttribute('data-' + $.mobile.ns + 'role', 'list-divider');
+                    divider.classList.add('ui-li-divider', 'ui-bar-d', 'hx-no-webkit-select');
+                    li.parentNode.insertBefore(divider, li);
+                }
+                // SAH - blank means ignore
+                if (dividerText) {
+                    lastDividerText = dividerText;
+                }
             }
         },
         setDefaultSort: function () {
@@ -639,13 +639,12 @@
                 $(emptyLI).hide();
             }
         },
-        
         _preloadPage: function (direction, pageCt) {
             if (this.options.grouped) {
                 // No preloading when we are dealing with a grouped list ...
                 return;
             }
-            
+
             var displayCollection = this.itemList;
             if ($.isArray(displayCollection)) {
                 // No preloading an array.
@@ -661,10 +660,10 @@
             if (this._preloadWindowStart === 0 && direction < 0) {
                 return;
             }
-            
+
             var nElems = pageCt * this._itemsPerPage;
             displayCollection = displayCollection.limit(nElems);
-            
+
             var skip = 0;
             if (direction < 0) {
                 skip = Math.max(0, this._preloadWindowStart - nElems);
@@ -672,12 +671,12 @@
                 skip = this._preloadWindowStart + this._prefetchedData.length;
             }
             displayCollection = displayCollection.skip(skip);
-            
+
             var _self = this;
             _self._preloadPromise = new Promise(function (resolve, reject) {
                 var _prefetchedItems = [];
                 displayCollection.newEach({
-                    startFn: function(ct) {
+                    startFn: function (ct) {
                         // if we don't get the full number of elems we asked for, we have run out of
                         // data
                         if (ct < nElems) {
@@ -725,7 +724,7 @@
                             if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
                                 _self._preloadPage(-1, 2);
                             }
-                            
+
                             _self._refreshDividers();
                             var i;
                             var delta = 0;
@@ -735,7 +734,7 @@
                                     break;
                                 }
                             }
-                            
+
                             _self.$listWrapper.scrollTop(delta);
                             _self._restoreScrollEvent();
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
@@ -763,7 +762,7 @@
                             if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
                                 _self._preloadPage(1, 2);
                             }
-                            
+
                             _self._refreshDividers();
                             var i;
                             var delta = 0;
@@ -773,7 +772,7 @@
                                     break;
                                 }
                             }
-                            
+
                             _self.$listWrapper.scrollTop(_self.$listWrapper[0].scrollTop + delta);
                             _self._restoreScrollEvent();
                         }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
@@ -798,27 +797,26 @@
                 _self._rescrollInProgress = false;
             }, 500);
         },
-        
         scrollHandler: function (ev) {
             var _self = this;
             if (_self._cancelAllScrolls) {
                 return;
             }
-            
+
             var scrollPos = _self.$listWrapper.scrollTop();
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
             _self._lastScrollPos = scrollPos;
-            
+
             if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
 
             if (scrollPos <= 0 && _self._renderWindowStart > 0) {
-                    // stop tracking scroll events
-                    _self._stopScrollHandler();
-                    _self._lastScrollPos = Number.MIN_VALUE;
-                    _self._nextPage(-1);
+                // stop tracking scroll events
+                _self._stopScrollHandler();
+                _self._lastScrollPos = Number.MIN_VALUE;
+                _self._nextPage(-1);
             } else if (scrollPos >= listHeight && !_self._atDataTop) {
                 // Scrolling down.
                 _self._stopScrollHandler();
@@ -949,7 +947,6 @@
                 }
             }, true, extraItems, _self.originalList, undefined, _options);
         },
-        
         _restoreScrollEvent: function () {
             var _self = this;
             var __scrollHandler = function (ev) {
@@ -959,12 +956,10 @@
             //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
             _self.$listWrapper.scroll(__scrollHandler);
         },
-        
-        _stopScrollHandler: function() {
+        _stopScrollHandler: function () {
             this._cancelAllScrolls = true;
             this.$listWrapper.off('scroll');
         },
-        
         /**
          * Helpers for infinite scroll.
          */
@@ -1001,7 +996,7 @@
                 displayCollection = _self._resetGlobalFilters(list);
             }
             var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
-            _self._refreshData(function () {                
+            _self._refreshData(function () {
                 if (selectedID) {
                     _self.setSelected(_self.$listWrapper.find('li[data-id="' + selectedID + '"]'));
                 } else {
@@ -1278,7 +1273,7 @@
                 this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
             }
         },
-        _makeFilterRadioDOM: function(filtersList, filterObj, fldName) {
+        _makeFilterRadioDOM: function (filtersList, filterObj, fldName) {
             var radioMarkup = $('<li />').addClass('hx-full-width');
             var formMarkup = $("<form />").addClass('hx-full-width').appendTo(radioMarkup);
             var wrapperMarkup = $('<fieldset/>').appendTo(formMarkup).addClass('hx-full-width');
@@ -1303,7 +1298,7 @@
                     'tabindex': -1,
                     'data-corners': 'false',
                     'data-value': filterObj.values[i],
-                    'data-field' : fldName
+                    'data-field': fldName
                 }).appendTo(wrapperMarkup);
                 $(inputMarkup).change(function (evt) {
                     if (this.checked === true) {
@@ -1322,34 +1317,33 @@
                 'tabindex': -1,
                 'data-corners': 'false',
                 'data-value': '__hx_clear',
-                'data-field' : fldName,
-                'checked' : 'true'
+                'data-field': fldName,
+                'checked': 'true'
             }).appendTo(wrapperMarkup)
                     .change(function (evt) {
-                    if (this.checked === true) {
-                        var gFilterField = $(this).attr('data-field');
-                        _self._doGlobalFilter(gFilterField, '__hx_clear');
-                    }
-                    $(_self._globalFilterContainer).popup("close");
-                    evt.stopImmediatePropagation();
-                    return false;
-                });
+                        if (this.checked === true) {
+                            var gFilterField = $(this).attr('data-field');
+                            _self._doGlobalFilter(gFilterField, '__hx_clear');
+                        }
+                        $(_self._globalFilterContainer).popup("close");
+                        evt.stopImmediatePropagation();
+                        return false;
+                    });
             $('<label />').attr({
                 'for': 'clear',
                 'data-corners': 'false'
             }).append('Any')
-                .appendTo(wrapperMarkup);
+                    .appendTo(wrapperMarkup);
             wrapperMarkup.appendTo(filtersList);
             wrapperMarkup.find('input').checkboxradio({
-                    mini: true
-                });
+                mini: true
+            });
             $(wrapperMarkup).controlgroup({
                 mini: true,
                 type: 'horizontal'
             });
             return radioMarkup;
         },
-        
         _refreshGlobalFilterContainer: function (filters) {
             var _self = this;
 
@@ -1470,7 +1464,7 @@
             if (_self.options.headerText) {
                 if (!_self._headerLI) {
                     _self._headerLI = $('<li />').attr({
-                        'class' : 'ui-li-divider ui-bar-d hx-no-webkit-select',
+                        'class': 'ui-li-divider ui-bar-d hx-no-webkit-select',
                         'data-role': 'list-divider'
                     }).append(_options.headerText)
                             .appendTo(_self.$parent);
@@ -1487,8 +1481,8 @@
             } else {
 
             }
-	    
-	    /* Must happen after we call _resetPaging */
+
+            /* Must happen after we call _resetPaging */
             if (renderWindowStart !== undefined) {
                 _self.setRenderWindowStart(renderWindowStart);
             }
@@ -1755,7 +1749,7 @@
 
         },
         getCurrentSearchText: function () {
-	    if (!this.$searchBox) {
+            if (!this.$searchBox) {
                 // Search is not enabled OR we have not yet displayed this list.
                 return '';
             }
@@ -1763,7 +1757,7 @@
         },
         setCurrentSearchText: function (searchQry, doSearch) {
             this.$searchBox.val(searchQry);
-	    if (doSearch === true) {
+            if (doSearch === true) {
                 this._doSearch();
             }
         },
@@ -1833,19 +1827,17 @@
             this._searchSortDirty = true;
             this._prependSearchBox(this.options);
         },
-        
-        _addSortFilterButton: function(id, icon, onclick) {
+        _addSortFilterButton: function (id, icon, onclick) {
             return $('<a/>').attr({
-                        'id': id,
-                        'class': 'ui-btn iconbutton hx-icon-sort-filter'
-                    }).append($('<div/>').attr({
-                        'class' : 'hx-btn-inner'
-                    }).append($('<div/>').attr({
-                        'class' : 'hx-icon ui-icon-' + icon
-                    }))).appendTo(this.$sortDiv)
-                        .on(this.tapEvent, onclick);
+                'id': id,
+                'class': 'ui-btn iconbutton hx-icon-sort-filter'
+            }).append($('<div/>').attr({
+                'class': 'hx-btn-inner'
+            }).append($('<div/>').attr({
+                'class': 'hx-icon ui-icon-' + icon
+            }))).appendTo(this.$sortDiv)
+                    .on(this.tapEvent, onclick);
         },
-        
         _prependSearchBox: function (options) {
             var _self = this;
             var useControlGroup = false;
@@ -1882,12 +1874,12 @@
                         'descending': PrimeFaces.escapeClientId(sDescendID)
                     };
 
-                    this.$sortAscending = this._addSortFilterButton(sAscendID, 'hx-sort-asc-black', function(ev) {
+                    this.$sortAscending = this._addSortFilterButton(sAscendID, 'hx-sort-asc-black', function (ev) {
                         ev.stopImmediatePropagation();
                         _self.displaySortMenu(this);
                         return false;
                     });
-                    this.$sortDescending = this._addSortFilterButton(sDescendID, 'hx-sort-desc-black', function(ev) {
+                    this.$sortDescending = this._addSortFilterButton(sDescendID, 'hx-sort-desc-black', function (ev) {
                         ev.stopImmediatePropagation();
                         _self.displaySortMenu(this);
                         return false;
@@ -1897,7 +1889,7 @@
                 if (options.showFilterButton) {
                     /* Filter button. */
                     var sFilterID = Helix.Utils.getUniqueID();
-                    this.$filter = this._addSortFilterButton(sFilterID, 'hx-filter-black', function(ev) {
+                    this.$filter = this._addSortFilterButton(sFilterID, 'hx-filter-black', function (ev) {
                         ev.stopImmediatePropagation();
                         _self.displayGlobalFilterMenu(this);
                         return false;
@@ -1961,7 +1953,7 @@
                         // If we had previously searched and we then blur the search box
                         // when it is empty, restore the original list.
                         if (!_self.$searchBox.val() && _self.__searchText) {
-                            _self.clearSearchText();
+                            _self._clearSearchText();
                             _self.resetListContents();
                         }
                         if (_self.$sortDiv) {
@@ -1984,8 +1976,6 @@
 
                 var $clearBtn = $searchDiv.find('a.ui-input-clear');
                 $clearBtn.on(_self.tapEvent, function () {
-                    _self.$searchBox.val('');
-                    _self.$searchBox.blur();
                     _self.clearSearchText();
                     _self.resetListContents();
                     return false;
@@ -2082,7 +2072,7 @@
                     } else {
                         $('<li />').attr({
                             'data-group': rowIndex,
-                            'data-role' : 'empty-group'
+                            'data-role': 'empty-group'
                         }).append(_self.options.emptyGroupMessage)
                                 .insertAfter(dividerLI);
                     }
@@ -2096,7 +2086,7 @@
                                 .append(_self.options.groupOverflowText);
                         var $moreLink = $('<a/>').attr({
                             'href': 'javascript:void(0)',
-                            'class' : 'ui-btn ui-btn-up-c'
+                            'class': 'ui-btn ui-btn-up-c'
                         }).append($moreMarkup);
                         if (_self.options.groupOverflowTextClass) {
                             $moreMarkup.addClass(_self.options.groupOverflowTextClass);
@@ -2159,7 +2149,7 @@
                 if (arrIdx >= LIs.length) {
                     dividerLI = $('<li />').attr({
                         'data-role': 'list-divider',
-			'class' : 'ui-li-divider ui-bar-d hx-no-webkit-select'
+                        'class': 'ui-li-divider ui-bar-d hx-no-webkit-select'
                     }).append(groupName);
                     dividerLI.appendTo(_self.$parent);
                 } else {
@@ -2226,7 +2216,7 @@
                             oncomplete();
                             return false;
                         }
-            } else {
+                    } else {
                 // Not grouped
                 if (_self._renderRowMarkup(LIs, curRow, _self.displayList.length)) {
                     _self.displayList.push(curRow);
@@ -2326,7 +2316,7 @@
                 }
             }, 0, this);
         },
-        _runContextAction: function(_tgtDiv) {
+        _runContextAction: function (_tgtDiv) {
             this.setSelected(_tgtDiv);
             if (!this.options.itemContextMenuFilter || this.options.itemContextMenuFilter(this.selected)) {
                 this.options.itemContextMenu.open({
@@ -2575,7 +2565,7 @@
             curRowParent.data('group', group);
             curRowParent.data('data', row);
             return true;
-    },
+        },
         _renderRowMarkup: function (LIs, row, rowIndex, attachFn) {
             var _self = this;
             var curRowParent = null;
@@ -2786,9 +2776,9 @@
                     } else {
                         lastComponent = $('<div/>').attr({
                             'data-role': 'multiselect',
-                            'class' : 'hx-multi-select-parent'
+                            'class': 'hx-multi-select-parent'
                         }).append($('<div/>').attr({
-                            'class' : 'hx-multi-select-button'
+                            'class': 'hx-multi-select-button'
                         }));
                         $(parentElement).prepend(lastComponent);
                     }
@@ -2798,7 +2788,7 @@
                     parentElement.removeClass('hx-multi-select-item');
                 }
             }
-            
+
             var oldPfx = components.prefix;
             if (rowComponents.prefix) {
                 if (oldPfx /*oldPfx.length*/) {
@@ -2813,14 +2803,14 @@
                     }
                 }
             } else if (oldPfx) {
-		oldPfx.hide();
+                oldPfx.hide();
             }
 
             var bodyParent = components.bodyParent;
             if (!bodyParent) {
                 bodyParent = $('<div />').attr({
-                    'data-role' : 'bodyParent',
-                    'class' : 'hx-flex-fill'
+                    'data-role': 'bodyParent',
+                    'class': 'hx-flex-fill'
                 }).appendTo(parentElement);
             }
             lastComponent = bodyParent;
@@ -2867,7 +2857,7 @@
 
             var splitLink = components.splitlink;
             if (rowComponents.splitLink) {
-                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link'); 
+                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link');
                 if (splitLink) {
                     splitLink.replaceWith(_newSplit);
                 } else {
@@ -3072,12 +3062,18 @@
          * 
          * @returns {undefined}
          */
-        clearSearchText: function () {
+        _clearSearchText: function() {
             if (this.$searchBox) {
                 this.$searchBox.val(this.options.indexedSearchText ? this.options.indexedSearchText : '');
                 this.__searchClear = true;
             }
             this.__searchText = '';
+        },
+        clearSearchText: function () {
+            this._clearSearchText();
+            if (this.$searchBox) {
+                this.$searchBox.blur();
+            }
         },
         hideList: function () {
             this.$wrapper.hide();
@@ -3151,20 +3147,18 @@
         /**
          * Overlay content on top of the header section.
          */
-        overlayHeader: function(markup) {
+        overlayHeader: function (markup) {
             this.restoreHeaderMarkup = this.$headerSection.children();
             this.restoreHeaderMarkup.detach();
             this.$headerSection.append(markup);
         },
-        
-        restoreHeader: function() {
+        restoreHeader: function () {
             if (this.restoreHeaderMarkup) {
                 this.$headerSection.empty();
                 this.$headerSection.append(this.restoreHeaderMarkup);
                 this.restoreHeaderMarkup = null;
             }
         },
-        
         /**
          * Return the options object.
          */
@@ -3202,18 +3196,15 @@
                 _self._refreshDividers();
             }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
         },
-
-        markDeleted: function(elems) {
+        markDeleted: function (elems) {
             //$(elems).hide(400, 'linear');
             $(elems).attr('data-deleted', 'true');
             $(elems).addClass('hx-deleted');
         },
-        
-        confirmDeleted: function(elems) {
+        confirmDeleted: function (elems) {
             $(elems).remove();
         },
-        
-        clearDeleted: function(elems) {
+        clearDeleted: function (elems) {
             $(elems).attr('data-deleted', '').removeClass('hx-deleted');
             this.refreshListView();
         }
