@@ -127,6 +127,15 @@
     border: none;
 }
 
+.iconbutton-inline {
+    width: 30px;
+    height: 30px;    
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
 .hx-tab {
     height: 48px;
     width: auto;
@@ -135,7 +144,7 @@
 .hx-btn-inner {
     padding: 0;
     width: auto;
-    height: 60px;
+    height: inherit;
     position: relative;    
 }
 
