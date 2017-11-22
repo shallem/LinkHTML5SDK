@@ -414,7 +414,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class': formElem.computedStyleClass,
             'tabindex': formLayout.__tabIndex++
         });
-
+        if (formElem.inputDisabled === true) {
+            inputMarkup[0].disabled = true;
+        }
         if (formElem.type === 'rawTextarea') {
             inputMarkup[0].value = formElem.value;
         } else {
