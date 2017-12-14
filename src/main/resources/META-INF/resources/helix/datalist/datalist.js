@@ -1501,8 +1501,8 @@
                 finalCompletion.call(_self);
                 _self._refreshDividers();
                 //_self.$parent.listview("refresh");
-                $(_self.$parent).trigger('refreshdone');
                 _self.refreshInProgress = false;
+                $(_self.$parent).trigger('refreshdone');
                 if (_self._queuedRefreshes.length) {
                     var refreshArgs = _self._queuedRefreshes.pop();
                     setTimeout(function () {
@@ -2237,6 +2237,12 @@
         _handleClick: function (event, target) {
             if ($(target).is('.ui-li-divider')) {
                 return false;
+            }
+            if (this.refreshInProgress) {
+                $(this.$parent).on('refreshdone', null, [this, event, target], function(ev) {
+                    ev.data[0]._handleClick(ev.data[1], ev.data[2]);
+                });
+                return;
             }
 
             if (this.options.multiSelect && event.clientX < 35 && $(target).is('.hx-multi-select-item')) {
