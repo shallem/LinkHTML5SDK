@@ -2239,7 +2239,7 @@
                 return false;
             }
             if (this.refreshInProgress) {
-                $(this.$parent).on('refreshdone', null, [this, event, target], function(ev) {
+                $(this.$parent).one('refreshdone', [this, event, target], function(ev) {
                     ev.data[0]._handleClick(ev.data[1], ev.data[2]);
                 });
                 return;
