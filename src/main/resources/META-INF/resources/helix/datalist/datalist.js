@@ -2325,10 +2325,11 @@
         _runContextAction: function (_tgtDiv) {
             this.setSelected(_tgtDiv);
             if (!this.options.itemContextMenuFilter || this.options.itemContextMenuFilter(this.selected)) {
+                var extraArgs = this.options.itemContextMenuArgs ? this.options.itemContextMenuArgs : [];
                 this.options.itemContextMenu.open({
                     positionTo: _tgtDiv,
                     thisArg: this,
-                    extraArgs: this.options.itemContextMenuArgs
+                    extraArgs: extraArgs.concat([this.selected])
                 });
             }
         },
