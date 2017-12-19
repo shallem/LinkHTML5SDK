@@ -1523,7 +1523,6 @@
             var _self = this;
             if (!oncomplete) {
                 oncomplete = function () {
-                    _self.scrollToStart();
                 };
             }
 
@@ -1778,6 +1777,7 @@
             } else {
                 var searchText = _self.__searchText.trim();
                 if (_self.options.localIndexedSearch) {
+                    _self.scrollToStart();
                     _self.options.localIndexedSearch.call(_self, searchText, function (res, optionsOverrides, oncomplete) {
                         // Make sure the user hasn't further changed the search box.
                         if (searchText !== _self.$searchBox.val()) {
