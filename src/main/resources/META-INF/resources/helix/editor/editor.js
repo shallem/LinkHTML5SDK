@@ -100,7 +100,7 @@
                     editor.popupOpen = false;
                 },
                 history: false,
-                theme: 'a'
+                theme: 'c'
             };
 
             for (var menuName in editor.menuPopups) {
