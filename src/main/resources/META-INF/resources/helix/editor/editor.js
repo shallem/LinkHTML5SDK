@@ -1,29 +1,27 @@
-(function($) {
+(function ($) {
 
     //==============
     // jQuery Plugin
     //==============
 
     $.widget('helix.editor', {
-
         // Define the defaults used for all new cleditor instances
         options: {
-            controls:     // controls to add to the toolbar
-            {
-                styles: "bold italic underline strikethrough subscript superscript",
-                font: "font size color highlight",
-                formats: "bullets numbering", // | outdent indent | alignleft center alignright justify | rule",
-                actions : "undo redo"
-            }
+            controls: // controls to add to the toolbar
+                    {
+                        styles: "bold italic underline strikethrough subscript superscript",
+                        font: "font size color highlight",
+                        formats: "bullets numbering", // | outdent indent | alignleft center alignright justify | rule",
+                        actions: "undo redo"
+                    }
             ,
-            font:        // font names in the font popup
-            "Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
-            "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
+            font: // font names in the font popup
+                    "Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
+                    "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
             tabIndex: -1,
             parentElement: null
         },
-
-        _create: function() {
+        _create: function () {
             var editor = this;
 
             // Init members.
@@ -45,16 +43,16 @@
 
             if (this.options.parentElement) {
                 var evName = 'hxLayoutDone.' + editor.name;
-                $(this.page).off(evName).on(evName, this, function(ev) {
+                $(this.page).off(evName).on(evName, this, function (ev) {
                     $(ev.data.$main).height($(ev.data.options.parentElement).height());
                 });
             }
 
             // Add the first group to the toolbar
             var $toolbar = editor.$toolbar = $(this.HEADER_TAG)
-            .attr('class', 'ui-body-d ' + this.TOOLBAR_CLASS)
-            .attr('data-role','controlgroup')
-            .attr('data-type','horizontal');
+                    .attr('class', 'ui-body-d ' + this.TOOLBAR_CLASS)
+                    .attr('data-role', 'controlgroup')
+                    .attr('data-type', 'horizontal');
 
             var doMini = 'false';
             if (Helix.deviceType !== "tablet") {
@@ -71,7 +69,7 @@
 
             // Add the font commands popup to the button bar
             var defaultValues = {
-                'font' : 'Calibri'
+                'font': 'Calibri'
             };
             this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini, defaultValues);
             editor.$fontMenu = editor.menus['font'];
@@ -89,12 +87,12 @@
 
             /* Instantiate the menus. */
             var popupOptions = {
-                beforeposition: function() {
+                beforeposition: function () {
                     if (editor.$toolbarEnabled) {
                         editor.popupOpen = true;
                     }
                 },
-                afterclose: function() {
+                afterclose: function () {
                     // Place the caret back where we found it ...
                     if (editor._lastInputRange) {
                         editor._setCaretPosition(editor._lastInputRange);
@@ -118,7 +116,7 @@
                     // screens.
                     if (doMini) {
                         $button.find('.ui-btn-inner').css('padding-left', '10px');
-                        $button.find('.ui-btn-inner').css('padding-right', '10px');                    
+                        $button.find('.ui-btn-inner').css('padding-right', '10px');
                     }
                 }
             }
@@ -128,54 +126,50 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom ui-editor-default-style hx-editor')
+                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom hx-no-hscroll ui-editor-default-style hx-editor')
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
 
             this._attachEditFrameEvents();
         },
-        
         //==================
         // Private Variables
         //==================
 
         // Misc constants
-        BUTTON : "button",
-        CHANGE : "change",
+        BUTTON: "button",
+        CHANGE: "change",
         DISABLED: "disabled",
-        DIV_TAG : "<div/>",
-        SECTION_TAG : "<section/>",
-        HEADER_TAG : "<header/>",
-        A_TAG : "<a />",
-        SPAN_TAG : "<span />",
-        LI_TAG : "<li />",
-        UL_TAG : "<ul />",
-
+        DIV_TAG: "<div/>",
+        SECTION_TAG: "<section/>",
+        HEADER_TAG: "<header/>",
+        A_TAG: "<a />",
+        SPAN_TAG: "<span />",
+        LI_TAG: "<li />",
+        UL_TAG: "<ul />",
         // Class name constants
-        MAIN_CLASS : "ui-editor ui-widget-content",    // main containing div
-        TOOLBAR_CLASS : "ui-editor-toolbar",            // Editor toolbar
-  
+        MAIN_CLASS: "ui-editor ui-widget-content", // main containing div
+        TOOLBAR_CLASS: "ui-editor-toolbar", // Editor toolbar
+
         // Captures the style changes.
-        styleChanges : [],
-  
+        styleChanges: [],
         // Captures the current text style
-        currentStyles : {},
-  
+        currentStyles: {},
         //==================
         // Private Functions
         //==================
 
-        _attachEditFrameEvents: function() {
+        _attachEditFrameEvents: function () {
             var lastClick = null;
-            $(document).on('mousedown touchstart', function(ev) {
+            $(document).on('mousedown touchstart', function (ev) {
                 lastClick = ev.target;
             });
-            $(this.$editFrame).on('keypress', null, this, function(ev) {
+            $(this.$editFrame).on('keypress', null, this, function (ev) {
                 var typed = String.fromCharCode(ev.keyCode);
                 return true;
             });
-            
-            $(document).on('selectionchange', null, this, function(ev) {
+
+            $(document).on('selectionchange', null, this, function (ev) {
                 var _self = ev.data;
                 if (window.getSelection().rangeCount > 0) {
                     var _last = window.getSelection().getRangeAt(0);
@@ -184,8 +178,8 @@
                     }
                 }
             });
-            
-            $(this.$editFrame).on('input', null, this, function(ev) {
+
+            $(this.$editFrame).on('input', null, this, function (ev) {
                 var _self = ev.data;
                 if (window.getSelection().rangeCount > 0) {
                     _self._lastInputRange = window.getSelection().getRangeAt(0);
@@ -195,21 +189,21 @@
                     if (_self._lastInputRange && _self._lastInputRange.startContainer && _self._lastInputRange.startContainer.nodeType === Node.TEXT_NODE) {
                         newTextNode = _self._lastInputRange.startContainer.splitText(_self._lastInputRange.startContainer.length - 1);
                     }
-                    
+
                     _self._executeStyleActions(newTextNode);
                     _self.styleChanges = [];
                 }
                 _self._isDirty = true;
                 $(this).trigger('change');
             });
-            
-            $(this.$editFrame).on('blur', null, this, function(ev) {
+
+            $(this.$editFrame).on('blur', null, this, function (ev) {
                 var _self = ev.data;
                 // Make sure the last click was not on a toolbar element.
                 if ($(lastClick).closest('.hx-editor-button').length) {
                     return;
                 }
-                
+
                 _self.$toolbarEnabled = false;
                 _self.popupOpen = false;
                 for (var menuName in this.menuPopups) {
@@ -219,7 +213,7 @@
                 _self.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
             });
 
-            $(this.$editFrame).on('focus', null, this, function(ev) {
+            $(this.$editFrame).on('focus', null, this, function (ev) {
                 var _self = ev.data;
                 _self.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
                 _self.$toolbarEnabled = true;
@@ -228,75 +222,74 @@
                     _self.styleChanges.push(['firstcap', null]);
                     _self.isFirstTyping = false;
                 }
-                setTimeout(function() {
+                setTimeout(function () {
                     if (window.getSelection() && window.getSelection().focusNode) {
                         _self._lastInputNode = window.getSelection().focusNode;
                     }
                 }, 1000);
             });
         },
-        
-        isDirty: function() {
+        isDirty: function () {
             return this._isDirty;
         },
-    
-        _createPopupMenu: function(menuName, buttonText, $parent, $toolbar, menuOptions, doMini, defaultValues) {
+        _createPopupMenu: function (menuName, buttonText, $parent, $toolbar, menuOptions, doMini, defaultValues) {
             var editor = this;
             if (!defaultValues) {
                 defaultValues = {};
             }
-            
+
             var $popup = this.menuPopups[menuName] = $(this.DIV_TAG)
-                .attr({
-                    'id' : menuName + "_" + editor.name
-                }).appendTo($parent);
+                    .attr({
+                        'id': menuName + "_" + editor.name,
+                        'data-theme': 'c'
+                    }).appendTo($parent);
 
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
-                'data-role' : 'listview',
-                'data-inset' : 'true',
-                'data-theme' : 'c'
+                'data-role': 'listview',
+                'data-inset': 'true',
+                'data-theme': 'c'
             }).appendTo($popup);
-            $.each(menuOptions.split(" "), function(idx, buttonName) {
+            $.each(menuOptions.split(" "), function (idx, buttonName) {
                 editor._addButtonToMenu($menu, $popup, buttonName, menuName, defaultValues[buttonName]);
             });
 
-            var $button = this.menuToolbar[menuName] = 
+            var $button = this.menuToolbar[menuName] =
                     $(this.A_TAG)
-                        .attr({
-                            'href' : 'javascript:void(0)',
-                            'data-role' : "button",
-                            'data-theme' : "d",
-                            'data-mini' : doMini,
-                            'class' : 'ui-disabled hx-editor-button'
-                        }).append(buttonText)
-                        .appendTo($toolbar)
-                        .on(Helix.clickEvent, function() {
-                            $popup.popup("open", { positionTo: $button });
-                            return false;
-                        });
+                    .attr({
+                        'href': 'javascript:void(0)',
+                        'data-role': "button",
+                        'data-theme': "d",
+                        'data-mini': doMini,
+                        'class': 'ui-disabled hx-editor-button'
+                    }).append(buttonText)
+                    .appendTo($toolbar)
+                    .on(Helix.clickEvent, function () {
+                        $popup.popup("open", {positionTo: $button});
+                        return false;
+                    });
         },
-
         // Add a button to a popup menu.
-        _addButtonToMenu: function(popupMenu, popupParent, buttonName, menuName, defaultValue) {
+        _addButtonToMenu: function (popupMenu, popupParent, buttonName, menuName, defaultValue) {
             var _self = this;
-            if (buttonName === "") return;
+            if (buttonName === "")
+                return;
 
             // Divider
             if (buttonName == "|") {
                 // Add a new divider to the group
                 $(this.LI_TAG)
-                    .attr({
-                        'data-role' : 'divider',
-                        'data-theme' : 'b' 
-                    })
-                    .appendTo(popupMenu);
+                        .attr({
+                            'data-role': 'divider',
+                            'data-theme': 'b'
+                        })
+                        .appendTo(popupMenu);
             }
             // Button
             else {
-                var descriptor = [ menuName, buttonName ];
-                
+                var descriptor = [menuName, buttonName];
+
                 // Special cases for commands with an associated dropdown or ancillary action.
-                switch(buttonName) {
+                switch (buttonName) {
                     case 'color':
                     case 'highlight':
                         this._appendColorSpectrum(popupMenu, buttonName, menuName);
@@ -313,21 +306,20 @@
                         $(this.LI_TAG)
                                 .appendTo(popupMenu)
                                 .append(linkName)
-                                .on(Helix.clickEvent, null, descriptor, function(ev) {
+                                .on(Helix.clickEvent, null, descriptor, function (ev) {
                                     if (!_self._executeAction.apply(_self, ev.data)) {
                                         ev.data.push(ev.target)
                                         _self._queueStyleAction.apply(_self, ev.data);
                                     }
                                     return false;
-                        });
+                                });
                         break;
                 }
             }
         },
-        
-        _executeAction: function(menuName, action, actionArg) {
+        _executeAction: function (menuName, action, actionArg) {
             this.menuPopups[menuName].popup('close');
-            switch(action) {
+            switch (action) {
                 case 'undo':
                 case 'redo':
                     document.execCommand(action, false, null);
@@ -343,29 +335,27 @@
             }
             return true;
         },
-        
-        _appendList: function(listTag) {
+        _appendList: function (listTag) {
             this.focus();
-            
+
             var $parent = this.$editFrame;
             if (this._lastInputRange) {
                 $parent = $(this._lastInputRange.commonAncestorContainer);
             } else if (this._lastInputNode) {
                 $parent = $(this._lastInputNode);
             }
-            
+
             var _list = $(listTag);
             if ($parent[0].nodeType === 3) {
                 _list.insertAfter($parent);
             } else {
                 _list.appendTo($parent);
             }
-            
+
             var _firstLI = $('<li/>').appendTo(_list);
             this._selectElementContents(_firstLI[0]);
         },
-        
-        _queueStyleAction: function(menuName, action, actionArg, target) {
+        _queueStyleAction: function (menuName, action, actionArg, target) {
             if (target) {
                 $(target).toggleClass('ui-editor-style-selected');
             }
@@ -380,14 +370,13 @@
                 this.styleChanges = [];
             }
         },
-        
-        _appendFontSelection: function(popupMenu, buttonName, menuName, defaultValue) {
+        _appendFontSelection: function (popupMenu, buttonName, menuName, defaultValue) {
             var _self = this;
             var inputMarkup = $('<select />')
                     .attr('data-corners', 'false')
                     .attr('data-mini', 'true')
                     .appendTo(popupMenu);
-            $.each(this.options.font.split(','), function() {
+            $.each(this.options.font.split(','), function () {
                 $('<option />').attr({
                     'value': this
                 }).append($('<span/>').css('font-family', this).append(this)).appendTo(inputMarkup);
@@ -396,41 +385,40 @@
                 inputMarkup.val(defaultValue);
             }
             inputMarkup.selectmenu();
-            $(inputMarkup).change(function() {
+            $(inputMarkup).change(function () {
                 _self._queueStyleAction(menuName, 'font', $(this).find(':selected').attr('value'));
+                _self.$editFrame.focus();
             });
         },
-        
-        _appendFontSizeInput: function(popupMenu, buttonName, menuName) {
+        _appendFontSizeInput: function (popupMenu, buttonName, menuName) {
             var _self = this;
             var inputMarkup = $('<input />')
                     .attr('type', 'number')
                     .appendTo(popupMenu)
                     .val('11');
-            $(inputMarkup).change(function() {
+            $(inputMarkup).change(function () {
                 _self._queueStyleAction(null, 'size', $(this).val());
             });
-        }, 
-        
-        _appendColorSpectrum: function($menu, buttonName, menuName) {
+       },
+        _appendColorSpectrum: function ($menu, buttonName, menuName) {
             var _self = this;
             var title = this._capitalizeFirstLetter(buttonName);
             $(this.DIV_TAG).attr({
-                'class' : 'ui-color-picker',
-                'style' : 'width: 100%;'
+                'class': 'ui-color-picker',
+                'style': 'width: 100%;'
             }).appendTo($menu).append(title);
             var colorInput = $('<input/>').appendTo($menu)
-                .attr({
-                    'data-command' : buttonName
-                })
-                .spectrum({
-                    color: 'black',
-                    change: function(color) {
-                        _self._queueStyleAction(menuName, buttonName, color.toHexString());
-                    }
-                });
+                    .attr({
+                        'data-command': buttonName
+                    })
+                    .spectrum({
+                        color: 'black',
+                        change: function (color) {
+                            _self._queueStyleAction(menuName, buttonName, color.toHexString());
+                        }
+                    });
 
-            $(_self.$editFrame).on('blur', function() {
+            $(_self.$editFrame).on('blur', function () {
                 colorInput.spectrum("hide");
             });
             var restoreColor = '#000000';
@@ -439,46 +427,42 @@
             }
 
             $(this.A_TAG).attr({
-                'href' : 'javascript:void(0);'
+                'href': 'javascript:void(0);'
             })
-            .append('Clear ' + this._capitalizeFirstLetter(buttonName))
-            .appendTo($menu).buttonMarkup({
+                    .append('Clear ' + this._capitalizeFirstLetter(buttonName))
+                    .appendTo($menu).buttonMarkup({
                 mini: true,
                 corners: false
-            }).on(Helix.clickEvent, function(ev) {
+            }).on(Helix.clickEvent, function (ev) {
                 $('input[data-command="' + buttonName + '"]').spectrum("set", restoreColor);
                 _self.menuPopups[menuName].popup('close');
                 _self._queueStyleAction(menuName, buttonName, restoreColor);
                 return false;
             });
         },
-
         // clear - clears the contents of the editor
-        clear: function() {
+        clear: function () {
             this.$editFrame.empty();
         },
-    
-        update: function(val) {
+        update: function (val) {
             this.$editFrame.html(val);
             if (!val) {
-                this.isFirstTyping = true;            
+                this.isFirstTyping = true;
             }
-            
+
             // Repair. We cannot handle 'b' and 'i' tags
-            this.$editFrame.find('b').each(function() {
+            this.$editFrame.find('b').each(function () {
                 $(this).replaceWith($('<span/>').css('font-weight', 'bold').append(this.innerHTML));
             });
-            this.$editFrame.find('i').each(function() {
+            this.$editFrame.find('i').each(function () {
                 $(this).replaceWith($('<span/>').css('font-style', 'italic').append(this.innerHTML));
             });
         },
-        
-        focus: function() {
+        focus: function () {
             this.$editFrame.focus();
         },
-
         // disable - enables or disables the editor
-        disable: function(disabled) {
+        disable: function (disabled) {
             // Update the textarea and save the state
             if (disabled) {
                 this.$editFrame.attr(this.DISABLED, this.DISABLED);
@@ -491,40 +475,37 @@
                 this.disabled = false;
             }
         },
-        
-        _toggleStyle: function(styleName) {
+        _toggleStyle: function (styleName) {
             if (this.currentStyles[styleName]) {
                 delete this.currentStyles[styleName];
             } else {
                 this.currentStyles[styleName] = styleName;
-            }                                        
+            }
         },
-
-        _applyStyle: function($newSpan, isCollapsed, styleName, cssName, cssValOn, cssValOff) {
+        _applyStyle: function ($newSpan, isCollapsed, styleName, cssName, cssValOn, cssValOff) {
             $newSpan.find('span').css(cssName, ''); // Clear out any old values
             if (styleName in this.currentStyles) {
                 $newSpan.css(cssName, cssValOn);
             } else {
                 $newSpan.css(cssName, cssValOff);
-            }                            
+            }
         },
-        
-        _executeStyleActions: function(txtToSurround) {
+        _executeStyleActions: function (txtToSurround) {
             var isCollapsed = this._lastInputRange.collapsed;
             var $newSpan = this._insertSpan(txtToSurround);
             var changedStyles = {};
-            
+
             // Update the state of all toggle styles.
             for (var i = 0; i < this.styleChanges.length; ++i) {
                 var actionName = this.styleChanges[i][0];
                 var param = this.styleChanges[i][1];
                 changedStyles[actionName] = true;
-                switch(actionName) {
+                switch (actionName) {
                     case 'bold':
                     case 'italic':
                     case 'strikethrough':
                     case 'underline':
-                    case 'subscript': 
+                    case 'subscript':
                     case 'super':
                         this._toggleStyle(actionName);
                         break;
@@ -538,21 +519,21 @@
                     default:
                         this.currentStyles[actionName] = param;
                         break;
-                }                
+                }
             }
-            
+
             // Apply the appropriate style to the new span.
             for (var actionName in $.extend({}, this.currentStyles, changedStyles)) {
                 var param = this.currentStyles[actionName];
-                switch(actionName) {
+                switch (actionName) {
                     case 'color':
                         $newSpan.css('color', param);
                         break;
                     case 'highlight':
-                        $newSpan.css('background-color', param);                    
+                        $newSpan.css('background-color', param);
                         break;
                     case 'font':
-                        $newSpan.css('font-family', param);                    
+                        $newSpan.css('font-family', param);
                         break;
                     case 'size':
                         $newSpan.css('font-size', param + 'pt');
@@ -564,12 +545,12 @@
                         this._applyStyle($newSpan, isCollapsed, actionName, 'font-style', 'italic', 'normal');
                         break;
                     case 'strikethrough':
-                        this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'line-through', 'none');                    
+                        this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'line-through', 'none');
                         break;
                     case 'underline':
                         this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'underline', 'none');
                         break;
-                    case 'subscript': 
+                    case 'subscript':
                         $('<sub/>').wrap($newSpan);
                         break;
                     case 'super':
@@ -580,8 +561,7 @@
                 }
             }
         },
-        
-        _setCaretAtEndOfElement: function(elem, pos) {
+        _setCaretAtEndOfElement: function (elem, pos) {
             var range = document.createRange();
             var sel = window.getSelection();
             range.setStart(elem, pos);
@@ -589,19 +569,17 @@
             sel.removeAllRanges();
             sel.addRange(range);
         },
-        
-        _setCaretPosition: function(range) {
+        _setCaretPosition: function (range) {
             var sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
         },
-        
-        _selectElementContents: function(el) {
+        _selectElementContents: function (el) {
             var range = document.createRange();
-            
+
             if (el.nodeType === 3) {
                 // Text node.
-                range.setStart(el, 1);            
+                range.setStart(el, 1);
             } else {
                 range.selectNodeContents(el);
             }
@@ -609,20 +587,19 @@
 
             this._setCaretPosition(range);
         },
-        
-        _insertSpan: function(txtToSurround) {
+        _insertSpan: function (txtToSurround) {
             var _self = this;
             var isCollapsed = _self._lastInputRange.collapsed;
             var newElement = document.createElement('span');
             this.$editFrame.focus();
-            if(_self._lastInputRange) {
+            if (_self._lastInputRange) {
                 if (!isCollapsed) {
                     // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
                     // See comment at the top of the link above as to why this method is better than
                     // surroundContents
-                    newElement.appendChild(_self._lastInputRange.extractContents()); 
+                    newElement.appendChild(_self._lastInputRange.extractContents());
                     _self._lastInputRange.insertNode(newElement)
-                    
+
                     //_self._lastInputRange.surroundContents(newElement);
                     // Restore the caret position.
                     _self._setCaretPosition(_self._lastInputRange);
@@ -639,7 +616,7 @@
                         $(newElement).append(txtToSurround);
                         _self._selectElementContents(newElement.childNodes[0]);
                     } else {
-                        _self._selectElementContents(newElement);                    
+                        _self._selectElementContents(newElement);
                     }
                 }
             } else {
@@ -648,17 +625,14 @@
             }
             return $(newElement);
         },
-
-        _capitalizeFirstLetter: function(string) {
+        _capitalizeFirstLetter: function (string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
-
-        getHTML: function() {
+        getHTML: function () {
             return '<html><body>' + this.$editFrame.html() + '</body></html>';
         },
-        
-        blur: function() {
-           $(this.$editFrame).blur(); 
+        blur: function () {
+            $(this.$editFrame).blur();
         }
     });
 })(jQuery);
