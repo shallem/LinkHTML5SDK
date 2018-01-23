@@ -751,8 +751,15 @@
                 var _addToEnd = function (toAdd) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
-                        var lastLI = _self.displayLIs[_self.displayLIs.length - 1];
-                        var lastTop = _self.displayLIs[_self.displayLIs.length - 1].offsetTop;
+                        var lastLI = null;
+                        var i;
+                        for (i = _self.displayLIs.length - 1; i >= 0; --i) {
+                            lastLI = _self.displayLIs[i];
+                            if ('data-id' in lastLI.attributes) {
+                                break;
+                            }
+                        }
+                        var lastTop = _self.displayLIs[i].offsetTop;
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx += toAdd;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
@@ -764,10 +771,11 @@
                             }
 
                             _self._refreshDividers();
-                            var i;
                             var delta = 0;
                             for (i = _self.displayLIs.length - 1; i > 0; --i) {
-                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
+                                var nxt = _self.displayLIs[i];
+                                if (('data-id' in nxt.attributes) &&
+                                        tgtID === nxt.attributes['data-id'].nodeValue) {
                                     delta = _self.displayLIs[i].offsetTop - origTop;
                                     break;
                                 }
