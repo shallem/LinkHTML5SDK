@@ -716,7 +716,14 @@
                 var _addToBottom = function (toReverse) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx - toReverse >= 0) {
-                        var lastLI = _self.displayLIs[0];
+                        var lastLI = null;
+                        var i;
+                        for (i = 0; i < _self.displayLIs.length; ++i) {
+                            lastLI = _self.displayLIs[i];
+                            if ('data-id' in lastLI.attributes) {
+                                break;
+                            }
+                        }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx -= toReverse;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
@@ -736,6 +743,9 @@
                             }
 
                             _self.$listWrapper.scrollTop(delta);
+                            setTimeout(function() {
+                                var t = _self.$listWrapper[0].scrollHeight;                            
+                            }, 1);
                             _self._restoreScrollEvent();
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
