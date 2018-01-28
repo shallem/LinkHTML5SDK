@@ -710,6 +710,12 @@
          * 
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
+        _forceRerender: function() {
+            this.$listWrapper[0].style.display = 'none';
+            var _ignore = this.$listWrapper[0].offsetHeight;
+            this.$listWrapper[0].style.display = 'block';
+        },
+        
         _nextPage: function (direction) {
             var _self = this;
             if (direction < 0) {
@@ -736,17 +742,19 @@
                             var i;
                             var delta = 0;
                             for (i = 0; i < _self.displayLIs.length; ++i) {
-                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
-                                    delta = _self.displayLIs[i].offsetTop - _self.displayLIs[0].offsetTop;
+                                var nxt = _self.displayLIs[i];
+                                if (('data-id' in nxt.attributes) &&
+                                        tgtID === nxt.attributes['data-id'].nodeValue) {
+                                    delta = nxt.offsetTop - _self.displayLIs[0].offsetTop;
                                     break;
                                 }
                             }
 
                             _self.$listWrapper.scrollTop(delta);
-                            setTimeout(function() {
-                                var t = _self.$listWrapper[0].scrollHeight;                            
+                            setTimeout(function () {
+                                _self._forceRerender();
+                                _self._restoreScrollEvent();
                             }, 1);
-                            _self._restoreScrollEvent();
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -791,8 +799,11 @@
                                 }
                             }
 
-                            _self.$listWrapper.scrollTop(_self.$listWrapper[0].scrollTop + delta);
-                            _self._restoreScrollEvent();
+                            _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
+                            setTimeout(function () {
+                                _self._forceRerender();
+                                _self._restoreScrollEvent();
+                            }, 1);
                         }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -2257,7 +2268,7 @@
                 return false;
             }
             if (this.refreshInProgress) {
-                $(this.$parent).one('refreshdone', [this, event, target], function(ev) {
+                $(this.$parent).one('refreshdone', [this, event, target], function (ev) {
                     ev.data[0]._handleClick(ev.data[1], ev.data[2]);
                 });
                 return;
@@ -2914,6 +2925,7 @@
         selectNext: function (noSelectAction) {
             if (!this.selectedLI) {
                 this.selectFirst();
+                this.selectItem(noSelectAction);
                 return true;
             } else {
                 var nxt = this.selectedLI;
@@ -2931,6 +2943,7 @@
         selectPrev: function (noSelectAction) {
             if (!this.selectedLI) {
                 this.selectFirst();
+                this.selectItem(noSelectAction);
                 return true;
             } else {
                 var prev = this.selectedLI;
@@ -3087,7 +3100,7 @@
          * 
          * @returns {undefined}
          */
-        _clearSearchText: function() {
+        _clearSearchText: function () {
             if (this.$searchBox) {
                 this.$searchBox.val(this.options.indexedSearchText ? this.options.indexedSearchText : '');
                 this.__searchClear = true;

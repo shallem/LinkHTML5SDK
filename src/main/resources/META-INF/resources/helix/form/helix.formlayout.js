@@ -2314,7 +2314,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
 
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     if (options.noOpen !== true) {
-        $.mobile.activePage.append(popup).trigger("pagecreate");
+        $.mobile.activePage.append(popup);//.trigger("pagecreate");
         $(popup).popup({});
         $(popup).on('popupafterclose', null, options, function (ev) {
             if (ev.data.oncomplete) {
