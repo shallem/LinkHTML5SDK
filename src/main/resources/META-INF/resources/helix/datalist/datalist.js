@@ -714,6 +714,7 @@
             this.$listWrapper[0].style.display = 'none';
             var _ignore = this.$listWrapper[0].offsetHeight;
             this.$listWrapper[0].style.display = 'block';
+            return _ignore; // Without this our JS compressor optimizes _ignore away
         },
         
         _nextPage: function (direction) {
