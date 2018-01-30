@@ -167,7 +167,7 @@ public class FormFieldRenderer extends CoreRenderer {
                         writer.write(",'href' : '" + ic.getHref() + "'");
                     }
                     if (ic.getOnclick() != null) {
-                        writer.write(",'onclick' : function(tgt,ev) {" + ic.getOnclick() + "}");
+                        writer.write(",'onclick' : function(tgt,ev) { return " + ic.getOnclick() + " }");
                     }
                     if (ic.getValue() != null) {
                         writer.write(",'fieldTitle' : '" + ic.getValue() + "'");
