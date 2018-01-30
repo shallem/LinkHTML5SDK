@@ -710,13 +710,27 @@
          * 
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
+        _forceRerender: function() {
+            this.$listWrapper[0].style.display = 'none';
+            var _ignore = this.$listWrapper[0].offsetHeight;
+            this.$listWrapper[0].style.display = 'block';
+            return _ignore; // Without this our JS compressor optimizes _ignore away
+        },
+        
         _nextPage: function (direction) {
             var _self = this;
             if (direction < 0) {
                 var _addToBottom = function (toReverse) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx - toReverse >= 0) {
-                        var lastLI = _self.displayLIs[0];
+                        var lastLI = null;
+                        var i;
+                        for (i = 0; i < _self.displayLIs.length; ++i) {
+                            lastLI = _self.displayLIs[i];
+                            if ('data-id' in lastLI.attributes) {
+                                break;
+                            }
+                        }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx -= toReverse;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
@@ -729,14 +743,19 @@
                             var i;
                             var delta = 0;
                             for (i = 0; i < _self.displayLIs.length; ++i) {
-                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
-                                    delta = _self.displayLIs[i].offsetTop - _self.displayLIs[0].offsetTop;
+                                var nxt = _self.displayLIs[i];
+                                if (('data-id' in nxt.attributes) &&
+                                        tgtID === nxt.attributes['data-id'].nodeValue) {
+                                    delta = nxt.offsetTop - _self.displayLIs[0].offsetTop;
                                     break;
                                 }
                             }
 
                             _self.$listWrapper.scrollTop(delta);
-                            _self._restoreScrollEvent();
+                            setTimeout(function () {
+                                _self._forceRerender();
+                                _self._restoreScrollEvent();
+                            }, 1);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -751,8 +770,15 @@
                 var _addToEnd = function (toAdd) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
-                        var lastLI = _self.displayLIs[_self.displayLIs.length - 1];
-                        var lastTop = _self.displayLIs[_self.displayLIs.length - 1].offsetTop;
+                        var lastLI = null;
+                        var i;
+                        for (i = _self.displayLIs.length - 1; i >= 0; --i) {
+                            lastLI = _self.displayLIs[i];
+                            if ('data-id' in lastLI.attributes) {
+                                break;
+                            }
+                        }
+                        var lastTop = _self.displayLIs[i].offsetTop;
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx += toAdd;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
@@ -764,17 +790,21 @@
                             }
 
                             _self._refreshDividers();
-                            var i;
                             var delta = 0;
                             for (i = _self.displayLIs.length - 1; i > 0; --i) {
-                                if (tgtID === _self.displayLIs[i].attributes['data-id'].nodeValue) {
+                                var nxt = _self.displayLIs[i];
+                                if (('data-id' in nxt.attributes) &&
+                                        tgtID === nxt.attributes['data-id'].nodeValue) {
                                     delta = _self.displayLIs[i].offsetTop - origTop;
                                     break;
                                 }
                             }
 
-                            _self.$listWrapper.scrollTop(_self.$listWrapper[0].scrollTop + delta);
-                            _self._restoreScrollEvent();
+                            _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
+                            setTimeout(function () {
+                                _self._forceRerender();
+                                _self._restoreScrollEvent();
+                            }, 1);
                         }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -2239,7 +2269,7 @@
                 return false;
             }
             if (this.refreshInProgress) {
-                $(this.$parent).one('refreshdone', [this, event, target], function(ev) {
+                $(this.$parent).one('refreshdone', [this, event, target], function (ev) {
                     ev.data[0]._handleClick(ev.data[1], ev.data[2]);
                 });
                 return;
@@ -2896,6 +2926,7 @@
         selectNext: function (noSelectAction) {
             if (!this.selectedLI) {
                 this.selectFirst();
+                this.selectItem(noSelectAction);
                 return true;
             } else {
                 var nxt = this.selectedLI;
@@ -2913,6 +2944,7 @@
         selectPrev: function (noSelectAction) {
             if (!this.selectedLI) {
                 this.selectFirst();
+                this.selectItem(noSelectAction);
                 return true;
             } else {
                 var prev = this.selectedLI;
@@ -3069,7 +3101,7 @@
          * 
          * @returns {undefined}
          */
-        _clearSearchText: function() {
+        _clearSearchText: function () {
             if (this.$searchBox) {
                 this.$searchBox.val(this.options.indexedSearchText ? this.options.indexedSearchText : '');
                 this.__searchClear = true;

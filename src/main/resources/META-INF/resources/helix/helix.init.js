@@ -48,7 +48,7 @@ Helix.postInit = function(fn, thisArg, args) {
     if (Helix.ready) {
         fn.apply(thisArg, args);
     } else {
-        $(document).on('helixinit', function() {
+        $(document).one('helixinit', function() {
             fn.apply(thisArg, args);
         });
     }

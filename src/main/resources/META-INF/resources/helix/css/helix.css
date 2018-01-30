@@ -288,6 +288,8 @@
 .hx-scroller-nozoom {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
 }
 
 .hx-no-scroll {
