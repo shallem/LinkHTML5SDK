@@ -1285,20 +1285,60 @@ function initHelixDB() {
             var args = {
                 nToAdd: _deltaObj.adds.length,
                 nToUpdate: _deltaObj.updates.length,
+                nFieldUpdates: _deltaObj.fieldUpdates.length,
                 nAddsDone: 0,
                 nUpdatesDone: 0,
+                nFieldUpdatesDone : 0,
                 allAdds: [],
                 deltaObj: _deltaObj,
                 oncomplete: oncomplete,
                 oncompleteArg: oncompleteArg
             };
 
+
+            var deltaSyncDone = function(args) {
+                args.oncomplete(args.oncompleteArg, field, args.allAdds);                
+            };
+
+            var updateFieldDone = function(args) {
+                ++args.nFieldUpdatesDone;
+                if (args.nFieldUpdatesDone >= args.nFieldUpdates) {
+                    deltaSyncDone(args);
+                }
+            };
+
+            var updateFieldFn = function(_args) {
+                if (_args.deltaObj.fieldUpdates.length > 0) {
+                    persistence.transaction(function(tx) {
+                        for (var u = 0; u < _args.deltaObj.fieldUpdates.length; ++u) {
+                            var fieldUpdate = _args.deltaObj.fieldUpdates[u];
+                            if (fieldUpdate.key) {
+                                var sql = 'UPDATE `' + elemSchema.meta.name + '` SET `' + 
+                                        fieldUpdate.field + '` =  ?' +
+                                        ' WHERE ' + keyField + ' = ?';  
+                                var sqlargs = [ 
+                                    persistence.typeMapper.entityValToDbVal(fieldUpdate.value, fieldUpdate.type),
+                                    persistence.typeMapper.entityValToDbVal(fieldUpdate.key, 'TEXT') 
+                                ];
+                                tx.executeSql(sql, sqlargs, function(rows) {
+                                    updateFieldDone(_args);
+                                }, function(t, e, badSQL, badArgs) {
+                                    persistence.errorHandler(e.message, e.code, badSQL, badArgs);
+                                    updateFieldDone(_args);
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    updateFieldDone(args);
+                }
+            };
             
             var updateDone = function(args) {
                 ++args.nUpdatesDone;
                 if (args.nUpdatesDone >= args.nToUpdate) {
-                    /* Nothing more to add - we are done. */
-                    args.oncomplete(args.oncompleteArg, field, args.allAdds);
+                    /* Nothing more to update - handle field updates. */
+                    updateFieldFn(args);
                 }
             };
             
@@ -1321,7 +1361,7 @@ function initHelixDB() {
                     }
                 } else {
                     /* Nothing more to sync. Done. */
-                    args.oncomplete(args.oncompleteArg, field, args.allAdds);
+                    updateDone(args);
                 }
             };
 
