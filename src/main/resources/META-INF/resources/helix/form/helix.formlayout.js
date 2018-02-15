@@ -50,7 +50,7 @@ function __mkTZOption(tzOffsetHours, curTime, text, val) {
 function __isCurrentTZ(stdOffsetHours) {
     var today = new Date();
     var offsetMinutes = today.stdTimezoneOffset();
-    if (offsetMinutes == (-stdOffsetHours * 60)) {
+    if (offsetMinutes === (-stdOffsetHours * 60)) {
         return true;
     }
     return false;
@@ -60,8 +60,11 @@ function __getTZSelect(tabIndex, name, id, curTime) {
     var date = null;
     if (!curTime) {
         date = new Date();
-    } else if (!Helix.Utils.isString(curTime)) {
+    } else if (!Helix.Utils.isString(curTime) &&
+                Object.prototype.toString.call(curTime) !== '[object Date]') {
         date = new Date(curTime);
+    } else {
+        date = curTime;
     }
 
     var tzSelect = $('<select />').attr({
@@ -283,6 +286,16 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
     }
 }
 
+function refreshTZDropdownToTarget(formElem, tgtDate) {
+    formElem.editDOM.empty();
+    __appendTZSelector(formElem.mode, formElem.parentForm, formElem, formElem.editDOM, formElem.layoutMini, tgtDate);
+    
+    var selected = $(formElem.editDOM).find("option:selected");
+    if (selected && selected.length) {
+        formElem.value = selected.val();
+    }
+}
+
 function __refreshTZSelector(mode, formElem) {
     if (!formElem.value) {
         // Use the current time zone.
@@ -300,16 +313,18 @@ function __refreshTZSelector(mode, formElem) {
     }
 }
 
-function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMiniLayout, tgtDate) {
     if (!formElem.name) {
         /* No field name. We cannot render this field. */
         console.log("Cannot add a TZ selector with no name to a form layout.");
         return;
     }
     if (mode) {
-        var defaultValue = Date.now();
-        if (formElem.value) {
+        var defaultValue = null;
+        if (!tgtDate && formElem.defaultValue) {
             defaultValue = formElem.value;
+        } else {
+            defaultValue = (tgtDate ? tgtDate : Date.now());
         }
 
         /* Edit */
