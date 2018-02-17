@@ -1281,6 +1281,9 @@ function initHelixDB() {
             if (!_deltaObj.updates) {
                 _deltaObj.updates = [];
             }
+            if (!_deltaObj.fieldUpdates) {
+                _deltaObj.fieldUpdates = [];
+            }
 
             var args = {
                 nToAdd: _deltaObj.adds.length,
