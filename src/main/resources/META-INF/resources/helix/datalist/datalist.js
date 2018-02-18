@@ -1028,7 +1028,10 @@
             var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
             _self._refreshData(function () {
                 if (selectedID) {
-                    _self.setSelected(_self.$listWrapper.find('li[data-id="' + selectedID + '"]'));
+                    var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
+                    if (selected.length === 0) {
+                        _self.clearSelected();
+                    }
                 } else {
                     _self.clearSelected();
                 }

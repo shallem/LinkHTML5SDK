@@ -39,6 +39,7 @@ public class LoadCommandAction {
     private final Method getter;
     private Method errorGetter;
     private Method facadeGetter;
+    private Method facadeInit;
     private Method preLoad;
     private Method postLoad;
     private final String beanName;
@@ -67,6 +68,27 @@ public class LoadCommandAction {
                 this.errorGetter = m;
             } else if (m.getName().equals("getFacade")) {
                 this.facadeGetter = m;
+            } else if (m.getAnnotation(org.helix.mobile.filters.InitBean.class) != null) {
+                this.facadeInit = m;
+            }
+        }
+    }
+    
+    public void doInit(Object thisObject, HttpServletRequest req) throws FacesException {
+        if (facadeInit != null) {
+            try {
+                facadeInit.invoke(thisObject, new Object[] { req });
+            } catch (IllegalAccessException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke preLoad: " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                throw new FacesException("Failed to invoke preLoad: " + ex.getMessage());
+            } catch (InvocationTargetException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex.getTargetException());
+
+                throw new FacesException("Failed to invoke preLoad: " + ex.getTargetException().getLocalizedMessage());
             }
         }
     }
@@ -91,18 +113,6 @@ public class LoadCommandAction {
     }
     
     public Object doLoad(Object thisObject, HttpServletRequest req) throws FacesException {
-        /*Object thisObject = null;
-        try {
-            thisObject = ctor.newInstance(new Object[]{});
-            if (this.postConstruct != null) {
-                this.postConstruct.invoke(thisObject, new Object[]{});
-            } 
-        } catch(Exception e) {
-
-        }
-        if (thisObject == null) {
-            throw new FacesException("Failed to construct object with constructor " + ctor.toString());
-        }*/
         try {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.

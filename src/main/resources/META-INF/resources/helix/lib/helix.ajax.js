@@ -890,7 +890,19 @@ Helix.Ajax = {
         $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage, loadingOptions ]);
         var args = '';
         for (var key in params.params) {
-            var nxtArg = key + '=' + encodeURIComponent(params.params[key]);
+            var nxtArg = null;
+            if ($.isArray(params.params[key])) {
+                var _arr = params.params[key];
+                nxtArg = '';
+                for (var i = 0; i < _arr.length; ++i) {
+                    if (i > 0) {
+                        nxtArg = nxtArg + '&';
+                    }
+                    nxtArg = nxtArg + key + '=' +  encodeURIComponent(_arr[i]);
+                }
+            } else {
+                nxtArg = key + '=' + encodeURIComponent(params.params[key]);
+            }
             if (args) {
                 args = args + '&' + nxtArg;
             } else {
