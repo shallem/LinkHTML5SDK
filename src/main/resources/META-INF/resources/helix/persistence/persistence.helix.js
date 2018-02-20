@@ -1097,7 +1097,7 @@ function initHelixDB() {
                         if (obj) {
                             _toCascade.push({ obj: obj, fld: nxtKey });
                         }
-                        if (_fetchDoneCt === _toFetch.lengt) {
+                        if (_fetchDoneCt === _toFetch.length) {
                             recurseDown(_toCascade, opaque);                
                         }
                     });
