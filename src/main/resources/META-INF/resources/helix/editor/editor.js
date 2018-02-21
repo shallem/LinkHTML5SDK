@@ -228,6 +228,17 @@
                     }
                 }, 1000);
             });
+            
+            $(this.$editFrame).on('paste', null, this, function(ev) {
+                var _self = ev.data;
+                $(_self.$editFrame).one('input', null, _self, function(_ev) {
+                    var __self = _ev.data;
+                    var re = /&lt;a href\=\"([^"]+)\"&gt;([^&]+)&lt;\/a[^&]*&gt;/g;
+                    var contentDiv = __self.$editFrame;
+                    var newHTML = contentDiv.html().replace(re, '<a href="$1">$2<\a>');
+                    contentDiv.html(newHTML);
+                });
+            });
         },
         isDirty: function () {
             return this._isDirty;
