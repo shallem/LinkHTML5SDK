@@ -778,35 +778,37 @@
                                 break;
                             }
                         }
-                        var lastTop = _self.displayLIs[i].offsetTop;
-                        var lastID = lastLI.attributes['data-id'].nodeValue;
-                        startIdx += toAdd;
-                        _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
-                            var tgtID = args[0];
-                            var origTop = args[1];
-                            _self._renderWindowStart += toAdd;
-                            if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
-                                _self._preloadPage(1, 2);
-                            }
-
-                            _self._refreshDividers();
-                            var delta = 0;
-                            for (i = _self.displayLIs.length - 1; i > 0; --i) {
-                                var nxt = _self.displayLIs[i];
-                                if (('data-id' in nxt.attributes) &&
-                                        tgtID === nxt.attributes['data-id'].nodeValue) {
-                                    delta = _self.displayLIs[i].offsetTop - origTop;
-                                    break;
+                        if (i >= 0) {
+                            var lastTop = _self.displayLIs[i].offsetTop;
+                            var lastID = lastLI.attributes['data-id'].nodeValue;
+                            startIdx += toAdd;
+                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
+                                var tgtID = args[0];
+                                var origTop = args[1];
+                                _self._renderWindowStart += toAdd;
+                                if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                                    _self._preloadPage(1, 2);
                                 }
-                            }
 
-                            _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
-                            setTimeout(function () {
-                                _self._forceRerender();
-                                _self._restoreScrollEvent();
-                            }, 1);
-                        }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
-                        return;
+                                _self._refreshDividers();
+                                var delta = 0;
+                                for (i = _self.displayLIs.length - 1; i > 0; --i) {
+                                    var nxt = _self.displayLIs[i];
+                                    if (('data-id' in nxt.attributes) &&
+                                            tgtID === nxt.attributes['data-id'].nodeValue) {
+                                        delta = _self.displayLIs[i].offsetTop - origTop;
+                                        break;
+                                    }
+                                }
+
+                                _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
+                                setTimeout(function () {
+                                    _self._forceRerender();
+                                    _self._restoreScrollEvent();
+                                }, 1);
+                            }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
+                            return;
+                        }
                     } else if (_self._preloadPromise) {
                         _self._preloadPromise.then(_addToEnd);
                         return;
