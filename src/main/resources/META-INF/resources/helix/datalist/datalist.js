@@ -2772,11 +2772,11 @@
             }
         },
         getAllMultiSelectElements: function () {
-            return $(this.element).find('li.hx-selected');
+            return $(this.element).find('li.hx-selected[data-deleted!="true"]');
         },
         getAllMultiSelectItems: function () {
             var ret = [];
-            $(this.element).find('li.hx-selected').each(function () {
+            $(this.element).find('li.hx-selected[data-deleted!="true"]').each(function () {
                 ret.push($(this).data('data'));
             });
             return ret;
