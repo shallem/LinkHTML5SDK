@@ -717,7 +717,7 @@
             return _ignore; // Without this our JS compressor optimizes _ignore away
         },
         
-        _nextPage: function (direction) {
+        _nextPage: function (direction, oncomplete) {
             var _self = this;
             if (direction < 0) {
                 var _addToBottom = function (toReverse) {
@@ -754,7 +754,7 @@
                             _self.$listWrapper.scrollTop(delta);
                             setTimeout(function () {
                                 _self._forceRerender();
-                                _self._restoreScrollEvent();
+                                oncomplete();
                             }, 1);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
@@ -769,6 +769,7 @@
             } else {
                 var _addToEnd = function (toAdd) {
                     if (toAdd === 0) {
+                        oncomplete();
                         return;
                     }
                     
@@ -808,7 +809,7 @@
                                 _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
                                 setTimeout(function () {
                                     _self._forceRerender();
-                                    _self._restoreScrollEvent();
+                                    oncomplete();
                                 }, 1);
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
@@ -852,12 +853,16 @@
                 // stop tracking scroll events
                 _self._stopScrollHandler();
                 _self._lastScrollPos = Number.MIN_VALUE;
-                _self._nextPage(-1);
+                _self._nextPage(-1, function() {
+                    _self._restoreScrollEvent();
+                });
             } else if (scrollPos >= listHeight && !_self._atDataTop) {
                 // Scrolling down.
                 _self._stopScrollHandler();
                 _self._lastScrollPos = Number.MIN_VALUE;
-                _self._nextPage(1);
+                _self._nextPage(1, function() {
+                    _self._restoreScrollEvent();
+                });
             }
         },
         /**
