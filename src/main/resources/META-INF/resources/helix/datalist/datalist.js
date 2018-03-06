@@ -768,6 +768,10 @@
                 _addToBottom(Math.floor(_self._itemsPerPage / 3));
             } else {
                 var _addToEnd = function (toAdd) {
+                    if (toAdd === 0) {
+                        return;
+                    }
+                    
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
                         var lastLI = null;

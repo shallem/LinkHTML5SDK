@@ -858,6 +858,7 @@ Autolinker.prototype = {
 				new matchersNs.Hashtag( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
 				new matchersNs.Email( { tagBuilder: tagBuilder } ),
 				new matchersNs.Phone( { tagBuilder: tagBuilder } ),
+                                new matchersNs.InternationalPhone( { tagBuilder: tagBuilder } ),
 				new matchersNs.Mention( { tagBuilder: tagBuilder, serviceName: this.mention } ),
 				new matchersNs.Url( { tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash } )
 			];
@@ -3336,7 +3337,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	 * @private
 	 * @property {RegExp} matcherRegex
 	 */
-	matcherRegex : /(?:(\+)?\d{1,3}[-\040.])?\(?\d{3}\)?[-\040.]?\d{3}[-\040.]\d{4}/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
+	matcherRegex : /(^|[\s,.;:])([+]?)[1]?[-\s]?[(]?([0-9]{3})[)]?[-\s]?([0-9]{3})[-\s]?([0-9]{4})([,][0-9]+#)?($|\s|[.,;:])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
 
 	/**
 	 * @inheritdoc
@@ -3350,8 +3351,61 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 		while( ( match = matcherRegex.exec( text ) ) !== null ) {
 			// Remove non-numeric values from phone number string
 			var matchedText = match[ 0 ],
-			    cleanNumber = matchedText.replace( /\D/g, '' ),  // strip out non-digit characters
-			    plusSign = !!match[ 1 ];  // match[ 1 ] is the prefixed plus sign, if there is one
+			    cleanNumber = '1-'+match[3]+'-'+match[4]+'-'+match[5]+(match[6] ? match[6] : ''),  // strip out non-digit characters
+			    plusSign = match.length > 1 && match[ 2 ] === '+';  // match[ 2 ] is the prefixed plus sign, if there is one
+
+			matches.push( new Autolinker.match.Phone( {
+				tagBuilder  : tagBuilder,
+				matchedText : matchedText,
+				offset      : match.index,
+				number      : cleanNumber,
+				plusSign    : plusSign
+			} ) );
+		}
+
+		return matches;
+	}
+
+} );
+/**
+ * @class Autolinker.matcher.InternationalPhone
+ * @extends Autolinker.matcher.Matcher
+ *
+ * Matcher to find international phone number matches in an input string.
+ *
+ * See this class's superclass ({@link Autolinker.matcher.Matcher}) for more
+ * details.
+ */
+Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
+
+	/**
+	 * The regular expression to match international phone numbers. Example match:
+	 *
+	 *     +86-010-85208989
+	 *
+	 * This regular expression has the following capturing groups:
+	 *
+	 * 1. The prefixed '+' sign, if there is one.
+	 *
+	 * @private
+	 * @property {RegExp} matcherRegex
+	 */
+	matcherRegex : /(^|[\s,.;:])(011|\+)[-]?(999|998|997|996|995|994|993|992|991|990|979|978|977|976|975|974|973|972|971|970|969|968|967|966|965|964|963|962|961|960|899|898|897|896|895|894|893|892|891|890|889|888|887|886|885|884|883|882|881|880|879|878|877|876|875|874|873|872|871|870|859|858|857|856|855|854|853|852|851|850|839|838|837|836|835|834|833|832|831|830|809|808|807|806|805|804|803|802|801|800|699|698|697|696|695|694|693|692|691|690|689|688|687|686|685|684|683|682|681|680|679|678|677|676|675|674|673|672|671|670|599|598|597|596|595|594|593|592|591|590|509|508|507|506|505|504|503|502|501|500|429|428|427|426|425|424|423|422|421|420|389|388|387|386|385|384|383|382|381|380|379|378|377|376|375|374|373|372|371|370|359|358|357|356|355|354|353|352|351|350|299|298|297|296|295|294|293|292|291|290|289|288|287|286|285|284|283|282|281|280|269|268|267|266|265|264|263|262|261|260|259|258|257|256|255|254|253|252|251|250|249|248|247|246|245|244|243|242|241|240|239|238|237|236|235|234|233|232|231|230|229|228|227|226|225|224|223|222|221|220|219|218|217|216|215|214|213|212|211|210|98|95|94|93|92|91|90|86|84|82|81|66|65|64|63|62|61|60|58|57|56|55|54|53|52|51|49|48|47|46|45|44|43|41|40|39|36|34|33|32|31|30|27|20|7|1)([-\s.]?)([0-9][0-9-\s.]{3,15}[0-9])($|\s|[.,;:])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
+
+	/**
+	 * @inheritdoc
+	 */
+	parseMatches : function( text ) {
+		var matcherRegex = this.matcherRegex,
+		    tagBuilder = this.tagBuilder,
+		    matches = [],
+		    match;
+
+		while( ( match = matcherRegex.exec( text ) ) !== null ) {
+			// Remove non-numeric values from phone number string
+			var matchedText = match[ 0 ],
+			    cleanNumber = match[3]+'-'+match[5].replace(/[ -.]/g,''),  // strip out non-digit characters
+			    plusSign = true;  // match[ 2 ] is the prefixed plus sign, if there is one
 
 			matches.push( new Autolinker.match.Phone( {
 				tagBuilder  : tagBuilder,
