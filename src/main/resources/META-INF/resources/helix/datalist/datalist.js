@@ -1841,6 +1841,11 @@
                 }
             }
         },
+        resetAllFilters: function() {
+            this._clearGlobalFilterMenu();
+            this._filterMap = {};
+            this.unfilteredList = this.originalList;
+        },
         // Restore the original list contents, without any searching, sorting, or filtering.
         resetListContents: function () {
             var _self = this;

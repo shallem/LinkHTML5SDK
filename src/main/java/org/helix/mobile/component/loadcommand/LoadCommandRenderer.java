@@ -263,12 +263,12 @@ public class LoadCommandRenderer extends CoreRenderer {
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
         writer.write("function " + cmd.getName() + "(options, itemKey){ ");
-        writer.write("if (Helix.Ajax.loadInProgress('" + cmd.resolveWidgetVar() + "')) return;");
+        writer.write("if (Helix.Ajax.loadInProgress('" + cmd.resolveWidgetVar() + "')) return false;");
         writer.write(cmd.getName() + "_genSchema(");
         writer.write(cmd.getName() + "_load,");
         writer.write("[options, itemKey]);");
         
-        writer.write("}\n");
+        writer.write("return true; }\n");
         
         writer.write("function " + cmd.getName() + "_genSchema(callback,args,noSync) {");
         writer.write("Helix.DB.generatePersistenceSchema(");

@@ -3337,7 +3337,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	 * @private
 	 * @property {RegExp} matcherRegex
 	 */
-	matcherRegex : /(^|[\s,.;:])([+]?)[1]?[-\s]?[(]?([0-9]{3})[)]?[-\s]?([0-9]{3})[-\s]?([0-9]{4})([,][0-9]+#)?($|\s|[.,;:])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
+	matcherRegex : /(^|[\s,.;:])([+]?)[1]?[-\s]?[(]?([0-9]{3})[)]?[.-\s]?([0-9]{3})[.-\s]?([0-9]{4})([,][0-9]+#)?($|\s|[.,;:])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
 
 	/**
 	 * @inheritdoc
