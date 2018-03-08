@@ -1476,16 +1476,16 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // of the main form.
     if (!subPanelObj.panelMode) {
         // Render in the same mode as the enclosing form.
-        subPanelObj.modes = formLayout.modes;
+        subPanelObj.mode = formLayout.modes;
         subPanelObj.currentMode = formLayout.currentMode;
     } else if (subPanelObj.panelMode === 'reverse') {
         // Opposite of the parent.
         subPanelObj.currentMode = (formLayout.currentMode === 'edit' ? 'view' : 'edit');
-        subPanelObj.modes = subPanelObj.panelMode;
+        subPanelObj.mode = subPanelObj.panelMode;
     } else {
         // Fixed value.
         subPanelObj.currentMode = subPanelObj.panelMode;
-        subPanelObj.modes = subPanelObj.panelMode;
+        subPanelObj.mode = subPanelObj.panelMode;
     }
     subPanelObj.titleStyleClass = formLayout.titleStyleClass;
     subPanelObj.textStyleClass = formLayout.textStyleClass;
@@ -1504,6 +1504,7 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+    subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 
     // Determine if the sub-panel is visible based on the 'mode' field.
     if (subPanelObj.mode && subPanelObj.mode !== 'all') {
@@ -1514,8 +1515,6 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
         }
     }
     $(subPanelDiv).show();
-
-    subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 }
 
 function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
