@@ -727,9 +727,14 @@
                         var i;
                         for (i = 0; i < _self.displayLIs.length; ++i) {
                             lastLI = _self.displayLIs[i];
-                            if ('data-id' in lastLI.attributes) {
+                            if (lastLI && ('data-id' in lastLI.attributes)) {
                                 break;
                             }
+                        }
+                        if (!lastLI) {
+                            // We are caught mid-refresh ... otherwise this should never happen.
+                            oncomplete();
+                            return;
                         }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx -= toReverse;
@@ -755,7 +760,7 @@
                             setTimeout(function () {
                                 _self._forceRerender();
                                 oncomplete();
-                            }, 1);
+                            }, 15);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -779,9 +784,14 @@
                         var i;
                         for (i = _self.displayLIs.length - 1; i >= 0; --i) {
                             lastLI = _self.displayLIs[i];
-                            if ('data-id' in lastLI.attributes) {
+                            if (lastLI && ('data-id' in lastLI.attributes)) {
                                 break;
                             }
+                        }
+                        if (!lastLI) {
+                            // We are caught mid-refresh ... otherwise this should never happen.
+                            oncomplete();
+                            return;
                         }
                         if (i >= 0) {
                             var lastTop = _self.displayLIs[i].offsetTop;
@@ -810,7 +820,7 @@
                                 setTimeout(function () {
                                     _self._forceRerender();
                                     oncomplete();
-                                }, 1);
+                                }, 15);
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
@@ -856,7 +866,7 @@
                 _self._nextPage(-1, function() {
                     _self._restoreScrollEvent();
                 });
-            } else if (scrollPos >= listHeight && !_self._atDataTop) {
+            } else if (scrollPos >= listHeight) {
                 // Scrolling down.
                 _self._stopScrollHandler();
                 _self._lastScrollPos = Number.MIN_VALUE;
@@ -970,16 +980,13 @@
                 if (_options.scroll) {
                     _self.$listWrapper.on('touchstart', function () {
                         _self._fingerOn = true;
-                        clearTimeout(_self._scrollerTimeout);
-                        _self._scrollerTimeout = null;
                     });
 
                     _self.$listWrapper.on('touchend', function () {
                         _self._fingerOn = false;
                     });
 
-                    _self._inBounce = false;
-                    _self._restoreScrollEvent();
+                    _self._installScrollHandler();
                 }
 
                 if (oncomplete) {
@@ -988,18 +995,27 @@
                 }
             }, true, extraItems, _self.originalList, undefined, _options);
         },
+        
+        _installScrollHandler: function() {
+            var __scrollHandler = $.proxy(function (ev) {
+                this.scrollHandler(ev);
+            }, this);
+            this.$listWrapper.off('scroll').scroll(__scrollHandler);
+            this._cancelAllScrolls = false;
+        },
+        
         _restoreScrollEvent: function () {
-            var _self = this;
-            var __scrollHandler = function (ev) {
-                _self.scrollHandler(ev);
-            };
-            _self._cancelAllScrolls = false;
+            //var _self = this;
+            //var __scrollHandler = function (ev) {
+            //    _self.scrollHandler(ev);
+            //};
+            this._cancelAllScrolls = false;
             //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
-            _self.$listWrapper.scroll(__scrollHandler);
+            //_self.$listWrapper.scroll(__scrollHandler);
         },
         _stopScrollHandler: function () {
             this._cancelAllScrolls = true;
-            this.$listWrapper.off('scroll');
+            //this.$listWrapper.off('scroll');
         },
         /**
          * Helpers for infinite scroll.

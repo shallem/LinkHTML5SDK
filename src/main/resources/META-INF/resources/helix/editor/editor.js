@@ -16,7 +16,7 @@
                     }
             ,
             font: // font names in the font popup
-                    "Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
+                    "Select Font,Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
                     "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
             tabIndex: -1,
             parentElement: null
@@ -306,7 +306,7 @@
                         this._appendColorSpectrum(popupMenu, buttonName, menuName);
                         break;
                     case 'font':
-                        this._appendFontSelection(popupMenu, buttonName, menuName, defaultValue);
+                        this._appendFontSelection(popupMenu, buttonName, menuName);
                         break;
                     case 'size':
                         this._appendFontSizeInput(popupMenu, buttonName, menuName);
@@ -397,8 +397,13 @@
             }
             inputMarkup.selectmenu();
             $(inputMarkup).change(function () {
-                _self._queueStyleAction(menuName, 'font', $(this).find(':selected').attr('value'));
+                var nxtFont = $(this).find(':selected').attr('value');
+                if (nxtFont === 'Select Font') {
+                    return;
+                }
+                _self._queueStyleAction(menuName, 'font', nxtFont);
                 _self.$editFrame.focus();
+                $(this).val('');
             });
         },
         _appendFontSizeInput: function (popupMenu, buttonName, menuName) {
@@ -538,27 +543,35 @@
                 var param = this.currentStyles[actionName];
                 switch (actionName) {
                     case 'color':
+                        $newSpan.find('span').css('color', '');
                         $newSpan.css('color', param);
                         break;
                     case 'highlight':
+                        $newSpan.find('span').css('background-color', '');
                         $newSpan.css('background-color', param);
                         break;
                     case 'font':
+                        $newSpan.find('span').css('font-family', '');
                         $newSpan.css('font-family', param);
                         break;
                     case 'size':
+                        $newSpan.find('span').css('font-size', '');
                         $newSpan.css('font-size', param + 'pt');
                         break;
                     case 'bold':
+                        $newSpan.find('span').css('font-weight', '');
                         this._applyStyle($newSpan, isCollapsed, actionName, 'font-weight', 'bold', 'normal');
                         break;
                     case 'italic':
+                        $newSpan.find('span').css('font-style', '');
                         this._applyStyle($newSpan, isCollapsed, actionName, 'font-style', 'italic', 'normal');
                         break;
                     case 'strikethrough':
+                        $newSpan.find('span').css('text-decoration', '');
                         this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'line-through', 'none');
                         break;
                     case 'underline':
+                        $newSpan.find('span').css('text-decoration', '');
                         this._applyStyle($newSpan, isCollapsed, actionName, 'text-decoration', 'underline', 'none');
                         break;
                     case 'subscript':
@@ -601,20 +614,75 @@
         _insertSpan: function (txtToSurround) {
             var _self = this;
             var isCollapsed = _self._lastInputRange.collapsed;
-            var newElement = document.createElement('span');
             this.$editFrame.focus();
             if (_self._lastInputRange) {
                 if (!isCollapsed) {
                     // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
                     // See comment at the top of the link above as to why this method is better than
                     // surroundContents
-                    newElement.appendChild(_self._lastInputRange.extractContents());
-                    _self._lastInputRange.insertNode(newElement)
+                    var allNewElements = [];
+                    //var frag = _self._lastInputRange.extractContents();
+                    var walker = document.createTreeWalker(_self._lastInputRange.commonAncestorContainer, NodeFilter.SHOW_TEXT, null, false);
+                    var textNode;
+                    var doWrap = false;
+                    var toWrap = [];
+                    while(textNode = walker.nextNode()) {
+                        if (!doWrap && textNode === _self._lastInputRange.startContainer) {
+                            doWrap = true;
+                        }
+                        if (!doWrap || !textNode.nodeValue || textNode.nodeValue.trim().length === 0) {
+                            // White space
+                            continue;
+                        }
+                        
+                        toWrap.push(textNode);
+                        
+                        if (textNode === _self._lastInputRange.endContainer) {
+                            break;
+                        }
+                    }
+                    for (var i = 0; i < toWrap.length; ++i) {
+                        var nxt = toWrap[i];
+                        var newElement = document.createElement('span');
+                        var oldParent = nxt.parentNode;
+                        var _new = nxt;
+                        if (i === 0 && _self._lastInputRange.startOffset > 0) {
+                            _new = nxt.cloneNode();
+                            _new.nodeValue = nxt.nodeValue.substring(_self._lastInputRange.startOffset);
+                            nxt.nodeValue = nxt.nodeValue.substring(0, _self._lastInputRange.startOffset);
+                            if (nxt.nextSibling) {
+                                nxt = nxt.nextSibling;
+                            } else {
+                                newElement = oldParent.appendChild(newElement);
+                                newElement.appendChild(_new);
+                                allNewElements.push(newElement);
+                                continue;
+                            }
+                        } else if (i === toWrap.length - 1 && _self._lastInputRange.endOffset < nxt.nodeValue.length) {
+                            _new = nxt.cloneNode();
+                            _new.nodeValue = nxt.nodeValue.substring(0, _self._lastInputRange.endOffset);
+                            nxt.nodeValue = nxt.nodeValue.substring(_self._lastInputRange.endOffset);
+                        }
+                        newElement = oldParent.insertBefore(newElement, nxt);
+                        newElement.appendChild(_new);
+                        allNewElements.push(newElement);
+                        /*newElement.appendChild(textNode);
+                        if (oldParent.nextSibling) {
+                            newElement = oldParent.parentNode.insertBefore(newElement, oldParent.nextSibling);
+                        } else {
+                            newElement = oldParent.parentNode.appendChild(newElement);
+                        }*/
+                        
+                    }
+                    
+                    //_self._lastInputRange.insertNode(newElement)
 
                     //_self._lastInputRange.surroundContents(newElement);
                     // Restore the caret position.
                     _self._setCaretPosition(_self._lastInputRange);
+                    return $(allNewElements);
                 } else {
+                    var newElement = document.createElement('span');
                     // See if we are in another styling span. If so, add the new span after the old one.
                     // If not, just add the span to the range.
                     var $parentSpan = $(_self._lastInputRange.endContainer).closest('span');
@@ -629,12 +697,14 @@
                     } else {
                         _self._selectElementContents(newElement);
                     }
+                    return $(newElement);
                 }
             } else {
+                var newElement = document.createElement('span');
                 _self.$editFrame.wrapInner($(newElement));
                 _self._selectElementContents(newElement);
+                return $(newElement);
             }
-            return $(newElement);
         },
         _capitalizeFirstLetter: function (string) {
             return string.charAt(0).toUpperCase() + string.slice(1);

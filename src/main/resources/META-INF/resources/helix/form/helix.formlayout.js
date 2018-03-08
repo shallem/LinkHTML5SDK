@@ -1504,7 +1504,13 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
-    subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
+    if (subPanelObj.mode === 'view') {
+        subPanelObj.DOM = subPanelObj.viewDOM = subPanelDiv;
+    } else if (subPanelObj.mode === 'edit') {
+        subPanelObj.DOM = subPanelObj.editDOM = subPanelDiv;
+    } else {
+        subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
+    }
 
     // Determine if the sub-panel is visible based on the 'mode' field.
     if (subPanelObj.mode && subPanelObj.mode !== 'all') {
