@@ -1329,6 +1329,8 @@ function initHelixDB() {
                                     persistence.errorHandler(e.message, e.code, badSQL, badArgs);
                                     updateFieldDone(_args);
                                 });
+                            } else {
+                                updateFieldDone(_args);
                             }
                         }
                     });
@@ -1427,11 +1429,6 @@ function initHelixDB() {
             };
             
             var prepareAdds = function(args) {
-                var addUniqueIDs = [];
-                for (var i = 0; i < args.deltaObj.adds.length; ++i) {
-                    var toAdd = args.deltaObj.adds[i];
-                    addUniqueIDs.push(toAdd[_self.getJSONKeyField(elemSchema, toAdd)]);
-                }
                 createUIDToEIDMap(args);
             };
             

@@ -355,7 +355,7 @@
 		    <include>form/formLayout.js</include>
 
 		    <!-- Scrolling Div -->
-		    <include>scrollingdiv/scrollingdiv.js</include>
+		    <!-- <include>scrollingdiv/scrollingdiv.js</include> -->
 
 		    <!-- Split View -->
 		    <include>splitview/helixSplitView.js</include>
@@ -379,7 +379,7 @@
 		    <include>withinViewport/jquery.withinViewport.js</include>
 
 		    <!-- Audio/video with jPlayer v2.6 -->
-		    <include>jplayer/jquery.jplayer.js</include>
+		    <!-- <include>jplayer/jquery.jplayer.js</include> -->
 
 		    <!-- Color animation -->
 		    <include>animate-colors/jquery.animate-colors.js</include>

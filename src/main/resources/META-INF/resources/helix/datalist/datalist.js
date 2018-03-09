@@ -717,7 +717,7 @@
             return _ignore; // Without this our JS compressor optimizes _ignore away
         },
         
-        _nextPage: function (direction) {
+        _nextPage: function (direction, oncomplete) {
             var _self = this;
             if (direction < 0) {
                 var _addToBottom = function (toReverse) {
@@ -727,9 +727,14 @@
                         var i;
                         for (i = 0; i < _self.displayLIs.length; ++i) {
                             lastLI = _self.displayLIs[i];
-                            if ('data-id' in lastLI.attributes) {
+                            if (lastLI && ('data-id' in lastLI.attributes)) {
                                 break;
                             }
+                        }
+                        if (!lastLI) {
+                            // We are caught mid-refresh ... otherwise this should never happen.
+                            oncomplete();
+                            return;
                         }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
                         startIdx -= toReverse;
@@ -754,8 +759,8 @@
                             _self.$listWrapper.scrollTop(delta);
                             setTimeout(function () {
                                 _self._forceRerender();
-                                _self._restoreScrollEvent();
-                            }, 1);
+                                oncomplete();
+                            }, 15);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
                     } else if (_self._preloadPromise) {
@@ -768,15 +773,25 @@
                 _addToBottom(Math.floor(_self._itemsPerPage / 3));
             } else {
                 var _addToEnd = function (toAdd) {
+                    if (toAdd === 0) {
+                        oncomplete();
+                        return;
+                    }
+                    
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
                     if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
                         var lastLI = null;
                         var i;
                         for (i = _self.displayLIs.length - 1; i >= 0; --i) {
                             lastLI = _self.displayLIs[i];
-                            if ('data-id' in lastLI.attributes) {
+                            if (lastLI && ('data-id' in lastLI.attributes)) {
                                 break;
                             }
+                        }
+                        if (!lastLI) {
+                            // We are caught mid-refresh ... otherwise this should never happen.
+                            oncomplete();
+                            return;
                         }
                         if (i >= 0) {
                             var lastTop = _self.displayLIs[i].offsetTop;
@@ -804,8 +819,8 @@
                                 _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
                                 setTimeout(function () {
                                     _self._forceRerender();
-                                    _self._restoreScrollEvent();
-                                }, 1);
+                                    oncomplete();
+                                }, 100);
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
@@ -813,7 +828,15 @@
                         _self._preloadPromise.then(_addToEnd);
                         return;
                     } else {
-                        _addToEnd(_self._prefetchedData.length - (startIdx + _self._itemsPerPage));
+                        var stubAdd = _self._prefetchedData.length - (startIdx + _self._itemsPerPage);
+                        if (stubAdd > 0) {
+                            _addToEnd(stubAdd);
+                        } else {
+                            _self._preloadPage(1, 2);
+                            if (_self._preloadPromise) {
+                                _self._preloadPromise.then(_addToEnd);
+                            }
+                        }
                     }
                 };
                 _addToEnd(Math.floor(_self._itemsPerPage / 3));
@@ -848,12 +871,16 @@
                 // stop tracking scroll events
                 _self._stopScrollHandler();
                 _self._lastScrollPos = Number.MIN_VALUE;
-                _self._nextPage(-1);
-            } else if (scrollPos >= listHeight && !_self._atDataTop) {
+                _self._nextPage(-1, function() {
+                    _self._restoreScrollEvent();
+                });
+            } else if (scrollPos >= listHeight) {
                 // Scrolling down.
                 _self._stopScrollHandler();
                 _self._lastScrollPos = Number.MIN_VALUE;
-                _self._nextPage(1);
+                _self._nextPage(1, function() {
+                    _self._restoreScrollEvent();
+                });
             }
         },
         /**
@@ -961,16 +988,13 @@
                 if (_options.scroll) {
                     _self.$listWrapper.on('touchstart', function () {
                         _self._fingerOn = true;
-                        clearTimeout(_self._scrollerTimeout);
-                        _self._scrollerTimeout = null;
                     });
 
                     _self.$listWrapper.on('touchend', function () {
                         _self._fingerOn = false;
                     });
 
-                    _self._inBounce = false;
-                    _self._restoreScrollEvent();
+                    _self._installScrollHandler();
                 }
 
                 if (oncomplete) {
@@ -979,18 +1003,27 @@
                 }
             }, true, extraItems, _self.originalList, undefined, _options);
         },
+        
+        _installScrollHandler: function() {
+            var __scrollHandler = $.proxy(function (ev) {
+                this.scrollHandler(ev);
+            }, this);
+            this.$listWrapper.off('scroll').scroll(__scrollHandler);
+            this._cancelAllScrolls = false;
+        },
+        
         _restoreScrollEvent: function () {
-            var _self = this;
-            var __scrollHandler = function (ev) {
-                _self.scrollHandler(ev);
-            };
-            _self._cancelAllScrolls = false;
+            //var _self = this;
+            //var __scrollHandler = function (ev) {
+            //    _self.scrollHandler(ev);
+            //};
+            this._cancelAllScrolls = false;
             //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
-            _self.$listWrapper.scroll(__scrollHandler);
+            //_self.$listWrapper.scroll(__scrollHandler);
         },
         _stopScrollHandler: function () {
             this._cancelAllScrolls = true;
-            this.$listWrapper.off('scroll');
+            //this.$listWrapper.off('scroll');
         },
         /**
          * Helpers for infinite scroll.
@@ -1831,6 +1864,11 @@
                     _self._doRemoteSearch(searchText, _self.originalList);
                 }
             }
+        },
+        resetAllFilters: function() {
+            this._clearGlobalFilterMenu();
+            this._filterMap = {};
+            this.unfilteredList = this.originalList;
         },
         // Restore the original list contents, without any searching, sorting, or filtering.
         resetListContents: function () {
@@ -2772,11 +2810,11 @@
             }
         },
         getAllMultiSelectElements: function () {
-            return $(this.element).find('li.hx-selected');
+            return $(this.element).find('li.hx-selected[data-deleted!="true"]');
         },
         getAllMultiSelectItems: function () {
             var ret = [];
-            $(this.element).find('li.hx-selected').each(function () {
+            $(this.element).find('li.hx-selected[data-deleted!="true"]').each(function () {
                 ret.push($(this).data('data'));
             });
             return ret;

@@ -62,6 +62,9 @@ $(document).on('resign', function() {
 
 $(document).on('active', function() {
     Helix.ignoreErrors = false;
+    if (Helix.Ajax) {
+        Helix.Ajax.inProgressLoads = {};
+    }
 });
 
 
