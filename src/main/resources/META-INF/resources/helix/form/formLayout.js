@@ -634,7 +634,8 @@
                     __refreshTextArea(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
-                } else if (fldType === 'subPanel') { 
+                } else if (fldType === 'subPanel' ||
+                        fldType === 'horizontalBlock') { 
                     if (item.panelMode) {
                         if (item.panelMode === 'reverse') {
                             // The sub-panel uses the opposite mode of the parent.
@@ -737,7 +738,7 @@
                 var nxtItem = this.options.items[idx];
                 if (nxtItem.type === "subPanel" ||
                         nxtItem.type === 'horizontalBlock') {
-                    if (!this.__refreshOneValue(mode,nxtItem,valuesMap)) {
+                    if (!this.__refreshOneValue(mode,nxtItem,valuesMap,modeChanged)) {
                         for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                             var subitem = nxtItem.items[subidx];
                             this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);

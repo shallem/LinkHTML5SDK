@@ -820,7 +820,7 @@
                                 setTimeout(function () {
                                     _self._forceRerender();
                                     oncomplete();
-                                }, 15);
+                                }, 250);
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
@@ -828,7 +828,13 @@
                         _self._preloadPromise.then(_addToEnd);
                         return;
                     } else {
-                        _addToEnd(_self._prefetchedData.length - (startIdx + _self._itemsPerPage));
+                        var stubAdd = _self._prefetchedData.length - (startIdx + _self._itemsPerPage);
+                        if (stubAdd > 0) {
+                            _addToEnd(stubAdd);
+                        } else {
+                            _self._preloadPage(1, 2);
+                            _self._preloadPromise.then(_addToEnd);
+                        }
                     }
                 };
                 _addToEnd(Math.floor(_self._itemsPerPage / 3));
