@@ -820,7 +820,7 @@
                                 setTimeout(function () {
                                     _self._forceRerender();
                                     oncomplete();
-                                }, 250);
+                                }, 100);
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
@@ -833,7 +833,9 @@
                             _addToEnd(stubAdd);
                         } else {
                             _self._preloadPage(1, 2);
-                            _self._preloadPromise.then(_addToEnd);
+                            if (_self._preloadPromise) {
+                                _self._preloadPromise.then(_addToEnd);
+                            }
                         }
                     }
                 };
