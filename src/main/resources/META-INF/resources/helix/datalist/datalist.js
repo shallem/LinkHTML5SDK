@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var globalDataListID = -1;
 (function ($) {
 
     $.widget("helix.helixDatalist", {
@@ -392,6 +393,7 @@
         },
         _create: function () {
             var _self = this;
+            this.dataListID = ++globalDataListID;
             this.$wrapper = this.element;
             if (this.options.scroll) {
                 this.$wrapper.addClass('hx-full-height');
@@ -3289,6 +3291,9 @@
         clearDeleted: function (elems) {
             $(elems).attr('data-deleted', '').removeClass('hx-deleted');
             this.refreshListView();
+        },
+        equals: function(other) {
+            return this.dataListID === other.dataListID;
         }
 
     });
