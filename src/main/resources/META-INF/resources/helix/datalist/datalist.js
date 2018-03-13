@@ -389,7 +389,12 @@ var globalDataListID = -1;
              * Number of rows to display in a single view of the list. The list automatically
              * paginates as the user scrolls.
              */
-            itemsPerPage: 50
+            itemsPerPage: 50,
+            
+            /*
+             * Size of the window of preloaded data (in pages).
+             */
+            preloadPageCt: 6
         },
         _create: function () {
             var _self = this;
@@ -663,15 +668,21 @@ var globalDataListID = -1;
                 return;
             }
 
-            var nElems = pageCt * this._itemsPerPage;
-            displayCollection = displayCollection.limit(nElems);
-
+            var nElems = 0;
             var skip = 0;
-            if (direction < 0) {
-                skip = Math.max(0, this._preloadWindowStart - nElems);
-            } else if (direction > 0) {
-                skip = this._preloadWindowStart + this._prefetchedData.length;
+            if (direction !== 0) {
+                // We are sliding the window of preloaded data ...
+                nElems = pageCt * this._itemsPerPage;
+                if (direction < 0) {
+                    skip = Math.max(0, this._preloadWindowStart - nElems);
+                } else if (direction > 0) {
+                    skip = this._preloadWindowStart + this._prefetchedData.length;
+                }
+            } else {
+                // We are setting up the initial preload window.
+                nElems = this.options.preloadPageCt * this._itemsPerPage;
             }
+            displayCollection = displayCollection.limit(nElems);
             displayCollection = displayCollection.skip(skip);
 
             var _self = this;
@@ -713,10 +724,12 @@ var globalDataListID = -1;
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
         _forceRerender: function() {
+            /*
             this.$listWrapper[0].style.display = 'none';
             var _ignore = this.$listWrapper[0].offsetHeight;
             this.$listWrapper[0].style.display = 'block';
             return _ignore; // Without this our JS compressor optimizes _ignore away
+            */
         },
         
         _nextPage: function (direction, oncomplete) {
@@ -726,9 +739,32 @@ var globalDataListID = -1;
                 return;
             }
             if (direction < 0) {
-                var _addToBottom = function (toReverse) {
-                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
-                    if (startIdx - toReverse >= 0) {
+                var _addToBottom = function () {
+                    var toReverse = Math.floor(_self._itemsPerPage / 3);
+                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
+                    var startIdx = preloadStartIdx - toReverse;
+                    if (startIdx < 0) {
+                        // Either: (1), we have no more data.
+                        // (2) We need to wait for more data.
+                        // (3) We need to get more data and wait for it.
+                        if (_self._renderWindowStart === 0) {
+                            // No data
+                            oncomplete();
+                            return;
+                        } else {
+                            if (!_self._preloadPromise) {
+                                _self._preloadPage(-1, 2);
+                            }
+                            if (_self._preloadPromise) {
+                                _self._preloadPromise.then(_addToBottom);
+                            } else {
+                                oncomplete();
+                            }
+                            return;
+                        }
+                    }
+
+                    if (startIdx >= 0) {
                         var lastLI = null;
                         var i;
                         for (i = 0; i < _self.displayLIs.length; ++i) {
@@ -743,10 +779,9 @@ var globalDataListID = -1;
                             return;
                         }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
-                        startIdx -= toReverse;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
                             _self._renderWindowStart -= toReverse;
-                            if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                            if (!_self._preloadPromise && (startIdx < _self._itemsPerPage * 2)) {
                                 _self._preloadPage(-1, 2);
                             }
 
@@ -769,23 +804,43 @@ var globalDataListID = -1;
                             }, 15);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
-                    } else if (_self._preloadPromise) {
-                        _self._preloadPromise.then(_addToBottom);
-                        return;
                     } else {
-                        _addToBottom(startIdx);
+                        oncomplete();
                     }
                 };
-                _addToBottom(Math.floor(_self._itemsPerPage / 3));
+                _addToBottom();
             } else {
-                var _addToEnd = function (toAdd) {
+                var _addToEnd = function () {
+                    var toAdd = Math.floor(_self._itemsPerPage / 3);
+                    var windowSize = _self._itemsPerPage;
+                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
+                    var startIdx = preloadStartIdx + toAdd;
+                    
+                    if ((startIdx + windowSize) >= _self._prefetchedData.length) {
+                        if (_self._preloadHitDataTop) {
+                            toAdd = (_self._prefetchedData.length - (preloadStartIdx + windowSize));
+                            startIdx = preloadStartIdx + toAdd;
+                        } else{
+                            if (!_self._preloadPromise) {
+                                // We need more data;
+                                _self._preloadPage(1, 2);                                
+                            }
+                            if (_self._preloadPromise) {
+                                // Wait for more data.
+                                _self._preloadPromise.then(_addToEnd);
+                            } else {
+                                oncomplete();
+                            }
+                            return;
+                        }
+                    }
                     if (toAdd === 0) {
+                        // We have hit the top of the list ... no more data.
                         oncomplete();
                         return;
                     }
                     
-                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
-                    if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
+                    if (startIdx <= _self._prefetchedData.length) {
                         var lastLI = null;
                         var i;
                         for (i = _self.displayLIs.length - 1; i >= 0; --i) {
@@ -802,12 +857,11 @@ var globalDataListID = -1;
                         if (i >= 0) {
                             var lastTop = _self.displayLIs[i].offsetTop;
                             var lastID = lastLI.attributes['data-id'].nodeValue;
-                            startIdx += toAdd;
-                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
+                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + windowSize), function (args) {
                                 var tgtID = args[0];
                                 var origTop = args[1];
                                 _self._renderWindowStart += toAdd;
-                                if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                                if (!_self._preloadPromise && (startIdx > (_self._itemsPerPage * 2))) {
                                     _self._preloadPage(1, 2);
                                 }
 
@@ -830,34 +884,23 @@ var globalDataListID = -1;
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
-                    } else if (_self._preloadPromise) {
-                        _self._preloadPromise.then(_addToEnd);
-                        return;
                     } else {
-                        var stubAdd = _self._prefetchedData.length - (startIdx + _self._itemsPerPage);
-                        if (stubAdd > 0) {
-                            _addToEnd(stubAdd);
-                        } else {
-                            _self._preloadPage(1, 2);
-                            if (_self._preloadPromise) {
-                                _self._preloadPromise.then(_addToEnd);
-                            }
-                        }
+                        oncomplete();
                     }
                 };
-                _addToEnd(Math.floor(_self._itemsPerPage / 3));
+                _addToEnd();
             }
         },
+        
         _setScrollTimer: function (scrollAction) {
-            this._rescrollInProgress = true;
+            this._cancelAllScrolls = true;
             scrollAction();
-            //this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
             setTimeout(function () {
-                //_self.$listWrapper.addClass('hx-scroller-nozoom');
-                _self._rescrollInProgress = false;
+                _self._cancelAllScrolls = false;
             }, 500);
         },
+ 
         scrollHandler: function (ev) {
             var _self = this;
             if (_self._cancelAllScrolls) {
@@ -1508,15 +1551,15 @@ var globalDataListID = -1;
             filtersList.listview();
             _self._globalFilterContainer.popup();
         },
+        
         _resetPaging: function () {
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
             this._preloadWindowStart = 0;
             this._preloadHitDataTop = false;
             this._itemsPerPage = this.options.itemsPerPage;
-            this._atDataTop = false;
-            this._rescrollInProgress = false;
         },
+
         _refreshData: function (oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options) {
             var _self = this;
             if (!_options) {
@@ -1550,7 +1593,6 @@ var globalDataListID = -1;
             /* List must be non-empty and either a query collection or an array. */
             if (itemList) {
                 /* The item list is new - so we reset paging. */
-                _self._resetPaging();
                 _self.itemList = itemList;
             } else {
 
@@ -1571,6 +1613,7 @@ var globalDataListID = -1;
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
+            _self._resetPaging();
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
                 finalCompletion.call(_self);
                 _self._refreshDividers();
@@ -1583,7 +1626,7 @@ var globalDataListID = -1;
                         _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4], refreshArgs[5]);
                     }, 0);
                 }
-                _self._preloadPage(0, 4); // Preload the 4 pages from the DB.
+                _self._preloadPage(0); // Preload the 4 pages from the DB.
             }, _options.emptyMessage, oncomplete, noPaginate, extraItems, _options);
         },
         hasIndexedSearch: function () {
@@ -1659,12 +1702,6 @@ var globalDataListID = -1;
 
             var __processStart = function (count) {
                 _self.nElems = count;
-                if (count < _self._itemsPerPage) {
-                    // We did not get the full "limit" count of items requested
-                    _self._atDataTop = true;
-                } else {
-                    _self._atDataTop = false;
-                }
             };
 
             var __renderGroup = function (groupIndex) {
@@ -1727,28 +1764,7 @@ var globalDataListID = -1;
                 }
             };
 
-            if (_self._prefetchedItems && (noPaginate !== true)) {
-                // If the prefetched items list is too small, we won't be able to scroll up. Instead we just extend the list.
-                var ct = _self._prefetchedItems.length;
-                var startIdx = 0;
-                if (_self._prefetchedItems.length < 20) {
-                    _self._atDataTop = true;
-                    ct = ct + _self._itemsPerPage;
-                    rowIndex = _self._itemsPerPage;
-                    startIdx = _self._itemsPerPage;
-                } else {
-                    _self.displayList = [];
-                    _self.displayLIs = [];
-                }
-
-                __processStart(ct);
-                __addPreExtras();
-                for (var i = 0; i < _self._prefetchedItems.length; ++i) {
-                    __processRow(_self._prefetchedItems[i]);
-                }
-                __processDone(ct, startIdx);
-                _self._prefetchedItems = [];
-            } else if ($.isArray(displayCollection)) {
+            if ($.isArray(displayCollection)) {
                 _self.displayList = [];
                 _self.displayLIs = [];
                 __processStart(displayCollection.length);
@@ -1773,29 +1789,12 @@ var globalDataListID = -1;
                     },
                     /* Called on start. */
                     startFn: function (count) {
-                        if (_self.prefetchedItems) {
-                            count = count + _self.prefetchedItems.length;
-                        }
                         __processStart(count);
                         __addPreExtras();
                     },
                     /* Called on done. */
                     doneFn: function (count) {
-                        if (_self.prefetchedItems) {
-                            for (var i = 0; i < _self._prefetchedItems.length; ++i) {
-                                __processRow(_self._prefetchedItems[i]);
-                                ++count;
-                            }
-                            if (extraItems && extraItems.post) {
-                                for (i = 0; i < extraItems.post.length; ++i) {
-                                    if (__processRow(extraItems.post[i])) {
-                                        ++_self.nExtras;
-                                    }
-                                }
-                            }
-                        }
                         __processDone(count);
-                        _self._prefetchedItems = [];
                     }
                 });
             }

@@ -1360,7 +1360,13 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.height && formElem.height !== 'full') {
         $fieldContainer.height(formElem.height);
         $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
+    } else {
+        $fieldContainer.height('100%');
+        if (formElem.minHeight) {
+            $fieldContainer.css('min-height',formElem.minHeight + 'px');
+        }
     }
+    
 
     if (!formElem.name) {
         /* No field name. We cannot edit this field. */

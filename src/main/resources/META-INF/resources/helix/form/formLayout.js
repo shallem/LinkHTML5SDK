@@ -321,7 +321,7 @@
                 this.__copyValues(this.options.items, valuesMap);
             }
             $(this.element).empty();
-            this.$section = $('<section/>').appendTo(this.element);
+            this.$section = $('<section/>').addClass('hx-full-height hx-full-width').appendTo(this.element);
             if (this.options.fullScreen) {
                 $(this.element).height('100%');
                 this.$section.height('100%');

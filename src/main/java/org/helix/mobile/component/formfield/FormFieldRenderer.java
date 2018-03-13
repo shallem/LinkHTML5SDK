@@ -57,6 +57,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getHeight() != null) {
             writer.write("'height' : '" + ffield.getHeight() + "',");
         }
+        if (ffield.getMinHeight() != null) {
+            writer.write("'minHeight' : '" + ffield.getMinHeight() + "',");
+        }
         if (ffield.getStyleMap() != null) {
             writer.write("'style' : " + ffield.getStyleMap() + ",");
         } else if (ffield.getStyle() != null) {
