@@ -721,6 +721,10 @@ var globalDataListID = -1;
         
         _nextPage: function (direction, oncomplete) {
             var _self = this;
+            if (this.options.grouped) {
+                // Grouped lists do not scroll
+                return;
+            }
             if (direction < 0) {
                 var _addToBottom = function (toReverse) {
                     var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
