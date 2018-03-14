@@ -107,6 +107,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getAutocompleteTimeout() != null) {
             writer.write(", 'autocompleteTimeout' : " + ffield.getAutocompleteTimeout());
         }
+        if (ffield.getAutocompleteProjection() != null) {
+            writer.write(", 'autocompleteProjection' : " + ffield.getAutocompleteProjection());
+        }
         if (ffield.getOptions() != null) {
             writer.write(", 'options' : " + ffield.getOptions());
         }

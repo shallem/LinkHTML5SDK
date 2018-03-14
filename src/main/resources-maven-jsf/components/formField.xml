@@ -196,6 +196,12 @@
             <description>Number of seconds (whole or fractional) before autocomplete executes with the contents of the input box.</description>
         </attribute>
         <attribute>
+            <name>autocompleteProjection</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Single argument function that converts an autocomplete element into its display projection.</description>
+        </attribute>
+        <attribute>
             <name>validator</name>
             <required>false</required>
             <type>java.lang.String</type>

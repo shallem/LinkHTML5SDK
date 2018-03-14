@@ -758,11 +758,16 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                     autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
+                    if (!formElem.autocompleteProjection) {
+                        formElem.autocompleteProjection = function(s) {
+                            return s;
+                        };
+                    }
                     var __doAutocomplete = function () {
                         formElem.autocomplete.call(formElem, text, function (LIs, queryText) {
                             if (queryText !== _self.val()) {
                                 // The user has changed the text further since we ran this query.
-                                return;
+                                return false;
                             }
 
                             // Set __noblur to prevent the user's clicking on an autocomplete list
@@ -784,7 +789,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function () {
+                                        var nxtItem = formElem.autocompleteProjection(LIs[i]);
+                                        $("<li/>").addClass('wordBreak').append(nxtItem).on('vclick', function () {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem);
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
@@ -810,6 +816,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                 autoCompleteList.empty();
                                 autoCompleteList.hide();
                             }
+                            return true;
                         });
                     };
 

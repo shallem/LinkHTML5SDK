@@ -731,6 +731,13 @@ var globalDataListID = -1;
             return _ignore; // Without this our JS compressor optimizes _ignore away
             */
         },
+ 
+        _updateScrollTop: function(newScrollTop) {
+            var node = this.$listWrapper[0];
+            node.style['-webkit-overflow-scrolling'] = 'auto';
+            node.scrollTop = newScrollTop;
+            node.style['-webkit-overflow-scrolling'] = 'touch';
+        },
         
         _nextPage: function (direction, oncomplete) {
             var _self = this;
@@ -757,10 +764,13 @@ var globalDataListID = -1;
                             }
                             if (_self._preloadPromise) {
                                 _self._preloadPromise.then(_addToBottom);
+                                return;
+                            } else if (preloadStartIdx) {
+                                startIdx = 0;
                             } else {
                                 oncomplete();
+                                return;
                             }
-                            return;
                         }
                     }
 
@@ -797,7 +807,7 @@ var globalDataListID = -1;
                                 }
                             }
 
-                            _self.$listWrapper.scrollTop(delta);
+                            _self._updateScrollTop(delta);
                             setTimeout(function () {
                                 _self._forceRerender();
                                 oncomplete();
@@ -876,7 +886,7 @@ var globalDataListID = -1;
                                     }
                                 }
 
-                                _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
+                                _self._updateScrollTop(_self.$listWrapper[0].scrollTop + delta);
                                 setTimeout(function () {
                                     _self._forceRerender();
                                     oncomplete();
@@ -1062,17 +1072,10 @@ var globalDataListID = -1;
         },
         
         _restoreScrollEvent: function () {
-            //var _self = this;
-            //var __scrollHandler = function (ev) {
-            //    _self.scrollHandler(ev);
-            //};
             this._cancelAllScrolls = false;
-            //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
-            //_self.$listWrapper.scroll(__scrollHandler);
         },
         _stopScrollHandler: function () {
             this._cancelAllScrolls = true;
-            //this.$listWrapper.off('scroll');
         },
         /**
          * Helpers for infinite scroll.
