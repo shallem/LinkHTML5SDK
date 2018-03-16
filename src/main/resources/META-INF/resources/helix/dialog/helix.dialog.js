@@ -24,7 +24,8 @@
             confirmText: "Confirm",
             dismissText: "Dismiss",
             positionTo: 'origin',
-            noOpen: true
+            noOpen: true,
+            oncomplete: null /* called whenever the user dismisses the dialog, even if done by tapping outside the dialog. */
         }
     };
     
@@ -182,6 +183,9 @@
                 $(_self.$mainDiv).popup( "close" );
                 return false;
             });
+        }
+        if (this.options.oncomplete) {
+            $(this.$mainDiv).popup( 'popupafterclose', this.options.oncomplete);
         }
         
         _self.$mainDiv.trigger('create');

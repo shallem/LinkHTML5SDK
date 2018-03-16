@@ -68,5 +68,11 @@
             <defaultValue>false</defaultValue>
             <description>Set to true if the dialog contains a form. If so, supply a form layout object to the show method.</description>
         </attribute>
+        <attribute>
+            <name>oncomplete</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>JavaScript functon to invoke when the dialog disappears by any means. Takes no arguments.</description>
+        </attribute>
     </attributes>
 </component>

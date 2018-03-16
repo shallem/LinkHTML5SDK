@@ -550,7 +550,6 @@ var globalDataListID = -1;
             this.displayLIs = [];
 
             // Other globals.
-            this.refreshInProgress = false;
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
@@ -564,7 +563,15 @@ var globalDataListID = -1;
 
             // Queued refershes - tracks refresh calls that occur during another refresh.
             this._queuedRefreshes = [];
-
+            this.refreshInProgress = false;
+            
+            $(document).on('active', null, this, function (ev) {
+                // Make sure a paused/interrupted refresh (due to the app going to sleep) does not leave
+                // the datalist stuck.
+                var _me = ev.data[0];
+                _me.refreshInProgress = false;
+                _me._queuedRefreshes = [];
+            });
             if (this.options.itemList) {
                 this.refreshList(this.options.itemList, this.options.condition, null, function () {
 
