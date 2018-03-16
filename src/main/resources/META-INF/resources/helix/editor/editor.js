@@ -349,20 +349,29 @@
         _appendList: function (listTag) {
             this.focus();
 
+            var _list = $(listTag);    
             var $parent = this.$editFrame;
-            if (this._lastInputRange) {
-                $parent = $(this._lastInputRange.commonAncestorContainer);
-            } else if (this._lastInputNode) {
-                $parent = $(this._lastInputNode);
-            }
-
-            var _list = $(listTag);
-            if ($parent[0].nodeType === 3) {
-                _list.insertAfter($parent);
+            var focusNode = window.getSelection().focusNode;
+            if (focusNode) {
+                if ($(focusNode).is('.hx-editor')) {
+                    _list.prependTo($(focusNode));
+                } else {
+                    _list.insertAfter($(focusNode));
+                }
             } else {
-                _list.appendTo($parent);
-            }
+                if (this._lastInputRange) {
+                    $parent = $(this._lastInputRange.commonAncestorContainer);
+                } else if (this._lastInputNode) {
+                    $parent = $(this._lastInputNode);
+                }
 
+                if ($parent[0].nodeType === 3) {
+                    _list.insertAfter($parent);
+                } else {
+                    _list.appendTo($parent);
+                }
+            }
+            
             var _firstLI = $('<li/>').appendTo(_list);
             this._selectElementContents(_firstLI[0]);
         },
@@ -433,8 +442,7 @@
                             _self._queueStyleAction(menuName, buttonName, color.toHexString());
                         }
                     });
-
-            $(_self.$editFrame).on('blur', function () {
+            $(_self.menuPopups[menuName]).on('popupafterclose', function() {
                 colorInput.spectrum("hide");
             });
             var restoreColor = '#000000';
