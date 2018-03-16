@@ -920,8 +920,12 @@ var globalDataListID = -1;
             var scrollPos = _self.$listWrapper.scrollTop();
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
+            if (listHeight <= 0) {
+                // This can happen when the list is in the process of being refreshed.
+                return;
+            }
+            
             _self._lastScrollPos = scrollPos;
-
             if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
