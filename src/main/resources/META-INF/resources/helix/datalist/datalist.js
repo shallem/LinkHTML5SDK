@@ -568,7 +568,7 @@ var globalDataListID = -1;
             $(document).on('active', null, this, function (ev) {
                 // Make sure a paused/interrupted refresh (due to the app going to sleep) does not leave
                 // the datalist stuck.
-                var _me = ev.data[0];
+                var _me = ev.data;
                 _me.refreshInProgress = false;
                 _me._queuedRefreshes = [];
             });
