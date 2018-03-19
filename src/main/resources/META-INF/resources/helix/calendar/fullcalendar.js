@@ -863,10 +863,12 @@
                                                 ) +
                                         "</span>"
                                         )
-                                        .click(function () {
+                                        .click(function (ev) {
                                             if (!button.hasClass(tm + '-state-disabled')) {
                                                 buttonClick();
                                             }
+                                            ev.stopImmediatePropagation();
+                                            return false;
                                         })
                                         .mousedown(function () {
                                             button
