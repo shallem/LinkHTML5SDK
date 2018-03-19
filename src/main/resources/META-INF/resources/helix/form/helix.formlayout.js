@@ -2376,7 +2376,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
 
 Helix.Layout.createYesNoCancelDialog = function (options) {
     if (options.onclick && !options.onclick()) {
-        return;
+        return null;
     }
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
@@ -2386,12 +2386,12 @@ Helix.Layout.createYesNoCancelDialog = function (options) {
     var noBtn = Helix.Layout._createButton(popupId + '-no', '80', 'c', popup, options.noText ? options.noText : 'No', options.onNo);
     var cancelBtn = Helix.Layout._createButton(popupId + '-cancel', '80', 'c', popup, options.cancelText ? options.cancelText : 'Cancel', options.onCancel);
 
-    Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
+    return Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
 };
 
 Helix.Layout.createConfirmDialog = function (options) {
     if (options.onclick && !options.onclick()) {
-        return;
+        return null;
     }
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
