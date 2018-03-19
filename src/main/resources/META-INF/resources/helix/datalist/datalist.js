@@ -1628,6 +1628,7 @@ var globalDataListID = -1;
              * search first. 
              */
             _self._resetPaging();
+            this.$listWrapper.scrollTop(0);            
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
                 finalCompletion.call(_self);
                 _self._refreshDividers();
@@ -2968,6 +2969,8 @@ var globalDataListID = -1;
 
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
+            } else {
+                $(parentElement).removeAttr('data-id');
             }
             //parentElement[0].style.display = '';
             return parentElement;

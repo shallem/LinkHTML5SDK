@@ -2397,8 +2397,8 @@ Helix.Layout.createConfirmDialog = function (options) {
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
 
-    var closebtn = Helix.Layout._createButton(popupId + '-cancel', '90', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
-    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '90', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
+    var closebtn = Helix.Layout._createButton(popupId + '-cancel', '105', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
+    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
 
     return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn]);
 };

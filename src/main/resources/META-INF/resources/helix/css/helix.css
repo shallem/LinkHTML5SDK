@@ -877,6 +877,7 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     padding: 0;
     margin: 0 auto;
     min-width: 64px;
+    font-size: 14px;
 }
 
 /* Styling for lists with a split button. */
