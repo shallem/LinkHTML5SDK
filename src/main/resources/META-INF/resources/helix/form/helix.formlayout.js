@@ -2402,3 +2402,16 @@ Helix.Layout.createConfirmDialog = function (options) {
 
     return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn]);
 };
+
+Helix.Layout.createAlertDialog = function(options) {
+    if (options.onclick && !options.onclick()) {
+        return null;
+    }
+    options.oncomplete = options.onclick;
+
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
+    var popup = Helix.Layout._createDialogPopup(popupId);
+
+    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'OK', options.onclick);
+    return Helix.Layout._layoutPopup(popup, options, [ confirmbtn ]); 
+};
