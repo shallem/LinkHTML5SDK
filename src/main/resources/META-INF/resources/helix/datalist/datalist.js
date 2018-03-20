@@ -851,7 +851,7 @@ var globalDataListID = -1;
                             return;
                         }
                     }
-                    if (toAdd === 0) {
+                    if (toAdd <= 0) {
                         // We have hit the top of the list ... no more data.
                         oncomplete();
                         return;

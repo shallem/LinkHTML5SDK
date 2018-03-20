@@ -54,6 +54,11 @@ Helix.postInit = function(fn, thisArg, args) {
     }
 };
 
+Helix.stopEvent = function(ev) {
+    ev.stopImmediatePropagation();
+    return false;
+};
+
 Helix.ignoreErrors = false;
 
 $(document).on('resign', function() {
