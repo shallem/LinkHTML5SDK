@@ -863,12 +863,11 @@
                                                 ) +
                                         "</span>"
                                         )
-                                        .click(function (ev) {
+                                        .on(Helix.clickEvent, function (ev) {
                                             if (!button.hasClass(tm + '-state-disabled')) {
                                                 buttonClick();
                                             }
-                                            ev.stopImmediatePropagation();
-                                            return false;
+                                            return Helix.stopEvent(ev);
                                         })
                                         .mousedown(function () {
                                             button
