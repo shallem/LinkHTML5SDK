@@ -688,6 +688,8 @@ var globalDataListID = -1;
             } else {
                 // We are setting up the initial preload window.
                 nElems = this.options.preloadPageCt * this._itemsPerPage;
+                skip = Math.max(0, this._renderWindowStart - this._itemsPerPage);
+                this._preloadWindowStart = this._renderWindowStart - skip;
             }
             displayCollection = displayCollection.limit(nElems);
             displayCollection = displayCollection.skip(skip);
@@ -1586,7 +1588,7 @@ var globalDataListID = -1;
                 _self._queuedRefreshes.push([oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options]);
                 return;
             }
-
+            
             _self.refreshInProgress = true;
             if (!extraItems) {
                 extraItems = _self.extraItems;
@@ -1612,11 +1614,6 @@ var globalDataListID = -1;
 
             }
 
-            /* Must happen after we call _resetPaging */
-            if (renderWindowStart !== undefined) {
-                _self.setRenderWindowStart(renderWindowStart);
-            }
-
             var displayCollection = _self.itemList;
             if (!displayCollection || (!displayCollection.newEach && !$.isArray(displayCollection))) {
                 _self.refreshInProgress = false;
@@ -1624,11 +1621,19 @@ var globalDataListID = -1;
                 return;
             }
 
+            if (_options.noPagingReset !== true) {
+                _self._resetPaging();
+                this.$listWrapper.scrollTop(0);            
+            }
+            
+            /* Must happen after we call _resetPaging */
+            if (renderWindowStart !== undefined) {
+                _self.setRenderWindowStart(renderWindowStart);
+            }
+
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
-            _self._resetPaging();
-            this.$listWrapper.scrollTop(0);            
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
                 finalCompletion.call(_self);
                 _self._refreshDividers();
