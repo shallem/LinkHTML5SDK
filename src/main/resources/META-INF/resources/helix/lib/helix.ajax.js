@@ -1154,7 +1154,9 @@ Helix.Ajax = {
                     if (jqXHR.status === 408 ||
                             jqXHR.status === 407) {
                         // Specifically a timeout or the end of the session.
-                        Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
+                        if (params.allowOfflineQueue !== false) {
+                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
+                        }
                     } else {
                         if (callbacks.fatal) {
                             callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
@@ -1178,7 +1180,9 @@ Helix.Ajax = {
             });
             return ret;
         } else {
-            Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+            if (params.allowOfflineQueue !== false) {
+                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+            }
             Helix.Ajax.hideLoader();
         }
         return null;
