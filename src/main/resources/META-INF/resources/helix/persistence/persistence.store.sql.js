@@ -278,23 +278,7 @@ function config(persistence, dialect) {
    *            indicate that we want to stop tracking the objects we flush; default
    *            is true, unless false is specified explicitly
    */
-    persistence.flush = function (tx, callback, stopTracking) {
-        var args = argspec.getArgs(arguments, [
-        {
-            name: "tx", 
-            optional: true, 
-            check: persistence.isTransaction
-        },
-        {
-            name: "callback", 
-            optional: true, 
-            check: argspec.isCallback(), 
-            defaultValue: null
-        }
-        ]);
-        tx = args.tx;
-        callback = args.callback;
-
+    persistence.flush = function (callback, stopTracking) {
         // Before we go any further see if we have anything to do. If not, just call the completion function.
         var session = this;
         if (Object.keys(session.trackedObjects).length === 0 &&
@@ -340,18 +324,20 @@ function config(persistence, dialect) {
             }         
         }
         
-        var __doFlush = function(tx, callback, persistObjArray, removeObjArray) {
+        var __doFlush = function(callback, persistObjArray, removeObjArray) {
             session.objectsToRemove = {};
             if(callback) {
-                persistence.asyncParForEach(removeObjArray, function(obj, callback) {
+                persistence.asyncParForEach(removeObjArray, function(obj, callback, opaque, tx) {
                     remove(obj, tx, callback);
                 }, function(result, err, _persistArr) {
-                    if (err) return callback(result, err);
-                    persistence.asyncParForEach(_persistArr, function(obj, callback) {
+                    //if (err) return callback(result, err);
+                    persistence.asyncParForEach(_persistArr, function(obj, callback, opaque, tx) {
                         save(obj, tx, callback);
                     }, function() {
                         if (addlQueries.length > 0) {
-                            persistence.executeQueriesSeq(tx, addlQueries, callback);
+                            persistence.transaction(function(tx) {
+                                persistence.executeQueriesSeq(tx, addlQueries, callback);                            
+                            });
                         } else {
                             callback();
                         }
@@ -359,48 +345,42 @@ function config(persistence, dialect) {
                     return true;
                 }, persistObjArray);
             } else { // More efficient
-                for(var i = 0; i < removeObjArray.length; i++) {
-                    remove(removeObjArray[i], tx);
-                }
-                for(var i = 0; i < persistObjArray.length; i++) {
-                    save(persistObjArray[i], tx);
-                }
-                if (addlQueries.length > 0) {
-                    persistence.executeQueriesSeq(tx, addlQueries);
-                }
+                persistence.transaction(function(tx) {
+                    for(var i = 0; i < removeObjArray.length; i++) {
+                        remove(removeObjArray[i], tx);
+                    }
+                    for(var i = 0; i < persistObjArray.length; i++) {
+                        save(persistObjArray[i], tx);
+                    }
+                    if (addlQueries.length > 0) {
+                        persistence.executeQueriesSeq(tx, addlQueries);
+                    }
+                });
             }
         };
 
         var __flushChunk = function(_cb, _persists, _removes, startIdx) {
-            persistence.transaction(function(tx) {
-                var _slice;
-                if (startIdx + 250 >= _persists.length) {
-                    _slice = _persists.slice(startIdx);
-                    __doFlush(tx, _cb, _slice, _removes);
-                } else {
-                    _slice = _persists.slice(startIdx, startIdx+250);
-                    __doFlush(tx, function() {
-                        setTimeout(function() {
-                            // Put this in a setTimeout to make sure that the cordova command queue has a chance
-                            // to get flushed at the end of the transaction callback.
-                            __flushChunk(_cb, _persists, [], startIdx + 250);                        
-                        }, 0);
-                    }, _slice, _removes);
-                }
-            });
+            var _slice;
+            if (startIdx + 250 >= _persists.length) {
+                _slice = _persists.slice(startIdx);
+                __doFlush(_cb, _slice, _removes);
+            } else {
+                _slice = _persists.slice(startIdx, startIdx+250);
+                __doFlush(function() {
+                    setTimeout(function() {
+                        // Put this in a setTimeout to make sure that the cordova command queue has a chance
+                        // to get flushed at the end of the transaction callback.
+                        __flushChunk(_cb, _persists, [], startIdx + 250);                        
+                    }, 0);
+                }, _slice, _removes);
+            }
         };
 
-        if(!tx) {
-            if (persistObjArray.length > 250) {
-                // Block into chunks of 250.
-                __flushChunk(callback, persistObjArray, removeObjArray, 0);
-            } else {
-                this.transaction(function(tx) {
-                    __doFlush(tx, callback, persistObjArray, removeObjArray);
-                });
-            }
+        if (persistObjArray.length > 250) {
+            // Block into chunks of 250.
+            __flushChunk(callback, persistObjArray, removeObjArray, 0);
         } else {
-            __doFlush(tx, callback, persistObjArray, removeObjArray);
+            __doFlush(callback, persistObjArray, removeObjArray);
         }
     };
 
@@ -772,31 +752,9 @@ function config(persistence, dialect) {
    * @param callback function to be called taking an array with
    *   result objects as argument
    */
-    persistence.DbQueryCollection.prototype.list = function (tx, callback) {
-        var args = argspec.getArgs(arguments, [
-        {
-            name: 'tx', 
-            optional: true, 
-            check: persistence.isTransaction, 
-            defaultValue: null
-        },
-        {
-            name: 'callback', 
-            optional: false, 
-            check: argspec.isCallback()
-        }
-        ]);
-        tx = args.tx;
-        callback = args.callback;
-
+    persistence.DbQueryCollection.prototype.list = function (callback, tx) {
         var that = this;
         var session = this._session;
-        if(!tx) { // no transaction supplied
-            session.transaction(function(tx) {
-                that.list(tx, callback);
-            });
-            return;
-        }
         var entityName = this._entityName;
         var meta = persistence.getMeta(entityName);
         var tm = persistence.typeMapper;
@@ -807,7 +765,7 @@ function config(persistence, dialect) {
             persistence.asyncForEach(meta.mixedIns, function(realMeta, next) {
                 var query = that.clone();
                 query._entityName = realMeta.name;
-                query.list(tx, function(array) {
+                query.list(function(array) {
                     result = result.concat(array);
                     next();
                 });
@@ -816,7 +774,7 @@ function config(persistence, dialect) {
                 query._orderColumns = that._orderColumns;
                 query._reverse = that._reverse;
                 // TODO: handle skip and limit -- do we really want to do it?
-                query.list(null, callback);
+                query.list(callback);
             });
             return;
         }
@@ -910,6 +868,12 @@ function config(persistence, dialect) {
         }
         
         function runQuery(tx) {
+            if (!tx) {
+                session.transaction(function(tx) {
+                    runQuery(tx);
+                });
+                return;
+            }
             tx.executeSql(sql, args, 
                 function (rows) {
                     var results = [];
@@ -923,7 +887,7 @@ function config(persistence, dialect) {
                             var prefetchField = that._prefetchFields[j];
                             var thisMeta = meta.hasOne[prefetchField].type.meta;
                             e._data_obj[prefetchField] = rowToEntity(session, thisMeta.name, r, prefetchField + '_');
-                            
+
                             // SAH - Do NOT track objects that we pull from the DB. We only start tracking them when
                             // they are modified.
                             //session.add(e._data_obj[prefetchField]);
@@ -944,7 +908,7 @@ function config(persistence, dialect) {
         if (this._noFlush) {
             runQuery(tx);
         } else {
-            session.flush(tx, function () {
+            session.flush(function () {
                 runQuery(tx);
             });
         }
@@ -1176,35 +1140,9 @@ function config(persistence, dialect) {
    * @param tx transaction to use
    * @param callback function to be called when clearing has completed
    */
-    persistence.DbQueryCollection.prototype.count = function (tx, callback) {
-        var args = argspec.getArgs(arguments, [
-        {
-            name: 'tx', 
-            optional: true, 
-            check: persistence.isTransaction, 
-            defaultValue: null
-        },
-        {
-            name: 'callback', 
-            optional: false, 
-            check: argspec.isCallback()
-        }
-        ]);
-        tx = args.tx;
-        callback = args.callback;
-
+    persistence.DbQueryCollection.prototype.count = function (callback) {
         var that = this;
         var session = this._session;
-        if(tx && !tx.executeSql) { // provided callback as first argument
-            callback = tx;
-            tx = null;
-        }
-        if(!tx) { // no transaction supplied
-            session.transaction(function(tx) {
-                that.count(tx, callback);
-            });
-            return;
-        }
         var entityName = this._entityName;
         var meta = persistence.getMeta(entityName);
         var tm = persistence.typeMapper;
@@ -1215,7 +1153,7 @@ function config(persistence, dialect) {
             persistence.asyncForEach(meta.mixedIns, function(realMeta, next) {
                 var query = that.clone();
                 query._entityName = realMeta.name;
-                query.count(tx, function(count) {
+                query.count(function(count) {
                     result += count;
                     next();
                 });
@@ -1239,9 +1177,11 @@ function config(persistence, dialect) {
 
         var sql = "SELECT COUNT(*) AS cnt FROM `" + entityName + "` AS `root` " + joinSql + " " + whereSql;
 
-        session.flush(tx, function () {
-            tx.executeSql(sql, args, function(results) {
-                callback(parseInt(results[0].cnt, 10));
+        session.flush(function () {
+            session.transaction(function(tx) {
+                tx.executeSql(sql, args, function(results) {
+                    callback(parseInt(results[0].cnt, 10));
+                });
             });
         });
     };

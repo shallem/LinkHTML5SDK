@@ -578,6 +578,9 @@ var globalDataListID = -1;
                 });
             }
         },
+        refreshDividers: function() {
+            this._refreshDividers();
+        },
         _refreshDividers: function () {
             if (!this.hasAutodividers) {
                 return;

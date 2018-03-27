@@ -426,14 +426,16 @@ function initPersistence(persistence) {
             if(arLength === 0) {
                 callback(undefined, undefined, opaque);
             }
-            for(var i = 0; i < arLength; i++) {
-                fn(array[i], function(result, err) {
-                    completed++;
-                    if(completed === arLength) {
-                        callback(result, err, opaque);
-                    }
-                }, opaque);
-            }
+            persistence.transaction(function(tx) {
+                for(var i = 0; i < arLength; i++) {
+                    fn(array[i], function(result, err) {
+                        completed++;
+                        if(completed === arLength) {
+                            callback(result, err, opaque);
+                        }
+                    }, opaque, tx);
+                }
+            })
         };
 
         /**
@@ -1023,7 +1025,7 @@ function initPersistence(persistence) {
                             var ar = jsonObj[p].slice(0);
                             var PropertyEntity = meta.hasMany[p].type;
                             // get all current items
-                            coll.list(tx, function(currentItems) {
+                            coll.list(function(currentItems) {
                                 persistence.asyncForEach(ar, function(item, callback) {
                                     PropertyEntity.fromSelectJSON(session, tx, item, function(result) {
                                         // Check if not already in collection
@@ -1078,22 +1080,16 @@ function initPersistence(persistence) {
                     defaultValue: function(){}
                 }
                 ]);
-                Entity.findBy(args.session, args.tx, "id", args.id, args.callback);
+                Entity.findBy(args.session, "id", args.id, args.callback, args.tx);
             };
 
-            Entity.findBy = function(session, tx, property, value, callback) {
+            Entity.findBy = function(session, property, value, callback, tx) {
                 var args = argspec.getArgs(arguments, [
                 {
                     name: 'session',
                     optional: true,
                     check: persistence.isSession,
                     defaultValue: persistence
-                },
-                {
-                    name: 'tx',
-                    optional: true,
-                    check: persistence.isTransaction,
-                    defaultValue: null
                 },
                 {
                     name: 'property',
@@ -1109,10 +1105,15 @@ function initPersistence(persistence) {
                     optional: true,
                     check: argspec.isCallback(),
                     defaultValue: function(){}
+                },
+                {
+                    name: 'tx',
+                    optional: true,
+                    check: persistence.isTransaction,
+                    defaultValue: null
                 }
                 ]);
                 session = args.session;
-                tx = args.tx;
                 property = args.property;
                 value = args.value;
                 callback = args.callback;
@@ -1121,17 +1122,9 @@ function initPersistence(persistence) {
                     callback(session.trackedObjects[value]);
                     return;
                 }
-                if(!tx) {
-                    session.transaction(function(tx) {
-                        Entity.findBy(session, tx, property, value, callback);
-                    }, function(err) {
-                        alert(err.message);
-                    });
-                    return;
-                }
-                Entity.all(session).filter(property, "=", value).one(tx, function(obj) {
+                Entity.all(session).filter(property, "=", value).one(function(obj) {
                     callback(obj);
-                });
+                }, tx);
             }
 
 
@@ -1276,245 +1269,6 @@ function initPersistence(persistence) {
             } else {
                 return value;
             }
-        };
-
-        /**
-     * Dumps the entire database into an object (that can be serialized to JSON for instance)
-     * @param tx transaction to use, use `null` to start a new one
-     * @param entities a list of entity constructor functions to serialize, use `null` for all
-     * @param callback (object) the callback function called with the results.
-     */
-        persistence.dump = function(tx, entities, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'entities',
-                optional: true,
-                check: function(obj) {
-                    return !obj || (obj && obj.length && !obj.apply);
-                },
-                defaultValue: null
-            },
-            {
-                name: 'callback',
-                optional: false,
-                check: argspec.isCallback(),
-                defaultValue: function(){}
-            }
-            ]);
-            tx = args.tx;
-            entities = args.entities;
-            callback = args.callback;
-
-            if(!entities) { // Default: all entity types
-                entities = [];
-                for(var e in entityClassCache) {
-                    if(entityClassCache.hasOwnProperty(e)) {
-                        entities.push(entityClassCache[e]);
-                    }
-                }
-            }
-
-            var result = {};
-            persistence.asyncParForEach(entities, function(Entity, callback) {
-                Entity.all().list(tx, function(all) {
-                    var items = [];
-                    persistence.asyncParForEach(all, function(e, callback) {
-                        var rec = {};
-                        var fields = Entity.meta.fields;
-                        for(var f in fields) {
-                            if(fields.hasOwnProperty(f)) {
-                                rec[f] = persistence.entityValToJson(e._data[f], fields[f]);
-                            }
-                        }
-                        var refs = Entity.meta.hasOne;
-                        for(var r in refs) {
-                            if(refs.hasOwnProperty(r)) {
-                                rec[r] = e._data[r];
-                            }
-                        }
-                        var colls = Entity.meta.hasMany;
-                        var collArray = [];
-                        for(var coll in colls) {
-                            if(colls.hasOwnProperty(coll)) {
-                                collArray.push(coll);
-                            }
-                        }
-                        persistence.asyncParForEach(collArray, function(collP, callback) {
-                            var coll = persistence.get(e, collP);
-                            coll.list(tx, function(results) {
-                                rec[collP] = results.map(function(r) {
-                                    return r.id;
-                                });
-                                callback();
-                            });
-                        }, function() {
-                            rec.id = e.id;
-                            items.push(rec);
-                            callback();
-                        });
-                    }, function() {
-                        result[Entity.meta.name] = items;
-                        callback();
-                    });
-                });
-            }, function() {
-                callback(result);
-            });
-        };
-
-        /**
-     * Loads a set of entities from a dump object
-     * @param tx transaction to use, use `null` to start a new one
-     * @param dump the dump object
-     * @param callback the callback function called when done.
-     */
-        persistence.load = function(tx, dump, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'dump',
-                optional: false
-            },
-            {
-                name: 'callback',
-                optional: true,
-                check: argspec.isCallback(),
-                defaultValue: function(){}
-            }
-            ]);
-            tx = args.tx;
-            dump = args.dump;
-            callback = args.callback;
-
-            var finishedCount = 0;
-            var collItemsToAdd = [];
-            var session = this;
-            for(var entityName in dump) {
-                if(dump.hasOwnProperty(entityName)) {
-                    var Entity = getEntity(entityName);
-                    var fields = Entity.meta.fields;
-                    var instances = dump[entityName];
-                    for(var i = 0; i < instances.length; i++) {
-                        var instance = instances[i];
-                        var ent = new Entity();
-                        ent.id = instance.id;
-                        for(var p in instance) {
-                            if(instance.hasOwnProperty(p)) {
-                                if (persistence.isImmutable(p)) {
-                                    ent[p] = instance[p];
-                                } else if(Entity.meta.hasMany[p]) { // collection
-                                    var many = Entity.meta.hasMany[p];
-                                    if(many.manyToMany && Entity.meta.name < many.type.meta.name) { // Arbitrary way to avoid double adding
-                                        continue;
-                                    }
-                                    var coll = persistence.get(ent, p);
-                                    if(instance[p].length > 0) {
-                                        instance[p].forEach(function(it) {
-                                            collItemsToAdd.push({
-                                                Entity: Entity,
-                                                coll: coll,
-                                                id: it
-                                            });
-                                        });
-                                    }
-                                } else {
-                                    persistence.set(ent, p, persistence.jsonToEntityVal(instance[p], fields[p]));
-                                }
-                            }
-                        }
-                        this.add(ent);
-                    }
-                }
-            }
-            session.flush(tx, function() {
-                persistence.asyncForEach(collItemsToAdd, function(collItem, callback) {
-                    collItem.Entity.load(session, tx, collItem.id, function(obj) {
-                        collItem.coll.add(obj);
-                        callback();
-                    });
-                }, function() {
-                    session.flush(tx, callback);
-                });
-            });
-        };
-
-        /**
-     * Dumps the entire database to a JSON string
-     * @param tx transaction to use, use `null` to start a new one
-     * @param entities a list of entity constructor functions to serialize, use `null` for all
-     * @param callback (jsonDump) the callback function called with the results.
-     */
-        persistence.dumpToJson = function(tx, entities, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'entities',
-                optional: true,
-                check: function(obj) {
-                    return obj && obj.length && !obj.apply;
-                },
-                defaultValue: null
-            },
-            {
-                name: 'callback',
-                optional: false,
-                check: argspec.isCallback(),
-                defaultValue: function(){}
-            }
-            ]);
-            tx = args.tx;
-            entities = args.entities;
-            callback = args.callback;
-            this.dump(tx, entities, function(obj) {
-                callback(JSON.stringify(obj));
-            });
-        };
-
-        /**
-     * Loads data from a JSON string (as dumped by `dumpToJson`)
-     * @param tx transaction to use, use `null` to start a new one
-     * @param jsonDump JSON string
-     * @param callback the callback function called when done.
-     */
-        persistence.loadFromJson = function(tx, jsonDump, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'jsonDump',
-                optional: false
-            },
-            {
-                name: 'callback',
-                optional: true,
-                check: argspec.isCallback(),
-                defaultValue: function(){}
-            }
-            ]);
-            tx = args.tx;
-            jsonDump = args.jsonDump;
-            callback = args.callback;
-            this.load(tx, JSON.parse(jsonDump), callback);
         };
 
 
@@ -2222,13 +1976,8 @@ function initPersistence(persistence) {
      *   number of results as an argument).
      * @param opaque An optional parameter to supply to all callbacks.
      */
-        QueryCollection.prototype.newEach = function (tx, callbacks, opaque) {
-            if (tx.doneFn || tx.eachFn || tx.startFn) {
-                opaque = callbacks;
-                callbacks = tx;
-                tx = null;
-            }
-            this.list(tx, function(results,error) {
+        QueryCollection.prototype.newEach = function (callbacks, opaque) {
+            this.list(function(results,error) {
                 if (!results) {
                     return;
                 }
@@ -2295,36 +2044,8 @@ function initPersistence(persistence) {
      * @param eachFn (elem) the function to be executed for each item
      * @param doneFn (ct) called when the iteration is done, passing the number of items visited
      */
-        QueryCollection.prototype.each = function (tx, eachFn, startFn, doneFn) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'eachFn',
-                optional: true,
-                check: argspec.isCallback()
-            },
-            {
-                name: 'startFn',
-                optional: true,
-                check: argspec.isCallback()
-            },
-            {
-                name: 'doneFn',
-                optional: true,
-                check: argspec.isCallback()
-            }
-            ]);
-            tx = args.tx;
-            eachFn = args.eachFn;
-            startFn = args.startFn;
-            doneFn = args.doneFn;
-
-            this.list(tx, function(results,error) {
+        QueryCollection.prototype.each = function (eachFn, startFn, doneFn) {
+            this.list(function(results,error) {
                 if (!results) {
                     if (error) {
                         alert(error);
@@ -2346,32 +2067,16 @@ function initPersistence(persistence) {
         // Alias
         QueryCollection.prototype.forEach = QueryCollection.prototype.each;
 
-        QueryCollection.prototype.one = function (tx, oneFn) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'oneFn',
-                optional: false,
-                check: argspec.isCallback()
-            }
-            ]);
-            tx = args.tx;
-            oneFn = args.oneFn;
-
+        QueryCollection.prototype.one = function (oneFn, tx) {
             var that = this;
 
-            this.limit(1).list(tx, function(results) {
+            this.limit(1).list(function(results) {
                 if(!results || results.length === 0) {
                     oneFn(null);
                 } else {
                     oneFn(results[0]);
                 }
-            });
+            }, tx);
         }
 
         DbQueryCollection.prototype = new QueryCollection();
@@ -2447,149 +2152,9 @@ function initPersistence(persistence) {
             }
         };
 
-        ////////// Local implementation of QueryCollection \\\\\\\\\\\\\\\\
-
-        function LocalQueryCollection(initialArray) {
-            this.init(persistence, null, LocalQueryCollection);
-            this._items = initialArray || [];
-        }
-
-        LocalQueryCollection.prototype = new QueryCollection();
-
-        LocalQueryCollection.prototype.clone = function() {
-            var c = DbQueryCollection.prototype.clone.call(this);
-            c._items = this._items;
-            return c;
-        };
-
-        LocalQueryCollection.prototype.add = function(obj) {
-            if(!arrayContains(this._items, obj)) {
-                this._session.add(obj);
-                this._items.push(obj);
-            }
-        };
-
-        LocalQueryCollection.prototype.addAll = function(objs) {
-            for(var i = 0; i < objs.length; i++) {
-                var obj = objs[i];
-                if(!arrayContains(this._items, obj)) {
-                    this._session.add(obj);
-                    this._items.push(obj);
-                }
-            }
-        }
-
-        LocalQueryCollection.prototype.remove = function(obj) {
-            var items = this._items;
-            for(var i = 0; i < items.length; i++) {
-                if(items[i] === obj) {
-                    this._items.splice(i, 1);
-                }
-            }
-        };
-
-        LocalQueryCollection.prototype.list = function(tx, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'callback',
-                optional: true,
-                check: argspec.isCallback()
-            }
-            ]);
-            callback = args.callback;
-
-            if(!callback || callback.executeSql) { // first argument is transaction
-                callback = arguments[1]; // set to second argument
-            }
-            var array = this._items.slice(0);
-            var that = this;
-            var results = [];
-            for(var i = 0; i < array.length; i++) {
-                if(this._filter.match(array[i])) {
-                    results.push(array[i]);
-                }
-            }
-            results.sort(function(a, b) {
-                for(var i = 0; i < that._orderColumns.length; i++) {
-                    var col = that._orderColumns[i][0];
-                    var asc = that._orderColumns[i][1];
-                    var sens = that._orderColumns[i][2];
-                    var aVal = persistence.get(a, col);
-                    var bVal = persistence.get(b, col);
-                    if (!sens) {
-                        if (Helix.Utils.isString(aVal)) {
-                            aVal = aVal.toLowerCase();
-                            bVal = bVal.toLowerCase();                            
-                        }
-                    }
-                    if(aVal < bVal) {
-                        return asc ? -1 : 1;
-                    } else if(aVal > bVal) {
-                        return asc ? 1 : -1;
-                    }
-                }
-                return 0;
-            });
-            if(this._skip) {
-                results.splice(0, this._skip);
-            }
-            if(this._limit > -1) {
-                results = results.slice(0, this._limit);
-            }
-            if(this._reverse) {
-                results.reverse();
-            }
-            if(callback) {
-                callback(results);
-            } else {
-                return results;
-            }
-        };
-
-        LocalQueryCollection.prototype.destroyAll = function(callback) {
-            if(!callback || callback.executeSql) { // first argument is transaction
-                callback = arguments[1]; // set to second argument
-            }
-            this._items = [];
-            if(callback) callback();
-        };
-
-        LocalQueryCollection.prototype.count = function(tx, callback) {
-            var args = argspec.getArgs(arguments, [
-            {
-                name: 'tx',
-                optional: true,
-                check: persistence.isTransaction,
-                defaultValue: null
-            },
-            {
-                name: 'callback',
-                optional: true,
-                check: argspec.isCallback()
-            }
-            ]);
-            tx = args.tx;
-            callback = args.callback;
-
-            var result = this.list();
-
-            if(callback) {
-                callback(result.length);
-            } else {
-                return result.length;
-            }
-        };
-
         persistence.QueryCollection             = QueryCollection;
         persistence.DbQueryCollection           = DbQueryCollection;
         persistence.ManyToManyDbQueryCollection = ManyToManyDbQueryCollection;
-        persistence.LocalQueryCollection        = LocalQueryCollection;
         persistence.Observable                  = Observable;
         persistence.Subscription                = Subscription;
         persistence.AndFilter                   = AndFilter;
