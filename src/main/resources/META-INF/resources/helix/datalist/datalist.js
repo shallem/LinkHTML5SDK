@@ -1402,12 +1402,18 @@ var globalDataListID = -1;
                     _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
                 }
             }
+            if (Object.keys(this._filterMap).length > 0) {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black').addClass('ui-icon-hx-filter-black-filled');
+            } else {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
+            }
         },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
                 this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
                 this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
             }
+            this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
         },
         _makeFilterRadioDOM: function (filtersList, filterObj, fldName) {
             var radioMarkup = $('<li />').addClass('hx-full-width');
@@ -1531,12 +1537,12 @@ var globalDataListID = -1;
                     // Execute the global filter.
                     filterItem.on(_self.tapEvent, function (evt) {
                         evt.stopImmediatePropagation();
-                        evt.preventDefault();
                         var newFilterField = $(evt.target).attr('data-field');
                         var newFilterValue = $(evt.target).attr('data-value');
 
                         _self._doGlobalFilter(newFilterField, newFilterValue);
                         $(_self._globalFilterContainer).popup("close");
+                        return false;
                     });
                 } else {
                     // Make the filter name a list divider.
@@ -1565,6 +1571,7 @@ var globalDataListID = -1;
                             _self.$listWrapper.scrollTop(0);
                         }, true, undefined, _self._applyOrdering(_self.unfilteredList, _self._currentSort, _self._currentSortOrder, _self._currentSortCase));
                         $(_self._globalFilterContainer).popup("close");
+                        return false;
                     });
 
             filtersList.listview();
