@@ -932,7 +932,7 @@
                 
                 
                 var nameAttribute = '[name="' + fld.name + '"]';
-                ret = $(fld.DOM).find('input'+nameAttribute+",textarea"+nameAttribute);
+                ret = $(fld.DOM).find('input'+nameAttribute+",textarea"+nameAttribute+",div"+nameAttribute);
                 if (ret.length === 0) {
                     ret = $(fld.DOM).find('[data-name="' + fld.name + '"]');
                 }
