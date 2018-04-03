@@ -1144,30 +1144,32 @@ Helix.Ajax = {
                         return;
                     }
                     
+                    if (jqXHR.status === 408 ||
+                            jqXHR.status === 407) {
+                        // Specifically a timeout or the end of the session.
+                        if (params.allowOfflineQueue !== false) {
+                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
+                            return;
+                        }
+                    }
+                    
                     if (!params.silentMode) {
                         if (params.fatal) {
                             Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "fatal");
                         } else if (!callbacks.fatal) {
                             Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "fatal");
                         }
-                    }
-                    if (jqXHR.status === 408 ||
-                            jqXHR.status === 407) {
-                        // Specifically a timeout or the end of the session.
-                        if (params.allowOfflineQueue !== false) {
-                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
-                        }
+                    } 
+                    
+                    if (callbacks.fatal) {
+                        callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
                     } else {
-                        if (callbacks.fatal) {
-                            callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
-                        } else {
-                            // In the absence of any other handling, queue operations that fail to be retried again later.
-                            if (jqXHR.status >= 400 &&
-                                jqXHR.status < 600) {
-                                // Something went wrong on the server. Rather than just drop a potentially important operation,
-                                // treat this is if we are offline ...
-                                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
-                            }
+                        // In the absence of any other handling, queue operations that fail to be retried again later.
+                        if (jqXHR.status >= 400 &&
+                            jqXHR.status < 600) {
+                            // Something went wrong on the server. Rather than just drop a potentially important operation,
+                            // treat this is if we are offline ...
+                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);
                         }
                     }
                 },
