@@ -124,7 +124,6 @@
                 }
             }
             $toolbar.controlgroup();
-            $toolbar.find('a').css('width', '25%');
 
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
@@ -267,7 +266,8 @@
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
                 'data-role': 'listview',
                 'data-inset': 'true',
-                'data-theme': 'c'
+                'data-theme': 'c',
+                'class': 'hx-editor-menu'
             }).appendTo($popup);
             var allMenuOptions = [];
             var _doMenuAction = function(_self, _nxt) {
@@ -365,7 +365,7 @@
                     case 'apply':
                         return $(this.LI_TAG)
                                 .attr({
-                                    'data-theme': 'a'
+                                    'data-theme': 'b'
                                 })
                                 .appendTo(popupMenu)
                                 .append('Apply');
