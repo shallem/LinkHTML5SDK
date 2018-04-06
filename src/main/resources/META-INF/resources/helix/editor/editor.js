@@ -313,7 +313,7 @@
             var $button = this.menuToolbar[menuName] =
                     $(this.A_TAG).attr({
                         'href': 'javascript:void(0)',
-                        'class': 'ui-btn iconbutton'
+                        'class': 'ui-btn iconbutton hx-editor-icon-button'
                     }).append($('<div/>').addClass('hx-btn-inner')
                     .append($('<div/>').addClass('hx-icon ' + buttonCSS)))
                     .appendTo($toolbar)

@@ -68,3 +68,11 @@
 .hx-editor-menu .ui-btn-up-d {
     background: #0d88c1 !important;
 }
+
+.hx-editor-menu .ui-btn-up-d .hx-noicon-button div.ui-btn-text {
+    color: white;
+}
+
+.hx-editor-menu .hx-editor-icon-button {
+    height: 32px;
+}
