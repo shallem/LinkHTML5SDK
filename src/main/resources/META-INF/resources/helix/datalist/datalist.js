@@ -1074,8 +1074,8 @@ var globalDataListID = -1;
 
                 if (oncomplete) {
                     oncomplete(_self);
-                    _self.isDirty = false;
                 }
+                _self.isDirty = false;
             }, true, extraItems, _self.originalList, undefined, _options);
         },
         
@@ -1141,8 +1141,8 @@ var globalDataListID = -1;
 
                 if (oncomplete) {
                     oncomplete(_self);
-                    _self.isDirty = false;
                 }
+                _self.isDirty = false;
                 /* itemList is the current query collection. Display list is an array
                  * of the currently displayed items.
                  */

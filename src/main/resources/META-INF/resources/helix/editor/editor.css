@@ -73,6 +73,6 @@
     color: white;
 }
 
-.hx-editor-menu .hx-editor-icon-button {
-    height: 32px;
+.ui-editor-toolbar .hx-editor-icon-button {
+    height: 32px !important;
 }
