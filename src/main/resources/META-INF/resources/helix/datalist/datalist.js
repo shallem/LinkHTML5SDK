@@ -1413,7 +1413,10 @@ var globalDataListID = -1;
                 this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
                 this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
             }
-            this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
+            // NOT all lists are filtered!
+            if (this.$filter) {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
+            }
         },
         _makeFilterRadioDOM: function (filtersList, filterObj, fldName) {
             var radioMarkup = $('<li />').addClass('hx-full-width');
