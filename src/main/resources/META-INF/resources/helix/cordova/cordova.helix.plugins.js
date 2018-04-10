@@ -269,4 +269,17 @@
             }
         };
     }
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 8) {
+        $.extend(window.HelixSystem, {
+            clearRefreshData: function(op, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "clearRefreshData", [ op ]);
+            },
+            getRefreshData: function(op, options, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "getRefreshData", [ op, options ]);
+            }
+        });
+    }
+
 })();

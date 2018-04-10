@@ -288,7 +288,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
 
 function refreshTZDropdownToTarget(formElem, tgtDate) {
     formElem.editDOM.empty();
-    __appendTZSelector(formElem.mode, formElem.parentForm, formElem, formElem.editDOM, formElem.layoutMini, tgtDate);
+    __appendTZSelector(formElem.mode, formElem.parentForm.options, formElem, formElem.editDOM, formElem.layoutMini, tgtDate);
     
     var selected = $(formElem.editDOM).find("option:selected");
     if (selected && selected.length) {
@@ -370,6 +370,14 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
             }
             if (formElem.computedStyleClass) {
                 uiSelect.addClass(formElem.computedStyleClass);
+            }
+        }
+        
+        if (formElem.type !== 'hidden') {
+            if (!formElem.noBorder) {
+                $fieldContainer.addClass('hx-form-view-border hx-form-view-item');
+            } else {
+                $fieldContainer.removeClass('hx-form-view-border').addClass('hx-form-view-item');
             }
         }
 

@@ -2724,6 +2724,25 @@ var globalDataListID = -1;
             curRowParent.data('data', row);
             return true;
         },
+        rerenderElem: function(obj, id) {
+            var li = this.$parent.find('[data-id="' + id + '"]');
+            if (!li || li.length === 0) {
+                return;
+            }
+
+            var renderer = this.options.rowRenderer;
+            if (this.options.grouped) {
+                renderer = this.options.groupRenderer(this.selectedGroup);
+            }
+            var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
+            if (renderer.call(rendererContext, li, this, obj, this.selectedIndex, this.options.strings)) {
+                li.show();
+                return true;
+            } else {
+                li.hide();
+                return false;
+            }
+        },
         rerenderSelected: function () {
             if (this.selected === null) {
                 return;
