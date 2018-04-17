@@ -1531,31 +1531,10 @@ var globalDataListID = -1;
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
                 var filterItem = null;
-                if (filterObj.values.length === 1) {
-                    filterItem = $('<li />').append($('<a />').attr({
-                        'href': 'javascript:void(0)',
-                        'data-field': fldName,
-                        'data-value': filterObj.values[0]
-                    }).appendTo(filtersList)
-                            .append(filterObj.valueNames[0]));
-                    filtersList.append(filterItem);
-
-                    // Execute the global filter.
-                    filterItem.on(_self.tapEvent, function (evt) {
-                        evt.stopImmediatePropagation();
-                        var newFilterField = $(evt.target).attr('data-field');
-                        var newFilterValue = $(evt.target).attr('data-value');
-
-                        _self._doGlobalFilter(newFilterField, newFilterValue);
-                        $(_self._globalFilterContainer).popup("close");
-                        return false;
-                    });
-                } else {
-                    // Make the filter name a list divider.
-                    var nxtLI = $('<li />').appendTo(filtersList);
-                    nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
-                    _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
-                }
+                // Make the filter name a list divider.
+                var nxtLI = $('<li />').appendTo(filtersList);
+                nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
+                _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
             }
 
             /* Always have a "Clear" button to reset all global filters. */

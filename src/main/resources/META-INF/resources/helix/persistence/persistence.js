@@ -1718,6 +1718,10 @@ function initPersistence(persistence) {
             s += this._skip;
             s += '|Reverse:';
             s += this._reverse;
+            if (this._group) {
+                s += '|Group:';
+                s += JSON.stringify(this._group);
+            }
             return s;
         };
 
@@ -1749,6 +1753,9 @@ function initPersistence(persistence) {
             }
             if (this._excludes) {
                 c._excludes = this._excludes;
+            }
+            if (this._group) {
+                c._group = $.extend({}, this._group);
             }
             return c;
         };
@@ -1831,6 +1838,16 @@ function initPersistence(persistence) {
         QueryCollection.prototype.skip = function(n) {
             var c = this.clone();
             c._skip = n;
+            return this._session.uniqueQueryCollection(c);
+        };
+
+        QueryCollection.prototype.group = function(groupByField, selectorField, selectorType) {
+            var c = this.clone();
+            c._group = {
+                'by' : groupByField,
+                'selector' : selectorField,
+                'selectorType' : selectorType
+            };
             return this._session.uniqueQueryCollection(c);
         };
 

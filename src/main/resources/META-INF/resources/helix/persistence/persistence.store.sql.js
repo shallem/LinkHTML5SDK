@@ -820,28 +820,42 @@ function config(persistence, dialect) {
         if(mtm) {
             joinSql += "LEFT JOIN `" + mtm.table + "` AS mtm ON mtm.`" + mtm.inverseProp + "` = `root`.`id` ";
             additionalWhereSqls.push("mtm.`" + mtm.prop + "` = " + tm.outId(mtm.id));
-        }
+        } 
 
-        joinSql += this._additionalJoinSqls.join(' ');
+        var originalEntityName = entityName;
+        var originalMainAlias = mainAlias;
+        if (this._group) {
+            entityName = '(SELECT ' + this._group.by + ',' + this._group.selectorType + '(' + this._group.selector + ') AS groupSelector' +
+                        ' FROM `' + entityName + '` GROUP BY ' + this._group.by + ')';
+            this._additionalJoinSqls = [' INNER JOIN `' + originalEntityName + '` AS `' + mainAlias + 
+                        '` ON `' + mainAlias + '`.`' + this._group.by + '` = groupedTable.`' + this._group.by + '` AND `'
+                                 + mainAlias + '`.`' + this._group.selector + '` = groupSelector'];
+            joinSql = this._additionalJoinSqls.join(' ');
+            mainAlias = 'groupedTable';
+        } else {
+            entityName = '`' + entityName + '`';
+        
+            joinSql += this._additionalJoinSqls.join(' ');
 
-        for ( var i = 0; i < this._prefetchFields.length; i++) {
-            var prefetchField = this._prefetchFields[i];
-            var thisMeta = meta.hasOne[prefetchField].type.meta;
-            if (thisMeta.isMixin)
-                throw new Error("cannot prefetch a mixin");
-            var tableAlias = thisMeta.name + '_' + prefetchField + "_tbl";
-            selectFields = selectFields.concat(selectAll(thisMeta, tableAlias,
-                prefetchField + "_"));
-            joinSql += "LEFT JOIN `" + thisMeta.name + "` AS `" + tableAlias
-            + "` ON `" + tableAlias + "`.`id` = `" + mainAlias + '`.`' + prefetchField + "` ";
+            for ( var i = 0; i < this._prefetchFields.length; i++) {
+                var prefetchField = this._prefetchFields[i];
+                var thisMeta = meta.hasOne[prefetchField].type.meta;
+                if (thisMeta.isMixin)
+                    throw new Error("cannot prefetch a mixin");
+                var tableAlias = thisMeta.name + '_' + prefetchField + "_tbl";
+                selectFields = selectFields.concat(selectAll(thisMeta, tableAlias,
+                    prefetchField + "_"));
+                joinSql += "LEFT JOIN `" + thisMeta.name + "` AS `" + tableAlias
+                + "` ON `" + tableAlias + "`.`id` = `" + mainAlias + '`.`' + prefetchField + "` ";
 
+            }
         }
 
         var whereSql = "WHERE "
-        + [ this._filter.sql(meta, mainAlias, args) ].concat(additionalWhereSqls).join(' AND ');
-
-        var sql = "SELECT " + selectFields.join(", ") + " FROM `" + entityName
-        + "` AS `" + mainAlias + "` " + joinSql + " " + whereSql;
+        + [ this._filter.sql(meta, originalMainAlias, args) ].concat(additionalWhereSqls).join(' AND ');
+        
+        var sql = "SELECT " + selectFields.join(", ") + " FROM " + entityName
+        + " AS `" + mainAlias + "` " + joinSql + " " + whereSql;
 
         if(this._additionalGroupSqls.length > 0) {
             sql += this._additionalGroupSqls.join(' ');
@@ -882,7 +896,7 @@ function config(persistence, dialect) {
                     }
                     for ( var i = 0; i < rows.length; i++) {
                         var r = rows[i];
-                        var e = rowToEntity(session, entityName, r, mainPrefix);
+                        var e = rowToEntity(session, originalEntityName, r, mainPrefix);
                         for ( var j = 0; j < that._prefetchFields.length; j++) {
                             var prefetchField = that._prefetchFields[j];
                             var thisMeta = meta.hasOne[prefetchField].type.meta;
