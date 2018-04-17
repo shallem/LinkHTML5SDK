@@ -1134,6 +1134,9 @@ var globalDataListID = -1;
                     var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
                     if (selected.length === 0) {
                         _self.clearSelected();
+                    } else {
+                        // Make sure this is the selected LI.
+                        _self.setSelected(selected);
                     }
                 } else {
                     _self.clearSelected();
@@ -1374,7 +1377,7 @@ var globalDataListID = -1;
         _resetGlobalFilters: function (itemList) {
             var curCollection = (itemList ? itemList : this._applyOrdering(this.unfilteredList, this._currentSort, this._currentSortOrder, this._currentSortCase));
             for (var filteredFld in this._filterMap) {
-                curCollection = this.options.doGlobalFilter(curCollection, filteredFld, this._filterMap[filteredFld]);
+                curCollection = this.options.doGlobalFilter.call(this, curCollection, filteredFld, this._filterMap[filteredFld]);
             }
             return curCollection;
         },
@@ -1399,7 +1402,7 @@ var globalDataListID = -1;
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
+                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue));
                 }
             }
             if (Object.keys(this._filterMap).length > 0) {
@@ -1682,6 +1685,7 @@ var globalDataListID = -1;
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
                 displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
+                displayCollection = _self._resetGlobalFilters(displayCollection);
                 this._refreshData(oncomplete, true, undefined, displayCollection, 0, optionsOverrides);
             }
         },

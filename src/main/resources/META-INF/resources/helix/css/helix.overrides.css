@@ -148,7 +148,8 @@
 /* Flat background coloring for ui-bar-d */
 .ui-bar-d {
     background-image: none;
-    background-color: #e0e0e0;
+    background-color: #EBEBF1; /* Matches header bar color in native iOS app */
+    border: none;
 }
 
 /* Make the active button class only apply on none-iconbuttons */
