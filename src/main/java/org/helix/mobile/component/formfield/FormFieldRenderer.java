@@ -57,6 +57,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getHeight() != null) {
             writer.write("'height' : '" + ffield.getHeight() + "',");
         }
+        if (ffield.getMinHeight() != null) {
+            writer.write("'minHeight' : '" + ffield.getMinHeight() + "',");
+        }
         if (ffield.getStyleMap() != null) {
             writer.write("'style' : " + ffield.getStyleMap() + ",");
         } else if (ffield.getStyle() != null) {
@@ -103,6 +106,9 @@ public class FormFieldRenderer extends CoreRenderer {
         }
         if (ffield.getAutocompleteTimeout() != null) {
             writer.write(", 'autocompleteTimeout' : " + ffield.getAutocompleteTimeout());
+        }
+        if (ffield.getAutocompleteProjection() != null) {
+            writer.write(", 'autocompleteProjection' : " + ffield.getAutocompleteProjection());
         }
         if (ffield.getOptions() != null) {
             writer.write(", 'options' : " + ffield.getOptions());
@@ -167,7 +173,7 @@ public class FormFieldRenderer extends CoreRenderer {
                         writer.write(",'href' : '" + ic.getHref() + "'");
                     }
                     if (ic.getOnclick() != null) {
-                        writer.write(",'onclick' : function(tgt,ev) { return " + ic.getOnclick() + " }");
+                        writer.write(",'onclick' : function(ev) {" + ic.getOnclick() + "; return Helix.stopEvent(ev); }");
                     }
                     if (ic.getValue() != null) {
                         writer.write(",'fieldTitle' : '" + ic.getValue() + "'");

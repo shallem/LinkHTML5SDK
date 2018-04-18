@@ -23,7 +23,6 @@ and open the template in the editor.
 }
 
 .hx-listview li.hx-li {
-    background-color: white;
     font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
     text-decoration: none;
     padding-right: 0.2em;
@@ -31,7 +30,8 @@ and open the template in the editor.
     background: #fff /*{d-bup-background-color}*/;
     font-weight: bold;
     color: #333;
-    text-shadow: 0 /*{d-bup-shadow-x}*/ 1px /*{d-bup-shadow-y}*/ 0 /*{d-bup-shadow-radius}*/ #fff /*{d-bup-shadow-color}*/;
+    text-shadow: none;
+    -webkit-backface-visibility: hidden;
 }
 
 .hx-listview li[data-role="empty-group"] {
@@ -104,12 +104,3 @@ and open the template in the editor.
 .hx-listview li:not(.hx-deleted) {
   opacity: 1;
 }
-
-/* On iOS, scrolling blocks can show a very distracting flicker. According to this site:
-    https://gist.github.com/bdalziel/3005482
-    the CSS below fixes the flicker. It does seem to work.
-*/
-/*.hx-listview {
-    -webkit-backface-visibility: hidden;
-    -webkit-transform: translateZ(0);
-}*/

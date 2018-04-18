@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var globalDataListID = -1;
 (function ($) {
 
     $.widget("helix.helixDatalist", {
@@ -388,10 +389,16 @@
              * Number of rows to display in a single view of the list. The list automatically
              * paginates as the user scrolls.
              */
-            itemsPerPage: 50
+            itemsPerPage: 50,
+            
+            /*
+             * Size of the window of preloaded data (in pages).
+             */
+            preloadPageCt: 6
         },
         _create: function () {
             var _self = this;
+            this.dataListID = ++globalDataListID;
             this.$wrapper = this.element;
             if (this.options.scroll) {
                 this.$wrapper.addClass('hx-full-height');
@@ -543,7 +550,6 @@
             this.displayLIs = [];
 
             // Other globals.
-            this.refreshInProgress = false;
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
@@ -557,12 +563,23 @@
 
             // Queued refershes - tracks refresh calls that occur during another refresh.
             this._queuedRefreshes = [];
-
+            this.refreshInProgress = false;
+            
+            $(document).on('active', null, this, function (ev) {
+                // Make sure a paused/interrupted refresh (due to the app going to sleep) does not leave
+                // the datalist stuck.
+                var _me = ev.data;
+                _me.refreshInProgress = false;
+                _me._queuedRefreshes = [];
+            });
             if (this.options.itemList) {
                 this.refreshList(this.options.itemList, this.options.condition, null, function () {
 
                 });
             }
+        },
+        refreshDividers: function() {
+            this._refreshDividers();
         },
         _refreshDividers: function () {
             if (!this.hasAutodividers) {
@@ -661,15 +678,23 @@
                 return;
             }
 
-            var nElems = pageCt * this._itemsPerPage;
-            displayCollection = displayCollection.limit(nElems);
-
+            var nElems = 0;
             var skip = 0;
-            if (direction < 0) {
-                skip = Math.max(0, this._preloadWindowStart - nElems);
-            } else if (direction > 0) {
-                skip = this._preloadWindowStart + this._prefetchedData.length;
+            if (direction !== 0) {
+                // We are sliding the window of preloaded data ...
+                nElems = pageCt * this._itemsPerPage;
+                if (direction < 0) {
+                    skip = Math.max(0, this._preloadWindowStart - nElems);
+                } else if (direction > 0) {
+                    skip = this._preloadWindowStart + this._prefetchedData.length;
+                }
+            } else {
+                // We are setting up the initial preload window.
+                nElems = this.options.preloadPageCt * this._itemsPerPage;
+                skip = Math.max(0, this._renderWindowStart - this._itemsPerPage);
+                this._preloadWindowStart = this._renderWindowStart - skip;
             }
+            displayCollection = displayCollection.limit(nElems);
             displayCollection = displayCollection.skip(skip);
 
             var _self = this;
@@ -711,18 +736,57 @@
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
         _forceRerender: function() {
+            /*
             this.$listWrapper[0].style.display = 'none';
             var _ignore = this.$listWrapper[0].offsetHeight;
             this.$listWrapper[0].style.display = 'block';
             return _ignore; // Without this our JS compressor optimizes _ignore away
+            */
+        },
+ 
+        _updateScrollTop: function(newScrollTop) {
+            var node = this.$listWrapper[0];
+            node.style['-webkit-overflow-scrolling'] = 'auto';
+            node.scrollTop = newScrollTop;
+            node.style['-webkit-overflow-scrolling'] = 'touch';
         },
         
         _nextPage: function (direction, oncomplete) {
             var _self = this;
+            if (this.options.grouped) {
+                // Grouped lists do not scroll
+                return;
+            }
             if (direction < 0) {
-                var _addToBottom = function (toReverse) {
-                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
-                    if (startIdx - toReverse >= 0) {
+                var _addToBottom = function () {
+                    var toReverse = Math.floor(_self._itemsPerPage / 3);
+                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
+                    var startIdx = preloadStartIdx - toReverse;
+                    if (startIdx < 0) {
+                        // Either: (1), we have no more data.
+                        // (2) We need to wait for more data.
+                        // (3) We need to get more data and wait for it.
+                        if (_self._renderWindowStart === 0) {
+                            // No data
+                            oncomplete();
+                            return;
+                        } else {
+                            if (!_self._preloadPromise) {
+                                _self._preloadPage(-1, 2);
+                            }
+                            if (_self._preloadPromise) {
+                                _self._preloadPromise.then(_addToBottom);
+                                return;
+                            } else if (preloadStartIdx) {
+                                startIdx = 0;
+                            } else {
+                                oncomplete();
+                                return;
+                            }
+                        }
+                    }
+
+                    if (startIdx >= 0) {
                         var lastLI = null;
                         var i;
                         for (i = 0; i < _self.displayLIs.length; ++i) {
@@ -737,10 +801,9 @@
                             return;
                         }
                         var lastID = lastLI.attributes['data-id'].nodeValue;
-                        startIdx -= toReverse;
                         _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
                             _self._renderWindowStart -= toReverse;
-                            if (!_self._preloadPromise && (_self._renderWindowStart < (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                            if (!_self._preloadPromise && (startIdx < _self._itemsPerPage * 2)) {
                                 _self._preloadPage(-1, 2);
                             }
 
@@ -756,30 +819,50 @@
                                 }
                             }
 
-                            _self.$listWrapper.scrollTop(delta);
+                            _self._updateScrollTop(delta);
                             setTimeout(function () {
                                 _self._forceRerender();
                                 oncomplete();
                             }, 15);
                         }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
                         return;
-                    } else if (_self._preloadPromise) {
-                        _self._preloadPromise.then(_addToBottom);
-                        return;
                     } else {
-                        _addToBottom(startIdx);
+                        oncomplete();
                     }
                 };
-                _addToBottom(Math.floor(_self._itemsPerPage / 3));
+                _addToBottom();
             } else {
-                var _addToEnd = function (toAdd) {
-                    if (toAdd === 0) {
+                var _addToEnd = function () {
+                    var toAdd = Math.floor(_self._itemsPerPage / 3);
+                    var windowSize = _self._itemsPerPage;
+                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
+                    var startIdx = preloadStartIdx + toAdd;
+                    
+                    if ((startIdx + windowSize) >= _self._prefetchedData.length) {
+                        if (_self._preloadHitDataTop) {
+                            toAdd = (_self._prefetchedData.length - (preloadStartIdx + windowSize));
+                            startIdx = preloadStartIdx + toAdd;
+                        } else{
+                            if (!_self._preloadPromise) {
+                                // We need more data;
+                                _self._preloadPage(1, 2);                                
+                            }
+                            if (_self._preloadPromise) {
+                                // Wait for more data.
+                                _self._preloadPromise.then(_addToEnd);
+                            } else {
+                                oncomplete();
+                            }
+                            return;
+                        }
+                    }
+                    if (toAdd <= 0) {
+                        // We have hit the top of the list ... no more data.
                         oncomplete();
                         return;
                     }
                     
-                    var startIdx = (_self._renderWindowStart - _self._preloadWindowStart);
-                    if (startIdx + _self._itemsPerPage + toAdd <= _self._prefetchedData.length) {
+                    if (startIdx <= _self._prefetchedData.length) {
                         var lastLI = null;
                         var i;
                         for (i = _self.displayLIs.length - 1; i >= 0; --i) {
@@ -796,12 +879,11 @@
                         if (i >= 0) {
                             var lastTop = _self.displayLIs[i].offsetTop;
                             var lastID = lastLI.attributes['data-id'].nodeValue;
-                            startIdx += toAdd;
-                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (args) {
+                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + windowSize), function (args) {
                                 var tgtID = args[0];
                                 var origTop = args[1];
                                 _self._renderWindowStart += toAdd;
-                                if (!_self._preloadPromise && (_self._renderWindowStart > (_self._preloadWindowStart + (_self._itemsPerPage * 2)))) {
+                                if (!_self._preloadPromise && (startIdx > (_self._itemsPerPage * 2))) {
                                     _self._preloadPage(1, 2);
                                 }
 
@@ -816,7 +898,7 @@
                                     }
                                 }
 
-                                _self.$listWrapper[0].scrollTop = _self.$listWrapper[0].scrollTop + delta;
+                                _self._updateScrollTop(_self.$listWrapper[0].scrollTop + delta);
                                 setTimeout(function () {
                                     _self._forceRerender();
                                     oncomplete();
@@ -824,34 +906,23 @@
                             }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
                             return;
                         }
-                    } else if (_self._preloadPromise) {
-                        _self._preloadPromise.then(_addToEnd);
-                        return;
                     } else {
-                        var stubAdd = _self._prefetchedData.length - (startIdx + _self._itemsPerPage);
-                        if (stubAdd > 0) {
-                            _addToEnd(stubAdd);
-                        } else {
-                            _self._preloadPage(1, 2);
-                            if (_self._preloadPromise) {
-                                _self._preloadPromise.then(_addToEnd);
-                            }
-                        }
+                        oncomplete();
                     }
                 };
-                _addToEnd(Math.floor(_self._itemsPerPage / 3));
+                _addToEnd();
             }
         },
+        
         _setScrollTimer: function (scrollAction) {
-            this._rescrollInProgress = true;
+            this._cancelAllScrolls = true;
             scrollAction();
-            //this.$listWrapper.removeClass('hx-scroller-nozoom');
             var _self = this;
             setTimeout(function () {
-                //_self.$listWrapper.addClass('hx-scroller-nozoom');
-                _self._rescrollInProgress = false;
+                _self._cancelAllScrolls = false;
             }, 500);
         },
+ 
         scrollHandler: function (ev) {
             var _self = this;
             if (_self._cancelAllScrolls) {
@@ -861,8 +932,12 @@
             var scrollPos = _self.$listWrapper.scrollTop();
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
+            if (listHeight <= 0) {
+                // This can happen when the list is in the process of being refreshed.
+                return;
+            }
+            
             _self._lastScrollPos = scrollPos;
-
             if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
@@ -999,8 +1074,8 @@
 
                 if (oncomplete) {
                     oncomplete(_self);
-                    _self.isDirty = false;
                 }
+                _self.isDirty = false;
             }, true, extraItems, _self.originalList, undefined, _options);
         },
         
@@ -1013,17 +1088,10 @@
         },
         
         _restoreScrollEvent: function () {
-            //var _self = this;
-            //var __scrollHandler = function (ev) {
-            //    _self.scrollHandler(ev);
-            //};
             this._cancelAllScrolls = false;
-            //_self.$listWrapper.scroll(Helix.Utils.throttle(__scrollHandler, 250, _self));
-            //_self.$listWrapper.scroll(__scrollHandler);
         },
         _stopScrollHandler: function () {
             this._cancelAllScrolls = true;
-            //this.$listWrapper.off('scroll');
         },
         /**
          * Helpers for infinite scroll.
@@ -1066,6 +1134,9 @@
                     var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
                     if (selected.length === 0) {
                         _self.clearSelected();
+                    } else {
+                        // Make sure this is the selected LI.
+                        _self.setSelected(selected);
                     }
                 } else {
                     _self.clearSelected();
@@ -1073,8 +1144,8 @@
 
                 if (oncomplete) {
                     oncomplete(_self);
-                    _self.isDirty = false;
                 }
+                _self.isDirty = false;
                 /* itemList is the current query collection. Display list is an array
                  * of the currently displayed items.
                  */
@@ -1306,7 +1377,7 @@
         _resetGlobalFilters: function (itemList) {
             var curCollection = (itemList ? itemList : this._applyOrdering(this.unfilteredList, this._currentSort, this._currentSortOrder, this._currentSortCase));
             for (var filteredFld in this._filterMap) {
-                curCollection = this.options.doGlobalFilter(curCollection, filteredFld, this._filterMap[filteredFld]);
+                curCollection = this.options.doGlobalFilter.call(this, curCollection, filteredFld, this._filterMap[filteredFld]);
             }
             return curCollection;
         },
@@ -1331,14 +1402,23 @@
                 } else {
                     // Use itemList in the call below as filters can build on each other.
                     _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter(_self.itemList, gFilterField, _filterValue));
+                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue));
                 }
+            }
+            if (Object.keys(this._filterMap).length > 0) {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black').addClass('ui-icon-hx-filter-black-filled');
+            } else {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
             }
         },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
                 this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
                 this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
+            }
+            // NOT all lists are filtered!
+            if (this.$filter) {
+                this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
             }
         },
         _makeFilterRadioDOM: function (filtersList, filterObj, fldName) {
@@ -1451,31 +1531,10 @@
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
                 var filterItem = null;
-                if (filterObj.values.length === 1) {
-                    filterItem = $('<li />').append($('<a />').attr({
-                        'href': 'javascript:void(0)',
-                        'data-field': fldName,
-                        'data-value': filterObj.values[0]
-                    }).appendTo(filtersList)
-                            .append(filterObj.valueNames[0]));
-                    filtersList.append(filterItem);
-
-                    // Execute the global filter.
-                    filterItem.on(_self.tapEvent, function (evt) {
-                        evt.stopImmediatePropagation();
-                        evt.preventDefault();
-                        var newFilterField = $(evt.target).attr('data-field');
-                        var newFilterValue = $(evt.target).attr('data-value');
-
-                        _self._doGlobalFilter(newFilterField, newFilterValue);
-                        $(_self._globalFilterContainer).popup("close");
-                    });
-                } else {
-                    // Make the filter name a list divider.
-                    var nxtLI = $('<li />').appendTo(filtersList);
-                    nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
-                    _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
-                }
+                // Make the filter name a list divider.
+                var nxtLI = $('<li />').appendTo(filtersList);
+                nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
+                _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
             }
 
             /* Always have a "Clear" button to reset all global filters. */
@@ -1497,20 +1556,21 @@
                             _self.$listWrapper.scrollTop(0);
                         }, true, undefined, _self._applyOrdering(_self.unfilteredList, _self._currentSort, _self._currentSortOrder, _self._currentSortCase));
                         $(_self._globalFilterContainer).popup("close");
+                        return false;
                     });
 
             filtersList.listview();
             _self._globalFilterContainer.popup();
         },
+        
         _resetPaging: function () {
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
             this._preloadWindowStart = 0;
             this._preloadHitDataTop = false;
             this._itemsPerPage = this.options.itemsPerPage;
-            this._atDataTop = false;
-            this._rescrollInProgress = false;
         },
+
         _refreshData: function (oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options) {
             var _self = this;
             if (!_options) {
@@ -1523,7 +1583,7 @@
                 _self._queuedRefreshes.push([oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options]);
                 return;
             }
-
+            
             _self.refreshInProgress = true;
             if (!extraItems) {
                 extraItems = _self.extraItems;
@@ -1544,15 +1604,9 @@
             /* List must be non-empty and either a query collection or an array. */
             if (itemList) {
                 /* The item list is new - so we reset paging. */
-                _self._resetPaging();
                 _self.itemList = itemList;
             } else {
 
-            }
-
-            /* Must happen after we call _resetPaging */
-            if (renderWindowStart !== undefined) {
-                _self.setRenderWindowStart(renderWindowStart);
             }
 
             var displayCollection = _self.itemList;
@@ -1560,6 +1614,16 @@
                 _self.refreshInProgress = false;
                 alert("Invalid display list.");
                 return;
+            }
+
+            if (_options.noPagingReset !== true) {
+                _self._resetPaging();
+                this.$listWrapper.scrollTop(0);            
+            }
+            
+            /* Must happen after we call _resetPaging */
+            if (renderWindowStart !== undefined) {
+                _self.setRenderWindowStart(renderWindowStart);
             }
 
             /* Apply any active search terms, then global filters. Note, we must apply 
@@ -1577,7 +1641,7 @@
                         _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4], refreshArgs[5]);
                     }, 0);
                 }
-                _self._preloadPage(0, 4); // Preload the 4 pages from the DB.
+                _self._preloadPage(0); // Preload the 4 pages from the DB.
             }, _options.emptyMessage, oncomplete, noPaginate, extraItems, _options);
         },
         hasIndexedSearch: function () {
@@ -1600,6 +1664,7 @@
             } else {
                 this.unfilteredList = this.itemList = displayCollection;
                 displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
+                displayCollection = _self._resetGlobalFilters(displayCollection);
                 this._refreshData(oncomplete, true, undefined, displayCollection, 0, optionsOverrides);
             }
         },
@@ -1653,12 +1718,6 @@
 
             var __processStart = function (count) {
                 _self.nElems = count;
-                if (count < _self._itemsPerPage) {
-                    // We did not get the full "limit" count of items requested
-                    _self._atDataTop = true;
-                } else {
-                    _self._atDataTop = false;
-                }
             };
 
             var __renderGroup = function (groupIndex) {
@@ -1721,28 +1780,7 @@
                 }
             };
 
-            if (_self._prefetchedItems && (noPaginate !== true)) {
-                // If the prefetched items list is too small, we won't be able to scroll up. Instead we just extend the list.
-                var ct = _self._prefetchedItems.length;
-                var startIdx = 0;
-                if (_self._prefetchedItems.length < 20) {
-                    _self._atDataTop = true;
-                    ct = ct + _self._itemsPerPage;
-                    rowIndex = _self._itemsPerPage;
-                    startIdx = _self._itemsPerPage;
-                } else {
-                    _self.displayList = [];
-                    _self.displayLIs = [];
-                }
-
-                __processStart(ct);
-                __addPreExtras();
-                for (var i = 0; i < _self._prefetchedItems.length; ++i) {
-                    __processRow(_self._prefetchedItems[i]);
-                }
-                __processDone(ct, startIdx);
-                _self._prefetchedItems = [];
-            } else if ($.isArray(displayCollection)) {
+            if ($.isArray(displayCollection)) {
                 _self.displayList = [];
                 _self.displayLIs = [];
                 __processStart(displayCollection.length);
@@ -1767,29 +1805,12 @@
                     },
                     /* Called on start. */
                     startFn: function (count) {
-                        if (_self.prefetchedItems) {
-                            count = count + _self.prefetchedItems.length;
-                        }
                         __processStart(count);
                         __addPreExtras();
                     },
                     /* Called on done. */
                     doneFn: function (count) {
-                        if (_self.prefetchedItems) {
-                            for (var i = 0; i < _self._prefetchedItems.length; ++i) {
-                                __processRow(_self._prefetchedItems[i]);
-                                ++count;
-                            }
-                            if (extraItems && extraItems.post) {
-                                for (i = 0; i < extraItems.post.length; ++i) {
-                                    if (__processRow(extraItems.post[i])) {
-                                        ++_self.nExtras;
-                                    }
-                                }
-                            }
-                        }
                         __processDone(count);
-                        _self._prefetchedItems = [];
                     }
                 });
             }
@@ -2686,6 +2707,25 @@
             curRowParent.data('data', row);
             return true;
         },
+        rerenderElem: function(obj, id) {
+            var li = this.$parent.find('[data-id="' + id + '"]');
+            if (!li || li.length === 0) {
+                return;
+            }
+
+            var renderer = this.options.rowRenderer;
+            if (this.options.grouped) {
+                renderer = this.options.groupRenderer(this.selectedGroup);
+            }
+            var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
+            if (renderer.call(rendererContext, li, this, obj, this.selectedIndex, this.options.strings)) {
+                li.show();
+                return true;
+            } else {
+                li.hide();
+                return false;
+            }
+        },
         rerenderSelected: function () {
             if (this.selected === null) {
                 return;
@@ -2949,6 +2989,8 @@
 
             if (rowID) {
                 $(parentElement).attr('data-id', rowID);
+            } else {
+                $(parentElement).removeAttr('data-id');
             }
             //parentElement[0].style.display = '';
             return parentElement;
@@ -3289,6 +3331,9 @@
         clearDeleted: function (elems) {
             $(elems).attr('data-deleted', '').removeClass('hx-deleted');
             this.refreshListView();
+        },
+        equals: function(other) {
+            return this.dataListID === other.dataListID;
         }
 
     });

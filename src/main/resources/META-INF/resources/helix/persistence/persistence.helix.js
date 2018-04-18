@@ -1491,7 +1491,7 @@ function initHelixDB() {
             // Update the old object (if it exists) or add the new with a recursive call.
             var objLocalField = field;
             var setter = Object.getOwnPropertyDescriptor(persistentObj, objLocalField).set;
-            objSchema.findBy(Helix.DB.getKeyField(objSchema), key, function(dbObj) {
+            objSchema.all().filter(Helix.DB.getKeyField(objSchema), "=", key).noFlush().one(function(dbObj) {
                 Helix.DB.synchronizeObjectFields(allSchemas, obj, dbObj, objSchema, function(newObj, oncompleteArg) {
                     setter.call(persistentObj, newObj);
                     oncomplete(oncompleteArg, objLocalField);
@@ -1756,7 +1756,7 @@ function initHelixDB() {
             } else {
                 var dbKeyField = Helix.DB.getKeyField(objSchema);
                 var objKeyField = Helix.DB.getJSONKeyField(objSchema, obj);
-                objSchema.findBy(dbKeyField, obj[objKeyField], function(persistentObj) {
+                objSchema.all().filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj, _opaque) {
                         /* Store the schema in the final obj. */
                         finalObj.__hx_schema = objSchema;
@@ -1818,7 +1818,7 @@ function initHelixDB() {
             var allTables = {};
             var masterDBVer = 0;
             persistence.schemaSync(function(tx) {
-                window.__pmMasterDB.all().newEach({
+                window.__pmMasterDB.all().noFlush().newEach({
                     eachFn: function(elem) {
                         if (elem.masterDBVer) {
                             masterDBVer = elem.masterDBVer;

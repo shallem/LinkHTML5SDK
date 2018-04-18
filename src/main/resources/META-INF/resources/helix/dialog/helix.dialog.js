@@ -24,7 +24,8 @@
             confirmText: "Confirm",
             dismissText: "Dismiss",
             positionTo: 'origin',
-            noOpen: true
+            noOpen: true,
+            oncomplete: null /* called whenever the user dismisses the dialog, even if done by tapping outside the dialog. */
         }
     };
     
@@ -168,7 +169,7 @@
         var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.options.confirmText ? this.options.confirmText : 'Confirm', onconfirm);
         
         this.options.titleStyleClass = 'ui-header';
-        Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
+        var popup = Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
         if (this.form) {
             $(this.form).on('submit', function(ev) {
                 ev.stopImmediatePropagation();
@@ -182,6 +183,9 @@
                 $(_self.$mainDiv).popup( "close" );
                 return false;
             });
+        }
+        if (this.options.oncomplete) {
+            $(popup).on('popupafterclose', this.options.oncomplete);
         }
         
         _self.$mainDiv.trigger('create');

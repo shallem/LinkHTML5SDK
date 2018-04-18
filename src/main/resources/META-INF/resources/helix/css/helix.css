@@ -288,8 +288,8 @@
 .hx-scroller-nozoom {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
-    -webkit-backface-visibility: hidden;
-    -webkit-transform: translateZ(0);
+    /*-webkit-backface-visibility: hidden;
+    -webkit-transform: translateZ(0);*/
 }
 
 .hx-no-scroll {
@@ -729,7 +729,8 @@ a {
 
 .ui-footer ul li a.ui-btn-up-a:not(.ui-btn-active) {
     /* footer color closer to header color */
-    background-color: #c0c0c0
+    /* HX revised */
+    background-color: #2d2d2d
 }
 
 .hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal {
@@ -803,7 +804,7 @@ a {
 .hx-loading {
     -webkit-animation: pulsating_border 1s infinite alternate;
     animation: pulsating_border 1s infinite alternate;
-    border-bottom: 0.25em solid rgba(192, 39, 45, 1); 
+    border-bottom: 0.25em solid rgba(192, 39, 45, 1) !important; 
 }
 
 /*@-webkit-keyframes pulsating_border {
@@ -877,6 +878,7 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
     padding: 0;
     margin: 0 auto;
     min-width: 64px;
+    font-size: 14px;
 }
 
 /* Styling for lists with a split button. */

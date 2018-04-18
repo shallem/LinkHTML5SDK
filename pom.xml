@@ -231,8 +231,6 @@
 
 		    <include>css/helix.css</include>
 
-		    <include>jplayer/jplayer.blue.monday.css</include>
-
 		    <!-- Styles from the PrimeFaces project. -->
 		    <include>primefaces-styles/primefaces-aristo.css</include>
 		    <include>primefaces-styles/primefaces-growl.css</include>

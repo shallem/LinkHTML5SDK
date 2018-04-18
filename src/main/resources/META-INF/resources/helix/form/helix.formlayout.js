@@ -288,7 +288,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
 
 function refreshTZDropdownToTarget(formElem, tgtDate) {
     formElem.editDOM.empty();
-    __appendTZSelector(formElem.mode, formElem.parentForm, formElem, formElem.editDOM, formElem.layoutMini, tgtDate);
+    __appendTZSelector(formElem.mode, formElem.parentForm.options, formElem, formElem.editDOM, formElem.layoutMini, tgtDate);
     
     var selected = $(formElem.editDOM).find("option:selected");
     if (selected && selected.length) {
@@ -370,6 +370,14 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
             }
             if (formElem.computedStyleClass) {
                 uiSelect.addClass(formElem.computedStyleClass);
+            }
+        }
+        
+        if (formElem.type !== 'hidden') {
+            if (!formElem.noBorder) {
+                $fieldContainer.addClass('hx-form-view-border hx-form-view-item');
+            } else {
+                $fieldContainer.removeClass('hx-form-view-border').addClass('hx-form-view-item');
             }
         }
 
@@ -758,11 +766,16 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                     autoCompleteList.hide();
                     autoCompleteList.listview("refresh");
                 } else {
+                    if (!formElem.autocompleteProjection) {
+                        formElem.autocompleteProjection = function(s) {
+                            return s;
+                        };
+                    }
                     var __doAutocomplete = function () {
                         formElem.autocomplete.call(formElem, text, function (LIs, queryText) {
                             if (queryText !== _self.val()) {
                                 // The user has changed the text further since we ran this query.
-                                return;
+                                return false;
                             }
 
                             // Set __noblur to prevent the user's clicking on an autocomplete list
@@ -784,7 +797,8 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        $("<li/>").addClass('wordBreak').append(LIs[i]).on('vclick', function () {
+                                        var nxtItem = formElem.autocompleteProjection(LIs[i]);
+                                        $("<li/>").addClass('wordBreak').append(nxtItem).on('vclick', function () {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem);
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
@@ -810,6 +824,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                 autoCompleteList.empty();
                                 autoCompleteList.hide();
                             }
+                            return true;
                         });
                     };
 
@@ -1360,7 +1375,13 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     if (formElem.height && formElem.height !== 'full') {
         $fieldContainer.height(formElem.height);
         $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
+    } else {
+        $fieldContainer.height('100%');
+        if (formElem.minHeight) {
+            $fieldContainer.css('min-height',formElem.minHeight + 'px');
+        }
     }
+    
 
     if (!formElem.name) {
         /* No field name. We cannot edit this field. */
@@ -1476,16 +1497,16 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // of the main form.
     if (!subPanelObj.panelMode) {
         // Render in the same mode as the enclosing form.
-        subPanelObj.mode = formLayout.modes;
+        subPanelObj.modes = formLayout.modes;
         subPanelObj.currentMode = formLayout.currentMode;
     } else if (subPanelObj.panelMode === 'reverse') {
         // Opposite of the parent.
         subPanelObj.currentMode = (formLayout.currentMode === 'edit' ? 'view' : 'edit');
-        subPanelObj.mode = subPanelObj.panelMode;
+        subPanelObj.modes = subPanelObj.panelMode;
     } else {
         // Fixed value.
         subPanelObj.currentMode = subPanelObj.panelMode;
-        subPanelObj.mode = subPanelObj.panelMode;
+        subPanelObj.modes = subPanelObj.panelMode;
     }
     subPanelObj.titleStyleClass = formLayout.titleStyleClass;
     subPanelObj.textStyleClass = formLayout.textStyleClass;
@@ -1504,17 +1525,17 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
-    if (subPanelObj.mode === 'view') {
+    if (subPanelObj.modes === 'view') {
         subPanelObj.DOM = subPanelObj.viewDOM = subPanelDiv;
-    } else if (subPanelObj.mode === 'edit') {
+    } else if (subPanelObj.modes === 'edit') {
         subPanelObj.DOM = subPanelObj.editDOM = subPanelDiv;
     } else {
         subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
     }
 
     // Determine if the sub-panel is visible based on the 'mode' field.
-    if (subPanelObj.mode && subPanelObj.mode !== 'all') {
-        if (subPanelObj.mode !== formLayout.currentMode) {
+    if (subPanelObj.modes && subPanelObj.modes !== 'all') {
+        if (subPanelObj.modes !== formLayout.currentMode) {
             // Not visible.
             $(subPanelDiv).hide();
             return;
@@ -1620,8 +1641,8 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
      });*/
 
     // Determine if the sub-panel is visible based on the 'mode' field.
-    if (subPanelObj.mode && subPanelObj.mode !== 'all') {
-        if (subPanelObj.mode !== formLayout.currentMode) {
+    if (subPanelObj.modes && subPanelObj.modes !== 'all') {
+        if (subPanelObj.modes !== formLayout.currentMode) {
             // Not visible.
             $(subPanelDiv).hide();
             return;
@@ -2363,7 +2384,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
 
 Helix.Layout.createYesNoCancelDialog = function (options) {
     if (options.onclick && !options.onclick()) {
-        return;
+        return null;
     }
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
@@ -2373,19 +2394,32 @@ Helix.Layout.createYesNoCancelDialog = function (options) {
     var noBtn = Helix.Layout._createButton(popupId + '-no', '80', 'c', popup, options.noText ? options.noText : 'No', options.onNo);
     var cancelBtn = Helix.Layout._createButton(popupId + '-cancel', '80', 'c', popup, options.cancelText ? options.cancelText : 'Cancel', options.onCancel);
 
-    Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
+    return Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
 };
 
 Helix.Layout.createConfirmDialog = function (options) {
     if (options.onclick && !options.onclick()) {
-        return;
+        return null;
     }
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
 
-    var closebtn = Helix.Layout._createButton(popupId + '-cancel', '90', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
-    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '90', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
+    var closebtn = Helix.Layout._createButton(popupId + '-cancel', '105', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
+    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
 
     return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn]);
+};
+
+Helix.Layout.createAlertDialog = function(options) {
+    if (options.onclick && !options.onclick()) {
+        return null;
+    }
+    options.oncomplete = options.onclick;
+
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
+    var popup = Helix.Layout._createDialogPopup(popupId);
+
+    var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'OK', options.onclick);
+    return Helix.Layout._layoutPopup(popup, options, [ confirmbtn ]); 
 };

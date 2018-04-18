@@ -164,7 +164,7 @@
             updateSyncState: function(op, state, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "updateSyncState", [ op, state ]);
             },
-            getRefreshData: function(op, success, failure) {
+            getRefreshData: function(op, options, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "getRefreshData", [ op ]);
             },
             clearAppBadge: function(success, failure) {
@@ -269,4 +269,17 @@
             }
         };
     }
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 8) {
+        $.extend(window.HelixSystem, {
+            clearRefreshData: function(op, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "clearRefreshData", [ op ]);
+            },
+            getRefreshData: function(op, options, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "getRefreshData", [ op, options ]);
+            }
+        });
+    }
+
 })();

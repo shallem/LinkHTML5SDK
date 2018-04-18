@@ -24,7 +24,9 @@ $(document).on('resumeActive', function() {
     // This is called when we open a window by switching windows. At this point, a header bar has
     // been added to the app screen, which decreases the size of the webview enclosing our app. We 
     // need to resize our app appropriately.
-    Helix.Layout.layoutPage();
+    Helix.postInit(function() {
+        Helix.Layout.layoutPage();    
+    });
 });
 
 Helix.Layout = {
@@ -213,8 +215,8 @@ Helix.Layout = {
     },
     
     layoutPageFullScreen: function(page, oncomplete) {
-        var contentHeight = Helix.Layout.resizePages(page);
         setTimeout(function() {
+            var contentHeight = Helix.Layout.resizePages(page);
             var $content = page.find('.hx-main-content');
             $content.height(contentHeight);
             

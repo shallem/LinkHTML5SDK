@@ -19,7 +19,9 @@
                     "Select Font,Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
                     "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
             tabIndex: -1,
-            parentElement: null
+            parentElement: null,
+            defaultFont: 'Calibri',
+            defaultFontSize: 11
         },
         _create: function () {
             var editor = this;
@@ -63,24 +65,25 @@
             editor.menuToolbar = {};
             editor.menus = {};
             editor.isFirstTyping = true;
+            editor.$toolbarEnabled = true;
 
-            this._createPopupMenu('style', 'Style', $parent, $toolbar, this.options.controls.styles, doMini);
+            this._createPopupMenu('style', 'hx-editor-style-button', $parent, $toolbar, this.options.controls.styles, doMini);
             editor.$styleMenu = editor.menus['style'];
 
             // Add the font commands popup to the button bar
             var defaultValues = {
-                'font': 'Calibri'
+                'font': this.options.defaultFont
             };
-            this._createPopupMenu('font', 'Font', $parent, $toolbar, this.options.controls.font, doMini, defaultValues);
+            this._createPopupMenu('font', 'hx-editor-font-button', $parent, $toolbar, this.options.controls.font, doMini, defaultValues);
             editor.$fontMenu = editor.menus['font'];
 
             // Add the format commands popup to the button bar
-            this._createPopupMenu('format', 'Format', $parent, $toolbar, this.options.controls.formats, doMini);
+            this._createPopupMenu('format', 'hx-editor-lists-button', $parent, $toolbar, this.options.controls.formats, doMini);
             editor.$formatMenu = editor.menus['format'];
 
             /* The action menu is "nice-to-have". Skip it on smaller screens. */
-            this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini);
-            editor.$actionMenu = editor.menus['action'];
+            //this._createPopupMenu('action', 'Action', $parent, $toolbar, this.options.controls.actions, doMini);
+            //editor.$actionMenu = editor.menus['action'];
 
             /* Attach the toolbar to the enclosing div. */
             $toolbar.appendTo($main);
@@ -121,7 +124,6 @@
                 }
             }
             $toolbar.controlgroup();
-            $toolbar.find('a').css('width', '25%');
 
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
@@ -204,19 +206,19 @@
                     return;
                 }
 
-                _self.$toolbarEnabled = false;
+                //_self.$toolbarEnabled = false;
                 _self.popupOpen = false;
                 for (var menuName in this.menuPopups) {
                     var editorName = '#' + menuName + "_" + this.name;
                     $(editorName).popup("close");
                 }
-                _self.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
+                //_self.$toolbar.find('a[data-role="button"]').addClass("ui-disabled");
             });
 
             $(this.$editFrame).on('focus', null, this, function (ev) {
                 var _self = ev.data;
-                _self.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
-                _self.$toolbarEnabled = true;
+                //_self.$toolbar.find('a[data-role="button"]').removeClass("ui-disabled");
+                //_self.$toolbarEnabled = true;
                 if (_self.isFirstTyping) {
                     // Capitalize the first letter.
                     _self.styleChanges.push(['firstcap', null]);
@@ -243,7 +245,13 @@
         isDirty: function () {
             return this._isDirty;
         },
-        _createPopupMenu: function (menuName, buttonText, $parent, $toolbar, menuOptions, doMini, defaultValues) {
+        eventMap: {
+            'size': 'blur',
+            'font': 'change',
+            'color': null,
+            'highlight': null
+        },
+        _createPopupMenu: function (menuName, buttonCSS, $parent, $toolbar, menuOptions, doMini, defaultValues) {
             var editor = this;
             if (!defaultValues) {
                 defaultValues = {};
@@ -258,37 +266,83 @@
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
                 'data-role': 'listview',
                 'data-inset': 'true',
-                'data-theme': 'c'
+                'data-theme': 'c',
+                'class': 'hx-editor-menu'
             }).appendTo($popup);
+            var allMenuOptions = [];
+            var _doMenuAction = function(_self, _nxt) {
+                var args = _nxt.data('applyArgs');
+                var fn = _nxt.data('apply');
+                var finalArgs = args.slice(0);
+                finalArgs.unshift(_self);
+                fn.apply(_nxt, finalArgs);
+            };
+            
             $.each(menuOptions.split(" "), function (idx, buttonName) {
-                editor._addButtonToMenu($menu, $popup, buttonName, menuName, defaultValues[buttonName]);
+                var nxt = editor._addButtonToMenu($menu, $popup, buttonName, menuName, defaultValues[buttonName]);
+                if (nxt.data('apply')) {
+                    allMenuOptions.push(nxt);
+                    var ev = editor.eventMap[buttonName];
+                    if (ev === undefined) {
+                        ev = Helix.clickEvent;
+                    }
+                    if (ev) {
+                        nxt.on(ev, null, [ editor, nxt ], function(ev) {
+                            var _self = ev.data[0];
+                            var _nxt = ev.data[1];
+                            _doMenuAction(_self, _nxt);
+                            return false;
+                        });
+                    }
+                }
+            });
+            var apply = editor._addButtonToMenu($menu, $popup, 'apply', menuName);
+            apply.on(Helix.clickEvent, null, [ editor, allMenuOptions, $popup ], function(ev) {
+                var _self = ev.data[0];
+                var _allOpts = ev.data[1];
+                var _popup = ev.data[2];
+                
+                for (var i = 0; i < _allOpts.length; ++i) {
+                    var _nxt = _allOpts[i];
+                    _doMenuAction(_self, _nxt);
+                }
+                _popup.popup('close');
+                return false;
             });
 
             var $button = this.menuToolbar[menuName] =
-                    $(this.A_TAG)
-                    .attr({
+                    $(this.A_TAG).attr({
                         'href': 'javascript:void(0)',
-                        'data-role': "button",
-                        'data-theme': "d",
-                        'data-mini': doMini,
-                        'class': 'ui-disabled hx-editor-button'
-                    }).append(buttonText)
+                        'class': 'ui-btn iconbutton hx-editor-icon-button'
+                    }).append($('<div/>').addClass('hx-btn-inner')
+                    .append($('<div/>').addClass('hx-icon ' + buttonCSS)))
                     .appendTo($toolbar)
                     .on(Helix.clickEvent, function () {
                         $popup.popup("open", {positionTo: $button});
                         return false;
                     });
+                    
+            $popup.on('popupafteropen', null, [this, apply], function(ev) {
+                var _self = ev.data[0];
+                var $apply = ev.data[1];
+                
+                if (_self._lastInputRange && !_self._lastInputRange.collapsed) {
+                    // we have a selection. in this case, show the apply button.
+                    $apply.show();
+                } else {
+                    $apply.hide();                    
+                }                
+            });
         },
         // Add a button to a popup menu.
         _addButtonToMenu: function (popupMenu, popupParent, buttonName, menuName, defaultValue) {
-            var _self = this;
             if (buttonName === "")
-                return;
+                return null;
 
             // Divider
-            if (buttonName == "|") {
+            if (buttonName === "|") {
                 // Add a new divider to the group
-                $(this.LI_TAG)
+                return $(this.LI_TAG)
                         .attr({
                             'data-role': 'divider',
                             'data-theme': 'b'
@@ -303,38 +357,38 @@
                 switch (buttonName) {
                     case 'color':
                     case 'highlight':
-                        this._appendColorSpectrum(popupMenu, buttonName, menuName);
-                        break;
+                        return this._appendColorSpectrum(popupMenu, popupParent, buttonName, menuName);
                     case 'font':
-                        this._appendFontSelection(popupMenu, buttonName, menuName);
-                        break;
+                        return this._appendFontSelection(popupMenu, buttonName, menuName);
                     case 'size':
-                        this._appendFontSizeInput(popupMenu, buttonName, menuName);
-                        break;
+                        return this._appendFontSizeInput(popupMenu, buttonName, menuName);
+                    case 'apply':
+                        return $(this.LI_TAG)
+                                .attr({
+                                    'data-theme': 'b'
+                                })
+                                .appendTo(popupMenu)
+                                .append('Apply');
                     default:
                         var linkName = this._capitalizeFirstLetter(buttonName);
                         descriptor.push(true)
-                        $(this.LI_TAG)
+                        return $(this.LI_TAG)
                                 .appendTo(popupMenu)
                                 .append(linkName)
-                                .on(Helix.clickEvent, null, descriptor, function (ev) {
-                                    if (!_self._executeAction.apply(_self, ev.data)) {
-                                        ev.data.push(ev.target)
-                                        _self._queueStyleAction.apply(_self, ev.data);
+                                .data('apply', function(_self, descriptor) {
+                                    if (!_self._executeAction.apply(_self, descriptor)) {
+                                        descriptor.push(descriptor);
+                                        _self._queueStyleAction.apply(_self, descriptor);
                                     }
-                                    return false;
-                                });
-                        break;
+                                    return false;                                    
+                                })
+                                .data('applyArgs', [ descriptor ]);
                 }
             }
         },
         _executeAction: function (menuName, action, actionArg) {
             this.menuPopups[menuName].popup('close');
             switch (action) {
-                case 'undo':
-                case 'redo':
-                    document.execCommand(action, false, null);
-                    break;
                 case 'bullets':
                     this._appendList('<ul/>');
                     break;
@@ -349,20 +403,29 @@
         _appendList: function (listTag) {
             this.focus();
 
+            var _list = $(listTag);    
             var $parent = this.$editFrame;
-            if (this._lastInputRange) {
-                $parent = $(this._lastInputRange.commonAncestorContainer);
-            } else if (this._lastInputNode) {
-                $parent = $(this._lastInputNode);
-            }
-
-            var _list = $(listTag);
-            if ($parent[0].nodeType === 3) {
-                _list.insertAfter($parent);
+            var focusNode = window.getSelection().focusNode;
+            if (focusNode) {
+                if ($(focusNode).is('.hx-editor')) {
+                    _list.prependTo($(focusNode));
+                } else {
+                    _list.insertAfter($(focusNode));
+                }
             } else {
-                _list.appendTo($parent);
-            }
+                if (this._lastInputRange) {
+                    $parent = $(this._lastInputRange.commonAncestorContainer);
+                } else if (this._lastInputNode) {
+                    $parent = $(this._lastInputNode);
+                }
 
+                if ($parent[0].nodeType === 3) {
+                    _list.insertAfter($parent);
+                } else {
+                    _list.appendTo($parent);
+                }
+            }
+            
             var _firstLI = $('<li/>').appendTo(_list);
             this._selectElementContents(_firstLI[0]);
         },
@@ -371,14 +434,21 @@
                 $(target).toggleClass('ui-editor-style-selected');
             }
             if (menuName) {
-                this.menuPopups[menuName].popup('close');
+                //this.menuPopups[menuName].popup('close');
             }
             this.styleChanges.push([action, actionArg]);
-            if (!this._lastInputRange.collapsed) {
+            if (this._lastInputRange && !this._lastInputRange.collapsed) {
                 // We are not changing the style at the caret. We are changing the style of an existing
                 // text selection.
-                this._executeStyleActions();
+                var newSpan = this._executeStyleActions();
                 this.styleChanges = [];
+                
+                // Update the selection to now be the span we just created
+                var selection = window.getSelection();
+                var range = document.createRange();
+                range.selectNodeContents(newSpan[0]);
+                selection.removeAllRanges();
+                selection.addRange(range);
             }
         },
         _appendFontSelection: function (popupMenu, buttonName, menuName, defaultValue) {
@@ -396,27 +466,28 @@
                 inputMarkup.val(defaultValue);
             }
             inputMarkup.selectmenu();
-            $(inputMarkup).change(function () {
-                var nxtFont = $(this).find(':selected').attr('value');
+            inputMarkup.data('apply', function(_self, _select) {
+                var nxtFont = $(_select).find(':selected').attr('value');
                 if (nxtFont === 'Select Font') {
                     return;
                 }
-                _self._queueStyleAction(menuName, 'font', nxtFont);
-                _self.$editFrame.focus();
-                $(this).val('');
+                _self._queueStyleAction(menuName, 'font', nxtFont);                
             });
+            inputMarkup.data('applyArgs', [ inputMarkup ]);
+            return inputMarkup;
         },
         _appendFontSizeInput: function (popupMenu, buttonName, menuName) {
-            var _self = this;
             var inputMarkup = $('<input />')
                     .attr('type', 'number')
                     .appendTo(popupMenu)
-                    .val('11');
-            $(inputMarkup).change(function () {
-                _self._queueStyleAction(null, 'size', $(this).val());
+                    .val(this.options.defaultFontSize);
+            $(inputMarkup).data('apply', function(_self, _input) {
+                _self._queueStyleAction(null, 'size', $(_input).val());
             });
+            $(inputMarkup).data('applyArgs', [ inputMarkup ]);
+            return inputMarkup;
        },
-        _appendColorSpectrum: function ($menu, buttonName, menuName) {
+        _appendColorSpectrum: function ($menu, popupParent, buttonName, menuName) {
             var _self = this;
             var title = this._capitalizeFirstLetter(buttonName);
             $(this.DIV_TAG).attr({
@@ -431,12 +502,16 @@
                         color: 'black',
                         change: function (color) {
                             _self._queueStyleAction(menuName, buttonName, color.toHexString());
+                            $(this).spectrum('hide');
                         }
                     });
-
-            $(_self.$editFrame).on('blur', function () {
-                colorInput.spectrum("hide");
+            colorInput.data('apply', function(_self, _spectrum) {
+                var color = _spectrum.spectrum('get');
+                _self._queueStyleAction(menuName, buttonName, color.toHexString());                
             });
+            colorInput.data('applyArgs', [ colorInput ]);
+                    
+            // Add the clear button
             var restoreColor = '#000000';
             if (buttonName === 'highlight') {
                 restoreColor = '#FFFFFF';
@@ -449,16 +524,24 @@
                     .appendTo($menu).buttonMarkup({
                 mini: true,
                 corners: false
-            }).on(Helix.clickEvent, function (ev) {
-                $('input[data-command="' + buttonName + '"]').spectrum("set", restoreColor);
-                _self.menuPopups[menuName].popup('close');
-                _self._queueStyleAction(menuName, buttonName, restoreColor);
+            }).on(Helix.clickEvent, null, restoreColor, function (ev) {
+                ev.stopImmediatePropagation();
+                $('input[data-command="' + buttonName + '"]').spectrum("set", ev.data);
+                _self._queueStyleAction(menuName, buttonName, ev.data);
                 return false;
             });
+            return colorInput;
         },
         // clear - clears the contents of the editor
         clear: function () {
             this.$editFrame.empty();
+        },
+        reset: function() {
+            this.clear();
+            
+            // Reset all fonts, font sizes, and style settings
+            this.currentStyles = {};
+            this.styleChanges = [];
         },
         update: function (val) {
             this.$editFrame.html(val);
@@ -584,6 +667,7 @@
                         break;
                 }
             }
+            return $newSpan;
         },
         _setCaretAtEndOfElement: function (elem, pos) {
             var range = document.createRange();
@@ -613,9 +697,8 @@
         },
         _insertSpan: function (txtToSurround) {
             var _self = this;
-            var isCollapsed = _self._lastInputRange.collapsed;
-            this.$editFrame.focus();
             if (_self._lastInputRange) {
+                var isCollapsed = _self._lastInputRange.collapsed;
                 if (!isCollapsed) {
                     // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
                     // See comment at the top of the link above as to why this method is better than
@@ -623,15 +706,16 @@
                     var allNewElements = [];
                     //var frag = _self._lastInputRange.extractContents();
                     var walker = document.createTreeWalker(_self._lastInputRange.commonAncestorContainer, NodeFilter.SHOW_TEXT, null, false);
-                    var textNode;
+                    var textNode = walker.currentNode;
                     var doWrap = false;
                     var toWrap = [];
-                    while(textNode = walker.nextNode()) {
+                    while(textNode) {
                         if (!doWrap && textNode === _self._lastInputRange.startContainer) {
                             doWrap = true;
                         }
                         if (!doWrap || !textNode.nodeValue || textNode.nodeValue.trim().length === 0) {
                             // White space
+                            textNode = walker.nextNode();                        
                             continue;
                         }
                         
@@ -640,6 +724,7 @@
                         if (textNode === _self._lastInputRange.endContainer) {
                             break;
                         }
+                        textNode = walker.nextNode();
                     }
                     for (var i = 0; i < toWrap.length; ++i) {
                         var nxt = toWrap[i];
