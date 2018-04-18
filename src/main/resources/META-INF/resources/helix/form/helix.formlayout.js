@@ -1497,16 +1497,16 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // of the main form.
     if (!subPanelObj.panelMode) {
         // Render in the same mode as the enclosing form.
-        subPanelObj.mode = formLayout.modes;
+        subPanelObj.modes = formLayout.modes;
         subPanelObj.currentMode = formLayout.currentMode;
     } else if (subPanelObj.panelMode === 'reverse') {
         // Opposite of the parent.
         subPanelObj.currentMode = (formLayout.currentMode === 'edit' ? 'view' : 'edit');
-        subPanelObj.mode = subPanelObj.panelMode;
+        subPanelObj.modes = subPanelObj.panelMode;
     } else {
         // Fixed value.
         subPanelObj.currentMode = subPanelObj.panelMode;
-        subPanelObj.mode = subPanelObj.panelMode;
+        subPanelObj.modes = subPanelObj.panelMode;
     }
     subPanelObj.titleStyleClass = formLayout.titleStyleClass;
     subPanelObj.textStyleClass = formLayout.textStyleClass;
@@ -1525,17 +1525,17 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
-    if (subPanelObj.mode === 'view') {
+    if (subPanelObj.modes === 'view') {
         subPanelObj.DOM = subPanelObj.viewDOM = subPanelDiv;
-    } else if (subPanelObj.mode === 'edit') {
+    } else if (subPanelObj.modes === 'edit') {
         subPanelObj.DOM = subPanelObj.editDOM = subPanelDiv;
     } else {
         subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
     }
 
     // Determine if the sub-panel is visible based on the 'mode' field.
-    if (subPanelObj.mode && subPanelObj.mode !== 'all') {
-        if (subPanelObj.mode !== formLayout.currentMode) {
+    if (subPanelObj.modes && subPanelObj.modes !== 'all') {
+        if (subPanelObj.modes !== formLayout.currentMode) {
             // Not visible.
             $(subPanelDiv).hide();
             return;
@@ -1641,8 +1641,8 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
      });*/
 
     // Determine if the sub-panel is visible based on the 'mode' field.
-    if (subPanelObj.mode && subPanelObj.mode !== 'all') {
-        if (subPanelObj.mode !== formLayout.currentMode) {
+    if (subPanelObj.modes && subPanelObj.modes !== 'all') {
+        if (subPanelObj.modes !== formLayout.currentMode) {
             // Not visible.
             $(subPanelDiv).hide();
             return;
