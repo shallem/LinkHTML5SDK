@@ -1701,7 +1701,7 @@ var globalDataListID = -1;
                 if (_options.grouped) {
                     groupsToRender.push(curRow);
                 } else {
-                    if (_self.nRendered >= _self._itemsPerPage) {
+                    if (_self.nRendered >= (_self._itemsPerPage + _self.nExtras)) {
                         return false;
                     }
 
