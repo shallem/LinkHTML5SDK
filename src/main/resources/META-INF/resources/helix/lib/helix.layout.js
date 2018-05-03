@@ -402,9 +402,9 @@ window.addEventListener('orientationchange', function(ev) {
     });
 });
 
-Helix.calculateScreenWidth = (function() {
+Helix.calculateScreenWidth = function() {
     return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-})();
+};
 
 Helix.screenWidth = Helix.calculateScreenWidth();
 
