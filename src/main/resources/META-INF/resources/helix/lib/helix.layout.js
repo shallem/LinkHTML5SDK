@@ -390,7 +390,7 @@ $(document).on('pagecreate', function(ev) {
     Helix.Layout.layoutPage();
 });*/
 
-window.addEventListener('orientationchange', function(ev) {
+$(document).on('orientationchange', function(ev) {
     Helix.Layout.refresh();
     Helix.Layout.layoutPage();
     $('.ui-page').each(function() {
