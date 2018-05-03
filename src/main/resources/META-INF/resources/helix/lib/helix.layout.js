@@ -390,6 +390,7 @@ $(document).on('pagecreate', function(ev) {
 });*/
 
 window.addEventListener('orientationchange', function(ev) {
+    Helix.screenWidth = Helix.calculateScreenWidth();
     Helix.Layout.refresh();
     Helix.Layout.layoutPage();
     $('.ui-page').each(function() {
@@ -401,9 +402,11 @@ window.addEventListener('orientationchange', function(ev) {
     });
 });
 
-Helix.screenWidth = (function() {
+Helix.calculateScreenWidth = (function() {
     return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 })();
+
+Helix.screenWidth = Helix.calculateScreenWidth();
 
 Helix.deviceType = (function() {
     var w = Helix.screenWidth;
