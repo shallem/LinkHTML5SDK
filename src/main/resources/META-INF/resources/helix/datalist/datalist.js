@@ -447,15 +447,6 @@ var globalDataListID = -1;
              * Append the footer.
              */
             this.$footerSection = $('<footer/>').addClass('hx-no-webkit-select').appendTo(this.$section).hide();
-
-            /**
-             * Append the hook div if we have pull to refresh setup.
-             */
-            this.$hookDiv = null;
-            if (this.options.pullToRefresh) {
-                this.$hookDiv = $('<div/>').appendTo(listWrapper);
-            }
-
             this.$parent = $('<ul/>').attr({
                 'data-role': 'listview',
                 'class': 'hx-listview'
@@ -465,14 +456,6 @@ var globalDataListID = -1;
             }
             if (this.options.multiSelect) {
                 this.$parent.addClass('hxMultiSelect');
-            }
-
-            /**
-             * Append the post hook div if we have push to refresh setup.
-             */
-            this.$pushDiv = null;
-            if (this.options.pushToRefresh) {
-                this.$pushDiv = $('<div/>').appendTo(listWrapper).addClass('hx-full-height-skip');
             }
 
             /**
@@ -513,32 +496,6 @@ var globalDataListID = -1;
                 dividerTheme: 'd',
                 headerTheme: 'd'
             });
-
-            if (this.$hookDiv) {
-                this.$hookDiv.hook({
-                    reloadPage: false,
-                    scrollTarget: listWrapper,
-                    reloadEl: function () {
-                        if (!_self.refreshInProgress && _self._renderWindowStart === 0) {
-                            _self.options.pullToRefresh.call(this);
-                            _self._clearGlobalFilterMenu();
-                        }
-                    }
-                });
-            }
-            if (this.$pushDiv) {
-                this.$pushDiv.hook({
-                    reloadPage: false,
-                    scrollTarget: listWrapper,
-                    isPull: false,
-                    reloadEl: function () {
-                        if (!_self.refreshInProgress) {
-                            _self.options.pushToRefresh.call(this);
-                            _self._clearGlobalFilterMenu();
-                        }
-                    }
-                });
-            }
 
             // Pagination setup.
             this._resetPaging();
@@ -941,6 +898,13 @@ var globalDataListID = -1;
             if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
+
+	    if (lastScroll >= 0 && scrollPos < 0) {
+                if (!_self.refreshInProgress && _self._renderWindowStart === 0 && _self.options.pullToRefresh) {
+                    _self.options.pullToRefresh.call(this);
+                    _self._clearGlobalFilterMenu();
+                }
+	    }
 
             if (scrollPos <= 0 && _self._renderWindowStart > 0) {
                 // stop tracking scroll events
@@ -1701,7 +1665,7 @@ var globalDataListID = -1;
                 if (_options.grouped) {
                     groupsToRender.push(curRow);
                 } else {
-                    if (_self.nRendered >= _self._itemsPerPage) {
+                    if (_self.nRendered >= (_self._itemsPerPage + _self.nExtras)) {
                         return false;
                     }
 

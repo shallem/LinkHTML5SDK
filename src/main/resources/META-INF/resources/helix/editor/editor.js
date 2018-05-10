@@ -407,22 +407,29 @@
             var $parent = this.$editFrame;
             var focusNode = window.getSelection().focusNode;
             if (focusNode) {
+		var isCollapsed = window.getSelection().isCollapsed;
                 if ($(focusNode).is('.hx-editor')) {
                     _list.prependTo($(focusNode));
-                } else {
+                } else if (!isCollapsed || focusNode.nodeType === 3) {
                     _list.insertAfter($(focusNode));
-                }
+                } else {
+                    _list.prependTo($(focusNode));
+		}
             } else {
+		var isCollapsed = false;
                 if (this._lastInputRange) {
                     $parent = $(this._lastInputRange.commonAncestorContainer);
+		    isCollapsed = this._lastInputRange.collapsed;
                 } else if (this._lastInputNode) {
                     $parent = $(this._lastInputNode);
                 }
 
                 if ($parent[0].nodeType === 3) {
                     _list.insertAfter($parent);
-                } else {
+                } else if (!isCollapsed) {
                     _list.appendTo($parent);
+                } else {
+                    _list.prependTo($(focusNode));
                 }
             }
             

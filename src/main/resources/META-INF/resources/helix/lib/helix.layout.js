@@ -328,6 +328,7 @@ Helix.Layout = {
  * the page load is done, they should call this function.
  */
 Helix.Layout.layoutPage = function(page, noTrigger) {
+    Helix.screenWidth = Helix.calculateScreenWidth();
     if (!page) {
         page = $.mobile.activePage;
         if (!page) {
@@ -389,7 +390,7 @@ $(document).on('pagecreate', function(ev) {
     Helix.Layout.layoutPage();
 });*/
 
-window.addEventListener('orientationchange', function(ev) {
+$(document).on('orientationchange', function(ev) {
     Helix.Layout.refresh();
     Helix.Layout.layoutPage();
     $('.ui-page').each(function() {
@@ -401,9 +402,11 @@ window.addEventListener('orientationchange', function(ev) {
     });
 });
 
-Helix.screenWidth = (function() {
+Helix.calculateScreenWidth = function() {
     return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-})();
+};
+
+Helix.screenWidth = Helix.calculateScreenWidth();
 
 Helix.deviceType = (function() {
     var w = Helix.screenWidth;
