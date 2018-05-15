@@ -155,6 +155,13 @@ public class LoadCommandAction {
              * exceptions are not caught. This is intentional.
              */
             gotten = getter.invoke(thisObject, new Object[] {});
+            
+            if (gotten == null && this.errorGetter != null) {
+                ClientWSResponse resp = (ClientWSResponse)this.errorGetter.invoke(thisObject, new Object[] {});
+                if (resp != null) {
+                    return "{ \"error\" : " + resp.toJSON() + "}";
+                }
+            }
         } catch (IllegalAccessException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new FacesException("Failed to invoke getter: " + ex.getMessage());
