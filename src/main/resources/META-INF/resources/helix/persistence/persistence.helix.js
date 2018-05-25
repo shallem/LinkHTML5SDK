@@ -1552,26 +1552,25 @@ function initHelixDB() {
             persistentObj.__hx_schema = objSchema;
             persistentObj.__hx_key = obj[this.getKeyField(objSchema)];
             persistentObj.__hx_indexed = false;
-            
-            /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
-             * make a bunch of objects dirty and flush them over and over again as
-             * we recurse through their children. We make all non-relation changes before
-             * we do anything that might trigger a flush.
-             */
-            while (scalarFields.length > 0) {
-                field = scalarFields.pop();
-                /* Use the setter to make sure the object is marked as dirty appropriately. */
-                var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
-                if (prop) {
-                    var setter = prop.set;
-                    if (!overrides.syncFields(setter, obj, field, persistentObj)) {
-                        setter.call(persistentObj, obj[field]);
-                    }
-                }
-            }
-            
+                        
             /* Called when an asynchronous relationship field is done sync'ing. */
             var syncDone = function() {
+                /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
+                 * make a bunch of objects dirty and flush them over and over again as
+                 * we recurse through their children. We make all non-relation changes before
+                 * we do anything that might trigger a flush.
+                 */
+                while (scalarFields.length > 0) {
+                   field = scalarFields.pop();
+                   /* Use the setter to make sure the object is marked as dirty appropriately. */
+                   var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
+                   if (prop) {
+                       var setter = prop.set;
+                       if (!overrides.syncFields(setter, obj, field, persistentObj)) {
+                           setter.call(persistentObj, obj[field]);
+                       }
+                   }
+                }
                 if (overrides.addHook) {
                     overrides.addHook(persistentObj);
                 }
@@ -1796,7 +1795,7 @@ function initHelixDB() {
      * We use this to check the schema for updates. If an update has occurred then
      * we run the update statements directly against the DB.
      */
-        pmCreateMasterTable: function () {
+        pmCreateMasterTable: function (tx) {
             window.__pmMasterDB = persistence.define('MasterDB',{
                 metaName : "TEXT",
                 tableVersion: "INT",
@@ -1817,7 +1816,7 @@ function initHelixDB() {
             
             var allTables = {};
             var masterDBVer = 0;
-            persistence.schemaSync(function(tx) {
+            persistence.schemaSync(tx, function() {
                 window.__pmMasterDB.all().noFlush().newEach({
                     eachFn: function(elem) {
                         if (elem.masterDBVer) {
@@ -1902,12 +1901,10 @@ function initHelixDB() {
 
             /* Initialize PersistenceJS migrations. */
             persistence.transaction(function(tx) {
-                persistence.migrations.init(tx, function() {
-                    persistence.migrations.Migrator.version(tx, function(schemaVer) {
-                        Helix.DB.__schemaVersion = schemaVer;
-                    });
-                    Helix.DB.pmCreateMasterTable();
+                persistence.migrations.init(tx, function(schemaVer) {
+                    Helix.DB.__schemaVersion = schemaVer;
                 });
+                Helix.DB.pmCreateMasterTable(tx);
             });
         },
     

@@ -636,13 +636,13 @@ a {
 }
 
 @-webkit-keyframes loading_color_change {
-    from { background: #BCCBF6; }
-    to { background: #CC9E0F; }
+    from { background-color: rgba(188, 203, 246, 0.5); }
+    to { background-color: rgba(204, 158, 15, 0.5); }
 }
 
 @keyframes loading_color_change {
-    from { background: #BCCBF6; }
-    to { background: #CC9E0F; }
+    from { background-color: rgba(188, 203, 246, 0.5); }
+    to { background-color: rgba(204, 158, 15, 0.5); }
 }
 
 .hx-toggleable {
@@ -801,11 +801,11 @@ a {
  * Animations
  */
 
-.hx-loading {
+/*.hx-loading {
     -webkit-animation: pulsating_border 1s infinite alternate;
     animation: pulsating_border 1s infinite alternate;
     border-bottom: 0.25em solid rgba(192, 39, 45, 1) !important; 
-}
+}*/
 
 /*@-webkit-keyframes pulsating_border {
     0%   { border-bottom-color: rgba(192, 39, 45, 1); }

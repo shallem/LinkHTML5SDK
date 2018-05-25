@@ -425,17 +425,18 @@ function initPersistence(persistence) {
             var arLength = array.length;
             if(arLength === 0) {
                 callback(undefined, undefined, opaque);
+            } else {
+                persistence.transaction(function(tx) {
+                    for(var i = 0; i < arLength; i++) {
+                        fn(array[i], function(result, err) {
+                            completed++;
+                            if(completed === arLength) {
+                                callback(result, err, opaque);
+                            }
+                        }, opaque, tx);
+                    }
+                });
             }
-            persistence.transaction(function(tx) {
-                for(var i = 0; i < arLength; i++) {
-                    fn(array[i], function(result, err) {
-                        completed++;
-                        if(completed === arLength) {
-                            callback(result, err, opaque);
-                        }
-                    }, opaque, tx);
-                }
-            })
         };
 
         /**
@@ -1757,6 +1758,7 @@ function initPersistence(persistence) {
             if (this._group) {
                 c._group = $.extend({}, this._group);
             }
+            c._noFlush = this._noFlush;
             return c;
         };
 
