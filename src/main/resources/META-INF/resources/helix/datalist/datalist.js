@@ -3304,6 +3304,7 @@ var globalDataListID = -1;
                 var obj = $(this).data('data');
                 allObjs.push(obj);
             });
+            $(elems).remove();
             if (callback) {
                 var _self = this;
                 callback(allObjs, function() {

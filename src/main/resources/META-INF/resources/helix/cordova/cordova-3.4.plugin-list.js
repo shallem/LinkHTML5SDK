@@ -205,27 +205,6 @@ module.exports = [
         ]
     },
     {
-        "file": "plugins/org.apache.cordova.geolocation/www/geolocation.js",
-        "id": "org.apache.cordova.geolocation.geolocation",
-        "clobbers": [
-            "navigator.geolocation"
-        ]
-    },
-    {
-        "file": "plugins/org.apache.cordova.globalization/www/GlobalizationError.js",
-        "id": "org.apache.cordova.globalization.GlobalizationError",
-        "clobbers": [
-            "window.GlobalizationError"
-        ]
-    },
-    {
-        "file": "plugins/org.apache.cordova.globalization/www/globalization.js",
-        "id": "org.apache.cordova.globalization.globalization",
-        "clobbers": [
-            "navigator.globalization"
-        ]
-    },
-    {
         "file": "plugins/org.apache.cordova.media/www/MediaError.js",
         "id": "org.apache.cordova.media.MediaError",
         "clobbers": [
@@ -322,8 +301,6 @@ module.exports.metadata =
     "org.apache.cordova.device-motion": "0.2.6",
     "org.apache.cordova.device-orientation": "0.3.5",
     "org.apache.cordova.dialogs": "0.2.6",
-    "org.apache.cordova.geolocation": "0.3.6",
-    "org.apache.cordova.globalization": "0.2.6",
     "org.apache.cordova.media": "0.2.9",
     "org.apache.cordova.media-capture": "0.2.8",
     "org.apache.cordova.network-information": "0.2.7",
