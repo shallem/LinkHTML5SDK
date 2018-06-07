@@ -66,7 +66,7 @@ public class FormLayoutRenderer extends CoreRenderer {
         if (layout.getFieldStyleClassMap() != null) {
             writer.write(",'fieldStyleClass' : " + layout.getFieldStyleClassMap());
         } else if (layout.getFieldStyleClass() != null) {
-            writer.write(",'fieldStyleClass' : '" + layout.getFieldStyleClass());
+            writer.write(",'fieldStyleClass' : '" + layout.getFieldStyleClass() + "'");
         }
         
         if (layout.getTitleStyleClass() != null) {

@@ -148,6 +148,12 @@
     position: relative;    
 }
 
+.hx-btn-border {
+    border-color: black !important;
+    border: 1px;
+    border-style: solid;
+}
+
 .hx-btn-inner.hx-tab-inner {
     height: 48px;
 }

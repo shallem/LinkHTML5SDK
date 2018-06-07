@@ -1805,7 +1805,7 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
             }
         }
         if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
-            $viewFieldContainer.attr('class', formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
+            $viewFieldContainer.addClass(formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
         }
         if (formLayout.computedFieldStyle) {
             $viewFieldContainer.attr('style', formLayout.computedFieldStyle);
