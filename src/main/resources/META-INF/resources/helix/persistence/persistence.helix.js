@@ -1449,6 +1449,8 @@ function initHelixDB() {
                                 Helix.DB.cascadingRemove(elemSchema,elem,function(_obj, _op, _args) {
                                     removeFn(_obj, _args);
                                 }, overrides, args);
+                            } else {
+                                removeFn(null, args);
                             }
                         },
                         startFn: function(ct) {
@@ -1479,7 +1481,6 @@ function initHelixDB() {
 
             if ((_deltaObj.deleteSpec && _deltaObj.deleteSpec.length > 0) ||
                     (_deltaObj.deletes && _deltaObj.deletes.length > 0)) {
-                /* Handle deletes, then sync. Then we handle modifications and adds. */
                 removeFn(null, args);
             } else {
                 /* Nothing to remove; move on to adds ... */
