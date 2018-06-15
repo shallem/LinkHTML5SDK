@@ -44,10 +44,10 @@
                     .appendTo($parent);
 
             if (this.options.parentElement) {
-                var evName = 'hxLayoutDone.' + editor.name;
+                /*var evName = 'hxLayoutDone.' + editor.name;
                 $(this.page).off(evName).on(evName, this, function (ev) {
                     $(ev.data.$main).height($(ev.data.options.parentElement).height());
-                });
+                });*/
             }
 
             // Add the first group to the toolbar

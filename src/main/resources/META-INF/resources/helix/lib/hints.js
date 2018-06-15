@@ -31,7 +31,7 @@ function HelixHints(hints, oncomplete) {
     // Sync to the DB.
     this._schema = Helix.DB.getSchemaForTable('HelixHints');
     var _self = this;
-    _self._schema.all().newEach({
+    _self._schema.all().noFlush().newEach({
         eachFn: function(row) {
             var hintObj = _self._hints[row.hintTag];
             if (hintObj) {

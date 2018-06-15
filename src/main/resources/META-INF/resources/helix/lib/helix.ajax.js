@@ -143,13 +143,13 @@ $(document).on('__hxOffline', function() {
  */
 $(document).on('hxGenerateSchemas', function() {
     if (!window.cordovaInstalled) {
-        Helix.Ajax.offlineNetworkQueue =  persistence.define('OfflineNetworkQueue', {
+        Helix.Ajax.offlineNetworkQueue =  Helix.DB.createSchemaForTable('OfflineNetworkQueue', {
             url: "TEXT",
             body: "TEXT",
             json: "TEXT",
             status: "TEXT",
             error: "TEXT"
-        });
+        }, [], '');
     }
 });
 
@@ -160,7 +160,7 @@ $(document).on('helixready', function() {
             // Execute any queued posts.
             var nQueuedActions = 0;
             var doneQueuedActions = 0;
-            Helix.Ajax.offlineNetworkQueue.all().newEach({
+            Helix.Ajax.offlineNetworkQueue.all().noFlush().newEach({
                 startFn: function(ct) {
                     nQueuedActions = ct;
                 },

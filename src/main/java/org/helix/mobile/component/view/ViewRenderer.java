@@ -77,14 +77,5 @@ public class ViewRenderer extends CoreRenderer {
         }
         
         writer.endElement("div");
-
-        startScript(writer, component.getClientId());
-        
-        writer.write("\n");
-        writer.write("$(PrimeFaces.escapeClientId('" + component.getClientId() + "'))");
-        writer.write(".on('orientationchange', function(event, ui) {\n");
-        writer.write("Helix.Layout.layoutPage(); });");
-
-        endScript(writer);
     }
 }

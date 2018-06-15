@@ -254,16 +254,28 @@
             
         },
     
-        updateItem: function(name, updatedProperties) {
+        updateItem: function(name, updatedProperties, reRenderItem) {
             var idx = 0;
+            var formElem = null;
             for (idx = 0; idx < this.options.items.length; ++idx) {
-                var formElem = this.options.items[idx];
+                formElem = this.options.items[idx];
                 var fldName = this._stripNamespace(formElem.name);
                 if (fldName === name) {
                     for (var prop in updatedProperties) {
                         formElem[prop] = updatedProperties[prop];
                     }
+                    break;
                 }
+                formElem = null;
+            }
+            if (formElem && reRenderItem) {
+                if (formElem.viewDOM) {
+                    formElem.viewDOM.empty();
+                }
+                if (formElem.editDOM) {
+                    formElem.editDOM.empty();
+                }
+                Helix.Utils.refreshFormElement(this.options, formElem, this.$section, this.page, this.layoutMini);
             }
         },
     
