@@ -35,12 +35,12 @@ import org.helix.mobile.util.ContextParametersProvider;
  * @version $Revision: 1449 $
  * @since 0.1
  */
-public class PrimeFacesMobileResourceHandler extends ResourceHandlerWrapper {
+public class LinkSDKMobileResourceHandler extends ResourceHandlerWrapper {
 
     private final ResourceHandler wrapped;
-    private static final String pmmVerString = ";pmmVer=";
+    private static final String linkSDKVerString = ";pmmVer=";
 
-    public PrimeFacesMobileResourceHandler(final ResourceHandler resourceHandler) {
+    public LinkSDKMobileResourceHandler(final ResourceHandler resourceHandler) {
         super();
 
         wrapped = resourceHandler;
@@ -55,9 +55,9 @@ public class PrimeFacesMobileResourceHandler extends ResourceHandlerWrapper {
     public Resource createResource(final String resourceName, final String libraryName) {
         String versionName = null;
         String finalResourceName = resourceName;
-        int versionNameIdx = resourceName.indexOf(pmmVerString);
+        int versionNameIdx = resourceName.indexOf(linkSDKVerString);
         if (versionNameIdx != -1) {
-            versionName = resourceName.substring(versionNameIdx + pmmVerString.length());
+            versionName = resourceName.substring(versionNameIdx + linkSDKVerString.length());
             finalResourceName = resourceName.substring(0, versionNameIdx);
         }
 
@@ -69,9 +69,9 @@ public class PrimeFacesMobileResourceHandler extends ResourceHandlerWrapper {
                     resource = super.createResource(resourceName, Constants.LIBRARY_UNCOMPRESSED);
                 }
                 
-                resource = new PrimeFacesMobileResource(resource);
+                resource = new LinkSDKResource(resource);
             } else if (versionName != null) {
-                resource = new PrimeFacesMobileResource(resource, versionName);
+                resource = new LinkSDKResource(resource, versionName);
             }
         }
 
