@@ -165,6 +165,14 @@
             }
         },
         
+        hide: function() {
+            $(this.element).hide();
+        },
+        
+        show: function() {
+            $(this.element).show();
+        },
+        
         resetItems: function(itemsList) {
             this._typeMap = [];
             this._fieldMap = [];
