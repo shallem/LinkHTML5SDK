@@ -165,6 +165,14 @@
             }
         },
         
+        hide: function() {
+            $(this.element).hide();
+        },
+        
+        show: function() {
+            $(this.element).show();
+        },
+        
         resetItems: function(itemsList) {
             this._typeMap = [];
             this._fieldMap = [];
@@ -644,6 +652,8 @@
                     __refreshTextBox(mode, item);
                 } else if (fldType === 'textarea' || fldType === 'rawTextarea') {
                     __refreshTextArea(mode, item);
+                } else if (fldType === 'textlabel') {
+                    __refreshTextLabel(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
                 } else if (fldType === 'subPanel' ||

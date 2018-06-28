@@ -31,12 +31,12 @@ import org.helix.mobile.util.VersionProvider;
  * @version $Revision: 1119 $
  * @since   0.1
  */
-public class PrimeFacesMobileResource extends ResourceWrapper {
+public class LinkSDKResource extends ResourceWrapper {
 
 	private Resource wrapped;
 	private String version;
 
-	public PrimeFacesMobileResource(final Resource resource) {
+	public LinkSDKResource(final Resource resource) {
 		super();
 		wrapped = resource;
 
@@ -48,7 +48,7 @@ public class PrimeFacesMobileResource extends ResourceWrapper {
 		}
 	}
 
-        public PrimeFacesMobileResource(final Resource resource,
+        public LinkSDKResource(final Resource resource,
                 String version) {
             super();
             wrapped = resource;
