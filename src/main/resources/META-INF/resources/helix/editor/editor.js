@@ -16,8 +16,8 @@
                     }
             ,
             font: // font names in the font popup
-                    "Select Font,Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
-                    "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
+                    "Select Font,Andale Mono,Arial,Arial Black,Calibri,Cambria,Comic Sans MS,Courier New," +
+                    "Georgia,Impact,Trebuchet MS,Times New Roman,Verdana",
             tabIndex: -1,
             parentElement: null,
             defaultFont: 'Calibri',
@@ -131,6 +131,7 @@
                     .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom hx-no-hscroll ui-editor-default-style hx-editor')
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
+            this.setDefaultFont(this.options.defaultFont);
 
             this._attachEditFrameEvents();
         },
@@ -549,6 +550,14 @@
             // Reset all fonts, font sizes, and style settings
             this.currentStyles = {};
             this.styleChanges = [];
+        },
+        setDefaultFont: function(font) {
+            this.options.defaultFont = font;
+            if (this.options.defaultFont === 'Calibri') {
+                this.$editFrame.addClass('ui-editor-default-font');
+            } else {
+                this.$editFrame.css('font-family', this.options.defaultFont);
+            }
         },
         update: function (val) {
             this.$editFrame.html(val);

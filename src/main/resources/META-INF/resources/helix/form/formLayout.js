@@ -652,6 +652,8 @@
                     __refreshTextBox(mode, item);
                 } else if (fldType === 'textarea' || fldType === 'rawTextarea') {
                     __refreshTextArea(mode, item);
+                } else if (fldType === 'textlabel') {
+                    __refreshTextLabel(mode, item);
                 } else if (fldType === 'horizontalScroll') {
                     __refreshHorizontalScroll(item);
                 } else if (fldType === 'subPanel' ||

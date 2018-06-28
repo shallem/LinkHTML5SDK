@@ -1697,6 +1697,7 @@ var globalDataListID = -1;
 
                 var nxt = groupsToRender.shift();
                 if (_self.nRendered >= _self._itemsPerPage) {
+                    oncomplete.call(_self, opaque);
                     return;
                 }
 

@@ -386,6 +386,18 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
     }
 }
 
+function __refreshTextLabel(mode, formElem) {
+    var dataNameAttr = '[data-name="' + formElem.name + '"]';
+    var selector = 'span' + dataNameAttr + ',p' + dataNameAttr;
+    var $span = $(formElem.DOM).find(selector);
+    if ($span.is('span')) {
+        $span.html("&nbsp;" + formElem.value);
+    } else {
+        /* Should be a 'p' tag. */
+        $span.html(formElem.value);
+    }
+}
+
 function __refreshTextArea(mode, formElem) {
     if (mode) {
         var $input = $(formElem.DOM).find('textarea[name="' + formElem.name + '"]');
@@ -395,15 +407,51 @@ function __refreshTextArea(mode, formElem) {
             $input.val(formElem.value ? formElem.value : '');
         }
     } else {
-        var dataNameAttr = '[data-name="' + formElem.name + '"]';
-        var selector = 'span' + dataNameAttr + ',p' + dataNameAttr;
-        var $span = $(formElem.DOM).find(selector);
-        if ($span.is('span')) {
-            $span.html("&nbsp;" + formElem.value);
+        __refreshTextLabel(mode, formElem);
+    }
+}
+
+function __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    if (mode === 1) {
+        // No title by default in edit mode.
+        if (formElem.titleStyleClass) {
+            $fieldContainer.append($('<span />').attr({
+                'class': formElem.titleStyleClass + ' ui-input-text'
+            }).append(formElem.fieldTitle));
+        } else if (formLayout.titleStyleClass) {
+            $fieldContainer.append($('<span />').attr({
+                'class': formLayout.titleStyleClass + ' ui-input-text'
+            }).append(formElem.fieldTitle));
         } else {
-            /* Should be a 'p' tag. */
-            $span.html(formElem.value);
+            $fieldContainer.append(formElem.fieldTitle);
         }
+    }
+    
+    var toAppend, inputMarkup;
+    if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
+        toAppend = "&nbsp;" + formElem.value;
+        inputMarkup = $('<span />').attr('data-name', formElem.name);
+    } else {
+        toAppend = formElem.value;
+        inputMarkup = $('<p />').attr('data-name', formElem.name);
+    }
+    if (formElem.type === 'rawTextarea') {
+        inputMarkup[0].innerHTML = formElem.value;
+    } else {
+        inputMarkup.append(formElem.value);
+    }
+    $fieldContainer.append(inputMarkup);
+    
+    if (formElem.onclick) {
+        $(inputMarkup).on('vclick', function (ev) {
+            ev.stopImmediatePropagation();
+            formElem.onclick.call(formElem, ev);
+            return false;
+        });
+    }
+
+    if (formLayout.textStyleClass || formElem.textStyleClass) {
+        inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
     }
 }
 
@@ -488,32 +536,20 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         $(inputMarkup).on('input', function () {
             $(this).trigger('change');
         });
-    } else {
-        var toAppend;
-        if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
-            toAppend = "&nbsp;" + formElem.value;
-            inputMarkup = $('<span />').attr('data-name', formElem.name);
-        } else {
-            toAppend = formElem.value;
-            inputMarkup = $('<p />').attr('data-name', formElem.name);
+        
+        if (formElem.onclick) {
+            $(inputMarkup).on('vclick', function (ev) {
+                ev.stopImmediatePropagation();
+                formElem.onclick.call(formElem, ev);
+                return false;
+            });
         }
-        if (formElem.type === 'rawTextarea') {
-            inputMarkup[0].innerHTML = formElem.value;
-        } else {
-            inputMarkup.append(formElem.value);
-        }
-        $fieldContainer.append(inputMarkup);
-    }
-    if (formElem.onclick) {
-        $(inputMarkup).on('vclick', function (ev) {
-            ev.stopImmediatePropagation();
-            formElem.onclick.call(formElem, ev);
-            return false;
-        });
-    }
 
-    if (formLayout.textStyleClass || formElem.textStyleClass) {
-        inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
+        if (formLayout.textStyleClass || formElem.textStyleClass) {
+            inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
+        }
+    } else {
+        __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
 }
 
@@ -907,7 +943,9 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'data-corners': 'false'
     });
     var lbl = $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
-    if (formLayout.textStyleClass || formElem.textStyleClass) {
+    if (formLayout.titleStyleClass) {
+        lbl.addClass(formLayout.titleStyleClass);
+    } else if (formLayout.textStyleClass || formElem.textStyleClass) {
         lbl.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
     }
     $(inputMarkup).appendTo($fieldContainer);
@@ -1765,6 +1803,8 @@ Helix.Utils.refreshFormElement = function(formLayout, formElem, parentDiv, page,
         renderFn = __appendTextBox;
     } else if (formElem.type === 'textarea' || formElem.type === 'rawTextarea') {
         renderFn = __appendTextArea;
+    } else if (formElem.type === 'textlabel') {
+        renderFn = __appendTextLabel;
     } else if (formElem.type === 'pickList' || formElem.type === 'picklist') {
         renderFn = __appendSelectMenu;
     } else if (formElem.type === 'checkbox') {
@@ -1941,18 +1981,24 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
 
     if (formElem.type === 'separator') {
         if (formElem.mode === 'all') {
-            formElem.viewDOM = $('<hr />').appendTo(parentDiv);
-            formElem.editDOM = $('<hr />').appendTo(parentDiv);
+            formElem.viewDOM = $('<hr />');
+            formElem.editDOM = $('<hr />');
         } else if (formElem.mode === 'view') {
-            formElem.viewDOM = $('<hr />').appendTo(parentDiv);
+            formElem.viewDOM = $('<hr />');
         } else {
-            formElem.editDOM = $('<hr />').appendTo(parentDiv);
+            formElem.editDOM = $('<hr />');
         }
 
         if (formLayout.currentMode === 'view') {
             formElem.DOM = formElem.viewDOM;
         } else {
             formElem.DOM = formElem.editDOM;
+        }
+        if (formElem.styleClass && formElem.DOM) {
+            formElem.DOM.addClass(formElem.styleClass);
+        }
+        if (formElem.DOM) {
+            formElem.DOM.appendTo(parentDiv);
         }
 
         return;
