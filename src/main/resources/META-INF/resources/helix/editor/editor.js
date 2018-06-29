@@ -556,7 +556,8 @@
             if (this.options.defaultFont === 'Calibri') {
                 this.$editFrame.addClass('ui-editor-default-font');
             } else {
-                this.$editFrame.css('font-family', this.options.defaultFont);
+                this.styleChanges.push(['font', this.options.defaultFont]);
+                //this.$editFrame.css('font-family', this.options.defaultFont);
             }
         },
         update: function (val) {
