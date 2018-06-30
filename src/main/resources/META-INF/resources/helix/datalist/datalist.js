@@ -2714,7 +2714,9 @@ var globalDataListID = -1;
             var nxtSelection = $(enclosingLI).data('data');
             if (this.options.grouped) {
                 this.selectedGroup = $(enclosingLI).data('group');
-            }
+            } else {
+		this.selectedGroup = null;
+	    }
             if (this.selectedGroup) {
                 var isOverflow = $(enclosingLI).attr('data-overflow');
                 if (Number(isOverflow) === 1) {
