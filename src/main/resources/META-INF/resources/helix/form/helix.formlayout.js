@@ -747,6 +747,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         if (formElem.onenter) {
             $(inputMarkup).on("keydown", $.proxy(function (e) {
                 if (e.which === 13) {
+                    $(e.target).blur();
                     this.onenter.apply(e.target, this);
                     if (this.dismissAutoComplete) {
                         this.dismissAutoComplete();
