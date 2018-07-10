@@ -529,16 +529,17 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.onfocus) {
             $(inputMarkup).focus(formElem.onfocus);
         }
-        if (formElem.onclick) {
-            $(inputMarkup).on(Helix.clickEvent, formElem.onclick);
-            $(lbl).css('color', 'blue').on(Helix.clickEvent, formElem.onclick);
-        }
         $(inputMarkup).on('input', function () {
             $(this).trigger('change');
         });
         
         if (formElem.onclick) {
-            $(inputMarkup).on('vclick', function (ev) {
+            $(inputMarkup).on(Helix.clickEvent, function (ev) {
+                ev.stopImmediatePropagation();
+                formElem.onclick.call(formElem, ev);
+                return false;
+            });
+            $(lbl).css('color', 'blue').on(Helix.clickEvent, function (ev) {
                 ev.stopImmediatePropagation();
                 formElem.onclick.call(formElem, ev);
                 return false;

@@ -281,5 +281,13 @@
             }
         });
     }
-
+    
+    if (window.CordovaVersion >= 3 &&
+        window.CordovaRevision >= 9) {
+        $.extend(window.HelixFiles, {
+            markSynced: function(docID, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "markSynced", [ docID ]);
+            }
+        });
+    }
 })();

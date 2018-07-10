@@ -795,21 +795,29 @@ var globalDataListID = -1;
                     var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
                     var startIdx = preloadStartIdx + toAdd;
                     
+                    if (_self._preloadPromise) {
+                        // Wait for more data.
+                        _self._preloadPromise.then(_addToEnd);
+                        return;
+                    }
+                    if (!_self._prefetchedData) {
+                        // We could not get any more data for one reason or another. This function cannot proceed.
+                        oncomplete();
+                        return;
+                    }
                     if ((startIdx + windowSize) >= _self._prefetchedData.length) {
+                        // we need more data.
                         if (_self._preloadHitDataTop) {
                             toAdd = (_self._prefetchedData.length - (preloadStartIdx + windowSize));
                             startIdx = preloadStartIdx + toAdd;
                         } else{
+                            // We need more data
+                            _self._preloadPage(1, 2);                                
                             if (!_self._preloadPromise) {
-                                // We need more data;
-                                _self._preloadPage(1, 2);                                
+                                // We tried to get the data we need, but we couldn't 
+                                _self._preloadHitDataTop = true;
                             }
-                            if (_self._preloadPromise) {
-                                // Wait for more data.
-                                _self._preloadPromise.then(_addToEnd);
-                            } else {
-                                oncomplete();
-                            }
+                            _addToEnd();
                             return;
                         }
                     }
