@@ -2796,7 +2796,7 @@ var globalDataListID = -1;
         // Select the very first item in the list.
         selectFirst: function () {
             var _self = this;
-            $.each($(this.$wrapper).find('li'), function (idx, li) {
+            $.each($(this.$wrapper).find('li[data-deleted!="true"]'), function (idx, li) {
                 var obj = $(li).data('data');
                 if (obj) {
                     _self.setSelected(li);
