@@ -131,7 +131,7 @@
                     .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom hx-no-hscroll ui-editor-default-style hx-editor')
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
-            this.setDefaultFont(this.options.defaultFont);
+            this.setDefaultFont(this.options.defaultFont, this.options.defaultFontSize);
 
             this._attachEditFrameEvents();
         },
@@ -261,13 +261,12 @@
             var $popup = this.menuPopups[menuName] = $(this.DIV_TAG)
                     .attr({
                         'id': menuName + "_" + editor.name,
-                        'data-theme': 'c'
+                        'data-theme': 'a'
                     }).appendTo($parent);
 
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
                 'data-role': 'listview',
                 'data-inset': 'true',
-                'data-theme': 'c',
                 'class': 'hx-editor-menu'
             }).appendTo($popup);
             var allMenuOptions = [];
@@ -551,13 +550,17 @@
             this.currentStyles = {};
             this.styleChanges = [];
         },
-        setDefaultFont: function(font) {
+        setDefaultFont: function(font, fontSize) {
             this.options.defaultFont = font;
+            this.options.defaultFontSize = fontSize;
             if (this.options.defaultFont === 'Calibri') {
                 this.$editFrame.addClass('ui-editor-default-font');
             } else {
                 this.styleChanges.push(['font', this.options.defaultFont]);
                 //this.$editFrame.css('font-family', this.options.defaultFont);
+            }
+            if (fontSize  && !isNaN(fontSize)) {
+                this.styleChanges.push(['size', this.options.defaultFontSize]);
             }
         },
         update: function (val) {
