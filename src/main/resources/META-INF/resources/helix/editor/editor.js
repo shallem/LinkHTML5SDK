@@ -556,11 +556,13 @@
             if (this.options.defaultFont === 'Calibri') {
                 this.$editFrame.addClass('ui-editor-default-font');
             } else {
-                this.styleChanges.push(['font', this.options.defaultFont]);
+                // this.styleChanges.push(['font', this.options.defaultFont]);
                 //this.$editFrame.css('font-family', this.options.defaultFont);
+                this.$editFrame.children().wrap($('<div/>').css('font-family', this.options.defaultFont));
             }
             if (fontSize  && !isNaN(fontSize)) {
-                this.styleChanges.push(['size', this.options.defaultFontSize]);
+                //this.styleChanges.push(['size', this.options.defaultFontSize]);
+                this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize));
             }
         },
         update: function (val) {
