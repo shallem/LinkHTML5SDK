@@ -568,7 +568,7 @@
             }
             if (fontSize  && !isNaN(fontSize)) {
                 if (this.$editFrame.children().size() > 0) {
-                    this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize));
+                    this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize + 'pt'));
                 } else {
                     this.styleChanges.push(['size', this.options.defaultFontSize]);
                 }
