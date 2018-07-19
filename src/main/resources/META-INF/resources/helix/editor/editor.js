@@ -365,7 +365,7 @@
                     case 'apply':
                         return $(this.LI_TAG)
                                 .attr({
-                                    'data-theme': 'b'
+                                    'data-theme': 'c'
                                 })
                                 .appendTo(popupMenu)
                                 .append('Apply');
@@ -375,6 +375,9 @@
                         return $(this.LI_TAG)
                                 .appendTo(popupMenu)
                                 .append(linkName)
+                                .attr({
+                                    'data-theme': 'c'
+                                })
                                 .data('apply', function(_self, descriptor) {
                                     if (!_self._executeAction.apply(_self, descriptor)) {
                                         descriptor.push(descriptor);
@@ -556,13 +559,19 @@
             if (this.options.defaultFont === 'Calibri') {
                 this.$editFrame.addClass('ui-editor-default-font');
             } else {
-                // this.styleChanges.push(['font', this.options.defaultFont]);
                 //this.$editFrame.css('font-family', this.options.defaultFont);
-                this.$editFrame.children().wrap($('<div/>').css('font-family', this.options.defaultFont));
+                if (this.$editFrame.children().size() > 0) {
+                    this.$editFrame.children().wrap($('<div/>').css('font-family', this.options.defaultFont));
+                } else {
+                    this.styleChanges.push(['font', this.options.defaultFont]);
+                }
             }
             if (fontSize  && !isNaN(fontSize)) {
-                //this.styleChanges.push(['size', this.options.defaultFontSize]);
-                this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize));
+                if (this.$editFrame.children().size() > 0) {
+                    this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize));
+                } else {
+                    this.styleChanges.push(['size', this.options.defaultFontSize]);
+                }
             }
         },
         update: function (val) {
