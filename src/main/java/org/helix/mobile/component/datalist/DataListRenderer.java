@@ -87,10 +87,6 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("multiSelect: false,");
         }
-
-        if (!dlist.isShowButtons()) {
-            writer.write("showButtons: false,");
-        }
         
         if (dlist.getButtonPos() != null) {
             writer.write("buttonPos: '" + dlist.getButtonPos() + "',");

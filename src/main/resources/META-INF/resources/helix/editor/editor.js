@@ -464,8 +464,11 @@
         _appendFontSelection: function (popupMenu, buttonName, menuName, defaultValue) {
             var _self = this;
             var inputMarkup = $('<select />')
-                    .attr('data-corners', 'false')
-                    .attr('data-mini', 'true')
+                    .attr({
+                        'data-corners': 'false',
+                        'data-mini': 'true',
+                        'data-name' : 'font-family'
+                    })
                     .appendTo(popupMenu);
             $.each(this.options.font.split(','), function () {
                 $('<option />').attr({
@@ -489,6 +492,7 @@
         _appendFontSizeInput: function (popupMenu, buttonName, menuName) {
             var inputMarkup = $('<input />')
                     .attr('type', 'number')
+                    .attr('data-name', 'font-size')
                     .appendTo(popupMenu)
                     .val(this.options.defaultFontSize);
             $(inputMarkup).data('apply', function(_self, _input) {
@@ -528,7 +532,8 @@
             }
 
             $(this.A_TAG).attr({
-                'href': 'javascript:void(0);'
+                'href': 'javascript:void(0);',
+                'data-theme': 'c'
             })
                     .append('Clear ' + this._capitalizeFirstLetter(buttonName))
                     .appendTo($menu).buttonMarkup({
@@ -566,12 +571,14 @@
                     this.styleChanges.push(['font', this.options.defaultFont]);
                 }
             }
+            this.$fontMenu.find('select[data-name="font-family"]').val(this.options.defaultFont);
             if (fontSize  && !isNaN(fontSize)) {
                 if (this.$editFrame.children().size() > 0) {
                     this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize + 'pt'));
                 } else {
                     this.styleChanges.push(['size', this.options.defaultFontSize]);
                 }
+                this.$fontMenu.find('input[data-name="font-size"]').val(this.options.defaultFontSize);
             }
         },
         update: function (val) {

@@ -2329,7 +2329,7 @@ var globalDataListID = -1;
                 if (this.setSelected(target)) {
                     if ($(target).is('a[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
-                            this.options.splitAction(this.selected, this.selectedGroup, this.strings);
+                            this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings);
                         } else {
                             this._runContextAction(target);
                         }
