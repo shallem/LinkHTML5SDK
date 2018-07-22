@@ -1393,14 +1393,14 @@ function __refreshButtonGroup(formElem) {
 }
 
 function __refreshHTMLArea(formElem) {
-    if ($(formElem.editDOM).is(':visible')) {
+    if (formElem.editDOM === formElem.DOM) {
         var elem = $(formElem.DOM).find('[name="' + formElem.name + '"]');
         if (!formElem.value) {
             $(elem).editor('update', '');
         } else {
             $(elem).editor('update', formElem.value);
         }
-    } else if ($(formElem.viewDOM).is(':visible')) {
+    } else if (formElem.viewDOM) {
         var viewContainer = $(formElem.viewDOM).find('div[data-name="' + formElem.name + '"]').empty();
         viewContainer.append(formElem.value);
     }
