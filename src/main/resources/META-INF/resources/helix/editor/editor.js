@@ -582,6 +582,9 @@
             }
         },
         update: function (val) {
+            // Strip out closing br tags that cause unnecessary spaces ...
+            val = val.replace(/<\/br>/g, '');
+            
             this.$editFrame.html(val);
             if (!val) {
                 this.isFirstTyping = true;
