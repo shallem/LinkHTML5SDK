@@ -1377,6 +1377,8 @@ var globalDataListID = -1;
                     if (_filtered !== undefined && _filtered !== null) {
                         _self._filterMap[gFilterField] = _filterValue;
                         _self._refreshData(_self.options.filterDone, undefined, _filtered);
+                    } else {
+                        this._clearGlobalFilterMenuItem(gFilterField);
                     }
                 }
             }
@@ -1386,10 +1388,13 @@ var globalDataListID = -1;
                 this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
             }
         },
+        _clearGlobalFilterMenuItem: function(fField) {
+            this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
+            this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');            
+        },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
-                this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
-                this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
+                this._clearGlobalFilterMenuItem(fField);
             }
             // NOT all lists are filtered!
             if (this.$filter) {
