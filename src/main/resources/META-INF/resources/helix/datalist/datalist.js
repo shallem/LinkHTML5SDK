@@ -1373,8 +1373,11 @@ var globalDataListID = -1;
                     }
                 } else {
                     // Use itemList in the call below as filters can build on each other.
-                    _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(_self.options.filterDone, undefined, _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue));
+                    var _filtered = _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue);
+                    if (_filtered !== undefined && _filtered !== null) {
+                        _self._filterMap[gFilterField] = _filterValue;
+                        _self._refreshData(_self.options.filterDone, undefined, _filtered);
+                    }
                 }
             }
             if (Object.keys(this._filterMap).length > 0) {
@@ -1903,7 +1906,7 @@ var globalDataListID = -1;
             }).append($('<div/>').attr({
                 'class': 'hx-icon ui-icon-' + icon
             }))).appendTo(this.$sortDiv)
-                    .on(this.tapEvent, onclick);
+                    .on(this.tapEvent, null, this, onclick);
         },
         _prependSearchBox: function (options) {
             var _self = this;
@@ -2085,7 +2088,14 @@ var globalDataListID = -1;
 
             var $controlGroup = $('<div/>').appendTo(_self.$clearSelectionDiv);
             if (this.options.selectionButtonsCallback) {
-                this.options.selectionButtonsCallback.call(_self, $controlGroup);
+                if (this.options.selectionButtonsCallback.call(_self, $controlGroup) === true) {
+                    // Add the filter button.
+                    $controlGroup.append(this._addSortFilterButton(Helix.Utils.getUniqueID(), 'hx-filter-black', function (ev) {
+                        ev.stopImmediatePropagation();
+                        ev.data.displayGlobalFilterMenu(this);
+                        return false;
+                    }));
+                }
             }
             $controlGroup.controlgroup({
                 type: 'horizontal',
