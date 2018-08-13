@@ -2330,7 +2330,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
     });
     if (options.message) {
         content
-                .append($('<p/>')
+                .append($('<p/>').css('word-wrap', 'break-word')
                         .append(options.message ? options.message : ''));
     }
     if (form) {

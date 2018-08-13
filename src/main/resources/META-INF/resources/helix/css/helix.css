@@ -542,11 +542,6 @@ a {
     display: inline-block;
 }
 
-.ui-header .hx-button-bar {
-    margin: 0;
-    float: left;
-}
-
 .ui-header .hx-button-bar .ui-controlgroup-controls {
     display: block;
 }
@@ -560,6 +555,7 @@ a {
     float: none;
     display: block;
     position: static;
+    margin-left: 0em;
     margin-top: 0em;
     margin-bottom: 0em;
     margin-right: 0.2em;    

@@ -28,7 +28,9 @@ public class IconButtonRenderer extends CoreRenderer {
             writer.writeAttribute("id", clientId, "id");
         }
         writer.writeAttribute("name", clientId, "name");
-        writer.writeAttribute("style", "min-width: " + Integer.toString(button.getWidth()), null);
+        if (button.getWidth() != null) {
+            writer.writeAttribute("style", "min-width: " + button.getWidth(), null);
+        }
         writer.writeAttribute("href", button.getHref(), null);
         
         // ui-btn ui-btn-up-d ui-mini ui-btn-inline

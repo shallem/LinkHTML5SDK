@@ -585,6 +585,7 @@
             // Strip out closing br tags that cause unnecessary spaces ...
             val = val.replace(/<\/br>/g, '');
             
+            this.$editFrame.scrollTop(0);
             this.$editFrame.html(val);
             if (!val) {
                 this.isFirstTyping = true;
