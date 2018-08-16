@@ -410,3 +410,7 @@ textarea.ui-input-text {
     margin: 0;
     -webkit-user-select: none !important;
 }
+
+.hx-form-pad-top {
+    margin-top: 0.5em;
+}
