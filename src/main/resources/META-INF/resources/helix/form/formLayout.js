@@ -142,11 +142,11 @@
             this._fieldMap[formElem.name] = formElem;
             formElem.parentForm = this;
             formElem.origCondition = formElem.condition;
+            formElem.originalName = formElem.name;
             if (this.options.namespace) {
                 if (formElem.id) {
                     formElem.id = this.options.namespace + "_" + formElem.id;
                 }
-                formElem.originalName = formElem.name;
                 formElem.name = this.options.namespace + "_" + formElem.name;
             }
             if (formElem.type === 'controlset') {
@@ -236,7 +236,7 @@
             return false;
         },
     
-        _computeHidden : function(valuesMap) {
+        _computeHidden : function(valuesMap, updateHidden) {
             var idx = 0;
             var i = 0;
             for (idx = 0; idx < this.options.items.length; ++idx) {
@@ -246,20 +246,32 @@
                 if (formElem.type in this._groupedTypes || formElem.type === 'radio') {
                     for (i = 0; i < formElem.controls.length; ++i) {
                         var subItem = formElem.controls[i];
-                        this.__computeOneHidden(subItem, valuesMap);
+                        if (this.__computeOneHidden(subItem, valuesMap) &&
+                                updateHidden) {
+                            this.__updateValue(subItem.mode, subItem.name, subItem, {});
+                        }
                     }
                 } else if (formElem.type === 'subPanel') { 
                     for (i = 0; i < formElem.items.length; ++i) {
                         var subpItem = formElem.items[i];
-                        this.__computeOneHidden(subpItem, valuesMap);
+                        if (this.__computeOneHidden(subpItem, valuesMap) &&
+                                updateHidden) {
+                            this.__updateValue(subpItem.mode, subpItem.name, subpItem, {});                            
+                        }
                     }
                 }
-                this.__computeOneHidden(formElem, valuesMap);
+                if (this.__computeOneHidden(formElem, valuesMap) &&
+                        updateHidden) {
+                    this.__updateValue(formElem.mode, formElem.name, formElem, {});                    
+                }
             }
         },
         
-        refreshHidden: function(name) {
-            
+        refreshHidden: function(valuesMap) {
+            if (!valuesMap) {
+                valuesMap = this.getValues();
+            }
+            this._computeHidden(valuesMap, true);
         },
     
         updateItem: function(name, updatedProperties, reRenderItem) {
@@ -810,6 +822,7 @@
         setValue: function(name, value) {
             var item, subItem;
             name = this._stripNamespace(name);
+            item = this._fieldMap[name];
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 item = this.options.items[idx];
                 var fieldID = item.name;
@@ -841,7 +854,7 @@
             
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             var valuesObj = {};
-            if (value) {
+            if (value !== null && value !== undefined) {
                 valuesObj[name] = value;
             }
             this.__refreshOneValue(mode, item, valuesObj);
@@ -879,8 +892,11 @@
             } else {
                 thisField = $(fld.DOM).find(fldSelector);
             }
-            var fldType = this._typeMap[name];
+            if (thisField.length === 0) {
+                return (fld.defaultValue ? fld.defaultValue : null);
+            }
             
+            var fldType = this._typeMap[name];
             // Checkboxes and radios are handled the same regardless of mode.
             if (fldType === 'checkbox' ||
                 fldType === 'onoff') {
@@ -936,10 +952,13 @@
         },
         
         getField: function(name) {
+            name = this._stripNamespace(name);
             return this._fieldMap[name];
         },
         
         getFieldElement: function(name) {
+            name = this._stripNamespace(name);
+            
             var fld = this._fieldMap[name];
             var ret = null;
             if (fld) {
@@ -968,6 +987,8 @@
         },
         
         hideField : function(name) {
+            name = this._stripNamespace(name);
+            
             var fld = this._fieldMap[name];
             if (!fld) {
                 return;
@@ -978,6 +999,7 @@
         },
         
         showField: function(name) {
+            name = this._stripNamespace(name);
             var fld = this._fieldMap[name];
             fld.hidden = false;
             fld.condition = fld.origCondition;
@@ -985,6 +1007,7 @@
         },
         
         isHidden: function(name) {
+            name = this._stripNamespace(name);
             var fld = this._fieldMap[name];
             return fld.hidden;
         },

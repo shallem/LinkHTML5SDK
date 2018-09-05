@@ -2067,7 +2067,7 @@ function initPersistence(persistence) {
             this.list(function(results,error) {
                 if (!results) {
                     if (error) {
-                        alert(error);
+                        alert(error.message);
                     }
                     return;
                 }

@@ -172,7 +172,11 @@ public class DataListRenderer extends CoreRenderer {
 
         // Selection
         if (dlist.getSelectAction() != null) {
-            writer.append(",selectAction: function(row,group,strings,contextArgs) {" + dlist.getSelectAction() + "}");
+            if (dlist.getSelectAction().equalsIgnoreCase("true")) {
+                writer.append(",selectAction: function() { return true; }");
+            } else {
+                writer.append(",selectAction: function(row,group,strings,contextArgs) {" + dlist.getSelectAction() + "}");
+            }
         }
         if (dlist.getSwipeLeftAction() != null) {
             writer.append(",swipeLeftAction: function(row) {" + dlist.getSwipeLeftAction() + "}");

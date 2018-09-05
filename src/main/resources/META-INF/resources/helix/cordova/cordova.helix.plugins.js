@@ -290,4 +290,12 @@
             }
         });
     }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 10) {
+        $.extend(window.HelixBulkContacts, {
+            deleteContact: function(nativeID, success, failure) {
+                return cordova.exec(success, failure, "HelixBulkContacts", "deleteContact", [ nativeID ]);
+            }
+        });
+    }
 })();

@@ -23,7 +23,7 @@
         <attribute>
             <name>selectAction</name>
             <required>false</required>
-            <type>java.lang.Object</type>
+            <type>java.lang.String</type>
             <description>JavaScript expression to invoke when the user taps a list item.</description>
         </attribute>
         <attribute>

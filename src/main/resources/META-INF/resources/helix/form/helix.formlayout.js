@@ -698,18 +698,16 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         });
 
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
+        var lbl = $('<label />').attr({
+            'for': inputID,
+            'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
+        });
         var textContainer = $('<div />').attr({
             'data-role': 'fieldcontain',
             'style': formLayout.computedFieldStyle,
             'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass
-        })
-                .append($('<label />').attr({
-                    'for': inputID,
-                    'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
-                })
-                        .append(formElem.fieldTitle)
-                        )
-                .append(inputMarkup);
+        }).append(lbl.append(formElem.fieldTitle))
+            .append(inputMarkup);
         $fieldContainer.append(textContainer);
         if (formElem.computedStyleClass) {
             $fieldContainer.addClass(formElem.computedStyleClass);
@@ -767,6 +765,14 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 $(uiInputText).addClass(formElem.computedStyleClass);
             }
         }
+        
+        if (formElem.labelClick) {
+            $(lbl).css('color', 'blue').on(Helix.clickEvent, function (ev) {
+                ev.stopImmediatePropagation();
+                formElem.labelClick.call(formElem, $(inputMarkup).val());
+                return false;
+            });
+        }
 
         // Add in autocomplete.
         if (formElem.autocomplete && formElem.autocompleteSelect) {
@@ -823,9 +829,12 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             formElem.__noblur = true;
                             autoCompleteList.empty();
                             if (LIs && LIs.length) {
-                                if (LIs.length === 1 && LIs[0] === _self.val()) {
+                                if (LIs.length === 1 && 
+                                        Helix.Utils.isString(LIs[0]) &&
+                                        LIs[0].toLowerCase().indexOf(queryText.toLowerCase()) >= 0) {
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
+                                    $(_self).val(LIs[0]);
                                     formElem.__noblur = false;
                                 } else {
                                     $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function () {
@@ -2353,13 +2362,19 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
         $(popup).popup({});
         $(popup).trigger('create');
         $.mobile.activePage.trigger('enhanceHeaders');
-        $(popup).on('popupafterclose', null, options, function (ev) {
-            if (ev.data.oncomplete) {
-                ev.data.oncomplete();
+    }
+    $(popup).on('popupafterclose', null,  options, function (ev) {
+        if (ev.data.oncomplete) {
+            ev.data.oncomplete();
+        }
+        $(this).remove();
+    });
+    if (options.beforePosition) {
+        $(popup).one('popupbeforeposition', null, options, function(ev) {
+            if (ev.data.beforePosition) {
+                ev.data.beforePosition(this);
             }
-            $(this).remove();
         });
-        $(popup).popup("open");
     }
     if (options.popupDismiss) {
         $(popup).on('popupdismiss', null, options, function (ev) {
@@ -2367,6 +2382,9 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
                 ev.data.popupDismiss();
             }
         });
+    }
+    if (options.noOpen !== true) {
+        $(popup).popup("open");
     }
 
     $(window).on('navigate.popup', function (e) {
@@ -2391,7 +2409,7 @@ Helix.Layout.createYesNoCancelDialog = function (options) {
     return Helix.Layout._layoutPopup(popup, options, [yesBtn, noBtn, cancelBtn]);
 };
 
-Helix.Layout.createConfirmDialog = function (options) {
+Helix.Layout.createFormDialog = function(options, form) {
     if (options.onclick && !options.onclick()) {
         return null;
     }
@@ -2402,7 +2420,11 @@ Helix.Layout.createConfirmDialog = function (options) {
     var closebtn = Helix.Layout._createButton(popupId + '-cancel', '105', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
     var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
 
-    return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn]);
+    return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn], form);
+};
+
+Helix.Layout.createConfirmDialog = function (options) {
+    return Helix.Layout.createFormDialog(options, null);
 };
 
 Helix.Layout.createAlertDialog = function(options) {

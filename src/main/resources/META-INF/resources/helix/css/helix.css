@@ -148,6 +148,12 @@
     position: relative;    
 }
 
+.hx-btn-inner-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .hx-btn-border {
     border-color: black !important;
     border: 1px;
@@ -894,6 +900,10 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
 
 .hx-noicon-button div.ui-btn-text {
    color: darkblue;
+}
+
+.hx-noicon-button div.ui-btn-text.hx-btn-text-white {
+    color: white;
 }
 
 /* Make sure button text container fills the surrounding ui-btn-inner. This allows us to center the

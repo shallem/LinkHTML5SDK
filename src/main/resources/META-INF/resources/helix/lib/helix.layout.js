@@ -320,6 +320,17 @@ Helix.Layout = {
         }).append($('<div/>').attr({
             'class': 'hx-icon ui-icon-' + iconClass
         })));
+    },
+    
+    makeTextButton: function(buttonText, textClass, buttonClass, buttonID) {
+        return $('<a/>').attr({
+            'id': buttonID ? buttonID : Helix.Utils.getUniqueID(),
+            'class': 'ui-btn hx-no-webkit-select hx-noicon-button'
+        }).append($('<div/>').attr({
+            'class': 'hx-btn-inner hx-btn-inner-text ' + (buttonClass ? buttonClass : '')
+        }).append($('<div/>').attr({
+            'class': 'ui-btn-text ' + (textClass ? textClass : '')
+        }).append(buttonText)));
     }
 };
 
