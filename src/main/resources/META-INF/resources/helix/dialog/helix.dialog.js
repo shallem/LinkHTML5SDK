@@ -25,6 +25,7 @@
             dismissText: "Dismiss",
             positionTo: 'origin',
             noOpen: true,
+            noRemoveOnClose: true,
             oncomplete: null /* called whenever the user dismisses the dialog, even if done by tapping outside the dialog. */
         }
     };

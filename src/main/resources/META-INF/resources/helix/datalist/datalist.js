@@ -1804,7 +1804,7 @@ var globalDataListID = -1;
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
-        _doRemoteSearch: function (searchText, localResultsColl, opaque) {
+        _doRemoteSearch: function (searchText, localResultsColl, opaque, noDelay) {
             var _self = this;
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
@@ -1820,7 +1820,7 @@ var globalDataListID = -1;
                     }, localResultsColl, opaque);
                 }
                 _self.__searchReadyTimeout = null;
-            }, 1000);
+            }, (noDelay ? 0 : 1000));
 
         },
         getCurrentSearchText: function () {
@@ -1833,13 +1833,13 @@ var globalDataListID = -1;
         setCurrentSearchText: function (searchQry, doSearch) {
             this.$searchBox.val(searchQry);
             if (doSearch === true) {
-                this._doSearch();
+                this._doSearch(null, true);
             }
         },
         runSearch: function(opaque) {
             this._doSearch(opaque);
         },
-        _doSearch: function (opaque) {
+        _doSearch: function (opaque, noDelay) {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();
             if (_self.__searchReadyTimeout) {
@@ -1867,12 +1867,12 @@ var globalDataListID = -1;
                                 oncomplete.call(_self);
                             }
                             if (_self.options.indexedSearch) {
-                                _self._doRemoteSearch(searchText, res, opaque);
+                                _self._doRemoteSearch(searchText, res, opaque, false);
                             }
                         }, optionsOverrides);
                     }, _self.originalList, opaque);
                 } else {
-                    _self._doRemoteSearch(searchText, _self.originalList, opaque);
+                    _self._doRemoteSearch(searchText, _self.originalList, opaque, noDelay);
                 }
             }
         },
@@ -2485,9 +2485,9 @@ var globalDataListID = -1;
 
             // Click
             if (this.options.selectAction) {
-                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"]', this, function (event) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"],li[data-overflow="1"]', this, function (event) {
                     var _self = event.data;
-                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"]');
+                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
                     if (_tgt.length) {
                         event.stopImmediatePropagation();
                         return _self._handleClick(event, _tgt);

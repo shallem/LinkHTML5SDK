@@ -2367,7 +2367,9 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
         if (ev.data.oncomplete) {
             ev.data.oncomplete();
         }
-        $(this).remove();
+        if (ev.data.noRemoveOnClose !== true) {
+            $(this).remove();
+        }
     });
     if (options.beforePosition) {
         $(popup).one('popupbeforeposition', null, options, function(ev) {
