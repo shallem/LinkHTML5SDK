@@ -2,7 +2,7 @@
     <name>helix</name>
       
     <application>
-        <resource-handler>org.helix.mobile.application.PrimeFacesMobileResourceHandler</resource-handler>
+        <resource-handler>org.helix.mobile.application.LinkSDKMobileResourceHandler</resource-handler>
         <system-event-listener>
             <system-event-listener-class>org.helix.mobile.application.PostConstructApplicationEventListener</system-event-listener-class>
             <system-event-class>javax.faces.event.PostConstructApplicationEvent</system-event-class>

@@ -28,7 +28,10 @@ function definePersistenceMigrations() {
     var Migrator = {
         migrations: [],
       
-        version: function(t, callback) {
+        version: function(t, callback, onerror) {
+            if (!onerror) {
+                onerror = null;
+            }
             if (!t) {
                 persistence.transaction(function(tx){
                     Migrator.version(tx, callback);
@@ -36,10 +39,12 @@ function definePersistenceMigrations() {
                 return;
             }
           
-            t.executeSql('SELECT current_version FROM schema_version', null, function(result){
-                if (result.length == 0) {
-                    t.executeSql('INSERT INTO schema_version VALUES (0)', null, function(){
-                        callback(0);
+            t.executeSql('SELECT current_version FROM schema_version', onerror, function(result){
+                if (result.length === 0) {
+                    persistence.transaction(function(tx){
+                        tx.executeSql('INSERT INTO schema_version VALUES (0)', null, function(){
+                            callback(0);
+                        });
                     });
                 } else {
                     callback(result[0].current_version);
@@ -65,8 +70,8 @@ function definePersistenceMigrations() {
                     up: function() { }, 
                     down: function() { }
                 });
-                if (callback) callback();
             });
+            Migrator.version(t, callback);
         },
       
         // Method should only be used for testing

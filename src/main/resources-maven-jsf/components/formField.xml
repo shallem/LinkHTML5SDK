@@ -279,5 +279,18 @@
             <defaultValue>false</defaultValue>
             <description>Indicates that this form field is disabled.</description>
         </attribute>
+        <attribute>
+            <name>noBorder</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Disable the border class on this item only</description>
+        </attribute>
+        <attribute>
+            <name>mode</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Mode applied to this form element. Values are either view or edit.</description>
+        </attribute>
     </attributes>
 </component>

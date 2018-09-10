@@ -140,6 +140,12 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getTheme() != null) {
             writer.write(", 'theme' : '" + ffield.getTheme() + "'");
         }
+        if (ffield.getMode() != null) {
+            writer.write(", 'mode' : '" + ffield.getMode() + "'");
+        }
+        if (Boolean.TRUE.equals(ffield.isNoBorder())) {
+            writer.write(", 'noBorder' : true");
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

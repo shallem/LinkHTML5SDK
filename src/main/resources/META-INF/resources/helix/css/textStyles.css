@@ -24,6 +24,10 @@ and open the template in the editor.
     font-size: 20pt;
 }
 
+.textSizeXXLarge .textCategoryLarge {
+    font-size: 21pt;
+}
+
 .textCategoryMedium, 
 label.ui-select.textCategoryMedium, 
 label.ui-input-text.textCategoryMedium,
@@ -62,6 +66,16 @@ textarea.ui-input-text.textCategoryMedium,
 .textSizeXLarge textarea.ui-input-text.textCategoryMedium,
 .textSizeXLarge .textCategoryMedium .ui-btn .ui-btn-inner {
     font-size: 17pt;
+}
+
+.textSizeXXLarge .textCategoryMedium, 
+.textSizeXXLarge label.ui-select.textCategoryMedium, 
+.textSizeXXLarge label.ui-input-text.textCategoryMedium,
+.textSizeXXLarge span.ui-btn-txt.textCategoryMedium,
+.textSizeXXLarge input.ui-input-text.textCategoryMedium,
+.textSizeXXLarge textarea.ui-input-text.textCategoryMedium,
+.textSizeXXLarge .textCategoryMedium .ui-btn .ui-btn-inner {
+    font-size: 19pt;
 }
 
 .textCategorySmall, 
@@ -104,6 +118,16 @@ textarea.ui-input-text.textCategorySmall,
     font-size: 15pt;
 }
 
+.textSizeXXLarge .textCategorySmall, 
+.textSizeXXLarge label.ui-select.textCategorySmall, 
+.textSizeXXLarge label.ui-input-text.textCategorySmall,
+.textSizeXXLarge .ui-btn-inner .ui-btn-txt.textCategorySmall,
+.textSizeXXLarge input.ui-input-text.textCategorySmall,
+.textSizeXXLarge textarea.ui-input-text.textCategorySmall,
+.textSizeXXLarge .textCategorySmall .ui-btn .ui-btn-inner {
+    font-size: 17pt;
+}
+
 .textCategoryXSmall, 
 label.ui-select.textCategoryXSmall, 
 label.ui-input-text.textCategoryXSmall,
@@ -142,6 +166,16 @@ textarea.ui-input-text.textCategoryXSmall,
 .textSizeXLarge textarea.ui-input-text.textCategoryXSmall,
 .textSizeXLarge .textCategoryXSmall .ui-btn .ui-btn-inner {
     font-size: 13pt;
+}
+
+.textSizeXXLarge .textCategoryXSmall, 
+.textSizeXXLarge label.ui-select.textCategoryXSmall, 
+.textSizeXXLarge label.ui-input-text.textCategoryXSmall,
+.textSizeXXLarge .ui-btn-inner .ui-btn-txt.textCategoryXSmall,
+.textSizeXXLarge input.ui-input-text.textCategoryXSmall,
+.textSizeXXLarge textarea.ui-input-text.textCategoryXSmall,
+.textSizeXXLarge .textCategoryXSmall .ui-btn .ui-btn-inner {
+    font-size: 15pt;
 }
 
 .textBold {

@@ -185,10 +185,6 @@
     height: 32px;
 }
 
-.ui-btn .ui-btn-text {
-    font-weight: normal !important;
-}
-
 .ui-panel-content-wrap {
     -webkit-touch-callout: none !important;
 }

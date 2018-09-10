@@ -16,8 +16,8 @@
                     }
             ,
             font: // font names in the font popup
-                    "Select Font,Arial,Arial Black,Calibri,Comic Sans MS,Courier New,Narrow,Garamond," +
-                    "Georgia,Impact,Sans Serif,Serif,Tahoma,Trebuchet MS,Verdana",
+                    "Select Font,Andale Mono,Arial,Arial Black,Calibri,Cambria,Comic Sans MS,Courier New," +
+                    "Georgia,Impact,Trebuchet MS,Times New Roman,Verdana",
             tabIndex: -1,
             parentElement: null,
             defaultFont: 'Calibri',
@@ -44,10 +44,10 @@
                     .appendTo($parent);
 
             if (this.options.parentElement) {
-                var evName = 'hxLayoutDone.' + editor.name;
+                /*var evName = 'hxLayoutDone.' + editor.name;
                 $(this.page).off(evName).on(evName, this, function (ev) {
                     $(ev.data.$main).height($(ev.data.options.parentElement).height());
-                });
+                });*/
             }
 
             // Add the first group to the toolbar
@@ -131,6 +131,7 @@
                     .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom hx-no-hscroll ui-editor-default-style hx-editor')
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
+            this.setDefaultFont(this.options.defaultFont, this.options.defaultFontSize);
 
             this._attachEditFrameEvents();
         },
@@ -260,13 +261,12 @@
             var $popup = this.menuPopups[menuName] = $(this.DIV_TAG)
                     .attr({
                         'id': menuName + "_" + editor.name,
-                        'data-theme': 'c'
+                        'data-theme': 'a'
                     }).appendTo($parent);
 
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
                 'data-role': 'listview',
                 'data-inset': 'true',
-                'data-theme': 'c',
                 'class': 'hx-editor-menu'
             }).appendTo($popup);
             var allMenuOptions = [];
@@ -365,7 +365,7 @@
                     case 'apply':
                         return $(this.LI_TAG)
                                 .attr({
-                                    'data-theme': 'b'
+                                    'data-theme': 'c'
                                 })
                                 .appendTo(popupMenu)
                                 .append('Apply');
@@ -375,6 +375,9 @@
                         return $(this.LI_TAG)
                                 .appendTo(popupMenu)
                                 .append(linkName)
+                                .attr({
+                                    'data-theme': 'c'
+                                })
                                 .data('apply', function(_self, descriptor) {
                                     if (!_self._executeAction.apply(_self, descriptor)) {
                                         descriptor.push(descriptor);
@@ -461,8 +464,11 @@
         _appendFontSelection: function (popupMenu, buttonName, menuName, defaultValue) {
             var _self = this;
             var inputMarkup = $('<select />')
-                    .attr('data-corners', 'false')
-                    .attr('data-mini', 'true')
+                    .attr({
+                        'data-corners': 'false',
+                        'data-mini': 'true',
+                        'data-name' : 'font-family'
+                    })
                     .appendTo(popupMenu);
             $.each(this.options.font.split(','), function () {
                 $('<option />').attr({
@@ -486,6 +492,7 @@
         _appendFontSizeInput: function (popupMenu, buttonName, menuName) {
             var inputMarkup = $('<input />')
                     .attr('type', 'number')
+                    .attr('data-name', 'font-size')
                     .appendTo(popupMenu)
                     .val(this.options.defaultFontSize);
             $(inputMarkup).data('apply', function(_self, _input) {
@@ -525,7 +532,8 @@
             }
 
             $(this.A_TAG).attr({
-                'href': 'javascript:void(0);'
+                'href': 'javascript:void(0);',
+                'data-theme': 'c'
             })
                     .append('Clear ' + this._capitalizeFirstLetter(buttonName))
                     .appendTo($menu).buttonMarkup({
@@ -550,7 +558,34 @@
             this.currentStyles = {};
             this.styleChanges = [];
         },
+        setDefaultFont: function(font, fontSize) {
+            this.options.defaultFont = font;
+            this.options.defaultFontSize = fontSize;
+            if (this.options.defaultFont === 'Calibri') {
+                this.$editFrame.addClass('ui-editor-default-font');
+            } else {
+                //this.$editFrame.css('font-family', this.options.defaultFont);
+                if (this.$editFrame.children().size() > 0) {
+                    this.$editFrame.children().wrap($('<div/>').css('font-family', this.options.defaultFont));
+                } else {
+                    this.styleChanges.push(['font', this.options.defaultFont]);
+                }
+            }
+            this.$fontMenu.find('select[data-name="font-family"]').val(this.options.defaultFont);
+            if (fontSize  && !isNaN(fontSize)) {
+                if (this.$editFrame.children().size() > 0) {
+                    this.$editFrame.children().wrap($('<div/>').css('font-size', this.options.defaultFontSize + 'pt'));
+                } else {
+                    this.styleChanges.push(['size', this.options.defaultFontSize]);
+                }
+                this.$fontMenu.find('input[data-name="font-size"]').val(this.options.defaultFontSize);
+            }
+        },
         update: function (val) {
+            // Strip out closing br tags that cause unnecessary spaces ...
+            val = val.replace(/<\/br>/g, '');
+            
+            this.$editFrame.scrollTop(0);
             this.$editFrame.html(val);
             if (!val) {
                 this.isFirstTyping = true;

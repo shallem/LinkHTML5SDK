@@ -257,6 +257,10 @@ function config(persistence, dialect) {
         } else {
             if (queries.length === 0) {
                 callback();
+            } else if (tx) {
+                executeQueriesSeq(tx, queries, function(_, err) {
+                    callback(tx, err);
+                });
             } else {
                 this.transaction(function(tx) {
                     executeQueriesSeq(tx, queries, function(_, err) {
@@ -316,8 +320,7 @@ function config(persistence, dialect) {
         // Stop tracking everything we flushed. This also ensures that if async calls
         // to flush happen at the same time only one of them attempts to persist the list
         // of tracked objects (which have now been moved into the local persistObjArray).
-        if (stopTracking === true ||
-            stopTracking === undefined) {
+        if (stopTracking !== false) {
             for (var i = 0; i < persistObjArray.length; ++i) {
                 id = persistObjArray[i].id;
                 delete session.trackedObjects[id];            

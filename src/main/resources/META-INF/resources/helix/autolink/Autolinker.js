@@ -623,7 +623,10 @@ Autolinker.prototype = {
 					anchorTagStackCount = Math.max( anchorTagStackCount - 1, 0 );  // attempt to handle extraneous </a> tags by making sure the stack count never goes below 0
 				}
 
-			} else if( nodeType === 'text' && anchorTagStackCount === 0 ) {  // Process text nodes that are not within an <a> tag
+			} else if( nodeType === 'element' && node.getTagName() === 'style' && !node.isClosing() ) {
+                            // Skip the next node (which is the text content of the style)
+                            ++i;
+                        } else if( nodeType === 'text' && anchorTagStackCount === 0 ) {  // Process text nodes that are not within an <a> tag
 				var textNodeMatches = this.parseText( node.getText(), node.getOffset() );
 
 				matches.push.apply( matches, textNodeMatches );

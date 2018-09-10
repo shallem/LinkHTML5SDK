@@ -28,28 +28,9 @@ public class IconButtonRenderer extends CoreRenderer {
             writer.writeAttribute("id", clientId, "id");
         }
         writer.writeAttribute("name", clientId, "name");
-        
-        
-        /*writer.writeAttribute("data-role", "button", null);
-        if (button.getIconPos() != null) {
-            writer.writeAttribute("data-iconpos", button.getIconPos(), null);            
-        } else {        
-            writer.writeAttribute("data-iconpos", "bottom", null);
+        if (button.getWidth() != null) {
+            writer.writeAttribute("style", "min-width: " + button.getWidth(), null);
         }
-        if (button.getImage() != null) {
-            writer.writeAttribute("data-icon", button.getImage(), null);
-        } else if (button.getIcon() != null) {
-            writer.writeAttribute("data-icon", button.getIcon(), null);
-            writer.writeAttribute("data-theme", button.getTheme(), null);
-            useStdButton = true;
-        }
-        
-        writer.writeAttribute("data-inline", "true", null);
-        writer.writeAttribute("data-corners", "false", null);
-        writer.writeAttribute("data-shadow", "false", null);
-        writer.writeAttribute("data-iconshadow", "false", null);
-        writer.writeAttribute("data-mini", "true", null);*/
-        writer.writeAttribute("style", "min-width: " + Integer.toString(button.getWidth()), null);
         writer.writeAttribute("href", button.getHref(), null);
         
         // ui-btn ui-btn-up-d ui-mini ui-btn-inline
@@ -64,8 +45,12 @@ public class IconButtonRenderer extends CoreRenderer {
             writer.writeAttribute("onclick", onclick, "onclick");
         }
         
+        String borderClass = "";
+        if (button.isBorder()) {
+            borderClass = " hx-btn-border";
+        }
         writer.startElement("div", button);
-        writer.writeAttribute("class", "hx-btn-inner", null);
+        writer.writeAttribute("class", "hx-btn-inner" + borderClass, null);
         
         writer.startElement("div", component);
         writer.writeAttribute("class", "hx-icon ui-icon-" + button.getImage(), null);

@@ -18,12 +18,14 @@
 
 package org.helix.mobile.application;
 
+import java.util.UUID;
 import javax.faces.application.Resource;
 import javax.faces.application.ResourceWrapper;
-import org.primefaces.util.Constants;
+import org.apache.commons.lang3.StringUtils;
+import org.helix.mobile.util.VersionProvider;
 
 /**
- * {@link ResourceWrapper} which appends the version of PrimeFaces to the URL.
+ * {@link ResourceWrapper} which appends the version of the Link SDK to the URL.
  *
  * @author Thomas Andraschko / last modified by $Author: $
  * @version $Revision: $
@@ -37,7 +39,12 @@ public class PrimeFacesResource extends ResourceWrapper {
 	public PrimeFacesResource(final Resource resource) {
 		super();
 		wrapped = resource;
-		version = "&amp;v=" + Constants.VERSION;
+		// get current version
+		if (StringUtils.isNotBlank(VersionProvider.getVersion())) {
+			version = "&amp;v=" + VersionProvider.getVersion();
+		} else {
+			version = UUID.randomUUID().toString();
+		}
 	}
 
 	@Override

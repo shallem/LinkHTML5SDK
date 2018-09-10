@@ -466,33 +466,9 @@ var globalDataListID = -1;
                 this.$parent.attr('data-icon', false);
             }
 
-            var ad = this.options.autodividers;
-            if (!ad) {
-                ad = false;
-            } else if (Helix.Utils.isString(ad)) {
-                if (ad.toLowerCase() === 'false') {
-                    ad = false;
-                } else {
-                    ad = true;
-                }
-            }
-            this.hasAutodividers = ad;
-
-            var ads = function (elt) {
-                var callback = _self.options.autodividersSelectorCallback;
-
-                var obj = $(elt).data('data');
-                if (callback && obj && $(elt).attr('data-deleted') !== 'true') {
-                    return callback(elt, _self.displayList, _self._currentSort, obj);
-                }
-
-                return null;
-            };
-            this.autodividerSelector = ads;
-
+            this.refreshDividerOptions();
+            
             this.$parent.listview({
-                //autodividers: ad,
-                //autodividersSelector: ads,
                 dividerTheme: 'd',
                 headerTheme: 'd'
             });
@@ -534,6 +510,32 @@ var globalDataListID = -1;
 
                 });
             }
+        },
+        refreshDividerOptions: function() {
+            var _self = this;
+            var ad = this.options.autodividers;
+            if (!ad) {
+                ad = false;
+            } else if (Helix.Utils.isString(ad)) {
+                if (ad.toLowerCase() === 'false') {
+                    ad = false;
+                } else {
+                    ad = true;
+                }
+            }
+            this.hasAutodividers = ad;
+
+            var ads = function (elt) {
+                var callback = _self.options.autodividersSelectorCallback;
+
+                var obj = $(elt).data('data');
+                if (callback && obj && $(elt).attr('data-deleted') !== 'true') {
+                    return callback(elt, _self.displayList, _self._currentSort, obj);
+                }
+
+                return null;
+            };
+            this.autodividerSelector = ads;
         },
         refreshDividers: function() {
             this._refreshDividers();
@@ -657,7 +659,7 @@ var globalDataListID = -1;
             var _self = this;
             _self._preloadPromise = new Promise(function (resolve, reject) {
                 var _prefetchedItems = [];
-                displayCollection.newEach({
+                displayCollection.noFlush().newEach({
                     startFn: function (ct) {
                         // if we don't get the full number of elems we asked for, we have run out of
                         // data
@@ -781,7 +783,7 @@ var globalDataListID = -1;
                                 _self._forceRerender();
                                 oncomplete();
                             }, 15);
-                        }, _self.options.emptyMessage, lastID, true, _self.extraItems, _self.options);
+                        }, _self.options.emptyMessage, lastID, _self.extraItems, _self.options);
                         return;
                     } else {
                         oncomplete();
@@ -795,21 +797,29 @@ var globalDataListID = -1;
                     var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
                     var startIdx = preloadStartIdx + toAdd;
                     
+                    if (_self._preloadPromise) {
+                        // Wait for more data.
+                        _self._preloadPromise.then(_addToEnd);
+                        return;
+                    }
+                    if (!_self._prefetchedData) {
+                        // We could not get any more data for one reason or another. This function cannot proceed.
+                        oncomplete();
+                        return;
+                    }
                     if ((startIdx + windowSize) >= _self._prefetchedData.length) {
+                        // we need more data.
                         if (_self._preloadHitDataTop) {
                             toAdd = (_self._prefetchedData.length - (preloadStartIdx + windowSize));
                             startIdx = preloadStartIdx + toAdd;
                         } else{
+                            // We need more data
+                            _self._preloadPage(1, 2);                                
                             if (!_self._preloadPromise) {
-                                // We need more data;
-                                _self._preloadPage(1, 2);                                
+                                // We tried to get the data we need, but we couldn't 
+                                _self._preloadHitDataTop = true;
                             }
-                            if (_self._preloadPromise) {
-                                // Wait for more data.
-                                _self._preloadPromise.then(_addToEnd);
-                            } else {
-                                oncomplete();
-                            }
+                            _addToEnd();
                             return;
                         }
                     }
@@ -860,7 +870,7 @@ var globalDataListID = -1;
                                     _self._forceRerender();
                                     oncomplete();
                                 }, 100);
-                            }, _self.options.emptyMessage, [lastID, lastTop], true, _self.extraItems, _self.options);
+                            }, _self.options.emptyMessage, [lastID, lastTop], _self.extraItems, _self.options);
                             return;
                         }
                     } else {
@@ -899,7 +909,7 @@ var globalDataListID = -1;
                 return;
             }
 
-	    if (lastScroll >= 0 && scrollPos < 0) {
+	    if (lastScroll >= -10 && scrollPos < -10) {
                 if (!_self.refreshInProgress && _self._renderWindowStart === 0 && _self.options.pullToRefresh) {
                     _self.options.pullToRefresh.call(this);
                     _self._clearGlobalFilterMenu();
@@ -969,7 +979,7 @@ var globalDataListID = -1;
                     };
                 }
 
-                _self._refreshSortContainer(sorts);
+                _self.refreshSortContainer(sorts);
             }
             /* itemList is the current query collection. Display list is an array
              * of the currently displayed items.
@@ -1040,7 +1050,7 @@ var globalDataListID = -1;
                     oncomplete(_self);
                 }
                 _self.isDirty = false;
-            }, true, extraItems, _self.originalList, undefined, _options);
+            }, extraItems, _self.originalList, undefined, _options);
         },
         
         _installScrollHandler: function() {
@@ -1116,7 +1126,7 @@ var globalDataListID = -1;
                 if (list) {
                     _self.originalList = _self.unfilteredList = list;
                 }
-            }, true, extraItems, displayCollection, renderWindowStart, _options);
+            }, extraItems, displayCollection, renderWindowStart, _options);
         },
         _updateSortButtons: function () {
             if ('ascending' in this.options.sortButtons &&
@@ -1131,7 +1141,7 @@ var globalDataListID = -1;
                 }
             }
         },
-        _refreshSortContainer: function (sorts) {
+        refreshSortContainer: function (sorts) {
             var _self = this;
 
             /* See if the contents of the sorts has changed. */
@@ -1259,7 +1269,7 @@ var globalDataListID = -1;
                             // Change the li for this sort field so that we can see it is the current sort field.
                             $(sortsList).find('li').removeClass('hx-current-sort');
                             $(tgt).addClass('hx-current-sort');
-                        }, true, undefined, _self._applyOrdering(_self.itemList.clearOrder(), newSort, newSortOrder, newSortCase));
+                        }, undefined, _self._applyOrdering(_self.itemList.clearOrder(), newSort, newSortOrder, newSortCase));
                         $(_self._sortContainer).popup("close");
                         return false;
                     });
@@ -1306,7 +1316,7 @@ var globalDataListID = -1;
                             _self._refreshData(function () {
                                 _self._thisFilterField = newFilterField;
                                 _self.$listWrapper.scrollTop(0);
-                            }, true, _self.extraItems, _self.options.doThisFilter(_self.itemList, newFilterField, _self.selected));
+                            }, _self.extraItems, _self.options.doThisFilter(_self.itemList, newFilterField, _self.selected));
                             _self._filterContextMenu.close();
                         },
                         'enabled': true
@@ -1321,7 +1331,7 @@ var globalDataListID = -1;
                     _self._refreshData(function () {
                         //_self.$parent.listview("refresh");
                         _self.$listWrapper.scrollTop(0);
-                    }, true, _self.extraItems, _self.unfilteredList);
+                    }, _self.extraItems, _self.unfilteredList);
                     _self._filterContextMenu.close();
                 },
                 'enabled': true
@@ -1352,7 +1362,7 @@ var globalDataListID = -1;
                 // Clear out this field, then starting from the unfiltered list re-instate all
                 // remaining fields.
                 delete _self._filterMap[gFilterField];
-                _self._refreshData(_self.options.filterDone, true, undefined, _self._resetGlobalFilters());
+                _self._refreshData(_self.options.filterDone, undefined, _self._resetGlobalFilters());
             } else {
                 if (gFilterField in _self._filterMap) {
                     if (_self._filterMap[gFilterField] === _filterValue) {
@@ -1361,12 +1371,17 @@ var globalDataListID = -1;
                     } else {
                         // The filter value changed. Apply the filter to the original list.
                         _self._filterMap[gFilterField] = _filterValue;
-                        _self._refreshData(_self.options.filterDone, true, undefined, _self._resetGlobalFilters());
+                        _self._refreshData(_self.options.filterDone, undefined, _self._resetGlobalFilters());
                     }
                 } else {
                     // Use itemList in the call below as filters can build on each other.
-                    _self._filterMap[gFilterField] = _filterValue;
-                    _self._refreshData(_self.options.filterDone, true, undefined, _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue));
+                    var _filtered = _self.options.doGlobalFilter.call(_self, _self.itemList, gFilterField, _filterValue);
+                    if (_filtered !== undefined && _filtered !== null) {
+                        _self._filterMap[gFilterField] = _filterValue;
+                        _self._refreshData(_self.options.filterDone, undefined, _filtered);
+                    } else {
+                        this._clearGlobalFilterMenuItem(gFilterField);
+                    }
                 }
             }
             if (Object.keys(this._filterMap).length > 0) {
@@ -1375,10 +1390,13 @@ var globalDataListID = -1;
                 this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
             }
         },
+        _clearGlobalFilterMenuItem: function(fField) {
+            this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
+            this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');            
+        },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
-                this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
-                this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
+                this._clearGlobalFilterMenuItem(fField);
             }
             // NOT all lists are filtered!
             if (this.$filter) {
@@ -1518,7 +1536,7 @@ var globalDataListID = -1;
                             _self._clearGlobalFilterMenu();
                             _self._filterMap = {};
                             _self.$listWrapper.scrollTop(0);
-                        }, true, undefined, _self._applyOrdering(_self.unfilteredList, _self._currentSort, _self._currentSortOrder, _self._currentSortCase));
+                        }, undefined, _self._applyOrdering(_self.unfilteredList, _self._currentSort, _self._currentSortOrder, _self._currentSortCase));
                         $(_self._globalFilterContainer).popup("close");
                         return false;
                     });
@@ -1535,7 +1553,7 @@ var globalDataListID = -1;
             this._itemsPerPage = this.options.itemsPerPage;
         },
 
-        _refreshData: function (oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options) {
+        _refreshData: function (oncomplete, extraItems, itemList, renderWindowStart, _options) {
             var _self = this;
             if (!_options) {
                 _options = _self.options;
@@ -1544,7 +1562,7 @@ var globalDataListID = -1;
             if (_self.refreshInProgress) {
                 //alert("HELLO2");
                 // Do not list refreshed interleave. Finish one, then do the next one.
-                _self._queuedRefreshes.push([oncomplete, noPaginate, extraItems, itemList, renderWindowStart, _options]);
+                _self._queuedRefreshes.push([oncomplete, extraItems, itemList, renderWindowStart, _options]);
                 return;
             }
             
@@ -1602,11 +1620,11 @@ var globalDataListID = -1;
                 if (_self._queuedRefreshes.length) {
                     var refreshArgs = _self._queuedRefreshes.pop();
                     setTimeout(function () {
-                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4], refreshArgs[5]);
+                        _self._refreshData(refreshArgs[0], refreshArgs[1], refreshArgs[2], refreshArgs[3], refreshArgs[4]);
                     }, 0);
                 }
                 _self._preloadPage(0); // Preload the 4 pages from the DB.
-            }, _options.emptyMessage, oncomplete, noPaginate, extraItems, _options);
+            }, _options.emptyMessage, oncomplete, extraItems, _options);
         },
         hasIndexedSearch: function () {
             if (this.options.indexedSearch) {
@@ -1629,7 +1647,7 @@ var globalDataListID = -1;
                 this.unfilteredList = this.itemList = displayCollection;
                 displayCollection = _self._applyOrdering(displayCollection, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 displayCollection = _self._resetGlobalFilters(displayCollection);
-                this._refreshData(oncomplete, true, undefined, displayCollection, 0, optionsOverrides);
+                this._refreshData(oncomplete, undefined, displayCollection, 0, optionsOverrides);
             }
         },
         listIsEmpty: function () {
@@ -1638,7 +1656,7 @@ var globalDataListID = -1;
         getExtrasCount: function () {
             return this.nExtras;
         },
-        _sortAndRenderData: function (displayCollection, oncomplete, emptyMsg, opaque, noPaginate, extraItems, _options) {
+        _sortAndRenderData: function (displayCollection, oncomplete, emptyMsg, opaque, extraItems, _options) {
             var _self = this;
             var rowIndex = 0;
             _self.nRendered = 0;
@@ -1697,6 +1715,7 @@ var globalDataListID = -1;
 
                 var nxt = groupsToRender.shift();
                 if (_self.nRendered >= _self._itemsPerPage) {
+                    oncomplete.call(_self, opaque);
                     return;
                 }
 
@@ -1762,7 +1781,7 @@ var globalDataListID = -1;
                 }
                 displayCollection = displayCollection.limit(_self._itemsPerPage);
 
-                displayCollection.newEach({
+                displayCollection.noFlush().newEach({
                     /* Process each element. */
                     eachFn: function (curRow) {
                         __processRow(curRow);
@@ -1785,19 +1804,23 @@ var globalDataListID = -1;
             toRemove.remove();
             this.$parent.find('[data-role="fieldcontain"]').remove();
         },
-        _doRemoteSearch: function (searchText, localResultsColl) {
+        _doRemoteSearch: function (searchText, localResultsColl, opaque, noDelay) {
             var _self = this;
             if (_self.__searchReadyTimeout) {
                 clearTimeout(_self.__searchReadyTimeout);
             }
+            if (!_self.options.indexedSearch) {
+                return;
+            }
+            
             _self.__searchReadyTimeout = setTimeout(function () {
                 if (searchText) {
                     _self.options.indexedSearch.call(_self, searchText, function (displayCollection, oncomplete, optionsOverrides) {
                         _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);
-                    }, localResultsColl);
+                    }, localResultsColl, opaque);
                 }
                 _self.__searchReadyTimeout = null;
-            }, 1000);
+            }, (noDelay ? 0 : 1000));
 
         },
         getCurrentSearchText: function () {
@@ -1810,10 +1833,13 @@ var globalDataListID = -1;
         setCurrentSearchText: function (searchQry, doSearch) {
             this.$searchBox.val(searchQry);
             if (doSearch === true) {
-                this._doSearch();
+                this._doSearch(null, true);
             }
         },
-        _doSearch: function () {
+        runSearch: function(opaque) {
+            this._doSearch(opaque);
+        },
+        _doSearch: function (opaque, noDelay) {
             var _self = this;
             _self.__searchText = _self.$searchBox.val();
             if (_self.__searchReadyTimeout) {
@@ -1841,12 +1867,12 @@ var globalDataListID = -1;
                                 oncomplete.call(_self);
                             }
                             if (_self.options.indexedSearch) {
-                                _self._doRemoteSearch(searchText, res);
+                                _self._doRemoteSearch(searchText, res, opaque, false);
                             }
                         }, optionsOverrides);
-                    }, _self.originalList);
+                    }, _self.originalList, opaque);
                 } else {
-                    _self._doRemoteSearch(searchText, _self.originalList);
+                    _self._doRemoteSearch(searchText, _self.originalList, opaque, noDelay);
                 }
             }
         },
@@ -1870,7 +1896,7 @@ var globalDataListID = -1;
                     if (_self.options.afterSearchClear) {
                         _self.options.afterSearchClear.call(_self);
                     }
-                }, true, _self.extraItems, _self.originalList);
+                }, _self.extraItems, _self.originalList);
             }
         },
         refreshSearchOptions: function (obj) {
@@ -1894,7 +1920,7 @@ var globalDataListID = -1;
             }).append($('<div/>').attr({
                 'class': 'hx-icon ui-icon-' + icon
             }))).appendTo(this.$sortDiv)
-                    .on(this.tapEvent, onclick);
+                    .on(this.tapEvent, null, this, onclick);
         },
         _prependSearchBox: function (options) {
             var _self = this;
@@ -1905,7 +1931,7 @@ var globalDataListID = -1;
 
             _self.$searchSortDiv.empty();
             _self._searchSortDirty = false;
-            if (options.grouped || (!options.showSortButton && !options.showFilterButton && !options.indexedSearch)) {
+            if (options.grouped || (!options.showSortButton && !options.showFilterButton && !options.indexedSearch && !options.localIndexedSearch)) {
                 _self.$searchSortDiv.hide();
                 return;
             }
@@ -2076,7 +2102,14 @@ var globalDataListID = -1;
 
             var $controlGroup = $('<div/>').appendTo(_self.$clearSelectionDiv);
             if (this.options.selectionButtonsCallback) {
-                this.options.selectionButtonsCallback.call(_self, $controlGroup);
+                if (this.options.selectionButtonsCallback.call(_self, $controlGroup) === true) {
+                    // Add the filter button.
+                    $controlGroup.append(this._addSortFilterButton(Helix.Utils.getUniqueID(), 'hx-filter-black', function (ev) {
+                        ev.stopImmediatePropagation();
+                        ev.data.displayGlobalFilterMenu(this);
+                        return false;
+                    }));
+                }
             }
             $controlGroup.controlgroup({
                 type: 'horizontal',
@@ -2320,7 +2353,9 @@ var globalDataListID = -1;
                 if (this.setSelected(target)) {
                     if ($(target).is('a[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
-                            this.options.splitAction(this.selected, this.selectedGroup, this.strings);
+                            if (!this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings)) {
+                                this._runContextAction(target);                                
+                            }
                         } else {
                             this._runContextAction(target);
                         }
@@ -2450,9 +2485,9 @@ var globalDataListID = -1;
 
             // Click
             if (this.options.selectAction) {
-                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"]', this, function (event) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"],li[data-overflow="1"]', this, function (event) {
                     var _self = event.data;
-                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"]');
+                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
                     if (_tgt.length) {
                         event.stopImmediatePropagation();
                         return _self._handleClick(event, _tgt);
@@ -2713,7 +2748,9 @@ var globalDataListID = -1;
             var nxtSelection = $(enclosingLI).data('data');
             if (this.options.grouped) {
                 this.selectedGroup = $(enclosingLI).data('group');
-            }
+            } else {
+		this.selectedGroup = null;
+	    }
             if (this.selectedGroup) {
                 var isOverflow = $(enclosingLI).attr('data-overflow');
                 if (Number(isOverflow) === 1) {
@@ -2785,7 +2822,7 @@ var globalDataListID = -1;
         // Select the very first item in the list.
         selectFirst: function () {
             var _self = this;
-            $.each($(this.$wrapper).find('li'), function (idx, li) {
+            $.each($(this.$wrapper).find('li[data-deleted!="true"]'), function (idx, li) {
                 var obj = $(li).data('data');
                 if (obj) {
                     _self.setSelected(li);
@@ -2941,7 +2978,12 @@ var globalDataListID = -1;
 
             var splitLink = components.splitlink;
             if (rowComponents.splitLink) {
-                var _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link');
+                var _newSplit;
+                if (!rowComponents.splitLinkText) {
+                    _newSplit = Helix.Layout.makeIconButton(rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link');
+                } else {
+                    _newSplit = Helix.Layout.makeTextButton(rowComponents.splitLinkText, rowComponents.splitLinkTextClass, rowComponents.splitLink).attr('data-role', 'splitlink').addClass('hx-splitview-link');
+                }
                 if (splitLink) {
                     splitLink.replaceWith(_newSplit);
                 } else {
@@ -3101,9 +3143,15 @@ var globalDataListID = -1;
             this._restoreFooter = this.$footerSection.children();
             this.setFooterContents(loader);
         },
+        startLoadingAsync: function(txt) {
+            this.$footerSection.children().addClass('hx-loading');
+        },
         stopLoading: function () {
-            this.setFooterContents(this._restoreFooter);
-            this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
+            if (this._restoreFooter) {
+                this.setFooterContents(this._restoreFooter);
+                this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
+            }
+            this.$footerSection.children().removeClass('hx-loading');
         },
         setFooterContents: function (contents) {
             this.$footerSection.empty();
@@ -3111,6 +3159,9 @@ var globalDataListID = -1;
                 this.$footerSection.append(contents);
                 this.$footerSection.show();
             }
+        },
+        getFooter: function() {
+            return this.$footerSection;
         },
         hideFooter: function () {
             this.$footerSection.hide();
@@ -3220,7 +3271,7 @@ var globalDataListID = -1;
                     _self._refreshData(function () {
                         __sortUpdateDone();
                         _self.$listWrapper.scrollTop(0);
-                    }, true, this.extraItems, _self._applyOrdering(_self.itemList, newSort, newOrder, newCase));
+                    }, this.extraItems, _self._applyOrdering(_self.itemList, newSort, newOrder, newCase));
                 } else {
                     __sortUpdateDone();
                 }
@@ -3282,15 +3333,28 @@ var globalDataListID = -1;
                     finalCompletion();
                 }
                 _self._refreshDividers();
-            }, this.options.emptyMessage, oncomplete, true, this.extraItems, _self.options);
+            }, this.options.emptyMessage, oncomplete, this.extraItems, _self.options);
         },
         markDeleted: function (elems) {
             //$(elems).hide(400, 'linear');
             $(elems).attr('data-deleted', 'true');
             $(elems).addClass('hx-deleted');
         },
-        confirmDeleted: function (elems) {
+        confirmDeleted: function (elems, callback) {
+            var allObjs = [];
+            $.each(elems, function() {
+                var obj = $(this).data('data');
+                allObjs.push(obj);
+            });
             $(elems).remove();
+            if (callback) {
+                var _self = this;
+                callback(allObjs, function() {
+                    _self._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });
+                });
+            } else {
+                this._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });            
+            }
         },
         clearDeleted: function (elems) {
             $(elems).attr('data-deleted', '').removeClass('hx-deleted');

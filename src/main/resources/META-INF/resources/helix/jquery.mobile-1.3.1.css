@@ -361,7 +361,7 @@
 .ui-btn-up-c,.ui-btn-hover-c {
 	border: 1px solid 		#ccc /*{c-bup-border}*/;
 	background: 			#eee /*{c-bup-background-color}*/;
-	font-weight: bold;
+	/* SAH take out bold font-weight: bold; */
 	color: 					#222 /*{c-bup-color}*/;
 	text-shadow: 0 /*{c-bup-shadow-x}*/ 1px /*{c-bup-shadow-y}*/ 0 /*{c-bup-shadow-radius}*/ #fff /*{c-bup-shadow-color}*/;
 	background-image: -webkit-gradient(linear, left top, left bottom, from( #fff /*{c-bup-background-start}*/), to( #f1f1f1 /*{c-bup-background-end}*/)); /* Saf4+, Chrome */
@@ -471,7 +471,7 @@
 .ui-btn-up-d {
 	border: 1px solid 		#bbb /*{d-bup-border}*/;
 	background: 			#fff /*{d-bup-background-color}*/;
-	font-weight: bold;
+	/* SAH font-weight: bold; */
 	color: 					#333 /*{d-bup-color}*/;
 	text-shadow: 0 /*{d-bup-shadow-x}*/ 1px /*{d-bup-shadow-y}*/ 0 /*{d-bup-shadow-radius}*/ #fff /*{d-bup-shadow-color}*/;
 }
@@ -2362,9 +2362,9 @@ label.ui-submit { font-size: 16px; line-height: 1.4; font-weight: normal; margin
 }
 .ui-popup > .ui-btn-left { left: -9px; }
 .ui-popup > .ui-btn-right { right: -9px; }
-// SAH: this change knowingly ruins all popup transitions. We have transitions on pages and
-// panels. We will forego them on popups.
-//.ui-popup-hidden { top: -99999px; left: -9999px; }
+/* SAH: this change knowingly ruins all popup transitions. We have transitions on pages and
+   panels. We will forego them on popups.
+  .ui-popup-hidden { top: -99999px; left: -9999px; } */
 .ui-popup-hidden { display: none; }
 .ui-checkbox, .ui-radio { position: relative; clear: both; margin: 0; z-index: 1; }
 .ui-checkbox .ui-btn, .ui-radio .ui-btn { text-align: left; z-index: 2; }

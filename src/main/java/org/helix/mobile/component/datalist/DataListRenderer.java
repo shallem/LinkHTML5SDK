@@ -87,10 +87,6 @@ public class DataListRenderer extends CoreRenderer {
         } else {
             writer.write("multiSelect: false,");
         }
-
-        if (!dlist.isShowButtons()) {
-            writer.write("showButtons: false,");
-        }
         
         if (dlist.getButtonPos() != null) {
             writer.write("buttonPos: '" + dlist.getButtonPos() + "',");
@@ -176,7 +172,11 @@ public class DataListRenderer extends CoreRenderer {
 
         // Selection
         if (dlist.getSelectAction() != null) {
-            writer.append(",selectAction: function(row,group,strings,contextArgs) {" + dlist.getSelectAction() + "}");
+            if (dlist.getSelectAction().equalsIgnoreCase("true")) {
+                writer.append(",selectAction: function() { return true; }");
+            } else {
+                writer.append(",selectAction: function(row,group,strings,contextArgs) {" + dlist.getSelectAction() + "}");
+            }
         }
         if (dlist.getSwipeLeftAction() != null) {
             writer.append(",swipeLeftAction: function(row) {" + dlist.getSwipeLeftAction() + "}");

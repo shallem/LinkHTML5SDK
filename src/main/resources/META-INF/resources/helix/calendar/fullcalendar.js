@@ -1451,11 +1451,14 @@
     }
 
 
-    function clearTime(d) {
-        /*d.setHours(0);
-         d.setMinutes(0);
-         d.setSeconds(0); 
-         d.setMilliseconds(0);*/
+    function clearTime(d, useLocalTime) {
+        if (useLocalTime === true) {
+            d.setHours(0);
+            d.setMinutes(0);
+            d.setSeconds(0); 
+            d.setMilliseconds(0);
+        } 
+        
         d.setUTCHours(0);
         d.setUTCMinutes(0);
         d.setUTCSeconds(0);
@@ -2583,7 +2586,7 @@
         function buildCellHTML(date) {
             var contentClass = tm + "-widget-content";
             var month = t.start.getUTCMonth(); /* SAH - to UTC */
-            var today = clearTime(new Date());
+            var today = clearTime(new Date(), true); /* SAH - clear in local time */
             var html = '';
             var classNames = [
                 'fc-day',
@@ -3384,7 +3387,7 @@
             var headerClass = tm + "-widget-header"; // TODO: make these when updateOptions() called
             var contentClass = tm + "-widget-content";
             var date;
-            var today = clearTime(new Date());
+            var today = clearTime(new Date(), true); /* SAH - use local time */
             var col;
             var cellsHTML;
             var cellHTML;

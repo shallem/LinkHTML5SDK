@@ -230,6 +230,7 @@
                     'data-theme': theme,
                     'data-icon': 'back'
                 }).append(this.options.headerToggleText).on(this.__clickEvent, function (ev) {
+                    ev.stopImmediatePropagation();
                     __self.toggle();
                     return false;
                 }).button());

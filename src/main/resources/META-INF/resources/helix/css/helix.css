@@ -148,6 +148,18 @@
     position: relative;    
 }
 
+.hx-btn-inner-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hx-btn-border {
+    border-color: black !important;
+    border: 1px;
+    border-style: solid;
+}
+
 .hx-btn-inner.hx-tab-inner {
     height: 48px;
 }
@@ -536,11 +548,6 @@ a {
     display: inline-block;
 }
 
-.ui-header .hx-button-bar {
-    margin: 0;
-    float: left;
-}
-
 .ui-header .hx-button-bar .ui-controlgroup-controls {
     display: block;
 }
@@ -554,6 +561,7 @@ a {
     float: none;
     display: block;
     position: static;
+    margin-left: 0em;
     margin-top: 0em;
     margin-bottom: 0em;
     margin-right: 0.2em;    
@@ -636,13 +644,13 @@ a {
 }
 
 @-webkit-keyframes loading_color_change {
-    from { background: #BCCBF6; }
-    to { background: #CC9E0F; }
+    from { background-color: rgba(188, 203, 246, 0.5); }
+    to { background-color: rgba(204, 158, 15, 0.5); }
 }
 
 @keyframes loading_color_change {
-    from { background: #BCCBF6; }
-    to { background: #CC9E0F; }
+    from { background-color: rgba(188, 203, 246, 0.5); }
+    to { background-color: rgba(204, 158, 15, 0.5); }
 }
 
 .hx-toggleable {
@@ -801,11 +809,11 @@ a {
  * Animations
  */
 
-.hx-loading {
+/*.hx-loading {
     -webkit-animation: pulsating_border 1s infinite alternate;
     animation: pulsating_border 1s infinite alternate;
     border-bottom: 0.25em solid rgba(192, 39, 45, 1) !important; 
-}
+}*/
 
 /*@-webkit-keyframes pulsating_border {
     0%   { border-bottom-color: rgba(192, 39, 45, 1); }
@@ -892,6 +900,10 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
 
 .hx-noicon-button div.ui-btn-text {
    color: darkblue;
+}
+
+.hx-noicon-button div.ui-btn-text.hx-btn-text-white {
+    color: white;
 }
 
 /* Make sure button text container fills the surrounding ui-btn-inner. This allows us to center the
@@ -1032,6 +1044,10 @@ div.hx-dialog-content p {
 
 div.hx-dialog-content ul {
     margin-top: 0em;
+}
+
+div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
+    font-weight: normal;
 }
 
 .hx-noicon-button {

@@ -165,6 +165,10 @@
     margin-left: 0;
 }
 
+.hx-form-container .ui-field-contain .ui-controlgroup-controls {
+    width: 100%;
+}
+
 .hx-form-container .ui-field-contain div.ui-input-text {
     box-shadow: none;
     flex: 2; /* Fill the remainder of the flex box. */
@@ -238,6 +242,12 @@
 
 .hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls label {
     color: darkblue;
+}
+
+.hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls .ui-radio {
+    border: 1px;
+    border-style: solid;
+    border-color: lightgrey;
 }
 
 .hx-form-container .ui-field-contain .ui-controlgroup .ui-controlgroup-controls .ui-radio label {
@@ -399,4 +409,8 @@ textarea.ui-input-text {
 .buttonBarMaster.buttonbar {
     margin: 0;
     -webkit-user-select: none !important;
+}
+
+.hx-form-pad-top {
+    margin-top: 0.75em;
 }

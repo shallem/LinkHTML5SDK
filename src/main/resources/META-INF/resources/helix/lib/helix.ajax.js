@@ -143,13 +143,13 @@ $(document).on('__hxOffline', function() {
  */
 $(document).on('hxGenerateSchemas', function() {
     if (!window.cordovaInstalled) {
-        Helix.Ajax.offlineNetworkQueue =  persistence.define('OfflineNetworkQueue', {
+        Helix.Ajax.offlineNetworkQueue =  Helix.DB.createSchemaForTable('OfflineNetworkQueue', {
             url: "TEXT",
             body: "TEXT",
             json: "TEXT",
             status: "TEXT",
             error: "TEXT"
-        });
+        }, [], '');
     }
 });
 
@@ -160,7 +160,7 @@ $(document).on('helixready', function() {
             // Execute any queued posts.
             var nQueuedActions = 0;
             var doneQueuedActions = 0;
-            Helix.Ajax.offlineNetworkQueue.all().newEach({
+            Helix.Ajax.offlineNetworkQueue.all().noFlush().newEach({
                 startFn: function(ct) {
                     nQueuedActions = ct;
                 },
@@ -880,6 +880,200 @@ Helix.Ajax = {
         });
     },
 
+    _ajaxGetPrepareArgs: function(params) {
+        var args = '';
+        for (var key in params.params) {
+            var nxtArg = null;
+            if ($.isArray(params.params[key])) {
+                var _arr = params.params[key];
+                nxtArg = '';
+                for (var i = 0; i < _arr.length; ++i) {
+                    if (i > 0) {
+                        nxtArg = nxtArg + '&';
+                    }
+                    nxtArg = nxtArg + key + '=' +  encodeURIComponent(_arr[i]);
+                }
+            } else {
+                nxtArg = key + '=' + encodeURIComponent(params.params[key]);
+            }
+            if (args) {
+                args = args + '&' + nxtArg;
+            } else {
+                args = nxtArg;
+            }
+        }
+        return args;
+    },
+    
+    _ajaxPrepareLoader: function(params, page) {
+        var loadingOptions = Helix.Ajax.setLoaderOptions({
+            async: (params.async !== undefined) ? params.async : true,
+            silent: (params.silentMode !== undefined) ? params.silentMode : false,
+            message : params.loadingMessage ? params.loadingMessage : ''
+        });
+        if (Helix.Ajax.isDeviceOnline()) {
+            $(document).trigger('prerequest', [ page, params.url, false, params.loadingDelegate, params.loadingMessage, loadingOptions ]);
+        }
+        return loadingOptions;
+    },
+
+    _ajaxFinishLoader: function(params, page, loadingOptions) {
+        $(document).trigger('postrequest', [ page, params.url, false, params.loadingDelegate, loadingOptions ]);
+    },
+    
+    _ajaxHandleXHRError: function(params, jqXHR, textStatus, errorThrown) {
+        if (Helix.ignoreErrors) {
+            return;
+        }
+        if (jqXHR.status < 0 || jqXHR.status >= 600) {
+            // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
+            return;
+        }
+        if (jqXHR.status === 404 || jqXHR.status === 408) {
+            // This generally happens because of a network error.
+            Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
+            return;
+        }
+
+        if (!params.silentMode) {
+            if (params.fatal) {
+                Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "severe");
+            } else if (!callbacks.fatal) {
+                Helix.Utils.statusMessage("Error", errorThrown, "severe");
+            }
+        }
+    },
+    
+    _handlePostPutXHRError: function(params, callbacks, jqXHR, textStatus, errorThrown) {
+        if (jqXHR.status < 0 || jqXHR.status >= 600) {
+            // Not valid HTTP response codes. Means something is going on inside the container that we should ignore.
+            return;
+        }
+
+        if (jqXHR.status === 408 ||
+                jqXHR.status === 407) {
+            // Specifically a timeout or the end of the session.
+            if (params.allowOfflineQueue !== false) {
+                Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
+                return;
+            }
+        }
+
+        if (!params.silentMode) {
+            if (params.fatal) {
+                Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "fatal");
+            } else if (!callbacks.fatal) {
+                Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "fatal");
+            }
+        } 
+
+        if (callbacks.fatal) {
+            callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+        } else {
+            // In the absence of any other handling, queue operations that fail to be retried again later.
+            if (jqXHR.status >= 400 &&
+                jqXHR.status < 600) {
+                // Something went wrong on the server. Rather than just drop a potentially important operation,
+                // treat this is if we are offline ...
+                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+            }
+        }
+    },
+
+    ajaxUpload: function(params, callbacks) {
+        var page = $.mobile.activePage;
+        var loadingOptions = Helix.Ajax._ajaxPrepareLoader(params, page);
+        if (Helix.Ajax.isDeviceOnline()) {
+            var ret = {
+                isCancelled : false,
+                cancel: function() {
+                    this.isCancelled = true;
+                    this._xhr.abort();
+                }
+            };
+            ret._xhr = $.ajax({
+                context: ret,
+                url: params.url,
+                type: 'POST',
+                data: params.body,
+                contentType: 'application/x-www-form-urlencoded',
+                headers: params.headers ? params.headers : {},
+                success: function(returnObj,textStatus,jqXHR) {
+                    Helix.Ajax._ajaxFinishLoader(params, page, loadingOptions);
+
+                    if (this.isCancelled) {
+                        return;
+                    }
+                    if (callbacks.success) {
+                        callbacks.success.call(window, returnObj);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    Helix.Ajax._ajaxFinishLoader(params, page, loadingOptions);
+                    
+                    if (this.isCancelled) {
+                        return;
+                    }
+                    if (Helix.ignoreErrors) {
+                        return;
+                    }
+                    Helix.Ajax._handlePostPutXHRError(params, callbacks, jqXHR, textStatus, errorThrown);
+                },
+                complete: function() {
+                    if (callbacks.complete) {
+                        callbacks.complete.call(window);
+                    }
+                }
+            });
+            return ret;
+        } else {
+            if (params.allowOfflineQueue !== false) {
+                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+            }
+            Helix.Ajax.hideLoader();
+        }
+        return null;
+    },
+
+    ajaxHTMLGet: function(params, callbacks) {
+        var page = $.mobile.activePage;
+        var loadingOptions = Helix.Ajax._ajaxPrepareLoader(params, page);
+        var args = Helix.Ajax._ajaxGetPrepareArgs(params);
+        var xhr = $.ajax({
+            url: params.url + (args ? '?' : '') + args,
+            type: 'GET',
+            headers: params.headers ? params.headers : {
+                'X-No-Script-Injection' : 1
+            },
+            success: function(returnObj,textStatus,jqXHR) {
+                if (!returnObj) {
+                    // We go nothing back from the server. This happens when the network request is killed
+                    // by the client (e.g., because the app was put to sleep).
+                    return;
+                }
+                
+                // If we get back any html at all, just send it to the callback
+                if (callbacks.success) {
+                    callbacks.success.call(window, returnObj);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                Helix.Ajax._ajaxHandleXHRError(params, jqXHR, textStatus, errorThrown);
+                if (callbacks.fatal) {
+                    callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+                }
+            },
+            complete: function() {
+                if (callbacks.complete) {
+                    callbacks.complete.call(window);
+                }
+                Helix.Ajax._ajaxFinishLoader(params, page, loadingOptions);
+            },
+            dataType: 'html'
+        });
+        return xhr;
+    },
+
     ajaxGet: function(params, callbacks) {
         var loadingOptions = Helix.Ajax.setLoaderOptions({
             async: (params.async !== undefined) ? params.async : true,
@@ -976,6 +1170,7 @@ Helix.Ajax = {
             },
             dataType: 'json'
         });
+        return xhr;
     },
 
     ajaxOfflineQueue: function(params, callbacks) {
