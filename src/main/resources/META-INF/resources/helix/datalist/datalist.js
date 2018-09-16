@@ -943,7 +943,9 @@ var globalDataListID = -1;
             if (keepOverrides) {
                 _self.options = _options;
             }
-
+            if (_self.__searchReadyTimeout) {
+                clearTimeout(_self.__searchReadyTimeout);
+            }
             // Prevent this function from being called again. Future calls should all go to refreshData.
             _self.isLoaded = true;
 
@@ -1816,7 +1818,11 @@ var globalDataListID = -1;
             _self.__searchReadyTimeout = setTimeout(function () {
                 if (searchText) {
                     _self.options.indexedSearch.call(_self, searchText, function (displayCollection, oncomplete, optionsOverrides) {
-                        _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);
+                        if (searchText === _self.getCurrentSearchText()) {
+                            _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);
+                        } else {
+                            oncomplete.call(_self, opaque);
+                        }
                     }, localResultsColl, opaque);
                 }
                 _self.__searchReadyTimeout = null;
@@ -3124,7 +3130,7 @@ var globalDataListID = -1;
         setHeaderText: function (txt) {
             this.options.headerText = txt;
         },
-        startLoading: function (text) {
+        startLoading: function (text, loadCanceller) {
             var loader = $('<div/>').addClass('hx-datalist-loading')
                     .append($('<div/>').addClass('hx-datalist-loading-bar'))
                     .append($('<div/>').addClass('hx-datalist-loading-bar'))
@@ -3141,12 +3147,20 @@ var globalDataListID = -1;
                         .append($('<div/>').addClass('hx-datalist-loading-text').append(text));
             }
             this._restoreFooter = this.$footerSection.children();
+            this._loadInProgress = loadCanceller;
             this.setFooterContents(loader);
+        },
+        cancelLoads: function() {
+            if (this._loadInProgress) {
+                this._loadInProgress.cancel();
+                this._loadInProgress = null;
+            }
         },
         startLoadingAsync: function(txt) {
             this.$footerSection.children().addClass('hx-loading');
         },
         stopLoading: function () {
+            this._loadInProgress = null;
             if (this._restoreFooter) {
                 this.setFooterContents(this._restoreFooter);
                 this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
