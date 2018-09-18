@@ -1837,7 +1837,9 @@ var globalDataListID = -1;
             return this.$searchBox.val()
         },
         setCurrentSearchText: function (searchQry, doSearch) {
-            this.$searchBox.val(searchQry);
+            if (this.$searchBox) {
+                this.$searchBox.val(searchQry);
+            }
             if (doSearch === true) {
                 this._doSearch(null, true);
             }
