@@ -171,6 +171,14 @@
                 var typed = String.fromCharCode(ev.keyCode);
                 return true;
             });
+            
+            $(document).on('nextbuttonclick', function() {
+                return true;
+            });
+            
+            $(document).on('previousbuttonclick', function() {
+                return true;
+            });
 
             $(document).on('selectionchange', null, this, function (ev) {
                 var _self = ev.data;

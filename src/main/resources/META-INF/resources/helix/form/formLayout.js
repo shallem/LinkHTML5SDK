@@ -868,7 +868,7 @@
             
             var d = new Date(isoStr);
             // Re-adjust back to local TZ.
-            d.addMinutes(d.getTimezoneOffset());
+            //d.addMinutes(d.getTimezoneOffset());
             return d;
         },
         
