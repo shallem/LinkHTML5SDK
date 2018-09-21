@@ -209,6 +209,7 @@
                                     $(innerList).prepend('<br/>');
                                 }
                                 setTimeout(function(_l) {
+                                    _self.focus();
                                     _self._selectElementContents($(_l).find('li')[0]);                                
                                 }, 10, innerList);
                             }
@@ -232,7 +233,7 @@
                         twoUp.append(_newLI);
                         _self._selectElementContents(_newLI[0]);
                     }
-                    $(_self._lastInputNode).closest('li').remove();
+                    $(range0.startContainer).closest('li').remove();                    
                 }
             });
 
