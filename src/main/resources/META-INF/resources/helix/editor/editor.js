@@ -167,17 +167,73 @@
             $(document).on('mousedown touchstart', function (ev) {
                 lastClick = ev.target;
             });
-            $(this.$editFrame).on('keypress', null, this, function (ev) {
-                var typed = String.fromCharCode(ev.keyCode);
-                return true;
+            
+            $(this.$editFrame).on('tabpress', null, this, function(ev) {
+                var _self = ev.data;
+                if (_self._lastInputNode) {
+                    if ($(_self._lastInputNode).closest('ol').length) {
+                        // In an ordered list - tab in
+                        var lastStyle = $(_self._lastInputNode).closest('ol').css('list-style-type');
+                        var innerList;
+                        switch(lastStyle) {
+                            case 'decimal':
+                                innerList = _self._appendList('<ol/>', 'upper-alpha');
+                                break;
+                            case 'upper-alpha':
+                                innerList =_self._appendList('<ol/>', 'upper-roman');
+                                break;
+                            case 'upper-roman':
+                                innerList =_self._appendList('<ol/>', 'lower-roman');
+                                break;
+                            case 'lower-roman':
+                                innerList = _self._appendList('<ol/>', 'disc');
+                                break;
+                            case 'disc':
+                                innerList = _self._appendList('<ol/>', 'circle');
+                                break;
+                            default:
+                                innerList = _self._appendList('<ol/>', 'square');
+                                break;
+                        }
+                        if (innerList) {
+                            var _parentLI = $(innerList).closest('li');
+                            if (_parentLI.length) {
+                                var _child = innerList[0];
+                                while (_child.parentNode !== _parentLI[0]) {
+                                    _child = _child.parentNode;
+                                }
+                                if (_parentLI[0].children[0] === _child) {
+                                    // Parent of this list is an LI, and the new list is the only child of the LI.
+                                    $(_parentLI).replaceWith(innerList);
+                                } else {
+                                    $(innerList).prepend('<br/>');
+                                }
+                                setTimeout(function(_l) {
+                                    _self._selectElementContents($(_l).find('li')[0]);                                
+                                }, 10, innerList);
+                            }
+                        }
+                    }
+                }
             });
             
-            $(document).on('nextbuttonclick', function() {
-                return true;
-            });
-            
-            $(document).on('previousbuttonclick', function() {
-                return true;
+            $(this.$editFrame).on('shifttabpress', null, this, function(ev) {
+                var _self = ev.data;
+                var sel = window.getSelection();
+                if (!sel) {
+                    return;
+                }
+                var range0 = sel.getRangeAt(0);
+                if (range0 && range0.startContainer) {
+                    // Back up two levels ...
+                    var _newLI = $('<li/>');
+                    var twoUp = $(range0.startContainer).closest('ol').parent().closest('ol');
+                    if (twoUp.length) {
+                        twoUp.append(_newLI);
+                        _self._selectElementContents(_newLI[0]);
+                    }
+                    $(_self._lastInputNode).closest('li').remove();
+                }
             });
 
             $(document).on('selectionchange', null, this, function (ev) {
@@ -401,20 +457,20 @@
             this.menuPopups[menuName].popup('close');
             switch (action) {
                 case 'bullets':
-                    this._appendList('<ul/>');
+                    this._appendList('<ol/>', 'disc');
                     break;
                 case 'numbering':
-                    this._appendList('<ol/>');
+                    this._appendList('<ol/>', 'decimal');
                     break;
                 default:
                     return false;
             }
             return true;
         },
-        _appendList: function (listTag) {
+        _appendList: function (listTag, listStyleType) {
             this.focus();
 
-            var _list = $(listTag);    
+            var _list = $(listTag).css('list-style-type', listStyleType);    
             var $parent = this.$editFrame;
             var focusNode = window.getSelection().focusNode;
             if (focusNode) {
@@ -446,6 +502,7 @@
             
             var _firstLI = $('<li/>').appendTo(_list);
             this._selectElementContents(_firstLI[0]);
+            return _list;
         },
         _queueStyleAction: function (menuName, action, actionArg, target) {
             if (target) {

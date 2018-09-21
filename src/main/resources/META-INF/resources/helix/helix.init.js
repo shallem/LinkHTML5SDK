@@ -105,4 +105,13 @@ $(document).on('ready', function() {
             Helix.errorHook(msg);
         }
     };
+    document.onkeydown = function(e) {
+        if (e.keyCode === 9) {
+            if (e.metaKey === true) {
+                $('.hx-editor').trigger('shifttabpress');
+            } else {
+                $('.hx-editor').trigger('tabpress');
+            }
+        }
+    };
 });
