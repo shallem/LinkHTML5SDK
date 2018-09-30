@@ -972,7 +972,8 @@ Helix.Ajax = {
         } else {
             // In the absence of any other handling, queue operations that fail to be retried again later.
             if (jqXHR.status >= 400 &&
-                jqXHR.status < 600) {
+                jqXHR.status < 600 &&
+                params.allowOfflineQueue !== false) {
                 // Something went wrong on the server. Rather than just drop a potentially important operation,
                 // treat this is if we are offline ...
                 Helix.Ajax.ajaxOfflineQueue(params, callbacks);
