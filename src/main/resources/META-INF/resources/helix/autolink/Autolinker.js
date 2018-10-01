@@ -604,6 +604,12 @@ Autolinker.prototype = {
 	 * @return {Autolinker.match.Match[]} The array of Matches found in the
 	 *   given input `textOrHtml`.
 	 */
+        decodeText: function(str) {
+            return str.replace(/&#(\d+);/g, function(match, dec) {
+                return String.fromCharCode(dec);
+            });
+        },
+        
 	parse : function( textOrHtml ) {
 		var htmlParser = this.getHtmlParser(),
 		    htmlNodes = htmlParser.parse( textOrHtml ),
@@ -627,7 +633,8 @@ Autolinker.prototype = {
                             // Skip the next node (which is the text content of the style)
                             ++i;
                         } else if( nodeType === 'text' && anchorTagStackCount === 0 ) {  // Process text nodes that are not within an <a> tag
-				var textNodeMatches = this.parseText( node.getText(), node.getOffset() );
+				var _text = this.decodeText(node.getText());
+                                var textNodeMatches = this.parseText( _text, node.getOffset() );
 
 				matches.push.apply( matches, textNodeMatches );
 			}
@@ -2747,7 +2754,7 @@ Autolinker.match.Phone = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getAnchorText : function() {
-		return this.matchedText;
+		return this.matchedText.trim();
 	}
 
 } );
@@ -3193,14 +3200,15 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	 */
 	matcherRegex : (function() {
 		var alphaNumericChars = Autolinker.RegexLib.alphaNumericCharsStr,
-		    emailRegex = new RegExp( '[' + alphaNumericChars + '\\-_\';:&=+$.,]+@' ),  // something@ for email addresses (a.k.a. local-part)
+                    emailRegex = new RegExp( '[' + alphaNumericChars + '\\-_\';:&=+$.,]+@' ),  // something@ for email addresses (a.k.a. local-part)
 			domainNameRegex = Autolinker.RegexLib.domainNameRegex,
 			tldRegex = Autolinker.RegexLib.tldRegex;  // match our known top level domains (TLDs)
 
 		return new RegExp( [
-			emailRegex.source,
+                        emailRegex.source,
 			domainNameRegex.source,
-			'\\.', tldRegex.source   // '.com', '.net', etc
+                        ,'\\.'
+			, tldRegex.source    // '.com', '.net', etc
 		].join( "" ), 'gi' );
 	} )(),
 
@@ -3215,13 +3223,13 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 		    match;
 
 		while( ( match = matcherRegex.exec( text ) ) !== null ) {
-			var matchedText = match[ 0 ];
+			var matchedText = match[ 0 ].trim();
 
 			matches.push( new Autolinker.match.Email( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
-				email       : matchedText
+				email       : matchedText.trim()
 			} ) );
 		}
 
@@ -3340,7 +3348,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	 * @private
 	 * @property {RegExp} matcherRegex
 	 */
-	matcherRegex : /(^|[\s,.;:])([+]?)[1]?[.-\s]?[(]?([0-9]{3})[)]?[.-\s]?([0-9]{3})[.-\s]?([0-9]{4})([,][0-9]+#)?($|\s|[.,;:)])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
+	matcherRegex : /(^|[\s,.;:])([+]?)[1]?[.-\s]?[(]?([0-9]{3})[)]?[.-\s]?([0-9]{3})[.-\s]?([0-9]{4})([,][0-9]+#)?($|\s|[.,;:)(])/g,  // ex: (123) 456-7890, 123 456 7890, 123-456-7890, etc.
 
 	/**
 	 * @inheritdoc

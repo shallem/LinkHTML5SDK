@@ -907,6 +907,9 @@
         },
         blur: function () {
             $(this.$editFrame).blur();
+        },
+        getFrame: function() {
+            return this.$editFrame;
         }
     });
 })(jQuery);
