@@ -3066,7 +3066,9 @@ var globalDataListID = -1;
         },
         /* Display sort and filter menus. */
         displaySortMenu: function (selector) {
-            this._sortContainer.popup('open', {positionTo: selector});
+            if (this._sortContainer) {
+                this._sortContainer.popup('open', {positionTo: selector});
+            }
         },
         displayFilterMenu: function (selector) {
             this._filterContextMenu.open({
