@@ -835,6 +835,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
                                     $(_self).val(LIs[0]);
+                                    formElem.autocompleteSelect.call(_self, LIs[0], formElem);
                                     formElem.__noblur = false;
                                 } else {
                                     $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function () {
