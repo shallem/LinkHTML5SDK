@@ -3232,6 +3232,12 @@ var globalDataListID = -1;
                 this.$searchBox.blur();
             }
         },
+        hideSearch: function() {
+            this.$searchBox.hide();
+        },
+        showSearch: function() {
+            this.$searchBox.show();
+        },
         hideList: function () {
             this.$wrapper.hide();
         },

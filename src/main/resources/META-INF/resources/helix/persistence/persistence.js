@@ -2005,7 +2005,9 @@ function initPersistence(persistence) {
                 }
                 if (callbacks.eachFn) {
                     for(var i = 0; i < results.length; i++) {
-                        callbacks.eachFn(results[i], opaque);
+                        if (callbacks.eachFn(results[i], opaque) === false) {
+                            break;
+                        }
                     }
                 }
                 if (callbacks.doneFn) {
