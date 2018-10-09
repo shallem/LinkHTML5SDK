@@ -585,6 +585,14 @@ Helix.Ajax = {
     },
 
     inProgressLoads : {},
+    
+    cancelLoadCommand: function(name) {
+        var opts = Helix.Ajax.inProgressLoads[name];
+        if (opts && opts.loadInProgress) {
+            opts.loadInProgress.cancel();
+            opts.loadInProgress = null;
+        }
+    },
 
     ajaxBeanLoad: function(loadCommandOptions,itemKey,nRetries) {
         // Set a default error handler if we do not have one.
@@ -683,7 +691,14 @@ Helix.Ajax = {
             loadingOptions
         ]);
         /* Give the browser a change to handle the event and show the loader. */
-        $.ajax({
+        var ret = {
+            isCancelled : false,
+            cancel: function() {
+                this.isCancelled = true;
+                this._xhr.abort();
+            }
+        };
+        ret._xhr = $.ajax({
             type: "POST",
             url: loadCommandOptions.requestOptions.postBack,
             dataType: "json",
@@ -693,6 +708,10 @@ Helix.Ajax = {
                 if (!data) {
                     // We go nothing back from the server. This happens when the network request is killed
                     // by the client (e.g., because the app was put to sleep).
+                    delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
+                    return;
+                }
+                if (this.isCancelled) {
                     delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
                     return;
                 }
@@ -763,6 +782,9 @@ Helix.Ajax = {
             },
             error: function(jqXHR, status, errorThrown) {
                 delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
+                if (this.isCancelled) {
+                    return;
+                }
                 if (Helix.ignoreErrors) {
                     return;
                 }
@@ -790,6 +812,7 @@ Helix.Ajax = {
                     ]);
             }
         });
+        loadCommandOptions.loadInProgress = ret;
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
