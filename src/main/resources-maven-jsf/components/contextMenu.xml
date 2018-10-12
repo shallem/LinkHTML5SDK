@@ -22,14 +22,12 @@
             <name>theme</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>a</defaultValue>
             <description>jQuery Mobile theme of the context menu items list.</description>
         </attribute>
         <attribute>
             <name>dividerTheme</name>
             <required>false</required>
             <type>java.lang.String</type>
-            <defaultValue>b</defaultValue>
             <description>jQuery Mobile theme of dividers in the menu.</description>
         </attribute>
         <attribute>

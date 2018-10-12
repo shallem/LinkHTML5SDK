@@ -1721,7 +1721,12 @@ function initPersistence(persistence) {
             s += this._reverse;
             if (this._group) {
                 s += '|Group:';
-                s += JSON.stringify(this._group);
+                s += JSON.stringify(this._group, function(key, value) {
+                    if (key === 'having') {
+                        return value.toUniqueString();
+                    }
+                    return value;
+                });
             }
             return s;
         };
@@ -1843,13 +1848,16 @@ function initPersistence(persistence) {
             return this._session.uniqueQueryCollection(c);
         };
 
-        QueryCollection.prototype.group = function(groupByField, selectorField, selectorType) {
+        QueryCollection.prototype.group = function(groupByField, selectorField, selectorType, having) {
             var c = this.clone();
             c._group = {
                 'by' : groupByField,
                 'selector' : selectorField,
                 'selectorType' : selectorType
             };
+            if (having) {
+                c._group.having = having;
+            }
             return this._session.uniqueQueryCollection(c);
         };
 

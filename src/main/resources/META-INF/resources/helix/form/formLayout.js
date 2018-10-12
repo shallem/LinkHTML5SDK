@@ -762,6 +762,35 @@
             return false;
         },
         
+        refreshValue: function(valuesMap, fieldName, modeChanged) {
+            if (!valuesMap) {
+                valuesMap = this.getValues();
+            }
+            
+            var mode = (this.options.currentMode === 'edit' ? 1 : 0);
+            for (var idx = 0; idx < this.options.items.length; ++idx) {
+                var nxtItem = this.options.items[idx];
+                if (nxtItem.type === "subPanel" ||
+                        nxtItem.type === 'horizontalBlock') {
+                    if (this._stripNamespace(nxtItem.name) === fieldName) {
+                        this.__refreshOneValue(mode,nxtItem,valuesMap,modeChanged);
+                        // Fall through - refreshing the parent implies refreshing all children ...
+                    }
+                    for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
+                        var subitem = nxtItem.items[subidx];
+                        if (this._stripNamespace(subitem.name) === fieldName) {
+                            this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
+                            return;
+                        }
+                    }                        
+                } else if (this._stripNamespace(nxtItem.name) === fieldName) {
+                    this.__refreshOneValue(mode, nxtItem, valuesMap,modeChanged);
+                    return;
+                }
+            }
+
+        },
+        
         refreshValues: function(valuesMap, modeChanged) {
             if (!valuesMap) {
                 valuesMap = this.getValues();

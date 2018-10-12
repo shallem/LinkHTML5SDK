@@ -828,8 +828,12 @@ function config(persistence, dialect) {
         var originalEntityName = entityName;
         var originalMainAlias = mainAlias;
         if (this._group) {
+            var _having = ' ';
+            if (this._group.having) {
+                _having = ' WHERE ' + this._group.having.sql(meta, 'groupSelectorTable', args);
+            }
             entityName = '(SELECT ' + this._group.by + ',' + this._group.selectorType + '(' + this._group.selector + ') AS groupSelector' +
-                        ' FROM `' + entityName + '` GROUP BY ' + this._group.by + ')';
+                        ' FROM `' + entityName + '` AS groupSelectorTable' + _having + ' GROUP BY ' + this._group.by + ')';
             this._additionalJoinSqls = [' INNER JOIN `' + originalEntityName + '` AS `' + mainAlias + 
                         '` ON `' + mainAlias + '`.`' + this._group.by + '` = groupedTable.`' + this._group.by + '` AND `'
                                  + mainAlias + '`.`' + this._group.selector + '` = groupSelector'];
