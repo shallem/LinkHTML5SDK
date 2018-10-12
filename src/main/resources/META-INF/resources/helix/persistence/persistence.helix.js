@@ -884,7 +884,12 @@ function initHelixDB() {
                 sch = schema.__hx_schema_name; 
             }
             var idx = sch.lastIndexOf('.');
-
+            if (idx > 0) {
+                sch = sch.substr(idx+1);
+            }
+            // Handle the case of inner clasess - the JSONDictionary still indexes by their simple name - e.g.,
+            // MailMessageFacade$AttachmentData is indexed by AttachmentData
+            var idx = sch.lastIndexOf('$');
             if (idx > 0) {
                 sch = sch.substr(idx+1);
             }

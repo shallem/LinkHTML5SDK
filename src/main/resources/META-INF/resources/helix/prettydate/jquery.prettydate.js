@@ -133,10 +133,15 @@
 		 */
 		format: function (target) {
 			var messages,
-				targetTime = $.prettyDate.parse(target),
-				nowTime = $.prettyDate.now().getTime(),
-				diff = (nowTime - targetTime) / 1000,
-				dayDiff = Math.floor(diff / 86400);
+				targetTime,
+				nowTime = $.prettyDate.now().getTime();
+                        if (isNaN(target)) {
+                            targetTime = $.prettyDate.parse(target)
+                        } else {
+                            targetTime = Number(target);
+                        }
+                        var diff = (nowTime - targetTime) / 1000,
+				dayDiff = Math.floor(diff / 86400)
 
 			if (isNaN(dayDiff) || dayDiff < 0) {
 				return;
