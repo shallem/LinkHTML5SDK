@@ -3233,10 +3233,10 @@ var globalDataListID = -1;
             }
         },
         hideSearch: function() {
-            this.$searchBox.hide();
+            this.$searchBox.closest('.ui-input-search').hide();
         },
         showSearch: function() {
-            this.$searchBox.show();
+            this.$searchBox.closest('.ui-input-search').show();
         },
         hideList: function () {
             this.$wrapper.hide();
