@@ -10697,6 +10697,7 @@ $.widget( "mobile.panel", $.mobile.widget, {
                         // We are already open.
                         self.close();
                     }
+                    self._open = false;
 
                     if ( this.element.closest( ".ui-page-active" ).length < 0 ) {
                             immediate = true;
