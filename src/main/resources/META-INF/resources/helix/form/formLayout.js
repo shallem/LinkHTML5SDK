@@ -1124,6 +1124,15 @@
                         validator = this._checkNonEmpty;
                     } else if (nxtItem.validator === 'notpast') {
                         validator = this._checkNotPast;
+                    } else {
+                        var fn = window[nxtItem.validator];
+                        if(typeof fn !== 'function') {
+                            validator = function() {
+                                Helix.Utils.statusMessage('Invalid validator', nxtItem.validator + ' is not a function.', 'error');
+                            };
+                        } else {
+                            validator = fn;
+                        }
                     }
                 } else {
                     validator = nxtItem.validator;
