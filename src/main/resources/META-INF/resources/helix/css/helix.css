@@ -1073,3 +1073,19 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     -webkit-backface-visibility: hidden;
     -webkit-transform: translateZ(0);
 }
+
+.hx-actions-popup {
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    min-height: 75%;
+    max-height: 75%;
+    width: 65%;
+    margin: auto;
+}
+
+.hx-action-border {
+    border-style: solid;
+    padding: 0.5em;
+}

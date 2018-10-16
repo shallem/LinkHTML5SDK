@@ -2309,8 +2309,6 @@ Helix.Layout._createButton = function (btnId, btnWidth, theme, popup, text, acti
 };
 
 Helix.Layout._createDialogPopup = function (popupId) {
-    var _width = Helix.screenWidth * 0.8;
-    _width = Math.min(_width, 400);
     return $('<div/>').attr({
         'data-role': 'popup',
         'id': popupId,
@@ -2318,7 +2316,7 @@ Helix.Layout._createDialogPopup = function (popupId) {
         'data-theme': 'd',
         'data-position-to': 'window',
         'data-history': 'false',
-        'style': 'width: 300px'
+        'class': 'hx-full-height hx-full-width'
     });
 };
 
@@ -2438,4 +2436,87 @@ Helix.Layout.createAlertDialog = function(options) {
 
     var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'OK', options.onclick);
     return Helix.Layout._layoutPopup(popup, options, [ confirmbtn ]); 
+};
+
+
+Helix.Layout.createActionsDialog = function (options, actions) {
+    var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
+    var popup = Helix.Layout._createDialogPopup(popupId);
+
+    var titleStyleClass = options.titleStyleClass ? options.titleStyleClass : 'dialog-title';
+    var header = $("<div/>").attr({
+        'data-role': 'header',
+        'data-theme': 'd',
+        'class': 'hx-dialog-header ' + titleStyleClass
+    }).append($('<h1/>').attr({
+        'class': 'ui-title'
+    }).append(options.title));
+
+    var content = $('<div/>').attr({
+        'data-role': 'content',
+        'style': 'margin: .5em .5em .5em .5em',
+        'data-theme': 'd',
+        'class': 'ui-corner-bottom ui-content hx-dialog-content'
+    });
+    for (var i = 0; i < actions.length; ++i) {
+        var nxt = actions[i];
+        var nxtDiv = $('<div/>').attr({
+            'class' : 'hx-flex-horizontal hx-mini-fieldcontain hx-action-border'
+        });
+        $(nxtDiv).append($('<div/>').attr({
+            'class': 'hx-display-inline hx-flex-fill'
+        }).append(nxt.label));
+        $(nxtDiv).append($('<div/>').attr({
+            'class' : 'hx-display-inline iconbutton ui-icon-' + nxt.icon
+        }));
+        $(nxtDiv).on(Helix.clickEvent, null, nxt, function(ev) {
+            ev.data.action.call(ev.data);
+        });
+        $(nxtDiv).appendTo(content);
+    }
+    $(popup)
+            .addClass('hx-actions-dialog')
+            .append(header)
+            .append(content);
+
+    // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
+    $.mobile.activePage.append(popup);//.trigger("pagecreate");
+    $(popup).popup({
+        noResize: true,
+        containerClass: 'hx-actions-popup'
+    });
+    $(popup).trigger('create');
+    $.mobile.activePage.trigger('enhanceHeaders');
+
+    $(popup).on('popupafterclose', null,  options, function (ev) {
+        if (ev.data.oncomplete) {
+            ev.data.oncomplete();
+        }
+        if (ev.data.noRemoveOnClose !== true) {
+            $(this).remove();
+        }
+    });
+    if (options.beforePosition) {
+        $(popup).one('popupbeforeposition', null, options, function(ev) {
+            if (ev.data.beforePosition) {
+                ev.data.beforePosition(this);
+            }
+        });
+    }
+    if (options.popupDismiss) {
+        $(popup).on('popupdismiss', null, options, function (ev) {
+            if (ev.data.popupDismiss) {
+                ev.data.popupDismiss();
+            }
+        });
+    }
+    if (options.noOpen !== true) {
+        $(popup).popup("open");
+    }
+
+    $(window).on('navigate.popup', function (e) {
+        e.preventDefault();
+        $(window).off('navigate.popup');
+    });
+    return $(popup);
 };

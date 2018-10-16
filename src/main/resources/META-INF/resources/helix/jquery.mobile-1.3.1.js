@@ -8480,6 +8480,9 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			navigateEvents: "navigate.popup",
 			closeEvents: "navigate.popup pagebeforechange.popup",
 			dismissible: true,
+                        /* SH */
+                        containerClass: '',
+                        noResize: false,
 
 			// NOTE Windows Phone 7 has a scroll position caching issue that
 			//      requires us to disable popup history management by default
@@ -8618,7 +8621,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			var ui = {
 					screen: $( "<div class='ui-screen-hidden ui-popup-screen'></div>" ),
 					placeholder: $( "<div style='display: none;'><!-- placeholder --></div>" ),
-					container: $( "<div class='ui-popup-container hx-popup-container ui-popup-hidden'></div>" )
+					container: $( "<div class='ui-popup-container hx-popup-container ui-popup-hidden " + this.options.containerClass + "'></div>" )
 				},
 				thisPage = this.element.closest( ".ui-page" ),
 				myId = this.element.attr( "id" ),
@@ -9044,7 +9047,9 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			this._ui.container.removeClass( "ui-popup-hidden" );
 
 			// Give applications a chance to modify the contents of the container before it appears
-			this._reposition( o );
+			if (this.options.noResize !== true) { /* SAH: let the client turn off repositioning. */
+                            this._reposition( o );
+                        }
 
 			if ( this.options.overlayTheme && androidBlacklist ) {
 				/* TODO:
