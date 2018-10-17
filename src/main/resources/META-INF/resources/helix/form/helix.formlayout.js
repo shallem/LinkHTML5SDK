@@ -2320,7 +2320,11 @@ Helix.Layout._createDialogPopup = function (popupId) {
     });
 };
 
-Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
+Helix.Layout._layoutPopup = function (popup, options, buttons, form, popupOpts) {
+    if (!popupOpts) {
+        popupOpts = {};
+    }
+    
     var titleStyleClass = options.titleStyleClass ? options.titleStyleClass : 'dialog-title';
     var header = $("<div/>").attr({
         'data-role': 'header',
@@ -2358,7 +2362,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form) {
     // Create the popup. Trigger "pagecreate" instead of "create" because currently the framework doesn't bind the enhancement of toolbars to the "create" event (js/widgets/page.sections.js).
     if (options.noOpen !== true) {
         $.mobile.activePage.append(popup);//.trigger("pagecreate");
-        $(popup).popup({});
+        $(popup).popup(popupOpts);
         $(popup).trigger('create');
         $.mobile.activePage.trigger('enhanceHeaders');
     }
@@ -2417,6 +2421,7 @@ Helix.Layout.createFormDialog = function(options, form) {
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
+    popup.addClass('hx-form-popup');
 
     var closebtn = Helix.Layout._createButton(popupId + '-cancel', '105', 'c', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
     var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);

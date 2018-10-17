@@ -699,6 +699,7 @@ Helix.Ajax = {
             }
         };
         ret._xhr = $.ajax({
+            context: ret,
             type: "POST",
             url: loadCommandOptions.requestOptions.postBack,
             dataType: "json",
@@ -1128,13 +1129,24 @@ Helix.Ajax = {
             }
         }
         
-        var xhr = $.ajax({
+        var ret = {
+            isCancelled : false,
+            cancel: function() {
+                this.isCancelled = true;
+                this._xhr.abort();
+            }
+        };
+        ret._xhr = $.ajax({
+            context: ret,
             url: params.url + (args ? '?' : '') + args,
             type: 'GET',
             success: function(returnObj,textStatus,jqXHR) {
                 if (!returnObj) {
                     // We go nothing back from the server. This happens when the network request is killed
                     // by the client (e.g., because the app was put to sleep).
+                    return;
+                }
+                if (this.isCancelled) {
                     return;
                 }
                 
@@ -1162,6 +1174,9 @@ Helix.Ajax = {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                if (this.isCancelled) {
+                    return;
+                }
                 if (Helix.ignoreErrors) {
                     return;
                 }
@@ -1194,7 +1209,7 @@ Helix.Ajax = {
             },
             dataType: 'json'
         });
-        return xhr;
+        return ret;
     },
 
     ajaxOfflineQueue: function(params, callbacks) {

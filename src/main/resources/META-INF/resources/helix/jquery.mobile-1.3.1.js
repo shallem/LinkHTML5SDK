@@ -8754,7 +8754,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 		},
 
 		_setTolerance: function( value ) {
-			var tol = { t: 30, r: 15, b: 30, l: 15 };
+			var tol = { t: 30, r: 10, b: 30, l: 10 };
 
 			if ( value !== undefined ) {
 				var ar = String( value ).split( "," );

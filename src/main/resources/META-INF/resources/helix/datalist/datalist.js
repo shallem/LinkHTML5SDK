@@ -530,7 +530,7 @@ var globalDataListID = -1;
 
                 var obj = $(elt).data('data');
                 if (callback && obj && $(elt).attr('data-deleted') !== 'true') {
-                    return callback(elt, _self.displayList, _self._currentSort, obj);
+                    return callback.call(_self, elt, _self.displayList, _self._currentSort, obj);
                 }
 
                 return null;
@@ -1820,7 +1820,7 @@ var globalDataListID = -1;
                     _self.options.indexedSearch.call(_self, searchText, function (displayCollection, oncomplete, optionsOverrides) {
                         if (searchText === _self.getCurrentSearchText()) {
                             _self.indexedSearchDone(displayCollection, oncomplete, optionsOverrides);
-                        } else {
+                        } else if (oncomplete) {
                             oncomplete.call(_self, opaque);
                         }
                     }, localResultsColl, opaque);
