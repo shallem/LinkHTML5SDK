@@ -20,7 +20,7 @@
 
 // Global dictionary use to map class name to class dictionary 
 // in the JSON serialization;
-var JSONKeyDictionary = [];
+var JSONKeyDictionary = {};
 
 function initHelixDB() {
     Helix.DB = {
