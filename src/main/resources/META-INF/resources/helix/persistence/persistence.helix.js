@@ -824,25 +824,23 @@ function initHelixDB() {
             
             if (!key) {
                 key = schema.__hx_key;
-                if (key in obj) {
-                    // Use the unconverted key field name.
-                } else {
-                    var classDict = this.getClassDictionary(schema);
+            }
+            if (key in obj) {
+                // Use the unconverted key field name.
+            } else {
+                var classDict = this.getClassDictionary(schema);
 
-                    if (classDict) {
-                        for (var k in classDict) {
-                            if (classDict[k] === key) {
-                                key = k;
-                                break;
-                            }
+                if (classDict) {
+                    for (var k in classDict) {
+                        if (classDict[k] === key) {
+                            key = k;
+                            break;
                         }
                     }
-                    // Store the mapping ...
-                    JSONKeyDictionary[sch] = key;
                 }
-                
-            }
-                
+                // Store the mapping ...
+                JSONKeyDictionary[sch] = key;
+            }               
             return key;
         },
     
@@ -1759,9 +1757,9 @@ function initHelixDB() {
                 };
                 syncComponent();
             } else {
-                obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 var dbKeyField = Helix.DB.getKeyField(objSchema);
                 var objKeyField = Helix.DB.getJSONKeyField(objSchema, obj);
+                obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 objSchema.all().filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj, _opaque) {
                         /* Store the schema in the final obj. */
