@@ -829,12 +829,26 @@ function initHelixDB() {
                 // Use the unconverted key field name.
             } else {
                 var classDict = this.getClassDictionary(schema);
+                var isFound = false;
 
                 if (classDict) {
-                    for (var k in classDict) {
-                        if (classDict[k] === key) {
+                    // First see if we can map key to its translated name, and if the object has already
+                    // been reverse mapped
+                    if (key in classDict) {
+                        var k = classDict[key];
+                        if (k in obj) {
                             key = k;
-                            break;
+                            isFound = true;
+                        }
+                    }
+                    
+                    if (isFound === false) {
+                        // Map backwards (from mapped name back to unmapped name).
+                        for (var k in classDict) {
+                            if (classDict[k] === key) {
+                                key = k;
+                                break;
+                            }
                         }
                     }
                 }
