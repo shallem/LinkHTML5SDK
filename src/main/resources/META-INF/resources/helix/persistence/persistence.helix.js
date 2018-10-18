@@ -1759,6 +1759,7 @@ function initHelixDB() {
                 };
                 syncComponent();
             } else {
+                obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 var dbKeyField = Helix.DB.getKeyField(objSchema);
                 var objKeyField = Helix.DB.getJSONKeyField(objSchema, obj);
                 objSchema.all().filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
