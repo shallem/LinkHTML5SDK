@@ -1757,9 +1757,9 @@ function initHelixDB() {
                 };
                 syncComponent();
             } else {
+                obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 var dbKeyField = Helix.DB.getKeyField(objSchema);
                 var objKeyField = Helix.DB.getJSONKeyField(objSchema, obj);
-                obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 objSchema.all().filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(allSchemas, obj, persistentObj, objSchema, function(finalObj, _opaque) {
                         /* Store the schema in the final obj. */
