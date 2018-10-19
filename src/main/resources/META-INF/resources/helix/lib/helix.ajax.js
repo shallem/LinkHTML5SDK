@@ -1306,7 +1306,8 @@ Helix.Ajax = {
         var loadingOptions = Helix.Ajax.setLoaderOptions({
             async: (params.async !== undefined) ? params.async : true,
             silent: (params.silentMode !== undefined) ? params.silentMode : false,
-            message: params.loadingMessage ? params.loadingMessage : ''
+            message: params.loadingMessage ? params.loadingMessage : '',
+            pin: (params.pin !== undefined) ? params.pin : false
         });
         if (Helix.Ajax.isDeviceOnline()) {
             var page = $.mobile.activePage;
