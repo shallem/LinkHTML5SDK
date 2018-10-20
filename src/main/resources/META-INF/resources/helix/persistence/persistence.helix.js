@@ -1552,7 +1552,12 @@ function initHelixDB() {
                     var val = obj[field];
                     delete obj[field];
                     field = classDict[field];
-                    obj[field] = val;
+                    if (field in obj) {
+                        // A new value for the mapped field name was set locally (this cannot come from the server).
+                        // Let any local overrides of this field take precedence over values sent by the server!
+                    } else {
+                        obj[field] = val;
+                    }
                 }
                 if (Object.prototype.toString.call(obj[field]) === '[object Array]' ||
                     Object.prototype.toString.call(obj[field]) === '[object Object]') {

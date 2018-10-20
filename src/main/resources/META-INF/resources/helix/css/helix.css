@@ -1085,6 +1085,17 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     margin: auto;
 }
 
+.hx-actions-popup .ui-header .ui-title {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+@media screen and (max-width: 400px) {
+    .hx-actions-popup {
+        width: 85%;
+    }
+}
+
 .hx-action-border {
     border-style: solid;
     padding: 0.5em;
