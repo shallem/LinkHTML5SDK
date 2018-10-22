@@ -5640,7 +5640,8 @@ $.fn.buttonMarkup = function( options ) {
 		}
 
 		buttonClass = "ui-btn ";
-		buttonClass += ( hover ? "ui-btn-hover-" + o.theme : "" );
+		// SAH: we don't want hover styles at all.
+                // buttonClass += ( hover ? "ui-btn-hover-" + o.theme : "" );
 		buttonClass += ( state ? " ui-btn-" + state + "-" + o.theme : "" );
 		buttonClass += o.shadow ? " ui-shadow" : "";
 		buttonClass += o.corners ? " ui-btn-corner-all" : "";
@@ -5794,10 +5795,12 @@ var attachEvents = function() {
 					if ( isTouchEvent ) {
 						// Use a short delay to determine if the user is scrolling before highlighting
 						foc = setTimeout( function() {
-							updateButtonClass( $btn, "ui-btn-up-" + theme, "ui-btn-hover-" + theme, true, "" );
+                                                        // SAH : No hover
+							updateButtonClass( $btn, "ui-btn-up-" + theme, /*"ui-btn-hover-" + theme*/'', true, "" );
 						}, hoverDelay );
 					} else {
-						updateButtonClass( $btn, "ui-btn-up-" + theme, "ui-btn-hover-" + theme, true, "" );
+                                                        // SAH : No hover
+						updateButtonClass( $btn, "ui-btn-up-" + theme, /*"ui-btn-hover-" + theme*/'', true, "" );
 					}
 				} else if ( evt === "vmouseout" || evt === "blur" || evt === "scrollstart" ) {
 					updateButtonClass( $btn, "ui-btn-hover-" + theme  + " ui-btn-down-" + theme, "ui-btn-up-" + theme, false, "up" );
