@@ -325,10 +325,13 @@ function config(persistence, dialect) {
                 id = persistObjArray[i].id;
                 delete session.trackedObjects[id];            
             }         
+            for (var i = 0; i < removeObjArray.length; ++i) {
+                id = removeObjArray[i][0];
+                delete session.objectsToRemove[id];            
+            }         
         }
         
         var __doFlush = function(callback, persistObjArray, removeObjArray) {
-            session.objectsToRemove = {};
             if(callback) {
                 persistence.asyncParForEach(removeObjArray, function(obj, callback, opaque, tx) {
                     remove(obj, tx, callback);
