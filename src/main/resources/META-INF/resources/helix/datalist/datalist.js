@@ -910,7 +910,10 @@ var globalDataListID = -1;
             }
 
 	    if (lastScroll >= -10 && scrollPos < -10) {
-                if (!_self.refreshInProgress && _self._renderWindowStart === 0 && _self.options.pullToRefresh) {
+                if (!_self.refreshInProgress && 
+                        _self._renderWindowStart === 0 && 
+                        !_self.getCurrentSearchText() &&
+                        _self.options.pullToRefresh) {
                     _self.options.pullToRefresh.call(this);
                     _self._clearGlobalFilterMenu();
                 }
