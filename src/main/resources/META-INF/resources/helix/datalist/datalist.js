@@ -1834,7 +1834,7 @@ var globalDataListID = -1;
                 // Search is not enabled OR we have not yet displayed this list.
                 return '';
             }
-            return this.$searchBox.val()
+            return this.$searchBox.val().trim();
         },
         setCurrentSearchText: function (searchQry, doSearch) {
             if (this.$searchBox) {
@@ -1867,7 +1867,7 @@ var globalDataListID = -1;
                     _self.scrollToStart();
                     _self.options.localIndexedSearch.call(_self, searchText, function (res, optionsOverrides, oncomplete) {
                         // Make sure the user hasn't further changed the search box.
-                        if (searchText !== _self.$searchBox.val()) {
+                        if (searchText !== _self.getCurrentSearchText()) {
                             return; // Don't do anything more here.
                         }
                         _self.indexedSearchDone(res, function () {
@@ -1899,6 +1899,7 @@ var globalDataListID = -1;
             if (_doRefresh !== false) {
                 _self.unfilteredList = _self.originalList;
                 _self._clearGlobalFilterMenu();
+                _self._filterMap = {};
                 _self._refreshData(function () {
                     _self.scrollToStart();
                     if (_self.options.afterSearchClear) {
@@ -2027,7 +2028,7 @@ var globalDataListID = -1;
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
                 }
-                this.$searchBox.on('input', function () {
+                this.$searchBox.on('input paste', function () {
                     _self.__searchClear = false;
                     _self._doSearch();
                 });
