@@ -488,6 +488,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.inputDisabled === true) {
             inputMarkup[0].disabled = true;
         }
+        if (formElem.noInput === true) {
+            inputMarkup[0].readOnly = true;
+        }
         if (formElem.type === 'rawTextarea') {
             inputMarkup[0].value = formElem.value;
         } else {

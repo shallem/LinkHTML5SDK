@@ -134,6 +134,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.isReadOnly()) {
             writer.write(", 'readOnly' : true");
         }
+        if (ffield.isDisableInput()) {
+            writer.write(", 'noInput' : true");            
+        }
         if (ffield.isDisabled()) {
             writer.write(", 'inputDisabled' : true");
         }

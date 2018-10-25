@@ -280,6 +280,13 @@
             <description>Indicates that this form field is disabled.</description>
         </attribute>
         <attribute>
+            <name>disableInput</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field should have the HTML attribute readonly.</description>
+        </attribute>
+        <attribute>
             <name>noBorder</name>
             <required>false</required>
             <type>java.lang.Boolean</type>
