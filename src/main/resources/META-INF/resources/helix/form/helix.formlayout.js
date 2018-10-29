@@ -233,6 +233,11 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         if (formElem.onchange) {
             dateInput.change(formElem.onchange);
         }
+        if (formElem.onblur) {
+            dateInput.blur(function () {
+                formElem.onblur.apply(this);
+            });
+        }
         $fieldContainer.append(dateDiv);
         dateDiv.fieldcontain();
     } else {
@@ -521,7 +526,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function () {
-                formElem.onblur.apply(this);
+                formElem.onblur.apply(this, formElem);
             });
         }
         if (formElem.onchange) {

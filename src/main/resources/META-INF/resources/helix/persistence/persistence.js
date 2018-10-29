@@ -363,6 +363,22 @@ function initPersistence(persistence) {
             return this;
         };
         
+        persistence.revert = function(obj, keyField, keyValue) {
+            if (!keyField) {
+                keyField = 'id';
+            }
+            if (!keyValue) {
+                keyValue = obj.id;
+            }
+            
+            var lookupKey = keyField + '=' + keyValue;
+            delete this.objectsToRemove[lookupKey];
+            delete this.trackedObjects[obj.id];
+            obj._dirtyProperties = {};
+            
+            return this;
+        };
+        
         persistence.getRemoveKeyValuePair = function(removeID) {
             var eqPos = removeID.indexOf('=');
             if (eqPos > 0) {
