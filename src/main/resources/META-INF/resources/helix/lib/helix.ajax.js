@@ -315,7 +315,15 @@ Helix.Ajax = {
                 var refreshObj = $.parseJSON(elem.json);
                 if (refreshObj.type) {
                     var schema = Helix.DB.getSchemaForTable(refreshObj.type);
-                    schema.all().filter(refreshObj.key, '=', refreshObj.value).destroyAll();
+                    if (refreshObj.values) {
+                        persistence.transaction(function(tx) {
+                            for (var i = 0; i < refreshObj.values.length; ++i) {
+                                schema.all().filter(refreshObj.key, '=', refreshObj.values[i]).destroyAll(tx); 
+                            }
+                        });
+                    } else { 
+                        schema.all().filter(refreshObj.key, '=', refreshObj.value).destroyAll(); 
+                    }
                 }
             } catch(e) {
                 // Something was unexpected in the format of the object from the native layer. Ignore.

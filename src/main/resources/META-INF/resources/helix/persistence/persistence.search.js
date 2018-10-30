@@ -668,7 +668,7 @@ persistence.search.config = function(persistence, dialect, options) {
             if (toRemove.hasOwnProperty(id)) {
                 var obj = toRemove[id];
                 var meta = persistence.getEntityMeta()[obj._type];
-                if(meta.textIndex) {
+                if(meta && meta.textIndex) {
                     var keyValuePair = persistence.getRemoveKeyValuePair(id);
                     queries.push(['DELETE FROM `' + obj._type + '_Index` WHERE `entityId` IN (SELECT ROWID FROM `' + obj._type + '` WHERE `' 
                                 + keyValuePair[0] + '`=?)', [keyValuePair[1]]]);
