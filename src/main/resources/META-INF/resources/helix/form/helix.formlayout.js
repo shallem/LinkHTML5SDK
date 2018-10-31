@@ -1383,6 +1383,9 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         if (formElem.isScroller) {
             $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
         }
+        if (formElem.height) {
+            $fieldContainer.height(formElem.height);
+        }
         var newFrameMarkup = __makeIFrameMarkup(formElem);
         formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
         __refreshIFrame(formElem);
