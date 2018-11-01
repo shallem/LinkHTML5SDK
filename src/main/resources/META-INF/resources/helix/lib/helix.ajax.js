@@ -672,7 +672,7 @@ Helix.Ajax = {
                     window[loadCommandOptions.name] = widget;
                     
                     delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
-                    loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, widget);
+                    loadCommandOptions.oncomplete(itemKey, loadCommandOptions.name, widget, false, { offline: true });
                 },loadCommandOptions.syncOverrides);
             } else if (itemKey === null) {
                 /* An explicit null means load all objects. */
@@ -680,7 +680,7 @@ Helix.Ajax = {
                     window[loadCommandOptions.name] = widgetList;
                     
                     delete Helix.Ajax.inProgressLoads[loadCommandOptions.name];
-                    loadCommandOptions.oncomplete(null, loadCommandOptions.name, widgetList);
+                    loadCommandOptions.oncomplete(null, loadCommandOptions.name, widgetList, false, { offline: true });
                 });
             } else {
                 /* itemKey is undefined. Nothing we can do when we are offline. */

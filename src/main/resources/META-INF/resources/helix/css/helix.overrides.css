@@ -202,3 +202,7 @@ div.ui-input-text textarea.ui-input-text,
 .ui-page {
     -webkit-user-select: none;
 }
+
+.ui-btn-inner .ui-btn-text {
+    text-decoration: none !important;
+}
