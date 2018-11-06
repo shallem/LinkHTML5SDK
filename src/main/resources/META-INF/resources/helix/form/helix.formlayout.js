@@ -2486,7 +2486,9 @@ Helix.Layout.createActionsDialog = function (options, actions) {
             'class' : 'hx-display-inline iconbutton ui-icon-' + nxt.icon
         }));
         $(nxtDiv).on(Helix.clickEvent, null, nxt, function(ev) {
+            ev.stopImmediatePropagation();
             ev.data.action.call(ev.data);
+            return false;
         });
         $(nxtDiv).appendTo(content);
     }

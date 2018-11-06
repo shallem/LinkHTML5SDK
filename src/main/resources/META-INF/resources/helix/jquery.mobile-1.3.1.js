@@ -8985,6 +8985,10 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 		},
 
 		_reposition: function( o ) {
+                    if (this.options.noResize === true) { 
+                        return;
+                    }
+                    
 			// We only care about position-related parameters for repositioning
 			o = { x: o.x, y: o.y, positionTo: o.positionTo };
 			this._trigger( "beforeposition", o );
