@@ -20,9 +20,14 @@
 .ui-editor-prompt textarea {font:8.5pt Arial,Verdana;}
 .ui-editor-message {background-color:#FDFCEE; width:150px; padding:4px; font-size:8.5pt}
 /* SAH: override JQM style that sets the width of controls to 78%. */
-.ui-editor-toolbar .ui-controlgroup-controls { 
+.hx-editor-toolbar .ui-controlgroup-controls { 
     float: right; 
 }
+
+.hx-editor-toolbar .hx-editor-custom-toolbar.ui-controlgroup-controls { 
+    float: left; 
+}
+
 .ui-editor-format { border:solid 1px #999;}
 
 
@@ -108,6 +113,10 @@
     color: white;
 }
 
-.ui-editor-toolbar .hx-editor-icon-button {
+.hx-editor-toolbar .hx-editor-icon-button {
     height: 32px !important;
+}
+
+.hx-editor-toolbar {
+    background-color: whitesmoke;
 }

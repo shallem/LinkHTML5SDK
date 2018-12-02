@@ -80,6 +80,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getTitleStyleClass() != null) {
             writer.write(", 'titleStyleClass' : '" + ffield.getTitleStyleClass() + "'");
         }
+        if (ffield.getFieldStyleClass()!= null) {
+            writer.write(", 'fieldStyleClass' : '" + ffield.getFieldStyleClass() + "'");
+        }
         if (ffield.getDirection() != null) {
             writer.write(", 'direction' : '" + ffield.getDirection() + "'");
         }

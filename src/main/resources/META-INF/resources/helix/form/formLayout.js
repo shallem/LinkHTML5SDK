@@ -355,8 +355,6 @@
             $(this.element).empty();
             this.$section = $('<section/>').addClass('hx-full-height hx-full-width').appendTo(this.element);
             if (this.options.fullScreen) {
-                $(this.element).height('100%');
-                this.$section.height('100%');
                 this.$section.addClass('hx-flex-vertical');
             }
             
@@ -1056,7 +1054,7 @@
                 // See if this is an editor.
                 var fld = this.getField(name);
                 if (fld.type === 'htmlarea') {
-                    $(fieldElem).find('[name="'+fld.name+'"]').editor('focus');
+                    $(fieldElem).editor('focus');
                 }
             }
         },

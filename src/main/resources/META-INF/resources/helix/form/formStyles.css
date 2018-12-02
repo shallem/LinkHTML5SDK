@@ -184,6 +184,24 @@
     flex-direction: row;
 }
 
+/* With an explicit bottom border, override the above. */
+.hx-form-bottom-border .hx-form-container .ui-field-contain div.ui-input-text {
+    border-bottom: none;
+    border-bottom-style: none;
+    border-bottom-width: 0px;
+}
+
+.hx-form-bottom-border.hx-form-container .ui-field-contain textarea.ui-input-text {
+    border: none;
+}
+
+.hx-form-bottom-border {
+    border-bottom: lightgrey;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-radius: 0px;    
+}
+
 .hx-form-container .ui-field-contain div.ui-input-text.hx-input-date input {
     border: none;
 }
@@ -412,5 +430,13 @@ textarea.ui-input-text {
 }
 
 .hx-form-pad-top {
-    margin-top: 0.75em;
+    padding-top: 0.75em;
+}
+
+.hx-form-pad-textinput {
+    padding-bottom: 0.2em;
+}
+
+.hx-form-pad-bottom {
+    padding-bottom: 0.75em;
 }

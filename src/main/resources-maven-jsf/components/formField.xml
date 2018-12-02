@@ -109,6 +109,12 @@
             <description>Optional style class for the field title</description>
         </attribute>
         <attribute>
+            <name>fieldStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class for the field wrapper</description>
+        </attribute>
+        <attribute>
             <name>valueText</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -513,12 +513,17 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         var textContainer = $('<div />').attr({
             'data-role': 'fieldcontain',
             'style': formLayout.computedFieldStyle,
-            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass
+            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
         })
                 .append(lbl)
                 .append(inputMarkup);
 
         $fieldContainer.append(textContainer);
+        
+        var fieldClasses = formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass;
+        if (fieldClasses.trim()) {
+            $fieldContainer.addClass(fieldClasses);
+        }
         textContainer.fieldcontain();
         $(inputMarkup).textinput();
         if (formElem.fieldTitleType === 'button') {
@@ -1433,16 +1438,23 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
             $fieldContainer.addClass('hx-full-width');
         }
     }
-    if (formElem.height && formElem.height !== 'full') {
-        $fieldContainer.height(formElem.height);
-        $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
-    } else {
-        $fieldContainer.height('100%');
-        if (formElem.minHeight) {
-            $fieldContainer.css('min-height',formElem.minHeight + 'px');
+    if (formElem.height) {
+        switch(formElem.height) {
+            case 'full':
+                $fieldContainer.height('100%');
+                if (formElem.minHeight) {
+                    $fieldContainer.css('min-height',formElem.minHeight + 'px');
+                }    
+                break;
+            case 'flex':
+                $fieldContainer.addClass('hx-flex-fill');    
+                break;
+            default:
+                $fieldContainer.height(formElem.height);
+                $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
+                break;
         }
     }
-    
 
     if (!formElem.name) {
         /* No field name. We cannot edit this field. */
@@ -2476,6 +2488,10 @@ Helix.Layout.createActionsDialog = function (options, actions) {
     });
     for (var i = 0; i < actions.length; ++i) {
         var nxt = actions[i];
+        var iconClass = nxt.icon;
+        if (iconClass.indexOf('ui-icon') !== 0) {
+            iconClass = 'ui-icon-' + iconClass;
+        }
         var nxtDiv = $('<div/>').attr({
             'class' : 'hx-flex-horizontal hx-mini-fieldcontain hx-action-border'
         });
@@ -2483,7 +2499,7 @@ Helix.Layout.createActionsDialog = function (options, actions) {
             'class': 'hx-display-inline hx-flex-fill'
         }).append(nxt.label));
         $(nxtDiv).append($('<div/>').attr({
-            'class' : 'hx-display-inline iconbutton ui-icon-' + nxt.icon
+            'class' : 'hx-display-inline iconbutton ' + iconClass
         }));
         $(nxtDiv).on(Helix.clickEvent, null, nxt, function(ev) {
             ev.stopImmediatePropagation();

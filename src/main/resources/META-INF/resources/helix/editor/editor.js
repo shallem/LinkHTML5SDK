@@ -152,7 +152,7 @@
         UL_TAG: "<ul />",
         // Class name constants
         MAIN_CLASS: "ui-editor ui-widget-content", // main containing div
-        TOOLBAR_CLASS: "ui-editor-toolbar", // Editor toolbar
+        TOOLBAR_CLASS: "hx-editor-toolbar", // Editor toolbar
 
         // Captures the style changes.
         styleChanges: [],
@@ -910,6 +910,24 @@
         },
         getFrame: function() {
             return this.$editFrame;
+        },
+        addCustomToolButtons: function(buttons) {
+            var $customControls = this.$toolbar.find('.hx-editor-custom-toolbar.ui-controlgroup-controls');
+            if ($customControls.length === 0) {
+                $customControls = $('<div/>').addClass('hx-editor-custom-toolbar ui-controlgroup-controls').prependTo(this.$toolbar);
+            }
+            $customControls.empty();
+            for (var i = 0; i < buttons.length; ++i) {
+                var buttonAction = $.proxy(function(ev) {
+                    ev.stopImmediatePropagation();
+                    this.action.call(this.context ? this.context : window);
+                    return false;
+                }, buttons[i]);
+                Helix.Layout.makeIconButton(buttons[i].icon)
+                        .addClass('hx-editor-icon-button')
+                        .appendTo($customControls)
+                        .on(Helix.clickEvent, buttonAction);
+            }
         }
     });
 })(jQuery);
