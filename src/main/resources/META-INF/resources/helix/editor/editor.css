@@ -114,9 +114,13 @@
 }
 
 .hx-editor-toolbar .hx-editor-icon-button {
-    height: 32px !important;
+    height: 40px !important;
 }
 
 .hx-editor-toolbar {
     background-color: whitesmoke;
+}
+
+.hx-editor-content {
+    background: #fff;
 }

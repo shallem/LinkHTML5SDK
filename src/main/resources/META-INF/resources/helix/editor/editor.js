@@ -151,7 +151,7 @@
         LI_TAG: "<li />",
         UL_TAG: "<ul />",
         // Class name constants
-        MAIN_CLASS: "ui-editor ui-widget-content", // main containing div
+        MAIN_CLASS: "ui-editor hx-editor-content", // main containing div
         TOOLBAR_CLASS: "hx-editor-toolbar", // Editor toolbar
 
         // Captures the style changes.
