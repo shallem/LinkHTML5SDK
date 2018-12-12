@@ -2737,7 +2737,10 @@ var globalDataListID = -1;
                 return false;
             }
         },
-        rerenderSelected: function () {
+        rerenderSelected: function (selectedObj) {
+            if (selectedObj) {
+                this.selected = selectedObj;
+            }
             if (this.selected === null) {
                 return;
             }
