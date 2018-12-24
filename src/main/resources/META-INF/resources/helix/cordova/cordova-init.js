@@ -31,7 +31,7 @@
         }
     } else {
         window.CordovaInstalled = false;
-    }
+    }   
     
     $(document).on('ready', function() {
         if (window.CordovaIOS || window.CordovaANDROID) {
