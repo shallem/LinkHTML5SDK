@@ -298,4 +298,27 @@
             }
         });
     }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 11) {
+        window.HelixCallerID = {
+            queue: function(phone, name, success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixCallerID", "queue", [ phone, name ]);
+            },
+            flush: function(success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixCallerID", "flush", []);
+            }
+        };
+    }
 })();
