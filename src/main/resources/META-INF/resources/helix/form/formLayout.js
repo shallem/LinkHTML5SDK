@@ -390,6 +390,10 @@
         },
         
         setView: function (valuesMap) {
+            if (this.options.fullScreen && this.$section) {
+                this.$section.removeClass('hx-flex-vertical');
+            }
+
             if (this.options.modes !== 'all' &&
                 this.options.modes !== 'view') {
                 alert("Attempting to set a form to view mode when view mode is not supported.");
@@ -404,6 +408,9 @@
         },
         
         setEdit : function(valuesMap) {
+            if (this.options.fullScreen && this.$section) {
+                this.$section.addClass('hx-flex-vertical');
+            }
             if (this.options.modes !== 'all' &&
                 this.options.modes !== 'edit') {
                 alert("Attempting to set a form to edit mode when view mode is not supported.");

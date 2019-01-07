@@ -1193,6 +1193,10 @@ Helix.Ajax = {
                     return;
                 }
                 if (jqXHR.status === 404 || jqXHR.status === 408) {
+                    if (callbacks.fatal) {
+                        callbacks.fatal.call(window, textStatus, errorThrown, jqXHR.status);
+                        return;
+                    }
                     // This generally happens because of a network error.
                     Helix.Utils.statusMessage("Error", "Sorry! We are unable to reach the network right now. Please try again in a few moments.", 'warn');
                     return;
