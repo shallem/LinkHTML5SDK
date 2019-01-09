@@ -962,9 +962,6 @@
         cache: false
     };
 
-    var eventGUID = 1;
-
-
     function EventManager(options, _sources) {
         var t = this;
 
@@ -978,8 +975,6 @@
         t.renderEvent = renderEvent;
         t.removeEvents = removeEvents;
         t.clientEvents = clientEvents;
-        t.normalizeEvent = normalizeEvent;
-
 
         // imports
         var trigger = t.trigger;
@@ -1041,7 +1036,7 @@
 
                         for (var i = 0; i < events.length; i++) {
                             events[i].source = source;
-                            normalizeEvent(events[i]);
+                            normalizeEvent(events[i], options);
                         }
                         cache = cache.concat(events);
                     }
@@ -1218,16 +1213,16 @@
                     e.backgroundColor = event.backgroundColor;
                     e.borderColor = event.borderColor;
                     e.textColor = event.textColor;
-                    normalizeEvent(e);
+                    normalizeEvent(e, options);
                 }
             }
-            normalizeEvent(event);
+            normalizeEvent(event, options);
             reportEvents(cache);
         }
 
 
         function renderEvent(event, stick) {
-            normalizeEvent(event);
+            normalizeEvent(event, options);
             if (!event.source) {
                 if (stick) {
                     stickySource.events.push(event);
@@ -1299,46 +1294,6 @@
             }
         }
 
-
-
-        /* Event Normalization
-         -----------------------------------------------------------------------------*/
-
-
-        function normalizeEvent(event) {
-            var source = event.source || {};
-            var ignoreTimezone = firstDefined(source.ignoreTimezone, options.ignoreTimezone);
-
-            event.tzOffset = -((new Date((new Date()).getUTCFullYear(), 1, 1)).getTimezoneOffset() / 60.0);
-            event.dstOffset = -((new Date((new Date()).getUTCFullYear(), 6, 1)).getTimezoneOffset() / 60.0);
-            event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
-            if (event.date) {
-                if (!event.start) {
-                    event.start = event.date;
-                }
-                delete event.date;
-            }
-            event.start = parseDate(event.start, ignoreTimezone, event.tzOffset, event.dstOffset);
-            if (event.end) {
-                event.end = parseDate(event.end, ignoreTimezone, event.tzOffset, event.dstOffset);
-            }
-            if (event.end && event._end <= event._start) {
-                event.end = null;
-            }   
-            if (event.allDay === undefined) {
-                event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
-            }
-            if (event.className) {
-                if (Helix.Utils.isString(event.className)) {
-                    event.className = event.className.split(/\s+/);
-                }
-            } else {
-                event.className = [];
-            }
-            // TODO: if there is no start date, return false to indicate an invalid event
-        }
-
-
         /* Utils
          ------------------------------------------------------------------------------*/
 
@@ -1376,9 +1331,6 @@
 
 
     fc.addDays = addDays;
-    fc.cloneDate = cloneDate;
-    fc.parseDate = parseDate;
-    fc.parseISO8601 = parseISO8601;
     fc.parseTime = parseTime;
     fc.formatDate = formatDate;
     fc.formatDates = formatDates;
@@ -1450,31 +1402,6 @@
         return d;
     }
 
-
-    function clearTime(d, useLocalTime) {
-        if (useLocalTime === true) {
-            d.setHours(0);
-            d.setMinutes(0);
-            d.setSeconds(0); 
-            d.setMilliseconds(0);
-        } 
-        
-        d.setUTCHours(0);
-        d.setUTCMinutes(0);
-        d.setUTCSeconds(0);
-        d.setUTCMilliseconds(0);
-        return d;
-    }
-
-
-    function cloneDate(d, dontKeepTime) {
-        if (dontKeepTime) {
-            return clearTime(new Date(+d));
-        }
-        return new Date(+d);
-    }
-
-
     function zeroDate() { // returns a Date with time 00:00:00 and dateOfMonth=1
         return new Date(0);
     }
@@ -1506,132 +1433,6 @@
             date.setUTCDate(d);
         }
     }
-
-
-
-    /* Date Parsing
-     -----------------------------------------------------------------------------*/
-
-    /* SAH - convert to a time zone based on the parameter option tzOffset. tzOffset
-     * is the number of hours to offset the date to adjust for the user's selected
-     * local timezone. If tzOffset is not set, just return the date, which defaults
-     * to the user's local timezone. 
-     */
-    function convertTimezone(s, tzOffset, dstOffset) {
-        if (!tzOffset || !dstOffset) {
-            alert("MISSING timezone settings.");
-            return s;
-        }
-
-        var minutesOffset = 0;
-        if (s.dst()) {
-            minutesOffset = (dstOffset) * 60;
-        } else {
-            minutesOffset = (tzOffset) * 60;
-        }
-
-        s.addMinutes(minutesOffset);
-        return s;
-    }
-
-    function parseDate(s, ignoreTimezone, tzOffset, dstOffset) { // ignoreTimezone defaults to true
-        if (typeof s === 'object') { // already a Date object
-            return convertTimezone(cloneDate(s), tzOffset, dstOffset);
-        }
-        if (typeof s === 'number') { // a UNIX timestamp
-            return convertTimezone(new Date(s * 1000), tzOffset, dstOffset);
-        }
-        if (typeof s === 'string') {
-            if (s.match(/^\d+(\.\d+)?$/)) { // a UNIX timestamp
-                return convertTimezone(new Date(parseFloat(s) * 1000), tzOffset, dstOffset);
-            }
-            if (ignoreTimezone === undefined) {
-                ignoreTimezone = true;
-            }
-            return parseISO8601(s, ignoreTimezone, tzOffset, dstOffset) || (s ? convertTimezone(new Date(s), tzOffset, dstOffset) : null);
-        }
-        // TODO: never return invalid dates (like from new Date(<string>)), return null instead
-        return null;
-    }
-
-
-    function parseISO8601(s, ignoreTimezone, tzOffset, dstOffset) { // ignoreTimezone defaults to false
-        // derived from http://delete.me.uk/2005/03/iso8601.html
-        // TODO: for a know glitch/feature, read tests/issue_206_parseDate_dst.html
-        var m = s.match(/^([0-9]{4})(-([0-9]{2})(-([0-9]{2})([T ]([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?(Z|(([-+])([0-9]{2})(:?([0-9]{2}))?))?)?)?)?$/);
-        if (!m) {
-            return null;
-        }
-        var date = new Date(m[1], 0, 1);
-        if (ignoreTimezone || !m[13]) {
-            var check = new Date(m[1], 0, 1, 9, 0);
-            if (m[3]) {
-                date.setMonth(m[3] - 1);
-                check.setMonth(m[3] - 1);
-            }
-            if (m[5]) {
-                date.setDate(m[5]);
-                check.setDate(m[5]);
-            }
-            fixDate(date, check);
-            if (m[7]) {
-                date.setHours(m[7]);
-            }
-            if (m[8]) {
-                date.setMinutes(m[8]);
-            }
-            if (m[10]) {
-                date.setSeconds(m[10]);
-            }
-            if (m[12]) {
-                date.setMilliseconds(Number("0." + m[12]) * 1000);
-            }
-            fixDate(date, check);
-        } else {
-            date.setUTCFullYear(
-                    m[1],
-                    m[3] ? m[3] - 1 : 0,
-                    m[5] || 1
-                    );
-            date.setUTCHours(
-                    m[7] || 0,
-                    m[8] || 0,
-                    m[10] || 0,
-                    m[12] ? Number("0." + m[12]) * 1000 : 0
-                    );
-            if (m[14]) {
-                var offset = Number(m[16]) * 60 + (m[18] ? Number(m[18]) : 0);
-                offset *= m[15] == '-' ? 1 : -1;
-                date = new Date(+date + (offset * 60 * 1000));
-            }
-        }
-        if (ignoreTimezone) {
-            return date;
-        }
-        return convertTimezone(date, tzOffset, dstOffset);
-    }
-
-
-    function parseTime(s) { // returns minutes since start of day
-        if (typeof s == 'number') { // an hour
-            return s * 60;
-        }
-        if (typeof s == 'object') { // a Date object
-            return s.getHours() * 60 + s.getMinutes();
-        }
-        var m = s.match(/(\d+)(?::(\d+))?\s*(\w+)?/);
-        if (m) {
-            var h = parseInt(m[1], 10);
-            if (m[3]) {
-                h %= 12;
-                if (m[3].toLowerCase().charAt(0) == 'p') {
-                    h += 12;
-                }
-            }
-            return h * 60 + (m[2] ? parseInt(m[2], 10) : 0);
-        }
-    }
-
 
 
     /* Date Formatting
@@ -2141,15 +1942,6 @@
                 ret = functions[i].apply(thisObj, args) || ret;
             }
             return ret;
-        }
-    }
-
-
-    function firstDefined() {
-        for (var i = 0; i < arguments.length; i++) {
-            if (arguments[i] !== undefined) {
-                return arguments[i];
-            }
         }
     }
 
@@ -4844,7 +4636,6 @@
 
                 // imports
                 var defaultEventEnd = t.defaultEventEnd;
-                var normalizeEvent = calendar.normalizeEvent; // in EventManager
                 var reportEventChange = calendar.reportEventChange;
 
 
@@ -6408,3 +6199,192 @@
             ;
 
         })(jQuery);
+        
+var eventGUID = 1;
+function normalizeEvent(event, _options) {
+    var options = _options || {};
+    var source = event.source || {};
+    var ignoreTimezone = firstDefined(source.ignoreTimezone, options.ignoreTimezone);
+
+    event.tzOffset = -((new Date((new Date()).getUTCFullYear(), 1, 1)).getTimezoneOffset() / 60.0);
+    event.dstOffset = -((new Date((new Date()).getUTCFullYear(), 6, 1)).getTimezoneOffset() / 60.0);
+    event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
+    if (event.date) {
+        if (!event.start) {
+            event.start = event.date;
+        }
+        delete event.date;
+    }
+    event.start = parseDate(event.start, ignoreTimezone, event.tzOffset, event.dstOffset);
+    if (event.end) {
+        event.end = parseDate(event.end, ignoreTimezone, event.tzOffset, event.dstOffset);
+    }
+    if (event.end && event._end <= event._start) {
+        event.end = null;
+    }   
+    if (event.allDay === undefined) {
+        event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
+    }
+    if (event.className) {
+        if (Helix.Utils.isString(event.className)) {
+            event.className = event.className.split(/\s+/);
+        }
+    } else {
+        event.className = [];
+    }
+    // TODO: if there is no start date, return false to indicate an invalid event
+}
+
+function firstDefined() {
+    for (var i = 0; i < arguments.length; i++) {
+        if (arguments[i] !== undefined) {
+            return arguments[i];
+        }
+    }
+}
+
+
+/* Date Parsing
+ -----------------------------------------------------------------------------*/
+
+/* SAH - convert to a time zone based on the parameter option tzOffset. tzOffset
+ * is the number of hours to offset the date to adjust for the user's selected
+ * local timezone. If tzOffset is not set, just return the date, which defaults
+ * to the user's local timezone. 
+ */
+function convertTimezone(s, tzOffset, dstOffset) {
+    if (!tzOffset || !dstOffset) {
+        alert("MISSING timezone settings.");
+        return s;
+    }
+
+    var minutesOffset = 0;
+    if (s.dst()) {
+        minutesOffset = (dstOffset) * 60;
+    } else {
+        minutesOffset = (tzOffset) * 60;
+    }
+
+    s.addMinutes(minutesOffset);
+    return s;
+}
+
+function parseDate(s, ignoreTimezone, tzOffset, dstOffset) { // ignoreTimezone defaults to true
+    if (typeof s === 'object') { // already a Date object
+        return convertTimezone(cloneDate(s), tzOffset, dstOffset);
+    }
+    if (typeof s === 'number') { // a UNIX timestamp
+        return convertTimezone(new Date(s * 1000), tzOffset, dstOffset);
+    }
+    if (typeof s === 'string') {
+        if (s.match(/^\d+(\.\d+)?$/)) { // a UNIX timestamp
+            return convertTimezone(new Date(parseFloat(s) * 1000), tzOffset, dstOffset);
+        }
+        if (ignoreTimezone === undefined) {
+            ignoreTimezone = true;
+        }
+        return parseISO8601(s, ignoreTimezone, tzOffset, dstOffset) || (s ? convertTimezone(new Date(s), tzOffset, dstOffset) : null);
+    }
+    // TODO: never return invalid dates (like from new Date(<string>)), return null instead
+    return null;
+}
+
+
+function parseISO8601(s, ignoreTimezone, tzOffset, dstOffset) { // ignoreTimezone defaults to false
+    // derived from http://delete.me.uk/2005/03/iso8601.html
+    // TODO: for a know glitch/feature, read tests/issue_206_parseDate_dst.html
+    var m = s.match(/^([0-9]{4})(-([0-9]{2})(-([0-9]{2})([T ]([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?(Z|(([-+])([0-9]{2})(:?([0-9]{2}))?))?)?)?)?$/);
+    if (!m) {
+        return null;
+    }
+    var date = new Date(m[1], 0, 1);
+    if (ignoreTimezone || !m[13]) {
+        var check = new Date(m[1], 0, 1, 9, 0);
+        if (m[3]) {
+            date.setMonth(m[3] - 1);
+            check.setMonth(m[3] - 1);
+        }
+        if (m[5]) {
+            date.setDate(m[5]);
+            check.setDate(m[5]);
+        }
+        fixDate(date, check);
+        if (m[7]) {
+            date.setHours(m[7]);
+        }
+        if (m[8]) {
+            date.setMinutes(m[8]);
+        }
+        if (m[10]) {
+            date.setSeconds(m[10]);
+        }
+        if (m[12]) {
+            date.setMilliseconds(Number("0." + m[12]) * 1000);
+        }
+        fixDate(date, check);
+    } else {
+        date.setUTCFullYear(
+                m[1],
+                m[3] ? m[3] - 1 : 0,
+                m[5] || 1
+                );
+        date.setUTCHours(
+                m[7] || 0,
+                m[8] || 0,
+                m[10] || 0,
+                m[12] ? Number("0." + m[12]) * 1000 : 0
+                );
+        if (m[14]) {
+            var offset = Number(m[16]) * 60 + (m[18] ? Number(m[18]) : 0);
+            offset *= m[15] == '-' ? 1 : -1;
+            date = new Date(+date + (offset * 60 * 1000));
+        }
+    }
+    if (ignoreTimezone) {
+        return date;
+    }
+    return convertTimezone(date, tzOffset, dstOffset);
+}
+
+
+function parseTime(s) { // returns minutes since start of day
+    if (typeof s == 'number') { // an hour
+        return s * 60;
+    }
+    if (typeof s == 'object') { // a Date object
+        return s.getHours() * 60 + s.getMinutes();
+    }
+    var m = s.match(/(\d+)(?::(\d+))?\s*(\w+)?/);
+    if (m) {
+        var h = parseInt(m[1], 10);
+        if (m[3]) {
+            h %= 12;
+            if (m[3].toLowerCase().charAt(0) == 'p') {
+                h += 12;
+            }
+        }
+        return h * 60 + (m[2] ? parseInt(m[2], 10) : 0);
+    }
+}
+
+function clearTime(d, useLocalTime) {
+    if (useLocalTime === true) {
+        d.setHours(0);
+        d.setMinutes(0);
+        d.setSeconds(0); 
+        d.setMilliseconds(0);
+    } 
+
+    d.setUTCHours(0);
+    d.setUTCMinutes(0);
+    d.setUTCSeconds(0);
+    d.setUTCMilliseconds(0);
+    return d;
+}
+
+function cloneDate(d, dontKeepTime) {
+    if (dontKeepTime) {
+        return clearTime(new Date(+d));
+    }
+    return new Date(+d);
+}
