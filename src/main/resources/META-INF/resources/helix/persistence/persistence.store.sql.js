@@ -303,17 +303,20 @@ function config(persistence, dialect) {
         // txn as possible. Allowing asynchronous delays can cause a transaction to flush
         // before we add required statements to it. Users of this API need to find another
         // way to 
+        var removeObjArray = [];
+        for (var id in session.objectsToRemove) {
+            if (session.objectsToRemove.hasOwnProperty(id)) {
+                var toRemove = session.objectsToRemove[id];
+                if (toRemove) {
+                    removeObjArray.push([id, toRemove]);
+                    delete session.trackedObjects[toRemove.id]; // Stop tracking
+                }
+            }
+        }
         var persistObjArray = [];
         for (var id in session.trackedObjects) {
             if (session.trackedObjects.hasOwnProperty(id)) {
                 persistObjArray.push(session.trackedObjects[id]);
-            }
-        }
-        var removeObjArray = [];
-        for (var id in session.objectsToRemove) {
-            if (session.objectsToRemove.hasOwnProperty(id)) {
-                removeObjArray.push([id, session.objectsToRemove[id]]);
-                delete session.trackedObjects[id]; // Stop tracking
             }
         }
         
