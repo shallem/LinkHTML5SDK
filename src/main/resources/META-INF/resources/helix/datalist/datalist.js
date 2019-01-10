@@ -2785,6 +2785,10 @@ var globalDataListID = -1;
 
             return true;
         },
+        updateSelectedAfterRefresh: function(dataID) {
+            var selected = this.$listWrapper.find('li[data-id="' + dataID + '"]');
+            this.setSelected(selected);
+        },
         getSelected: function () {
             return this.selected;
         },
