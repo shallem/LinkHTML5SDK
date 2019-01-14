@@ -2794,7 +2794,9 @@ var globalDataListID = -1;
         },
         clearSelected: function () {
             if (this.selected) {
-                this.selectedLI.removeClass('ui-btn-active');
+                if (this.selectedLI) {
+                    this.selectedLI.removeClass('ui-btn-active');
+                }
                 this.selectedLI = null;
                 this.selected = null;
                 this.selectedGroup = null;
