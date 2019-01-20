@@ -282,7 +282,7 @@ function config(persistence, dialect) {
    *            indicate that we want to stop tracking the objects we flush; default
    *            is true, unless false is specified explicitly
    */
-    persistence.flush = function (callback, stopTracking) {
+    persistence.flush = function (callback, stopTracking, deleteOverAdd) {
         // Before we go any further see if we have anything to do. If not, just call the completion function.
         var session = this;
         if (Object.keys(session.trackedObjects).length === 0 &&
@@ -309,7 +309,9 @@ function config(persistence, dialect) {
                 var toRemove = session.objectsToRemove[id];
                 if (toRemove) {
                     removeObjArray.push([id, toRemove]);
-                    delete session.trackedObjects[toRemove.id]; // Stop tracking
+                    if (deleteOverAdd !== false) {
+                        delete session.trackedObjects[toRemove.id]; // Stop tracking
+                    }
                 }
             }
         }
