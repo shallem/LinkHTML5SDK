@@ -983,6 +983,7 @@ Helix.Ajax = {
         }
 
         if (jqXHR.status === 408 ||
+                jqXHR.status === 502 || // Proxy timeout
                 jqXHR.status === 407) {
             // Specifically a timeout or the end of the session.
             if (params.allowOfflineQueue !== false) {
@@ -1392,6 +1393,7 @@ Helix.Ajax = {
                     }
                     
                     if (jqXHR.status === 408 ||
+                            jqXHR.status === 502 || // Proxy timeout
                             jqXHR.status === 407) {
                         // Specifically a timeout or the end of the session.
                         if (params.allowOfflineQueue !== false) {
