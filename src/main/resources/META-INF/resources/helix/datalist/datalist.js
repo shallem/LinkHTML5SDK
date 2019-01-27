@@ -2905,6 +2905,10 @@ var globalDataListID = -1;
         createListRow: function (parentElement, rowComponents, rowID) {
             var components = {};
             var lastComponent = null;
+            if (!parentElement) {
+                return; // Happens, so adding a defensive check. Not sure why it happens ...
+            }
+            
             this._findRowComponents(parentElement[0], components);
 
             // Hide the parent to avoid contant recomputation of the DOM.
