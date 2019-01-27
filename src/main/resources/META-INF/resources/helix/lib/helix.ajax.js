@@ -994,9 +994,9 @@ Helix.Ajax = {
 
         if (!params.silentMode) {
             if (params.fatal) {
-                Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "fatal");
+                Helix.Utils.statusMessage("Error", params.fatal + ": " + errorThrown, "error");
             } else if (!callbacks.fatal) {
-                Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "fatal");
+                Helix.Utils.statusMessage("Error in POST", errorThrown ? errorThrown : 'Failed to contact ' + params.url, "error");
             }
         } 
 
@@ -1392,9 +1392,11 @@ Helix.Ajax = {
                         return;
                     }
                     
+                    var isTimeout = false;
                     if (jqXHR.status === 408 ||
                             jqXHR.status === 502 || // Proxy timeout
                             jqXHR.status === 407) {
+                        isTimeout = true;
                         // Specifically a timeout or the end of the session.
                         if (params.allowOfflineQueue !== false) {
                             Helix.Ajax.ajaxOfflineQueue(params, callbacks);                        
@@ -1415,7 +1417,8 @@ Helix.Ajax = {
                     } else {
                         // In the absence of any other handling, queue operations that fail to be retried again later.
                         if (jqXHR.status >= 400 &&
-                            jqXHR.status < 600) {
+                            jqXHR.status < 600 &&
+                            isTimeout === false) {
                             // Something went wrong on the server. Rather than just drop a potentially important operation,
                             // treat this is if we are offline ...
                             Helix.Ajax.ajaxOfflineQueue(params, callbacks);
