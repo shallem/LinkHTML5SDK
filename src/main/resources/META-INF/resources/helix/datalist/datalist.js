@@ -2744,6 +2744,9 @@ var globalDataListID = -1;
             if (this.selected === null) {
                 return;
             }
+            if (this.selectedLI == null) {
+                return;
+            }
             var renderer = this.options.rowRenderer;
             if (this.options.grouped) {
                 renderer = this.options.groupRenderer(this.selectedGroup);
