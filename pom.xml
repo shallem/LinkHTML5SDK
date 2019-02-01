@@ -20,27 +20,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.servlet.jsp</artifactId>
-      <version>3.1.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.servlet</artifactId>
-      <version>3.1.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.faces</artifactId>
-      <version>2.1.11</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.primefaces</groupId>
       <artifactId>primefaces</artifactId>
-      <version>3.4.2</version>
+      <version>6.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -53,11 +35,26 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.1</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>1.9.11</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.9.8</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.glassfish/javax.faces -->
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.faces</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>4.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.helix</groupId>
       <artifactId>LinkSDKSerializer</artifactId>
@@ -75,14 +72,14 @@
       </resource>
     </resources>
     
-    <plugins>
+    <plugins>      
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-compiler-plugin</artifactId>
-	<version>2.3.2</version>
+	<version>3.8.0</version>
 	<configuration>
-	  <source>1.5</source>
-	  <target>1.5</target>
+	  <source>1.8</source>
+	  <target>1.8</target>
 	  <encoding>${project.build.sourceEncoding}</encoding>
 	</configuration>
       </plugin>
