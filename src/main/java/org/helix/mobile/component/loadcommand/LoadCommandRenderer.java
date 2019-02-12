@@ -68,6 +68,12 @@ public class LoadCommandRenderer extends CoreRenderer {
         return key;
     }
     
+    @SuppressWarnings("unchecked")
+    public static <T> T findBean(String beanName) {
+        FacesContext context = FacesContext.getCurrentInstance();
+        return (T) context.getApplication().evaluateExpressionGet(context, "#{" + beanName + "}", Object.class);
+    }
+    
     protected String resolveCommand(FacesContext context,
             String loadCommandName,
             ValueExpression valE,
@@ -79,7 +85,7 @@ public class LoadCommandRenderer extends CoreRenderer {
             String beanName = m.group(1);
             String methodName = m.group(2);
             
-            Object bean = context.getExternalContext().getRequestMap().get(beanName);
+            Object bean = LoadCommandRenderer.findBean(beanName);//context.getExternalContext().getRequestMap().get(beanName);
             if (bean != null) {
                 Class<?> c = bean.getClass();
                 Method loadMethod = null;
