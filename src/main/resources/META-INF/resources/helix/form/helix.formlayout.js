@@ -2405,7 +2405,7 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form, popupOpts) 
         });
     }
     if (options.popupDismiss) {
-        $(popup).on('popupdismiss', null, options, function (ev) {
+        $(popup).one('popupdismiss popupcancel', null, options, function (ev) {
             if (ev.data.popupDismiss) {
                 ev.data.popupDismiss();
             }
