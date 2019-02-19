@@ -120,16 +120,7 @@
     };
     
     if (window.CordovaVersion >= 3 &&
-        window.CordovaRevision >= 1) {
-        window.HelixBulkContacts = {
-            queue: function(contactOpts) {
-                return cordova.exec(null, null, "HelixBulkContacts", "queue", [ contactOpts ]);
-            },
-            saveQueued: function(success, failure) {
-                return cordova.exec(success, failure, "HelixBulkContacts", "saveQueued", [ ]);
-            }
-        };
-        
+        window.CordovaRevision >= 1) {        
         $.extend(window.HelixSystem, {
             updateOnlineOffline: function(success) {
                 return cordova.exec(success, null, "HelixSystem", "updateOnlineOffline", []);
@@ -320,5 +311,47 @@
                 return cordova.exec(success, failure, "HelixCallerID", "flush", []);
             }
         };
+    }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 12) {
+        window.HelixBulkContacts = {
+            queueAdd: function(contactOpts, success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixBulkContacts", "queueAdd", [ contactOpts ]);
+            },
+            queueUpdate: function(contactOpts, success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixBulkContacts", "queueUpdate", [ contactOpts ]);
+            },
+            queueDelete: function(contactID, success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixBulkContacts", "queueDelete", [ contactID ]);
+            },
+            flushQueue: function(success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixBulkContacts", "flushQueue", [ ]);
+            }
+        };
+
     }
 })();
