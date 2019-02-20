@@ -38,6 +38,7 @@
             alert("This version of the Link client app is no longer supported. Go to the app store and upgrade to v9.7+");
         } else if (window.CordovaIOS34) {
             cordova_ios_34_init();
+            cordova_helix_init();
         }
         
         // If we have it, ask the container to update our online/offline status.

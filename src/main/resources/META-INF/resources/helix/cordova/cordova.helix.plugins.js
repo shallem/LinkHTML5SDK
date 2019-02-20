@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-(function() {
+function cordova_helix_init() {
     window.OfflineSave = {
         saveDoc: function ( name, lastModified, docUniqueID, thumbURL, viewURL, editURL, success, fail) {
             return cordova.exec(success, fail, "OfflineSave", "saveDoc", [name, lastModified, docUniqueID, thumbURL, viewURL, editURL]);
@@ -126,14 +126,7 @@
                 return cordova.exec(success, null, "HelixSystem", "updateOnlineOffline", []);
             }
         });
-    }
-    
-    if (window.CordovaVersion >= 3 &&
-        window.CordovaRevision >= 2) {
-        window.HelixBulkContacts.queue = function(contactsToQueue, done) {
-            return cordova.exec(done, done, "HelixBulkContacts", "queue", [ contactsToQueue ]);
-        };
-    }
+    }    
     
     if (window.CordovaVersion >= 3 &&
         window.CordovaRevision >= 3) {
@@ -280,15 +273,7 @@
                 return cordova.exec(success, failure, "HelixSystem", "markSynced", [ docID ]);
             }
         });
-    }
-    
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 10) {
-        $.extend(window.HelixBulkContacts, {
-            deleteContact: function(nativeID, success, failure) {
-                return cordova.exec(success, failure, "HelixBulkContacts", "deleteContact", [ nativeID ]);
-            }
-        });
-    }
+    }    
     
     if (window.CordovaVersion >= 3 && window.CordovaRevision >= 11) {
         window.HelixCallerID = {
@@ -354,4 +339,4 @@
         };
 
     }
-})();
+}
