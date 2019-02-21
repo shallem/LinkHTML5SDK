@@ -79,28 +79,35 @@
         },
     
         renderMessage: function(msg) {
-            var markup = '<div class="ui-growl-item-container ui-state-highlight ui-corner-all ui-helper-hidden ui-shadow hx-no-webkit-select">';
-            markup += '<div class="ui-growl-item">';
-            markup += '<div class="ui-growl-icon-close ui-icon ui-icon-delete" style="display:none"></div>';
-            markup += '<span class="ui-growl-image ui-growl-image-' + msg.severity + '" />';
-            markup += '<div class="ui-growl-message">';
-            markup += '<span class="ui-growl-title"></span>';
-            markup += '<p></p>';
-            markup += '</div><div style="clear: both;"></div></div></div>';
+            var message;
+            var markup;
+            if (msg.severity !== 'success') {
+                markup = '<div class="ui-growl-item-container ui-state-highlight ui-corner-all ui-helper-hidden hx-no-webkit-select">';
+                markup += '<div class="ui-growl-item">';
+                markup += '<div class="ui-growl-icon-close ui-icon ui-icon-delete" style="display:none"></div>';
+                markup += '<span class="ui-growl-image ui-growl-image-' + msg.severity + '" />';
+                markup += '<div class="ui-growl-message">';
+                markup += '<span class="ui-growl-title"></span>';
+                markup += '<p></p>';
+                markup += '</div><div style="clear: both;"></div></div></div>';
 
-            var message = $(markup),
-            summaryEL = message.find('span.ui-growl-title'),
-            detailEL = summaryEL.next();
-        
-            if(this.options.escape) {
-                summaryEL.text(msg.summary);
-                detailEL.text(msg.detail);
-            }
-            else {
-                summaryEL.html(msg.summary);
-                detailEL.html(msg.detail);
-            }
+                message = $(markup);
+                var summaryEL = message.find('span.ui-growl-title'),
+                detailEL = summaryEL.next();
 
+                if(this.options.escape) {
+                    summaryEL.text(msg.summary);
+                    detailEL.text(msg.detail);
+                }
+                else {
+                    summaryEL.html(msg.summary);
+                    detailEL.html(msg.detail);
+                }
+            } else {
+                markup = '<div class="hx-success-item">';
+                markup += '<div class="hx-icon ui-icon-check-ok imageFadeIn"></div></div>'; 
+                message = $(markup);
+            }
             message.appendTo(this.element).fadeIn();
             this.bindEvents(message);
         },

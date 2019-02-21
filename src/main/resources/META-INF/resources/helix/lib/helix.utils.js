@@ -56,8 +56,15 @@ Helix.Utils =  {
         return growl;
     },
     
+    successMessage: function() {
+        Helix.Utils.statusMessage('', '', 'success', 4000);
+    },
+    
     statusMessage : function(summary, msg, severity, lifetime) {
         if (Helix.Utils.errorGrowl) {
+            if (lifetime) {
+                Helix.Utils.errorGrowl.options.life = lifetime;
+            }
             Helix.Utils.errorGrowl.show([
                 { summary : summary, detail: msg, severity: severity }
                 ]);
