@@ -7105,7 +7105,7 @@ $.widget( "mobile.checkboxradio", $.mobile.widget, $.extend( {
 			checkedClass = "ui-" + checkedState,
 			uncheckedClass = "ui-" + uncheckedState;
 
-		if ( inputtype !== "checkbox" && inputtype !== "radio" ) {
+		if ( inputtype !== "checkbox" && inputtype !== "radio" && input.jqmData( "role" ) !== 'none' ) {
 			return;
 		}
 

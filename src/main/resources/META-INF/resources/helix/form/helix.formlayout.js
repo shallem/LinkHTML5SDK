@@ -1129,6 +1129,7 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
             'name': formElem.name,
             'type': 'checkbox',
             'class': 'hxonoff-checkbox',
+            'data-role': 'none',
             'id': formElem.name
         }).appendTo(switchContainer);
         if (formElem.onchange) {
