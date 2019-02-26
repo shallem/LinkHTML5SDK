@@ -1137,7 +1137,8 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
                 formElem.onchange.call(this, formElem);
             });
         }
-        if (formElem.value === true) {
+        if (formElem.value === true ||
+                formElem.value === 'true') {
             switchInput.prop('checked', true);
         }
 

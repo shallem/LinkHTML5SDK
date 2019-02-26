@@ -442,6 +442,7 @@
             "picklist" : true,
             "hidden" : true,
             "checkbox" : true,
+            "onoff" : true,
             "tzSelector" : true,
             "radio" : true,
             "date" : true,
@@ -1048,8 +1049,9 @@
         
         disableField: function(name) {
             var fieldElem = this.getFieldElement(name);
-            if (fieldElem && fieldElem.is('input')) {
+            if (fieldElem && fieldElem.is('input,textarea')) {
                 fieldElem.addClass('ui-disabled');
+                fieldElem[0].readOnly = true;
             }
         },
         
@@ -1068,8 +1070,9 @@
         
         enableField: function(name) {
             var fieldElem = this.getFieldElement(name);
-            if (fieldElem && fieldElem.is('input')) {
+            if (fieldElem && fieldElem.is('input,textarea')) {
                 fieldElem.removeClass('ui-disabled');
+                fieldElem[0].readOnly = false;
             }
         },
         
