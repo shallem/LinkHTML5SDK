@@ -1595,7 +1595,9 @@ function initHelixDB() {
                    }
                 }
                 if (overrides.addHook) {
-                    overrides.addHook(persistentObj);
+                    if (persistentObj._new !== false) {
+                        overrides.addHook(persistentObj);
+                    }
                 }
                 
                 oncomplete(persistentObj, opaque);
