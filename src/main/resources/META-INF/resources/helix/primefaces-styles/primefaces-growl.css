@@ -107,6 +107,10 @@
         height: 48px !important;
         background-size: 48px;
     }
+
+    .ui-growl {
+        right:10px;
+    }
 }
 
 @media all and (min-width: 501px) {
