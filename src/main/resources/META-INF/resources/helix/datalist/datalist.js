@@ -2379,53 +2379,33 @@ var globalDataListID = -1;
 
             return false;
         },
-        _handleTap: function (event) {
-            event.stopImmediatePropagation();
+        _retargetEvent: function(event, callback) {
+            var touch = event.changedTouches ? event.changedTouches[0] : event;
+            setTimeout(function(touch, _self) {
+                var target = document.elementFromPoint(touch.clientX, touch.clientY);
+                //var target = event.target;
+                target = $(target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
+                if (target.length === 0) {
+                    return;
+                }
 
-            if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
-                return false;
-            }
-
-            var touch = event.changedTouches[0];
-            //var target = document.elementFromPoint(touch.clientX, touch.clientY);
-            var target = event.target;
-            target = $(target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
-            if (target.length === 0) {
-                return false;
-            }
-
-            return this._handleClick(touch, target);
+                callback.call(_self, touch, target);                
+            }, 50, touch, this);
         },
-        _queueTap: function (ev) {
-            if (this._nextTapTimer) {
-                clearTimeout(this._nextTapTimer);
+        
+        _handleTap: function (event) {
+            event.preventDefault();
+
+            if (this._longTouchTimer) {
+                clearTimeout(this._longTouchTimer);
+                this._longTouchTimer = null;
+                this._longTapAction = null;
             }
-            if (ev) {
-                if (this._longTouchTimer) {
-                    clearTimeout(this._longTouchTimer);
-                    this._longTouchTimer = null;
-                    this._longTapAction = null;
-                }
-                if (this._longTouchReadyTimer) {
-                    clearTimeout(this._longTouchReadyTimer);
-                    this._longTouchReadyTimer = null;
-                }
-                this._nextTapAction = $.proxy(function () {
-                    if (this.list._handleTap(this.data) === false) {
-                        this.data.preventDefault();
-                        this.data.stopPropagation();
-                    }
-                }, {
-                    list: this,
-                    data: ev
-                });
+            if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
+                return;
             }
-            this._nextTapTimer = setTimeout(function (list) {
-                if (list._nextTapAction) {
-                    list._nextTapAction();
-                    list._nextTapAction = false;
-                }
-            }, 0, this);
+
+            this._retargetEvent(event, this._handleClick);
         },
         _runContextAction: function (_tgtDiv) {
             this.setSelected(_tgtDiv);
@@ -2512,6 +2492,37 @@ var globalDataListID = -1;
                 });
             }
         },
+        _touchEndIsTap: function(ev) {
+            var _now = new Date().getTime();
+            var _tDiff = _now - this._tapInstant;
+            var _yDiff = this.$listWrapper.scrollTop() - this._lastScrollTop;
+            var _xDiff = this._lastTapX - ev.changedTouches[0].clientX;
+            var _yTouchDiff = this._lastTapY - ev.changedTouches[0].clientY;
+            if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10 || Math.abs(_yTouchDiff) > 10) {
+                // The finger moved too much either up/down or left/right ...
+                return false;
+            }
+            if (_tDiff > 600) {
+                // The user sat on the list item for too long .. not a tap ...
+                return false;
+            }
+            return true;
+        },
+        
+        _handleSwipeLeft: function(event, target) {
+            event.stopImmediatePropagation();
+
+            this.setSelected(target);
+            this.options.swipeLeftAction.call(this, this.selected);
+        },
+        
+        _handleSwipeRight: function(event, target) {
+            event.stopImmediatePropagation();
+
+            this.setSelected(target);
+            this.options.swipeRightAction.call(this, this.selected);
+        },
+        
         _installTouchActionHandlers: function () {
             var _self = this;
 
@@ -2544,19 +2555,6 @@ var globalDataListID = -1;
 
             // Tap
             if (this.options.selectAction) {
-                /* Suppress tap and vclick so they don't propagate below this list. */
-                $(this.listWrapper).off('tap vclick').on('tap vclick', 'a[data-role="splitlink"],.hx-li', function (ev) {
-                    ev.stopImmediatePropagation();
-                    return false;
-                });
-
-                /*$(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, 'li,a[data-origin="splitlink"]', this, function(event) {
-                 var _self = event.data;
-                 var _tgt = $(event.target).closest('li,a[data-origin="splitlink"]');
-                 if (_tgt.length) {
-                 return _self._handleTap(event, _tgt);
-                 }
-                 });*/
                 this.$listWrapper[0].addEventListener('touchstart', function (ev) {
                     _self._tapInstant = new Date().getTime();
                     _self._lastScrollTop = _self.$listWrapper.scrollTop();
@@ -2568,46 +2566,15 @@ var globalDataListID = -1;
                 }, false);
                 this.$listWrapper[0].addEventListener('touchmove', function (ev) {
                     var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
-                    if (Math.abs(_xDiff) > 10) {
+                    var _yDiff = _self._lastTapY - ev.changedTouches[0].clientY;
+                    if (Math.abs(_xDiff) > 10 || Math.abs(_yDiff) > 10) {
                         if (_self._longTouchTimer) {
                             clearTimeout(_self._longTouchTimer);
                             _self._longTouchTimer = null;
                         }
                     }
-                });
-                this.$listWrapper[0].addEventListener('touchend', function (ev) {
-                    var _now = new Date().getTime();
-                    var _tDiff = _now - _self._tapInstant;
-                    var _yDiff = _self.$listWrapper.scrollTop() - _self._lastScrollTop;
-                    var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
-                    var _yTouchDiff = _self._lastTapY - ev.changedTouches[0].clientY;
-                    if (Math.abs(_yDiff) > 10 || Math.abs(_xDiff) > 10 || Math.abs(_yTouchDiff) > 10) {
-                        if (_self._nextTapTimer) {
-                            clearTimeout(_self._nextTapTimer);
-                            _self._nextTapTimer = null;
-                        }
-                        // The finger moved too much ...
-                        return;
-                    }
-                    if (_tDiff > 600) {
-                        return;
-                    }
-                    if (_self._longTouchTimer) {
-                        clearTimeout(_self._longTouchTimer);
-                        _self._longTouchTimer = null;
-                    }
-                    _self._queueTap(ev);
-                }, false);
-                this.$listWrapper[0].addEventListener('scroll', function (ev) {
-                    if (_self._nextTapTimer) {
-                        //_self._queueTap();
-                        clearTimeout(_self._nextTapTimer);
-                    }
-                    if (_self._longTouchTimer) {
-                        clearTimeout(_self._longTouchTimer);
-                    }
-                }, false);
-                $(this.$listWrapper).on('vclick', function (event) {
+                });                      
+                this.$listWrapper.on('tap vclick', function (event) {
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
                     event.noButtonSelect = true;
@@ -2619,20 +2586,14 @@ var globalDataListID = -1;
             if (this.options.swipeLeftAction) {
                 this.$listWrapper.off('swipeleft').on('swipeleft', '.hx-li', this, function (event) {
                     var _self = event.data;
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeLeftAction.call(_self, _self.selected);
+                    _self._retargetEvent(event, _self._handleSwipeLeft);
                     return false;
                 });
             }
             if (this.options.swipeRightAction) {
                 $(this.$listWrapper).off('swiperight').on('swiperight', '.hx-li', this, function (event) {
                     var _self = event.data;
-                    event.stopImmediatePropagation();
-
-                    _self.setSelected(event.target);
-                    _self.options.swipeRightAction.call(_self, _self.selected);
+                    _self._retargetEvent(event, _self._handleSwipeRight);
                     return false;
                 });
             }
@@ -2668,6 +2629,11 @@ var globalDataListID = -1;
                         curRowParent.insertAfter(groupStart);
                     }
                     LIs.push(curRowParent);
+                    curRowParent[0].addEventListener('touchend', function(ev) {
+                        if (_self._touchEndIsTap(ev)) {
+                            _self._handleTap(ev);
+                        }
+                    });
                 } else {
                     curRowParent.show();
                 }
@@ -2708,6 +2674,11 @@ var globalDataListID = -1;
                     } else {
                         attachFn(curRowParent);
                     }
+                    curRowParent[0].addEventListener('touchend', function(ev) {
+                        if (_self._touchEndIsTap(ev)) {
+                            _self._handleTap(ev);
+                        }
+                    });
                 } else {
                     curRowParent.show();
                     _self.displayLIs.push(curRowParent[0]);

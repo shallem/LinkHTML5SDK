@@ -3362,9 +3362,14 @@ if ( eventCaptureSupported ) {
 			if ( stop.time - start.time < $.event.special.swipe.durationThreshold) {
                             if (Math.abs( start.coords[ 0 ] - stop.coords[ 0 ] ) > $.event.special.swipe.horizontalDistanceThreshold &&
                                 Math.abs( start.coords[ 1 ] - stop.coords[ 1 ] ) < $.event.special.swipe.verticalDistanceThreshold ) {
-
+                                
+                                var event = new jQuery.Event( start.coords[0] > stop.coords[ 0 ] ? "swipeleft" : "swiperight", 
+                                {
+                                    clientX : stop.coords[0],
+                                    clientY : stop.coords[1]
+                                });
                                 start.origin.trigger( "swipe" )
-                                    .trigger( start.coords[0] > stop.coords[ 0 ] ? "swipeleft" : "swiperight" );
+                                    .trigger( event );
                             } else if (Math.abs( start.coords[ 1 ] - stop.coords[ 1 ] ) > $.event.special.swipe.horizontalDistanceThreshold &&
                                        Math.abs( start.coords[ 0 ] - stop.coords[ 0 ] ) < $.event.special.swipe.verticalDistanceThreshold) {
                                 start.origin.trigger( "swipe" )
