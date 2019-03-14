@@ -2506,6 +2506,10 @@ var globalDataListID = -1;
                 // The user sat on the list item for too long .. not a tap ...
                 return false;
             }
+            if ($(ev.target).is('[data-capture="tap"]')) {
+                return false;
+            }
+            
             return true;
         },
         
