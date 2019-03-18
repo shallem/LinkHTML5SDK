@@ -2162,6 +2162,7 @@ var globalDataListID = -1;
         },
         _renderSingleRow: function (LIs, rowIndex, itemsPerPage, curRow, oncomplete, isGrouped, _options) {
             var _self = this;
+            var groupLIs = [];
             var arrIdx = (itemsPerPage > 0) ? (rowIndex % itemsPerPage) : rowIndex;
             if (isGrouped) {
                 var __renderEmptyGroup = function (dividerLI) {
@@ -2183,7 +2184,7 @@ var globalDataListID = -1;
 
                 var __finishGroup = function (idx) {
                     if (_self.options.itemsPerGroup > 0 &&
-                            idx > _self.options.itemsPerGroup) {
+                            idx >= _self.options.itemsPerGroup) {
                         // Add a "More ..." item.
                         var $moreMarkup = $('<div/>')
                                 .append(_self.options.groupOverflowText);
@@ -2200,17 +2201,23 @@ var globalDataListID = -1;
                             $(li).empty().append($moreLink);
                             // Force jQueryMobile to re-enhance
                             $(li).removeClass('ui-li');
-                            idx++;
+                            ++idx;
                         } else {
-                            li = groupLIs[idx] = $('<li/>')
+                            li = $('<li/>')
                                     .attr('data-theme', 'd')
                                     .append($moreLink)
                                     .appendTo(_self.$parent);
-                            idx++;
+                            groupLIs.push(li);
+                            ++idx;
                         }
                         $(li).attr('data-overflow', '1'); // Mark this as overflow
                         $(li).attr('data-group', rowIndex);
                         $(li).data('group', curRow);
+                        $(li)[0].addEventListener('touchend', function(ev) {
+                            if (_self._touchEndIsTap(ev)) {
+                                _self.options.groupOverflowFn.call(_self, curRow);
+                            }
+                        });
                     }
                     oncomplete();
                     for (var _gidx = idx; _gidx < groupLIs.length; ++_gidx) {
@@ -2220,7 +2227,7 @@ var globalDataListID = -1;
 
                 var __renderGroupRow = function (groupRow, groupIndex, groupStart) {
                     if (_self.options.itemsPerGroup > 0 &&
-                            groupIndex > _self.options.itemsPerGroup) {
+                            groupIndex >= _self.options.itemsPerGroup) {
                         // Stop rendering ... we have exceeded the max number in a group.
                         return groupIndex;
                     }
@@ -2276,9 +2283,9 @@ var globalDataListID = -1;
 
                 if (groupMembers) {
                     // Remove empty group messages.
-                    $(dividerLI).nextUntil('li[data-role="list-divider"]', '[data-role="empty-group"]').remove();
+                    $(dividerLI).nextUntil('li[data-role="list-divider"]','[data-role="empty-group"]').remove();
                     // groupLIs are all LIs from dividerLI to the next divider (except empty messages)
-                    var groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
+                    groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
                     if ($.isArray(groupMembers)) {
                         if (groupMembers.length === 0) {
                             __renderEmptyGroup(dividerLI);
@@ -2292,34 +2299,34 @@ var globalDataListID = -1;
                         }
                     } else {
                         groupMembers.forEach(
-                                /* Element callback. */
-                                        function (groupRow) {
-                                            groupIndex = __renderGroupRow(groupRow, groupIndex, dividerLI);
-                                        },
-                                        /* On start. */
-                                                function (ct) {
-                                                    if (ct === 0) {
-                                                        __renderEmptyGroup(dividerLI);
-                                                    } else {
+                            /* Element callback. */
+                            function (groupRow) {
+                                groupIndex = __renderGroupRow(groupRow, groupIndex, dividerLI);
+                            },
+                            /* On start. */
+                            function (ct) {
+                                if (ct === 0) {
+                                    __renderEmptyGroup(dividerLI);
+                                } else {
 
-                                                    }
-                                                },
-                                                /* On done. */
-                                                        function () {
-                                                            __finishGroup(groupIndex);
-                                                        }
-                                                );
-                                            }
-                                    return true;
-                                } else if (groupMembers === null) {
-                            __renderEmptyGroup(dividerLI);
-                            oncomplete();
-                            return true;
-                        } else {
-                            oncomplete();
-                            return false;
-                        }
-                    } else {
+                                }
+                            },
+                            /* On done. */
+                            function () {
+                                __finishGroup(groupIndex);
+                            }
+                        );
+                    }
+                    return true;
+                } else if (groupMembers === null) {
+                    __renderEmptyGroup(dividerLI);
+                    oncomplete();
+                    return true;
+                } else {
+                    oncomplete();
+                    return false;
+                }
+            } else {
                 // Not grouped
                 if (_self._renderRowMarkup(LIs, curRow, _self.displayList.length)) {
                     _self.displayList.push(curRow);
