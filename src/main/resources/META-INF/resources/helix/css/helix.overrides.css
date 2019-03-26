@@ -191,6 +191,7 @@
 
 .ui-loader h1 {
     word-break: break-word;
+    color: white;
 }
 
 div.ui-input-text input.ui-input-text, 

@@ -245,6 +245,9 @@
 		    <!-- Datalist styles -->
 		    <include>datalist/datalist.css</include>
 
+		    <!-- Override styles -->
+		    <include>css/helix.overrides.css</include>
+
 		  </includes>
 		  <aggregations>
 		    <aggregation>
