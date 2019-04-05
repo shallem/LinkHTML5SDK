@@ -92,8 +92,9 @@
  * styles for doing so were not obvious to me.
  */
 .ui-growl-item-container {
-    background-color: black;
+    background-color: darkgrey;
     color: white;
+    border-radius: 1em;
 }
 
 @media all and (max-width: 500px) {

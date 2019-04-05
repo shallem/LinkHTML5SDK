@@ -181,10 +181,3 @@ textarea.ui-input-text.textCategoryXSmall,
 .textBold {
     font-weight: bold;
 }
-
-.textCategoryLarge,
-.textCategoryMedium,
-.textCategorySmall,
-.textCategoryXSmall {
-    color: #676262; /* Standard text color for all Link text boxes */
-}

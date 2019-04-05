@@ -995,10 +995,11 @@ $.widget( "mobile.widget", {
 			text: "loading"
 		},
 
-		defaultHtml: "<div class='" + loaderClass + "'>" +
+		/*defaultHtml: "<div class='" + loaderClass + "'>" +
 			"<span class='ui-icon ui-icon-loading'></span>" +
 			"<h1></h1>" +
-			"</div>",
+			"</div>",*/
+                defaultHtml: "<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>",
 
 		// For non-fixed supportin browsers. Position at y center (if scrollTop supported), above the activeBtn (if defined), or just 100px from top
 		fakeFixLoader: function() {
@@ -1042,7 +1043,7 @@ $.widget( "mobile.widget", {
 
 			// use the prototype options so that people can set them globally at
 			// mobile init. Consistency, it's what's for dinner
-			if ( $.type(theme) === "object" ) {
+			/*if ( $.type(theme) === "object" ) {
 				loadSettings = $.extend( {}, this.options, theme );
 
 				// prefer object property from the param then the old theme setting
@@ -1058,12 +1059,15 @@ $.widget( "mobile.widget", {
 
 			// set the message text, prefer the param, then the settings object
 			// then loading message
-			message = msgText || $.mobile.loadingMessage || loadSettings.text;
+			message = msgText || $.mobile.loadingMessage || loadSettings.text;*/
 
 			// prepare the dom
 			$html.addClass( "ui-loading" );
+                        // attach the loader to the DOM
+                        this.element.appendTo( $.mobile.pageContainer );
 
-			if ( $.mobile.loadingMessage !== false || loadSettings.html ) {
+
+			/*if ( $.mobile.loadingMessage !== false || loadSettings.html ) {
 				// boolean values require a bit more work :P, supports object properties
 				// and old settings
 				if ( $.mobile.loadingMessageTextVisible !== undefined ) {
@@ -1098,18 +1102,18 @@ $.widget( "mobile.widget", {
 
 				// on scroll check the loader position
 				$window.bind( "scroll", $.proxy( this.checkLoaderPosition, this ) );
-			}
+			}*/
 		},
 
 		hide: function() {
 			$html.removeClass( "ui-loading" );
 
-			if ( $.mobile.loadingMessage ) {
+			/*if ( $.mobile.loadingMessage ) {
 				this.element.removeClass( "ui-loader-fakefix" );
 			}
 
 			$.mobile.window.unbind( "scroll", this.fakeFixLoader );
-			$.mobile.window.unbind( "scroll", this.checkLoaderPosition );
+			$.mobile.window.unbind( "scroll", this.checkLoaderPosition );*/
 		}
 	});
 
