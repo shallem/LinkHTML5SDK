@@ -593,7 +593,9 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
             'value': formElem.options[i].value
         }).append(formElem.options[i].label).appendTo(inputMarkup);
 
-        if (formElem.value && formElem.options[i].value === formElem.value) {
+        if (formElem.value !== undefined &&
+                formElem.value !== null && 
+                formElem.options[i].value === formElem.value.toString()) {
             // This item is selected.
             option.attr('selected', true);
         }

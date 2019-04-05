@@ -79,16 +79,14 @@
 }
 
 .hx-form-container select {
-   border: 1px solid #555;
-   padding: 0.5em;
+   padding: 0.45em;
    font-size: 15px;
    line-height: 1.2em;
    width: 100%;
-   background: #fff;
    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ccc));
    -webkit-appearance: none;
    -webkit-box-shadow: 1px 1px 1px #fff;
-   -webkit-border-radius: 0.5em;
+   -webkit-border-radius: 0.25em;
 }
 
 .hx-form-container select {
