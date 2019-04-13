@@ -598,8 +598,9 @@ a {
     display: -webkit-flex;
     align-items: center;
     -webkit-align-items: center;
-    margin: 2px;
-    height: 34px
+    margin: 1px;
+    height: 34px;
+    background-color: whitesmoke;
 }
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
@@ -730,7 +731,7 @@ a {
     height:  calc(100% - 30px);
 }
 
-.ui-btn-active {
+.ui-btn-active:not(.hx-tab) {
     /*background-color: rgba(44, 92, 255, 0.8);*/
     background-color: #DCECF9 !important;
 }
@@ -1051,7 +1052,7 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     font-weight: normal;
 }
 
-.hx-noicon-button {
+.hx-noicon-button:not(.hx-tab) {
     border-radius: 5px;
 }
 
@@ -1194,4 +1195,20 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
   100% {
     opacity: 0;
   }
+}
+
+.ui-btn-up-f {
+    background: #dde;
+    border: white solid 1px;
+}
+
+.ui-bar-f {
+    background-image: none;
+    background-color: #EBEBF1; /* Matches header bar color in native iOS app */
+    border: none;
+}
+
+.ui-mobile .ui-footer {
+    border-bottom-width: 1px;
+    border: white solid 1px;
 }

@@ -1194,7 +1194,9 @@ var globalDataListID = -1;
                         'href': 'javascript:void(0)',
                         'data-field': sortFld,
                         'data-direction': nxtSort.direction,
-                        'data-case': nxtSort.usecase
+                        'data-case': nxtSort.usecase,
+                        'data-secondary': nxtSort.secondary,
+                        'data-secondary-order': nxtSort.secondaryDirection
                     }).append(nxtSort.display)).appendTo($(sortsList));
 
                     /* Highlight the current sort. */
@@ -1208,6 +1210,8 @@ var globalDataListID = -1;
                         var newSortField = $(evt.target).attr('data-field');
                         var defDirection = $(evt.target).attr('data-direction');
                         var caseSensitive = $(evt.target).attr('data-case');
+                        var secondarySortField = $(evt.target).attr('data-secondary');
+                        var secondaryOrder = $(evt.target).attr('data-secondary-order')
 
                         var newSort = _self._currentSort;
                         var newSortOrder = _self._currentSortOrder;
@@ -1245,7 +1249,13 @@ var globalDataListID = -1;
                         // new field.
                         if (!found) {
                             newSort = newSortField;
+                            if (secondarySortField) {
+                                newSort = newSort + ',' + secondarySortField;
+                            }
                             newSortOrder = defDirection;
+                            if (secondaryOrder) {
+                                newSortOrder = newSortOrder + ',' + secondaryOrder;
+                            }
                             newSortCase = caseSensitive;
                         }
 

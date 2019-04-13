@@ -154,7 +154,7 @@
 
 /* Make the active button class only apply on none-iconbuttons */
 .hx-btn-active:not(.iconbutton) {
-	border: 1px solid 		#2373a5 /*{global-active-border}*/;
+    border: 1px solid 		#2373a5 /*{global-active-border}*/;
 	background: 			#5393c5 /*{global-active-background-color}*/;
 	font-weight: bold;
 	color: 					#fff /*{global-active-color}*/;

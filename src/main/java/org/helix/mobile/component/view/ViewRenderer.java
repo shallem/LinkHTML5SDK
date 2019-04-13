@@ -68,7 +68,7 @@ public class ViewRenderer extends CoreRenderer {
             
             writer.startElement("div", component);
             writer.writeAttribute("data-role", "footer", null);
-            //writer.writeAttribute("data-position", "fixed", null);
+            writer.writeAttribute("data-theme", "d", null);
             writer.writeAttribute("data-tap-toggle", "false", null);
             writer.writeAttribute("data-update-page-padding", "false", null);
             

@@ -32,12 +32,13 @@ public class TabRenderer extends CoreRenderer {
         } else {
             writer.writeAttribute("class", "hx-tab ui-btn", null);
         }
+        writer.writeAttribute("data-theme", "f", null);
         
         writer.startElement("div", component);
         writer.writeAttribute("class", "hx-btn-inner hx-tab-inner", null);
         
         writer.startElement("div", component);
-        writer.writeAttribute("class", "hx-icon     ui-icon-" + tab.getIcon(), null);
+        writer.writeAttribute("class", "hx-icon ui-icon-" + tab.getIcon(), null);
     }
     
     @Override

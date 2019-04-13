@@ -19,7 +19,7 @@
  *
  * @author Seth Hallem
  */
-
+var offlineActionsDirty = false;
 $(document).on('cordovaReady', function() {
     document.addEventListener('pause', function() {
         // The native app will kill all in progress network requests when it receives the pause event.
@@ -154,7 +154,13 @@ $(document).on('hxGenerateSchemas', function() {
 });
 
 $(document).on('helixready', function() {
+    _updateOfflinePostStatus();
+    setInterval(_updateOfflinePostStatus, 15000);
+});
+
+function _updateOfflinePostStatus() {
     if (Helix.Ajax.isDeviceOnline()) {
+        offlineActionsDirty = false;
         Helix.Ajax.failedOfflineActions = [];
         if (!window.CordovaInstalled) {
             // Execute any queued posts.
@@ -194,7 +200,7 @@ $(document).on('helixready', function() {
                             ++doneQueuedActions;
                             if (doneQueuedActions === nQueuedActions) {
                                 // We have processed all actions. See if there are errors and, if so, print a message.
-                                if (Helix.Ajax.failedOfflineActions.length > 0) {
+                                if (Helix.Ajax.failedOfflineActions.length > 0 && offlineActionsDirty) {
                                     //Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
                                     if (Helix.Ajax.failedOfflineActionsCallback) {
                                         Helix.Ajax.failedOfflineActionsCallback.call(window, Helix.Ajax.failedOfflineActions);
@@ -206,7 +212,7 @@ $(document).on('helixready', function() {
                     });              
                 }
             });
-        } else {
+        } else if (window.CordovaRevision >= 13) {
             if (window.OfflinePost.listPosts) {
                 window.OfflinePost.listPosts(function(postsList) {
                     for (var i = 0; i < postsList.length; ++i) {
@@ -234,7 +240,7 @@ $(document).on('helixready', function() {
                                 break;
                         }
                     }
-                    if (Helix.Ajax.failedOfflineActions.length > 0) {
+                    if (Helix.Ajax.failedOfflineActions.length > 0 && offlineActionsDirty) {
                         //Helix.Utils.statusMessage("Failed to execute offline actions", "One or more queued actions that were queued while you were offline failed to execute.", "error");
                         if (Helix.Ajax.failedOfflineActionsCallback) {
                             Helix.Ajax.failedOfflineActionsCallback.call(window, Helix.Ajax.failedOfflineActions);
@@ -244,7 +250,7 @@ $(document).on('helixready', function() {
             }
         }
     }
-});
+}
 
 /**
 * Execute an AJAX load from a backing bean. This command is specifically used to
@@ -1228,19 +1234,20 @@ Helix.Ajax = {
     ajaxOfflineQueue: function(params, callbacks) {
         // Collect the data we will need to continue this offline draft. Not always used or applicable.
         var refreshValues = null;
-        if (params.form) {
+        if (params.lookup) {
+            refreshValues = params.lookup;
+        } else if (params.form) {
             refreshValues = params.form.getValues();
             if (params.type) {
                 refreshValues['__type'] = params.type;
             }
-        } else if (params.lookup) {
-            refreshValues = params.lookup;
         }
 
         // Queue a post for the next time the container is online.
         if (params.disableOffline) {
             Helix.Utils.statusMessage('Offline', 'This operations is not available offline.', 'info');
         } else if (!window.CordovaInstalled) {
+            offlineActionsDirty = true;
             if (params.id) {
                 Helix.Ajax.offlineNetworkQueue.all().filter('id', '=', params.id).one(function(obj) {
                     if (obj) {
@@ -1275,11 +1282,12 @@ Helix.Ajax = {
                 });
             }
         } else {
+            offlineActionsDirty = true;
             window.OfflinePost.savePost(params.url,
                 'application/x-www-form-urlencoded',
                 params.body,
                 refreshValues ? JSON.stringify(refreshValues) : '',
-                params.id ? params.id : 0,
+                params.id ? Number(params.id) : 0,
                 function(rowid) {
                     if (!params.silentMode) {
                         if (params.offlineSuccess) {

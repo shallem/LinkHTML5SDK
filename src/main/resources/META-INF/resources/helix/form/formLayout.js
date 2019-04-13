@@ -732,6 +732,10 @@
                         newValue = valuesMap['default'];
                     }
                     
+                    if (newValue === undefined) {
+                        newValue = item.defaultValue;
+                    }
+                    
                     var fldType = item.type;
                     if (fldType !== 'buttonGroup') {
                         item.value = newValue;
@@ -778,13 +782,18 @@
                 var nxtItem = this.options.items[idx];
                 if (nxtItem.type === "subPanel" ||
                         nxtItem.type === 'horizontalBlock') {
+                    var forceRefresh = false;
                     if (this._stripNamespace(nxtItem.name) === fieldName) {
                         this.__refreshOneValue(mode,nxtItem,valuesMap,modeChanged);
+                        forceRefresh = true;
                         // Fall through - refreshing the parent implies refreshing all children ...
                     }
                     for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                         var subitem = nxtItem.items[subidx];
-                        if (this._stripNamespace(subitem.name) === fieldName) {
+                        if (forceRefresh === true) {
+                            // We are refreshing the parent. Refresh all children.
+                            this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
+                        } else if (this._stripNamespace(subitem.name) === fieldName) {
                             this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
                             return;
                         }

@@ -147,11 +147,16 @@
 				return;
 			}
                         var targetDate = new Date(targetTime);
+                        var nowDate = new Date(nowTime);
                         if (dayDiff === 0) {
                             // Confirm these are really on the same day ...
-                            var nowDate = new Date(nowTime);
                             if (targetDate.getDate() !== nowDate.getDate()) {
                                 dayDiff = 1;
+                            }
+                        } else {
+                            var aDayDiff = nowDate.getDate() - targetDate.getDate();
+                            if (aDayDiff > dayDiff) {
+                                ++dayDiff;
                             }
                         }
 

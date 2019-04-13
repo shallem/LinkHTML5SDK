@@ -337,6 +337,13 @@ function cordova_helix_init() {
                 return cordova.exec(success, failure, "HelixBulkContacts", "flushQueue", [ ]);
             }
         };
-
+    }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 13) {
+        $.extend(window.HelixSystem, {
+            playSound: function(soundName, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "playSound", [ soundName ]);
+            }
+        });
     }
 }

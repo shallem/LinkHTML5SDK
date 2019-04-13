@@ -567,6 +567,12 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
 }
 
+function __getTitleStyleClass(formLayout, formElem) {
+    var _css = (formLayout.titleStyleClass ? formLayout.titleStyleClass : '');
+    _css = _css + (formElem.titleStyleClass ? (' ' + formElem.titleStyleClass) : '');
+    return _css;
+}
+
 function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     var $fieldContainer = formElem.DOM;
     if ($fieldContainer) {
@@ -609,7 +615,7 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
         })
                 .append($('<label />').attr({
                     'for': inputID,
-                    'class': formLayout.titleStyleClass
+                    'class': __getTitleStyleClass(formLayout, formElem)
                 })
                         .append(formElem.fieldTitle)
                         )
@@ -715,7 +721,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
         // WE always use the mini style. Otherwise the fonts are too large even on tablets.
         var lbl = $('<label />').attr({
             'for': inputID,
-            'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
+            'class': __getTitleStyleClass(formLayout, formElem)
         });
         var textContainer = $('<div />').attr({
             'data-role': 'fieldcontain',
