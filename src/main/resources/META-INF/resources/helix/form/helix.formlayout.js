@@ -1111,7 +1111,12 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
 }
 
 function __refreshOnOffSlider(formElem) {
-    $(formElem.DOM).find('input').removeAttr('checked').prop('checked', formElem.value);
+    if (formElem.value === true ||
+            formElem.value === 'true') {
+        $(formElem.DOM).find('input').removeAttr('checked').prop('checked', true);
+    } else {
+        $(formElem.DOM).find('input').removeAttr('checked').prop('checked', false);
+    }
 }
 
 // Borrowed from: https://proto.io/freebies/onoff/
@@ -1148,6 +1153,8 @@ function __appendOnOffSlider(mode, formLayout, formElem, $fieldContainer, useMin
         if (formElem.value === true ||
                 formElem.value === 'true') {
             switchInput.prop('checked', true);
+        } else {
+            switchInput.prop('checked', false);
         }
 
         switchContainer.append($('<label/>').attr({
@@ -2478,7 +2485,7 @@ Helix.Layout.createAlertDialog = function(options) {
 };
 
 
-Helix.Layout.createActionsDialog = function (options, actions) {
+Helix.Layout.createActionsDialog = function (options, actions, opaque) {
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
 
@@ -2499,6 +2506,10 @@ Helix.Layout.createActionsDialog = function (options, actions) {
     });
     for (var i = 0; i < actions.length; ++i) {
         var nxt = actions[i];
+        if (nxt.condition && nxt.condition(opaque) === false) {
+            continue;
+        }
+        
         var iconClass = nxt.icon;
         if (iconClass.indexOf('ui-icon') !== 0) {
             iconClass = 'ui-icon-' + iconClass;
