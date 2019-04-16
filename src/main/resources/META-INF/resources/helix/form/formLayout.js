@@ -251,7 +251,8 @@
                             this.__updateValue(subItem.mode, subItem.name, subItem, {});
                         }
                     }
-                } else if (formElem.type === 'subPanel') { 
+                } else if (formElem.type === 'subPanel' ||
+                        formElem.type === 'horizontalBlock') { 
                     for (i = 0; i < formElem.items.length; ++i) {
                         var subpItem = formElem.items[i];
                         if (this.__computeOneHidden(subpItem, valuesMap) &&
@@ -542,7 +543,7 @@
                     }
                     // We don't serialize the controlset itself - just its component checkboxes
                     continue;
-                } else if (fieldType === 'subPanel') {
+                } else if (fieldType === 'subPanel' || fieldType === 'horizontalBlock') {
                     // Process sub items.
                     for (i = 0; i < nxtItem.items.length; ++i) {
                         subItem = nxtItem.items[i];
@@ -780,7 +781,7 @@
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                if (nxtItem.type === "subPanel" ||
+                if (nxtItem.type === 'subPanel' ||
                         nxtItem.type === 'horizontalBlock') {
                     var forceRefresh = false;
                     if (this._stripNamespace(nxtItem.name) === fieldName) {
@@ -833,7 +834,8 @@
             for (var idx = 0; idx < items.length; ++idx) {
                 var nxtItem = items[idx];
                 this.__copyOneValue(nxtItem, valuesMap);
-                if (nxtItem.type === 'subPanel') {
+                if (nxtItem.type === 'subPanel' ||
+                        nxtItem.type === 'horizontalBlock') {
                     this.__copyValues(nxtItem.items, valuesMap);
                 }
             }
@@ -854,7 +856,8 @@
             for (var idx = 0; idx < items.length; ++idx) {
                 var nxtItem = items[idx];
                 this.__clearOneValue(nxtItem);
-                if (nxtItem.type === 'subPanel') {
+                if (nxtItem.type === 'subPanel' ||
+                        nxtItem.type === 'horizontalBlock') {
                     this.__clearValues(nxtItem.items);
                 } else if (nxtItem.type === 'controlset') {
                     // controlset or radio
@@ -875,7 +878,8 @@
                 if (name === strippedFieldID) {
                     break;
                 }
-                if (item.type === 'subPanel') {
+                if (item.type === 'subPanel' ||
+                        item.type === 'horizontalBlock') {
                     // Go through the items.
                     for (var j = 0; j < item.items.length; ++j) {
                         subItem = item.items[j];
@@ -1191,7 +1195,8 @@
                 if (nxtItem.hidden) {
                     continue;
                 }
-                if (nxtItem.type === 'subPanel') {
+                if (nxtItem.type === 'subPanel' ||
+                        nxtItem.type === 'horizontalBlock') {
                     // Go through the items.
                     for (var j = 0; j < nxtItem.items.length; ++j) {
                         this._validateItem(nxtItem.items[j], validationErrors);
