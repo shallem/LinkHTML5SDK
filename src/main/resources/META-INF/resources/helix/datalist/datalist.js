@@ -2143,7 +2143,7 @@ var globalDataListID = -1;
             // Make sure this is a query collection.
             if (displayCollection && displayCollection.clearOrder) {
                 displayCollection = displayCollection.clearOrder();
-                if (this.options.groupBy) {
+                if (this.options.groupBy && orderby !== this.options.groupBy) {
                     if (this.options.groupByOrder.toUpperCase() === 'ASC') {
                         displayCollection = displayCollection.order(this.options.groupBy, true, false);
                     } else {
