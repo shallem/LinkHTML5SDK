@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 (function() {
-    var userAgent = (__hxUserAgent ? __hxUserAgent : navigator.userAgent);
+    var userAgent = (__hxUserAgent !== undefined && __hxUserAgent)  ? __hxUserAgent : navigator.userAgent;
     window.CordovaIOS = userAgent.match(/\[CORDOVA\]/);
     window.CordovaANDROID = userAgent.match(/\[CORDOVA-ANDROID\]/);
     window.CordovaIOS34 = userAgent.match(/\[CORDOVA-3\.4\.([^\]]*)\]/);
