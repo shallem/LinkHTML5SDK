@@ -856,7 +856,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
                                     $(_self).val(LIs[0]);
-                                    formElem.autocompleteSelect.call(_self, LIs[0], formElem);
+                                    formElem.autocompleteSelect.call(_self, LIs[0], formElem, null);
                                     formElem.__noblur = false;
                                 } else {
                                     $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function () {
@@ -866,9 +866,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     // We cap out the list length at 20 b/c otherwise we might crash the app ...
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
-                                        var nxtItem = formElem.autocompleteProjection(LIs[i]);
-                                        $("<li/>").addClass('wordBreak').append(nxtItem).on('vclick', function () {
-                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem);
+                                        var nxtLI = $("<li/>");
+                                        var nxtItem = formElem.autocompleteProjection(LIs[i], nxtLI);
+                                        nxtLI.addClass('wordBreak').append(nxtItem).on('vclick', function () {
+                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem, $(this));
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
                                             if (ret === true) {

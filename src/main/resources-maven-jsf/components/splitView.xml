@@ -42,6 +42,13 @@
             <description>Percentage of the full view occupied by the left split pane.</description>
         </attribute>
         <attribute>
+            <name>splitPadding</name>
+            <required>false</required>
+            <type>java.lang.Integer</type>
+            <defaultValue>5</defaultValue>
+            <description>Number of pixels separating the right and left panes.</description>
+        </attribute>
+        <attribute>
             <name>rightWidth</name>
             <required>false</required>
             <type>java.lang.Integer</type>

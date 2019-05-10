@@ -110,7 +110,8 @@
 }   
 
 .ui-input-search {
-    border-radius: 0.2em;
+    border-bottom: 1px solid rgba(25,25,25,0.25);
+    border-radius: 0px 0px 0px 0px;
 }
 
 .ui-mini.ui-btn-inline {
@@ -153,7 +154,7 @@
 }
 
 /* Make the active button class only apply on none-iconbuttons */
-.hx-btn-active:not(.iconbutton) {
+.hx-btn-active:not(.iconbutton):not(.hx-tab) {
     border: 1px solid 		#2373a5 /*{global-active-border}*/;
 	background: 			#5393c5 /*{global-active-background-color}*/;
 	font-weight: bold;

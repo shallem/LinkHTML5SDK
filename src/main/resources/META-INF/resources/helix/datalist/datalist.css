@@ -13,8 +13,10 @@ and open the template in the editor.
 }
 
 .hx-listview li.ui-li-divider {
-    color: #676262;
-    background-color: whitesmoke;
+    color: rgb(67, 140, 255);
+    background-color: white;
+    border-top: 1px solid rgba(25,25,25,0.25);
+    border-bottom: 1px solid rgba(25,25,25,0.25);
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
 }

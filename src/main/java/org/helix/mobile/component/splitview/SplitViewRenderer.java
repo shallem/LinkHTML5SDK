@@ -48,6 +48,7 @@ public class SplitViewRenderer extends CoreRenderer {
         if (sview.getButtonBarSelector() != null) {
             writer.write(",buttonBarSelector: '" + sview.getButtonBarSelector() + "'");
         }
+        writer.write(",splitPadding: " + sview.getSplitPadding());
         writer.write("}).data('helix-helixSplitView');");
         writer.write("});");
         

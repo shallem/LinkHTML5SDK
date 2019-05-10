@@ -20,14 +20,12 @@
 .hx-split-left-area {
     float: left;
     background-color: white;
-    border: 1px solid grey;
-    border-radius: 0px 0px 0px 0px;
 }
 
 .hx-split-right-area {
     float: right;
     background-color: white;
-    border: 1px solid grey;
+    border-left: 2px solid rgba(25,25,25,0.1);
     border-radius: 0px 0px 0px 0px;
 }   
 
@@ -600,7 +598,7 @@ a {
     -webkit-align-items: center;
     margin: 1px;
     height: 34px;
-    background-color: whitesmoke;
+    background-color: white;
 }
 
 .hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
