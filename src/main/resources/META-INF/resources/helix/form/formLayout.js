@@ -566,7 +566,8 @@
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
-                if (nxtItem.type === "subPanel") {
+                if (nxtItem.type === 'subPanel' ||
+                        nxtItem.type === 'horizontalBlock') {
                     for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                         var subitem = nxtItem.items[subidx];
                         this.__updateValue(mode,this._stripNamespace(subitem.name),subitem,{});
