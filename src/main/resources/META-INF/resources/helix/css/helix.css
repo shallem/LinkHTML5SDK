@@ -425,6 +425,10 @@ a {
     justify-content: center;
 }
 
+.hx-flex-align-center {
+    align-items: center;
+}
+
 .hx-flex-vertical {
     display: flex;
     display: -webkit-flex;

@@ -224,7 +224,7 @@
 		    <include>editor/editor.css</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <include>calendar/fullcalendar.css</include>
+		    <!-- <include>calendar/fullcalendar.css</include> -->
 
 		    <include>css/helix.css</include>
 
@@ -299,7 +299,7 @@
 		    <include>primefaces-js/growl.js</include>
 
 		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <include>calendar/fullcalendar.js</include>
+		    <!-- <include>calendar/fullcalendar.js</include> -->
 
 		    <!-- https://github.com/gregjacobs/Autolinker.js -->
 		    <include>autolink/Autolinker.js</include>
