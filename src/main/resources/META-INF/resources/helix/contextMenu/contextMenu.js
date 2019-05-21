@@ -360,9 +360,7 @@
                 theme: this.options.theme,
                 dividerTheme: this.options.dividerTheme
             });
-            _self._menuContainer.popup({
-                dismissible: !Helix.hasTouch // We will explicitly close the popup when this is a touch device.
-            });
+            _self._menuContainer.popup({});
             $(_self._menuContainer).on('popupafterclose', null, _self, function(ev) {
                 var _p = ev.data;
                 _p.active = false;

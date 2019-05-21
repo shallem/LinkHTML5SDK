@@ -179,10 +179,10 @@ public class DataListRenderer extends CoreRenderer {
             }
         }
         if (dlist.getSwipeLeftAction() != null) {
-            writer.append(",swipeLeftAction: function(row) {" + dlist.getSwipeLeftAction() + "}");
+            writer.append(",swipeLeftAction: function(row, ev) {" + dlist.getSwipeLeftAction() + "}");
         }
         if (dlist.getSwipeRightAction() != null) {
-            writer.append(",swipeRightAction: function(row) {" + dlist.getSwipeRightAction() + "}");
+            writer.append(",swipeRightAction: function(row, ev) {" + dlist.getSwipeRightAction() + "}");
         }
         if (dlist.getHoldAction() != null) {
             writer.append(",holdAction: function(row,group,strings) {" + dlist.getHoldAction() + "}");

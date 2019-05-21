@@ -8632,7 +8632,6 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 
 		_create: function() {
 			var ui = {
-					screen: $( "<div class='ui-screen-hidden ui-popup-screen'></div>" ),
 					placeholder: $( "<div style='display: none;'><!-- placeholder --></div>" ),
 					container: $( "<div class='ui-popup-container hx-popup-container ui-popup-hidden " + this.options.containerClass + "'></div>" )
 				},
@@ -8643,6 +8642,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			// We need to adjust the history option to be false if there's no AJAX nav.
 			// We can't do it in the option declarations because those are run before
 			// it is determined whether there shall be AJAX nav.
+                        ui.screen = thisPage.find('.ui-popup-screen');
 			this.options.history = this.options.history && $.mobile.ajaxEnabled && $.mobile.hashListeningEnabled;
 
 			if ( thisPage.length === 0 ) {
@@ -8654,12 +8654,10 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			this.options.container = this.options.container || $.mobile.pageContainer;
 
 			// Apply the proto
-			thisPage.append( ui.screen );
-			ui.container.insertAfter( ui.screen );
+			ui.container.appendTo( thisPage );
 			// Leave a placeholder where the element used to be
-			ui.placeholder.insertAfter( this.element );
+			ui.placeholder.insertAfter( ui.container );
 			if ( myId ) {
-				ui.screen.attr( "id", myId + "-screen" );
 				ui.container.attr( "id", myId + "-popup" );
 				ui.placeholder.html( "<!-- placeholder for " + myId + " -->" );
 			}
@@ -8690,8 +8688,6 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 				self.options[ key ] = undefined;
 				self._setOption( key, value, true );
 			});
-
-			ui.screen.bind( "vclick", $.proxy( this, "_eatEventAndClose" ) );
 
 			this._on( $.mobile.window, {
 				orientationchange: $.proxy( this, "_handleWindowOrientationchange" ),
@@ -8767,7 +8763,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 		},
 
 		_setTolerance: function( value ) {
-			var tol = { t: 30, r: 10, b: 30, l: 10 };
+			var tol = { t: 40, r: 10, b: 40, l: 10 }; // 40 is the height of the standard header bar
 
 			if ( value !== undefined ) {
 				var ar = String( value ).split( "," );
@@ -9026,24 +9022,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 		},
 
 		_open: function( options ) {
-			var o = $.extend( {}, this.options, options ),
-				// TODO move blacklist to private method
-				androidBlacklist = ( function() {
-					var w = window,
-						ua = navigator.userAgent,
-						// Rendering engine is Webkit, and capture major version
-						wkmatch = ua.match( /AppleWebKit\/([0-9\.]+)/ ),
-						wkversion = !!wkmatch && wkmatch[ 1 ],
-						androidmatch = ua.match( /Android (\d+(?:\.\d+))/ ),
-						andversion = !!androidmatch && androidmatch[ 1 ],
-						chromematch = ua.indexOf( "Chrome" ) > -1;
-
-					// Platform is Android, WebKit version is greater than 534.13 ( Android 3.2.1 ) and not Chrome.
-					if( androidmatch !== null && andversion === "4.0" && wkversion && wkversion > 534.13 && !chromematch ) {
-						return true;
-					}
-					return false;
-				}());
+			var o = $.extend( {}, this.options, options );
 
 			// Count down to triggering "popupafteropen" - we have two prerequisites:
 			// 1. The popup window animation completes (container())
@@ -9060,7 +9039,10 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 				this._setTheme( this._page.jqmData( "theme" ) || $.mobile.getInheritedTheme( this._page, "c" ) );
 			}
 
-			this._ui.screen.removeClass( "ui-screen-hidden" );
+                        this._ui.screen = $.mobile.activePage.find('.ui-popup-screen');
+			this._ui.screen.removeClass( "ui-screen-hidden ui-overlay-" + this._page.jqmData( "theme" ));
+                        this._ui.screen.one( "vclick." + this._ui.container.attr('id'), $.proxy( this, "_eatEventAndClose" ) );
+
 			this._ui.container.removeClass( "ui-popup-hidden" );
 
 			// Give applications a chance to modify the contents of the container before it appears
@@ -9068,23 +9050,6 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
                             this._reposition( o );
                         }
 
-			if ( this.options.overlayTheme && androidBlacklist ) {
-				/* TODO:
-				The native browser on Android 4.0.X ("Ice Cream Sandwich") suffers from an issue where the popup overlay appears to be z-indexed
-				above the popup itself when certain other styles exist on the same page -- namely, any element set to `position: fixed` and certain
-				types of input. These issues are reminiscent of previously uncovered bugs in older versions of Android's native browser:
-				https://github.com/scottjehl/Device-Bugs/issues/3
-
-				This fix closes the following bugs ( I use "closes" with reluctance, and stress that this issue should be revisited as soon as possible ):
-
-				https://github.com/jquery/jquery-mobile/issues/4816
-				https://github.com/jquery/jquery-mobile/issues/4844
-				https://github.com/jquery/jquery-mobile/issues/4874
-				*/
-
-				// TODO sort out why this._page isn't working
-				this.element.closest( ".ui-page" ).addClass( "ui-popup-open" );
-			}
 			this._animate({
 				additionalCondition: true,
 				transition: o.transition,
@@ -9122,6 +9087,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 		},
 
 		_close: function( immediate ) {
+                        this._ui.screen.off( "vclick." + this._ui.container.attr('id') );
 			this._ui.container.removeClass( "ui-popup-active" );
 			this._page.removeClass( "ui-popup-open" );
 
@@ -9159,7 +9125,6 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 				.detach()
 				.insertAfter( this._ui.placeholder )
 				.removeClass( "ui-popup ui-overlay-shadow ui-corner-all" );
-			this._ui.screen.remove();
 			this._ui.container.remove();
 			this._ui.placeholder.remove();
 		},
@@ -9997,8 +9962,7 @@ $( document ).bind( "pagecreate create", function( e ) {
 		.find( "a" )
 		.jqmEnhanceable()
 		.not( ".ui-btn, .ui-link-inherit, :jqmData(role='none'), :jqmData(role='nojs')" )
-		.addClass( "ui-link" );
-
+		.addClass( "ui-link" );		
 });
 
 })( jQuery );
@@ -10852,6 +10816,11 @@ $.widget( "mobile.panel", $.mobile.widget, {
 //auto self-init widgets
 $( document ).bind( "pagecreate create", function( e ) {
 	$.mobile.panel.prototype.enhanceWithin( e.target );
+        if (e.type === 'pagecreate') {
+            // SAH
+            $(e.target)
+                    .append( "<div class='ui-screen-hidden ui-popup-screen'></div>" );
+        }
 });
 
 })( jQuery );

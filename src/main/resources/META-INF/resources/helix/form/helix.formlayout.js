@@ -56,7 +56,7 @@ function __isCurrentTZ(stdOffsetHours) {
     return false;
 }
 
-function __getTZSelect(tabIndex, name, id, curTime) {
+function __getTZSelect(tabIndex, name, id, curTime, formLayout) {
     var date = null;
     if (!curTime) {
         date = new Date();
@@ -72,6 +72,9 @@ function __getTZSelect(tabIndex, name, id, curTime) {
         'id': id,
         'tabIndex': tabIndex
     });
+    if (formLayout.textStyleClass) {
+        tzSelect.addClass(formLayout.textStyleClass);
+    }
     __mkTZOption(-12.0, date, "(GMT -12:00) Eniwetok, Kwajalein", "INTERNATIONAL").appendTo(tzSelect);
     __mkTZOption(-11.0, date, "(GMT -11:00) Midway Island, Samoa", "SAMOA").appendTo(tzSelect);
     __mkTZOption(-10.0, date, "(GMT -10:00) Hawaii", "HAWAII").appendTo(tzSelect);
@@ -218,7 +221,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             inputType = 'time';
         }
         valueString = new Date(defaultValue).toISOString();
-        var inputWrapper = $('<div/>').addClass('ui-input-text').addClass('hx-input-date').appendTo(dateDiv);
+        var inputWrapper = $('<div/>').addClass('hx-input-date').appendTo(dateDiv);
         var inputID = Helix.Utils.getUniqueID();
         dateInput = $('<input />').attr({
             'name': formElem.name,
@@ -352,7 +355,7 @@ function __appendTZSelector(mode, formLayout, formElem, $fieldContainer, useMini
                         .append(formElem.fieldTitle)
                         );
 
-        var tzSelect = __getTZSelect(formLayout.__tabIndex++, formElem.name, inputID, defaultValue).appendTo(dateDiv);
+        var tzSelect = __getTZSelect(formLayout.__tabIndex++, formElem.name, inputID, defaultValue, formLayout).appendTo(dateDiv);
         if (formElem.onchange) {
             $(tzSelect).change(function () {
                 var newVal = $(this).find("option:selected");
@@ -587,6 +590,9 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     });
     if (formElem.computedWidth) {
         $(inputMarkup).attr('width', formElem.computedWidth);
+    }
+    if (formLayout.textStyleClass) {
+        inputMarkup.addClass(formLayout.textStyleClass);
     }
 
     var i;

@@ -394,7 +394,12 @@ var globalDataListID = -1;
             /*
              * Size of the window of preloaded data (in pages).
              */
-            preloadPageCt: 6
+            preloadPageCt: 6,
+            
+            /*
+             * Override the next tap and call this function instead.
+             */
+            messageTapOverride: null
         },
         _create: function () {
             var _self = this;
@@ -2364,7 +2369,12 @@ var globalDataListID = -1;
                 });
                 return;
             }
-
+            if (this.messageTapOverride) {
+                this.messageTapOverride();
+                this.messageTapOverride = null;
+                return;
+            }
+            
             if (this.options.multiSelect && event.clientX < 35 && $(target).is('.hx-multi-select-item')) {
                 $(target).toggleClass("hx-selected");
 
@@ -2534,14 +2544,14 @@ var globalDataListID = -1;
             event.stopImmediatePropagation();
 
             this.setSelected(target);
-            this.options.swipeLeftAction.call(this, this.selected);
+            this.options.swipeLeftAction.call(this, this.selected, event);
         },
         
         _handleSwipeRight: function(event, target) {
             event.stopImmediatePropagation();
 
             this.setSelected(target);
-            this.options.swipeRightAction.call(this, this.selected);
+            this.options.swipeRightAction.call(this, this.selected, event);
         },
         
         _installTouchActionHandlers: function () {
@@ -3398,7 +3408,9 @@ var globalDataListID = -1;
         },
         equals: function(other) {
             return this.dataListID === other.dataListID;
+        },
+        setTapOverride: function(fn) {
+            this.messageTapOverride = fn;
         }
-
     });
 })(jQuery);

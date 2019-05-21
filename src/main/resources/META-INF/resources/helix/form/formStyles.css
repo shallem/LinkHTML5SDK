@@ -80,10 +80,15 @@
 }
 
 .hx-select {
+    border-bottom: 1px solid;
+    border-color: lightgrey;
+}
+
+.hx-select,.hx-input-date {
     background-color: transparent;
 }
 
-.hx-select select {
+.hx-select select,.hx-input-date input {
   color: black;
   width: 95%;
   border: none;
@@ -92,13 +97,12 @@
   outline: none;
 }
 
-.hx-select::before {
+.hx-select::after,.hx-input-date::after {
   content: "\25bc";
   width: 30px;
   float: right;
   text-align: center;
   font-size: 14px;
-  line-height: 32px;
   color: black;
   pointer-events: none;
 }
@@ -155,7 +159,8 @@
     width: 100%;
 }
 
-.hx-form-container .ui-field-contain div.ui-input-text {
+.hx-form-container .ui-field-contain div.ui-input-text,
+.hx-form-container .ui-field-contain div.hx-input-date{
     box-shadow: none;
     flex: 2; /* Fill the remainder of the flex box. */
     -webkit-flex: 2;
@@ -168,6 +173,12 @@
     width: auto;
     display: flex;
     flex-direction: row;
+}
+
+.hx-form-container .ui-field-contain div.hx-input-date {
+    width: -moz-available;          /* WebKit-based browsers will ignore this. */
+    width: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    width: fill-available;
 }
 
 /* With an explicit bottom border, override the above. */
