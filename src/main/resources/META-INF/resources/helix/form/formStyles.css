@@ -97,6 +97,12 @@
   outline: none;
 }
 
+@media all and (max-width: 500px) {
+    .hx-select select,.hx-input-date input {
+        width: 85%;
+    }
+}
+
 .hx-select::after,.hx-input-date::after {
   content: "\25bc";
   width: 30px;

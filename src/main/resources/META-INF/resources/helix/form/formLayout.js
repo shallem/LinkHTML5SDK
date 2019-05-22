@@ -155,7 +155,7 @@
             } else if (formElem.items) {
                 // Sub panel.
                 this._processItems(formElem.items);
-            }            
+            }        
         },
         
         _processItems: function(itemsList) {
