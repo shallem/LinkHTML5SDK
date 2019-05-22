@@ -1214,3 +1214,16 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     border-bottom-width: 1px;
     border: white solid 1px;
 }
+
+.hx-menu-item .hx-mini-fieldcontain div.ui-input-text {
+    display: block !important;
+}
+
+.hx-menu-item .ui-btn-inner .ui-btn-text .hx-noicon-button.a.ui-link-inherit {
+    padding: 0.15em;
+}
+
+.hx-menu-item .ui-field-contain div.ui-input-text {
+    width: 100%;
+    padding: 0em;
+}

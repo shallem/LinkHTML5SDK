@@ -104,7 +104,8 @@
                     $(target).find('legend.span').text(overrideLabel);
                 } else if (selected.type === 'checkbox') {
                     $(target).find('span.ui-btn-text').text(overrideLabel);
-                } else if (selected.type === 'text') {
+                } else if (selected.type === 'text' ||
+                        selected.type === 'date') {
                     $(target).find('label').text(overrideLabel);
                 } else {
                     $(target).text(overrideLabel);
@@ -178,7 +179,8 @@
                 } else {
                     $(items).checkboxradio('disable');
                 }
-            } else if (selected.type === 'text') {
+            } else if (selected.type === 'text' ||
+                    selected.type === 'date') {
                 var isEnabled = $.isArray(status) ? status[0] : status;
                 var nxtVal = $.isArray(status) ? status[1] : '';
                 if (isEnabled === true) {
@@ -226,7 +228,7 @@
             this._menuContainer.append(this.optionsList);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
-                var nxtLI = $('<li />');
+                var nxtLI = $('<li />').addClass('hx-menu-item');
 
                 if (nxtItem.isDivider) {
                     nxtLI.attr('data-role', 'list-divider');
@@ -236,6 +238,7 @@
                     var inputID = this.options.name + '-' + (nxtItem.name ? nxtItem.name : i);
                     switch (nxtItem.type) {
                         case 'radio':
+                            nxtLI.attr('data-icon', false);
                             var form = $('<form/>').appendTo(nxtLI);
                             var fieldSet = nxtLink = $('<fieldset/>').attr({
                                 'data-role': 'controlgroup',
@@ -293,10 +296,12 @@
                             });
                             break;
                         case 'text':
+                        case 'date':
+                            nxtLI.attr('data-icon', false);
                             var inputMarkup = $('<input />').attr({
                                 'name': nxtItem.name,
                                 'id': inputID,
-                                'type': 'text',
+                                'type': nxtItem.type,
                                 'autocapitalize': 'off',
                                 'data-index': i
                             });
@@ -304,10 +309,11 @@
                             var textContainer = $('<div />').attr({
                                 'data-role': 'fieldcontain',
                                 'class': 'hx-mini-fieldcontain',
-                                'style' : 'max-width: 150px !important;'
+                                'style' : 'width: 100% !important;'
                             })
                                     .append($('<label />').attr({
-                                        'for': inputID
+                                        'for': inputID,
+                                        'style': 'color: black'
                                     })
                                             .append(nxtItem.display)
                                             )
@@ -317,10 +323,23 @@
                             $(inputMarkup).textinput({
                                 disabled: !nxtItem.enabled
                             });
+                            
                             if (nxtItem.action) {
-                                $(inputMarkup).on('input', null, [_self, nxtItem], function (ev) {
-                                    ev.data[0].__runAction(ev, ev.data[1], $(ev.target).val(), true);
-                                });
+                                if (nxtItem.type === 'date') {
+                                    $('<a />').appendTo(nxtLI).attr({
+                                        'data-role': 'button',
+                                        'data-inline': true,
+                                        'data-shadow': 'false',
+                                        'data-theme': 'd',
+                                        'data-corners': 'false'
+                                    }).append('Set').buttonMarkup({mini: true}).on(Helix.clickEvent, null, [_self, nxtItem, inputMarkup], function(ev) {
+                                        ev.data[0].__runAction(ev, ev.data[1], $(ev.data[2]).val(), true);
+                                    });
+                                } else {
+                                    $(inputMarkup).on('input', null, [_self, nxtItem], function (ev) {
+                                        ev.data[0].__runAction(ev, ev.data[1], $(ev.target).val(), true);
+                                    });
+                                }
                             }
                             break;
                         default:

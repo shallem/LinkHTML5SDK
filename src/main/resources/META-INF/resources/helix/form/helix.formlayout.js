@@ -1691,6 +1691,20 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
         return false;
     });
     subPanelDiv.append(heading);
+    $(subPanelDiv).on('toggle', function(ev) {
+        ev.stopImmediatePropagation();
+        var h = $(this).children()[0];
+        if ($(h).next()[0].classList.contains('hx-collapsed')) {
+            // Was collapsed, expand
+            $(h).find('.ui-icon-expand').removeClass('ui-icon-expand').addClass('ui-icon-collapse');
+        } else {
+            // Was expanded, collapse
+            $(h).find('.ui-icon-collapse').removeClass('ui-icon-collapse').addClass('ui-icon-expand');
+        }
+        $(h).next().toggleClass('hx-collapsed');
+        $(h).next().fadeToggle('fast');
+        return false;
+    });
 
     var body = $('<div/>').addClass('hx-collapsible-content ' + (subPanelObj.noCollapse ? '' : 'hx-collapsed'))
             .appendTo(subPanelDiv);

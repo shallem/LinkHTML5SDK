@@ -9019,6 +9019,7 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			this._ui.container.attr( "tabindex", "0" ).focus();
 			this._ignoreResizeEvents();
 			this._trigger( "afteropen" );
+                        this._ui.screen.one( "vclick." + this._ui.container.attr('id'), $.proxy( this, "_eatEventAndClose" ) );
 		},
 
 		_open: function( options ) {
@@ -9041,7 +9042,6 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 
                         this._ui.screen = $.mobile.activePage.find('.ui-popup-screen');
 			this._ui.screen.removeClass( "ui-screen-hidden ui-overlay-" + this._page.jqmData( "theme" ));
-                        this._ui.screen.one( "vclick." + this._ui.container.attr('id'), $.proxy( this, "_eatEventAndClose" ) );
 
 			this._ui.container.removeClass( "ui-popup-hidden" );
 
