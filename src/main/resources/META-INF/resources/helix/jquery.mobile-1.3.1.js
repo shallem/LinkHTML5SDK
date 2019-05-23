@@ -9019,7 +9019,9 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 			this._ui.container.attr( "tabindex", "0" ).focus();
 			this._ignoreResizeEvents();
 			this._trigger( "afteropen" );
-                        this._ui.screen.one( "vclick." + this._ui.container.attr('id'), $.proxy( this, "_eatEventAndClose" ) );
+                        
+                        var evName = "vclick." + this._ui.container.attr('id');
+                        this._ui.screen.off(evName).one( evName, $.proxy( this, "_eatEventAndClose" ) );
 		},
 
 		_open: function( options ) {
