@@ -1674,9 +1674,9 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }).appendTo($fieldContainer);
 
     var iconClass = (subPanelObj.noCollapse ? 'ui-icon-collapse' : 'ui-icon-expand');
-    var heading = $('<div/>').addClass('hx-collapsible-heading')
+    var heading = $('<div/>').addClass('hx-collapsible-heading hx-flex-horizontal')
             .append($('<div/>').addClass(iconClass + ' hx-collapsible-button'))
-            .append($('<div/>').addClass('hx-collapsible-label ' + (subPanelObj.titleStyleClass ? subPanelObj.titleStyleClass : '')).append(formElem.fieldTitle));
+            .append($('<div/>').addClass('hx-flex-fill hx-collapsible-label ' + (subPanelObj.titleStyleClass ? subPanelObj.titleStyleClass : '')).append(formElem.fieldTitle));
     heading.on(Helix.clickEvent, function (ev) {
         ev.stopImmediatePropagation();
         if ($(this).next()[0].classList.contains('hx-collapsed')) {

@@ -123,4 +123,5 @@
 
 .hx-editor-content {
     background: #fff;
+    min-height: 300px;
 }

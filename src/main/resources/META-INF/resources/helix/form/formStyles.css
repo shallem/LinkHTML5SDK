@@ -396,7 +396,6 @@ textarea.ui-input-text {
     margin: 0;
     border-radius: 0px;
     padding: 0;
-    display: block;
     -webkit-user-select: none !important;
 }
 
@@ -442,4 +441,8 @@ textarea.ui-input-text {
 
 .hx-form-pad-bottom {
     padding-bottom: 0.3em;
+}
+
+.hx-form-container .iconbutton .hx-btn-inner {
+    height: inherit;
 }

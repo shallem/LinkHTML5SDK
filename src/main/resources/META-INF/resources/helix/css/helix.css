@@ -1227,3 +1227,7 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     width: 100%;
     padding: 0em;
 }
+
+.hx-popup-container {
+    min-width: 10em;
+}
