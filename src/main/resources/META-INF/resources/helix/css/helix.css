@@ -352,12 +352,6 @@ a {
     margin-right: 0em;
 }
 
-.hx-form-container {
-    padding-right: 0px;
-    margin-right: 0px;
-    overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
-}
-
 .hx-form-compactvalue {
     font-weight: normal;
     padding-top: 0px;
@@ -632,10 +626,6 @@ a {
     padding-right: 10px;
     margin-top: 0em;
     margin-bottom: 0em;
-}
-
-.hx-form-container .ui-field-contain .ui-input-search {
-    width: 100%;
 }
 
 /**

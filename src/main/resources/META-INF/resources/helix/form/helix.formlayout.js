@@ -486,13 +486,22 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         } else if (heightStyle) {
             computedStyle = heightStyle;
         }
+        var lbl = $('<label />').attr({
+            'for': inputID,
+            'class': __getTitleStyleClass(formLayout, formElem)
+        })
+                .append(formElem.fieldTitle)
+                .appendTo($fieldContainer);
+        if (!formElem.fieldTitle) {
+            lbl.hide();
+        }
         inputMarkup = $('<textarea />').attr({
             'name': formElem.name,
             'id': inputID,
             'style': computedStyle,
             'class': formElem.computedStyleClass,
             'tabindex': formLayout.__tabIndex++
-        });
+        }).appendTo($fieldContainer);
         if (formElem.inputDisabled === true) {
             inputMarkup[0].disabled = true;
         }
@@ -504,31 +513,11 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         } else {
             inputMarkup.append(formElem.value);
         }
-        var lbl = $('<label />').attr({
-            'for': inputID,
-            'class': formLayout.titleStyleClass + ' ' + (formElem.titleStyleClass ? formElem.titleStyleClass : '')
-        })
-                .append(formElem.fieldTitle);
-        if (!formElem.fieldTitle) {
-            lbl.hide();
-        }
-
-        var textContainer = $('<div />').attr({
-            'data-role': 'fieldcontain',
-            'style': formLayout.computedFieldStyle,
-            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
-        })
-                .append(lbl)
-                .append(inputMarkup);
-
-        $fieldContainer.append(textContainer);
         
         var fieldClasses = formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass;
         if (fieldClasses.trim()) {
             $fieldContainer.addClass(fieldClasses);
         }
-        textContainer.fieldcontain();
-        $(inputMarkup).textinput();
         if (formElem.fieldTitleType === 'button') {
             $(formElem.fieldTitle).button();
         }
@@ -555,7 +544,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
                 formElem.onclick.call(formElem, ev);
                 return false;
             });
-            $(lbl).css('color', 'blue').on(Helix.clickEvent, function (ev) {
+            $(lbl).addClass('hx-link-label').on(Helix.clickEvent, function (ev) {
                 ev.stopImmediatePropagation();
                 formElem.onclick.call(formElem, ev);
                 return false;
@@ -715,41 +704,41 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
 
         var inputID = Helix.Utils.getUniqueID();
         var capitalization = (formElem.autocapitalize ? formElem.autocapitalize : 'sentences');
+
+        // WE always use the mini style. Otherwise the fonts are too large even on tablets.
+        var lbl = $('<label />').attr({
+            'for': inputID,
+            'class': __getTitleStyleClass(formLayout, formElem)
+        }).append(formElem.fieldTitle).appendTo($fieldContainer);
         formElem.inputMarkup = inputMarkup = $('<input />').attr({
             'name': formElem.name,
             'id': inputID,
             'type': formElem.dataType,
             'value': (formElem.value),
             'tabindex': formLayout.__tabIndex++,
-            'autocapitalize': capitalization
-        });
-
-        // WE always use the mini style. Otherwise the fonts are too large even on tablets.
-        var lbl = $('<label />').attr({
-            'for': inputID,
-            'class': __getTitleStyleClass(formLayout, formElem)
-        });
-        var textContainer = $('<div />').attr({
-            'data-role': 'fieldcontain',
-            'style': formLayout.computedFieldStyle,
-            'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass
-        }).append(lbl.append(formElem.fieldTitle))
-            .append(inputMarkup);
-        $fieldContainer.append(textContainer);
-        if (formElem.computedStyleClass) {
-            $fieldContainer.addClass(formElem.computedStyleClass);
+            'autocapitalize': capitalization,
+            'class': formElem.textStyleClass
+        }).appendTo($fieldContainer);
+        var containerClass = formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass + ' ' + formElem.computedStyleClass;
+        if (containerClass.trim()) {
+            $fieldContainer.addClass(containerClass.trim());
         }
-        textContainer.fieldcontain();
-        $(inputMarkup).textinput({
-            disabled: formElem.inputDisabled ? true : false
-        });
+        if (formElem.inputDisabled) {
+            inputMarkup[0].disabled = true;
+        } else {
+            inputMarkup[0].disabled = false;
+        }
+        if (formElem.noInput === true) {
+            inputMarkup[0].readOnly = true;
+        } else {
+            inputMarkup[0].readOnly = false;
+        }
         if (formElem.width && formElem.type === 'search') {
             $(inputMarkup).parent('.ui-input-search').width(formElem.width);
         }
 
         if (formElem.fieldTitleType === 'button') {
-            $(formElem.fieldTitle).button();
-            $(formElem.fieldTitle).addClass('hx-btn-inlabel');
+            lbl.addClass('hx-link-label');
         }
         if (formElem.onblur) {
             $(inputMarkup).blur(function () {
@@ -781,20 +770,9 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 }
             }, formElem));
         }
-
-        // Apply styling to the input text div ...
-        if (formElem.computedStyle || formElem.computedStyleClass) {
-            var uiInputText = textContainer.find('div.ui-input-text');
-            if (formElem.computedStyle) {
-                $(uiInputText).attr('style', formElem.computedStyle);
-            }
-            if (formElem.computedStyleClass) {
-                $(uiInputText).addClass(formElem.computedStyleClass);
-            }
-        }
         
         if (formElem.labelClick) {
-            $(lbl).css('color', 'blue').on(Helix.clickEvent, function (ev) {
+            lbl.addClass('hx-link-label').on(Helix.clickEvent, function (ev) {
                 ev.stopImmediatePropagation();
                 formElem.labelClick.call(formElem, $(inputMarkup).val());
                 return false;
@@ -956,9 +934,6 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             formElem.onclick.call(formElem, ev);
             return false;
         });
-    }
-    if (formLayout.textStyleClass || formElem.textStyleClass) {
-        inputMarkup.addClass(formElem.textStyleClass ? formElem.textStyleClass : formLayout.textStyleClass);
     }
 }
 
@@ -1812,6 +1787,14 @@ function __preprocessFormElement(formLayout, formElem) {
         formElem.computedStyle = 'width: ' + formElem.computedWidth;
     } else if (formElem.computedWidth) {
         formElem.computedStyle = formElem.computedStyle + 'width: ' + formElem.computedWidth;
+    }
+
+    if (formElem.textStyleClass === undefined) {
+        formElem.textStyleClass = '';
+    }
+    
+    if (formElem.titleStyleClass === undefined) {
+        formElem.titleStyleClass = '';
     }
 
     if (!formElem.mode) {

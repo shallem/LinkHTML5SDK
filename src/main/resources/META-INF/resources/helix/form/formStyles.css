@@ -1,3 +1,12 @@
+.hx-form-container {
+    box-shadow: 0 3px 3px -3px rgba(0,0,0,0.16), 0 3px 3px -3px rgba(0,0,0,0.23);
+    border-radius: 0px;
+    width: 100%;
+    padding: 0.25em 0em;
+    margin: 0em;
+    overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
+}
+
 .hxonoff {
     position: relative; 
     width: 80px;
@@ -122,13 +131,26 @@
     max-width: 100% !important;
 }
 
-.hx-form-container .ui-field-contain {
-    display: flex;
-    display: -webkit-flex;
-    flex-direction: row;
-    overflow: hidden;
-    border: none;
-    margin: 0 .5em .3em;
+.hx-form-container label {
+    margin-left: 0.4em;
+    color: #777777;
+}
+
+.hx-form-container label.hx-link-label,
+.hx-link-label {
+    color: rgb(52,152,219);
+    min-width: 10%;
+}
+
+.hx-form-container input,
+.hx-form-container textarea {
+    width: -webkit-fill-available;
+    border: none; 
+    border-bottom: 1px solid #BBBBBB; 
+    border-radius: 0px;
+    margin-left: 1em;
+    margin-right: 1em;
+    padding: 0em;
 }
 
 .hx-form-container .ui-field-contain label.ui-select {
