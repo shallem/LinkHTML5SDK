@@ -898,11 +898,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 'class': 'ui-input-text hx-full-width'
             }).append(formElem.value);
             var valSpan = $('<div/>').attr({
-                'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '') + 'ui-field-contain ui-body ui-br'
+                'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
             })
                     .append($('<label/>').attr({
                         'for': formElem.name,
-                        'class': 'ui-input-text ' + (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
+                        'class': (formLayout.titleStyleClass ? formLayout.titleStyleClass : '')
                     }).append(formElem.fieldTitle))
                     .append(inputMarkup);
             if (formElem.computedStyle) {
@@ -914,16 +914,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             $fieldContainer.append(valSpan);
         } else {
             inputMarkup = $('<span />').attr({
-                'data-name': formElem.name
+                'data-name': formElem.name,
+                'class' : formElem.computedStyleClass + ' ' + formElem.textStyleClass
             }).text(' ' + formElem.value);
-            if (!mode && hasTitle) {
-                inputMarkup.addClass('ui-input-text');
-            }
             if (formElem.computedStyle) {
                 $fieldContainer.attr('style', formElem.computedStyle);
-            }
-            if (formElem.computedStyleClass) {
-                $fieldContainer.addClass(formElem.computedStyleClass);
             }
             $fieldContainer.append(inputMarkup);
         }
@@ -2077,11 +2072,7 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
                 .addClass('hx-form-container')
                 .appendTo(parentDiv);
         if (formElem.type !== 'hidden') {
-            if (!formElem.noBorder) {
-                formElem.viewDOM.addClass('hx-form-view-border hx-form-view-item');
-            } else {
-                formElem.viewDOM.addClass('hx-form-view-item');
-            }
+            formElem.viewDOM.addClass('hx-form-view-item');
         }
         if (formLayout.computedFieldStyleClass || formElem.computedFieldStyleClass) {
             $viewFieldContainer.addClass(formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass);
@@ -2093,27 +2084,15 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
             $viewFieldContainer.width(formLayout.computedWidth);
         }
         if (formElem.fieldTitle && !(formElem.type in Helix.Utils.noTitleLayouts)) {
-            if (formElem.titleStyleClass) {
-                $viewFieldContainer.append($('<span />').attr({
-                    'class': formElem.titleStyleClass + ' ui-input-text'
-                }).append(formElem.fieldTitle));
-            } else if (formLayout.titleStyleClass) {
-                $viewFieldContainer.append($('<span />').attr({
-                    'class': formLayout.titleStyleClass + ' ui-input-text'
-                }).append(formElem.fieldTitle));
-            } else {
-                $viewFieldContainer.append(formElem.fieldTitle);
-            }
+            $viewFieldContainer.append($('<span />').attr({
+                'class': __getTitleStyleClass(formLayout, formElem)
+            }).append(formElem.fieldTitle));
             if (formElem.type in Helix.Utils.fieldContainers) {
                 if (formElem.mini) {
                     $viewFieldContainer.addClass('hx-mini-fieldview');
                 } else {
                     $viewFieldContainer.addClass('hx-fieldview');
                 }
-
-                $viewFieldContainer.addClass('ui-fieldcontain');
-                $viewFieldContainer.addClass('ui-body');
-                $viewFieldContainer.addClass('ui-br');
             }
         }
     }
