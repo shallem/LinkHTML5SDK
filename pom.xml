@@ -223,10 +223,8 @@
 		    <include>colorpicker/spectrum.css</include>
 		    <include>editor/editor.css</include>
 
-		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <!-- <include>calendar/fullcalendar.css</include> -->
-
 		    <include>css/helix.css</include>
+		    <include>css/icono.css</include>
 
 		    <!-- Styles from the PrimeFaces project. -->
 		    <include>primefaces-styles/primefaces-aristo.css</include>
@@ -344,16 +342,13 @@
 		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <!-- Data list. -->
-		    <include>datalist/datalist.js</include>
+		    <!-- <include>datalist/datalist.js</include> -->
 
 		    <!-- Context menu -->
 		    <include>contextMenu/contextMenu.js</include>
 
 		    <!-- Form Layout -->
 		    <include>form/formLayout.js</include>
-
-		    <!-- Scrolling Div -->
-		    <!-- <include>scrollingdiv/scrollingdiv.js</include> -->
 
 		    <!-- Split View -->
 		    <include>splitview/helixSplitView.js</include>

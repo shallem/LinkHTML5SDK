@@ -2214,8 +2214,6 @@ var globalDataListID = -1;
                         if (idx < groupLIs.length) {
                             li = groupLIs[idx];
                             $(li).empty().append($moreLink);
-                            // Force jQueryMobile to re-enhance
-                            $(li).removeClass('ui-li');
                             ++idx;
                         } else {
                             li = $('<li/>')
@@ -2479,7 +2477,7 @@ var globalDataListID = -1;
         _installNoTouchActionHandlers: function () {
             // Right-click
             if (this.options.itemContextMenu) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
                     var _self = event.data;
 
                     // This allows the container to have taphold context menus that are not
@@ -2489,7 +2487,7 @@ var globalDataListID = -1;
                     return false;
                 });
             } else if (this.options.holdAction) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
@@ -2559,7 +2557,7 @@ var globalDataListID = -1;
 
             // Tap-hold
             if (this.options.holdAction) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
@@ -2571,7 +2569,7 @@ var globalDataListID = -1;
                     return false;
                 });
             } else if (this.options.doThisFilter) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.ui-li', this, function (event) {
+                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
                     var _self = event.data;
                     if (_self.setSelected(event.target)) {
                         _self.selectItem(true);
@@ -2641,7 +2639,7 @@ var globalDataListID = -1;
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class': _self.options.rowStyleClass + ' ui-li hx-li hx-flex-horizontal'
+                    'class': _self.options.rowStyleClass + ' hx-li hx-flex-horizontal'
                 });
             }
 
@@ -2687,7 +2685,7 @@ var globalDataListID = -1;
             if (!curRowParent) {
                 curRowFresh = true;
                 curRowParent = $('<li />').attr({
-                    'class': _self.options.rowStyleClass + ' ui-li hx-li hx-flex-horizontal'
+                    'class': _self.options.rowStyleClass + ' hx-li hx-flex-horizontal'
                 });
             }
 
@@ -2746,7 +2744,7 @@ var globalDataListID = -1;
             if (this.selected === null) {
                 return;
             }
-            if (this.selectedLI == null) {
+            if (this.selectedLI === null) {
                 return;
             }
             var renderer = this.options.rowRenderer;

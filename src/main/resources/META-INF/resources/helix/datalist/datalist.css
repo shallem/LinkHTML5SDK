@@ -28,13 +28,17 @@ and open the template in the editor.
 .hx-listview li.hx-li {
     font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
     text-decoration: none;
-    padding-right: 0.2em;
+    border: none;
     border-bottom: 1px solid rgba(187,187,187,0.25); 
     background: #fff /*{d-bup-background-color}*/;
     font-weight: bold;
     color: #333;
     text-shadow: none;
     -webkit-backface-visibility: hidden;
+    list-style: none;
+    padding: 0em 0.2em 0em 0em;
+    margin: 0;
+    position: relative;
 }
 
 .hx-listview li[data-role="empty-group"] {

@@ -60,6 +60,13 @@
             <description>Style class for the image used in the button. The style class should have the format ui-icon-image.</description>
         </attribute>
         <attribute>
+            <name>iconClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <defaultValue></defaultValue>
+            <description>Style class for the icon used in the button.</description>
+        </attribute>
+        <attribute>
             <name>styleClass</name>
             <required>false</required>
             <type>java.lang.String</type>

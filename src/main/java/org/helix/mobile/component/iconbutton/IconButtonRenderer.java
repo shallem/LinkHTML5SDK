@@ -21,43 +21,32 @@ public class IconButtonRenderer extends CoreRenderer {
         IconButton button = (IconButton) component;
         String clientId = button.getClientId(context);
         
-        writer.startElement("a", button);
-        if (button.getId() != null) {
-            writer.writeAttribute("id", button.getId(), null);
-        } else {
-            writer.writeAttribute("id", clientId, "id");
-        }
-        writer.writeAttribute("name", clientId, "name");
-        if (button.getWidth() != null) {
-            writer.writeAttribute("style", "min-width: " + button.getWidth(), null);
-        }
-        writer.writeAttribute("href", button.getHref(), null);
-        
-        // ui-btn ui-btn-up-d ui-mini ui-btn-inline
-        String aClass = "ui-btn iconbutton hx-no-webkit-select"; 
-        if (button.getStyleClass() != null) {
-            aClass = aClass + " " + button.getStyleClass();
-        }
-        writer.writeAttribute("class", aClass, null);
-        
-        String onclick = button.getOnclick();
-        if (!isValueBlank(onclick)) {
-            writer.writeAttribute("onclick", onclick, "onclick");
-        }
-        
         String borderClass = "";
         if (button.isBorder()) {
             borderClass = " hx-btn-border";
         }
         writer.startElement("div", button);
-        writer.writeAttribute("class", "hx-btn-inner" + borderClass, null);
+        String bClass = "iconbutton hx-btn-inner hx-no-webkit-select";
+        if (button.getStyleClass() != null) {
+            bClass = bClass + " " + button.getStyleClass() + borderClass;
+        }
+        writer.writeAttribute("class", bClass, null);
+        String onclick = button.getOnclick();
+        if (isValueBlank(onclick)) {
+            onclick = button.getHref();
+        }
+        if (!isValueBlank(onclick)) {
+            writer.writeAttribute("onclick", onclick, "onclick");
+        } 
         
         writer.startElement("div", component);
-        writer.writeAttribute("class", "hx-icon ui-icon-" + button.getImage(), null);
+        if (!isValueBlank(button.getImage())) {
+            writer.writeAttribute("class", "hx-icon ui-icon-" + button.getImage(), null);
+        } else if (!isValueBlank(button.getIconClass())) {
+            writer.writeAttribute("class", "hx-icon " + button.getIconClass(), null);
+        }
         writer.endElement("div");
         
         writer.endElement("div");
-        
-        writer.endElement("a");
     }
 }

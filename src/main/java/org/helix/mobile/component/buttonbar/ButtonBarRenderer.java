@@ -16,37 +16,12 @@
 package org.helix.mobile.component.buttonbar;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.helix.mobile.component.button.Button;
-import org.helix.mobile.component.iconbutton.IconButton;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class ButtonBarRenderer extends CoreRenderer {
-
-    protected void outputChildren(FacesContext context,
-            ResponseWriter writer, ButtonBar buttonBar,
-            List<UIComponent> childButtons, boolean isLeft,
-            boolean isHorizontal, boolean hasBoth) throws IOException {
-        String widthStr = "";
-        if (isLeft) {
-            widthStr = hasBoth ? " width: 50%;" : " width: 100%;";
-        }
-        
-        int idx = 1;
-        for (UIComponent child : childButtons) {
-
-            if (child.isRendered()) {
-                child.encodeAll(context);
-            }
-            ++idx;
-        }
-        /*writer.endElement("div");*/
-    }
-
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
@@ -56,45 +31,20 @@ public class ButtonBarRenderer extends CoreRenderer {
 
         writer.startElement("div", buttonBar);
         writer.writeAttribute("id", buttonBar.getClientId(context), "id");
-        writer.writeAttribute("data-role", "controlgroup", null);
-        writer.writeAttribute("data-type", isHorizontal ? "horizontal" : "vertical", null);
         
         if (buttonBar.getStyle() != null) {
             writer.writeAttribute("style", buttonBar.getStyle(), null);
         }
-        String styleClass = "hx-button-bar";
+        String styleClass = "hx-button-bar" + (isHorizontal ? "" : " hx-button-bar-vertical");
         if (buttonBar.getStyleClass() != null) {
             styleClass = styleClass + " " + buttonBar.getStyleClass();
         }
         writer.writeAttribute("class", styleClass, null);
 
-        // Separate children into right/left buttons.
-        List<UIComponent> leftButtons = new LinkedList<UIComponent>();
-        List<UIComponent> rightButtons = new LinkedList<UIComponent>();
-
         for (UIComponent child : buttonBar.getChildren()) {
-            if (child instanceof IconButton) {
-                IconButton ib = (IconButton) child;
-                if (ib.getAlign().equals("right")) {
-                    rightButtons.add(child);
-                    continue;
-                }
-            } else if (child instanceof Button) {
-                Button ib = (Button) child;
-                if (ib.getAlign().equals("right")) {
-                    rightButtons.add(child);
-                    continue;
-                }
+            if (child.isRendered()) {
+                child.encodeAll(context);
             }
-            leftButtons.add(child);
-        }
-
-        boolean hasBoth = (!leftButtons.isEmpty()) && (!rightButtons.isEmpty());
-        if (!leftButtons.isEmpty()) {
-            outputChildren(context, writer, buttonBar, leftButtons, true, isHorizontal, hasBoth);
-        }
-        if (!rightButtons.isEmpty()) {
-            outputChildren(context, writer, buttonBar, rightButtons, false, isHorizontal, hasBoth);
         }
         writer.endElement("div");
     }

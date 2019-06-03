@@ -58,7 +58,7 @@ public class HeaderRenderer extends CoreRenderer {
             writer.writeAttribute("data-tap-toggle", "false", null);
         }
         if(left != null) {
-            left.getAttributes().put("styleClass", "ui-btn-left");
+            left.getAttributes().put("styleClass", "hx-bar-left");
             left.encodeAll(context);
         }
 
@@ -78,7 +78,7 @@ public class HeaderRenderer extends CoreRenderer {
         }
 
         if(right != null) {
-            right.getAttributes().put("styleClass", "ui-btn-right");
+            right.getAttributes().put("styleClass", "hx-bar-right");
             right.encodeAll(context);
         }
     }
