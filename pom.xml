@@ -246,6 +246,9 @@
 		    <!-- Override styles -->
 		    <include>css/helix.overrides.css</include>
 
+		    <!-- Context menu styles -->
+		    <include>contextMenu/contextMenu.css</include>
+		    
 		  </includes>
 		  <aggregations>
 		    <aggregation>
@@ -334,7 +337,7 @@
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
 		    <include>persistence/persistence.search.js</include>
-		    <include>persistence/persistence.helix.js</include>
+<!-- 		    <include>persistence/persistence.helix.js</include> -->
 		    <include>persistence/persistence.helix.helpers.js</include>
 		    <include>persistence/persistence.init.js</include>
 

@@ -5,42 +5,28 @@
 package org.helix.mobile.component.contextmenuitem;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
 
 /**
  *
  * @author shallem
  */
-public class ContextMenuItemRenderer extends CoreRenderer {
-    /*@Override
-     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-     ResponseWriter writer = context.getResponseWriter();
-     ContextMenuItem item = (ContextMenuItem) component; 
-     writer.startElement("li", item);
-     writer.startElement("a", null);
-     writer.writeAttribute("href", "javascript:void(0);", null);
-     writer.writeAttribute("onclick", item.getOntap(), null);
-     writer.write((String)item.getValue());
-     }*/
-
+public class ContextMenuItemRenderer extends Renderer {
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        StringWriter writer = (StringWriter)context.getAttributes().get("menuWriter");
         ContextMenuItem item = (ContextMenuItem) component;
         String itemType = item.getType();
 
-        /*writer.endElement("a");
-         writer.endElement("li");*/
         writer.write("{");
         writer.write("'display' : '" + item.getValue() + "'");
         if (item.getOntap() != null) {
             writer.write(",'action' : " + item.getOntap());
         }
         writer.write(",'enabled' : " + Boolean.toString(item.isEnabled()));
-        writer.write(",'name' : '" + item.getClientId(context) + "'");
         writer.write(",type: '" + itemType + "'");
         if (item.getGroup() != null) {
             writer.write(",'group' : '" + item.getGroup() + "'");

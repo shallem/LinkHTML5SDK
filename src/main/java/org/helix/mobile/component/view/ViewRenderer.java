@@ -31,6 +31,7 @@ public class ViewRenderer extends CoreRenderer {
         String swatch = view.getSwatch();
         String title = view.getTitle();
 
+        context.getAttributes().put("pageID", view.getId());
         writer.startElement("div", view);
         writer.writeAttribute("id", view.getId(), "id");
         writer.writeAttribute("data-role", "page", null);

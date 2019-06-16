@@ -1,0 +1,44 @@
+.hx-menu-list {
+    min-width: 200px;
+}
+
+.hx-menu-list-mini {
+    min-width: 150px;
+}
+
+.hx-menu-item {
+    border: none;
+    border-radius: 0px;
+    box-shadow: 0 3px 3px -3px rgba(0,0,0,0.16), 0 3px 3px -3px rgba(0,0,0,0.23);
+    margin: 0.25em 0em;
+    padding-bottom: 0.25em;
+}
+
+.hx-menu-item .icono-caretRight {
+    position: relative;
+}
+
+.hx-menu-item-text {
+    margin-left:0.75em; 
+    margin-top:0.25em;
+}
+
+.hx-context-menu-textinput {
+    width: -webkit-fill-available;
+    display: block;
+    height: 32px;
+    margin: 0 0.5em 0.25em;
+    padding: 0;
+    -webkit-appearance: none;
+}
+
+.hx-context-menu-button {
+    color: #3498DB;
+    border: 1px solid darkgrey;
+    margin: 0 auto;
+    margin-bottom: 0.25em;
+    width: 50%;
+    text-align: center;
+    padding-top: 0.25em; 
+    padding-bottom: 0.25em;
+}

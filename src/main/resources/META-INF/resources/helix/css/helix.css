@@ -420,7 +420,7 @@ a {
     }
 }
 
-.ui-header .hx-btn-inner {
+.hx-button-bar .hx-btn-inner {
     display: inline-block;
 }
 
@@ -702,22 +702,6 @@ a {
 
 .ui-controlgroup .hx-toolbar.iconbutton .ui-btn-inner .ui-icon {
   margin: 0;
-}
-
-/* Match height/margin of hx-search-sort */
-.hx-list-selection-buttons {
-    margin: .2em;
-    height: 32px;
-}
-
-.hx-list-selection-buttons .ui-mini.ui-btn-inline {
-    margin-top: 0em;
-    margin-bottom: 0em;
-}
-
-.hx-list-selection-buttons .iconbutton {
-    height: 32px;
-    width: 40px; 
 }
 
 .hx-li>.ui-btn-inner {

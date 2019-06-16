@@ -4,25 +4,22 @@
  */
 package org.helix.mobile.component.contextmenuitemoption;
 
-import org.helix.mobile.component.contextmenuitem.*;
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
 
 /**
  *
  * @author shallem
  */
-public class ContextMenuItemOptionRenderer extends CoreRenderer {
+public class ContextMenuItemOptionRenderer extends Renderer {
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        StringWriter writer = (StringWriter)context.getAttributes().get("menuWriter");
         ContextMenuItemOption item = (ContextMenuItemOption) component; 
 
-        /*writer.endElement("a");
-        writer.endElement("li");*/
         writer.write("{");
         writer.write("'value' : '" + item.getValue() + "'");
         writer.write(",'label' : '" + item.getLabel() + "'");

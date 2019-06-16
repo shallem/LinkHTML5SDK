@@ -16,16 +16,16 @@
 package org.helix.mobile.component.pickitem;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
 
-public class PickItemRenderer extends CoreRenderer {
+public class PickItemRenderer extends Renderer {
 
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        StringWriter writer = (StringWriter)context.getAttributes().get("formWriter");
         PickItem pitem = (PickItem) component;
         writer.write("{");
         writer.write("'value' : '" + pitem.getValue() + "',");

@@ -5,41 +5,21 @@
 package org.helix.mobile.component.contextmenudivider;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
 
 /**
  *
  * @author shallem
  */
-public class ContextMenuDividerRenderer extends CoreRenderer {
-    /*@Override
+public class ContextMenuDividerRenderer extends Renderer {
+    @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        ContextMenuDivider item = (ContextMenuDivider) component;
-
-        writer.startElement("li", item);
-        writer.writeAttribute("data-role", "divider", null);
-        writer.writeAttribute("data-theme", "a", null);
-        writer.write((String)item.getValue());
-    }
-
-    @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-
-        writer.endElement("li");
-    }*/
-    
-    @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+        StringWriter writer = (StringWriter)context.getAttributes().get("menuWriter");
         ContextMenuDivider item = (ContextMenuDivider) component; 
 
-        /*writer.endElement("a");
-        writer.endElement("li");*/
         writer.write("{");
         writer.write("'display' : '" + item.getValue() + "'");
         writer.write(",'isDivider' : true");

@@ -85,7 +85,7 @@
 .icono-volumeMedium:before,
 .icono-volumeHigh:after,
 .icono-volumeHigh:before {
-  border: 2px solid;
+  border: 1px solid;
 }
 .stickCenterV,
 .icono-dropper:before,
@@ -381,21 +381,21 @@
 [class*="icono-plus"]:before,
 [class*="icono-cross"]:before,
 [class*="icono-check"]:before {
-  width: 20px;
-  height: 2px;
+  width: 24px;
+  height: 1px;
 }
 [class*="icono-plus"]:after,
 [class*="icono-cross"]:after {
-  height: 20px;
-  width: 2px;
+  height: 24px;
+  width: 1px;
 }
 [class*="icono-plus"][class*="Circle"]:before,
 [class*="icono-cross"][class*="Circle"]:before {
-  width: 18px;
+  width: 14px;
 }
 [class*="icono-plus"][class*="Circle"]:after,
 [class*="icono-cross"][class*="Circle"]:after {
-  height: 18px;
+  height: 14px;
 }
 .icono-cross,
 .icono-crossCircle {
@@ -1657,43 +1657,6 @@
   right: 6px;
   bottom: 4px;
 }
-.icono-paperClip {
-  width: 24px;
-  height: 18px;
-  border-left: none;
-  -webkit-border-radius: 0 16px 16px 0;
-  -moz-border-radius: 0 16px 16px 0;
-  -o-border-radius: 0 16px 16px 0;
-  border-radius: 0 16px 16px 0;
-  -webkit-transform: rotate(-45deg);
-  -moz-transform: rotate(-45deg);
-  -ms-transform: rotate(-45deg);
-  -o-transform: rotate(-45deg);
-  transform: rotate(-45deg);
-  margin: 5px 0 11px 10px;
-}
-.icono-paperClip:before {
-  width: 18px;
-  height: 6px;
-  right: 2px;
-  -webkit-border-radius: 0 16px 16px 0;
-  -moz-border-radius: 0 16px 16px 0;
-  -o-border-radius: 0 16px 16px 0;
-  border-radius: 0 16px 16px 0;
-  border-left: none;
-}
-.icono-paperClip:after {
-  position: absolute;
-  width: 12px;
-  height: 10px;
-  left: -12px;
-  top: -2px;
-  border-right: none;
-  -webkit-border-radius: 16px 0 0 16px;
-  -moz-border-radius: 16px 0 0 16px;
-  -o-border-radius: 16px 0 0 16px;
-  border-radius: 16px 0 0 16px;
-}
 .icono-market {
   width: 32px;
   height: 12px;
@@ -2954,10 +2917,8 @@
 }
 [class*="icono-"] {
   display: inline-block;
-  vertical-align: middle;
-  position: relative;
   font-style: normal;
-  color: #dddddd;
+  color: black;
   text-align: left;
   text-indent: -9999px;
   direction: ltr;
@@ -2972,9 +2933,9 @@
   -moz-border-radius: 50%;
   -o-border-radius: 50%;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  margin: 2px;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
 }
 [class*="icono-"][class*="Square"] {
   -webkit-border-radius: 4px;
@@ -2988,4 +2949,13 @@
 [class*="icono-"],
 [class*="icono-"] * {
   box-sizing: border-box;
+}
+
+.iconbutton .icono-caretDown {
+    width: 100%;
+    height: initial;
+    top: 25%;
+    left: 0;
+    margin: 0;
+    color: darkgrey;
 }

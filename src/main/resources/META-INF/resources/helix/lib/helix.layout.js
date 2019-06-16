@@ -69,6 +69,21 @@ Helix.Layout = {
     allScrollers : {},
     
     /**
+     * List of all popup dialogs in the application.
+     */
+    allDialogs: {},
+    
+    /**
+     * List of all menus in the application
+     */
+    allMenus: {},
+    
+    /**
+     * List of all forms in the application
+     */
+    allForms: {},
+    
+    /**
      * Content height, excluding headers and footers.
      */
     contentHeight : 0,
@@ -312,14 +327,11 @@ Helix.Layout = {
     },
     
     makeIconButton: function(iconClass, buttonID) {
-        return $('<a/>').attr({
-            'id': buttonID ? buttonID : Helix.Utils.getUniqueID(),
-            'class': 'ui-btn iconbutton hx-no-webkit-select hx-icon-sort-filter'
+        return $('<div/>').attr({
+            'class': 'iconbutton hx-no-webkit-select hx-icon-sort-filter hx-btn-inner'
         }).append($('<div/>').attr({
-            'class': 'hx-btn-inner'
-        }).append($('<div/>').attr({
-            'class': 'hx-icon ui-icon-' + iconClass
-        })));
+            'class': 'hx-icon ' + iconClass
+        }));
     },
     
     makeTextButton: function(buttonText, textClass, buttonClass, buttonID) {
@@ -331,8 +343,58 @@ Helix.Layout = {
         }).append($('<div/>').attr({
             'class': 'ui-btn-text ' + (textClass ? textClass : '')
         }).append(buttonText)));
+    },
+    
+    /*(function($) {
+$(document).on('helixinit', function() {
+window.newAccountDialog = $(PrimeFaces.escapeClientId('j_idt55')).helixDialog({title:'Login',hasForm:true,onConfirm:_saveRootCredentials,confirmText:'Save',dismissText:'Cancel',message:'Accessing this file repository requires that you enter your account details. These will be stored for all future accesses to this repository.',name: 'newAccountDialog',id:'j_idt55'});
+});})(jQuery);
+*/
+    makeDialog: function(dialogName, markupID, dialogOpts) {
+        dialogOpts.name = dialogName;
+        dialogOpts.id = markupID;
+        Helix.Layout.allDialogs[dialogName] = dialogOpts;
+    },
+    
+    makeMenu: function(menuName, markupID, menuOpts) {
+        /*(function($) {$(document).on('helixinit', function() {
+searchScopeMenu =$(PrimeFaces.escapeClientId('SearchScopeMenu')).helixContextMenu({items: [{'display' : 'Entire mailbox','action' : searchEntireMailbox,'enabled' : true,'name' : 'j_idt75',type: 'button'},
+{'display' : 'This folder','action' : searchThisFolder,'enabled' : true,'name' : 'j_idt76',type: 'button'}],theme: 'd',dividerTheme: 'd',name: 'SearchScopeMenu'}).data('helix-helixContextMenu');});})(jQuery);*/
+        menuOpts.name = markupID;
+        Helix.Layout.allMenus[menuName] = menuOpts;
+    },
+    
+    makeForm: function(formName, pageID, markupID, formOpts) {
+        formOpts.markupID = markupID;
+        formOpts.pageID = pageID;
+        formOpts.formName = formName;
+        Helix.Layout.allForms[formName] = formOpts;
     }
 };
+
+$(document).on('helixinit', function() {
+    for (var dName in Helix.Layout.allDialogs) {
+        var dialogOpts = Helix.Layout.allDialogs[dName];
+        window[dName] = $(PrimeFaces.escapeClientId(dialogOpts.id)).helixDialog(dialogOpts);
+    }
+    
+    for (var menuName in Helix.Layout.allMenus) {
+        var menuOpts = Helix.Layout.allMenus[menuName];
+        window[menuName] = $(PrimeFaces.escapeClientId(menuOpts.name)).helixContextMenu(menuOpts).data('helix-helixContextMenu');
+    }
+});
+
+$(document).on('pagecreate', function(ev) {
+    for (var formName in Helix.Layout.allForms) {
+        var targetID = ev.target.id;
+        var formOpts = Helix.Layout.allForms[formName];
+        if (targetID === formOpts.pageID) {
+            Helix.Layout.renderer($(ev.target), formOpts.markupID, $.proxy(function() {
+                window[this.formName] =$(PrimeFaces.escapeClientId(this.markupID)).helixFormLayout(this).data('helix-helixFormLayout');
+            }, formOpts));
+        }
+    }
+});
 
 /**
  * In general, apps should use the pagebeforeshow event to layout the DOM. When

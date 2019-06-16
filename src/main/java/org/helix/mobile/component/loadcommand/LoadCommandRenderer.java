@@ -16,6 +16,7 @@
 package org.helix.mobile.component.loadcommand;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
@@ -25,24 +26,22 @@ import javax.el.ValueExpression;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
+import javax.faces.render.Renderer;
 import javax.servlet.http.HttpServletRequest;
+import org.helix.mobile.component.page.PageRenderer;
 import org.helix.mobile.model.JSONSerializer;
-import org.helix.mobile.filters.LoadCommandAction;
-import org.primefaces.renderkit.CoreRenderer;
 
-public class LoadCommandRenderer extends CoreRenderer {
+public class LoadCommandRenderer extends Renderer {
 
-    private Pattern commandPattern;
+    private final Pattern commandPattern;
     
     public LoadCommandRenderer() {
         commandPattern = Pattern.compile("#\\{([^.]+)\\.([^\\(]+).*\\}");
     }
     
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        LoadCommand cmd = (LoadCommand) component;
-        this.encodeScript(context, cmd);
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        this.encodeScript(context, (LoadCommand)component);
     }
     
     public static String generateLoadCommandKey(Class c, 
@@ -145,11 +144,8 @@ public class LoadCommandRenderer extends CoreRenderer {
     }
     
     protected void encodeScript(FacesContext context, LoadCommand cmd) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        String clientId = cmd.getClientId();
-        
+        StringWriter writer = new StringWriter(4096);
         String url = context.getExternalContext().getRequestContextPath() + 
-                //context.getExternalContext().getRequestServletPath() +
                 "/__hxload/index.xhtml";
         
         StringBuilder onComplete = new StringBuilder();
@@ -167,16 +163,13 @@ public class LoadCommandRenderer extends CoreRenderer {
         }
         
         Object v = cmd.getValue();
-        
         if (v == null) {
             throw new FacesException("LoadCommand '" + 
                     cmd.getName() + 
                     "': The value getter cannot ever return null. Return an empty object of the proper return type if no data is available.");
         }
-        String schema = JSONSerializer.serializeObjectSchema(v.getClass());
         
-        // Global variables populated by this load.
-        String widgetName = "window." + cmd.resolveWidgetVar();
+        String schema = JSONSerializer.serializeObjectSchema(v.getClass());
         
         // NOTE: must call this AFTER we call cmd.getValue above to create the request-scoped
         // bean. Otherwise this method will throw a null pointer exception.
@@ -185,11 +178,8 @@ public class LoadCommandRenderer extends CoreRenderer {
         String keyVal = this.resolveCommand(context, cmd.getName(), cmd.getValueExpression("value"), cmd.getCmd(),
                 loadMethod, getMethod);
         
-        writer.write("\n");
-        startScript(writer, clientId);
-        writer.write(widgetName + " = null;");
-        writer.write("Helix.Ajax.loadCommands['" + cmd.getName() + "'] = {");
-        writer.write(" 'name' : '" + cmd.resolveWidgetVar() + "',");
+        // widgetName, commandName, options, schema
+        writer.write("Helix.Ajax.makeLoadCommand('" + cmd.resolveWidgetVar() + "', '"   + cmd.getName() + "', {");
         if (onComplete != null) {
             writer.write(" 'oncomplete' : " + onComplete.toString() + ",");
         }
@@ -201,12 +191,17 @@ public class LoadCommandRenderer extends CoreRenderer {
         } else {
             writer.write(" 'onerror' : Helix.Ajax.defaultOnError,");
         }
-        writer.write(" 'schemaFactory' : " + cmd.getName() + "_genSchema,");
         writer.write(" 'loadingOptions' : {");
-        writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
-        writer.write(" 'color' : '"  + (cmd.getLoadingColor() != null ? cmd.getLoadingColor() : "") + "', ");
-        writer.write(" 'async' : " + (cmd.isLoadingAsync()) + ", ");
-        writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "'");
+        writer.write(" 'async' : " + (cmd.isLoadingAsync()));
+        if (cmd.getLoadingMessage() != null) {
+            writer.write(", 'message' : '" + cmd.getLoadingMessage() + "'");
+        }
+        if (cmd.getLoadingColor() != null) {
+            writer.write(", 'color' : '"  + cmd.getLoadingColor() + "'");
+        }
+        if (cmd.getLoadingTheme() != null) {
+            writer.write(", 'theme' : '" + cmd.getLoadingTheme()+ "'");
+        }
         writer.write("},");
         if (cmd.getSyncingMessage() != null) {
             writer.write(" 'syncingOptions' : {");
@@ -218,7 +213,7 @@ public class LoadCommandRenderer extends CoreRenderer {
         writer.write(" 'loadKey' : '" + keyVal + "',");
         writer.write(" 'loadMethod' : '" + loadMethod.toString() + "',");
         writer.write(" 'getMethod' : '" + getMethod.toString() + "',");
-        writer.write(" 'postBack' : '" + url + "',");
+        writer.write(" 'postBack' : '" + url + "'");
         writer.write("},");
         writer.write(" 'syncOverrides' : {");
         boolean needsComma = false;
@@ -254,37 +249,9 @@ public class LoadCommandRenderer extends CoreRenderer {
             }
             writer.append(" 'updateHook' : " + cmd.getUpdateHook());
         }
-        writer.write("}");
-        writer.write("};\n");
-        
-        writer.write("function " + cmd.getName() + "_load(schemaObj, options, itemKey){ ");
-        writer.write("var loadCommandOptions = Helix.Ajax.loadCommands['" + cmd.getName() + "'];");
-        writer.write("loadCommandOptions.schema = schemaObj;");
-        
-        // Setup the widget.
-        writer.write("Helix.Ajax.ajaxBeanLoad($.extend({}, loadCommandOptions, options), itemKey);");
-
-        writer.write("}");
-        
-        // When the load command runs, first generate the schema if we have not done so yet. 
-        // Then, oncomplete, call the load function.
-        writer.write("function " + cmd.getName() + "(options, itemKey){ ");
-        writer.write("if (Helix.Ajax.loadInProgress('" + cmd.resolveWidgetVar() + "')) return false;");
-        writer.write(cmd.getName() + "_genSchema(");
-        writer.write(cmd.getName() + "_load,");
-        writer.write("[options, itemKey]);");
-        
-        writer.write("return true; }\n");
-        
-        writer.write("function " + cmd.getName() + "_genSchema(callback,args,noSync) {");
-        writer.write("Helix.DB.generatePersistenceSchema(");
+        writer.write("} },");
         writer.write(schema);
-        writer.write(", '");
-        writer.write(cmd.resolveWidgetVar());
-        writer.write("',callback,args,0,noSync);");
-        writer.write("}");
-        
-        writer.write("$(document).on('hxGenerateSchemas', function() {" + cmd.getName() + "_genSchema(null, null, true); });");
-        endScript(writer);
+        writer.write(");\n");
+        PageRenderer.renderLoadCommand(context, cmd, writer.toString());
     }
 }

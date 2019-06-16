@@ -29,8 +29,8 @@ import org.primefaces.renderkit.CoreRenderer;
 public class FormFieldRenderer extends CoreRenderer {
 
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        StringWriter writer = (StringWriter)context.getAttributes().get("formWriter");
         FormField ffield = (FormField) component;
         if (ffield.isEditOnly() && ffield.isViewOnly()) {
             throw new FacesException("Cannot specify that a form field is both viewOnly and editOnly.");
@@ -180,7 +180,12 @@ public class FormFieldRenderer extends CoreRenderer {
                 if (c instanceof IconButton) {
                     IconButton ic = (IconButton)c;
                     writer.write("{");
-                    writer.write("'iconClass' : '" + ic.getImage() + "'");
+                    if (!isValueBlank(ic.getImage())) {
+                        writer.write("'image' : '" + ic.getImage() + "'");
+                    }
+                    if (!isValueBlank(ic.getIconClass())) {
+                        writer.write("'iconClass' : '" + ic.getIconClass() + "'");
+                    }
                     if (ic.getHref() != null) {
                         writer.write(",'href' : '" + ic.getHref() + "'");
                     }

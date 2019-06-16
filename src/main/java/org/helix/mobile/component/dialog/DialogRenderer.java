@@ -16,23 +16,27 @@
 package org.helix.mobile.component.dialog;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
+import org.helix.mobile.component.page.PageRenderer;
 
-public class DialogRenderer extends CoreRenderer {
+public class DialogRenderer extends Renderer {
 
+    private String clientId;
+    
     @Override
-    public void decode(FacesContext context, UIComponent component) {
-        super.decodeBehaviors(context, component);
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
+        Dialog dialog = (Dialog) component;
+        this.clientId = dialog.getClientId(context);
+        encodeScript(context, dialog);   
     }
-
+    
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        Dialog dialog = (Dialog) component;
         ResponseWriter writer = context.getResponseWriter();
-        String clientId = dialog.getClientId(context);
         
         writer.startElement("div", null);
         writer.writeAttribute("id", clientId, null);
@@ -40,51 +44,33 @@ public class DialogRenderer extends CoreRenderer {
         writer.writeAttribute("data-history", "false", null);
         
         writer.endElement("div");
-        
-        encodeScript(context, dialog);
     }
 
     protected void encodeScript(FacesContext context, Dialog dialog) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        String clientId = dialog.getClientId(context);
-
-        startScript(writer, clientId);
-
-        writer.write("(function($) {\n");
+        StringWriter writer = new StringWriter();
         
-        writer.write("$(document).on('helixinit', function() {");
-        writer.write("\nwindow." + dialog.resolveWidgetVar() + " = $(PrimeFaces.escapeClientId('" + clientId + "')).helixDialog({");
-        writer.write("title:'" + dialog.getTitle() + "',");
-        writer.write("hasForm:" + dialog.isHasForm() + ",");
-        writer.write("onConfirm:" + dialog.getOnConfirm() + ",");
+        writer.write("Helix.Layout.makeDialog('" + dialog.resolveWidgetVar() + "', '" + this.clientId + "', ");
+        writer.write("{");
+        writer.write("title:'" + dialog.getTitle() + "'");
+        writer.write(", hasForm:" + dialog.isHasForm());
+        writer.write(", onConfirm:" + dialog.getOnConfirm());
         if (dialog.getOnDismiss() != null) {
-            writer.write("onDismiss:" + dialog.getOnDismiss() + ",");
+            writer.write(", onDismiss:" + dialog.getOnDismiss());
         }
         if (dialog.getConfirmTitle() != null) {
-            writer.write("confirmText:'" + dialog.getConfirmTitle() + "',");
+            writer.write(", confirmText:'" + dialog.getConfirmTitle() + "'");
         }
         if (dialog.getDismissTitle() != null) {
-            writer.write("dismissText:'" + dialog.getDismissTitle() + "',");
+            writer.write(", dismissText:'" + dialog.getDismissTitle() + "'");
         }
         if (dialog.getBodyContent() != null) {
-            writer.write("message:'" + dialog.getBodyContent() + "',");
+            writer.write(", message:'" + dialog.getBodyContent() + "'");
         }
         if (dialog.getOncomplete() != null) {
-            writer.write("oncomplete: " + dialog.getOncomplete() + ",");
+            writer.write(", oncomplete: " + dialog.getOncomplete());
         }
-        writer.write("name: '" + dialog.resolveWidgetVar() + "',");
-        writer.write("id:'" + clientId + "'");
         writer.write("});\n");
-        writer.write("});");
-        
-        writer.write("})(jQuery);\n");
-
-        endScript(writer);
-    }
-    
-    @Override
-    public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
-        //Rendering happens on encodeEnd
+        PageRenderer.renderDialog(context, dialog, writer.toString());
     }
 
     @Override

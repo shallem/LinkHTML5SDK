@@ -330,9 +330,7 @@
                     }).appendTo($parent);
 
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
-                'data-role': 'listview',
-                'data-inset': 'true',
-                'class': 'hx-editor-menu'
+                'class': 'hx-listview hx-menu-list ui-body-d hx-menu-list-mini hx-editor-menu'
             }).appendTo($popup);
             var allMenuOptions = [];
             var _doMenuAction = function(_self, _nxt) {
@@ -410,7 +408,7 @@
                 return $(this.LI_TAG)
                         .attr({
                             'data-role': 'divider',
-                            'data-theme': 'b'
+                            'data-theme': 'd'
                         })
                         .appendTo(popupMenu);
             }
@@ -419,6 +417,8 @@
                 var descriptor = [menuName, buttonName];
 
                 // Special cases for commands with an associated dropdown or ancillary action.
+                var nxtLI;
+                var nxtLbl;
                 switch (buttonName) {
                     case 'color':
                     case 'highlight':
@@ -428,21 +428,18 @@
                     case 'size':
                         return this._appendFontSizeInput(popupMenu, buttonName, menuName);
                     case 'apply':
-                        return $(this.LI_TAG)
+                        nxtLI = $(this.LI_TAG)
                                 .attr({
-                                    'data-theme': 'c'
+                                    'class': 'hx-menu-item'
                                 })
-                                .appendTo(popupMenu)
-                                .append('Apply');
+                                .appendTo(popupMenu);
+                        nxtLbl = 'Apply';
+                        break;
                     default:
-                        var linkName = this._capitalizeFirstLetter(buttonName);
+                        nxtLbl = this._capitalizeFirstLetter(buttonName);
                         descriptor.push(true)
-                        return $(this.LI_TAG)
+                        nxtLI = $(this.LI_TAG)
                                 .appendTo(popupMenu)
-                                .append(linkName)
-                                .attr({
-                                    'data-theme': 'c'
-                                })
                                 .data('apply', function(_self, descriptor) {
                                     if (!_self._executeAction.apply(_self, descriptor)) {
                                         descriptor.push(descriptor);
@@ -451,7 +448,14 @@
                                     return false;                                    
                                 })
                                 .data('applyArgs', [ descriptor ]);
+                        break;
                 }
+                nxtLI.addClass('hx-menu-item hx-flex-horizontal ui-btn-up-d');
+                $('<div />').attr({
+                    'class': 'hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text'
+                }).append(nxtLbl).appendTo(nxtLI);
+                $('<div/>').addClass('icono-caretRight').appendTo(nxtLI);
+                return nxtLI;
             }
         },
         _executeAction: function (menuName, action, actionArg) {
@@ -533,7 +537,8 @@
                     .attr({
                         'data-corners': 'false',
                         'data-mini': 'true',
-                        'data-name' : 'font-family'
+                        'data-name' : 'font-family',
+                        'class': 'textCategoryMedium'
                     })
                     .appendTo(popupMenu);
             $.each(this.options.font.split(','), function () {
@@ -559,6 +564,7 @@
             var inputMarkup = $('<input />')
                     .attr('type', 'number')
                     .attr('data-name', 'font-size')
+                    .attr('class', 'textCategoryMedium')
                     .appendTo(popupMenu)
                     .val(this.options.defaultFontSize);
             $(inputMarkup).data('apply', function(_self, _input) {
@@ -924,7 +930,7 @@
                     return false;
                 }, buttons[i]);
                 Helix.Layout.makeIconButton(buttons[i].icon)
-                        .addClass('hx-editor-icon-button')
+                        .addClass('hx-editor-icon-button hx-btn-inline')
                         .appendTo($customControls)
                         .on(Helix.clickEvent, buttonAction);
             }

@@ -16,30 +16,24 @@
 package org.helix.mobile.component.contextmenu;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
-import org.primefaces.renderkit.CoreRenderer;
+import javax.faces.render.Renderer;
+import org.helix.mobile.component.page.PageRenderer;
 
-public class ContextMenuRenderer extends CoreRenderer {
+public class ContextMenuRenderer extends Renderer {
 
-    
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         ContextMenu menu = (ContextMenu)component;
-        writer.startElement("div", menu);
-        writer.writeAttribute("id", menu.getClientId(context), "id"); 
-        
-        writer.endElement("div");
-        
-        startScript(writer, menu.getClientId(context));
-        writer.write("\n(function($) {");
-        
-        writer.write("$(document).on('helixinit', function() {");
-        writer.write("\n" + menu.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + menu.getClientId(context) + "')).helixContextMenu({");
+        StringWriter writer = new StringWriter();
+        writer.write("Helix.Layout.makeMenu('" + menu.resolveWidgetVar() + "', '" + menu.getClientId(context) + "', {");
         writer.write("items: [");
         boolean isFirst = true;
+        
+        context.getAttributes().put("menuWriter", writer);
         for (UIComponent c : menu.getChildren()) {
             if (isFirst) {
                 isFirst = false;
@@ -48,6 +42,7 @@ public class ContextMenuRenderer extends CoreRenderer {
             }
             c.encodeAll(context);
         }
+        context.getAttributes().remove("menuWriter");
         writer.write("]");
         
         if (menu.getUseMiniLayout() != null) {
@@ -59,19 +54,19 @@ public class ContextMenuRenderer extends CoreRenderer {
         if (menu.getAfterClose() != null) {
             writer.write(",afterclose: " + menu.getAfterClose());
         }
-        if (menu.getTheme() != null) {
-            writer.write(",theme: '" + menu.getTheme() + "'");
-        }
-        if (menu.getDividerTheme() != null) {
-            writer.write(",dividerTheme: '" + menu.getDividerTheme()+ "'");
-        }
-        writer.write(",name: '" + menu.getClientId(context) + "'");
         
-        writer.write("}).data('helix-helixContextMenu');");
-        writer.write("});");
+        writer.write("});\n");
+        PageRenderer.renderDialog(context, component, writer.toString());
+    }
+    
+    @Override
+    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+        ResponseWriter writer = context.getResponseWriter();
+        ContextMenu menu = (ContextMenu)component;
+        writer.startElement("div", menu);
+        writer.writeAttribute("id", menu.getClientId(context), "id"); 
         
-        writer.write("})(jQuery);\n");
-        endScript(writer);
+        writer.endElement("div");
     }
     
     @Override

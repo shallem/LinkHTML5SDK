@@ -26,6 +26,9 @@ public class IconButtonRenderer extends CoreRenderer {
             borderClass = " hx-btn-border";
         }
         writer.startElement("div", button);
+        if (!isValueBlank(button.getId())) {
+            writer.writeAttribute("id", button.getId(), null);
+        }
         String bClass = "iconbutton hx-btn-inner hx-no-webkit-select";
         if (button.getStyleClass() != null) {
             bClass = bClass + " " + button.getStyleClass() + borderClass;

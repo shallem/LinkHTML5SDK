@@ -105,8 +105,8 @@
     }
 }
 
-.hx-editor-menu .ui-btn-up-d {
-    background: #0d88c1 !important;
+.hx-editor-menu {
+    padding: 0em;
 }
 
 .hx-editor-menu .ui-btn-up-d .hx-noicon-button div.ui-btn-text {

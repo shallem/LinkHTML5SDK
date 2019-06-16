@@ -22,13 +22,13 @@ import java.util.Map;
 import javax.faces.application.ProjectStage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIOutput;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import javax.faces.render.Renderer;
 import javax.servlet.http.HttpServletRequest;
-import org.primefaces.renderkit.CoreRenderer;
+import org.helix.mobile.component.loadcommand.LoadCommandScriptRenderer;
 
-public class PageRenderer extends CoreRenderer {
+public class PageRenderer extends Renderer {
 
     public static final String HelixLibraryName = "helix";
     
@@ -131,8 +131,7 @@ public class PageRenderer extends CoreRenderer {
         writer.endElement("script");
         
         // Registered resources - from primefaces
-        UIViewRoot viewRoot = context.getViewRoot();
-        ListIterator<UIComponent> iter = (viewRoot.getComponentResources(context, "head")).listIterator();
+        ListIterator<UIComponent> iter = (context.getViewRoot().getComponentResources(context, "head")).listIterator();
         while (iter.hasNext()) {
             writer.write("\n");
             UIComponent resource = (UIComponent) iter.next();
@@ -146,7 +145,6 @@ public class PageRenderer extends CoreRenderer {
                 postinitChild.encodeAll(context);
             }
         }
-        
         writer.endElement("head");
 
         writer.startElement("body", page);
@@ -156,6 +154,27 @@ public class PageRenderer extends CoreRenderer {
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
+        Page page = (Page) component;
+        
+        context.getRenderKit().addRenderer("javax.faces.Output", LoadCommandScriptRenderer.class.getCanonicalName(), new LoadCommandScriptRenderer());
+        writer.startElement("script", null);
+        writer.writeAttribute("type", "text/javascript", null);
+        // Find all load commands
+        ListIterator<UIComponent> iter = (context.getViewRoot().getComponentResources(context, "loadcommand")).listIterator();
+        while (iter.hasNext()) {
+            writer.write("\n");
+            UIComponent resource = (UIComponent) iter.next();
+            resource.encodeAll(context);
+        }
+        
+        // Find all dialogs
+        iter = (context.getViewRoot().getComponentResources(context, "dialog")).listIterator();
+        while (iter.hasNext()) {
+            writer.write("\n");
+            UIComponent resource = (UIComponent) iter.next();
+            resource.encodeAll(context);
+        }
+        writer.endElement("script");
 
         writer.endElement("body");
         writer.endElement("html");
@@ -179,5 +198,29 @@ public class PageRenderer extends CoreRenderer {
         attrs.put("target", "head");
         
         resource.encodeAll(context);
+    }
+    
+    public static void renderLoadCommand(FacesContext context,
+            UIComponent component,
+            String cmdContents) {
+        UIOutput resource = new UIOutput();
+        resource.setRendererType(LoadCommandScriptRenderer.class.getCanonicalName());
+
+        Map<String, Object> attrs = resource.getAttributes();
+        attrs.put("script", cmdContents);
+        
+        context.getViewRoot().addComponentResource(context, resource, "loadcommand");
+    }
+    
+    public static void renderDialog(FacesContext context,
+            UIComponent component,
+            String cmdContents) {
+        UIOutput resource = new UIOutput();
+        resource.setRendererType(LoadCommandScriptRenderer.class.getCanonicalName());
+
+        Map<String, Object> attrs = resource.getAttributes();
+        attrs.put("script", cmdContents);
+        
+        context.getViewRoot().addComponentResource(context, resource, "dialog");
     }
 }

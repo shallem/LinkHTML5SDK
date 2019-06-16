@@ -16,92 +16,89 @@
 package org.helix.mobile.component.formlayout;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import org.helix.mobile.component.page.PageRenderer;
 import org.primefaces.renderkit.CoreRenderer;
 
 public class FormLayoutRenderer extends CoreRenderer {
 
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         FormLayout layout = (FormLayout) component;
         String id = layout.getClientId(context);
+        String pageID = (String)context.getAttributes().get("pageID");
         
-        writer.startElement("div", layout);
-        writer.writeAttribute("id", id, "id"); 
-        if (layout.getWidth() != null) {
-            writer.writeAttribute("style", "width: " + layout.getWidth() + ";", "width");
+        {
+            ResponseWriter writer = context.getResponseWriter();
+            writer.startElement("div", layout);
+            writer.writeAttribute("id", id, "id"); 
+            if (layout.getWidth() != null) {
+                writer.writeAttribute("style", "width: " + layout.getWidth() + ";", "width");
+            }
+
+            writer.endElement("div");
         }
         
-        writer.endElement("div");
+        StringWriter scriptWriter = new StringWriter();
+        context.getAttributes().put("formWriter", scriptWriter);
         
-        startScript(writer, layout.getClientId(context));
-        writer.write("\nvar " + layout.resolveWidgetVar() + " = null;");
-        writer.write("\n(function($) {");
-        
-        writer.write("$(document).on('pagecreate', function(ev) {");
-        writer.write("Helix.Layout.renderer(");
-        writer.write("$(PrimeFaces.escapeClientId('" + id + "')).closest('.ui-page'),'" + id + "', function() {");
-        writer.write("\n if (" + layout.resolveWidgetVar() + ") { return; }");
-        writer.write("\n" + layout.resolveWidgetVar() + " =$(PrimeFaces.escapeClientId('" + layout.getClientId(context) + "')).helixFormLayout({");
-        writer.write("items: [");
+        scriptWriter.write("Helix.Layout.makeForm('" + layout.resolveWidgetVar() + "', '" + pageID + "', '" + id + "', {");
+        scriptWriter.write("items: [");
         boolean isFirst = true;
         for (UIComponent c : layout.getChildren()) {
             if (isFirst) {
                 isFirst = false;
             } else {
-                writer.write(",\n");
+                scriptWriter.write(",\n");
             }
             c.encodeAll(context);
         }
-        writer.write("]");
+        context.getAttributes().remove("formWriter");
+        scriptWriter.write("]");
         if (layout.getFieldStyleMap() != null) {
-            writer.write(",'fieldStyle' : " + layout.getFieldStyleMap());
+            scriptWriter.write(",'fieldStyle' : " + layout.getFieldStyleMap());
         } else if (layout.getFieldStyle() != null) {
-            writer.write(",'fieldStyle' : '" + layout.getFieldStyle() + "'");
+            scriptWriter.write(",'fieldStyle' : '" + layout.getFieldStyle() + "'");
         }
         
         if (layout.getFieldStyleClassMap() != null) {
-            writer.write(",'fieldStyleClass' : " + layout.getFieldStyleClassMap());
+            scriptWriter.write(",'fieldStyleClass' : " + layout.getFieldStyleClassMap());
         } else if (layout.getFieldStyleClass() != null) {
-            writer.write(",'fieldStyleClass' : '" + layout.getFieldStyleClass() + "'");
+            scriptWriter.write(",'fieldStyleClass' : '" + layout.getFieldStyleClass() + "'");
         }
         
         if (layout.getTitleStyleClass() != null) {
-            writer.write(", 'titleStyleClass' : '" + layout.getTitleStyleClass() + "'");
+            scriptWriter.write(", 'titleStyleClass' : '" + layout.getTitleStyleClass() + "'");
         } else {
-            writer.write(", 'titleStyleClass' : null");
+            scriptWriter.write(", 'titleStyleClass' : null");
         }
         
         if (layout.getFormStyleClass() != null) {
-            writer.write(", 'formStyleClass' : '" + layout.getFormStyleClass() + "'");
+            scriptWriter.write(", 'formStyleClass' : '" + layout.getFormStyleClass() + "'");
         }
         
         if (layout.getMaxWidth() != null) {
-            writer.write(", 'width' : '" + layout.getMaxWidth() + "'");
+            scriptWriter.write(", 'width' : '" + layout.getMaxWidth() + "'");
         }
         if (layout.getHeight() != null) {
-            writer.write(", 'height' : '" + layout.getHeight() + "'");
+            scriptWriter.write(", 'height' : '" + layout.getHeight() + "'");
         }
         if (layout.getUseMiniLayout() != null) {
-            writer.write(", 'useMiniLayout' : " + layout.getUseMiniLayout());
+            scriptWriter.write(", 'useMiniLayout' : " + layout.getUseMiniLayout());
         }
         if (layout.getTextStyleClass() != null) {
-            writer.write(", 'textStyleClass' : '" + layout.getTextStyleClass() + "'");
+            scriptWriter.write(", 'textStyleClass' : '" + layout.getTextStyleClass() + "'");
         }
         
-        writer.write(",fullScreen : " + Boolean.toString(layout.isFullScreen()));
-        writer.write(",modes : '" + layout.getModes() + "'");
-        writer.write(",currentMode: '" + layout.getCurrentMode() + "'");
-        writer.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
-        writer.write("}).data('helix-helixFormLayout');");
-        writer.write("});");
-        writer.write("});");
-        
-        writer.write("})(jQuery);\n");
-        endScript(writer);
+        scriptWriter.write(",fullScreen : " + Boolean.toString(layout.isFullScreen()));
+        scriptWriter.write(",modes : '" + layout.getModes() + "'");
+        scriptWriter.write(",currentMode: '" + layout.getCurrentMode() + "'");
+        scriptWriter.write(",separateElements: " + Boolean.toString(layout.isSeparateElements()));
+        scriptWriter.write("});\n");
+        PageRenderer.renderDialog(context, component, scriptWriter.toString());
     }
     
     @Override

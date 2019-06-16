@@ -16,31 +16,29 @@
 package org.helix.mobile.component.outputschema;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
+import javax.faces.render.Renderer;
+import org.helix.mobile.component.page.PageRenderer;
 import org.helix.mobile.model.JSONSerializer;
-import org.primefaces.renderkit.CoreRenderer;
 
 /**
  *
  * @author Seth
  */
-public class OutputSchemaRenderer extends CoreRenderer {
+public class OutputSchemaRenderer extends Renderer {
     
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         OutputSchema os = (OutputSchema) component;
         this.encodeScript(context, os);
     }
     
      protected void encodeScript(FacesContext context, OutputSchema os) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        String clientId = os.getClientId();
-        
         Class<?> c = null;
         try {
             c = Class.forName(os.getName(), true, Thread.currentThread().getContextClassLoader());
@@ -58,17 +56,10 @@ public class OutputSchemaRenderer extends CoreRenderer {
         String schema = JSONSerializer.serializeObjectSchema(c);        
         
         
-        writer.write("\n");
-        startScript(writer, clientId);
-        writer.write("$(document).on('hxGenerateSchemas', function (ev, schemasDone) {");
-        writer.write("Helix.DB.generatePersistenceSchema(");
+        StringWriter writer = new StringWriter(4096);
+        writer.write("Helix.Ajax.loadSchemas['" + os.getName() + "'] = ");
         writer.write(schema);
-        writer.write(", '");
-        writer.write(os.getName());
-        writer.write("',function(schema, a) { a.push('");
-        writer.write(os.getName());
-        writer.write("'); },[ schemasDone ],0,true);");
-        writer.write("});");
-        endScript(writer);
+        writer.write(";\n");
+        PageRenderer.renderLoadCommand(context, os, writer.toString());
     }
 }

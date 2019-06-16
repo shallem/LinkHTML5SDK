@@ -152,7 +152,7 @@
                 _self.options.onDismiss.call(_self);
             }
         };
-        var closebtn = Helix.Layout._createButton(this.name + '-cancel', '90', 'c', this.$mainDiv, this.options.dismissText ? this.options.dismissText : 'Dismiss', onclose);
+        var closebtn = Helix.Layout._createButton(this.name + '-cancel', '90', 'd', this.$mainDiv, this.options.dismissText ? this.options.dismissText : 'Dismiss', onclose);
         
         var onconfirm = function() {
             var args = [];

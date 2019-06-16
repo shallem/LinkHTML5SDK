@@ -141,7 +141,7 @@ $(document).on('__hxOffline', function() {
  * For when Cordova is not installed, create a database for caching offline actions that will be flushed
  * to the network when the app is activated.
  */
-$(document).on('hxGenerateSchemas', function() {
+$(document).on('hxGenerateSchemas', function(ev, schemasDone) {
     if (!window.cordovaInstalled) {
         Helix.Ajax.offlineNetworkQueue =  Helix.DB.createSchemaForTable('OfflineNetworkQueue', {
             url: "TEXT",
@@ -150,6 +150,20 @@ $(document).on('hxGenerateSchemas', function() {
             status: "TEXT",
             error: "TEXT"
         }, [], '');
+    }
+    
+    for (var cmdName in Helix.Ajax.loadCommands) {
+        var cmdOpts = Helix.Ajax.loadCommands[cmdName];
+        cmdOpts.schemaFactory($.proxy(function(schemaObj, options, itemKey) {
+            this.schema = schemaObj;
+        }, cmdOpts), null, true); 
+    }
+    
+    for (var schemaName in Helix.Ajax.loadSchemas) {
+        var nxtSchema = Helix.Ajax.loadSchemas[schemaName];
+        Helix.DB.generatePersistenceSchema(nxtSchema, schemaName, function(schema, a) { 
+            a.push(schemaName); 
+        },[ schemasDone ],0,true);
     }
 });
 
@@ -287,6 +301,13 @@ Helix.Ajax = {
      */
     loadCommands: {
 
+    },
+    
+    /**
+     * Global map that maintains independent schemas that are sync'ed via Ajax, not load commands.
+     */
+    loadSchemas: {
+        
     },
     
     /**
@@ -1466,5 +1487,50 @@ Helix.Ajax = {
                 }
             });
         }
+    },
+    
+    /*
+     
+     
+     window.currentMailFolder = null;Helix.Ajax.loadCommands['loadSubFolders'] = { 'name' : 'currentMailFolder', 'onerror' : Helix.Ajax.defaultOnError, 'schemaFactory' : loadSubFolders_genSchema, 'loadingOptions' : { 'message' : 'Loading',  'color' : '',  'async' : true,  'theme' : ''}, 'requestOptions' : { 'loadKey' : 'ef01949f1e123d8e5e1dcb6cf92569e8', 'loadMethod' : 'loadSubFolders', 'getMethod' : 'getFolder', 'postBack' : '/Email/__hxload/index.xhtml',}, 'syncOverrides' : { 'syncFields' : syncFolderFields, 'addHook' : markMailFoldersDirty, 'deleteHook' : markMailFoldersDirty, 'updateHook' : markMailFoldersDirty}};
+function loadSubFolders_load(schemaObj, options, itemKey){ var loadCommandOptions = Helix.Ajax.loadCommands['loadSubFolders'];loadCommandOptions.schema = schemaObj;Helix.Ajax.ajaxBeanLoad($.extend({}, loadCommandOptions, options), itemKey);}function loadSubFolders(options, itemKey){ if (Helix.Ajax.loadInProgress('currentMailFolder')) return false;loadSubFolders_genSchema(loadSubFolders_load,[options, itemKey]);return true; }
+function loadSubFolders_genSchema(callback,args,noSync) {Helix.DB.generatePersistenceSchema({"__hx_schema_name":"com.mobilehelix.appserver.email.FolderFacade","system":true,"uniqueID":"e","ordinal":1,"emailAccount":"e","syncKey":"e","totalMessageCount":1,"unreadMessageCount":1,"hasSubFolders":true,"isHidden":true,"subFoldersKey":"e","subFolders":[{"__hx_schema_name":"com.mobilehelix.appserver.email.FolderFacade","__hx_schema_type":1002}],"distinguishedID":"e","lastSyncTime":1,"depth":1,"fullName":"e","contents":[{"__hx_schema_name":"com.mobilehelix.appserver.email.MailMessageFacade","color":"e","sender":"e","replyTo":"e","uniqueID":"e","categories":"e","importance":1,"searchText":"e","flagStatus":1,"flagCompleteDate":1,"isRead":true,"fullMsgLoaded":true,"fullThreadLoaded":true,"autocompleteIndexed":true,"sentTo":"e","conversationId":"e","receiveDate":1,"itemClass":"e","replyAllTo":"e","fullHTMLBody":"e","cCList":"e","cCNames":"e","bCCList":"e","meetingDetails":{"__hx_schema_name":"com.mobilehelix.appserver.calendar.MeetingDetails","uniqueID":"e","responseType":"e","recurrenceEnd":1,"isPrivate":true,"recurring":true,"recurrencePattern":"e","attendees":[{"__hx_schema_name":"com.mobilehelix.appserver.calendar.MeetingAttendee","uniqueID":"e","email":"e","response":"e","optional":true,"name":"e","__hx_key":"uniqueID","__hx_sorts":{},"__hx_filters":{},"__hx_global_filters":{},"__hx_text_index":[]}],"isCancelled":true,"appointmentID":"e","isAllDay":true,"isConflict":true,"startTime":1,"endTime":1,"timeZone":"e","__hx_key":"uniqueID","__hx_sorts":{},"__hx_filters":{},"__hx_global_filters":{},"__hx_text_index":[]},"queryID":1,"exchangeConversationID":"e","filingDigest":"e","filingID":"e","isFiledToDMS":true,"localID":"e","vipProcessed":1,"vipStatus":1,"lastAction":"e","preview":"e","hasAttachments":true,"attachments":[{"__hx_schema_name":"com.mobilehelix.appserver.email.MailMessageFacade$AttachmentData","contentId":"e","hasFileHandler":true,"fsID":"e","fsDigest":"e","fsLastModTime":1,"handlerAppID":1,"noEdit":true,"clientObject":"e","remoteIdx":1,"attachmentId":"e","fileExtension":"e","name":"e","size":1,"hidden":true,"contentType":"e","__hx_key":"attachmentId","__hx_sorts":{},"__hx_filters":{},"__hx_global_filters":{},"__hx_text_index":[]}],"offlineIDString":"e","bodyPlainText":"e","threadID":"e","location":"e","subject":"e","__hx_key":"uniqueID","__hx_sorts":{"exchangeConversationID":{"display":"[none]","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"flagCompleteDate":{"display":"Flag Due","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"flagStatus":{"display":"Flagged","direction":"ASC","usecase":"false","secondary":"receiveDate","secondaryDirection":"DSC"},"importance":{"display":"Importance","direction":"ASC","usecase":"false","secondary":"receiveDate","secondaryDirection":"DSC"},"isRead":{"display":"Unread","direction":"ASC","usecase":"false","secondary":"receiveDate","secondaryDirection":"DSC"},"localID":{"display":"[none]","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"queryID":{"display":"[none]","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"receiveDate":{"display":"Received Date","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"sender":{"display":"Sender","direction":"ASC","usecase":"false","secondary":"receiveDate","secondaryDirection":"DSC"},"vipStatus":{"display":"VIP","direction":"DSC","usecase":"false","secondary":"receiveDate","secondaryDirection":"DSC"}},"__hx_filters":{},"__hx_global_filters":{"conversationId":{"display":"This Conversation?","values":["1"],"valueNames":["Yes"]},"flagStatus":{"display":"Flagged?","values":["1","2","3"],"valueNames":["Yes","Completed","No"]},"hasAttachments":{"display":"Has Attachments?","values":["1","0"],"valueNames":["Yes","No"]},"importance":{"display":"Importance","values":["1","2","3","4"],"valueNames":["High","Normal","Low"]},"isRead":{"display":"Unread?","values":["0","1"],"valueNames":["Yes","No"]},"sender":{"display":"This Sender?","values":["1"],"valueNames":["Yes"]},"vipStatus":{"display":"VIP?","values":["1","0"],"valueNames":["Yes","No"]}},"__hx_text_index":["searchText"]}],"displayName":"e","parentId":"e","__hx_key":"uniqueID","__hx_sorts":{"displayName":{"display":"Name","direction":"ASC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"fullName":{"display":"Folder Path","direction":"ASC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"ordinal":{"display":"Is Standard Folder","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"totalMessageCount":{"display":"Total Count","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"},"unreadMessageCount":{"display":"Unread Count","direction":"DSC","usecase":"false","secondary":"","secondaryDirection":"DSC"}},"__hx_filters":{},"__hx_global_filters":{},"__hx_text_index":[]}, 'currentMailFolder',callback,args,0,noSync);}$(document).on('hxGenerateSchemas', function() {loadSubFolders_genSchema(null, null, true); });
+     
+     */
+    makeLoadCommand: function(widgetName, commandName, options, schema) {
+        window[widgetName] = null;
+        var cmdOpts = Helix.Ajax.loadCommands[commandName] = $.extend({}, options, {
+            'name': widgetName,
+            'schemaFactory': function(callback, itemKey, noSync) {
+                // schemaTemplate,name,oncomplete,opaque,nRetries,noSync
+                Helix.DB.generatePersistenceSchema(this.origSchema, this.name, callback, [this, itemKey], 0, noSync);
+            },
+            'origSchema': schema
+        });
+        // When the load command runs, first generate the schema if we have not done so yet. 
+        // Then, oncomplete, call the load function.
+        window[commandName] = $.proxy(function(options, itemKey){
+            if (Helix.Ajax.loadInProgress(this.name)) {
+                return false;
+            }
+            if (this.schema) {
+                Helix.Ajax.ajaxBeanLoad($.extend({}, this, options), itemKey);
+            } else {
+                this.schemaFactory(function(schemaObj, cmd, itemKey) {
+                    cmd.schema = schemaObj;
+                    Helix.Ajax.ajaxBeanLoad($.extend({}, cmd, options), itemKey);
+                }, itemKey, false);
+            }
+            return true;
+        }, cmdOpts);
+    },
+    
+    makeAggregateLoad: function(widgetName, cmdName, aggregateOptions) {
+        window[widgetName] = null;
+        aggregateOptions.name = widgetName;
+        window[cmdName] = $.proxy(function(options) {
+            var loadCommandOptions = $.extend(this, options);
+            Helix.Ajax.ajaxAggregateLoad(loadCommandOptions);
+        }, aggregateOptions);
     }
 };

@@ -529,36 +529,19 @@ var globalDataListID = -1;
                 }
             }
             this.hasAutodividers = ad;
-
-            var ads = function (elt) {
-                var callback = _self.options.autodividersSelectorCallback;
-
-                var obj = $(elt).data('data');
-                if (callback && obj && $(elt).attr('data-deleted') !== 'true') {
-                    return callback.call(_self, elt, _self.displayList, _self._currentSort, obj);
-                }
-
-                return null;
-            };
-            this.autodividerSelector = ads;
         },
         refreshDividers: function() {
-            this._refreshDividers();
+            
         },
-        _refreshDividers: function () {
+        _insertDivider: function (curRowParent, row) {
             if (!this.hasAutodividers) {
                 return;
             }
-            this.$parent.find("li:jqmData(role='list-divider')").remove();
-
-            var lis = this.$parent.find('li'),
-                    lastDividerText = null, li, dividerText;
-
-            for (var i = 0; i < lis.length; i++) {
-                li = lis[i];
-                dividerText = this.autodividerSelector($(li));
-
-                if (dividerText && lastDividerText !== dividerText) {
+            var callback = this.options.autodividersSelectorCallback;
+            var li = curRowParent[0];
+            if (callback && row && $(curRowParent).attr('data-deleted') !== 'true') {
+                var dividerText = callback.call(this, curRowParent, this.displayList, this._currentSort, row);
+                if (dividerText && this.lastDividerText !== dividerText) {
                     var divider = document.createElement('li');
                     divider.appendChild(document.createTextNode(dividerText));
                     divider.setAttribute('data-' + $.mobile.ns + 'role', 'list-divider');
@@ -567,7 +550,7 @@ var globalDataListID = -1;
                 }
                 // SAH - blank means ignore
                 if (dividerText) {
-                    lastDividerText = dividerText;
+                    this.lastDividerText = dividerText;
                 }
             }
         },
@@ -771,7 +754,6 @@ var globalDataListID = -1;
                                 _self._preloadPage(-1, 2);
                             }
 
-                            _self._refreshDividers();
                             var i;
                             var delta = 0;
                             for (i = 0; i < _self.displayLIs.length; ++i) {
@@ -859,7 +841,6 @@ var globalDataListID = -1;
                                     _self._preloadPage(1, 2);
                                 }
 
-                                _self._refreshDividers();
                                 var delta = 0;
                                 for (i = _self.displayLIs.length - 1; i > 0; --i) {
                                     var nxt = _self.displayLIs[i];
@@ -904,7 +885,7 @@ var globalDataListID = -1;
             var scrollPos = _self.$listWrapper.scrollTop();
             var lastScroll = _self._lastScrollPos;
             var listHeight = _self.$parent.height() - _self.$listWrapper.height();
-            if (listHeight <= 0) {
+            if (listHeight < 0) {
                 // This can happen when the list is in the process of being refreshed.
                 return;
             }
@@ -919,10 +900,16 @@ var globalDataListID = -1;
                         _self._renderWindowStart === 0 && 
                         !_self.getCurrentSearchText() &&
                         _self.options.pullToRefresh) {
-                    _self.options.pullToRefresh.call(this);
-                    _self._clearGlobalFilterMenu();
+                    $(document).off('scrollzero').one('scrollzero', function() {
+                        _self.options.pullToRefresh.call(this);
+                        _self._clearGlobalFilterMenu();
+                    });
+                    return;
                 }
 	    }
+            if (scrollPos === 0) {
+                $(document).trigger('scrollzero');
+            }
 
             if (scrollPos <= 0 && _self._renderWindowStart > 0) {
                 // stop tracking scroll events
@@ -1139,15 +1126,20 @@ var globalDataListID = -1;
             }, extraItems, displayCollection, renderWindowStart, _options);
         },
         _updateSortButtons: function () {
-            if ('ascending' in this.options.sortButtons &&
-                    'descending' in this.options.sortButtons) {
-                if (this._currentSortOrder.toUpperCase().indexOf("DSC") === 0) {
-                    // Show the descending button, reflecting the CURRENT order.
-                    $(this.options.sortButtons.descending).show();
-                    $(this.options.sortButtons.ascending).hide();
-                } else {
-                    $(this.options.sortButtons.ascending).show();
-                    $(this.options.sortButtons.descending).hide();
+            if (this._currentSortOrder && this._currentSortOrder.toUpperCase().indexOf("DSC") === 0) {
+                // Show the descending button, reflecting the CURRENT order.
+                if (this.$sortDescending) {
+                    this.$sortDescending.show();
+                }
+                if (this.$sortAscending) {
+                    this.$sortAscending.hide();
+                }
+            } else {
+                if (this.$sortAscending) {
+                    this.$sortAscending.show();
+                }
+                if (this.$sortDescending) {
+                    this.$sortDescending.hide();
                 }
             }
         },
@@ -1186,23 +1178,26 @@ var globalDataListID = -1;
                 'data-icon': 'false'
             }).appendTo(_self.$wrapper);
             var sortsList = $('<ul />').attr({
-                'data-role': 'listview',
-                'data-inset': 'true',
-                'data-theme': 'd'
+                'class': 'ui-listview ui-listview-inset ui-corner-all ui-shadow hx-menu-list ui-body-d'
             }).appendTo(_self._sortContainer);
             var sorts = JSON.parse(_self._currentSortsJSON);
             var currentSortItem = null;
             for (var sortFld in sorts) {
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
-                    var sortItem = $('<li />').append($('<a />').attr({
-                        'href': 'javascript:void(0)',
-                        'data-field': sortFld,
-                        'data-direction': nxtSort.direction,
-                        'data-case': nxtSort.usecase,
-                        'data-secondary': nxtSort.secondary,
-                        'data-secondary-order': nxtSort.secondaryDirection
-                    }).append(nxtSort.display)).appendTo($(sortsList));
+                    var sortItem = $('<li />').addClass('hx-menu-item hx-search-item hx-flex-horizontal')
+                    .append(
+                        $('<div />').attr({
+                            'data-field': sortFld,
+                            'data-direction': nxtSort.direction,
+                            'data-case': nxtSort.usecase,
+                            'data-secondary': nxtSort.secondary,
+                            'data-secondary-order': nxtSort.secondaryDirection,
+                            'class': 'hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text'
+                            })
+                            .append(nxtSort.display))
+                    .append($('<div/>').addClass('icono-caretRight'))      
+                    .appendTo(sortsList);
 
                     /* Highlight the current sort. */
                     if (sortFld === _self._currentSort) {
@@ -1276,6 +1271,10 @@ var globalDataListID = -1;
                                 newSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : newSortCase);
                             }
                         }
+                        
+                        // Change the li for this sort field so that we can see it is the current sort field.
+                        $(sortsList).find('li').removeClass('hx-current-sort');
+                        $(evt.target).closest('li').addClass('hx-current-sort');
 
                         // Display from the beginning of the list.
                         _self._refreshData(function () {
@@ -1285,17 +1284,12 @@ var globalDataListID = -1;
                             _self._currentSortCase = newSortCase;
 
                             _self._updateSortButtons();
-
-                            // Change the li for this sort field so that we can see it is the current sort field.
-                            $(sortsList).find('li').removeClass('hx-current-sort');
-                            $(tgt).addClass('hx-current-sort');
                         }, undefined, _self._applyOrdering(_self.itemList.clearOrder(), newSort, newSortOrder, newSortCase));
                         $(_self._sortContainer).popup("close");
                         return false;
                     });
                 }
             }
-            sortsList.listview();
             if (currentSortItem) {
                 $(currentSortItem).addClass('hx-current-sort');
             }
@@ -1526,31 +1520,25 @@ var globalDataListID = -1;
                 'data-history': 'false'
             }).appendTo(_self.$wrapper);
             var filtersList = $('<ul />').attr({
-                'data-role': 'listview',
-                'data-inset': 'true',
-                'data-theme': 'd'
+                'class': 'ui-listview ui-listview-inset ui-corner-all ui-shadow hx-menu-list ui-body-d'
             }).appendTo(_self._globalFilterContainer);
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
-                var filterItem = null;
                 // Make the filter name a list divider.
-                var nxtLI = $('<li />').appendTo(filtersList);
+                var nxtLI = $('<li />').addClass('ui-li ui-li-static').appendTo(filtersList);
                 nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
                 _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
             }
 
             /* Always have a "Clear" button to reset all global filters. */
-            $('<li />').append($('<a />').attr({
-                'href': 'javascript:void(0)',
-                'data-field': '__clear',
-                'data-theme': 'd',
-                'data-mini': 'true'
-            }).append("Clear All"))
+            $('<li />').addClass('hx-menu-item hx-clear-filters hx-flex-horizontal')
+                    .append(
+                        $('<div />').addClass('hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text')
+                            .append('Clear filters'))
+                    .append($('<div/>').addClass('icono-caretRight'))      
                     .appendTo(filtersList)
                     .on(_self.tapEvent, function (evt) {
                         evt.stopImmediatePropagation();
-                        evt.preventDefault();
-
                         _self._refreshData(function () {
                             // Reset the values in the global filter popup.
                             _self._clearGlobalFilterMenu();
@@ -1560,8 +1548,7 @@ var globalDataListID = -1;
                         $(_self._globalFilterContainer).popup("close");
                         return false;
                     });
-
-            filtersList.listview();
+            
             _self._globalFilterContainer.popup();
         },
         
@@ -1633,7 +1620,6 @@ var globalDataListID = -1;
              */
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
                 finalCompletion.call(_self);
-                _self._refreshDividers();
                 //_self.$parent.listview("refresh");
                 _self.refreshInProgress = false;
                 $(_self.$parent).trigger('refreshdone');
@@ -1680,6 +1666,7 @@ var globalDataListID = -1;
             var _self = this;
             var rowIndex = 0;
             _self.nRendered = 0;
+            _self.lastDividerText = null;
             var LIs = [];
             var groupsToRender = [];
             if (_options.grouped) {
@@ -1693,8 +1680,9 @@ var globalDataListID = -1;
                     $(LIs[0]).prevAll().remove();
                 }
             } else {
-                // Add not selector to make sure we handle auto dividers properly.
-                LIs = $(_self.$parent).find('li').not('[data-role="list-divider"]').not('[data-role="empty-message"]');
+                // Clear out dividers because we will redo them.
+                $(_self.$parent).find('li[data-role="list-divider"]').remove();
+                LIs = $(_self.$parent).find('li').not('[data-role="empty-message"]');
             }
             _self.nExtras = 0;
 
@@ -1760,9 +1748,6 @@ var globalDataListID = -1;
                     }
 
                     _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
-                    // Remove all existing list dividers. The call to listview refresh in the completion method will take care of 
-                    // restoring them.
-                    $(_self.$parent).find('li[data-role="list-divider"]').remove();
                     oncomplete.call(_self, opaque);
                 } else {
                     __renderGroup(0);
@@ -1874,8 +1859,10 @@ var globalDataListID = -1;
             if (_self.__searchText.length === 0) {
                 // The same as clearing the search.
                 _self.resetListContents();
+                _self.$searchClear.hide();
                 return;
             }
+            _self.$searchClear.show();
             if (_self.__searchText.length < 2) {
                 // We do not do 1 letter searches ...
                 return;
@@ -1939,14 +1926,11 @@ var globalDataListID = -1;
             this._prependSearchBox(this.options);
         },
         _addSortFilterButton: function (id, icon, onclick) {
-            return $('<a/>').attr({
-                'id': id,
-                'class': 'ui-btn iconbutton hx-icon-sort-filter'
-            }).append($('<div/>').attr({
-                'class': 'hx-btn-inner'
+            return $('<div/>').attr({
+                'class': 'iconbutton hx-btn-inner'
             }).append($('<div/>').attr({
                 'class': 'hx-icon ui-icon-' + icon
-            }))).appendTo(this.$sortDiv)
+            })).appendTo(this.$sortDiv)
                     .on(this.tapEvent, null, this, onclick);
         },
         _prependSearchBox: function (options) {
@@ -1972,19 +1956,11 @@ var globalDataListID = -1;
                     useControlGroup = true;
                 }
 
-                _self.$sortDiv = $('<div/>').attr({
-                    'data-role': 'none',
-                    'data-type': 'horizontal'
-                }).appendTo(_self.$searchSortDiv);
+                _self.$sortDiv = $('<div/>').addClass('hx-button-bar').appendTo(_self.$searchSortDiv);
                 if (options.showSortButton) {
                     /* Ascending/descending sort buttons. */
                     var sAscendID = Helix.Utils.getUniqueID();
                     var sDescendID = Helix.Utils.getUniqueID();
-                    _self.options.sortButtons = {
-                        'ascending': PrimeFaces.escapeClientId(sAscendID),
-                        'descending': PrimeFaces.escapeClientId(sDescendID)
-                    };
-
                     this.$sortAscending = this._addSortFilterButton(sAscendID, 'hx-sort-asc-black', function (ev) {
                         ev.stopImmediatePropagation();
                         _self.displaySortMenu(this);
@@ -1995,6 +1971,7 @@ var globalDataListID = -1;
                         _self.displaySortMenu(this);
                         return false;
                     });
+                    this._updateSortButtons();
                 }
 
                 if (options.showFilterButton) {
@@ -2010,41 +1987,48 @@ var globalDataListID = -1;
                 if (options.externalButtonsCallback) {
                     options.externalButtonsCallback(_self, _self.$sortDiv, useControlGroup);
                 }
-
-                if (useControlGroup) {
-                    _self.$sortDiv.controlgroup();
-                } else {
-                    _self.$sortDiv.controlgroup({corners: false});
-                }
             };
 
             var _attachSearchBox = function () {
-                var $searchDiv = $('<div/>').addClass('hx-almost-full-width').appendTo(_self.$searchSortDiv);
+                var $searchDiv = $('<div/>')
+                        .addClass('hx-form-container hx-search-input hx-flex-fill hx-flex-horizontal')
+                        .attr('data-enhance', 'false')
+                        .appendTo(_self.$searchSortDiv);
                 var sboxID = Helix.Utils.getUniqueID();
                 var sboxType = 'search';
                 if (options.indexedSearchType !== 'search') {
                     sboxType = 'text';
                 }
+                $('<div/>').addClass('hx-button-bar')
+                        .append($('<div/>').addClass('iconbutton hx-btn-inner')
+                            .append($('<div/>').addClass('hx-icon ui-icon-search-indicator')))
+                            .appendTo($searchDiv);
                 this.$searchBox = $('<input/>').attr({
-                    'type': sboxType,
+                    'type': 'text',
                     'name': 'search',
+                    'class': 'textCategorySmall',
                     'id': sboxID,
-                    'data-role': 'none',
-                    'data-mini': true,
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
+                this.$searchClear = $('<div/>').addClass('hx-button-bar')
+                        .append($('<div/>').addClass('iconbutton hx-btn-inner')
+                            .append($('<div/>').addClass('hx-icon icono-cross')))
+                            .appendTo($searchDiv)
+                            .on(Helix.clickEvent, function(ev) {
+                                ev.stopImmediatePropagation();
+                                _self.$searchBox.val('');
+                                _self.$searchClear.hide();
+                                _self.resetListContents();                                
+                                return false;
+                            })
+                                    .hide();
 
-                this.$searchLabel = $('<label/>').attr({
-                    'for': sboxID
-                }).append('Search').appendTo($searchDiv).hide();
-                this.$searchBox.textinput({
-                    clearBtn: true
-                });
                 if (options.defaultSearchText) {
                     this.__searchText = options.defaultSearchText;
                 }
                 if (this.__searchText) {
                     this.$searchBox.val(this.__searchText);
+                    this.$searchClear.show();
                 }
                 this.$searchBox.on('input paste', function () {
                     _self.__searchClear = false;
@@ -2084,13 +2068,6 @@ var globalDataListID = -1;
                         }
                     });
                 }
-
-                var $clearBtn = $searchDiv.find('a.ui-input-clear');
-                $clearBtn.on(_self.tapEvent, function () {
-                    _self.clearSearchText();
-                    _self.resetListContents();
-                    return false;
-                });
             };
 
             if (options.buttonPos === 'left') {
@@ -2115,19 +2092,12 @@ var globalDataListID = -1;
             var _self = this;
             _self.$clearSelectionDiv.empty();
 
-            _self.$clearSelectionDiv.append($('<a/>').append("Clear").buttonMarkup({
-                mini: true,
-                corners: false,
-                shadow: false,
-                icon: 'check',
-                iconpos: 'left',
-                inline: true
-            }).on(_self.tapEvent, function () {
+            _self.$clearSelectionDiv.append($('<div/>').append("Clear").addClass('hx-selection-menu-button').on(_self.tapEvent, function () {
                 _self.clearAllMultiSelect();
                 return false;
             }));
 
-            var $controlGroup = $('<div/>').appendTo(_self.$clearSelectionDiv);
+            var $controlGroup = $('<div/>').addClass('hx-button-bar hx-selection-menu-custom-bar').appendTo(_self.$clearSelectionDiv);
             if (this.options.selectionButtonsCallback) {
                 if (this.options.selectionButtonsCallback.call(_self, $controlGroup) === true) {
                     // Add the filter button.
@@ -2138,10 +2108,6 @@ var globalDataListID = -1;
                     }));
                 }
             }
-            $controlGroup.controlgroup({
-                type: 'horizontal',
-                shadow: false
-            });
         },
         /* Apply the appropriate sort to the display collection. */
         _applyOrdering: function (displayCollection, orderby, direction, usecase) {
@@ -2201,14 +2167,11 @@ var globalDataListID = -1;
                     if (_self.options.itemsPerGroup > 0 &&
                             idx >= _self.options.itemsPerGroup) {
                         // Add a "More ..." item.
-                        var $moreMarkup = $('<div/>')
+                        var $moreLink = $('<div/>')
+                                .addClass('textCategorySmall hx-group-overflow-text')
                                 .append(_self.options.groupOverflowText);
-                        var $moreLink = $('<a/>').attr({
-                            'href': 'javascript:void(0)',
-                            'class': 'ui-btn ui-btn-up-c'
-                        }).append($moreMarkup);
                         if (_self.options.groupOverflowTextClass) {
-                            $moreMarkup.addClass(_self.options.groupOverflowTextClass);
+                            $moreLink.addClass(_self.options.groupOverflowTextClass);
                         }
                         var li;
                         if (idx < groupLIs.length) {
@@ -2217,7 +2180,6 @@ var globalDataListID = -1;
                             ++idx;
                         } else {
                             li = $('<li/>')
-                                    .attr('data-theme', 'd')
                                     .append($moreLink)
                                     .appendTo(_self.$parent);
                             groupLIs.push(li);
@@ -2388,7 +2350,7 @@ var globalDataListID = -1;
                 }
             } else {
                 if (this.setSelected(target)) {
-                    if ($(target).is('a[data-role="splitlink"]')) {
+                    if ($(target).is('[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
                             if (!this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings)) {
                                 this._runContextAction(target);                                
@@ -2409,7 +2371,7 @@ var globalDataListID = -1;
             setTimeout(function(touch, _self) {
                 var target = document.elementFromPoint(touch.clientX, touch.clientY);
                 //var target = event.target;
-                target = $(target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
+                target = $(target).closest('li.hx-li,div[data-role="splitlink"],li[data-overflow="1"]');
                 if (target.length === 0) {
                     return;
                 }
@@ -2421,11 +2383,6 @@ var globalDataListID = -1;
         _handleTap: function (event) {
             event.preventDefault();
 
-            if (this._longTouchTimer) {
-                clearTimeout(this._longTouchTimer);
-                this._longTouchTimer = null;
-                this._longTapAction = null;
-            }
             if (this.options.itemContextMenu && this.options.itemContextMenu.active) {
                 return;
             }
@@ -2442,37 +2399,6 @@ var globalDataListID = -1;
                     extraArgs: extraArgs.concat([this.selected])
                 });
             }
-        },
-        _queueLongTap: function (ev) {
-            if (this._longTouchTimer) {
-                clearTimeout(this._longTouchTimer);
-            }
-            if (ev) {
-                this._longTapAction = $.proxy(function () {
-                    var _yDiff = this.list.$listWrapper.scrollTop() - this.list._lastScrollTop;
-                    if (Math.abs(_yDiff) > 10) {
-                        // Scrolled too much
-                        return;
-                    }
-
-                    var touch = this.data.changedTouches[0];
-                    var _tgt = document.elementFromPoint(touch.clientX, touch.clientY);
-                    var _tgtDiv = $(_tgt).closest('li.hx-li');
-                    if (_tgtDiv.length) {
-                        this.list._runContextAction(_tgtDiv);
-                    }
-                }, {
-                    list: this,
-                    data: ev
-                });
-            }
-            this._longTouchTimer = setTimeout(function (list) {
-                list._longTouchTimer = null;
-                if (list._longTapAction) {
-                    list._longTapAction();
-                    list._longTapAction = null;
-                }
-            }, 600, this);
         },
         _installNoTouchActionHandlers: function () {
             // Right-click
@@ -2555,33 +2481,6 @@ var globalDataListID = -1;
         _installTouchActionHandlers: function () {
             var _self = this;
 
-            // Tap-hold
-            if (this.options.holdAction) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
-                    var _self = event.data;
-                    if (_self.setSelected(event.target)) {
-                        _self.selectItem(true);
-                    }
-                    _self.options.holdAction.call(_self, _self.selected, _self.selectedGroup, _self.options.strings);
-                    _self._cancelNextTap = true;
-
-                    event.stopImmediatePropagation();
-                    return false;
-                });
-            } else if (this.options.doThisFilter) {
-                $(this.$listWrapper).off(this.contextEvent).on(this.contextEvent, 'li.hx-li', this, function (event) {
-                    var _self = event.data;
-                    if (_self.setSelected(event.target)) {
-                        _self.selectItem(true);
-                    }
-                    _self.displayFilterMenu();
-                    _self._cancelNextTap = true;
-
-                    event.stopImmediatePropagation();
-                    return false;
-                });
-            }
-
             // Tap
             if (this.options.selectAction) {
                 this.$listWrapper[0].addEventListener('touchstart', function (ev) {
@@ -2589,20 +2488,7 @@ var globalDataListID = -1;
                     _self._lastScrollTop = _self.$listWrapper.scrollTop();
                     _self._lastTapX = ev.changedTouches[0].clientX;
                     _self._lastTapY = ev.changedTouches[0].clientY;
-                    if (_self.options.itemContextMenu) {
-                        _self._queueLongTap(ev);
-                    }
-                }, false);
-                this.$listWrapper[0].addEventListener('touchmove', function (ev) {
-                    var _xDiff = _self._lastTapX - ev.changedTouches[0].clientX;
-                    var _yDiff = _self._lastTapY - ev.changedTouches[0].clientY;
-                    if (Math.abs(_xDiff) > 10 || Math.abs(_yDiff) > 10) {
-                        if (_self._longTouchTimer) {
-                            clearTimeout(_self._longTouchTimer);
-                            _self._longTouchTimer = null;
-                        }
-                    }
-                });                      
+                }, false);                    
                 this.$listWrapper.on('tap vclick', function (event) {
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
@@ -2674,6 +2560,7 @@ var globalDataListID = -1;
             return true;
         },
         _renderRowMarkup: function (LIs, row, rowIndex, attachFn) {
+            // Only called when we are NOT grouped
             var _self = this;
             var curRowParent = null;
             var curRowFresh = false;
@@ -2716,6 +2603,7 @@ var globalDataListID = -1;
                 return false;
             }
             curRowParent.data('data', row);
+            _self._insertDivider(curRowParent, row);
             return true;
         },
         rerenderElem: function(obj, id) {
@@ -3376,7 +3264,6 @@ var globalDataListID = -1;
                 if (finalCompletion) {
                     finalCompletion();
                 }
-                _self._refreshDividers();
             }, this.options.emptyMessage, oncomplete, this.extraItems, _self.options);
         },
         markDeleted: function (elems) {

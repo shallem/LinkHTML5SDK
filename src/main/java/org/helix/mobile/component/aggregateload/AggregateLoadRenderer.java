@@ -16,11 +16,12 @@
 package org.helix.mobile.component.aggregateload;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
 import org.helix.mobile.component.loadcommand.LoadCommandRenderer;
+import org.helix.mobile.component.page.PageRenderer;
 import org.helix.mobile.model.AggregateObject;
 import org.helix.mobile.model.ParamObject;
 
@@ -31,15 +32,12 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
     }
     
     @Override
-    public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+    public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
         AggregateLoad cmd = (AggregateLoad) component;
         this.encodeScript(context, cmd);
     }
     
     protected void encodeScript(FacesContext context, AggregateLoad cmd) throws IOException {
-        ResponseWriter writer = context.getResponseWriter();
-        String clientId = cmd.getClientId();
-        
         String url = context.getExternalContext().getRequestContextPath() + 
                 //context.getExternalContext().getRequestServletPath() +
                 "/__hxload/index.xhtml";
@@ -68,13 +66,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
                 cmd.getValueExpression("value"), cmd.getCmd(),
                 loadMethodName, getMethodNameRet);
         
-        writer.write("\n");
-        startScript(writer, clientId);
-        writer.write(widgetName + " = null;");
-   
-        writer.write("function " + cmd.getName() + "(options){ ");
-        writer.write("var loadCommandOptions = $.extend({");
-        writer.write(" 'name' : '" + cmd.resolveWidgetVar() + "',");
+        StringWriter writer = new StringWriter();
+        writer.write("Helix.Ajax.makeAggregateLoad('" + cmd.resolveWidgetVar() + "', '" + cmd.getName() + "', {");
         writer.write(" 'loadingOptions' : {");
         writer.write(" 'message' : '" + (cmd.getLoadingMessage() != null ? cmd.getLoadingMessage() : "") + "', ");
         writer.write(" 'theme' : '" + (cmd.getLoadingTheme() != null ? cmd.getLoadingTheme() : "") + "', ");
@@ -93,13 +86,8 @@ public class AggregateLoadRenderer extends LoadCommandRenderer {
         writer.write(" 'getMethod' : '" + getMethodNameRet.toString() + "',");
         writer.write(" 'postBack' : '" + url + "'");
         writer.write("}");
-        writer.write("}, options);\n");
+        writer.write("});\n");
         
-        // Setup the widget.
-        writer.write("Helix.Ajax.ajaxAggregateLoad(loadCommandOptions);");
-
-        writer.write("}");
-        
-        endScript(writer);
+        PageRenderer.renderLoadCommand(context, cmd, writer.toString());
     }
 }

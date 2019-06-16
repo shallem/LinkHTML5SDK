@@ -31,13 +31,9 @@
              */
             items: [],
             /**
-             * Object mapping device types to a constant, true or false, which indicates
-             * if the form layout should be in "mini" mode for that device type. Supported
-             * device types are "tablet", "phablet", and "phone". The default is { "phone" : true }.
+             * Should this be a small-width or regular-width list
              */
-            useMiniLayout: {
-                "phone": true
-            },
+            useMiniLayout: false,
             /**
              * Optional callback that is invoked before the context menu is opened. The 'this' variable
              * in the call is determined by the object that opens this context menu. If that object specifies
@@ -60,16 +56,7 @@
              * Optional name. Used to provide a unique ID for each menu item of the form <name>-<index>.
              * If no name is provided, one is generated. The getName method returns the name.
              */
-            name: null,
-            /**
-             * Optional theme. Used to provide a color swatch for the menu. Defaults to jquery mobile theme 'd'.
-             */
-            theme: 'd',
-            /**
-             * Optional divider theme. Used to provide a color swatch for dividers in the menu. Default to jquery mobile
-             * theme 'd'.
-             */
-            dividerTheme: 'd'
+            name: null
         },
         _refreshControlGroups: false,
         _create: function () {
@@ -221,8 +208,7 @@
                 'class': 'hx-no-webkit-select'
             }).appendTo(this.element);
             this.optionsList = $('<ul />').attr({
-                'data-role': 'listview',
-                'data-inset': 'true',
+                'class': 'ui-listview ui-listview-inset ui-corner-all ui-shadow hx-menu-list ui-body-d' + (this.options.useMiniLayout === true ? ' hx-menu-list-mini' : ''),
                 'id': this.id + "-ul"
             });
             this._menuContainer.append(this.optionsList);
@@ -297,42 +283,22 @@
                             break;
                         case 'text':
                         case 'date':
-                            nxtLI.attr('data-icon', false);
+                            $('<div/>').addClass('textCategoryMedium').append(nxtItem.display).appendTo(nxtLI);
                             var inputMarkup = $('<input />').attr({
                                 'name': nxtItem.name,
                                 'id': inputID,
                                 'type': nxtItem.type,
                                 'autocapitalize': 'off',
-                                'data-index': i
-                            });
-
-                            var textContainer = $('<div />').attr({
-                                'data-role': 'fieldcontain',
-                                'class': 'hx-mini-fieldcontain',
-                                'style' : 'width: 100% !important;'
-                            })
-                                    .append($('<label />').attr({
-                                        'for': inputID,
-                                        'style': 'color: black'
-                                    })
-                                            .append(nxtItem.display)
-                                            )
-                                    .append(inputMarkup)
-                                    .appendTo(nxtLI);
-                            textContainer.fieldcontain();
-                            $(inputMarkup).textinput({
-                                disabled: !nxtItem.enabled
-                            });
+                                'data-index': i,
+                                'class': 'hx-context-menu-textinput'
+                            }).appendTo(nxtLI);
+                            inputMarkup.prop('disabled', !nxtItem.enabled);
                             
                             if (nxtItem.action) {
                                 if (nxtItem.type === 'date') {
-                                    $('<a />').appendTo(nxtLI).attr({
-                                        'data-role': 'button',
-                                        'data-inline': true,
-                                        'data-shadow': 'false',
-                                        'data-theme': 'd',
-                                        'data-corners': 'false'
-                                    }).append('Set').buttonMarkup({mini: true}).on(Helix.clickEvent, null, [_self, nxtItem, inputMarkup], function(ev) {
+                                    $('<div />').attr({
+                                        'class': 'textCategoryMedium hx-context-menu-button'
+                                    }).append('Set').appendTo(nxtLI).on(Helix.clickEvent, null, [_self, nxtItem, inputMarkup], function(ev) {
                                         ev.data[0].__runAction(ev, ev.data[1], $(ev.data[2]).val(), true);
                                     });
                                 } else {
@@ -343,14 +309,16 @@
                             }
                             break;
                         default:
-                            nxtLink = $('<a />').attr({
-                                'href': 'javascript:void(0)',
+                            nxtLI.addClass('hx-flex-horizontal');
+                            nxtLink = $('<div />').attr({
+                                'class': 'hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text',
                                 'data-index': i,
                                 'id': inputID
                             }).append(nxtItem.display).appendTo(nxtLI);
                             nxtLink.on(_self.tapEvent, function (evt) {
                                 return _self._handleClick(evt);
                             });
+                            $('<div/>').addClass('icono-caretRight').appendTo(nxtLI);
                             if (_self.stopEvent) {
                                 nxtLink.on(_self.stopEvent, function (evt) {
                                     evt.stopImmediatePropagation();
@@ -375,10 +343,6 @@
                 this.optionsList.append(nxtLI);
             }
 
-            this.optionsList.listview({
-                theme: this.options.theme,
-                dividerTheme: this.options.dividerTheme
-            });
             _self._menuContainer.popup({});
             $(_self._menuContainer).on('popupafterclose', null, _self, function(ev) {
                 var _p = ev.data;

@@ -226,10 +226,6 @@
 		},
 
 		haveParents: function( $set, attr ) {
-			if ( !$.mobile.ignoreContentEnabled ) {
-				return $set;
-			}
-
 			var count = $set.length,
 				$newSet = $(),
 				e, $element, excluded;

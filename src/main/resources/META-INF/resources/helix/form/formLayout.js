@@ -657,7 +657,7 @@
                         __refreshTextBox(mode, item);
                     }
                 } else if (fldType === 'checkbox') {
-                    __refreshControl(item, false, mode);
+                    __refreshControl(item);
                 } else if (fldType === 'onoff') {
                     __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
@@ -765,10 +765,12 @@
                 return true;
             }
             
-            var valueChanged = this.__copyOneValue(item, valuesMap);
-            if (valueChanged) {
-                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
-                return true;
+            if (!item.readOnly) {
+                var valueChanged = this.__copyOneValue(item, valuesMap);
+                if (valueChanged) {
+                    this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                    return true;
+                }
             }
             
             return false;
@@ -1039,7 +1041,8 @@
             name = this._stripNamespace(name);
             
             var fld = this._fieldMap[name];
-            if (!fld) {
+            if (!fld || fld.hidden === true) {
+                // Bad name, or already hidden
                 return;
             }
             fld.hidden = true;
@@ -1050,6 +1053,11 @@
         showField: function(name) {
             name = this._stripNamespace(name);
             var fld = this._fieldMap[name];
+            if (!fld || fld.hidden === false) {
+                // Already showing ...
+                return;
+            }
+            
             fld.hidden = false;
             fld.condition = fld.origCondition;
             this.__updateValue(fld.mode, name, fld, {});
