@@ -219,6 +219,9 @@
             this._menuContainer.append(this.optionsList);
             for (var i = 0; i < this.options.items.length; ++i) {
                 var nxtItem = this.options.items[i];
+                if (!nxtItem) {
+                    continue;
+                }
                 var nxtLI = $('<li />').addClass('hx-menu-item');
 
                 if (nxtItem.isDivider) {
