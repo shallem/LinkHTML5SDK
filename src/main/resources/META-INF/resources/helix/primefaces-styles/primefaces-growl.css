@@ -24,12 +24,12 @@
     position:fixed;
     top:60px;
     right:20px;
-    width:301px;
     z-index: 1102;
 }
 .ui-growl-item-container {
     position:relative;
     margin:0 0 10px 0;
+    width:301px;
 }
 .ui-growl-item {
     display:block;

@@ -240,7 +240,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 formElem.onblur.apply(this);
             });
         }
-        inputWrapper.on(Helix.clickEvent, dateInput, function(ev) {
+        $fieldContainer.on(Helix.clickEvent, dateInput, function(ev) {
             $(ev.data).focus();
             return Helix.stopEvent(ev);
         });
@@ -648,6 +648,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
     if (!formElem.value) {
         formElem.value = "";
     }
+    $fieldContainer.attr('data-enhance', 'false');
 
     var inputMarkup = null;
     if (mode && !formElem.viewOnly) {
@@ -854,7 +855,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             inputMarkup = $('<div/>').attr({
                 'data-name': formElem.name,
                 'id': formElem.name,
-                'class': 'ui-input-text hx-full-width'
+                'class': 'ui-input-text hx-form-inset hx-fill-available ' + __getTextStyleClass(formLayout, formElem)
             }).append(formElem.value);
             var valSpan = $('<div/>').attr({
                 'class': (useMiniLayout ? 'hx-mini-fieldcontain ' : '')
@@ -920,7 +921,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     
     if (formElem.type === 'radio') {
         $(inputMarkup).appendTo($fieldContainer);
-        __refreshControl(formElem, isChecked);
+        __refreshControl(formElem, isChecked, mode);
         $(inputMarkup).checkboxradio({
             mini: useMiniLayout
         });
@@ -929,7 +930,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         var $checkContainer = $('<div/>').addClass('hx-checkbox').appendTo($fieldContainer);
         $(inputMarkup).appendTo($checkContainer);
         $('<div/>').addClass('state').appendTo($checkContainer).append(lbl);
-        __refreshControl(formElem);
+        __refreshControl(formElem, false , mode);
     }
     if (formElem.onchange) {
         $(inputMarkup).change(function () {
@@ -944,7 +945,7 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
     return inputMarkup;
 }
 
-function __refreshControl(subElem, isChecked) {
+function __refreshControl(subElem, isChecked, mode) {
     var DOM;
     if ($(subElem.DOM).is('input')) {
         DOM = subElem.DOM;
@@ -962,6 +963,15 @@ function __refreshControl(subElem, isChecked) {
     } else if (subElem.value !== undefined) {
         $(DOM).prop('checked', false);
     }
+    
+    if (!mode) {
+        /* View */
+        $(DOM)[0].readOnly = true;
+        $(DOM).addClass('ui-disabled').prev().addClass('ui-disabled');
+    } else {
+        $(DOM)[0].readOnly = false;
+        $(DOM).removeClass('ui-disabled').prev().removeClass('ui-disabled');
+     }
 }
 
 function hxRefreshRadioButton(parentDOM, newValue) {
@@ -1118,19 +1128,9 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
         }
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
         subElem.DOM = inputMarkup;
-    }
-    $(wrapperMarkup).controlgroup({
-        mini: useMiniLayout,
-        type: "horizontal"
-    });
-    $fieldContainer.find('.ui-btn-text').addClass(__getTextStyleClass(formLayout, formElem));
-    
-    // After enhancement, hide any hidden controls
-    for (i = 0; i < formElem.controls.length; ++i) {
-        subElem = formElem.controls[i];
-        subElem.DOM = subElem.viewDOM = subElem.editDOM = $(subElem.DOM).closest('div.ui-checkbox');
+        subElem.viewDOM = subElem.editDOM = $(subElem.DOM).closest('.hx-checkbox');
         if (subElem.hidden) {
-            $(subElem.DOM).hide();
+            $(subElem.DOM).closest('.hx-checkbox').hide();
         }
         if (subElem.mode === 'edit') {
             /* No view. */
@@ -1141,6 +1141,10 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
             subElem.editDOM = null;
         }
     }
+    $(wrapperMarkup).controlgroup({
+        mini: useMiniLayout,
+        type: "horizontal"
+    });
 }
 
 function __makeButtonMarkup(formElem, useMiniLayout, $parent) {

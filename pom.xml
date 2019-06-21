@@ -337,7 +337,7 @@
 		    <include>persistence/persistence.store.sql.js</include>
 		    <include>persistence/persistence.store.websql.js</include>
 		    <include>persistence/persistence.search.js</include>
-<!-- 		    <include>persistence/persistence.helix.js</include> -->
+ 		    <include>persistence/persistence.helix.js</include>
 		    <include>persistence/persistence.helix.helpers.js</include>
 		    <include>persistence/persistence.init.js</include>
 
@@ -345,7 +345,7 @@
 		    <include>prettydate/jquery.prettydate.js</include>
 
 		    <!-- Data list. -->
-		    <!-- <include>datalist/datalist.js</include> -->
+		    <include>datalist/datalist.js</include>
 
 		    <!-- Context menu -->
 		    <include>contextMenu/contextMenu.js</include>
@@ -361,7 +361,7 @@
 		    <include>lib/helix.layout.js</include>
 
 		    <!-- Must go after helix.utils.js and helix.layout.js -->
-		    <!-- <include>form/helix.formlayout.js</include> -->
+		    <include>form/helix.formlayout.js</include>
 
 		    <!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
 		    <include>lib/hook.js</include>

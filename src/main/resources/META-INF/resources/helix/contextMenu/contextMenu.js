@@ -88,9 +88,9 @@
         updateOverrideLabel: function(selected, target, overrideLabel) {
             if (overrideLabel) {
                 if (selected.type === 'radio') {
-                    $(target).find('legend.span').text(overrideLabel);
+                    $(target).find('div.span').text(overrideLabel);
                 } else if (selected.type === 'checkbox') {
-                    $(target).find('span.ui-btn-text').text(overrideLabel);
+                    $(target).find('div.label').text(overrideLabel);
                 } else if (selected.type === 'text' ||
                         selected.type === 'date') {
                     $(target).find('label').text(overrideLabel);
@@ -142,40 +142,45 @@
             var target = items[0];
 
             if (selected.type === 'radio') {
-                var inputs = $(target).find('input[type="radio"]');
-                for (var i = 0; i < status.length; ++i) {
-                    var _input = inputs[i];
+                for (var i = 0; i < items.length; ++i) {
+                    var _input = items[i];
                     var nxt = status[i];
                     var isEnabled = $.isArray(nxt) ? nxt[0] : nxt;
                     var nxtVal = $.isArray(nxt) ? nxt[1] : false;
                     if (isEnabled === true) {
-                        $(_input).checkboxradio('enable');
+                        _input.disabled = false;
+                        $(_input).closest('label').removeClass('ui-disabled');
                     } else {
-                        $(_input).checkboxradio('disable');
+                        _input.disabled = true;
+                        $(_input).closest('label').addClass('ui-disabled');
                     }
                     if (nxtVal === true) {
-                        $(_input).attr('checked', true);
+                        _input.checked = true;
                     } else {
-                        $(_input).removeAttr('checked');
+                        _input.checked = false;
                     }
                 }
                 this._refreshControlGroups = true;
             } else if (selected.type === 'checkbox') {
                 if (status === true) {
-                    $(items).checkboxradio('enable');
+                    target.disabled = false;
+                    $(target).closest('li').removeClass('ui-disabled');
                 } else {
-                    $(items).checkboxradio('disable');
+                    target.disabled = true;
+                    $(target).closest('li').addClass('ui-disabled');
                 }
             } else if (selected.type === 'text' ||
                     selected.type === 'date') {
                 var isEnabled = $.isArray(status) ? status[0] : status;
                 var nxtVal = $.isArray(status) ? status[1] : '';
                 if (isEnabled === true) {
-                    $(items).textinput('enable');
+                    target.disabled = false;
+                    $(target).closest('li').removeClass('ui-disabled');
                 } else {
-                    $(items).textinput('disable');
+                    target.disabled = true;
+                    $(target).closest('li').addClass('ui-disabled');
                 }
-                $(items).val(nxtVal);
+                $(target).val(nxtVal);
             } else {
                 if (status === true) {
                     // Enable item
@@ -224,55 +229,41 @@
                     var inputID = this.options.name + '-' + (nxtItem.name ? nxtItem.name : i);
                     switch (nxtItem.type) {
                         case 'radio':
-                            nxtLI.attr('data-icon', false);
-                            var form = $('<form/>').appendTo(nxtLI);
-                            var fieldSet = nxtLink = $('<fieldset/>').attr({
-                                'data-role': 'controlgroup',
-                                'data-type': 'horizontal',
-                                'data-index': i
-                            }).append($('<legend/>').append($('<span/>').css('font-weight', 'bold').append(nxtItem.display))).appendTo(form);
+                            var form = $('<div/>').appendTo(nxtLI);
+                            $('<span/>').addClass('textCategoryMedium').append(nxtItem.display).appendTo(form);
                             for (var j = 0; j < nxtItem.options.length; ++j) {
                                 var _opt = nxtItem.options[j];
+                                var nxtLbl = $('<label/>').addClass('hx-radio').appendTo(form);
                                 var inputMarkup = $('<input/>').attr({
                                     'type': 'radio',
-                                    'name': nxtItem.name,
+                                    'name': inputID,
                                     'id': inputID + '-' + j + '-id',
-                                    'value': _opt.value
-                                });
-                                fieldSet.append(inputMarkup)
-                                fieldSet.append($('<label/>').attr({
-                                    'for': inputID + '-' + j + '-id'
-                                }).append(_opt.label));
-                                inputMarkup.checkboxradio({
-                                    mini: true
-                                });
+                                    'value': _opt.value,
+                                    'data-index': i
+                                }).appendTo(nxtLbl);
+                                $('<span/>').append(_opt.label).appendTo(nxtLbl);
                                 $(inputMarkup).change(nxtItem, function (ev) {
                                     if ($(this).prop('checked')) {
                                         _self.__runAction(ev, ev.data, $(this).attr('value'), true);
                                     }
                                 });
                             }
-                            fieldSet.controlgroup({
-                                mini: true,
-                                type: 'vertical'
-                            });
                             break;
                         case 'checkbox':
-                            var form = $('<form/>').appendTo(nxtLI);
+                            var form = $('<div/>').addClass('hx-extra-padding').appendTo(nxtLI);
+                            var checkInner = $('<div/>').addClass('hx-checkbox').appendTo(form);
                             nxtLink = $('<input/>').attr({
                                 'name': nxtItem.name,
                                 'id': inputID,
                                 'type': 'checkbox',
                                 'tabindex': -1,
                                 'data-index': i
-                            }).appendTo(form);
-                            $('<label/>').attr({
+                            }).appendTo(checkInner);
+                            $('<div/>').addClass('state')
+                                    .append($('<label/>').attr({
                                 'for': inputID,
-                                'data-corners': 'false'
-                            }).append(nxtItem.display).appendTo(form);
-                            nxtLink.checkboxradio({
-                                mini: true
-                            });
+                                'class': 'textCategorySmall'
+                            }).append(nxtItem.display)).appendTo(checkInner);
                             $(nxtLink).change(nxtItem, function (ev) {
                                 if ($(this).prop('checked')) {
                                     _self.__runAction(ev, ev.data, true, true);
@@ -283,7 +274,7 @@
                             break;
                         case 'text':
                         case 'date':
-                            $('<div/>').addClass('textCategoryMedium').append(nxtItem.display).appendTo(nxtLI);
+                            $('<div/>').addClass('textCategoryMedium').attr('data-enhance', 'false').append(nxtItem.display).appendTo(nxtLI);
                             var inputMarkup = $('<input />').attr({
                                 'name': nxtItem.name,
                                 'id': inputID,
@@ -293,6 +284,9 @@
                                 'class': 'hx-context-menu-textinput'
                             }).appendTo(nxtLI);
                             inputMarkup.prop('disabled', !nxtItem.enabled);
+                            if (!nxtItem.enabled) {
+                                inputMarkup.addClass('ui-disabled');
+                            }
                             
                             if (nxtItem.action) {
                                 if (nxtItem.type === 'date') {
@@ -474,11 +468,9 @@
         },
         hideGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').hide();
-            this.optionsList.listview("refresh");
         },
         showGroup: function (grp) {
             $(this.optionsList).find('[data-group="' + grp + '"]').show();
-            this.optionsList.listview("refresh");
         },
         _stopAndClose: function (ev) {
             ev.preventDefault();

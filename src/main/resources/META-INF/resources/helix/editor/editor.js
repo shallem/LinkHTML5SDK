@@ -111,7 +111,6 @@
                 var $menu = editor.menus[menuName];
                 var $button = editor.menuToolbar[menuName];
                 if ($popup && $menu && $button) {
-                    $menu.listview();
                     $button.button();
                     $popup.popup(popupOptions);
 
@@ -330,7 +329,8 @@
                     }).appendTo($parent);
 
             var $menu = this.menus[menuName] = $(this.UL_TAG).attr({
-                'class': 'hx-listview hx-menu-list ui-body-d hx-menu-list-mini hx-editor-menu'
+                'class': 'ui-listview ui-listview-inset ui-corner-all ui-shadow hx-listview hx-menu-list ui-body-d hx-menu-list-mini hx-editor-menu',
+                'data-enhance': 'false'
             }).appendTo($popup);
             var allMenuOptions = [];
             var _doMenuAction = function(_self, _nxt) {

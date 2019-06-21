@@ -4141,7 +4141,7 @@ $.mobile.getMaxScrollForTransition = $.mobile.getMaxScrollForTransition || defau
 	//animation complete callback
 	$.fn.animationComplete = function( callback ) {
 		if ( $.support.cssTransitions ) {
-			return $( this ).one( 'webkitAnimationEnd animationend', callback );
+			return $( this ).one( 'webkitAnimationEnd', callback ); //animationend
 		}
 		else{
 			// defer execution for consistency between webkit/non webkit
@@ -6684,7 +6684,7 @@ $.widget( "mobile.textinput", $.mobile.widget, {
 		mini: false,
 		// This option defaults to true on iOS devices.
 		preventFocusZoom: /iPhone|iPad|iPod/.test( navigator.platform ) && navigator.userAgent.indexOf( "AppleWebKit" ) > -1,
-		initSelector: "input[type='text'], input[type='search'], :jqmData(type='search'), input[type='number'], :jqmData(type='number'), input[type='password'], input[type='email'], input[type='url'], input[type='tel'], textarea, input[type='time'], input[type='date'], input[type='month'], input[type='week'], input[type='datetime'], input[type='datetime-local'], input[type='color'], input:not([type]), input[type='file']",
+		initSelector: '', //"input[type='text'], input[type='search'], :jqmData(type='search'), input[type='number'], :jqmData(type='number'), input[type='password'], input[type='email'], input[type='url'], input[type='tel'], textarea, input[type='time'], input[type='date'], input[type='month'], input[type='week'], input[type='datetime'], input[type='datetime-local'], input[type='color'], input:not([type]), input[type='file']",
 		clearBtn: false,
 		clearSearchButtonText: null, //deprecating for 1.3...
 		clearBtnText: "clear text",
@@ -7090,7 +7090,7 @@ $.widget( "mobile.checkboxradio", $.mobile.widget, $.extend( {
 	options: {
 		theme: null,
 		mini: false,
-		initSelector: "input[type='checkbox'],input[type='radio']"
+		initSelector: '' //"input[type='radio']"  input[type='checkbox'],
 	},
 	_create: function() {
 		var self = this,

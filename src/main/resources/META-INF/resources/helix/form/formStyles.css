@@ -6,6 +6,10 @@
     overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
 }
 
+.hx-extra-padding {
+    padding: 0.5em 0em;
+}
+
 /* Set width to 100% unless we are in a flex box and we are the fill field */
 .hx-form-container:not(.hx-flex-fill) {
     width: 100%;
@@ -148,7 +152,8 @@
 }
 
 .hx-form-container input,
-.hx-form-container textarea {
+.hx-form-container textarea,
+.hx-form-container div.ui-input-text {
     width: -webkit-fill-available;
     border: none; 
     border-bottom: 1px solid #BBBBBB; 
@@ -203,16 +208,21 @@
     }
 }
 
-.hx-form-container .hx-block-field {
-    display: block;
+.hx-form-inset {
+    margin-left: 1em;
+    margin-right: 1em;
 }
 
-textarea.ui-input-text {
-    padding: 0;
-    margin-left: 1em;
-    width: auto;
-    flex: 2;
-    -webkit-flex: 2;
+.hx-fill-available {
+    width: -webkit-fill-available;
+}
+
+.hx-form-container textarea.ui-input-text {
+    border: 1px solid #BBBBBB;
+}
+
+.hx-form-container .hx-block-field {
+    display: block;
 }
 
 .hx-form-container .hx-form-strong-title {
@@ -353,13 +363,13 @@ textarea.ui-input-text {
     color: #3498DB;
 }
 
-.hx-form-container .hx-checkbox *,
-.hx-form-container .hx-checkbox ::after,
-.hx-form-container .hx-checkbox ::before {
+.hx-checkbox *,
+.hx-checkbox ::after,
+.hx-checkbox ::before {
     box-sizing: border-box;
 }
 
-.hx-form-container .hx-checkbox {
+.hx-checkbox {
     position: relative;
     display: inline-block;
     margin-right: 1em;
@@ -367,7 +377,7 @@ textarea.ui-input-text {
     line-height: 1;
 }
 
-.hx-form-container .hx-checkbox input {
+.hx-checkbox input {
     min-width: 2em;
     padding: 0;
     touch-action: manipulation;
@@ -382,16 +392,16 @@ textarea.ui-input-text {
     cursor: pointer;
 }
 
-.hx-form-container .hx-checkbox.state {
+.hx-checkbox.state {
     position: relative;
 }
 
-.hx-form-container .hx-checkbox input:checked~.state:before {
+.hx-checkbox input:checked~.state:before {
     border-color: #2373a5;
     background-color: #3373a5;
 }
 
-.hx-form-container .hx-checkbox .state:before {
+.hx-checkbox .state:before {
     content: '';
     border: 1px solid #bdc3c7;
     border-radius: 10px;
@@ -404,7 +414,7 @@ textarea.ui-input-text {
     transition: all .5s ease;
 }
 
-.hx-form-container .hx-checkbox .state label {
+.hx-checkbox .state label {
     text-indent: 3em;
     position: initial;
     display: inline-block;
@@ -413,12 +423,12 @@ textarea.ui-input-text {
     min-width: calc(1em + 2px);
 }
 
-.hx-form-container .hx-checkbox .state label:before {
+.hx-checkbox .state label:before {
     border-color: #bdc3c7;
 }
 
-.hx-form-container .hx-checkbox .state label:after,
-.hx-form-container .hx-checkbox .state label:before {
+.hx-checkbox .state label:after,
+.hx-checkbox .state label:before {
     content: '';
     width: calc(1em + 2px);
     height: calc(1em + 2px);
@@ -433,8 +443,8 @@ textarea.ui-input-text {
     background-color: transparent;
 }
 
-.hx-form-container .hx-checkbox .state label:after,
-.hx-form-container .hx-checkbox .state label:before {
+.hx-checkbox .state label:after,
+.hx-checkbox .state label:before {
     transition: all .5s ease;
     border-radius: 100%;
     left: 0.35em;
@@ -442,15 +452,69 @@ textarea.ui-input-text {
     transform: scale(.8);
 }
 
-.hx-form-container .hx-checkbox input:checked~.state label:after {
+.hx-checkbox input:checked~.state label:after {
     background-color: #fff !important;
     left: 1.25em;
 }
 
-.hx-form-container .hx-checkbox .state label:after {
+.hx-checkbox .state label:after {
     background-color: #bdc3c7 !important;
 }
 
 .ui-radio input.ui-disabled {
     display: none;
+}
+
+.hx-radio {
+    margin: 16px 0;
+    display: block;
+    cursor: pointer;
+}
+
+.hx-radio input {
+    display: none;
+}
+ 
+.hx-radio input + span {
+    line-height: 22px;
+    height: 22px;
+    padding-left: 22px;
+    display: block;
+    position: relative;
+}
+
+.hx-radio input + span:not(:empty) {
+    padding-left: calc(22px + 8);
+}
+            
+.hx-radio input + span:before,
+.hx-radio input + span:after {
+    content: '';
+    width: 22px;
+    height: 22px;
+    display: block;
+    border-radius: 50%;
+    left: 0;
+    top: 0;
+    position: absolute;
+}
+            
+.hx-radio input + span:before {
+    background: #D1D7E3;
+    transition: background .2s ease, transform .4s cubic-bezier(.175, .885, .32, 2);
+}
+.hx-radio input + span:after {
+    background: #fff;
+    transform: scale(.78);
+    transition: transform .6s cubic-bezier(.175, .885, .32, 1.4);
+}
+
+.hx-radio input:checked + span:before {
+    transform: scale(1.04);
+    background: #5D9BFB;
+}
+            
+.hx-radio input:checked + span::after {
+    transform: scale(.4);
+    transition: transform .3s ease;
 }

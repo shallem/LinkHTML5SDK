@@ -23,14 +23,16 @@
 .ui-hx-undo {
 	position:fixed;
 	bottom:30px;
-	left:20px;
-	width:220px;
+	left:0px;
+	width:100%;
+        background-color: #AAAAAA;
 }
 .ui-hx-undo-item-container {
 	position:relative;
 	margin:0 0 10px 0;
 	opacity:0.65;
 	filter:alpha(opacity=65);
+        color: whitesmoke;
 }
 .ui-hx-undo-item {
 	display:block;
@@ -55,11 +57,3 @@
     margin-top: -9px;
     padding-left: 20px;
 }
-
-/* SAH: Added to make the background of the hx-undo black. The original PrimeFaces
- * styles for doing so were not obvious to me.
- */
- .ui-hx-undo-item-container {
-    background-color: darkslategray;
-    color: white;
- }
