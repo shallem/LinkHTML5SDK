@@ -48,13 +48,17 @@ public class FormLayoutRenderer extends CoreRenderer {
         scriptWriter.write("Helix.Layout.makeForm('" + layout.resolveWidgetVar() + "', '" + pageID + "', '" + id + "', {");
         scriptWriter.write("items: [");
         boolean isFirst = true;
+        boolean didWrite = false;
         for (UIComponent c : layout.getChildren()) {
             if (isFirst) {
                 isFirst = false;
-            } else {
+            } else if (didWrite) {
                 scriptWriter.write(",\n");
             }
+            int preLength = scriptWriter.getBuffer().length();
             c.encodeAll(context);
+            int postLength = scriptWriter.getBuffer().length();
+            didWrite = (postLength > preLength);
         }
         context.getAttributes().remove("formWriter");
         scriptWriter.write("]");

@@ -32,15 +32,20 @@ public class ContextMenuRenderer extends Renderer {
         writer.write("Helix.Layout.makeMenu('" + menu.resolveWidgetVar() + "', '" + menu.getClientId(context) + "', {");
         writer.write("items: [");
         boolean isFirst = true;
+        boolean didWrite = false;
         
         context.getAttributes().put("menuWriter", writer);
+        
         for (UIComponent c : menu.getChildren()) {
             if (isFirst) {
                 isFirst = false;
-            } else {
+            } else if (didWrite) {
                 writer.write(",\n");
             }
+            int preLength = writer.getBuffer().length();
             c.encodeAll(context);
+            int postLength = writer.getBuffer().length();
+            didWrite = (postLength > preLength);
         }
         context.getAttributes().remove("menuWriter");
         writer.write("]");
