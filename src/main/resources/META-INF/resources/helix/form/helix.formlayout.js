@@ -1546,7 +1546,11 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
             return;
         }
     }
-    $(subPanelDiv).show();
+    if (formElem.hidden === true) {
+        $(subPanelDiv).hide();
+    } else {
+        $(subPanelDiv).show();
+    }
 }
 
 function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
