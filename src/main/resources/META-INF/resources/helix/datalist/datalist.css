@@ -128,9 +128,9 @@ and open the template in the editor.
 }
 
 .hx-selection-menu-button {
-    height: 48px;
-    line-height: 48px;
-    margin: 6px;
+    height: 28px;
+    line-height: 28px;
+    margin: 2px;
     padding: 0em 1em;
 }
 

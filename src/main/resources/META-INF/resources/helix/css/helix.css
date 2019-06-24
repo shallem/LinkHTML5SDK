@@ -424,6 +424,10 @@ a {
     display: inline-block;
 }
 
+.hx-button-bar.hx-button-bar-vertical .hx-btn-inner {
+    display: block;
+}
+
 /**
  * mini view mode
  */
@@ -547,26 +551,10 @@ a {
     background-color: white;
 }
 
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal {
-    margin: 0em;
-    -webkit-flex: 0 0 auto;
-    flex: none;
-}
-
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .iconbutton,
-.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .iconbutton {
-    height: 30px;
-    width: auto;
-}
-
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner,
-.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner{
-    height: 30px;
-}
-
-.hx-search-sort .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner,
-.hx-list-selection-buttons .ui-controlgroup.ui-controlgroup-horizontal .hx-btn-inner {
-    padding: 0em 20px 0em 20px
+.hx-search-sort .hx-button-bar .iconbutton,
+.hx-list-selection-buttons .hx-button-bar .iconbutton {
+    height: 32px;
+    width: 40px;
 }
 
 .hx-search-sort .ui-input-search {
@@ -631,6 +619,11 @@ a {
         height: 40px;    
         padding: 0;
         margin: 0;
+    }
+    
+    .hx-search-sort .hx-button-bar .iconbutton,
+    .hx-list-selection-buttons .hx-button-bar .iconbutton {
+        width: 32px;
     }
     
     .hx-btn-inner {

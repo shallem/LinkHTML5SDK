@@ -166,6 +166,12 @@
             <description>On click event for field types that support it.</description>
         </attribute>
         <attribute>
+            <name>labelClick</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Action to trigger on clicking or tapping the field label.</description>
+        </attribute>
+        <attribute>
             <name>onchange</name>
             <required>false</required>
             <type>java.lang.String</type>

@@ -589,7 +589,7 @@
                     // This element does not exist in edit mode.
                     if (!item.editDOM) {
                         if (item.DOM) {
-                            item.DOM.hide();
+                            item.DOM.closest('.hx-form-container').hide();
                         }
                         if (item.SEPARATOR) {
                             item.SEPARATOR.hide();
@@ -598,13 +598,13 @@
                     }
                     item.DOM = item.editDOM;
                     if (item.viewDOM) {
-                        item.viewDOM.hide();
+                        item.viewDOM.closest('.hx-form-container').hide();
                     }
                 } else {
                     // This element does not exist in view mode.
                     if (!item.viewDOM) {
                         if (item.DOM) {
-                            item.DOM.hide();
+                            item.DOM.closest('.hx-form-container').hide();
                         }
                         if (item.SEPARATOR) {
                             item.SEPARATOR.hide();
@@ -614,7 +614,7 @@
                     
                     item.DOM = item.viewDOM;
                     if (item.editDOM) {
-                        item.editDOM.hide();
+                        item.editDOM.closest('.hx-form-container').hide();
                     }
                 }
                 
@@ -624,14 +624,14 @@
 
                 if (item.hidden) {
                     if (item.DOM) {
-                        $(item.DOM).hide();
+                        $(item.DOM).closest('.hx-form-container').hide();
                         if (item.SEPARATOR) {
                             // Hide the HR.
                             $(item.SEPARATOR).hide();
                         }
                     }
                 } else if (fldType !== 'hidden') {
-                    $(item.DOM).show();
+                    $(item.DOM).closest('.hx-form-container').show();
                     if (item.SEPARATOR) {
                         // Show the HR.
                         $(item.SEPARATOR).show();

@@ -92,6 +92,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getOnclick() != null) {
             writer.write(", 'onclick' : " + ffield.getOnclick());
         }
+        if (ffield.getLabelClick() != null) {
+            writer.write(", 'labelClick' : " + ffield.getLabelClick());
+        }
         if (ffield.getOnchange() != null) {
             writer.write(", 'onchange' : " + ffield.getOnchange());
         }

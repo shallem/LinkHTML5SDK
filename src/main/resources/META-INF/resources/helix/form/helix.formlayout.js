@@ -199,7 +199,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         /* Edit */
         var dateDiv = $('<div />').attr({
             'style': formLayout.computedFieldStyle,
-            'class': formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
+            'class': 'hx-date-selector'  + formLayout.computedFieldStyleClass + formElem.computedFieldStyleClass + (useMiniLayout ? 'hx-mini-fieldcontain' : '')
         })
                 .append($('<label />').attr({
                     'for': formElem.name,
