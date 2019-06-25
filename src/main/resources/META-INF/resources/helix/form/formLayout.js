@@ -578,6 +578,36 @@
             }
         },
         
+        __hideItem: function(item, DOM) {
+            if (!DOM) {
+                return;
+            }
+            
+            if (item.parentForm &&
+                item.parentForm.type &&
+                (item.parentForm.type === "subPanel" ||
+                    item.parentForm.type === 'horizontalBlock')) {
+                $(DOM).hide();
+            } else {
+                $(DOM).closest('.hx-form-container').hide();
+            }
+        },
+        
+        __showItem: function(item, DOM) {
+            if (!DOM) {
+                return;
+            }
+            
+            if (item.parentForm &&
+                item.parentForm.type &&
+                (item.parentForm.type === "subPanel" ||
+                    item.parentForm.type === 'horizontalBlock')) {
+                $(DOM).show();
+            } else {
+                $(DOM).closest('.hx-form-container').show();
+            }
+        },
+        
         __updateValue: function(mode, name, item, valuesMap) {
             var value = item.value;
             var thisField = null;
@@ -588,24 +618,18 @@
                 if (mode) {
                     // This element does not exist in edit mode.
                     if (!item.editDOM) {
-                        if (item.DOM) {
-                            item.DOM.closest('.hx-form-container').hide();
-                        }
+                        this.__hideItem(item, item.DOM);
                         if (item.SEPARATOR) {
                             item.SEPARATOR.hide();
                         }
                         return;
                     }
                     item.DOM = item.editDOM;
-                    if (item.viewDOM) {
-                        item.viewDOM.closest('.hx-form-container').hide();
-                    }
+                    this.__hideItem(item, item.viewDOM);
                 } else {
                     // This element does not exist in view mode.
                     if (!item.viewDOM) {
-                        if (item.DOM) {
-                            item.DOM.closest('.hx-form-container').hide();
-                        }
+                        this.__hideItem(item, item.DOM);
                         if (item.SEPARATOR) {
                             item.SEPARATOR.hide();
                         }
@@ -613,9 +637,7 @@
                     }
                     
                     item.DOM = item.viewDOM;
-                    if (item.editDOM) {
-                        item.editDOM.closest('.hx-form-container').hide();
-                    }
+                    this.__hideItem(item, item.editDOM);
                 }
                 
                 if (!item.DOM) {
@@ -624,14 +646,14 @@
 
                 if (item.hidden) {
                     if (item.DOM) {
-                        $(item.DOM).closest('.hx-form-container').hide();
+                        this.__hideItem(item, item.DOM);
                         if (item.SEPARATOR) {
                             // Hide the HR.
                             $(item.SEPARATOR).hide();
                         }
                     }
                 } else if (fldType !== 'hidden') {
-                    $(item.DOM).closest('.hx-form-container').show();
+                    this.__showItem(item, item.DOM);
                     if (item.SEPARATOR) {
                         // Show the HR.
                         $(item.SEPARATOR).show();
@@ -824,7 +846,7 @@
                         for (var subidx = 0; subidx < nxtItem.items.length; ++subidx) {
                             var subitem = nxtItem.items[subidx];
                             this.__refreshOneValue(mode,subitem,valuesMap,modeChanged);
-                        }                        
+                        } 
                     }
                     $(nxtItem.DOM).trigger('collapse');
                 } else{
