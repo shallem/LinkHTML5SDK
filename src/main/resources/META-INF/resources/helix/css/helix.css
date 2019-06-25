@@ -624,6 +624,7 @@ a {
     .hx-search-sort .hx-button-bar .iconbutton,
     .hx-list-selection-buttons .hx-button-bar .iconbutton {
         width: 32px;
+        margin-left: 0.1em;
     }
     
     .hx-btn-inner {

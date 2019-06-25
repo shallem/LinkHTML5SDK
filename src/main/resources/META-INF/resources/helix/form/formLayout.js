@@ -1112,6 +1112,10 @@
             }
         },
         
+        blurForm: function() {
+            $(this.element).find('input,select,textarea,div[contenteditable="true"]').blur();
+        },
+        
         enableField: function(name) {
             var fieldElem = this.getFieldElement(name);
             if (fieldElem && fieldElem.is('input,textarea')) {
