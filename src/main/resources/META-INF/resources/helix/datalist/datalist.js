@@ -1018,30 +1018,33 @@ var globalDataListID = -1;
                 return;
             }
 
-            var nItems = _self._itemsPerPage / 2;
-            if (scrollPos <= 0) {
-                $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
-                if (_self._renderWindowStart < _self._itemsPerPage) {
-                    _self._stopScrollHandler();
-                    _self._preloadPage(-1);
-                    _self._preloadPromise.then(function() {
+            // Avoid rescrolling a list that is in the process of being refreshed
+            if (listHeight > 0) {
+                var nItems = _self._itemsPerPage / 2;
+                if (scrollPos <= 0) {
+                    $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
+                    if (_self._renderWindowStart < _self._itemsPerPage) {
+                        _self._stopScrollHandler();
+                        _self._preloadPage(-1);
+                        _self._preloadPromise.then(function() {
+                            _self._addToListStart(nItems);
+                            _self._restoreScrollEvent();
+                        });
+                    } else {
                         _self._addToListStart(nItems);
-                        _self._restoreScrollEvent();
-                    });
-                } else {
-                    _self._addToListStart(nItems);
-                }
-            } else if (scrollPos >= listHeight) {
-                $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
-                if (_self._renderWindowStart > (_self._preloadNElems - _self._itemsPerPage)) {
-                    _self._stopScrollHandler();
-                    _self._preloadPage(1);
-                    _self._preloadPromise.then(function() {
+                    }
+                } else if (scrollPos >= listHeight) {
+                    $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
+                    if (_self._renderWindowStart > (_self._preloadNElems - _self._itemsPerPage)) {
+                        _self._stopScrollHandler();
+                        _self._preloadPage(1);
+                        _self._preloadPromise.then(function() {
+                            _self._addToListEnd(nItems);
+                            _self._restoreScrollEvent();
+                        });
+                    } else {
                         _self._addToListEnd(nItems);
-                        _self._restoreScrollEvent();
-                    });
-                } else {
-                    _self._addToListEnd(nItems);
+                    }
                 }
             }
         },
