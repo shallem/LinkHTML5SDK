@@ -849,6 +849,7 @@ Helix.Ajax = {
             }
         });
         loadCommandOptions.loadInProgress = ret;
+        return ret;
     },
 
     ajaxFormSubmit: function(url, formSelector, statusTitle, successMsg, pendingMsg, errorMsg, actions) {
@@ -1509,16 +1510,22 @@ function loadSubFolders_genSchema(callback,args,noSync) {Helix.DB.generatePersis
         });
         // When the load command runs, first generate the schema if we have not done so yet. 
         // Then, oncomplete, call the load function.
-        window[commandName] = $.proxy(function(options, itemKey){
+        window[commandName] = $.proxy(function(options, itemKey, onload){
             if (Helix.Ajax.loadInProgress(this.name)) {
                 return false;
             }
             if (this.schema) {
-                Helix.Ajax.ajaxBeanLoad($.extend({}, this, options), itemKey);
+                var ret = Helix.Ajax.ajaxBeanLoad($.extend({}, this, options), itemKey);
+                if (onload) {
+                    onload(ret);
+                }
             } else {
                 this.schemaFactory(function(schemaObj, cmd, itemKey) {
                     cmd.schema = schemaObj;
-                    Helix.Ajax.ajaxBeanLoad($.extend({}, cmd, options), itemKey);
+                    var ret = Helix.Ajax.ajaxBeanLoad($.extend({}, cmd, options), itemKey);
+                    if (onload) {
+                        onload(ret);
+                    }
                 }, itemKey, false);
             }
             return true;

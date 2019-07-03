@@ -537,7 +537,7 @@ var globalDataListID = -1;
         },
         _addDivider: function(nxtRow, lastRow, li, direction) {
             if (!this.hasAutodividers) {
-                return;
+                return li;
             }
             var callback = this.options.autodividersSelectorCallback;
             var lastVal = null;
@@ -746,10 +746,10 @@ var globalDataListID = -1;
                 this._addDivider(null, this._prefetchedData[this._renderWindowStart], lastLI, -1);
                 this._updateScrollTop(this.$listWrapper[0].scrollTop + fullheight);
                 setTimeout(function(dl) {
-                    dl.$section.next('.hx-datalist-spinner').remove();
+                    dl.$section.nextAll('.hx-datalist-spinner').remove();
                 }, 500, this);
             } else {
-                this.$section.next('.hx-datalist-spinner').remove();
+                this.$section.nextAll('.hx-datalist-spinner').remove();
             }
         },
         
@@ -758,7 +758,16 @@ var globalDataListID = -1;
             var lastLI = LIs[LIs.length - 1];
             var fullheight = 0;
             for (var i = 0; i < nItems && (this._renderWindowStart + this._itemsPerPage) < this._prefetchedData.length; ++i) {
-                var toMove = LIs[i];
+                var toMove = null;
+                var isFresh = false;
+                if (i < LIs.length) {
+                    toMove = LIs[i];
+                } else {
+                    toMove = $('<li />').attr({
+                        'class': this.options.rowStyleClass + ' hx-li hx-flex-horizontal',
+                        'data-selected': '0'
+                    });                    
+                }
                 fullheight += toMove.clientHeight;
                 if ($(toMove).attr('data-role') === 'list-divider') {
                     $(toMove).remove();
@@ -769,19 +778,23 @@ var globalDataListID = -1;
                 var obj = this._prefetchedData[this._renderWindowStart + this._itemsPerPage];
                 ++this._renderWindowStart;
                 lastLI = this._addDivider(obj, lastObj, lastLI, 1);
-                lastLI = $(toMove).detach().insertAfter($(lastLI));
+                if (isFresh === false) {
+                    lastLI = $(toMove).detach().insertAfter($(lastLI));
+                    $(lastLI).attr('data-deleted', null);
+                } else {
+                    lastLI = $(toMove).insertAfter($(lastLI));
+                }
                 
-                $(lastLI).attr('data-deleted', null);
                 $(lastLI).data('data', obj);
                 this.rerenderElem(obj, obj.id, $(toMove));
             }
             if (fullheight > 0) {
                 this._updateScrollTop(this.$listWrapper[0].scrollTop - fullheight);
                 setTimeout(function(dl) {
-                    dl.$section.next('.hx-datalist-spinner').remove();
+                    dl.$section.nextAll('.hx-datalist-spinner').remove();
                 }, 500, this);
             } else {
-                this.$section.next('.hx-datalist-spinner').remove();
+                this.$section.nextAll('.hx-datalist-spinner').remove();
             }
         },
         
