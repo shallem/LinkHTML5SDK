@@ -550,14 +550,16 @@ var globalDataListID = -1;
             }
             if (nxtVal !== lastVal) {
                 var divider;
-                if (direction > 0) {
+                if (direction > 0 && nxtVal) {
                     divider = this._makeDivider(nxtVal);
                     $(divider).insertAfter(li);
-                } else {
+                } else if (direction <= 0 && lastVal) {
                     divider = this._makeDivider(lastVal);
                     $(divider).insertBefore(li);
                 }
-                return divider;
+                if (divider) {
+                    return divider;
+                }
             }
             return li;
         },
@@ -725,52 +727,81 @@ var globalDataListID = -1;
             var LIs = $(this.$parent).find('li');
             var lastLI = LIs[0];
             var fullheight = 0;
-            for (var i = LIs.length - 1; i >= LIs.length - nItems && this._renderWindowStart > 0; --i) {
+            var i = LIs.length - 1; 
+            var origLastID = '';
+            for (var k = 0; k < LIs.length; ++k) {
+                if (LIs[k].hasAttribute('data-id')) {
+                    origLastID = LIs[k].getAttribute('data-id');
+                    break;
+                }
+            }
+            while (i >= LIs.length - nItems && this._renderWindowStart > 0) {
                 var toMove = LIs[i];
-                fullheight += toMove.clientHeight;
                 if ($(toMove).attr('data-role') === 'list-divider') {
+                    fullheight += toMove.clientHeight;
                     $(toMove).remove();
+                    --i;
                     continue;
                 }
                 var lastObj = $(lastLI).data('data');
                 var obj = this._prefetchedData[--this._renderWindowStart];
                 lastLI = this._addDivider(obj, lastObj, lastLI, -1);
-                $(toMove).detach().insertBefore($(lastLI));
-                lastLI = toMove;
-                
-                $(lastLI).attr('data-deleted', null);
-                $(lastLI).data('data', obj);
-                this.rerenderElem(obj, obj.id, $(toMove));
+                    
+                if (this.rerenderElem(obj, obj.id, $(toMove)) === true) {
+                    // Render this item.
+                    --i;
+                    fullheight += toMove.clientHeight;
+                    $(toMove).detach().insertBefore($(lastLI));
+                    lastLI = toMove;
+
+                    $(lastLI).attr('data-deleted', null);
+                    $(lastLI).data('data', obj);
+                    $(lastLI).css('display', '');
+                }
             }
             if (fullheight > 0) {
                 this._addDivider(null, this._prefetchedData[this._renderWindowStart], lastLI, -1);
-                this._updateScrollTop(this.$listWrapper[0].scrollTop + fullheight);
                 setTimeout(function(dl) {
+                    var scrollToZero = false;
+                    var origLast = dl.$listWrapper.find('[data-id="' + origLastID + '"]:visible');
+                    if (origLast.length === 0) {
+                        scrollToZero = true;
+                    }
+                    // Be careful - make sure that we never scroll to 0, which will trigger another refresh immediately
+                    dl._updateScrollTop((scrollToZero === true) ? 1 : 
+                            Math.max(origLast[0].offsetTop - dl.$listWrapper[0].offsetTop, 2) - 1);
                     dl.$section.nextAll('.hx-datalist-spinner').remove();
+                    dl._restoreScrollEvent();
                 }, 500, this);
             } else {
                 this.$section.nextAll('.hx-datalist-spinner').remove();
+                this._restoreScrollEvent();
             }
         },
         
         _addToListEnd: function(nItems) {
             var LIs = $(this.$parent).find('li');
             var lastLI = LIs[LIs.length - 1];
+            var origLastID = $(lastLI).attr('data-id');
+            var scrollToZero = false;
             var fullheight = 0;
-            for (var i = 0; i < nItems && (this._renderWindowStart + this._itemsPerPage) < this._prefetchedData.length; ++i) {
+            var i = 0, j = 0;
+            while (i < nItems && (this._renderWindowStart + this._itemsPerPage) < this._prefetchedData.length) {
                 var toMove = null;
                 var isFresh = false;
-                if (i < LIs.length) {
-                    toMove = LIs[i];
+                if (j < LIs.length) {
+                    toMove = LIs[j];
                 } else {
-                    toMove = $('<li />').attr({
-                        'class': this.options.rowStyleClass + ' hx-li hx-flex-horizontal',
-                        'data-selected': '0'
-                    });                    
+                    toMove = document.createElement('li');
+                    toMove.className = this.options.rowStyleClass + ' hx-li hx-flex-horizontal';
+                    toMove.setAttribute('data-selected', '0');
+                    toMove.style = '';
+                    scrollToZero = true;
                 }
-                fullheight += toMove.clientHeight;
                 if ($(toMove).attr('data-role') === 'list-divider') {
+                    fullheight += toMove.clientHeight;
                     $(toMove).remove();
+                    ++j; // Move to the next LI
                     continue;
                 }
                 
@@ -778,23 +809,37 @@ var globalDataListID = -1;
                 var obj = this._prefetchedData[this._renderWindowStart + this._itemsPerPage];
                 ++this._renderWindowStart;
                 lastLI = this._addDivider(obj, lastObj, lastLI, 1);
-                if (isFresh === false) {
-                    lastLI = $(toMove).detach().insertAfter($(lastLI));
-                    $(lastLI).attr('data-deleted', null);
-                } else {
-                    lastLI = $(toMove).insertAfter($(lastLI));
-                }
                 
                 $(lastLI).data('data', obj);
-                this.rerenderElem(obj, obj.id, $(toMove));
+                if (this.rerenderElem(obj, obj.id, $(toMove)) === true) {
+                    // We have moved this LI and re-rendered the data.
+                    ++i; ++j;
+                    if (isFresh === false) {
+                        lastLI = $(toMove).detach().insertAfter($(lastLI));
+                        $(lastLI).attr('data-deleted', null);
+                    } else {
+                        lastLI = $(toMove).insertAfter($(lastLI));
+                        scrollToZero = true;
+                    }
+                    fullheight += toMove.clientHeight;
+                }
             }
             if (fullheight > 0) {
-                this._updateScrollTop(this.$listWrapper[0].scrollTop - fullheight);
                 setTimeout(function(dl) {
+                    var origLast = dl.$listWrapper.find('[data-id="' + origLastID + '"]:visible');
+                    if (origLast.length === 0) {
+                        scrollToZero = true;
+                    }
+                    // Make sure that we never scroll to the very end of the list or beyond, which will trigger another refresh instantly
+                    dl._updateScrollTop((scrollToZero === true) ? 1 : 
+                            Math.min(origLast[0].offsetTop - dl.$listWrapper[0].offsetTop, 
+                                     dl.$listWrapper[0].scrollHeight - dl.$listWrapper[0].clientHeight) - 1);
                     dl.$section.nextAll('.hx-datalist-spinner').remove();
+                    dl._restoreScrollEvent();
                 }, 500, this);
             } else {
                 this.$section.nextAll('.hx-datalist-spinner').remove();
+                this._restoreScrollEvent();
             }
         },
         
@@ -1021,26 +1066,24 @@ var globalDataListID = -1;
             // Avoid rescrolling a list that is in the process of being refreshed
             if (listHeight > 0) {
                 var nItems = _self._itemsPerPage / 2;
-                if (scrollPos <= 0) {
+                if (_self.$listWrapper[0].scrollTop <= 0) {
                     $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
+                    _self._stopScrollHandler();
                     if (_self._renderWindowStart < _self._itemsPerPage) {
-                        _self._stopScrollHandler();
                         _self._preloadPage(-1);
                         _self._preloadPromise.then(function() {
                             _self._addToListStart(nItems);
-                            _self._restoreScrollEvent();
                         });
                     } else {
                         _self._addToListStart(nItems);
                     }
-                } else if (scrollPos >= listHeight) {
+                } else if ((_self.$listWrapper[0].scrollTop + _self.$listWrapper[0].clientHeight) >= _self.$listWrapper[0].scrollHeight) {
                     $('<div/>').addClass('hx-datalist-spinner').insertAfter(_self.$section);
-                    if (_self._renderWindowStart > (_self._preloadNElems - _self._itemsPerPage)) {
-                        _self._stopScrollHandler();
+                    _self._stopScrollHandler();
+                    if (_self._renderWindowStart >= (_self._preloadNElems - _self._itemsPerPage)) {
                         _self._preloadPage(1);
                         _self._preloadPromise.then(function() {
                             _self._addToListEnd(nItems);
-                            _self._restoreScrollEvent();
                         });
                     } else {
                         _self._addToListEnd(nItems);
@@ -2744,10 +2787,10 @@ var globalDataListID = -1;
             
             var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
             if (renderer.call(rendererContext, li, this, obj, this.selectedIndex, this.options.strings)) {
-                li.show();
+                li[0].style.display = '';
                 return true;
             } else {
-                li.hide();
+                li[0].style.display = 'none';
                 return false;
             }
         },
