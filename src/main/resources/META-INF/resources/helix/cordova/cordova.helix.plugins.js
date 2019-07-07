@@ -346,4 +346,21 @@ function cordova_helix_init() {
             }
         });
     }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 15) {
+        $.extend(window.HelixFiles, {
+            makeCloudDoc: function(url, docID, docName, docDigest, options, success, failure) {
+                if (!options) {
+                    options = {};
+                }
+                return cordova.exec(success, failure, "DocumentDownload", "makeCloudDoc", [
+                   url,
+                   docID,
+                   docName,
+                   docDigest,
+                   options
+                ]);
+            }
+        });
+    }
 }
