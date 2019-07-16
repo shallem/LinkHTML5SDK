@@ -810,9 +810,9 @@ var globalDataListID = -1;
                 ++this._renderWindowStart;
                 lastLI = this._addDivider(obj, lastObj, lastLI, 1);
                 
-                $(lastLI).data('data', obj);
                 if (this.rerenderElem(obj, obj.id, $(toMove)) === true) {
                     // We have moved this LI and re-rendered the data.
+                    $(toMove).data('data', obj);
                     ++i; ++j;
                     if (isFresh === false) {
                         lastLI = $(toMove).detach().insertAfter($(lastLI));
