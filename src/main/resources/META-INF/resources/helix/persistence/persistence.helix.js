@@ -1277,14 +1277,14 @@ function initHelixDB() {
             // from the DB to add it to the session and mark all properties in the object dirty (except those that the
             // sync override tells us not to override ...). Then we update the object.
             //elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) {
-            var toUpdateObj = new elemSchema();
-            toUpdateObj.markPersistent(persistentObjID);
-            Helix.DB.synchronizeObjectFields(dbSession, allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj, _opaque) {
-                if (overrides.updateHook) {
-                    overrides.updateHook(newObj);
-                }
-                oncomplete(newObj, _opaque);
-            }, overrides, opaque);
+            elemSchema.all().filter('id', "=", persistentObjID).noFlush().one(function(toUpdateObj) {
+                Helix.DB.synchronizeObjectFields(dbSession, allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj, _opaque) {
+                    if (overrides.updateHook) {
+                        overrides.updateHook(newObj);
+                    }
+                    oncomplete(newObj, _opaque);
+                }, overrides, opaque);
+            });
         },
     
         synchronizeDeltaField: function(dbSession, allSchemas, _deltaObj, parentCollection, elemSchema, field, oncomplete, oncompleteArg, overrides) {
