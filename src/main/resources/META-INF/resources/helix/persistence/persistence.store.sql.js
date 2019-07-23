@@ -595,10 +595,12 @@ function config(persistence, dialect) {
         if (removeKeyValue[0] === 'id' && obj.id) {
             queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
             for (var rel in meta.hasMany) {
-                if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
-                    var tableName = meta.hasMany[rel].tableName;
-                    //var inverseProperty = meta.hasMany[rel].inverseProperty;
-                    queries.push(["DELETE FROM `" + tableName + "` WHERE `" + meta.name + '_' + rel + "` = " + tm.outId(obj.id), null]);
+                if (meta.hasMany.hasOwnProperty(rel) && !meta.hasMany[rel].manyToMany) {
+                    var tableName = meta.hasMany[rel].type.__hx_schema_name;
+                    var inverseProperty = meta.hasMany[rel].inverseProperty;
+                    if (tableName && inverseProperty) {
+                        queries.push(["DELETE FROM `" + tableName + "` WHERE `" + inverseProperty + "` = " + tm.outId(obj.id), null]);
+                    }
                 }
             }
         } else {

@@ -1038,7 +1038,6 @@ function initHelixDB() {
                 
                 var elem = toDelete.pop();
                 Helix.DB.cascadingRemove(dbSession, elemSchema, elem, function(pObj, op, _opaque) {
-                    queryCollection.remove(pObj);
                     dbSession.remove(pObj);
                     if (overrides && overrides.deleteHook) {
                         overrides.deleteHook(pObj);
@@ -1195,7 +1194,6 @@ function initHelixDB() {
 
                     var removeFn = function(persistentObj) {
                         if (persistentObj) {
-                            parentCollection.remove(persistentObj);
                             dbSession.remove(persistentObj);
                             if (overrides && overrides.deleteHook) {
                                 overrides.deleteHook(persistentObj);
@@ -1453,7 +1451,6 @@ function initHelixDB() {
             
             var removeFn = function(persistentObj, args) {
                 if (persistentObj) {
-                    parentCollection.remove(persistentObj);
                     dbSession.remove(persistentObj);
                     if (overrides && overrides.deleteHook){
                         overrides.deleteHook(persistentObj);
