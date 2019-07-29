@@ -337,8 +337,34 @@ function config(persistence, dialect) {
         }
         
         var __doFlush = function(callback, persistObjArray, removeObjArray) {
-            if(callback) {
-                persistence.asyncParForEach(removeObjArray, function(obj, callback, opaque, tx) {
+            if(1 /*callback*/) {
+                var queries = [];
+                var errors = [];
+                for(var i = 0; i < removeObjArray.length; i++) {
+                    remove(removeObjArray[i], queries);
+                }
+                executeQueries(queries, errors).then(function() {
+                    // Resolve
+                    queries = [];
+                    for(var i = 0; i < persistObjArray.length; i++) {
+                        save(persistObjArray[i], queries);
+                    }
+                    return executeQueries(queries, errors);
+                }).then(function() {
+                    if (addlQueries.length > 0) {
+                        return executeQueries(queries, errors);
+                    } else {
+                        return errors;
+                    }
+                }).then(function(_errors) {
+                    if (_errors.length) {
+                        persistence.errorHandler(_errors);
+                    }
+                    if (callback) {
+                        callback(_errors);
+                    }
+                });
+                /*persistence.asyncParForEach(removeObjArray, function(obj, callback, opaque, tx) {
                     remove(obj, tx, callback);
                 }, function(result, err, _persistArr) {
                     //if (err) return callback(result, err);
@@ -354,8 +380,8 @@ function config(persistence, dialect) {
                         }
                     });
                     return true;
-                }, persistObjArray);
-            } else { // More efficient
+                }, persistObjArray);*/
+            }/* else { // More efficient
                 persistence.transaction(function(tx) {
                     for(var i = 0; i < removeObjArray.length; i++) {
                         remove(removeObjArray[i], tx);
@@ -367,7 +393,7 @@ function config(persistence, dialect) {
                         persistence.executeQueriesSeq(tx, addlQueries);
                     }
                 });
-            }
+            }*/
         };
 
         var __flushChunk = function(_cb, _persists, _removes, startIdx) {
@@ -487,8 +513,7 @@ function config(persistence, dialect) {
         return o;
     }
 
-    function saveObj(obj, tx, callback, properties, values, propertyPairs, qs) {
-        var meta = persistence.getMeta(obj._type);
+    function saveObj(obj, queries, properties, values, propertyPairs, qs) {
         var tm = persistence.typeMapper;
     
         obj._dirtyProperties = {};
@@ -498,23 +523,10 @@ function config(persistence, dialect) {
             qs.push(tm.outIdVar('?'));
             var sql = "INSERT INTO `" + obj._type + "` (" + properties.join(", ") + ") VALUES (" + qs.join(', ') + ")";
             obj._new = false;
-            tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
-                callback();                  
-                return false;
-            });
+            queries.push([sql, values]);
         } else if (propertyPairs.length > 0) {
             sql = "UPDATE `" + obj._type + "` SET " + propertyPairs.join(',') + " WHERE id = " + tm.outId(obj.id);
-            tx.executeSql(sql, values, callback, function(t, e, badSQL, badArgs) {
-                persistence.errorHandler(e.message, e.code, badSQL, badArgs);
-                callback();                  
-                return false;
-            });
-        } else {
-            // Nothing to do. Just call the callback.
-            if (callback) {
-                callback();
-            }
+            queries.push([sql, values]);
         }
     }
 
@@ -522,7 +534,7 @@ function config(persistence, dialect) {
    * Internal function to persist an object to the database
    * this function is invoked by persistence.flush()
    */
-    function save(obj, tx, callback) {
+    function save(obj, queries) {
         var meta = persistence.getMeta(obj._type);
         var tm = persistence.typeMapper;
         var properties = [];
@@ -545,68 +557,54 @@ function config(persistence, dialect) {
                 propertyPairs.push("`" + p + "` = " + tm.outVar("?", type));
             }
         }
-        var additionalQueries = [];
         for(var p in meta.hasMany) {
             if(meta.hasMany.hasOwnProperty(p)) {
-                additionalQueries = additionalQueries.concat(persistence.get(obj, p).persistQueries());
+                Array.prototype.push.apply(queries, persistence.get(obj, p).persistQueries());
             }
         }
-        /*executeQueriesSeq(tx, additionalQueries, function(obj, callback, properties, values, propertyPairs, qs) {
-        if (!obj._new && properties.length === 0) { // Nothing changed and not new
-          if(callback) callback();
-          return;
-        }
-        saveObj(obj, tx, callback, properties, values, propertyPairs, qs);
-      }, obj, callback, properties, values, propertyPairs, qs);*/
-
-        // Note that everything we do here is in 1 txn. We don't need to ensure that an object's
-        // one-to-many targets are inserted before the object is inserted. We just need to make
-        // sure that we don't assume the insert is done and invoke the callback until all one-to-many
-        // objects are in the DB.
-        var nQueries = additionalQueries.length + 1; // 1 extra for the insert/update of this object.
-        var nDone = 0;
-        var __callback = function() {
-            ++nDone;
-            if (nQueries === nDone && callback) {
-                callback();
-            }
-        };
     
-        for (var i = 0; i < additionalQueries.length; ++i) {
-            var queryTuple = additionalQueries[i];
-            tx.executeSql(queryTuple[0], queryTuple[1], __callback, function(_, err, badSQL, badArgs) {
-                persistence.errorHandler(err.message, err.code, badSQL, badArgs);
-                __callback();
-            });
-        }
-    
-        saveObj(obj, tx, __callback, properties, values, propertyPairs, qs);
+        saveObj(obj, queries, properties, values, propertyPairs, qs);
     }
 
     persistence.save = save;
 
-    function remove(removeObjPair, tx, callback) {
+    function remove(removeObjPair, queries) {
         var removeKeyValue = persistence.getRemoveKeyValuePair(removeObjPair[0]);
         var obj = removeObjPair[1];
         
-        var meta = persistence.getMeta(obj._type);
         var tm = persistence.typeMapper;
-        var queries = [];
         if (removeKeyValue[0] === 'id' && obj.id) {
-            queries = [["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]];
-            for (var rel in meta.hasMany) {
-                if (meta.hasMany.hasOwnProperty(rel) && !meta.hasMany[rel].manyToMany) {
-                    var tableName = meta.hasMany[rel].type.__hx_schema_name;
-                    var inverseProperty = meta.hasMany[rel].inverseProperty;
-                    if (tableName && inverseProperty) {
-                        queries.push(["DELETE FROM `" + tableName + "` WHERE `" + inverseProperty + "` = " + tm.outId(obj.id), null]);
-                    }
-                }
-            }
+            queries.push(["DELETE FROM `" + obj._type + "` WHERE id = " + tm.outId(obj.id), null]);
         } else {
-            queries = [["DELETE FROM `" + obj._type + "` WHERE " + removeKeyValue[0] + " = ?", [removeKeyValue[1]]]];
+            queries.push(["DELETE FROM `" + obj._type + "` WHERE " + removeKeyValue[0] + " = ?", [removeKeyValue[1]]]);
         }
-        executeQueriesSeq(tx, queries, callback);
+    }
+    
+    function executeQueries(queries, errors) {
+        return new Promise(function(resolve, reject) {
+            var nDone = 0;
+            if (queries.length === 0) {
+                resolve(errors);
+                return;
+            }
+            persistence.transaction(function(tx) {
+                for (var i = 0; i < queries.length; ++i) {
+                    var queryTuple = queries[i];
+                    tx.executeSql(queryTuple[0], queryTuple[1], function() {
+                        ++nDone;
+                        if (nDone === queries.length) {
+                            resolve(errors);
+                        }
+                    }, function(_, err, badSQL, badArgs) {
+                        errors.push('Statement ' + badSQL + ' with arguments ' + JSON.stringify(badArgs) + ' failed with error ' + err.message);
+                        ++nDone;
+                        if (nDone === queries.length) {
+                            resolve(errors);
+                        }
+                    });
+                }
+            });
+        });
     }
 
     /**
