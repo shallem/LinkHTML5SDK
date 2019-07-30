@@ -489,7 +489,6 @@ persistence.search.config = function(persistence, dialect, options) {
             }
         }
         queries.reverse();
-        //persistence.executeQueriesSeq(tx, queries);
         return queries;
     });
   

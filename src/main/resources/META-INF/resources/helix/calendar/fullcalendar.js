@@ -289,7 +289,7 @@
             var fullheightStyle = '';
             fullheightStyle = 'hx-full-height hx-no-scroll';
 
-            var markup = "<div class='fc-content hx-flex-fill hx-flex-vertical " + fullheightStyle + "' style='position:relative'/>"
+            var markup = "<div class='fc-content hx-flex-fill " + fullheightStyle + "' style='position:relative'/>"
             content = $(markup)
                     .prependTo(element);
 
@@ -383,7 +383,7 @@
                     });
                 }
             } else {
-                fullheightStyle = 'hx-flex-fill hx-no-scroll';
+                fullheightStyle = 'hx-full-height hx-no-scroll';
             }
             var markup = $("<div class='fc-view " + fullheightStyle + " fc-view-" + newViewName + "' style='position:relative'/>");
 
@@ -2300,7 +2300,7 @@
 
         function buildTableHTML() {
             var html =
-                    "<table class='fc-border-separate' style='width:100%' cellspacing='0' class='pm-layout-full-height'>" +
+                    "<table class='fc-border-separate' style='width:100%' cellspacing='0'>" +
                     buildHeadHTML() +
                     buildBodyHTML() +
                     "</table>";
@@ -2345,11 +2345,11 @@
             var col;
             var date;
 
-            html += "<tbody class='pm-layout-full-height'>";
+            html += "<tbody>";
 
             for (row = 0; row < rowCnt; row++) {
 
-                html += "<tr class='fc-week pm-layout-full-height'>";
+                html += "<tr>";
 
                 if (showWeekNumbers) {
                     date = cellToDate(row, 0);
@@ -2401,14 +2401,13 @@
             else {
                 classNames.push('fc-future');
             }
-            classNames.push('pm-layout-full-height');
 
             html +=
                     "<td" +
                     " class='" + classNames.join(' ') + "'" +
                     " data-date='" + formatDate(date, 'yyyy-MM-dd') + "'" +
                     ">" +
-                    "<div class='mh-layout-parent-height'>";
+                    "<div>";
 
             if (showNumbers) {
                 html += "<div class='fc-day-number'>" + date.getUTCDate() + "</div>"; /* SAH - to UTC */
@@ -2999,7 +2998,7 @@
             buildDayTable();
 
             slotLayer =
-                    $("<div style='position:absolute;z-index:2;left:0;width:100%' class='pm-layout-full-height'/>")
+                    $("<div style='position:absolute;z-index:2;left:0px;bottom:0px;width:100%' class='hx-flex-vertical'/>")
                     .appendTo(element);
 
             if (opt('allDaySlot')) {
@@ -3036,7 +3035,7 @@
             }
 
             slotScroller =
-                    $("<div class='fc-slot-scroller'/>")
+                    $("<div class='fc-slot-scroller hx-flex-fill'/>")
                     .appendTo(slotLayer);
 
             slotContainer =
@@ -3120,7 +3119,7 @@
 
         function buildDayTableHTML() {
             var html =
-                    "<table style='width:100%' class='fc-agenda-days fc-border-separate pm-layout-full-height' cellspacing='0'>" +
+                    "<table style='width:100%' class='fc-agenda-days fc-border-separate' cellspacing='0'>" +
                     buildDayTableHeadHTML() +
                     buildDayTableBodyHTML() +
                     "</table>";

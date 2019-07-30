@@ -1277,7 +1277,7 @@ function initHelixDB() {
             // from the DB to add it to the session and mark all properties in the object dirty (except those that the
             // sync override tells us not to override ...). Then we update the object.
             //elemSchema.findBy(keyField, toUpdateKey, function(toUpdateObj) {
-            elemSchema.all().filter('id', "=", persistentObjID).noFlush().one(function(toUpdateObj) {
+            elemSchema.all(dbSession).filter('id', "=", persistentObjID).noFlush().one(function(toUpdateObj) {
                 Helix.DB.synchronizeObjectFields(dbSession, allSchemas, updatedObj, toUpdateObj, elemSchema, function(newObj, _opaque) {
                     if (overrides.updateHook) {
                         overrides.updateHook(newObj);
@@ -1482,7 +1482,7 @@ function initHelixDB() {
                             removeFn(null, args);
                         });
                     } else {
-                        elemSchema.all().filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
+                        elemSchema.all(dbSession).filter(nxt.field, nxt.op, nxt.value).destroyAll(function() {
                             removeFn(null, args);
                         });
                     }
@@ -1508,7 +1508,7 @@ function initHelixDB() {
             // Update the old object (if it exists) or add the new with a recursive call.
             var objLocalField = field;
             var setter = Object.getOwnPropertyDescriptor(persistentObj, objLocalField).set;
-            objSchema.all().filter(Helix.DB.getKeyField(objSchema), "=", key).noFlush().one(function(dbObj) {
+            objSchema.all(dbSession).filter(Helix.DB.getKeyField(objSchema), "=", key).noFlush().one(function(dbObj) {
                 Helix.DB.synchronizeObjectFields(dbSession, allSchemas, obj, dbObj, objSchema, function(newObj, oncompleteArg) {
                     setter.call(persistentObj, newObj);
                     oncomplete(oncompleteArg, objLocalField);
@@ -1697,8 +1697,8 @@ function initHelixDB() {
             }
             
             if (Object.prototype.toString.call(obj) === '[object Array]') {
-                var isHandled = Helix.DB.synchronizeArrayField(dbSession, allSchemas, obj, null, objSchema.all(), objSchema, null, function() {
-                    callback(objSchema.all(), opaque);
+                var isHandled = Helix.DB.synchronizeArrayField(dbSession, allSchemas, obj, null, objSchema.all(dbSession), objSchema, null, function() {
+                    callback(objSchema.all(dbSession), opaque);
                 }, opaque, overrides);            
                 if (!isHandled) {
                     var nDone = 0;
@@ -1716,7 +1716,7 @@ function initHelixDB() {
                     }
                 }
             } else if (obj.__hx_type === 1001) {
-                Helix.DB.synchronizeDeltaField(dbSession, allSchemas, obj, objSchema.all(), objSchema, null, function(_opaque, fld, allAdds) {
+                Helix.DB.synchronizeDeltaField(dbSession, allSchemas, obj, objSchema.all(dbSession), objSchema, null, function(_opaque, fld, allAdds) {
                     callback(allAdds, _opaque);
                 }, opaque, overrides);
             } else if (obj.__hx_type === 1003) {
@@ -1781,7 +1781,7 @@ function initHelixDB() {
                 obj = Helix.DB.getJSONReverseMappedObject(obj, objSchema);
                 var dbKeyField = Helix.DB.getKeyField(objSchema);
                 var objKeyField = Helix.DB.getJSONKeyField(objSchema, obj);
-                objSchema.all().filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
+                objSchema.all(dbSession).filter(dbKeyField, '=', obj[objKeyField]).noFlush().one(function(persistentObj) {
                     Helix.DB.synchronizeObjectFields(dbSession, allSchemas, obj, persistentObj, objSchema, function(finalObj, _opaque) {
                         /* Store the schema in the final obj. */
                         finalObj.__hx_schema = objSchema;

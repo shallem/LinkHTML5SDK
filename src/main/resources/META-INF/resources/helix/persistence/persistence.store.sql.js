@@ -337,63 +337,32 @@ function config(persistence, dialect) {
         }
         
         var __doFlush = function(callback, persistObjArray, removeObjArray) {
-            if(1 /*callback*/) {
-                var queries = [];
-                var errors = [];
-                for(var i = 0; i < removeObjArray.length; i++) {
-                    remove(removeObjArray[i], queries);
+            var queries = [];
+            var errors = [];
+            for(var i = 0; i < removeObjArray.length; i++) {
+                remove(removeObjArray[i], queries);
+            }
+            executeQueries(queries, errors).then(function() {
+                // Resolve
+                queries = [];
+                for(var i = 0; i < persistObjArray.length; i++) {
+                    save(persistObjArray[i], queries);
                 }
-                executeQueries(queries, errors).then(function() {
-                    // Resolve
-                    queries = [];
-                    for(var i = 0; i < persistObjArray.length; i++) {
-                        save(persistObjArray[i], queries);
-                    }
+                return executeQueries(queries, errors);
+            }).then(function() {
+                if (addlQueries.length > 0) {
                     return executeQueries(queries, errors);
-                }).then(function() {
-                    if (addlQueries.length > 0) {
-                        return executeQueries(queries, errors);
-                    } else {
-                        return errors;
-                    }
-                }).then(function(_errors) {
-                    if (_errors.length) {
-                        persistence.errorHandler(_errors);
-                    }
-                    if (callback) {
-                        callback(_errors);
-                    }
-                });
-                /*persistence.asyncParForEach(removeObjArray, function(obj, callback, opaque, tx) {
-                    remove(obj, tx, callback);
-                }, function(result, err, _persistArr) {
-                    //if (err) return callback(result, err);
-                    persistence.asyncParForEach(_persistArr, function(obj, callback, opaque, tx) {
-                        save(obj, tx, callback);
-                    }, function() {
-                        if (addlQueries.length > 0) {
-                            persistence.transaction(function(tx) {
-                                persistence.executeQueriesSeq(tx, addlQueries, callback);                            
-                            });
-                        } else {
-                            callback();
-                        }
-                    });
-                    return true;
-                }, persistObjArray);*/
-            }/* else { // More efficient
-                persistence.transaction(function(tx) {
-                    for(var i = 0; i < removeObjArray.length; i++) {
-                        remove(removeObjArray[i], tx);
-                    }
-                    for(var i = 0; i < persistObjArray.length; i++) {
-                        save(persistObjArray[i], tx);
-                    }
-                    if (addlQueries.length > 0) {
-                        persistence.executeQueriesSeq(tx, addlQueries);
-                    }
-                });
-            }*/
+                } else {
+                    return errors;
+                }
+            }).then(function(_errors) {
+                if (_errors.length) {
+                    persistence.errorHandler(_errors);
+                }
+                if (callback) {
+                    callback(_errors);
+                }
+            });
         };
 
         var __flushChunk = function(_cb, _persists, _removes, startIdx) {

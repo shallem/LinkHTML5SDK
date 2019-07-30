@@ -462,13 +462,15 @@ function initPersistence(persistence) {
          */
         function _makeGetter(field) {
             return function() {
-                return persistence.canonical(this)._data[field];
+                var _sess = this._session ? this._session : persistence;
+                return _sess.canonical(this)._data[field];
             };
         }
         
         function _makeSetter(field) {
             return function(val) {
-                var that = persistence.add(this);
+                var _sess = this._session ? this._session : persistence;
+                var that = _sess.add(this);
                 that._data[field] = val;
                 that._dirtyProperties[field] = true;
                 that._ignoreProperties[field] = false;                
