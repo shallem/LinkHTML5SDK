@@ -1443,10 +1443,6 @@ var globalDataListID = -1;
                         // Display from the beginning of the list.
                         _self._refreshData(function () {
                             _self.$listWrapper.scrollTop(0);
-                            _self._currentSort = newSort;
-                            _self._currentSortOrder = newSortOrder;
-                            _self._currentSortCase = newSortCase;
-
                             _self._updateSortButtons();
                         }, undefined, _self._applyOrdering(_self.itemList.clearOrder(), newSort, newSortOrder, newSortCase));
                         $(_self._sortContainer).popup("close");
@@ -2304,6 +2300,9 @@ var globalDataListID = -1;
                     }
                 }
             }
+            this._currentSort = orderby;
+            this._currentSortOrder = direction;
+            this._currentSortCase = usecase;
             return displayCollection;
         },
         _renderSingleRow: function (LIs, rowIndex, itemsPerPage, curRow, oncomplete, isGrouped, _options) {
@@ -2515,7 +2514,8 @@ var globalDataListID = -1;
                 }
             } else {
                 if (this.setSelected(target)) {
-                    if ($(target).is('[data-role="splitlink"]')) {
+                    if ($(event.target).closest('a').is('[data-role="splitlink"]') ||
+                            $(target).is('[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
                             if (!this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings)) {
                                 this._runContextAction(target);                                
@@ -3359,15 +3359,15 @@ var globalDataListID = -1;
                     (oldSortCase !== newCase)) {
                 var _self = this;
                 var __sortUpdateDone = function () {
-                    _self._currentSort = newSort;
-                    _self._currentSortOrder = newOrder;
-                    _self._currentSortCase = newCase;
                     if (_self.isLoaded) {
                         _self.__refreshSortContainer();
                         _self._updateSortButtons();
                     }
                 };
 
+                _self._currentSort = newSort;
+                _self._currentSortOrder = newOrder;
+                _self._currentSortCase = newCase;
                 if (doRefresh === true) {
                     _self._refreshData(function () {
                         __sortUpdateDone();
