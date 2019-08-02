@@ -184,21 +184,21 @@ public class FormFieldRenderer extends CoreRenderer {
                     IconButton ic = (IconButton)c;
                     writer.write("{");
                     if (!isValueBlank(ic.getImage())) {
-                        writer.write("'image' : '" + ic.getImage() + "'");
+                        writer.write("'image' : '" + ic.getImage() + "',");
                     }
                     if (!isValueBlank(ic.getIconClass())) {
-                        writer.write("'iconClass' : '" + ic.getIconClass() + "'");
+                        writer.write("'iconClass' : '" + ic.getIconClass() + "',");
                     }
                     if (ic.getHref() != null) {
-                        writer.write(",'href' : '" + ic.getHref() + "'");
+                        writer.write("'href' : '" + ic.getHref() + "',");
                     }
                     if (ic.getOnclick() != null) {
-                        writer.write(",'onclick' : function(ev) {" + ic.getOnclick() + "; return Helix.stopEvent(ev); }");
+                        writer.write("'onclick' : function(ev) {" + ic.getOnclick() + "; return Helix.stopEvent(ev); },");
                     }
-                    if (ic.getValue() != null) {
-                        writer.write(",'fieldTitle' : '" + ic.getValue() + "'");
+                    if (ic.getValue() != null && !ic.getValue().isEmpty()) {
+                        writer.write("'fieldTitle' : '" + ic.getValue() + "',");
                     }
-                    writer.write(",'theme' : '" + ic.getTheme() + "'");
+                    writer.write("'theme' : '" + ic.getTheme() + "'");
                     writer.write("}");
                 }
             }
