@@ -532,6 +532,7 @@ var globalDataListID = -1;
             var divider = document.createElement('li');
             divider.appendChild(document.createTextNode(dividerText));
             divider.setAttribute('data-' + $.mobile.ns + 'role', 'list-divider');
+            divider.setAttribute('data-text', dividerText);
             divider.classList.add('ui-li-divider', 'ui-bar-d', 'hx-no-webkit-select');
             return divider;
         },
@@ -567,18 +568,32 @@ var globalDataListID = -1;
             if (!this.hasAutodividers) {
                 return;
             }
+            var keepDivider = false;
             var callback = this.options.autodividersSelectorCallback;
             var li = curRowParent[0];
+            var prevSib = li.previousSibling;
             if (callback && row && $(curRowParent).attr('data-deleted') !== 'true') {
                 var dividerText = callback.call(this, curRowParent, this.displayList, this._currentSort, row);
-                if (dividerText && this.lastDividerText !== dividerText) {
-                    var divider = this._makeDivider(dividerText);
-                    li.parentNode.insertBefore(divider, li);
-                }
-                // SAH - blank means ignore
-                if (dividerText) {
+                if (dividerText) { 
+                    if (this.lastDividerText !== dividerText) {
+                        if (prevSib && $(prevSib).is('[data-role="list-divider"]')) {
+                            var prevSibText = $(prevSib).attr('data-text');
+                            if (prevSibText === dividerText) {
+                                // We already have this divider ... move on.
+                                keepDivider = true;
+                            }
+                        }
+                        if (!keepDivider) {
+                            var divider = this._makeDivider(dividerText);
+                            li.parentNode.insertBefore(divider, li);
+                        }
+                    }
+                    // SAH - blank means ignore
                     this.lastDividerText = dividerText;
                 }
+            }
+            if (!keepDivider && prevSib && $(prevSib).is('[data-role="list-divider"]')) {
+                $(prevSib).remove();
             }
         },
         setDefaultSort: function () {
@@ -1841,9 +1856,11 @@ var globalDataListID = -1;
                     $(LIs[0]).prevAll().remove();
                 }
             } else {
-                // Clear out dividers because we will redo them.
-                $(_self.$parent).find('li[data-role="list-divider"]').remove();
-                LIs = $(_self.$parent).find('li').not('[data-role="empty-message"]');
+                // Don't clear them out unless we *need* to redo them. Otherwise they flash ...
+                if (!this.hasAutodividers) {
+                    $(_self.$parent).find('li[data-role="list-divider"]').remove();
+                }
+                LIs = $(_self.$parent).find('li').not('[data-role="empty-message"],[data-role="list-divider"]');
             }
             _self.nExtras = 0;
 
