@@ -509,6 +509,10 @@
     transition: transform .3s ease;
 }
 
+.hx-form-border-none {
+    border: none !important;
+}
+
 @media all and (min-width: 500px) {
     .hx-form-container .hx-button-bar .iconbutton {
         width: 40px;
