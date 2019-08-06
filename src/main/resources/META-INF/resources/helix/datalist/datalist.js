@@ -581,6 +581,7 @@ var globalDataListID = -1;
                             if (prevSibText === dividerText) {
                                 // We already have this divider ... move on.
                                 keepDivider = true;
+                                $(prevSib).removeAttr('data-mark')
                             }
                         }
                         if (!keepDivider) {
@@ -686,9 +687,10 @@ var globalDataListID = -1;
                     skip = this._preloadWindowStart + this._itemsPerPage;
                 }
             } else {
-                // We are setting up the initial preload window.
-                skip = Math.max(0, this._renderWindowStart - (this._itemsPerPage * 2));
-                this._preloadWindowStart = this._renderWindowStart - skip;
+                // We are setting up the initial preload window. Start preloading from 2 pages prior to where we start rendering.
+                // Then go from there.
+                skip = this._preloadWindowStart = 
+                        this._renderWindowStart - Math.max(0, this._renderWindowStart - (this._itemsPerPage * 2));
             }
             displayCollection = displayCollection.limit(nElems);
             displayCollection = displayCollection.skip(skip);
@@ -1781,9 +1783,12 @@ var globalDataListID = -1;
                 return;
             }
 
+            var _restoreScroll = undefined;
             if (_options.noPagingReset !== true) {
                 _self._resetPaging();
                 this.$listWrapper.scrollTop(0);            
+            } else {
+                _restoreScroll = this.$listWrapper[0].scrollTop;
             }
             
             /* Must happen after we call _resetPaging */
@@ -1806,6 +1811,9 @@ var globalDataListID = -1;
                     }, 0);
                 }
                 _self._preloadPage(0); // Preload the 4 pages from the DB.
+                if (_restoreScroll !== undefined) {
+                    _self.$listWrapper[0].scrollTop = _restoreScroll;
+                }
             }, _options.emptyMessage, oncomplete, extraItems, _options);
         },
         hasIndexedSearch: function () {
@@ -1859,6 +1867,8 @@ var globalDataListID = -1;
                 // Don't clear them out unless we *need* to redo them. Otherwise they flash ...
                 if (!this.hasAutodividers) {
                     $(_self.$parent).find('li[data-role="list-divider"]').remove();
+                } else {
+                    $(_self.$parent).find('li[data-role="list-divider"]').attr('data-mark', '1');
                 }
                 LIs = $(_self.$parent).find('li').not('[data-role="empty-message"],[data-role="list-divider"]');
             }
@@ -1924,7 +1934,7 @@ var globalDataListID = -1;
                     for (_ridx = startIdx; _ridx < LIs.length; ++_ridx) {
                         $(LIs[_ridx]).hide().removeData();
                     }
-
+                    $(_self.$parent).find('li[data-role="list-divider"][data-mark="1"]').remove();
                     _self._handleEmpty(_self.nRendered, _self.nExtras, emptyMsg, _options.emptyHook);
                     oncomplete.call(_self, opaque);
                 } else {
