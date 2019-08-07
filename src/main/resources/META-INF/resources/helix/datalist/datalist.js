@@ -798,15 +798,25 @@ var globalDataListID = -1;
         
         _addToListEnd: function(nItems) {
             var LIs = $(this.$parent).find('li');
-            var lastLI = LIs[LIs.length - 1];
-            var origLastID = $(lastLI).attr('data-id');
+            var lastLI;
+            var lastLIPos;
+            var origLastID;
+            for (var k = LIs.length - 1; k >= 0; --k) {
+                origLastID = LIs[k].getAttribute('data-id');
+                lastLI = LIs[k];
+                lastLIPos = k;
+                if (LIs[k].hasAttribute('data-id') && LIs[k].style.display !== 'none') {
+                    break;
+                }
+            }
+            
             var scrollToZero = false;
             var fullheight = 0;
             var i = 0, j = 0;
             while (i < nItems && (this._renderWindowStart + this._itemsPerPage) < this._prefetchedData.length) {
                 var toMove = null;
                 var isFresh = false;
-                if (j < LIs.length) {
+                if (j < lastLIPos) {
                     toMove = LIs[j];
                 } else {
                     toMove = document.createElement('li');
@@ -2737,9 +2747,9 @@ var globalDataListID = -1;
                         curRowParent.insertAfter(groupStart);
                     }
                     LIs.push(curRowParent);
-                    curRowParent[0].addEventListener('touchend', function(ev) {
-                        if (_self._touchEndIsTap(ev)) {
-                            _self._handleTap(ev);
+                    $(curRowParent).off('touchend').on('touchend', null, _self, function(ev) {
+                        if (ev.data._touchEndIsTap(ev.originalEvent)) {
+                            ev.data._handleTap(ev.originalEvent);
                         }
                     });
                 } else {
@@ -2783,9 +2793,9 @@ var globalDataListID = -1;
                     } else {
                         attachFn(curRowParent);
                     }
-                    curRowParent[0].addEventListener('touchend', function(ev) {
-                        if (_self._touchEndIsTap(ev)) {
-                            _self._handleTap(ev);
+                    $(curRowParent).off('touchend').on('touchend', null, _self, function(ev) {
+                        if (ev.data._touchEndIsTap(ev.originalEvent)) {
+                            ev.data._handleTap(ev.originalEvent);
                         }
                     });
                 } else {
@@ -2815,6 +2825,11 @@ var globalDataListID = -1;
             var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
             if (renderer.call(rendererContext, li, this, obj, this.selectedIndex, this.options.strings)) {
                 li[0].style.display = '';
+                $(li).off('touchend').on('touchend', null, this, function(ev) {
+                    if (ev.data._touchEndIsTap(ev.originalEvent)) {
+                        ev.data._handleTap(ev.originalEvent);
+                    }
+                });                
                 return true;
             } else {
                 li[0].style.display = 'none';

@@ -485,6 +485,10 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             inputMarkup[0].value = formElem.value;
         } else {
             inputMarkup.append(formElem.value);
+            
+            // Aside from "rawTextArea" we auto resize.
+            inputMarkup[0].style.boxSizing = 'border-box';
+            inputMarkup[0].rows = 1;
         }
         
         var fieldClasses = formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass;
@@ -507,8 +511,13 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         if (formElem.onfocus) {
             $(inputMarkup).focus(formElem.onfocus);
         }
-        $(inputMarkup).on('input', function () {
+        $(inputMarkup).on('input', null, formElem, function (ev) {
             $(this).trigger('change');
+            if (ev.data.type !== 'rawTextarea') {
+                var offset = ev.target.offsetHeight - ev.target.clientHeight;
+                ev.target.style.height = 'auto';
+                ev.target.style.height = ev.target.scrollHeight + offset + 'px';
+            }
         });
         
         if (formElem.onclick) {
