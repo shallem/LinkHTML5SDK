@@ -413,7 +413,7 @@ var globalDataListID = -1;
             }
 
             this.$section = $('<section/>').appendTo(this.$wrapper).addClass('hx-full-height').addClass('hx-flex-vertical').addClass('hx-full-width');
-            this.$headerSection = $('<header/>').appendTo(this.$section);
+            this.$headerSection = $('<header/>').appendTo(this.$section).addClass('hx-listview-header');
             this.$searchSortDiv = $('<div/>')
                     .appendTo(this.$headerSection)
                     .addClass('hx-full-width hx-search-sort hx-toggleable')
