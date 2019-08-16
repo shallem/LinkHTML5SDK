@@ -2022,22 +2022,23 @@ function initPersistence(persistence) {
      * @param opaque An optional parameter to supply to all callbacks.
      */
         QueryCollection.prototype.newEach = function (callbacks, opaque) {
+            var _self = this;
             this.list(function(results,error) {
                 if (!results) {
                     return;
                 }
                 if (callbacks.startFn) {
-                    callbacks.startFn(results.length, opaque);
+                    callbacks.startFn.call(_self._session, results.length, opaque);
                 }
                 if (callbacks.eachFn) {
                     for(var i = 0; i < results.length; i++) {
-                        if (callbacks.eachFn(results[i], opaque) === false) {
+                        if (callbacks.eachFn.call(_self._session, results[i], opaque) === false) {
                             break;
                         }
                     }
                 }
                 if (callbacks.doneFn) {
-                    callbacks.doneFn(i, opaque);
+                    callbacks.doneFn.call(_self._session, i, opaque);
                 }
             });
         }
