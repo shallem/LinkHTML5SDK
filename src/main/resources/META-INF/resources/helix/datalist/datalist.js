@@ -2323,12 +2323,12 @@ var globalDataListID = -1;
                 if (orderby) {
                     var orderbyFields = orderby.split(",");
                     var directionVals = direction.split(",");
-                    var caseVals = (Helix.Utils.isString(usecase) ? usecase.split(",") : usecase.toString());
+                    var caseVals = (usecase ? (Helix.Utils.isString(usecase) ? usecase.split(",") : usecase.toString()) : ['false']);
 
                     var oidx = 0;
                     for (oidx = 0; oidx < orderbyFields.length; ++oidx) {
                         var latestDirection = ((oidx < directionVals.length) ? directionVals[oidx] : directionVals[directionVals.length - 1]);
-                        var nxtCase = (caseVals[oidx] === 'true' ? true : false);
+                        var nxtCase = (oidx < caseVals.length && caseVals[oidx] === 'true' ? true : false);
                         if (latestDirection.toUpperCase() === 'DSC') {
                             displayCollection = displayCollection.order(orderbyFields[oidx], false, nxtCase);
                         } else {
