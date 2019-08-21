@@ -388,6 +388,7 @@ function __refreshTextArea(mode, formElem) {
             $input[0].value = formElem.value;
         } else {
             $input.val(formElem.value ? formElem.value : '');
+            $input.trigger('input');
         }
     } else {
         __refreshTextLabel(mode, formElem);
