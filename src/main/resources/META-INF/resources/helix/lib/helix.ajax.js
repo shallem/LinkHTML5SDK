@@ -1466,6 +1466,10 @@ Helix.Ajax = {
         } else {
             if (params.allowOfflineQueue !== false) {
                 Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+            } else {
+                if (callbacks && callbacks.offlineSuccess) {
+                    callbacks.offlineSuccess.call(window, params.id);
+                }
             }
             Helix.Ajax.hideLoader();
         }
