@@ -1183,12 +1183,20 @@ function initHelixDB() {
                         addObjs.push(newObjectMap[k]);
                     }
 
+                    var addsDone = 0;
                     var doAdds = function() {
-                        if (addObjs.length > 0) {
-                            var toAdd = addObjs.pop();
-                            Helix.DB.addObjectToQueryCollection(dbSession, allSchemas, toAdd, elemSchema, parentCollection, overrides, doAdds);
-                        } else {
+                        if (addObjs.length === 0) {
                             oncomplete(oncompleteArg);
+                            return;
+                        }
+                        
+                        for (var i = 0; i < addObjs.length; ++i) {
+                            var toAdd = addObjs[i];
+                            Helix.DB.addObjectToQueryCollection(dbSession, allSchemas, toAdd, elemSchema, parentCollection, overrides, function() {
+                                if (++addsDone >= addObjs.length) {
+                                    oncomplete(oncompleteArg);
+                                }
+                            });
                         }
                     };
 
