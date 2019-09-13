@@ -387,8 +387,10 @@ function __refreshTextArea(mode, formElem) {
         if (formElem.type === 'rawTextarea') {
             $input[0].value = formElem.value;
         } else {
-            $input.val(formElem.value ? formElem.value : '');
-            $input.trigger('input');
+            $input[0].value = formElem.value ? formElem.value : '';
+            setTimeout(function(_input) {
+                _input.trigger('input');
+            }, 10, $input);
         }
     } else {
         __refreshTextLabel(mode, formElem);
@@ -517,7 +519,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             if (ev.data.type !== 'rawTextarea') {
                 var offset = ev.target.offsetHeight - ev.target.clientHeight;
                 ev.target.style.height = 'auto';
-                ev.target.style.height = ev.target.scrollHeight + offset + 'px';
+                if (ev.target.scrollHeight > 0) {
+                    ev.target.style.height = ev.target.scrollHeight + offset + 'px';
+                }
             }
         });
         
