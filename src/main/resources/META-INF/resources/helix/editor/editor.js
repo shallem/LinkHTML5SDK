@@ -33,8 +33,6 @@
             // Map whose keys are the current style.
             editor.name = $(this.element).attr('id');
 
-            this.page = $(this.element).closest('div[data-role="page"]');
-
             // Create the main container and append the textarea
             var $parent = editor.$parent = this.element;
 
@@ -42,13 +40,6 @@
                     .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width hx-flex-vertical')
                     .css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
                     .appendTo($parent);
-
-            if (this.options.parentElement) {
-                /*var evName = 'hxLayoutDone.' + editor.name;
-                $(this.page).off(evName).on(evName, this, function (ev) {
-                    $(ev.data.$main).height($(ev.data.options.parentElement).height());
-                });*/
-            }
 
             // Add the first group to the toolbar
             var $toolbar = editor.$toolbar = $(this.HEADER_TAG)
