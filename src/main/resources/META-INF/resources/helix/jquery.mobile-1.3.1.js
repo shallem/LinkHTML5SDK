@@ -8193,13 +8193,13 @@ $.widget( "mobile.selectmenu", $.mobile.widget, $.extend( {
 
 	// setup items that are generally necessary for select menu extension
 	_preExtension: function() {
-		var classes = "";
-		// TODO: Post 1.1--once we have time to test thoroughly--any classes manually applied to the original element should be carried over to the enhanced element, with an `-enhanced` suffix. See https://github.com/jquery/jquery-mobile/issues/3577
-		/* if ( $el[0].className.length ) {
-			classes = $el[0].className;
-		} */
                 /* SAH rewrite. */ 
-                this.select = this.element.wrap( "<div class='hx-form-container hx-select " + classes + "'>" );
+                var selClasses = 'hx-form-container hx-select';
+                if (this.element.parent().is('.hx-select')) {
+                    selClasses = '';
+                }
+                
+                this.select = this.element.wrap( "<div class='" + selClasses + "'>" );
 		this.selectID  = this.select.attr( "id" );
 		this.label = $( "label[for='"+ this.selectID +"']" );
 		this.isMultiple = this.select[ 0 ].multiple;

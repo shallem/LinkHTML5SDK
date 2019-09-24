@@ -394,6 +394,10 @@ $(document).on('pagecreate', function(ev) {
             }, formOpts));
         }
     }
+    
+    Helix.Layout.postRenderer($(ev.target), $.proxy(function() {
+        Helix.Layout.layoutPage(this);
+    }, $(ev.target)), false);
 });
 
 /**
@@ -451,12 +455,6 @@ $(document).on('pageshow', function(ev) {
     if (!$.mobile.activePage.is('[data-async="true"]')) {
         Helix.Layout.postRefresh(ev.target, true);
     }
-});
-
-$(document).on('pagecreate', function(ev) {
-    Helix.Layout.postRenderer($(ev.target), $.proxy(function() {
-        Helix.Layout.layoutPage(this);
-    }, $(ev.target)), true);
 });
 
 /*$(document).on('keyboardHide', function(ev) {

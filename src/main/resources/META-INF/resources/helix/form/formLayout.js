@@ -290,13 +290,7 @@
                 formElem = null;
             }
             if (formElem && reRenderItem) {
-                if (formElem.viewDOM) {
-                    formElem.viewDOM.empty();
-                }
-                if (formElem.editDOM) {
-                    formElem.editDOM.empty();
-                }
-                Helix.Utils.refreshFormElement(this.options, formElem, this.$section, this.page, this.layoutMini);
+                this.__updateValue(this.options.currentMode, this._stripNamespace(formElem.name), formElem, {});
             }
         },
     
