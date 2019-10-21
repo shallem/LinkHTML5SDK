@@ -271,6 +271,13 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getOnenter() != null) {
             writer.write(",'onenter' : function() {" + ffield.getOnenter() + "; }");
         }
+        if (ffield.getPlaceholderText() != null) {
+            writer.write(", 'placeholderText' : '" + ffield.getPlaceholderText() + "'");
+        }
+        if (ffield.getExtraButtons() != null &&
+                !ffield.getExtraButtons().isEmpty()) {
+            writer.write(", 'extraButtons' : " + ffield.getExtraButtons());
+        }
         
         writer.write("}");
     }

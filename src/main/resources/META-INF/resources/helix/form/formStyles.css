@@ -514,6 +514,10 @@
     border: none !important;
 }
 
+.hx-form-hidden {
+    display: none !important;
+}
+
 @media all and (min-width: 500px) {
     .hx-form-container .hx-button-bar .iconbutton {
         width: 40px;

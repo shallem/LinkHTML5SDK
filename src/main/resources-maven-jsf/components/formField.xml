@@ -311,5 +311,18 @@
             <type>java.lang.String</type>
             <description>Mode applied to this form element. Values are either view or edit.</description>
         </attribute>
+        <attribute>
+            <name>placeholderText</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Placeholder text for the editor.</description>
+        </attribute>
+        <attribute>
+            <name>extraButtons</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Extra buttons to add to the toolbar (editor only).</description>
+        </attribute>
+        extraButtons
     </attributes>
 </component>
