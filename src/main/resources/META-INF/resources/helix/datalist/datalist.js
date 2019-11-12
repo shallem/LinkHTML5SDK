@@ -2551,7 +2551,7 @@ var globalDataListID = -1;
                 }
             } else {
                 if (this.setSelected(target)) {
-                    if ($(event.target).closest('a').is('[data-role="splitlink"]') ||
+                    if ($(event.target).closest('div.iconbutton').is('[data-role="splitlink"]') ||
                             $(target).is('[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
                             if (!this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings)) {
@@ -2573,7 +2573,7 @@ var globalDataListID = -1;
             setTimeout(function(touch, _self) {
                 var target = document.elementFromPoint(touch.clientX, touch.clientY);
                 //var target = event.target;
-                target = $(target).closest('li.hx-li,div[data-role="splitlink"],li[data-overflow="1"]');
+                target = $(target).closest('li.hx-li,div[data-role="splitlink"],a[data-role="splitlink"],li[data-overflow="1"]');
                 if (target.length === 0) {
                     return;
                 }
@@ -2630,9 +2630,9 @@ var globalDataListID = -1;
 
             // Click
             if (this.options.selectAction) {
-                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,a[data-role="splitlink"],li[data-overflow="1"]', this, function (event) {
+                $(this.$listWrapper).off(this.tapEvent).on(this.tapEvent, '.hx-li,div[data-role="splitlink"],a[data-role="splitlink"],li[data-overflow="1"]', this, function (event) {
                     var _self = event.data;
-                    var _tgt = $(event.target).closest('li.hx-li,a[data-role="splitlink"],li[data-overflow="1"]');
+                    var _tgt = $(event.target).closest('li.hx-li,div[data-role="splitlink"],a[data-role="splitlink"],li[data-overflow="1"]');
                     if (_tgt.length) {
                         event.stopImmediatePropagation();
                         return _self._handleClick(event, _tgt);

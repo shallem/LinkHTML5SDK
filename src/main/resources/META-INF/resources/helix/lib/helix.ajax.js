@@ -1451,7 +1451,9 @@ Helix.Ajax = {
                             isTimeout === false) {
                             // Something went wrong on the server. Rather than just drop a potentially important operation,
                             // treat this is if we are offline ...
-                            Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+                            if (params.allowOfflineQueue !== false) {
+                                Helix.Ajax.ajaxOfflineQueue(params, callbacks);
+                            }
                         }
                     }
                 },

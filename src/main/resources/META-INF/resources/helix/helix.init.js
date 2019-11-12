@@ -105,7 +105,7 @@ $(document).on('ready', function() {
             Helix.errorHook(msg);
         }
     };
-    document.onkeydown = function(e) {
+    /*document.onkeydown = function(e) {
         if (e.keyCode === 9) {
             if (e.metaKey === true) {
                 $('.hx-editor').trigger('shifttabpress');
@@ -113,5 +113,5 @@ $(document).on('ready', function() {
                 $('.hx-editor').trigger('tabpress');
             }
         }
-    };
+    };*/
 });
