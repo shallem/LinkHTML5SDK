@@ -4,6 +4,11 @@
     padding: 0.25em 0em;
     margin: 0em;
     overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
+    outline-style: none;
+}
+
+.hx-form-container.hx-form-border-none {
+    box-shadow: none;
 }
 
 .hx-extra-padding {
@@ -13,6 +18,10 @@
 /* Set width to 100% unless we are in a flex box and we are the fill field */
 .hx-form-container:not(.hx-flex-fill) {
     width: 100%;
+}
+
+.hx-form-container div {
+    outline-style: none;
 }
 
 .hx-flex-horizontal .hx-form-container {

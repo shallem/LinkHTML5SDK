@@ -105,13 +105,110 @@ $(document).on('ready', function() {
             Helix.errorHook(msg);
         }
     };
-    /*document.onkeydown = function(e) {
-        if (e.keyCode === 9) {
-            if (e.metaKey === true) {
-                $('.hx-editor').trigger('shifttabpress');
-            } else {
-                $('.hx-editor').trigger('tabpress');
+    document.onkeydown = function(e) {
+        switch(e.keyCode) {
+            case 37:
+                moveCaret(-1);
+                break;
+            case 39:
+                moveCaret(1);
+                break;
+        }
+    };
+});
+
+
+function findLastTextNodeUnder(par) {
+    var childNodes = par.childNodes;
+    for (var i = childNodes.length - 1; i >= 0; --i) {
+        if (childNodes[i].nodeType === 3) {
+            return childNodes[i];
+        } else if (childNodes[i].nodeType === 1) {
+            var tn = findLastTextNodeUnder(childNodes[i]);
+            if (tn) {
+                return tn;
             }
         }
-    };*/
-});
+    }
+    
+    return null;
+}
+
+function findFirstTextNodeUnder(par) {
+    var childNodes = par.childNodes;
+    for (var i = 0; i < childNodes.length; ++i) {
+        if (childNodes[i].nodeType === 3) {
+            return childNodes[i];
+        } else if (childNodes[i].nodeType === 1) {
+            var tn = findLastTextNodeUnder(childNodes[i]);
+            if (tn) {
+                return tn;
+            }
+        }
+    }
+    
+    return null;
+}
+
+function findPrevTextSib(tn) {
+    var par = tn;
+    while (par) {
+        while (par && par.previousSibling === null) {
+            par = par.parentElement;
+        }
+        if (par === null) {
+            return null;
+        }
+        par = par.previousSibling;
+        var tn = findLastTextNodeUnder(par);
+        if (tn) {
+            return tn;
+        }
+    }
+
+    return null;
+}
+
+function findNextTextSib(tn) {
+    var par = tn;
+    while (par) {
+        while (par && par.nextSibling === null) {
+            par = par.parentElement;
+        }
+        if (par === null) {
+            return null;
+        }
+        par = par.nextSibling;
+        var tn = findFirstTextNodeUnder(par);
+        if (tn) {
+            return tn;
+        }
+    }
+
+    return null;
+}
+
+function moveCaret(ct) {
+    if (window.getSelection) {
+        var sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            var tn = sel.focusNode;
+            var newOffset = sel.focusOffset + ct;
+            if (newOffset < 0) {
+                // Move to the previous sibling.
+                var prevSib = findPrevTextSib(tn);
+                if (prevSib) {
+                    window.getSelection().collapse(prevSib, prevSib.length);
+                }
+            } else if (newOffset > tn.length) {
+                // Move to the next sibling.
+                var nextSib = findNextTextSib(tn);
+                if (nextSib) {
+                    window.getSelection().collapse(nextSib, 0);
+                }
+            } else {
+                sel.collapse(tn, Math.min(tn.length, newOffset));
+            }
+        }
+    }
+}

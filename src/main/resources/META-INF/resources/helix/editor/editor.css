@@ -1,5 +1,3 @@
-/* SAH: added float left b/c we let the toolbar float to the right. */
-.ui-editor {background: none #FFFFFF; float: left; }
 .ui-editor-group {float:left; height:26px}
 .ui-editor-disabled {opacity:0.3; filter:alpha(opacity=30)}
 .ui-editor-divider {float:left; width:1px; height:23px; margin:1px 0 1px 0; background:#CCC}
@@ -28,7 +26,10 @@
     float: left; 
 }
 
-.ui-editor-format { border:solid 1px #999;}
+.ui-editor-format { 
+    border:solid 1px transparent;
+    outline-style: none;
+}
 
 
 /** IE fix within overlays **/
@@ -113,7 +114,7 @@
     color: white;
 }
 
-.hx-editor-toolbar .hx-editor-icon-button {
+.hx-editor-toolbar .hx-editor-icon-button,.hx-editor-toolbar-height {
     height: 40px !important;
 }
 
@@ -124,5 +125,4 @@
 
 .hx-editor-content {
     background: #fff;
-    min-height: 300px;
 }

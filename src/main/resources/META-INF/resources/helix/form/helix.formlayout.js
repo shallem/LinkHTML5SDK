@@ -539,6 +539,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
 
         inputMarkup.addClass(__getTextStyleClass(formLayout, formElem));
+        $fieldContainer.on(Helix.clickEvent, function() {
+            $(inputMarkup).focus();
+        });
     } else {
         __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
@@ -752,6 +755,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                 return false;
             });
         }
+        
+        $fieldContainer.on(Helix.clickEvent, function() {
+            $(inputMarkup).focus();
+        });
 
         // Add in autocomplete.
         if (formElem.autocomplete && formElem.autocompleteSelect) {
@@ -1396,6 +1403,9 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
                 $fieldContainer.css('min-height', $.isNumeric(formElem.height) ? formElem.height + "px" : formElem.height);
                 break;
         }
+    }
+    if (formElem.computedFieldStyleClass) {
+        $fieldContainer.addClass(formElem.computedFieldStyleClass);
     }
 
     if (!formElem.name) {

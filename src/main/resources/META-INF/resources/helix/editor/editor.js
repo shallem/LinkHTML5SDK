@@ -35,17 +35,17 @@
 
             // Create the main container and append the textarea
             var $parent = editor.$parent = this.element;
-
             var $main = editor.$main = $(this.SECTION_TAG)
-                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width hx-flex-vertical')
-                    .css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
+                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width') //hx-flex-vertical
+                    //.css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
                     .appendTo($parent);
 
             // Add the first group to the toolbar
             var $toolbar = editor.$toolbar = $(this.HEADER_TAG)
                     .attr('class', 'ui-body-d ' + this.TOOLBAR_CLASS)
                     .attr('data-role', 'controlgroup')
-                    .attr('data-type', 'horizontal');
+                    .attr('data-type', 'horizontal')
+                    .attr('data-corners', 'false');
 
             var doMini = 'false';
             if (Helix.deviceType !== "tablet") {
@@ -118,10 +118,13 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'hx-flex-fill ui-editor-format hx-scroller-nozoom hx-no-hscroll ui-editor-default-style hx-editor')
+                    .attr('class', 'ui-editor-format hx-no-hscroll ui-editor-default-style hx-editor hx-full-width') // hx-scroller-nozoom
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
             this.setDefaultFont(this.options.defaultFont, this.options.defaultFontSize);
+            $parent.on('focus', null, this, function(ev) {
+                ev.data.$editFrame.focus();
+            });
 
             this._attachEditFrameEvents();
         },
@@ -142,7 +145,7 @@
         UL_TAG: "<ul />",
         // Class name constants
         MAIN_CLASS: "ui-editor hx-editor-content", // main containing div
-        TOOLBAR_CLASS: "hx-editor-toolbar", // Editor toolbar
+        TOOLBAR_CLASS: "hx-editor-toolbar hx-editor-toolbar-height", // Editor toolbar
 
         // Captures the style changes.
         styleChanges: [],

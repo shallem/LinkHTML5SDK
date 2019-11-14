@@ -167,9 +167,10 @@ $(document).on('hxGenerateSchemas', function(ev, schemasDone) {
     }
 });
 
+var _offlinePostInterval = null;
 $(document).on('helixready', function() {
     _updateOfflinePostStatus();
-    setInterval(_updateOfflinePostStatus, 15000);
+    _offlinePostInterval = setInterval(_updateOfflinePostStatus, 15000);
 });
 
 function _updateOfflinePostStatus() {
@@ -1448,7 +1449,8 @@ Helix.Ajax = {
                         // In the absence of any other handling, queue operations that fail to be retried again later.
                         if (jqXHR.status >= 400 &&
                             jqXHR.status < 600 &&
-                            isTimeout === false) {
+                            isTimeout === false &&
+                            params.allowOfflineQueue !== false) {
                             // Something went wrong on the server. Rather than just drop a potentially important operation,
                             // treat this is if we are offline ...
                             if (params.allowOfflineQueue !== false) {

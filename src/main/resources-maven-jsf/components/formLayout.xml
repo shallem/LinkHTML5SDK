@@ -118,5 +118,11 @@
             <type>java.lang.String</type>
             <description>Map from device type to boolean indicating if a mini layout should be used. Add &quot;all&quot; to the map to always use the mini layout.</description>
         </attribute>
+        <attribute>
+            <name>defaultField</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Field to focus if the user clicks on the form itself.</description>
+        </attribute>
     </attributes>
 </component>
