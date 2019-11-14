@@ -143,7 +143,7 @@ function findLastTextNodeUnder(par) {
 
 function findFirstTextNodeUnder(par) {
     var childNodes = par.childNodes;
-    for (var i = 0; i < childNodes.length - 1; ++i) {
+    for (var i = 0; i < childNodes.length; ++i) {
         if (childNodes[i].nodeType === 3) {
             return childNodes[i];
         } else if (childNodes[i].nodeType === 1) {
