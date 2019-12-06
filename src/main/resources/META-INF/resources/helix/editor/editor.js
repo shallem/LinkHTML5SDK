@@ -118,7 +118,7 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'ui-editor-format hx-no-hscroll ui-editor-default-style hx-editor hx-full-width') // hx-scroller-nozoom
+                    .attr('class', 'ui-editor-format hx-no-hscroll ui-editor-default-style hx-editor hx-available-width') // hx-scroller-nozoom
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
             this.setDefaultFont(this.options.defaultFont, this.options.defaultFontSize);

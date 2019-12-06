@@ -1098,9 +1098,13 @@ var globalDataListID = -1;
                     _self._stopScrollHandler();
                     if (_self._renderWindowStart < _self._itemsPerPage) {
                         _self._preloadPage(-1);
-                        _self._preloadPromise.then(function() {
+                        if (_self._preloadPromise) {
+                            _self._preloadPromise.then(function() {
+                                _self._addToListStart(nItems);
+                            });
+                        } else {
                             _self._addToListStart(nItems);
-                        });
+                        }
                     } else {
                         _self._addToListStart(nItems);
                     }
@@ -1109,9 +1113,13 @@ var globalDataListID = -1;
                     _self._stopScrollHandler();
                     if (_self._renderWindowStart >= (_self._preloadNElems - _self._itemsPerPage)) {
                         _self._preloadPage(1);
-                        _self._preloadPromise.then(function() {
+                        if (_self._preloadPromise) {
+                            _self._preloadPromise.then(function() {
+                                _self._addToListEnd(nItems);
+                            });
+                        } else {
                             _self._addToListEnd(nItems);
-                        });
+                        }
                     } else {
                         _self._addToListEnd(nItems);
                     }

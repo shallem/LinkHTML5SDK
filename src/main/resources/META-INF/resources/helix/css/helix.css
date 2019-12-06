@@ -344,6 +344,10 @@ a {
     width: 100%;
 }
 
+.hx-available-width {
+    width: -webkit-fill-available;
+}
+
 .hx-almost-full-width {
     width: 98%;
 }
