@@ -36,7 +36,7 @@
             // Create the main container and append the textarea
             var $parent = editor.$parent = this.element;
             var $main = editor.$main = $(this.SECTION_TAG)
-                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width') //hx-flex-vertical
+                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width  hx-no-hscroll') //hx-flex-vertical
                     //.css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
                     .appendTo($parent);
 

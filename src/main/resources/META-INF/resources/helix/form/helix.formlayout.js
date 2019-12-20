@@ -756,8 +756,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             });
         }
         
-        $fieldContainer.on(Helix.clickEvent, function() {
+        $fieldContainer.on(Helix.clickEvent, function(ev) {
+            ev.stopImmediatePropagation();
             $(inputMarkup).focus();
+            return false;
         });
 
         // Add in autocomplete.
@@ -2369,6 +2371,13 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form, popupOpts) 
         $(popup).one('popupdismiss popupcancel', null, options, function (ev) {
             if (ev.data.popupDismiss) {
                 ev.data.popupDismiss();
+            }
+        });
+    }
+    if (options.afterOpen) {
+        $(popup).one('popupafteropen', null, options, function (ev) {
+            if (ev.data.afterOpen) {
+                ev.data.afterOpen();
             }
         });
     }

@@ -2224,7 +2224,8 @@ var globalDataListID = -1;
                                 ev.stopImmediatePropagation();
                                 _self.$searchBox.val('');
                                 _self.$searchClear.hide();
-                                _self.resetListContents();                                
+                                _self.resetListContents();
+                                _self.$searchBox.focus();
                                 return false;
                             })
                                     .hide();
