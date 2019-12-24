@@ -101,7 +101,7 @@ function cordova_helix_init() {
         },
         notifyParent: function(eventName, eventArg) {
             if (eventArg === undefined) {
-                eventArg = nil;
+                eventArg = null;
             }
             
             return cordova.exec(null, null, "HelixSystem", "notifyParent", [ eventName, eventArg ])
