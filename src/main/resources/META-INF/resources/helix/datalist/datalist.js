@@ -1299,6 +1299,12 @@ var globalDataListID = -1;
                 displayCollection = _self._resetGlobalFilters(list);
             }
             var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
+            var multiSelectElems = _self.getAllMultiSelectElements();
+            var multiSelectIDs = [];
+            $(multiSelectElems).each(function(index, elem) {
+                multiSelectIDs.push($(elem).attr('data-id'));
+                $(elem).removeClass('hx-selected');
+            });
             _self._refreshData(function () {
                 if (selectedID) {
                     var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
@@ -1311,6 +1317,11 @@ var globalDataListID = -1;
                 } else {
                     _self.clearSelected();
                 }
+                multiSelectIDs.forEach(function(element) {
+                    if (element) {
+                        _self.$listWrapper.find('li[data-id="' + element + '"]').addClass('hx-selected');
+                    }
+                });
 
                 if (oncomplete) {
                     oncomplete(_self);
