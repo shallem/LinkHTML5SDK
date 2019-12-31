@@ -185,7 +185,12 @@ function config(persistence, dialect) {
                     colDefs = [];
                     for (var prop in meta.fields) {
                         if (meta.fields.hasOwnProperty(prop)) {
-                            colDefs.push([prop, meta.fields[prop]]);
+                            var fld = meta.fields[prop];
+                            if ($.isArray(prop)) {
+                                colDefs.push([prop].concat(fld));
+                            } else {
+                                colDefs.push([prop, fld]);
+                            }
                         }
                     }
                     for (var rel in meta.hasOne) {
