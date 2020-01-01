@@ -290,7 +290,7 @@
                 formElem = null;
             }
             if (formElem && reRenderItem) {
-                this.__updateValue(this.options.currentMode, this._stripNamespace(formElem.name), formElem, {});
+                this.__updateValue(this.options.currentMode, this._stripNamespace(formElem.name), formElem, {}, reRenderItem);
             }
         },
     
@@ -602,7 +602,7 @@
             }
         },
         
-        __updateValue: function(mode, name, item, valuesMap) {
+        __updateValue: function(mode, name, item, valuesMap, rerenderItem) {
             var value = item.value;
             var thisField = null;
             if (this.rendered) {
@@ -677,7 +677,7 @@
                 } else if (fldType === 'onoff') {
                     __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
-                    __refreshRadioButtons(item);
+                    __refreshRadioButtons(item, rerenderItem);
                 } else if (fldType === 'onoff') {
                     __refreshOnOffSlider(item);
                 } else if (fldType === 'htmlframe') {

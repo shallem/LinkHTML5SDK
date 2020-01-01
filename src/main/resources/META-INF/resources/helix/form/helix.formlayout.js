@@ -1004,12 +1004,17 @@ function hxRefreshRadioButton(parentDOM, newValue) {
     });
 }
 
-function __refreshRadioButtons(formElem) {
+function __refreshRadioButtons(formElem, rerenderItem) {
     // Clear out all selections.
     $(formElem.DOM).find('input').removeAttr('checked').prop('checked', false).prev('label').removeClass('hx-btn-active');
     $(formElem.DOM).find('input[data-value="' + formElem.value + '"]')
         .attr('checked', true).prop('checked', true)
         .prev('label').addClass('hx-btn-active');
+    if (rerenderItem) {
+        var formLayout = formElem.parentForm;
+        $(formElem.DOM).empty();
+        __appendRadioButtons(formLayout.isEdit() ? 1: 0, formLayout.options, formElem, formElem.DOM, formLayout.layoutMini);
+    }
 }
 
 function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
