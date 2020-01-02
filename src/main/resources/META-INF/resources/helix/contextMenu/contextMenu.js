@@ -287,6 +287,11 @@
                             if (!nxtItem.enabled) {
                                 inputMarkup.addClass('ui-disabled');
                             }
+                            nxtLI.on(Helix.clickEvent, null, inputMarkup, function(ev) {
+                                ev.stopImmediatePropagation();
+                                $(ev.data).focus();
+                                return false;
+                            });
                             
                             if (nxtItem.action) {
                                 if (nxtItem.type === 'date') {

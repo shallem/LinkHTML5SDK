@@ -2564,10 +2564,19 @@ var globalDataListID = -1;
                 var selectedElems = this.getAllMultiSelectElements();
                 if (selectedElems.length === 0) {
                     this.$clearSelectionDiv.addClass('hx-toggled');
+                    this.$clearSelectionDiv.removeClass('hx-toggled-one');
+                    this.$clearSelectionDiv.removeClass('hx-toggled-many');
                     this.$searchSortDiv.removeClass('hx-toggled');
                 } else {
                     this.$clearSelectionDiv.removeClass('hx-toggled');
                     this.$searchSortDiv.addClass('hx-toggled');
+                    if (selectedElems.length === 1) {
+                        this.$clearSelectionDiv.addClass('hx-toggled-one');
+                        this.$clearSelectionDiv.removeClass('hx-toggled-many');
+                    } else {
+                        this.$clearSelectionDiv.removeClass('hx-toggled-one');
+                        this.$clearSelectionDiv.addClass('hx-toggled-many');
+                    }
                 }
             } else {
                 if (this.setSelected(target)) {

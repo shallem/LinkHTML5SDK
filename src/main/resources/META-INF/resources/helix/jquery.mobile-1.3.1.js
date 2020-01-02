@@ -8690,9 +8690,9 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
 				resize: $.proxy( this, "_handleWindowResize" ),
 				keyup: $.proxy( this, "_handleWindowKeyUp" )
 			});
-			this._on( $.mobile.document, {
+			/*this._on( $.mobile.document, {
 				focusin: $.proxy( this, "_handleDocumentFocusIn" )
-			});
+			});*/
 		},
 
 		_applyTheme: function( dst, theme, prefix ) {
