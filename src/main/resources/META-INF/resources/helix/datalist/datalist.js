@@ -2865,6 +2865,21 @@ var globalDataListID = -1;
                 return false;
             }
         },
+        rerenderLI: function(LI, obj) {
+            var renderer = this.options.rowRenderer;
+            if (this.options.grouped) {
+                renderer = this.options.groupRenderer(this.selectedGroup);
+            }
+
+            var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
+            if (renderer.call(rendererContext, LI, this, obj, this.selectedIndex, this.options.strings)) {
+                LI.show();
+                return true;
+            } else {
+                LI.hide();
+                return false;
+            }
+        },
         rerenderSelected: function (selectedObj) {
             if (selectedObj) {
                 this.selected = selectedObj;
@@ -2875,19 +2890,7 @@ var globalDataListID = -1;
             if (this.selectedLI === null) {
                 return;
             }
-            var renderer = this.options.rowRenderer;
-            if (this.options.grouped) {
-                renderer = this.options.groupRenderer(this.selectedGroup);
-            }
-
-            var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
-            if (renderer.call(rendererContext, this.selectedLI, this, this.selected, this.selectedIndex, this.options.strings)) {
-                this.selectedLI.show();
-                return true;
-            } else {
-                this.selectedLI.hide();
-                return false;
-            }
+            this.rerenderLI(this.selectedLI, this.selected);
         },
         setSelected: function (targetElem) {
             var enclosingLI = $(targetElem).closest("li");
