@@ -1560,7 +1560,9 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
 
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
+    subPanelObj.__tabIndex = formLayout.__tabIndex;
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+    formLayout.__tabIndex = subPanelObj.__tabIndex;
     if (subPanelObj.modes === 'view') {
         subPanelObj.DOM = subPanelObj.viewDOM = subPanelDiv;
     } else if (subPanelObj.modes === 'edit') {
@@ -1652,7 +1654,9 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
+    subPanelObj.__tabIndex = formLayout.__tabIndex;
     Helix.Utils.layoutForm(body, subPanelObj, page, useMiniLayout);
+    formLayout.__tabIndex = subPanelObj.__tabIndex;
 
     // Prepend here rather than appending before the layoutForm call because layoutForm
     // empties the parent div.
