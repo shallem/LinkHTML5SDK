@@ -3366,7 +3366,9 @@ if ( eventCaptureSupported ) {
                                 var event = new jQuery.Event( start.coords[0] > stop.coords[ 0 ] ? "swipeleft" : "swiperight", 
                                 {
                                     clientX : stop.coords[0],
-                                    clientY : stop.coords[1]
+                                    clientY : stop.coords[1],
+                                    startX: start.coords[0],
+                                    startY: start.coords[1]
                                 });
                                 start.origin.trigger( "swipe" )
                                     .trigger( event );
