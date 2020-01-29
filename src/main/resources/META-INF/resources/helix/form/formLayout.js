@@ -364,8 +364,12 @@
             this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
                         
             $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
-                ev.data._isDirty = true;
+                ev.data.markDirty();
             });
+        },
+        
+        markDirty: function() {
+            this._isDirty = true;
         },
         
         isDirty: function() {
@@ -577,10 +581,10 @@
                 return;
             }
             
-            if (item.parentForm &&
-                item.parentForm.type &&
-                (item.parentForm.type === "subPanel" ||
-                    item.parentForm.type === 'horizontalBlock')) {
+            if (item.parentContainer &&
+                item.parentContainer.type &&
+                (item.parentContainer.type === "subPanel" ||
+                    item.parentContainer.type === 'horizontalBlock')) {
                 $(DOM).hide();
             } else {
                 $(DOM).closest('.hx-form-container').hide();
@@ -592,10 +596,10 @@
                 return;
             }
             
-            if (item.parentForm &&
-                item.parentForm.type &&
-                (item.parentForm.type === "subPanel" ||
-                    item.parentForm.type === 'horizontalBlock')) {
+            if (item.parentContainer &&
+                item.parentContainer.type &&
+                (item.parentContainer.type === "subPanel" ||
+                    item.parentContainer.type === 'horizontalBlock')) {
                 $(DOM).show();
             } else {
                 $(DOM).closest('.hx-form-container').show();
@@ -673,13 +677,11 @@
                         __refreshTextBox(mode, item);
                     }
                 } else if (fldType === 'checkbox') {
-                    __refreshControl(item);
+                    __refreshControl(item, undefined, mode, true);
                 } else if (fldType === 'onoff') {
                     __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
                     __refreshRadioButtons(item, rerenderItem);
-                } else if (fldType === 'onoff') {
-                    __refreshOnOffSlider(item);
                 } else if (fldType === 'htmlframe') {
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {

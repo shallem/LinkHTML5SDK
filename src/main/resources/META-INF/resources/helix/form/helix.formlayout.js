@@ -953,22 +953,32 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         var $checkContainer = $('<div/>').addClass('hx-checkbox').appendTo($fieldContainer);
         $(inputMarkup).appendTo($checkContainer);
         $('<div/>').addClass('state').appendTo($checkContainer).append(lbl);
-        __refreshControl(formElem, false , mode);
+        __refreshControl(formElem, false , mode, true);
+        $fieldContainer.on(Helix.clickEvent, null, [formElem.parentForm, inputMarkup[0]], function(ev) {
+            var _formLayout = ev.data[0];
+            var _inputMarkup = ev.data[1];
+            if (_inputMarkup.checked === true) {
+                _inputMarkup.checked = false;
+            } else {
+                _inputMarkup.checked = true;
+            }
+            if (_formLayout && _formLayout.markDirty !== undefined) {
+                _formLayout.markDirty();
+            }
+            
+            ev.stopImmediatePropagation();
+            return false;
+        })
     }
     if (formElem.onchange) {
         $(inputMarkup).change(function () {
             formElem.onchange.call(this, formElem);
         });
     }
-    if (!mode) {
-        /* View */
-        $(inputMarkup)[0].readOnly = true;
-        $(inputMarkup).addClass('ui-disabled').prev().addClass('ui-disabled');
-    }
     return inputMarkup;
 }
 
-function __refreshControl(subElem, isChecked, mode) {
+function __refreshControl(subElem, isChecked, mode, forceReadOnly) {
     var DOM;
     if ($(subElem.DOM).is('input')) {
         DOM = subElem.DOM;
@@ -994,6 +1004,9 @@ function __refreshControl(subElem, isChecked, mode) {
     } else {
         $(DOM)[0].readOnly = false;
         $(DOM).removeClass('ui-disabled').prev().removeClass('ui-disabled');
+     }
+     if (forceReadOnly === true) {
+         $(DOM)[0].readOnly = true;
      }
 }
 
@@ -1035,7 +1048,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     var i = 0;
     for (i = 0; i < formElem.controls.length; ++i) {
         var subElem = formElem.controls[i];
-        __preprocessFormElement(formLayout, subElem);
+        __preprocessFormElement(subElem);
         if (subElem.hidden || subElem.disabled) {
             continue;
         }
@@ -1146,7 +1159,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     var i = 0;
     for (i = 0; i < formElem.controls.length; ++i) {
         var subElem = formElem.controls[i];
-        __preprocessFormElement(formLayout, subElem);
+        __preprocessFormElement(subElem);
         if (subElem.disabled) {
             continue;
         }
@@ -1369,7 +1382,7 @@ function __refreshButtonGroup(formElem) {
     var formButtonIdx;
     for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
         formButton = formElem.buttons[formButtonIdx];
-        __preprocessFormElement(formElem.parentForm, formButton);
+        __preprocessFormElement(formButton);
         __makeButtonMarkup(formButton, formButton.mini, $buttonBar);
     }
 }
@@ -1698,7 +1711,7 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 }
 
-function __preprocessFormElement(formLayout, formElem) {
+function __preprocessFormElement(formElem) {
     formElem.computedFieldStyleClass = '';
     if (formElem.fieldStyleClass) {
         if (!Helix.Utils.isString(formElem.fieldStyleClass)) {
@@ -1808,7 +1821,7 @@ Helix.Utils.refreshFormElement = function(formLayout, formElem, parentDiv, page,
 
     var separateElements = formLayout.separateElements;
 
-    __preprocessFormElement(formLayout, formElem);
+    __preprocessFormElement(formElem);
 
     if (formElem.disabled) {
         return false;
@@ -1991,7 +2004,7 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
     var $viewFieldContainer, $editFieldContainer;
     var separateElements = false;
 
-    __preprocessFormElement(formLayout, formElem);
+    __preprocessFormElement(formElem);
 
     if (formElem.disabled) {
         return;
@@ -2178,7 +2191,7 @@ Helix.Utils.layoutForm = function (parentDiv, formLayout, page, useMiniLayout) {
     }
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        formElem.parentForm = formLayout;
+        formElem.parentContainer = formLayout;
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
 }
