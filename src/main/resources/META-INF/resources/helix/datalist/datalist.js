@@ -741,7 +741,7 @@ var globalDataListID = -1;
         },
         
         _addToListStart: function(nItems) {
-            var LIs = $(this.$parent).find('li');
+            var LIs = $(this.$parent).find('li').not('[data-role="empty-message"]');
             var lastLI = LIs[0];
             var fullheight = 0;
             var i = LIs.length - 1; 
@@ -797,7 +797,7 @@ var globalDataListID = -1;
         },
         
         _addToListEnd: function(nItems) {
-            var LIs = $(this.$parent).find('li');
+            var LIs = $(this.$parent).find('li').not('[data-role="empty-message"]');
             var lastLI;
             var lastLIPos;
             var origLastID;
@@ -867,175 +867,6 @@ var globalDataListID = -1;
             } else {
                 this.$section.nextAll('.hx-datalist-spinner').remove();
                 this._restoreScrollEvent();
-            }
-        },
-        
-        _nextPage: function (direction, oncomplete) {
-            var _self = this;
-            if (this.options.grouped) {
-                // Grouped lists do not scroll
-                return;
-            }
-            if (direction < 0) {
-                var _addToBottom = function () {
-                    var toReverse = Math.floor(_self._itemsPerPage / 3);
-                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
-                    var startIdx = preloadStartIdx - toReverse;
-                    if (startIdx < 0) {
-                        // Either: (1), we have no more data.
-                        // (2) We need to wait for more data.
-                        // (3) We need to get more data and wait for it.
-                        if (_self._renderWindowStart === 0) {
-                            // No data
-                            oncomplete();
-                            return;
-                        } else {
-                            if (!_self._preloadPromise) {
-                                _self._preloadPage(-1, 2);
-                            }
-                            if (_self._preloadPromise) {
-                                _self._preloadPromise.then(_addToBottom);
-                                return;
-                            } else if (preloadStartIdx) {
-                                startIdx = 0;
-                            } else {
-                                oncomplete();
-                                return;
-                            }
-                        }
-                    }
-
-                    if (startIdx >= 0) {
-                        var lastLI = null;
-                        var i;
-                        for (i = 0; i < _self.displayLIs.length; ++i) {
-                            lastLI = _self.displayLIs[i];
-                            if (lastLI && ('data-id' in lastLI.attributes)) {
-                                break;
-                            }
-                        }
-                        if (!lastLI) {
-                            // We are caught mid-refresh ... otherwise this should never happen.
-                            oncomplete();
-                            return;
-                        }
-                        var lastID = lastLI.attributes['data-id'].nodeValue;
-                        _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + _self._itemsPerPage), function (tgtID) {
-                            _self._renderWindowStart -= toReverse;
-                            if (!_self._preloadPromise && (startIdx < _self._itemsPerPage * 2)) {
-                                _self._preloadPage(-1, 2);
-                            }
-
-                            var i;
-                            var delta = 0;
-                            for (i = 0; i < _self.displayLIs.length; ++i) {
-                                var nxt = _self.displayLIs[i];
-                                if (('data-id' in nxt.attributes) &&
-                                        tgtID === nxt.attributes['data-id'].nodeValue) {
-                                    delta = nxt.offsetTop - _self.displayLIs[0].offsetTop;
-                                    break;
-                                }
-                            }
-
-                            _self._updateScrollTop(delta);
-                            setTimeout(function () {
-                                _self._forceRerender();
-                                oncomplete();
-                            }, 15);
-                        }, _self.options.emptyMessage, lastID, _self.extraItems, _self.options);
-                        return;
-                    } else {
-                        oncomplete();
-                    }
-                };
-                _addToBottom();
-            } else {
-                var _addToEnd = function () {
-                    var toAdd = Math.floor(_self._itemsPerPage / 3);
-                    var windowSize = _self._itemsPerPage;
-                    var preloadStartIdx = _self._renderWindowStart - _self._preloadWindowStart;
-                    var startIdx = preloadStartIdx + toAdd;
-                    
-                    if (_self._preloadPromise) {
-                        // Wait for more data.
-                        _self._preloadPromise.then(_addToEnd);
-                        return;
-                    }
-                    if (!_self._prefetchedData) {
-                        // We could not get any more data for one reason or another. This function cannot proceed.
-                        oncomplete();
-                        return;
-                    }
-                    if ((startIdx + windowSize) >= _self._prefetchedData.length) {
-                        // we need more data.
-                        if (_self._preloadHitDataTop) {
-                            toAdd = (_self._prefetchedData.length - (preloadStartIdx + windowSize));
-                            startIdx = preloadStartIdx + toAdd;
-                        } else{
-                            // We need more data
-                            _self._preloadPage(1, 2);                                
-                            if (!_self._preloadPromise) {
-                                // We tried to get the data we need, but we couldn't 
-                                _self._preloadHitDataTop = true;
-                            }
-                            _addToEnd();
-                            return;
-                        }
-                    }
-                    if (toAdd <= 0) {
-                        // We have hit the top of the list ... no more data.
-                        oncomplete();
-                        return;
-                    }
-                    
-                    if (startIdx <= _self._prefetchedData.length) {
-                        var lastLI = null;
-                        var i;
-                        for (i = _self.displayLIs.length - 1; i >= 0; --i) {
-                            lastLI = _self.displayLIs[i];
-                            if (lastLI && ('data-id' in lastLI.attributes)) {
-                                break;
-                            }
-                        }
-                        if (!lastLI) {
-                            // We are caught mid-refresh ... otherwise this should never happen.
-                            oncomplete();
-                            return;
-                        }
-                        if (i >= 0) {
-                            var lastTop = _self.displayLIs[i].offsetTop;
-                            var lastID = lastLI.attributes['data-id'].nodeValue;
-                            _self._sortAndRenderData(_self._prefetchedData.slice(startIdx, startIdx + windowSize), function (args) {
-                                var tgtID = args[0];
-                                var origTop = args[1];
-                                _self._renderWindowStart += toAdd;
-                                if (!_self._preloadPromise && (startIdx > (_self._itemsPerPage * 2))) {
-                                    _self._preloadPage(1, 2);
-                                }
-
-                                var delta = 0;
-                                for (i = _self.displayLIs.length - 1; i > 0; --i) {
-                                    var nxt = _self.displayLIs[i];
-                                    if (('data-id' in nxt.attributes) &&
-                                            tgtID === nxt.attributes['data-id'].nodeValue) {
-                                        delta = _self.displayLIs[i].offsetTop - origTop;
-                                        break;
-                                    }
-                                }
-
-                                _self._updateScrollTop(_self.$listWrapper[0].scrollTop + delta);
-                                setTimeout(function () {
-                                    _self._forceRerender();
-                                    oncomplete();
-                                }, 100);
-                            }, _self.options.emptyMessage, [lastID, lastTop], _self.extraItems, _self.options);
-                            return;
-                        }
-                    } else {
-                        oncomplete();
-                    }
-                };
-                _addToEnd();
             }
         },
         
