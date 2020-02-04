@@ -949,14 +949,31 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
             mini: useMiniLayout
         });
         $fieldContainer.find('label').removeClass('ui-btn-corner-all');
+        if (formElem.onchange) {
+            $(inputMarkup).change(function () {
+                formElem.onchange.call(this, formElem);
+            });
+        }
     } else {
         var $checkContainer = $('<div/>').addClass('hx-checkbox').appendTo($fieldContainer);
         $(inputMarkup).appendTo($checkContainer);
         $('<div/>').addClass('state').appendTo($checkContainer).append(lbl);
         __refreshControl(formElem, false , mode, true);
-        $fieldContainer.on(Helix.clickEvent, null, [formElem.parentForm, inputMarkup[0]], function(ev) {
+        var $checkTarget;
+        if (formElem.parentContainer && formElem.parentContainer.type === 'controlset') {
+            $checkTarget = $checkContainer;
+        } else {
+            $checkTarget = $fieldContainer;
+        }
+        $checkTarget.on(Helix.clickEvent, null, [formElem.parentForm, inputMarkup[0], formElem], function(ev) {
             var _formLayout = ev.data[0];
             var _inputMarkup = ev.data[1];
+            var _formElem = ev.data[2];
+            if (_formLayout && _formLayout.isView()) {
+                // View mode. do nothing.
+                ev.stopImmediatePropagation();
+                return false;
+            }
             if (_inputMarkup.checked === true) {
                 _inputMarkup.checked = false;
             } else {
@@ -965,14 +982,12 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
             if (_formLayout && _formLayout.markDirty !== undefined) {
                 _formLayout.markDirty();
             }
+            if (_formElem.onchange) {
+                _formElem.onchange.call(_inputMarkup, _formElem);
+            }
             
             ev.stopImmediatePropagation();
             return false;
-        })
-    }
-    if (formElem.onchange) {
-        $(inputMarkup).change(function () {
-            formElem.onchange.call(this, formElem);
         });
     }
     return inputMarkup;
@@ -1167,6 +1182,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
             console.log("Skipping controlset checkbox because it has no name.");
             continue;
         }
+        subElem.parentContainer = formElem;
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
         subElem.DOM = inputMarkup;
         subElem.viewDOM = subElem.editDOM = $(subElem.DOM).closest('.hx-checkbox');
