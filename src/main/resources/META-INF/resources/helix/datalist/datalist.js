@@ -1129,31 +1129,7 @@ var globalDataListID = -1;
                 list = _self._applyOrdering(list, _self._currentSort, _self._currentSortOrder, _self._currentSortCase);
                 displayCollection = _self._resetGlobalFilters(list);
             }
-            var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
-            var multiSelectElems = _self.getAllMultiSelectElements();
-            var multiSelectIDs = [];
-            $(multiSelectElems).each(function(index, elem) {
-                multiSelectIDs.push($(elem).attr('data-id'));
-                $(elem).removeClass('hx-selected');
-            });
             _self._refreshData(function () {
-                if (selectedID) {
-                    var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
-                    if (selected.length === 0) {
-                        _self.clearSelected();
-                    } else {
-                        // Make sure this is the selected LI.
-                        _self.setSelected(selected);
-                    }
-                } else {
-                    _self.clearSelected();
-                }
-                multiSelectIDs.forEach(function(element) {
-                    if (element) {
-                        _self.$listWrapper.find('li[data-id="' + element + '"]').addClass('hx-selected');
-                    }
-                });
-
                 if (oncomplete) {
                     oncomplete(_self);
                 }
@@ -1655,11 +1631,38 @@ var globalDataListID = -1;
             if (renderWindowStart !== undefined) {
                 _self.setRenderWindowStart(renderWindowStart);
             }
+            
+            /* Make sure selections are stable. */
+            var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
+            var multiSelectElems = _self.getAllMultiSelectElements();
+            var multiSelectIDs = [];
+            $(multiSelectElems).each(function(index, elem) {
+                multiSelectIDs.push($(elem).attr('data-id'));
+                $(elem).removeClass('hx-selected');
+            });
 
             /* Apply any active search terms, then global filters. Note, we must apply 
              * search first. 
              */
             this._sortAndRenderData(displayCollection, function (finalCompletion) {
+                /* Restore selections. */
+                if (selectedID) {
+                    var selected = _self.$listWrapper.find('li[data-id="' + selectedID + '"]');
+                    if (selected.length === 0) {
+                        _self.clearSelected();
+                    } else {
+                        // Make sure this is the selected LI.
+                        _self.setSelected(selected);
+                    }
+                } else {
+                    _self.clearSelected();
+                }
+                multiSelectIDs.forEach(function(element) {
+                    if (element) {
+                        _self.$listWrapper.find('li[data-id="' + element + '"]').addClass('hx-selected');
+                    }
+                });
+                
                 finalCompletion.call(_self);
                 //_self.$parent.listview("refresh");
                 _self.refreshInProgress = false;
