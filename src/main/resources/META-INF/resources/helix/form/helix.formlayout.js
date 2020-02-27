@@ -1319,7 +1319,16 @@ function __refreshHTMLFrame(formElem, mode) {
         }
     } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
-        __refreshIFrame(formElem);
+        if (formElem.selectable !== true) {
+            __refreshIFrame(formElem);
+        } else {
+            formElem.$frame.empty();
+            formElem.$frame.append(formElem.value);
+            formElem.$frame.find('style').each(function() {
+                var _t = $(this)[0].innerHTML;
+                $(this)[0].innerHTML = '.hx-form-html-container {' + _t + '}';
+            });
+        }
     }
 }
 
@@ -1358,6 +1367,7 @@ function __makeIFrameMarkup(formElem) {
 }
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
+    // XXX: hx-text-selectable
     if (formElem.height === 'full') {
         $fieldContainer.addClass('hx-flex-fill');
     }
@@ -1379,10 +1389,17 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         if (formElem.height) {
             $fieldContainer.height(formElem.height);
         }
-        var newFrameMarkup = __makeIFrameMarkup(formElem);
-        formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
-        __refreshIFrame(formElem);
-        formElem.frameMarkup = newFrameMarkup;
+        if (formElem.selectable === true) {
+            formElem.$frame = $('<div/>')
+                    .attr('data-role', 'container')
+                    .addClass('hx-scroller-nozoom hx-full-width hx-full-height hx-form-html-container')
+                    .appendTo($fieldContainer);
+        } else {
+            var newFrameMarkup = __makeIFrameMarkup(formElem);
+            formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
+            __refreshIFrame(formElem);
+            formElem.frameMarkup = newFrameMarkup;
+        }
     } else {
         __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }

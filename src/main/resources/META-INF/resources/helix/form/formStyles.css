@@ -257,6 +257,11 @@
     padding : 3px 0px 3px 0px;
 }
 
+.hx-text-selectable,.hx-text-selectable * {
+    -webkit-user-select : text !important;
+    -webkit-touch-callout: default !important;
+}
+
 .hx-form-container .hx-tz-selector label,
 .hx-form-container .hx-date-selector label{
     margin-bottom: 0.25em;
