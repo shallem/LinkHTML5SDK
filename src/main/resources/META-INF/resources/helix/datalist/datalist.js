@@ -3345,16 +3345,22 @@ var globalDataListID = -1;
         },
         markDeleted: function (elems) {
             //$(elems).hide(400, 'linear');
-            $(elems).attr('data-deleted', 'true');
-            $(elems).addClass('hx-deleted');
+            $(elems).each(function() {
+                $(this).attr('data-deleted', 'true');
+                $(this).addClass('hx-deleted');
+            });
+            
+            setTimeout(function(_self) {
+                _self.$listWrapper.find('.hx-deleted').addClass('hx-hide-deleted');
+            }, 2000, this);
         },
         confirmDeleted: function (elems, callback) {
             var allObjs = [];
             $.each(elems, function() {
                 var obj = $(this).data('data');
                 allObjs.push(obj);
+                $(this).remove();
             });
-            $(elems).remove();
             if (callback) {
                 var _self = this;
                 callback(allObjs, function() {
@@ -3365,7 +3371,11 @@ var globalDataListID = -1;
             }
         },
         clearDeleted: function (elems) {
-            $(elems).attr('data-deleted', '').removeClass('hx-deleted');
+            $(elems).each(function() {
+                $(this).attr('data-deleted', '');
+                $(this).removeClass('hx-deleted');
+                $(this).removeClass('hx-hide-deleted');
+            });
             this.refreshListView();
         },
         equals: function(other) {
