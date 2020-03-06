@@ -142,6 +142,13 @@
             <description>Indicates that this form field is read only. Read only form elements are not influenced by clear calls.</description>
         </attribute>
         <attribute>
+            <name>selectable</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>false</defaultValue>
+            <description>Indicates that this form field has selectable HTML text.</description>
+        </attribute>
+        <attribute>
             <name>trueText</name>
             <required>false</required>
             <type>java.lang.String</type>
