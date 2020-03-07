@@ -2547,7 +2547,8 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
     $.mobile.activePage.append(popup);//.trigger("pagecreate");
     $(popup).popup({
         noResize: true,
-        containerClass: 'hx-actions-popup'
+        containerClass: 'hx-actions-popup',
+        dismissible: (options.dismissible !== undefined ? options.dismissible : true)
     });
     $(popup).trigger('create');
     $.mobile.activePage.trigger('enhanceHeaders');
@@ -2568,7 +2569,7 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
         });
     }
     if (options.popupDismiss) {
-        $(popup).on('popupdismiss', null, options, function (ev) {
+        $(popup).on('popupdismiss popupcancel', null, options, function (ev) {
             if (ev.data.popupDismiss) {
                 ev.data.popupDismiss();
             }
