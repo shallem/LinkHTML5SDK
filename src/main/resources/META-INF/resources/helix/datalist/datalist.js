@@ -653,7 +653,7 @@ var globalDataListID = -1;
             }
 
             var displayCollection = this.itemList;
-            if ($.isArray(displayCollection)) {
+            if (!displayCollection || $.isArray(displayCollection)) {
                 // No preloading an array.
                 return;
             }
