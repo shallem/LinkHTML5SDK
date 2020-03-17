@@ -3337,11 +3337,13 @@ var globalDataListID = -1;
          */
         renderListView: function (oncomplete) {
             var _self = this;
-            this._sortAndRenderData(this.itemList, function (finalCompletion) {
-                if (finalCompletion) {
-                    finalCompletion();
-                }
-            }, this.options.emptyMessage, oncomplete, this.extraItems, _self.options);
+            if (this.itemList) {
+                this._sortAndRenderData(this.itemList, function (finalCompletion) {
+                    if (finalCompletion) {
+                        finalCompletion();
+                    }
+                }, this.options.emptyMessage, oncomplete, this.extraItems, _self.options);
+            }
         },
         markDeleted: function (elems) {
             //$(elems).hide(400, 'linear');

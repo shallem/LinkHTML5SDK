@@ -344,14 +344,14 @@ function config(persistence, dialect) {
         var __doFlush = function(callback, persistObjArray, removeObjArray) {
             var queries = [];
             var errors = [];
-            for(var i = 0; i < removeObjArray.length; i++) {
-                remove(removeObjArray[i], queries);
+            for(var j = 0; j < removeObjArray.length; ++j) {
+                remove(removeObjArray[j], queries);
             }
             executeQueries(queries, errors).then(function() {
                 // Resolve
                 queries = [];
-                for(var i = 0; i < persistObjArray.length; i++) {
-                    save(persistObjArray[i], queries);
+                for(var k = 0; k < persistObjArray.length; ++k) {
+                    save(persistObjArray[k], queries);
                 }
                 return executeQueries(queries, errors);
             }).then(function() {
@@ -556,12 +556,12 @@ function config(persistence, dialect) {
     
     function executeQueries(queries, errors) {
         return new Promise(function(resolve, reject) {
-            var nDone = 0;
             if (queries.length === 0) {
                 resolve(errors);
                 return;
             }
             persistence.transaction(function(tx) {
+                var nDone = 0;
                 for (var i = 0; i < queries.length; ++i) {
                     var queryTuple = queries[i];
                     tx.executeSql(queryTuple[0], queryTuple[1], function() {

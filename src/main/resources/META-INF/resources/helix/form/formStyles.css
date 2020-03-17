@@ -313,6 +313,7 @@
     border-radius: 0px;
     padding: 0;
     -webkit-user-select: none !important;
+    align-items: center;
 }
 
 .hx-collapsible-button {
