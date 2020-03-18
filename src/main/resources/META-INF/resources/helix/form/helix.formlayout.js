@@ -1656,7 +1656,7 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     var subPanelDiv = $('<div />').attr({
         'id': subPanelID,
-        'class': 'hx-collapsible hx-form-container'
+        'class': 'hx-collapsible hx-form-container ' + (formElem.styleClass ? formElem.styleClass : '')
     }).appendTo($fieldContainer);
 
     var iconClass = (subPanelObj.noCollapse ? 'ui-icon-collapse' : 'ui-icon-expand');
