@@ -1325,8 +1325,15 @@ function __refreshHTMLFrame(formElem, mode) {
             formElem.$frame.empty();
             formElem.$frame.append(formElem.value);
             formElem.$frame.find('style').each(function() {
-                var _t = $(this)[0].innerHTML;
-                $(this)[0].innerHTML = '.hx-form-html-container {' + _t + '}';
+                var _t = $(this)[0];
+                if (_t.sheet) {
+                    var newText = '';
+                    for (var s = 0; s < _t.sheet.cssRules.length; ++s) {
+                        var _nxt = _t.sheet.cssRules[s];
+                        newText = newText + ' .hx-form-html-container ' + _nxt.cssText;
+                    }
+                    _t.innerHTML = newText;
+                }
             });
         }
     }
