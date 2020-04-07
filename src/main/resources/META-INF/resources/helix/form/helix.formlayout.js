@@ -2533,7 +2533,7 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
             'class' : 'hx-flex-horizontal hx-mini-fieldcontain hx-action-border'
         });
         $(nxtDiv).append($('<div/>').attr({
-            'class': 'hx-display-inline hx-flex-fill'
+            'class': 'hx-display-inline hx-flex-fill ' + (nxt.textClass ? nxt.textClass : '')
         }).append(nxt.label));
         $(nxtDiv).append($('<div/>').attr({
             'class' : 'hx-display-inline iconbutton ' + iconClass

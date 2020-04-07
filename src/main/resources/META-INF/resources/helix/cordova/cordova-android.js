@@ -19,9 +19,13 @@ function cordova_android_init() {
                 var resStr = obj[methodName].apply(obj, finalArgs);
                 var res = $.parseJSON(resStr);
                 if (res.code === 0) {
-                    success(res.val ? $.parseJSON(res.val) : null);
+                    if (success) {
+                        success(res.val ? $.parseJSON(res.val) : null);
+                    }
                 } else {
-                    failure(res.msg);
+                    if (failure) {
+                        failure(res.msg);
+                    }
                 }
             }
         }
