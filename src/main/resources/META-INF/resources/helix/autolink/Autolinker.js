@@ -790,7 +790,11 @@ Autolinker.prototype = {
 			newHtml.push( textOrHtml.substring( lastIndex, match.getOffset() ) );
 			newHtml.push( this.createMatchReturnVal( match ) );
 
-			lastIndex = match.getOffset() + match.getMatchedText().length;
+                        if (match.skipTo !== undefined) {
+                            lastIndex = match.skipTo;
+                        } else {
+                            lastIndex = match.getOffset() + match.getMatchedText().length;
+                        }
 		}
 		newHtml.push( textOrHtml.substring( lastIndex ) );  // handle the text after the last match
 
@@ -3380,7 +3384,8 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
-				plusSign    : plusSign
+				plusSign    : plusSign,
+                                skipTo      : matcherRegex.lastIndex
 			} ) );
 		}
 
@@ -3433,7 +3438,8 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
-				plusSign    : plusSign
+				plusSign    : plusSign,
+                                skipTo      : matcherRegex.lastIndex
 			} ) );
 		}
 
@@ -3748,7 +3754,8 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				protocolUrlMatch      : protocolUrlMatch,
 				protocolRelativeMatch : !!protocolRelativeMatch,
 				stripPrefix           : stripPrefix,
-				stripTrailingSlash    : stripTrailingSlash
+				stripTrailingSlash    : stripTrailingSlash,
+                                skipTo      : matcherRegex.lastIndex
 			} ) );
 		}
 
