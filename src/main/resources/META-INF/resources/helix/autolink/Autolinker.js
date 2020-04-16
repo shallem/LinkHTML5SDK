@@ -606,8 +606,9 @@ Autolinker.prototype = {
 	 */
         decodeText: function(str, decodeOffsets) {
             return str.replace(/&#(\d+);/g, function(match, dec, offset) {
-                decodeOffsets.push({ offset: offset, length: match.length });
-                return String.fromCharCode(dec);
+                var repl = String.fromCharCode(dec);
+                decodeOffsets.push({ offset: offset, length: match.length - repl.length });
+                return repl;
             });
         },
         
@@ -791,7 +792,7 @@ Autolinker.prototype = {
 			newHtml.push( this.createMatchReturnVal( match ) );
 
                         if (match.skipTo !== undefined) {
-                            lastIndex = match.skipTo;
+                            lastIndex = match.getOffset() + match.getMatchedText().length + match.skipTo;
                         } else {
                             lastIndex = match.getOffset() + match.getMatchedText().length;
                         }
@@ -2379,6 +2380,7 @@ Autolinker.match.Match = Autolinker.Util.extend( Object, {
 		this.tagBuilder = cfg.tagBuilder;
 		this.matchedText = cfg.matchedText;
 		this.offset = cfg.offset;
+                this.skipTo = cfg.skipTo ? cfg.skipTo : 0;
 	},
 
 
@@ -3246,18 +3248,19 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 
 		while( ( match = matcherRegex.exec( text ) ) !== null ) {
 			var matchedText = match[ 0 ].trim();
-                        matchedText = matchedText.replace(/^mailto:/,'');
                         if (matchedText.charAt(matchedText.length - 1).match(Autolinker.RegexLib.terminatorRegex.source)) {
                             matchedText = matchedText.substring(0, matchedText.length - 1);
                         }
 
                         var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);  
-			matches.push( new Autolinker.match.Email( {
+			var finalText = matchedText.replace(/^mailto:/,'');
+                        offsetAdjust += matchedText.length - finalText.length;
+                        matches.push( new Autolinker.match.Email( {
 				tagBuilder  : tagBuilder,
-				matchedText : matchedText,
+				matchedText : finalText,
 				offset      : match.index,
-				email       : matchedText.trim(),
-                                skipTo      : matcherRegex.lastIndex + offsetAdjust
+				email       : finalText.trim(),
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3400,7 +3403,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				offset      : match.index,
 				number      : cleanNumber,
 				plusSign    : plusSign,
-                                skipTo      : matcherRegex.lastIndex + offsetAdjust
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3455,7 +3458,7 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 				offset      : match.index,
 				number      : cleanNumber,
 				plusSign    : plusSign,
-                                skipTo      : matcherRegex.lastIndex + offsetAdjust
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3772,7 +3775,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				protocolRelativeMatch : !!protocolRelativeMatch,
 				stripPrefix           : stripPrefix,
 				stripTrailingSlash    : stripTrailingSlash,
-                                skipTo      : matcherRegex.lastIndex + offsetAdjust
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
