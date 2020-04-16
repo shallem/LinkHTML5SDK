@@ -604,8 +604,9 @@ Autolinker.prototype = {
 	 * @return {Autolinker.match.Match[]} The array of Matches found in the
 	 *   given input `textOrHtml`.
 	 */
-        decodeText: function(str) {
-            return str.replace(/&#(\d+);/g, function(match, dec) {
+        decodeText: function(str, decodeOffsets) {
+            return str.replace(/&#(\d+);/g, function(match, dec, offset) {
+                decodeOffsets.push({ offset: offset, length: match.length });
                 return String.fromCharCode(dec);
             });
         },
@@ -633,9 +634,9 @@ Autolinker.prototype = {
                             // Skip the next node (which is the text content of the style)
                             ++i;
                         } else if( nodeType === 'text' && anchorTagStackCount === 0 ) {  // Process text nodes that are not within an <a> tag
-				var _text = this.decodeText(node.getText());
-                                var textNodeMatches = this.parseText( _text, node.getOffset() );
-
+				var decodeOffsets = [];
+                                var _text = this.decodeText(node.getText(), decodeOffsets);
+                                var textNodeMatches = this.parseText( _text, node.getOffset(), decodeOffsets );
 				matches.push.apply( matches, textNodeMatches );
 			}
 		}
@@ -737,13 +738,13 @@ Autolinker.prototype = {
 	 * @return {Autolinker.match.Match[]} The array of Matches found in the
 	 *   given input `text`.
 	 */
-	parseText : function( text, offset ) {
+	parseText : function( text, offset, decodeOffsets ) {
 		offset = offset || 0;
 		var matchers = this.getMatchers(),
 		    matches = [];
 
 		for( var i = 0, numMatchers = matchers.length; i < numMatchers; i++ ) {
-			var textMatches = matchers[ i ].parseMatches( text );
+			var textMatches = matchers[ i ].parseMatches( text, decodeOffsets.slice() );
 
 			// Correct the offset of each of the matches. They are originally
 			// the offset of the match within the provided text node, but we
@@ -783,8 +784,7 @@ Autolinker.prototype = {
 		var matches = this.parse( textOrHtml ),
 			newHtml = [],
 			lastIndex = 0;
-
-		for( var i = 0, len = matches.length; i < len; i++ ) {
+                for( var i = 0, len = matches.length; i < len; i++ ) {
 			var match = matches[ i ];
 
 			newHtml.push( textOrHtml.substring( lastIndex, match.getOffset() ) );
@@ -3184,7 +3184,19 @@ Autolinker.matcher.Matcher = Autolinker.Util.extend( Object, {
 	 * @param {String} text The text to scan and replace matches in.
 	 * @return {Autolinker.match.Match[]}
 	 */
-	parseMatches : Autolinker.Util.abstractMethod
+	parseMatches : Autolinker.Util.abstractMethod,
+        
+        offsetAdjustment: function(offset, decodeOffsets) {
+            var totAdjustment = 0;
+            for (var i = 0 ; i < decodeOffsets.length; ++i) {
+                if (decodeOffsets[i].offset <= offset) {
+                    totAdjustment += decodeOffsets[i].length;
+                } else {
+                    break;
+                }
+            }
+            return totAdjustment;
+        }
 
 } );
 /*global Autolinker */
@@ -3226,7 +3238,7 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3234,16 +3246,18 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 
 		while( ( match = matcherRegex.exec( text ) ) !== null ) {
 			var matchedText = match[ 0 ].trim();
-                        matchedText.replace(/^mailto:/,'');
+                        matchedText = matchedText.replace(/^mailto:/,'');
                         if (matchedText.charAt(matchedText.length - 1).match(Autolinker.RegexLib.terminatorRegex.source)) {
                             matchedText = matchedText.substring(0, matchedText.length - 1);
                         }
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);  
 			matches.push( new Autolinker.match.Email( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
-				email       : matchedText.trim()
+				email       : matchedText.trim(),
+                                skipTo      : matcherRegex.lastIndex + offsetAdjust
 			} ) );
 		}
 
@@ -3367,7 +3381,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3379,13 +3393,14 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 			    cleanNumber = '1-'+match[3]+'-'+match[4]+'-'+match[5]+(match[6] ? match[6] : ''),  // strip out non-digit characters
 			    plusSign = match.length > 1 && match[ 2 ] === '+';  // match[ 2 ] is the prefixed plus sign, if there is one
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);
 			matches.push( new Autolinker.match.Phone( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
 				plusSign    : plusSign,
-                                skipTo      : matcherRegex.lastIndex
+                                skipTo      : matcherRegex.lastIndex + offsetAdjust
 			} ) );
 		}
 
@@ -3421,7 +3436,7 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3433,13 +3448,14 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 			    cleanNumber = match[3]+'-'+match[5].replace(/[ -.]/g,''),  // strip out non-digit characters
 			    plusSign = true;  // match[ 2 ] is the prefixed plus sign, if there is one
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);                        
 			matches.push( new Autolinker.match.Phone( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
 				plusSign    : plusSign,
-                                skipTo      : matcherRegex.lastIndex
+                                skipTo      : matcherRegex.lastIndex + offsetAdjust
 			} ) );
 		}
 
@@ -3692,7 +3708,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    stripPrefix = this.stripPrefix,
 		    stripTrailingSlash = this.stripTrailingSlash,
@@ -3745,6 +3761,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 			var urlMatchType = schemeUrlMatch ? 'scheme' : ( wwwUrlMatch ? 'www' : 'tld' ),
 			    protocolUrlMatch = !!schemeUrlMatch;
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);
 			matches.push( new Autolinker.match.Url( {
 				tagBuilder            : tagBuilder,
 				matchedText           : matchStr,
@@ -3755,7 +3772,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				protocolRelativeMatch : !!protocolRelativeMatch,
 				stripPrefix           : stripPrefix,
 				stripTrailingSlash    : stripTrailingSlash,
-                                skipTo      : matcherRegex.lastIndex
+                                skipTo      : matcherRegex.lastIndex + offsetAdjust
 			} ) );
 		}
 
