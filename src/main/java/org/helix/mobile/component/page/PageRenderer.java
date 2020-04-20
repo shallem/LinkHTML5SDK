@@ -65,6 +65,13 @@ public class PageRenderer extends Renderer {
         writer.write(page.getTitle());
         writer.endElement("title");
         
+        // Get rid of favicon requests
+        // <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+        writer.startElement("link", null);
+        writer.writeAttribute("rel", "icon", null);
+        writer.writeAttribute("href", "data:;base64,iVBORw0KGgo=", null);
+        writer.endElement("link");
+        
         if(preinit != null) {
             preinit.encodeAll(context);
         }
