@@ -1330,7 +1330,24 @@ function __refreshHTMLFrame(formElem, mode) {
                     var newText = '';
                     for (var s = 0; s < _t.sheet.cssRules.length; ++s) {
                         var _nxt = _t.sheet.cssRules[s];
-                        newText = newText + ' .hx-form-html-container ' + _nxt.cssText;
+                        if (_nxt.type === 1) {
+                            // Style rule
+                            var newSelector = null;
+                            var selText = _nxt.selectorText;
+                            var sels = selText.split(',');
+                            if (sels.length > 0) {
+                                for (var l = 0; l < sels.length; ++l) {
+                                    if (!newSelector) {
+                                        newSelector = '.hx-form-html-container ' + sels[l].trim();
+                                    } else {
+                                        newSelector = newSelector + ', .hx-form-html-container ' + sels[l].trim();
+                                    }
+                                }
+                            } else {
+                                newSelector = '.hx-form-html-container';
+                            }
+                            newText = newSelector + ' ' + _nxt.style.cssText;
+                        }
                     }
                     _t.innerHTML = newText;
                 }

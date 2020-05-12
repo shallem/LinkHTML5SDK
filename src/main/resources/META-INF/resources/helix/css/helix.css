@@ -350,6 +350,8 @@ a {
 
 .hx-available-width {
     width: -webkit-fill-available;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .hx-almost-full-width {
