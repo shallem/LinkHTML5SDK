@@ -100,6 +100,16 @@
             }
         },
         
+        showItemByName: function(itemName, status, overrideLabel) {
+            for (var i = 0; i < this.options.items.length; ++i) {
+                var _i = this.options.items[i];
+                if (_i.name && itemName === _i.name) {
+                    this.showItem(i, status, overrideLabel);
+                    break;
+                }
+            }
+        },
+        
         // showItem, status = true or false
         showItem: function (itemIndex, status, overrideLabel) {
             if (itemIndex >= this.options.items.length) {
@@ -515,6 +525,13 @@
                 return e.val();
             }
             return null;
+        },
+        addMenuOption: function(newOpt) {
+            if (!newOpt.type) {
+                newOpt.type = 'menu';
+            }
+            this.options.items.push(newOpt);
+            this.refresh();
         }
     });
 }(jQuery));
