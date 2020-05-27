@@ -162,17 +162,18 @@
 
 			messages = $.prettyDate.messages;
                         var dayOfWeek = $.prettyDate.dayOfWeek;
-			return  dayDiff === 0 && targetDate.toString('h:mm tt') ||
-                                dayDiff === 1 && 'Yesterday' ||
-                                dayDiff < 7 && dayOfWeek[targetDate.getDay()] ||
-                                dayDiff <= 90 && targetDate.toString('MMM d') ||
-                                dayDiff > 90 && targetDate.toString('MMM d, yy');
+                        var tstamp = targetDate.toString('h:mm tt');
+			return  dayDiff === 0 && tstamp ||
+                                //dayDiff === 1 && ('Yesterday, ' + tstamp) ||
+                                dayDiff < 7 && (dayOfWeek[targetDate.getDay()] + ' ' + tstamp) ||
+                                dayDiff <= 90 && (dayOfWeek[targetDate.getDay()] + ' ' + targetDate.toString('M/d') + ' ' + tstamp) ||
+                                dayDiff > 90 && (targetDate.toString('MMM d, yy') + ' ' + tstamp);
 		}
 
 	};
 
         $.prettyDate.dayOfWeek = [ 
-            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+            'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
             ];
             
 	$.prettyDate.messages = {

@@ -110,6 +110,15 @@
             }
         },
         
+        showGroupByName: function(itemGroup, status, overrideLabel) {
+            for (var i = 0; i < this.options.items.length; ++i) {
+                var _i = this.options.items[i];
+                if (_i.groupid && itemGroup === _i.groupid) {
+                    this.showItem(i, status, overrideLabel);
+                }
+            }
+        },
+        
         // showItem, status = true or false
         showItem: function (itemIndex, status, overrideLabel) {
             if (itemIndex >= this.options.items.length) {
@@ -532,6 +541,16 @@
             }
             this.options.items.push(newOpt);
             this.refresh();
+        },
+        insertMenuOption: function(newOpt, idx) {
+            if (!newOpt.type) {
+                newOpt.type = 'menu';
+            }
+            this.options.items.splice(idx, 0, newOpt);
+            this.refresh();
+        },
+        getOptionsCount: function() {
+            return this.options.items.length;
         }
     });
 }(jQuery));

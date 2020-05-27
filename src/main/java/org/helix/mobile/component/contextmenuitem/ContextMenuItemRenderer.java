@@ -37,6 +37,9 @@ public class ContextMenuItemRenderer extends Renderer {
         if (item.getData() != null) {
             writer.write(",'data' : '" + item.getData() + "'");
         }
+        if (item.getName() != null) {
+            writer.write(", 'name': '" + item.getName() + "'");
+        }
         if (itemType.equals("radio")) {
             writer.write(",'options': [");
             boolean isFirst = true;
