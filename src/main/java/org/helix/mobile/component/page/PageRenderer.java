@@ -181,6 +181,8 @@ public class PageRenderer extends Renderer {
             UIComponent resource = (UIComponent) iter.next();
             resource.encodeAll(context);
         }
+        writer.write("\n");
+        writer.write("$(document).trigger('hxLayoutDone');");
         writer.endElement("script");
 
         writer.endElement("body");

@@ -227,7 +227,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             'name': formElem.name,
             'id': inputID,
             'type': inputType,
-            'step': stepStr
+            'step': stepStr,
+            'tabIndex': formLayout.__tabIndex++
         }).appendTo(inputWrapper);
         if (formElem.onfocus) {
             dateInput.focus(formElem.onfocus);
@@ -2223,7 +2224,9 @@ function __preprocessFormLayout(formLayout) {
         formLayout.textStyleClass = '';
     }
 
-    formLayout.__tabIndex = 1;
+    if (!formLayout.__tabIndex) {
+        formLayout.__tabIndex = 1;
+    }
 }
 
 /**
