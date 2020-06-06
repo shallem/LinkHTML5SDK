@@ -1324,7 +1324,11 @@ function __refreshHTMLFrame(formElem, mode) {
             __refreshIFrame(formElem);
         } else {
             formElem.$frame.empty();
-            formElem.$frame.append(formElem.value);
+            if (Helix.Utils.isString(formElem.value)) {
+                formElem.$frame.append(formElem.value);
+            } else {
+                formElem.$frame.append($(formElem.value.body.children));
+            }
             formElem.$frame.find('style').each(function() {
                 var _t = $(this)[0];
                 if (_t.sheet) {

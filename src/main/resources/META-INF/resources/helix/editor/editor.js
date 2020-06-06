@@ -648,13 +648,18 @@
             }
         },
         update: function (val) {
-            // Strip out closing br tags that cause unnecessary spaces ...
-            val = val.replace(/<\/br>/g, '');
-            
-            this.$editFrame.scrollTop(0);
-            this.$editFrame.html(val);
-            if (!val) {
-                this.isFirstTyping = true;
+            if (Helix.Utils.isString(val)) {
+                // Strip out closing br tags that cause unnecessary spaces ...
+                val = val.replace(/<\/br>/g, '');
+
+                this.$editFrame.scrollTop(0);
+                this.$editFrame.html(val);
+                if (!val) {
+                    this.isFirstTyping = true;
+                }
+            } else {
+                this.$editFrame.empty();
+                this.$editFrame.append($(val.body.children));
             }
 
             // Repair. We cannot handle 'b' and 'i' tags
