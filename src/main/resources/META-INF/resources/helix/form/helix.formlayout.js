@@ -1327,7 +1327,7 @@ function __refreshHTMLFrame(formElem, mode) {
             if (Helix.Utils.isString(formElem.value)) {
                 formElem.$frame.append(formElem.value);
             } else {
-                formElem.$frame.append($(formElem.value.body.children));
+                formElem.$frame.append($(formElem.value.body.childNodes));
             }
             formElem.$frame.find('style').each(function() {
                 var _t = $(this)[0];
