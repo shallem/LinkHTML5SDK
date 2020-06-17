@@ -517,6 +517,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         $(inputMarkup).on('input', null, formElem, function (ev) {
             $(this).trigger('change');
+            if (ev.data.parentForm) {
+                ev.data.parentForm.markDirty();
+            }
             if (ev.data.type !== 'rawTextarea') {
                 var offset = ev.target.offsetHeight - ev.target.clientHeight;
                 ev.target.style.height = 'auto';
@@ -612,11 +615,14 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
         return false;
     });
     
-    if (formElem.onchange) {
-        $(inputMarkup).change(function () {
-            formElem.onchange.call(this, formElem);
-        });
-    }
+    $(inputMarkup).change(formElem, function (ev) {
+        if (ev.data.parentForm) {
+            ev.data.parentForm.markDirty();
+        }
+        if (ev.data.onchange) {
+            ev.data.onchange.call(this, formElem);
+        }
+    });
 }
 
 function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
