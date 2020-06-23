@@ -1640,7 +1640,12 @@ function initHelixDB() {
                     }
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type === 1001) {
-                        Helix.DB.synchronizeDeltaField(dbSession, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, handleAsyncFields, _asyncFields, overrides);
+                        Helix.DB.synchronizeDeltaField(dbSession, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, function(__a) {
+                            var cKeyName = field + 'ChangeKey';
+                            obj[cKeyName] = fieldVal.changeID;
+                            scalarFields.push(cKeyName);
+                            handleAsyncFields(__a);
+                        }, _asyncFields, overrides);
                     } else {
                         var keyField = Helix.DB.getJSONKeyField(fieldSchema, fieldVal);
                         Helix.DB.synchronizeObjectField(dbSession, allSchemas, fieldVal, persistentObj, fieldSchema, field, fieldVal[keyField], handleAsyncFields, _asyncFields, overrides); 
@@ -1765,7 +1770,8 @@ function initHelixDB() {
                         return;
                     }
                     
-                    if (obj[nxt].error) {
+                    if (obj[nxt].__hx_type === -999) {
+                        // This is an error object
                         resultObj[nxt] = obj[nxt];
                         syncComponent();
                     } else {

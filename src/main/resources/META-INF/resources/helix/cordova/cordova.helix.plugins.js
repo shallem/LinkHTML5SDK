@@ -363,4 +363,12 @@ function cordova_helix_init() {
             }
         });
     }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 16) {
+        $.extend(window.HelixSystem, {
+            logout: function() {
+                return cordova.exec(null, null, "HelixSystem", "logout", [ ]);
+            }
+        });
+    }
 }
