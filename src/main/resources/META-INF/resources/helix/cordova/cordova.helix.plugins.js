@@ -101,7 +101,7 @@ function cordova_helix_init() {
         },
         notifyParent: function(eventName, eventArg) {
             if (eventArg === undefined) {
-                eventArg = nil;
+                eventArg = null;
             }
             
             return cordova.exec(null, null, "HelixSystem", "notifyParent", [ eventName, eventArg ])
@@ -364,10 +364,17 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 16) {
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 15) {
         $.extend(window.HelixSystem, {
-            logout: function() {
-                return cordova.exec(null, null, "HelixSystem", "logout", [ ]);
+            logout: function(success, failure) {
+                if (!success) {
+                    success = function() {};
+                }
+                if (!failure) {
+                    failure = function() {};
+                }
+                return cordova.exec(success, failure, "HelixSystem", "logout", [
+                ]);
             }
         });
     }

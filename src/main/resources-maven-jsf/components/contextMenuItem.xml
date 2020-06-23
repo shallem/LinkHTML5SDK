@@ -64,5 +64,11 @@
             <literal>true</literal>
             <description>Unique identifier of the component in a namingContainer.</description>
         </attribute>
+        <attribute>
+            <name>name</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Unique identifier of the menu option.</description>
+        </attribute>
     </attributes>
 </component>

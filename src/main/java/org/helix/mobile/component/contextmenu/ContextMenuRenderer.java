@@ -59,6 +59,9 @@ public class ContextMenuRenderer extends Renderer {
         if (menu.getAfterClose() != null) {
             writer.write(",afterclose: " + menu.getAfterClose());
         }
+        if (menu.getAfterOpen() != null) {
+            writer.write(",afteropen: " + menu.getAfterOpen());
+        }
         
         writer.write("});\n");
         PageRenderer.renderDialog(context, component, writer.toString());

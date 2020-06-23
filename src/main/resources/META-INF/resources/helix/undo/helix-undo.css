@@ -25,14 +25,14 @@
 	bottom:30px;
 	left:0px;
 	width:100%;
-        background-color: #AAAAAA;
+        background-color: #FF8000;
 }
 .ui-hx-undo-item-container {
 	position:relative;
 	margin:0 0 10px 0;
 	opacity:0.65;
 	filter:alpha(opacity=65);
-        color: whitesmoke;
+        color: white;
 }
 .ui-hx-undo-item {
 	display:block;

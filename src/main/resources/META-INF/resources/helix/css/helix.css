@@ -171,6 +171,10 @@
     min-height: 60px;    
 }
 
+.iconbuttonLineHeight {
+    line-height: 60px;
+}
+
 .hx-button-bar .iconbutton .ui-btn-inner {
     border: none;
 }
@@ -342,6 +346,12 @@ a {
 
 .hx-full-width {
     width: 100%;
+}
+
+.hx-available-width {
+    width: -webkit-fill-available;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .hx-almost-full-width {
@@ -637,6 +647,10 @@ a {
     
     .iconbuttonHeight {
         min-height: 40px;    
+    }
+    
+    .iconbuttonLineHeight {
+        line-height: 40px;
     }
     
     .iconbutton .ui-icon-check {

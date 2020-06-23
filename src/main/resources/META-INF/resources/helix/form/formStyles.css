@@ -257,6 +257,11 @@
     padding : 3px 0px 3px 0px;
 }
 
+.hx-text-selectable,.hx-text-selectable * {
+    -webkit-user-select : text !important;
+    -webkit-touch-callout: default !important;
+}
+
 .hx-form-container .hx-tz-selector label,
 .hx-form-container .hx-date-selector label{
     margin-bottom: 0.25em;
@@ -308,6 +313,7 @@
     border-radius: 0px;
     padding: 0;
     -webkit-user-select: none !important;
+    align-items: center;
 }
 
 .hx-collapsible-button {
@@ -379,19 +385,17 @@
 .hx-checkbox {
     position: relative;
     display: inline-block;
-    margin-right: 1em;
     white-space: nowrap;
     line-height: 1;
+    margin: 0.75em 1em 0.75em 0em;
 }
 
 .hx-checkbox input {
-    min-width: 2em;
     padding: 0;
     touch-action: manipulation;
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
     height: 100%;
     z-index: 2;
     opacity: 0;

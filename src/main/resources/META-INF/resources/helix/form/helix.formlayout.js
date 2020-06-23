@@ -227,7 +227,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             'name': formElem.name,
             'id': inputID,
             'type': inputType,
-            'step': stepStr
+            'step': stepStr,
+            'tabIndex': formLayout.__tabIndex++
         }).appendTo(inputWrapper);
         if (formElem.onfocus) {
             dateInput.focus(formElem.onfocus);
@@ -516,6 +517,9 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
         }
         $(inputMarkup).on('input', null, formElem, function (ev) {
             $(this).trigger('change');
+            if (ev.data.parentForm) {
+                ev.data.parentForm.markDirty();
+            }
             if (ev.data.type !== 'rawTextarea') {
                 var offset = ev.target.offsetHeight - ev.target.clientHeight;
                 ev.target.style.height = 'auto';
@@ -611,11 +615,14 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
         return false;
     });
     
-    if (formElem.onchange) {
-        $(inputMarkup).change(function () {
-            formElem.onchange.call(this, formElem);
-        });
-    }
+    $(inputMarkup).change(formElem, function (ev) {
+        if (ev.data.parentForm) {
+            ev.data.parentForm.markDirty();
+        }
+        if (ev.data.onchange) {
+            ev.data.onchange.call(this, formElem);
+        }
+    });
 }
 
 function __appendSelectMenu(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
@@ -756,8 +763,10 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             });
         }
         
-        $fieldContainer.on(Helix.clickEvent, function() {
+        $fieldContainer.on(Helix.clickEvent, function(ev) {
+            ev.stopImmediatePropagation();
             $(inputMarkup).focus();
+            return false;
         });
 
         // Add in autocomplete.
@@ -947,26 +956,51 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
             mini: useMiniLayout
         });
         $fieldContainer.find('label').removeClass('ui-btn-corner-all');
+        if (formElem.onchange) {
+            $(inputMarkup).change(function () {
+                formElem.onchange.call(this, formElem);
+            });
+        }
     } else {
         var $checkContainer = $('<div/>').addClass('hx-checkbox').appendTo($fieldContainer);
         $(inputMarkup).appendTo($checkContainer);
         $('<div/>').addClass('state').appendTo($checkContainer).append(lbl);
-        __refreshControl(formElem, false , mode);
-    }
-    if (formElem.onchange) {
-        $(inputMarkup).change(function () {
-            formElem.onchange.call(this, formElem);
+        __refreshControl(formElem, false , mode, true);
+        var $checkTarget;
+        if (formElem.parentContainer && formElem.parentContainer.type === 'controlset') {
+            $checkTarget = $checkContainer;
+        } else {
+            $checkTarget = $fieldContainer;
+        }
+        $checkTarget.on(Helix.clickEvent, null, [formElem.parentForm, inputMarkup[0], formElem], function(ev) {
+            var _formLayout = ev.data[0];
+            var _inputMarkup = ev.data[1];
+            var _formElem = ev.data[2];
+            if (_formLayout && _formLayout.isView()) {
+                // View mode. do nothing.
+                ev.stopImmediatePropagation();
+                return false;
+            }
+            if (_inputMarkup.checked === true) {
+                _inputMarkup.checked = false;
+            } else {
+                _inputMarkup.checked = true;
+            }
+            if (_formLayout && _formLayout.markDirty !== undefined) {
+                _formLayout.markDirty();
+            }
+            if (_formElem.onchange) {
+                _formElem.onchange.call(_inputMarkup, _formElem);
+            }
+            
+            ev.stopImmediatePropagation();
+            return false;
         });
-    }
-    if (!mode) {
-        /* View */
-        $(inputMarkup)[0].readOnly = true;
-        $(inputMarkup).addClass('ui-disabled').prev().addClass('ui-disabled');
     }
     return inputMarkup;
 }
 
-function __refreshControl(subElem, isChecked, mode) {
+function __refreshControl(subElem, isChecked, mode, forceReadOnly) {
     var DOM;
     if ($(subElem.DOM).is('input')) {
         DOM = subElem.DOM;
@@ -993,6 +1027,9 @@ function __refreshControl(subElem, isChecked, mode) {
         $(DOM)[0].readOnly = false;
         $(DOM).removeClass('ui-disabled').prev().removeClass('ui-disabled');
      }
+     if (forceReadOnly === true) {
+         $(DOM)[0].readOnly = true;
+     }
 }
 
 function hxRefreshRadioButton(parentDOM, newValue) {
@@ -1002,12 +1039,17 @@ function hxRefreshRadioButton(parentDOM, newValue) {
     });
 }
 
-function __refreshRadioButtons(formElem) {
+function __refreshRadioButtons(formElem, rerenderItem) {
     // Clear out all selections.
     $(formElem.DOM).find('input').removeAttr('checked').prop('checked', false).prev('label').removeClass('hx-btn-active');
     $(formElem.DOM).find('input[data-value="' + formElem.value + '"]')
         .attr('checked', true).prop('checked', true)
         .prev('label').addClass('hx-btn-active');
+    if (rerenderItem) {
+        var formLayout = formElem.parentForm;
+        $(formElem.DOM).empty();
+        __appendRadioButtons(formLayout.isEdit() ? 1: 0, formLayout.options, formElem, formElem.DOM, formLayout.layoutMini);
+    }
 }
 
 function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
@@ -1028,7 +1070,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
     var i = 0;
     for (i = 0; i < formElem.controls.length; ++i) {
         var subElem = formElem.controls[i];
-        __preprocessFormElement(formLayout, subElem);
+        __preprocessFormElement(subElem);
         if (subElem.hidden || subElem.disabled) {
             continue;
         }
@@ -1139,7 +1181,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
     var i = 0;
     for (i = 0; i < formElem.controls.length; ++i) {
         var subElem = formElem.controls[i];
-        __preprocessFormElement(formLayout, subElem);
+        __preprocessFormElement(subElem);
         if (subElem.disabled) {
             continue;
         }
@@ -1147,6 +1189,7 @@ function __appendControlSet(mode, formLayout, formElem, $fieldContainer, useMini
             console.log("Skipping controlset checkbox because it has no name.");
             continue;
         }
+        subElem.parentContainer = formElem;
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout);
         subElem.DOM = inputMarkup;
         subElem.viewDOM = subElem.editDOM = $(subElem.DOM).closest('.hx-checkbox');
@@ -1283,7 +1326,44 @@ function __refreshHTMLFrame(formElem, mode) {
         }
     } else if ($(formElem.viewDOM).is(':visible') || mode === 0) {
         // Reset onload, otherwise it is not called.
-        __refreshIFrame(formElem);
+        if (formElem.selectable !== true) {
+            __refreshIFrame(formElem);
+        } else {
+            formElem.$frame.empty();
+            if (Helix.Utils.isString(formElem.value)) {
+                formElem.$frame.append(formElem.value);
+            } else {
+                formElem.$frame.append($(formElem.value.body.childNodes));
+            }
+            formElem.$frame.find('style').each(function() {
+                var _t = $(this)[0];
+                if (_t.sheet) {
+                    var newText = '';
+                    for (var s = 0; s < _t.sheet.cssRules.length; ++s) {
+                        var _nxt = _t.sheet.cssRules[s];
+                        if (_nxt.type === 1) {
+                            // Style rule
+                            var newSelector = null;
+                            var selText = _nxt.selectorText;
+                            var sels = selText.split(',');
+                            if (sels.length > 0) {
+                                for (var l = 0; l < sels.length; ++l) {
+                                    if (!newSelector) {
+                                        newSelector = '.hx-form-html-container ' + sels[l].trim();
+                                    } else {
+                                        newSelector = newSelector + ', .hx-form-html-container ' + sels[l].trim();
+                                    }
+                                }
+                            } else {
+                                newSelector = '.hx-form-html-container';
+                            }
+                            newText = newSelector + ' ' + _nxt.style.cssText;
+                        }
+                    }
+                    _t.innerHTML = newText;
+                }
+            });
+        }
     }
 }
 
@@ -1322,6 +1402,7 @@ function __makeIFrameMarkup(formElem) {
 }
 
 function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv) {
+    // XXX: hx-text-selectable
     if (formElem.height === 'full') {
         $fieldContainer.addClass('hx-flex-fill');
     }
@@ -1343,10 +1424,17 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         if (formElem.height) {
             $fieldContainer.height(formElem.height);
         }
-        var newFrameMarkup = __makeIFrameMarkup(formElem);
-        formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
-        __refreshIFrame(formElem);
-        formElem.frameMarkup = newFrameMarkup;
+        if (formElem.selectable === true) {
+            formElem.$frame = $('<div/>')
+                    .attr('data-role', 'container')
+                    .addClass('hx-scroller-nozoom hx-full-width hx-full-height hx-form-html-container')
+                    .appendTo($fieldContainer);
+        } else {
+            var newFrameMarkup = __makeIFrameMarkup(formElem);
+            formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
+            __refreshIFrame(formElem);
+            formElem.frameMarkup = newFrameMarkup;
+        }
     } else {
         __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page, parentDiv);
     }
@@ -1362,7 +1450,7 @@ function __refreshButtonGroup(formElem) {
     var formButtonIdx;
     for (formButtonIdx = 0; formButtonIdx < formElem.buttons.length; ++formButtonIdx) {
         formButton = formElem.buttons[formButtonIdx];
-        __preprocessFormElement(formElem.parentForm, formButton);
+        __preprocessFormElement(formButton);
         __makeButtonMarkup(formButton, formButton.mini, $buttonBar);
     }
 }
@@ -1555,7 +1643,9 @@ function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContaine
 
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
+    subPanelObj.__tabIndex = formLayout.__tabIndex;
     Helix.Utils.layoutForm(subPanelDiv, subPanelObj, page, useMiniLayout);
+    formLayout.__tabIndex = subPanelObj.__tabIndex;
     if (subPanelObj.modes === 'view') {
         subPanelObj.DOM = subPanelObj.viewDOM = subPanelDiv;
     } else if (subPanelObj.modes === 'edit') {
@@ -1603,7 +1693,7 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     var subPanelDiv = $('<div />').attr({
         'id': subPanelID,
-        'class': 'hx-collapsible hx-form-container'
+        'class': 'hx-collapsible hx-form-container ' + (formElem.styleClass ? formElem.styleClass : '')
     }).appendTo($fieldContainer);
 
     var iconClass = (subPanelObj.noCollapse ? 'ui-icon-collapse' : 'ui-icon-expand');
@@ -1647,7 +1737,9 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     }
     // Layout the elements in the sub-panel add a separator between elements
     // but not between items in each element.
+    subPanelObj.__tabIndex = formLayout.__tabIndex;
     Helix.Utils.layoutForm(body, subPanelObj, page, useMiniLayout);
+    formLayout.__tabIndex = subPanelObj.__tabIndex;
 
     // Prepend here rather than appending before the layoutForm call because layoutForm
     // empties the parent div.
@@ -1689,7 +1781,7 @@ function __appendSubPanel(mode, formLayout, formElem, $fieldContainer, useMiniLa
     subPanelObj.DOM = subPanelObj.editDOM = subPanelObj.viewDOM = subPanelDiv;
 }
 
-function __preprocessFormElement(formLayout, formElem) {
+function __preprocessFormElement(formElem) {
     formElem.computedFieldStyleClass = '';
     if (formElem.fieldStyleClass) {
         if (!Helix.Utils.isString(formElem.fieldStyleClass)) {
@@ -1799,7 +1891,7 @@ Helix.Utils.refreshFormElement = function(formLayout, formElem, parentDiv, page,
 
     var separateElements = formLayout.separateElements;
 
-    __preprocessFormElement(formLayout, formElem);
+    __preprocessFormElement(formElem);
 
     if (formElem.disabled) {
         return false;
@@ -1982,7 +2074,7 @@ Helix.Utils.layoutFormElement = function (formLayout, formElem, parentDiv, page,
     var $viewFieldContainer, $editFieldContainer;
     var separateElements = false;
 
-    __preprocessFormElement(formLayout, formElem);
+    __preprocessFormElement(formElem);
 
     if (formElem.disabled) {
         return;
@@ -2144,7 +2236,9 @@ function __preprocessFormLayout(formLayout) {
         formLayout.textStyleClass = '';
     }
 
-    formLayout.__tabIndex = 1;
+    if (!formLayout.__tabIndex) {
+        formLayout.__tabIndex = 1;
+    }
 }
 
 /**
@@ -2169,7 +2263,7 @@ Helix.Utils.layoutForm = function (parentDiv, formLayout, page, useMiniLayout) {
     }
     for (elemIdx = 0; elemIdx < formElements.length; ++elemIdx) {
         formElem = formElements[elemIdx];
-        formElem.parentForm = formLayout;
+        formElem.parentContainer = formLayout;
         Helix.Utils.layoutFormElement(formLayout, formElem, parentDiv, page, useMiniLayout);
     }
 }
@@ -2374,6 +2468,13 @@ Helix.Layout._layoutPopup = function (popup, options, buttons, form, popupOpts) 
             }
         });
     }
+    if (options.afterOpen) {
+        $(popup).one('popupafteropen', null, options, function (ev) {
+            if (ev.data.afterOpen) {
+                ev.data.afterOpen();
+            }
+        });
+    }
     if (options.noOpen !== true) {
         $(popup).popup("open");
     }
@@ -2464,7 +2565,7 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
             'class' : 'hx-flex-horizontal hx-mini-fieldcontain hx-action-border'
         });
         $(nxtDiv).append($('<div/>').attr({
-            'class': 'hx-display-inline hx-flex-fill'
+            'class': 'hx-display-inline hx-flex-fill ' + (nxt.textClass ? nxt.textClass : '')
         }).append(nxt.label));
         $(nxtDiv).append($('<div/>').attr({
             'class' : 'hx-display-inline iconbutton ' + iconClass
@@ -2485,7 +2586,8 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
     $.mobile.activePage.append(popup);//.trigger("pagecreate");
     $(popup).popup({
         noResize: true,
-        containerClass: 'hx-actions-popup'
+        containerClass: 'hx-actions-popup',
+        dismissible: (options.dismissible !== undefined ? options.dismissible : true)
     });
     $(popup).trigger('create');
     $.mobile.activePage.trigger('enhanceHeaders');
@@ -2506,7 +2608,7 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
         });
     }
     if (options.popupDismiss) {
-        $(popup).on('popupdismiss', null, options, function (ev) {
+        $(popup).on('popupdismiss popupcancel', null, options, function (ev) {
             if (ev.data.popupDismiss) {
                 ev.data.popupDismiss();
             }

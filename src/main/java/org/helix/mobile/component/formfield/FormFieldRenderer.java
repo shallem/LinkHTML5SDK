@@ -155,6 +155,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (Boolean.TRUE.equals(ffield.isNoBorder())) {
             writer.write(", 'noBorder' : true");
         }
+        if (Boolean.TRUE.equals(ffield.isSelectable())) {
+            writer.write(", 'selectable' : true");
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

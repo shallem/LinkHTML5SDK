@@ -100,6 +100,25 @@
             }
         },
         
+        showItemByName: function(itemName, status, overrideLabel) {
+            for (var i = 0; i < this.options.items.length; ++i) {
+                var _i = this.options.items[i];
+                if (_i.name && itemName === _i.name) {
+                    this.showItem(i, status, overrideLabel);
+                    break;
+                }
+            }
+        },
+        
+        showGroupByName: function(itemGroup, status, overrideLabel) {
+            for (var i = 0; i < this.options.items.length; ++i) {
+                var _i = this.options.items[i];
+                if (_i.groupid && itemGroup === _i.groupid) {
+                    this.showItem(i, status, overrideLabel);
+                }
+            }
+        },
+        
         // showItem, status = true or false
         showItem: function (itemIndex, status, overrideLabel) {
             if (itemIndex >= this.options.items.length) {
@@ -287,6 +306,11 @@
                             if (!nxtItem.enabled) {
                                 inputMarkup.addClass('ui-disabled');
                             }
+                            nxtLI.on(Helix.clickEvent, null, inputMarkup, function(ev) {
+                                ev.stopImmediatePropagation();
+                                $(ev.data).focus();
+                                return false;
+                            });
                             
                             if (nxtItem.action) {
                                 if (nxtItem.type === 'date') {
@@ -510,6 +534,23 @@
                 return e.val();
             }
             return null;
+        },
+        addMenuOption: function(newOpt) {
+            if (!newOpt.type) {
+                newOpt.type = 'menu';
+            }
+            this.options.items.push(newOpt);
+            this.refresh();
+        },
+        insertMenuOption: function(newOpt, idx) {
+            if (!newOpt.type) {
+                newOpt.type = 'menu';
+            }
+            this.options.items.splice(idx, 0, newOpt);
+            this.refresh();
+        },
+        getOptionsCount: function() {
+            return this.options.items.length;
         }
     });
 }(jQuery));

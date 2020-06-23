@@ -169,7 +169,7 @@
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-resources-plugin</artifactId>
-	<version>2.6</version>
+	<version>3.1.0</version>
 	<executions>
 	  <execution>
 	    <id>copy-resources</id>
@@ -271,6 +271,7 @@
 		    <include>cordova/cordova-3.4.plugins.js</include>
 		    <include>cordova/cordova-3.4.plugin-list.js</include>
 		    <include>cordova/cordova.ios-3.4.js</include>
+		    <include>cordova/cordova-android.js</include>
 		    <include>cordova/cordova-init.js</include>
 
 		    <!-- Must go after cordova-init.js, where we

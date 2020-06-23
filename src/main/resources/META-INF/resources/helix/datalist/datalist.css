@@ -105,12 +105,19 @@ and open the template in the editor.
 }
 
 .hx-listview li {
-  transition: opacity 1s ease-out;
-  opacity: 0;
+    transition: opacity 2s linear, visibility 0s 2s;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .hx-listview li:not(.hx-deleted) {
-  opacity: 1;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 2s linear;
+}
+
+.hx-listview li.hx-hide-deleted {
+    display: none;
 }
 
 .hx-listview .hx-text-list-item {
@@ -183,7 +190,7 @@ and open the template in the editor.
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.3);
+  background-color: rgba(0,0,0,0.8);
   /* hide "hx-datalist-spinner..." text */
   font: 0/0 a;
   color: transparent;

@@ -185,7 +185,12 @@ function config(persistence, dialect) {
                     colDefs = [];
                     for (var prop in meta.fields) {
                         if (meta.fields.hasOwnProperty(prop)) {
-                            colDefs.push([prop, meta.fields[prop]]);
+                            var fld = meta.fields[prop];
+                            if ($.isArray(prop)) {
+                                colDefs.push([prop].concat(fld));
+                            } else {
+                                colDefs.push([prop, fld]);
+                            }
                         }
                     }
                     for (var rel in meta.hasOne) {
@@ -339,14 +344,14 @@ function config(persistence, dialect) {
         var __doFlush = function(callback, persistObjArray, removeObjArray) {
             var queries = [];
             var errors = [];
-            for(var i = 0; i < removeObjArray.length; i++) {
-                remove(removeObjArray[i], queries);
+            for(var j = 0; j < removeObjArray.length; ++j) {
+                remove(removeObjArray[j], queries);
             }
             executeQueries(queries, errors).then(function() {
                 // Resolve
                 queries = [];
-                for(var i = 0; i < persistObjArray.length; i++) {
-                    save(persistObjArray[i], queries);
+                for(var k = 0; k < persistObjArray.length; ++k) {
+                    save(persistObjArray[k], queries);
                 }
                 return executeQueries(queries, errors);
             }).then(function() {
@@ -551,12 +556,12 @@ function config(persistence, dialect) {
     
     function executeQueries(queries, errors) {
         return new Promise(function(resolve, reject) {
-            var nDone = 0;
             if (queries.length === 0) {
                 resolve(errors);
                 return;
             }
             persistence.transaction(function(tx) {
+                var nDone = 0;
                 for (var i = 0; i < queries.length; ++i) {
                     var queryTuple = queries[i];
                     tx.executeSql(queryTuple[0], queryTuple[1], function() {

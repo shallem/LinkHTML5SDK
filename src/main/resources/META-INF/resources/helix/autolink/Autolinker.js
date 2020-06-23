@@ -604,9 +604,11 @@ Autolinker.prototype = {
 	 * @return {Autolinker.match.Match[]} The array of Matches found in the
 	 *   given input `textOrHtml`.
 	 */
-        decodeText: function(str) {
-            return str.replace(/&#(\d+);/g, function(match, dec) {
-                return String.fromCharCode(dec);
+        decodeText: function(str, decodeOffsets) {
+            return str.replace(/&#(\d+);/g, function(match, dec, offset) {
+                var repl = String.fromCharCode(dec);
+                decodeOffsets.push({ offset: offset, length: match.length - repl.length });
+                return repl;
             });
         },
         
@@ -633,9 +635,9 @@ Autolinker.prototype = {
                             // Skip the next node (which is the text content of the style)
                             ++i;
                         } else if( nodeType === 'text' && anchorTagStackCount === 0 ) {  // Process text nodes that are not within an <a> tag
-				var _text = this.decodeText(node.getText());
-                                var textNodeMatches = this.parseText( _text, node.getOffset() );
-
+				var decodeOffsets = [];
+                                var _text = this.decodeText(node.getText(), decodeOffsets);
+                                var textNodeMatches = this.parseText( _text, node.getOffset(), decodeOffsets );
 				matches.push.apply( matches, textNodeMatches );
 			}
 		}
@@ -737,13 +739,13 @@ Autolinker.prototype = {
 	 * @return {Autolinker.match.Match[]} The array of Matches found in the
 	 *   given input `text`.
 	 */
-	parseText : function( text, offset ) {
+	parseText : function( text, offset, decodeOffsets ) {
 		offset = offset || 0;
 		var matchers = this.getMatchers(),
 		    matches = [];
 
 		for( var i = 0, numMatchers = matchers.length; i < numMatchers; i++ ) {
-			var textMatches = matchers[ i ].parseMatches( text );
+			var textMatches = matchers[ i ].parseMatches( text, decodeOffsets.slice() );
 
 			// Correct the offset of each of the matches. They are originally
 			// the offset of the match within the provided text node, but we
@@ -783,14 +785,17 @@ Autolinker.prototype = {
 		var matches = this.parse( textOrHtml ),
 			newHtml = [],
 			lastIndex = 0;
-
-		for( var i = 0, len = matches.length; i < len; i++ ) {
+                for( var i = 0, len = matches.length; i < len; i++ ) {
 			var match = matches[ i ];
 
 			newHtml.push( textOrHtml.substring( lastIndex, match.getOffset() ) );
 			newHtml.push( this.createMatchReturnVal( match ) );
 
-			lastIndex = match.getOffset() + match.getMatchedText().length;
+                        if (match.skipTo !== undefined) {
+                            lastIndex = match.getOffset() + match.getMatchedText().length + match.skipTo;
+                        } else {
+                            lastIndex = match.getOffset() + match.getMatchedText().length;
+                        }
 		}
 		newHtml.push( textOrHtml.substring( lastIndex ) );  // handle the text after the last match
 
@@ -1555,7 +1560,7 @@ Autolinker.RegexLib = (function() {
 	// See documentation below
 	var tldRegex = /(?:travelersinsurance|sandvikcoromant|kerryproperties|cancerresearch|weatherchannel|kerrylogistics|spreadbetting|international|wolterskluwer|lifeinsurance|construction|pamperedchef|scholarships|versicherung|bridgestone|creditunion|kerryhotels|investments|productions|blackfriday|enterprises|lamborghini|photography|motorcycles|williamhill|playstation|contractors|barclaycard|accountants|redumbrella|engineering|management|telefonica|protection|consulting|tatamotors|creditcard|vlaanderen|schaeffler|associates|properties|foundation|republican|bnpparibas|boehringer|eurovision|extraspace|industries|immobilien|university|technology|volkswagen|healthcare|restaurant|cuisinella|vistaprint|apartments|accountant|travelers|homedepot|institute|vacations|furniture|fresenius|insurance|christmas|bloomberg|solutions|barcelona|firestone|financial|kuokgroup|fairwinds|community|passagens|goldpoint|equipment|lifestyle|yodobashi|aquarelle|marketing|analytics|education|amsterdam|statefarm|melbourne|allfinanz|directory|microsoft|stockholm|montblanc|accenture|lancaster|landrover|everbank|istanbul|graphics|grainger|ipiranga|softbank|attorney|pharmacy|saarland|catering|airforce|yokohama|mortgage|frontier|mutuelle|stcgroup|memorial|pictures|football|symantec|cipriani|ventures|telecity|cityeats|verisign|flsmidth|boutique|cleaning|firmdale|clinique|clothing|redstone|infiniti|deloitte|feedback|services|broadway|plumbing|commbank|training|barclays|exchange|computer|brussels|software|delivery|barefoot|builders|business|bargains|engineer|holdings|download|security|helsinki|lighting|movistar|discount|hdfcbank|supplies|marriott|property|diamonds|capetown|partners|democrat|jpmorgan|bradesco|budapest|rexroth|zuerich|shriram|academy|science|support|youtube|singles|surgery|alibaba|statoil|dentist|schwarz|android|cruises|cricket|digital|markets|starhub|systems|courses|coupons|netbank|country|domains|corsica|network|neustar|realtor|lincoln|limited|schmidt|yamaxun|cooking|contact|auction|spiegel|liaison|leclerc|latrobe|lasalle|abogado|compare|lanxess|exposed|express|company|cologne|college|avianca|lacaixa|fashion|recipes|ferrero|komatsu|storage|wanggou|clubmed|sandvik|fishing|fitness|bauhaus|kitchen|flights|florist|flowers|watches|weather|temasek|samsung|bentley|forsale|channel|theater|frogans|theatre|okinawa|website|tickets|jewelry|gallery|tiffany|iselect|shiksha|brother|organic|wedding|genting|toshiba|origins|philips|hyundai|hotmail|hoteles|hosting|rentals|windows|cartier|bugatti|holiday|careers|whoswho|hitachi|panerai|caravan|reviews|guitars|capital|trading|hamburg|hangout|finance|stream|family|abbott|health|review|travel|report|hermes|hiphop|gratis|career|toyota|hockey|dating|repair|google|social|soccer|reisen|global|otsuka|giving|unicom|casino|photos|center|broker|rocher|orange|bostik|garden|insure|ryukyu|bharti|safety|physio|sakura|oracle|online|jaguar|gallup|piaget|tienda|futbol|pictet|joburg|webcam|berlin|office|juegos|kaufen|chanel|chrome|xihuan|church|tennis|circle|kinder|flickr|bayern|claims|clinic|viajes|nowruz|xperia|norton|yachts|studio|coffee|camera|sanofi|nissan|author|expert|events|comsec|lawyer|tattoo|viking|estate|villas|condos|realty|yandex|energy|emerck|virgin|vision|durban|living|school|coupon|london|taobao|natura|taipei|nagoya|luxury|walter|aramco|sydney|madrid|credit|maison|makeup|schule|market|anquan|direct|design|swatch|suzuki|alsace|vuelos|dental|alipay|voyage|shouji|voting|airtel|mutual|degree|supply|agency|museum|mobily|dealer|monash|select|mormon|active|moscow|racing|datsun|quebec|nissay|rodeo|email|gifts|works|photo|chloe|edeka|cheap|earth|vista|tushu|koeln|glass|shoes|globo|tunes|gmail|nokia|space|kyoto|black|ricoh|seven|lamer|sener|epson|cisco|praxi|trust|citic|crown|shell|lease|green|legal|lexus|ninja|tatar|gripe|nikon|group|video|wales|autos|gucci|party|nexus|guide|linde|adult|parts|amica|lixil|boats|azure|loans|locus|cymru|lotte|lotto|stada|click|poker|quest|dabur|lupin|nadex|paris|faith|dance|canon|place|gives|trade|skype|rocks|mango|cloud|boots|smile|final|swiss|homes|honda|media|horse|cards|deals|watch|bosch|house|pizza|miami|osaka|tours|total|xerox|coach|sucks|style|delta|toray|iinet|tools|money|codes|beats|tokyo|salon|archi|movie|baidu|study|actor|yahoo|store|apple|world|forex|today|bible|tmall|tirol|irish|tires|forum|reise|vegas|vodka|sharp|omega|weber|jetzt|audio|promo|build|bingo|chase|gallo|drive|dubai|rehab|press|solar|sale|beer|bbva|bank|band|auto|sapo|sarl|saxo|audi|asia|arte|arpa|army|yoga|ally|zara|scor|scot|sexy|seat|zero|seek|aero|adac|zone|aarp|maif|meet|meme|menu|surf|mini|mobi|mtpc|porn|desi|star|ltda|name|talk|navy|love|loan|live|link|news|limo|like|spot|life|nico|lidl|lgbt|land|taxi|team|tech|kred|kpmg|sony|song|kiwi|kddi|jprs|jobs|sohu|java|itau|tips|info|immo|icbc|hsbc|town|host|page|toys|here|help|pars|haus|guru|guge|tube|goog|golf|gold|sncf|gmbh|gift|ggee|gent|gbiz|game|vana|pics|fund|ford|ping|pink|fish|film|fast|farm|play|fans|fail|plus|skin|pohl|fage|moda|post|erni|dvag|prod|doha|prof|docs|viva|diet|luxe|site|dell|sina|dclk|show|qpon|date|vote|cyou|voto|read|coop|cool|wang|club|city|chat|cern|cash|reit|rent|casa|cars|care|camp|rest|call|cafe|weir|wien|rich|wiki|buzz|wine|book|bond|room|work|rsvp|shia|ruhr|blue|bing|shaw|bike|safe|xbox|best|pwc|mtn|lds|aig|boo|fyi|nra|nrw|ntt|car|gal|obi|zip|aeg|vin|how|one|ong|onl|dad|ooo|bet|esq|org|htc|bar|uol|ibm|ovh|gdn|ice|icu|uno|gea|ifm|bot|top|wtf|lol|day|pet|eus|wtc|ubs|tvs|aco|ing|ltd|ink|tab|abb|afl|cat|int|pid|pin|bid|cba|gle|com|cbn|ads|man|wed|ceb|gmo|sky|ist|gmx|tui|mba|fan|ski|iwc|app|pro|med|ceo|jcb|jcp|goo|dev|men|aaa|meo|pub|jlc|bom|jll|gop|jmp|mil|got|gov|win|jot|mma|joy|trv|red|cfa|cfd|bio|moe|moi|mom|ren|biz|aws|xin|bbc|dnp|buy|kfh|mov|thd|xyz|fit|kia|rio|rip|kim|dog|vet|nyc|bcg|mtr|bcn|bms|bmw|run|bzh|rwe|tel|stc|axa|kpn|fly|krd|cab|bnl|foo|crs|eat|tci|sap|srl|nec|sas|net|cal|sbs|sfr|sca|scb|csc|edu|new|xxx|hiv|fox|wme|ngo|nhk|vip|sex|frl|lat|yun|law|you|tax|soy|sew|om|ac|hu|se|sc|sg|sh|sb|sa|rw|ru|rs|ro|re|qa|py|si|pw|pt|ps|sj|sk|pr|pn|pm|pl|sl|sm|pk|sn|ph|so|pg|pf|pe|pa|zw|nz|nu|nr|np|no|nl|ni|ng|nf|sr|ne|st|nc|na|mz|my|mx|mw|mv|mu|mt|ms|mr|mq|mp|mo|su|mn|mm|ml|mk|mh|mg|me|sv|md|mc|sx|sy|ma|ly|lv|sz|lu|lt|ls|lr|lk|li|lc|lb|la|tc|kz|td|ky|kw|kr|kp|kn|km|ki|kh|tf|tg|th|kg|ke|jp|jo|jm|je|it|is|ir|tj|tk|tl|tm|iq|tn|to|io|in|im|il|ie|ad|sd|ht|hr|hn|hm|tr|hk|gy|gw|gu|gt|gs|gr|gq|tt|gp|gn|gm|gl|tv|gi|tw|tz|ua|gh|ug|uk|gg|gf|ge|gd|us|uy|uz|va|gb|ga|vc|ve|fr|fo|fm|fk|fj|vg|vi|fi|eu|et|es|er|eg|ee|ec|dz|do|dm|dk|vn|dj|de|cz|cy|cx|cw|vu|cv|cu|cr|co|cn|cm|cl|ck|ci|ch|cg|cf|cd|cc|ca|wf|bz|by|bw|bv|bt|bs|br|bo|bn|bm|bj|bi|ws|bh|bg|bf|be|bd|bb|ba|az|ax|aw|au|at|as|ye|ar|aq|ao|am|al|yt|ai|za|ag|af|ae|zm|id)/;
 
-        var terminatorRegex = /[\s\[\]\(\);:\}\{]/;
+        var terminatorRegex = /[\s\[\]\(\);:\}\{<>]/;
 
 	return {
 
@@ -2375,6 +2380,7 @@ Autolinker.match.Match = Autolinker.Util.extend( Object, {
 		this.tagBuilder = cfg.tagBuilder;
 		this.matchedText = cfg.matchedText;
 		this.offset = cfg.offset;
+                this.skipTo = cfg.skipTo ? cfg.skipTo : 0;
 	},
 
 
@@ -3180,7 +3186,19 @@ Autolinker.matcher.Matcher = Autolinker.Util.extend( Object, {
 	 * @param {String} text The text to scan and replace matches in.
 	 * @return {Autolinker.match.Match[]}
 	 */
-	parseMatches : Autolinker.Util.abstractMethod
+	parseMatches : Autolinker.Util.abstractMethod,
+        
+        offsetAdjustment: function(offset, decodeOffsets) {
+            var totAdjustment = 0;
+            for (var i = 0 ; i < decodeOffsets.length; ++i) {
+                if (decodeOffsets[i].offset <= offset) {
+                    totAdjustment += decodeOffsets[i].length;
+                } else {
+                    break;
+                }
+            }
+            return totAdjustment;
+        }
 
 } );
 /*global Autolinker */
@@ -3222,7 +3240,7 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3230,16 +3248,19 @@ Autolinker.matcher.Email = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 
 		while( ( match = matcherRegex.exec( text ) ) !== null ) {
 			var matchedText = match[ 0 ].trim();
-                        matchedText.replace(/^mailto:/,'');
                         if (matchedText.charAt(matchedText.length - 1).match(Autolinker.RegexLib.terminatorRegex.source)) {
                             matchedText = matchedText.substring(0, matchedText.length - 1);
                         }
 
-			matches.push( new Autolinker.match.Email( {
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);  
+			var finalText = matchedText.replace(/^mailto:/,'');
+                        offsetAdjust += matchedText.length - finalText.length;
+                        matches.push( new Autolinker.match.Email( {
 				tagBuilder  : tagBuilder,
-				matchedText : matchedText,
+				matchedText : finalText,
 				offset      : match.index,
-				email       : matchedText.trim()
+				email       : finalText.trim(),
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3363,7 +3384,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3375,12 +3396,14 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 			    cleanNumber = '1-'+match[3]+'-'+match[4]+'-'+match[5]+(match[6] ? match[6] : ''),  // strip out non-digit characters
 			    plusSign = match.length > 1 && match[ 2 ] === '+';  // match[ 2 ] is the prefixed plus sign, if there is one
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);
 			matches.push( new Autolinker.match.Phone( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
-				plusSign    : plusSign
+				plusSign    : plusSign,
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3416,7 +3439,7 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
@@ -3428,12 +3451,14 @@ Autolinker.matcher.InternationalPhone = Autolinker.Util.extend( Autolinker.match
 			    cleanNumber = match[3]+'-'+match[5].replace(/[ -.]/g,''),  // strip out non-digit characters
 			    plusSign = true;  // match[ 2 ] is the prefixed plus sign, if there is one
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);                        
 			matches.push( new Autolinker.match.Phone( {
 				tagBuilder  : tagBuilder,
 				matchedText : matchedText,
 				offset      : match.index,
 				number      : cleanNumber,
-				plusSign    : plusSign
+				plusSign    : plusSign,
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 
@@ -3686,7 +3711,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 	/**
 	 * @inheritdoc
 	 */
-	parseMatches : function( text ) {
+	parseMatches : function( text, decodeOffsets ) {
 		var matcherRegex = this.matcherRegex,
 		    stripPrefix = this.stripPrefix,
 		    stripTrailingSlash = this.stripTrailingSlash,
@@ -3739,6 +3764,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 			var urlMatchType = schemeUrlMatch ? 'scheme' : ( wwwUrlMatch ? 'www' : 'tld' ),
 			    protocolUrlMatch = !!schemeUrlMatch;
 
+                        var offsetAdjust = this.offsetAdjustment(matcherRegex.lastIndex, decodeOffsets);
 			matches.push( new Autolinker.match.Url( {
 				tagBuilder            : tagBuilder,
 				matchedText           : matchStr,
@@ -3748,7 +3774,8 @@ Autolinker.matcher.Url = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 				protocolUrlMatch      : protocolUrlMatch,
 				protocolRelativeMatch : !!protocolRelativeMatch,
 				stripPrefix           : stripPrefix,
-				stripTrailingSlash    : stripTrailingSlash
+				stripTrailingSlash    : stripTrailingSlash,
+                                skipTo      : offsetAdjust
 			} ) );
 		}
 

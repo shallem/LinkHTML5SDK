@@ -36,7 +36,7 @@
             // Create the main container and append the textarea
             var $parent = editor.$parent = this.element;
             var $main = editor.$main = $(this.SECTION_TAG)
-                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width') //hx-flex-vertical
+                    .attr('class', this.MAIN_CLASS + ' hx-full-height hx-full-width hx-no-hscroll') //hx-flex-vertical
                     //.css('overflow-y', 'hidden') /* Add this to prevent long text corpuses from bleeding out of the iFrame. */
                     .appendTo($parent);
 
@@ -118,7 +118,7 @@
             // Create the editing frame - a content editable div.
             this.$editFrame = $(this.DIV_TAG)
                     .appendTo($main)
-                    .attr('class', 'ui-editor-format hx-no-hscroll ui-editor-default-style hx-editor hx-full-width') // hx-scroller-nozoom
+                    .attr('class', 'ui-editor-format ui-editor-default-style hx-editor hx-available-width hx-horizontal-scroller-nozoom') // hx-scroller-nozoom
                     .attr('contentEditable', 'true')
                     .attr('autocapitalize', 'sentences');
             this.setDefaultFont(this.options.defaultFont, this.options.defaultFontSize);
@@ -648,13 +648,18 @@
             }
         },
         update: function (val) {
-            // Strip out closing br tags that cause unnecessary spaces ...
-            val = val.replace(/<\/br>/g, '');
-            
-            this.$editFrame.scrollTop(0);
-            this.$editFrame.html(val);
-            if (!val) {
-                this.isFirstTyping = true;
+            if (Helix.Utils.isString(val)) {
+                // Strip out closing br tags that cause unnecessary spaces ...
+                val = val.replace(/<\/br>/g, '');
+
+                this.$editFrame.scrollTop(0);
+                this.$editFrame.html(val);
+                if (!val) {
+                    this.isFirstTyping = true;
+                }
+            } else {
+                this.$editFrame.empty();
+                this.$editFrame.append($(val.body.children));
             }
 
             // Repair. We cannot handle 'b' and 'i' tags

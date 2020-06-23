@@ -290,7 +290,7 @@
                 formElem = null;
             }
             if (formElem && reRenderItem) {
-                this.__updateValue(this.options.currentMode, this._stripNamespace(formElem.name), formElem, {});
+                this.__updateValue(this.options.currentMode, this._stripNamespace(formElem.name), formElem, {}, reRenderItem);
             }
         },
     
@@ -364,8 +364,12 @@
             this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
                         
             $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
-                ev.data._isDirty = true;
+                ev.data.markDirty();
             });
+        },
+        
+        markDirty: function() {
+            this._isDirty = true;
         },
         
         isDirty: function() {
@@ -577,10 +581,10 @@
                 return;
             }
             
-            if (item.parentForm &&
-                item.parentForm.type &&
-                (item.parentForm.type === "subPanel" ||
-                    item.parentForm.type === 'horizontalBlock')) {
+            if (item.parentContainer &&
+                item.parentContainer.type &&
+                (item.parentContainer.type === "subPanel" ||
+                    item.parentContainer.type === 'horizontalBlock')) {
                 $(DOM).hide();
             } else {
                 $(DOM).closest('.hx-form-container').hide();
@@ -592,17 +596,17 @@
                 return;
             }
             
-            if (item.parentForm &&
-                item.parentForm.type &&
-                (item.parentForm.type === "subPanel" ||
-                    item.parentForm.type === 'horizontalBlock')) {
+            if (item.parentContainer &&
+                item.parentContainer.type &&
+                (item.parentContainer.type === "subPanel" ||
+                    item.parentContainer.type === 'horizontalBlock')) {
                 $(DOM).show();
             } else {
                 $(DOM).closest('.hx-form-container').show();
             }
         },
         
-        __updateValue: function(mode, name, item, valuesMap) {
+        __updateValue: function(mode, name, item, valuesMap, rerenderItem) {
             var value = item.value;
             var thisField = null;
             if (this.rendered) {
@@ -673,13 +677,11 @@
                         __refreshTextBox(mode, item);
                     }
                 } else if (fldType === 'checkbox') {
-                    __refreshControl(item);
+                    __refreshControl(item, undefined, mode, true);
                 } else if (fldType === 'onoff') {
                     __refreshOnOffSlider(item);
                 } else if (fldType === 'radio') {
-                    __refreshRadioButtons(item);
-                } else if (fldType === 'onoff') {
-                    __refreshOnOffSlider(item);
+                    __refreshRadioButtons(item, rerenderItem);
                 } else if (fldType === 'htmlframe') {
                     __refreshHTMLFrame(item, mode);
                 } else if (fldType === 'buttonGroup') {
@@ -1095,13 +1097,15 @@
         
         focusField: function(name) {
             var fieldElem = this.getFieldElement(name);
-            if (fieldElem.is('input,textarea,select')) {
-                fieldElem.focus();
-            } else {
-                // See if this is an editor.
-                var fld = this.getField(name);
-                if (fld.type === 'htmlarea') {
-                    $(fieldElem).editor('focus');
+            if (fieldElem) {
+                if (fieldElem.is('input,textarea,select')) {
+                    fieldElem.focus();
+                } else {
+                    // See if this is an editor.
+                    var fld = this.getField(name);
+                    if (fld.type === 'htmlarea') {
+                        $(fieldElem).editor('focus');
+                    }
                 }
             }
         },

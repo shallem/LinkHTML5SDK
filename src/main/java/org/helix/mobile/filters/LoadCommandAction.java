@@ -93,10 +93,13 @@ public class LoadCommandAction {
         }
     }
     
-    public void preLoad(Object thisObject, HttpServletRequest req) throws FacesException {
+    public boolean preLoad(Object thisObject, HttpServletRequest req) throws FacesException {
         if (preLoad != null) {
             try {
-                preLoad.invoke(thisObject, new Object[] { req, loader.getName() });
+                Boolean res = (Boolean)preLoad.invoke(thisObject, new Object[] { req, loader.getName() });
+                if (Boolean.FALSE.equals(res)) {
+                    return false;
+                }
             } catch (IllegalAccessException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 throw new FacesException("Failed to invoke preLoad: " + ex.getMessage());
@@ -110,6 +113,7 @@ public class LoadCommandAction {
                 throw new FacesException("Failed to invoke preLoad: " + ex.getTargetException().getLocalizedMessage());
             }
         }
+        return true;
     }
     
     public Object doLoad(Object thisObject, HttpServletRequest req) throws FacesException {
@@ -117,6 +121,14 @@ public class LoadCommandAction {
             /* NOTE: we use an explicit list of catch blocks here so that application specific
              * exceptions are not caught. This is intentional.
              */
+            if (this.errorGetter != null) {
+                // The pre-load step failed.
+                ClientWSResponse resp = (ClientWSResponse)this.errorGetter.invoke(thisObject, new Object[] {});
+                if (resp != null) {
+                    return thisObject;
+                }
+            }
+            
             Date startTime = new Date();
             loader.invoke(thisObject, new Object[] { req });
             Date endTime = new Date();
