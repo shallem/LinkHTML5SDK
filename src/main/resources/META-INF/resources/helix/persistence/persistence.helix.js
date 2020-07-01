@@ -23,6 +23,23 @@
 var JSONKeyDictionary = {};
 
 function initHelixDB() {
+    function recordChangeKey(args) {
+        let onCompleteArgs = args[0];
+        let changeID = args[1]; 
+        let fieldName = args[2];
+        let persistentObj = args[3];
+        let dbSession = args[4];
+        let oncomplete = args[5];
+        
+        var cKeyName = fieldName + 'ChangeKey';
+        persistentObj[cKeyName] = changeID;
+        dbSession.flush(function() {
+            if (oncomplete) {
+                oncomplete(onCompleteArgs);
+            }
+        });            
+    }
+    
     Helix.DB = {
         
         __masterDBVer : 1,
@@ -73,7 +90,10 @@ function initHelixDB() {
                 } 
                 var subSchema = schemaTemplate[schemaField];
                 if (Object.prototype.toString.call(subSchema) === '[object Array]') {
-                    var elemSchema = this.generatePersistenceFields(subSchema[0],schemaField,allVisited,recursiveFields,allSchemas);
+                    do {
+                        subSchema = subSchema[0];
+                    } while(Object.prototype.toString.call(subSchema) === '[object Array]');
+                    var elemSchema = this.generatePersistenceFields(subSchema,schemaField,allVisited,recursiveFields,allSchemas);
                     if (elemSchema !== null) {
                         subSchemas[schemaField] = elemSchema;
                         oneToMany.push({
@@ -82,7 +102,7 @@ function initHelixDB() {
                         });
                     } else {
                         myRecursiveFields.push({
-                            'schemaName': subSchema[0].__hx_schema_name, 
+                            'schemaName': subSchema.__hx_schema_name, 
                             'field' : schemaField, 
                             'oneToMany' : true
                         });
@@ -1511,6 +1531,29 @@ function initHelixDB() {
                 prepareAdds(args);
             }
         },
+        
+        synchronizeDeltaFieldArray: function(dbSession, allSchemas, deltaArr, persistentObj, fieldSchema, fieldName, 
+                                    oncomplete, oncompleteArgs, overrides) {
+            if (deltaArr.length === 0) {
+                oncomplete(oncompleteArgs);
+                return;
+            }
+            var nxt = deltaArr.shift();
+            var qryColl = persistentObj[fieldName];
+            Helix.DB.synchronizeDeltaField(dbSession, allSchemas, nxt, qryColl, fieldSchema, nxt, 
+                                    function(args) {
+                                        let changeID = args.pop();
+                                        let _dbSession = args[0];
+                                        let _persistentObj = args[3];
+                                        let _fieldName = args[5];
+                                        
+                                        recordChangeKey([args, changeID, _fieldName, _persistentObj, _dbSession, function(_args) {
+                                            Helix.DB.synchronizeDeltaFieldArray.apply(window, _args);                                            
+                                        }]); 
+                                    }, [dbSession, allSchemas, deltaArr, persistentObj, fieldSchema, fieldName, 
+                                    oncomplete, oncompleteArgs, overrides, nxt.changeID], 
+                                    overrides);
+        },
     
         synchronizeObjectField: function(dbSession, allSchemas, obj, persistentObj, objSchema, field, key, oncomplete, oncompleteArg, overrides) {
             // Update the old object (if it exists) or add the new with a recursive call.
@@ -1585,22 +1628,6 @@ function initHelixDB() {
                         
             /* Called when an asynchronous relationship field is done sync'ing. */
             var syncDone = function() {
-                /* Now synchronize all scalar fields (i.e. non-object, non-array) to ensure that we don't 
-                 * make a bunch of objects dirty and flush them over and over again as
-                 * we recurse through their children. We make all non-relation changes before
-                 * we do anything that might trigger a flush.
-                 */
-                while (scalarFields.length > 0) {
-                   field = scalarFields.pop();
-                   /* Use the setter to make sure the object is marked as dirty appropriately. */
-                   var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
-                   if (prop) {
-                       var setter = prop.set;
-                       if (!overrides.syncFields(setter, obj, field, persistentObj)) {
-                           setter.call(persistentObj, obj[field]);
-                       }
-                   }
-                }
                 if (overrides.addHook) {
                     if (persistentObj._new !== false) {
                         overrides.addHook(persistentObj);
@@ -1630,22 +1657,26 @@ function initHelixDB() {
                     if (!Helix.DB.synchronizeArrayField(dbSession, allSchemas, fieldVal, persistentObj, persistentObj[field], fieldSchema, field, handleAsyncFields, _asyncFields, overrides)) {
                         var nDone = 0;
                         for (var _q = 0; _q < fieldVal.length; ++_q) {
-                            Helix.DB._synchronizeObject(fieldVal[_q], fieldSchema, function(finalObj, opaque) {
-                                ++nDone;
-                                if (nDone === fieldVal.length) {
-                                    handleAsyncFields(opaque);
-                                }
-                            }, _asyncFields, overrides);
+                            var nxt = fieldVal[_q];
+                            if (nxt.__hx_type === 1001) {
+                                Helix.DB.synchronizeDeltaFieldArray(dbSession, allSchemas, fieldVal.slice(0), persistentObj, fieldSchema, field, 
+                                    handleAsyncFields, _asyncFields,
+                                    overrides);
+                                break;
+                            } else {
+                                Helix.DB._synchronizeObject(dbSession, nxt, fieldSchema, function(finalObj, opaque) {
+                                    ++nDone;
+                                    if (nDone === fieldVal.length) {
+                                        handleAsyncFields(opaque);
+                                    }
+                                }, _asyncFields, overrides);
+                            }
                         }
                     }
                 } else if (Object.prototype.toString.call(fieldVal) === '[object Object]') {
                     if (fieldVal.__hx_type === 1001) {
-                        Helix.DB.synchronizeDeltaField(dbSession, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, function(__a) {
-                            var cKeyName = field + 'ChangeKey';
-                            obj[cKeyName] = fieldVal.changeID;
-                            scalarFields.push(cKeyName);
-                            handleAsyncFields(__a);
-                        }, _asyncFields, overrides);
+                        Helix.DB.synchronizeDeltaField(dbSession, allSchemas, fieldVal, persistentObj[field], fieldSchema, field, 
+                            recordChangeKey, [ _asyncFields, fieldVal.changeID, field, persistentObj, dbSession, handleAsyncFields], overrides);
                     } else {
                         var keyField = Helix.DB.getJSONKeyField(fieldSchema, fieldVal);
                         Helix.DB.synchronizeObjectField(dbSession, allSchemas, fieldVal, persistentObj, fieldSchema, field, fieldVal[keyField], handleAsyncFields, _asyncFields, overrides); 
@@ -1653,8 +1684,23 @@ function initHelixDB() {
                 }
             };
             
-            /* Handle all asynchronous fields. */
-            handleAsyncFields(asyncFields);
+            while (scalarFields.length > 0) {
+                field = scalarFields.pop();
+                /* Use the setter to make sure the object is marked as dirty appropriately. */
+                var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
+                if (prop) {
+                    var setter = prop.set;
+                    if (!overrides.syncFields(setter, obj, field, persistentObj)) {
+                        setter.call(persistentObj, obj[field]);
+                    }
+                }
+            }
+            
+            /* Flush the parent object, then recurse down. */
+            dbSession.flush(function() {
+                /* Handle all asynchronous fields. */
+                handleAsyncFields(asyncFields);                
+            });
         },
 
         launchIndexing: function() {

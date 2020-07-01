@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.helix</groupId>
       <artifactId>LinkSDKSerializer</artifactId>
-      <version>1.1.15</version>
+      <version>1.1.18</version>
     </dependency>
 
   </dependencies>
@@ -207,206 +207,206 @@
       <plugin>
 	<groupId>org.primefaces.extensions</groupId>
 	<artifactId>resources-optimizer-maven-plugin</artifactId>
-	<version>0.6</version>
+	<version>2.3.4</version>
 	<executions>
 	  <execution>
-	    <id>compress-resources</id>
-	    <phase>generate-resources</phase>
+	    <id>optimize</id>
 	    <goals>
-	      <goal>optimize</goal>
+              <goal>optimize</goal>
 	    </goals>
-	    <configuration>
-	      <resourcesSets>
-		<resourcesSet>
-		  <includes>
-		    <include>jquery.mobile-1.3.1.css</include>
-		    <include>colorpicker/spectrum.css</include>
-		    <!-- <include>editor/editor.css</include> -->
-		    <include>editor/css/froala_editor.css</include>
-		    <include>editor/css/froala_style.css</include>
-		    <include>editor/css/plugins.pkgd.css</include>
-
-		    <include>css/helix.css</include>
-		    <include>css/icono.css</include>
-
-		    <!-- Styles from the PrimeFaces project. -->
-		    <include>primefaces-styles/primefaces-aristo.css</include>
-		    <include>primefaces-styles/primefaces-growl.css</include>
-		    <include>primefaces-styles/primefaces-core.css</include>
-
-		    <!-- Undo styles. -->
-		    <include>undo/helix-undo.css</include>
-
-		    <!-- Form layout styles. -->
-		    <include>form/formStyles.css</include>
-
-		    <!-- Text styles. -->
-		    <include>css/textStyles.css</include>
-
-		    <!-- Datalist styles -->
-		    <include>datalist/datalist.css</include>
-
-		    <!-- Override styles -->
-		    <include>css/helix.overrides.css</include>
-
-		    <!-- Context menu styles -->
-		    <include>contextMenu/contextMenu.css</include>
-		    
-		  </includes>
-		  <aggregations>
-		    <aggregation>
-		      <inputDir>${resources.dir.compressed}</inputDir>
-		      <outputFile>${resources.dir.compressed}/helix-mobile-full.css</outputFile>
-		    </aggregation>
-		    <aggregation>
-		      <withoutCompress>true</withoutCompress>
-		      <inputDir>${resources.dir.uncompressed}</inputDir>
-		      <outputFile>${resources.dir.uncompressed}/helix-mobile-full.css</outputFile>
-		    </aggregation>
-		  </aggregations>
-		</resourcesSet>
-		<resourcesSet>
-		  <includes>
-		    <!-- Cordova, including custom plugins. -->
-		    <include>cordova/cordova-3.4.plugins.js</include>
-		    <include>cordova/cordova-3.4.plugin-list.js</include>
-		    <include>cordova/cordova.ios-3.4.js</include>
-		    <include>cordova/cordova-android.js</include>
-		    <include>cordova/cordova-init.js</include>
-
-		    <!-- Must go after cordova-init.js, where we
-		         determine the version/revision of the Cordova
-		         container. -->
-		    <include>cordova/cordova.helix.plugins.js</include>
-		  </includes>
-		  <aggregations>
-		    <aggregation>
-		      <inputDir>${resources.dir.compressed}</inputDir>                                
-		      <outputFile>${resources.dir.compressed}/cordova-full.js</outputFile>
-		    </aggregation>
-		    <aggregation>
-		      <withoutCompress>true</withoutCompress>
-		      <inputDir>${resources.dir.uncompressed}</inputDir>                                
-		      <outputFile>${resources.dir.uncompressed}/cordova-full.js</outputFile>
-		    </aggregation>
-		  </aggregations>
-		</resourcesSet>
-		<resourcesSet>
-		  <includes>
-		    <include>jquery.mobile-1.3.1.js</include>
-
-		    <!-- Start of Link SDK. -->		    
-		    <include>helix.init.js</include>
-		    <include>helix.compatibility.js</include>
-
-		    <!-- Adapted primefaces components. -->
-		    <include>primefaces-js/core.js</include>
-		    <include>primefaces-js/growl.js</include>
-
-		    <!-- http://arshaw.com/fullcalendar/, with modifications ... -->
-		    <!-- <include>calendar/fullcalendar.js</include> -->
-
-		    <!-- https://github.com/gregjacobs/Autolinker.js -->
-		    <include>autolink/Autolinker.js</include>
-
-		    <include>colorpicker/spectrum.js</include>
-
-		    <!-- Dialog box component using jQM popups. -->
-		    <include>dialog/helix.dialog.js</include>
-
-		    <!-- Depends on colorpicker. -->
- 		    <!-- <include>editor/editor.js</include> -->
-		    <!-- <include>editor/froala.js</include> -->
-		    <include>editor/js/froala_editor.js</include>
-		    <include>editor/js/plugins.pkgd.js</include>
-
-		    <!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
-		    <include>lib/helix.crypto.js</include>
-
-		    <!-- URL parsing. -->
-		    <include>lib/purl.js</include>
-
-		    <!-- Hints. -->
-		    <include>lib/hints.js</include>
-
-		    <!-- Date arithmetic and manipulation. -->
-		    <!-- Culture files should come first. Right now we
-		         can only include 1 culture file. Need to make
-		         that more flexible down the road ... -->
-		    <include>datelib/en-US.js</include>
-		    <include>datelib/core.js</include>
-		    <include>datelib/parser.js</include>
-
-		    <!-- Persistence. -->
-		    <include>persistence/helix.websql.js</include>
-		    <include>persistence/persistence.js</include>
-		    <include>persistence/persistence.migrations.js</include>
-		    <include>persistence/persistence.store.sql.js</include>
-		    <include>persistence/persistence.store.websql.js</include>
-		    <include>persistence/persistence.search.js</include>
- 		    <include>persistence/persistence.helix.js</include>
-		    <include>persistence/persistence.helix.helpers.js</include>
-		    <include>persistence/persistence.init.js</include>
-
-		    <!-- Pretty dates. -->
-		    <include>prettydate/jquery.prettydate.js</include>
-
-		    <!-- Data list. -->
-		    <include>datalist/datalist.js</include>
-
-		    <!-- Context menu -->
-		    <include>contextMenu/contextMenu.js</include>
-
-		    <!-- Form Layout -->
-		    <include>form/formLayout.js</include>
-
-		    <!-- Split View -->
-		    <include>splitview/helixSplitView.js</include>
-
-		    <include>lib/helix.utils.js</include>		    
-		    <include>lib/helix.ajax.js</include>
-		    <include>lib/helix.layout.js</include>
-
-		    <!-- Must go after helix.utils.js and helix.layout.js -->
-		    <include>form/helix.formlayout.js</include>
-
-		    <!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
-		    <include>lib/hook.js</include>
-
-		    <!-- Tab bar handling of the popup keyboard. -->
-		    <include>tabbar/tabbar.js</include>
-
-		    <!-- Within viewport plugin -
-		    https://github.com/patik/within-viewport -->
-		    <include>withinViewport/withinViewport.js</include>
-		    <include>withinViewport/jquery.withinViewport.js</include>
-
-		    <!-- Audio/video with jPlayer v2.6 -->
-		    <!-- <include>jplayer/jquery.jplayer.js</include> -->
-
-		    <!-- Color animation -->
-		    <include>animate-colors/jquery.animate-colors.js</include>
-
-		    <!-- Undo. -->
-		    <include>undo/undo.js</include>
-
-		  </includes>
-		  <aggregations>
-		    <aggregation>
-		      <inputDir>${resources.dir.compressed}</inputDir>                                
-		      <outputFile>${resources.dir.compressed}/helix-mobile-full.js</outputFile>
-		    </aggregation>
-		    <aggregation>
-		      <withoutCompress>true</withoutCompress>
-		      <inputDir>${resources.dir.uncompressed}</inputDir>                                
-		      <outputFile>${resources.dir.uncompressed}/helix-mobile-full.js</outputFile>
-		    </aggregation>
-		  </aggregations>
-		</resourcesSet>
-	      </resourcesSets>
-	    </configuration>
 	  </execution>
 	</executions>
+	<configuration>
+	  <languageIn>ECMASCRIPT6_TYPED</languageIn>
+	  <resourcesSets>
+	    <resourcesSet>
+	      <includes>
+		<include>jquery.mobile-1.3.1.css</include>
+		<include>colorpicker/spectrum.css</include>
+		<!-- <include>editor/editor.css</include> -->
+		<include>editor/css/froala_editor.css</include>
+		<include>editor/css/froala_style.css</include>
+		<include>editor/css/plugins.pkgd.css</include>
+		
+		<include>css/helix.css</include>
+		<include>css/icono.css</include>
+		
+		<!-- Styles from the PrimeFaces project. -->
+		<include>primefaces-styles/primefaces-aristo.css</include>
+		<include>primefaces-styles/primefaces-growl.css</include>
+		<include>primefaces-styles/primefaces-core.css</include>
+		
+		<!-- Undo styles. -->
+		<include>undo/helix-undo.css</include>
+		
+		<!-- Form layout styles. -->
+		<include>form/formStyles.css</include>
+		
+		<!-- Text styles. -->
+		<include>css/textStyles.css</include>
+		
+		<!-- Datalist styles -->
+		<include>datalist/datalist.css</include>
+		
+		<!-- Override styles -->
+		<include>css/helix.overrides.css</include>
+		
+		<!-- Context menu styles -->
+		<include>contextMenu/contextMenu.css</include>
+		
+	      </includes>
+	      <aggregations>
+		<aggregation>
+		  <inputDir>${resources.dir.compressed}</inputDir>
+		  <outputFile>${resources.dir.compressed}/helix-mobile-full.css</outputFile>
+		</aggregation>
+		<aggregation>
+		  <withoutCompress>true</withoutCompress>
+		  <inputDir>${resources.dir.uncompressed}</inputDir>
+		  <outputFile>${resources.dir.uncompressed}/helix-mobile-full.css</outputFile>
+		</aggregation>
+	      </aggregations>
+	    </resourcesSet>
+	    <resourcesSet>
+	      <includes>
+		<!-- Cordova, including custom plugins. -->
+		<include>cordova/cordova-3.4.plugins.js</include>
+		<include>cordova/cordova-3.4.plugin-list.js</include>
+		<include>cordova/cordova.ios-3.4.js</include>
+		<include>cordova/cordova-android.js</include>
+		<include>cordova/cordova-init.js</include>
+		
+		<!-- Must go after cordova-init.js, where we
+		     determine the version/revision of the Cordova
+		     container. -->
+		<include>cordova/cordova.helix.plugins.js</include>
+	      </includes>
+	      <aggregations>
+		<aggregation>
+		  <inputDir>${resources.dir.compressed}</inputDir>                                
+		  <outputFile>${resources.dir.compressed}/cordova-full.js</outputFile>
+		</aggregation>
+		<aggregation>
+		  <withoutCompress>true</withoutCompress>
+		  <inputDir>${resources.dir.uncompressed}</inputDir>                                
+		  <outputFile>${resources.dir.uncompressed}/cordova-full.js</outputFile>
+		</aggregation>
+	      </aggregations>
+	    </resourcesSet>
+	    <resourcesSet>
+	      <includes>
+		<include>jquery.mobile-1.3.1.js</include>
+		
+		<!-- Start of Link SDK. -->		    
+		<include>helix.init.js</include>
+		<include>helix.compatibility.js</include>
+		
+		<!-- Adapted primefaces components. -->
+		<include>primefaces-js/core.js</include>
+		<include>primefaces-js/growl.js</include>
+		
+		<!-- http://arshaw.com/fullcalendar/, with modifications ... -->
+		<!-- <include>calendar/fullcalendar.js</include> -->
+		
+		<!-- https://github.com/gregjacobs/Autolinker.js -->
+		<include>autolink/Autolinker.js</include>
+		
+		<include>colorpicker/spectrum.js</include>
+		
+		<!-- Dialog box component using jQM popups. -->
+		<include>dialog/helix.dialog.js</include>
+		
+		<!-- Depends on colorpicker. -->
+ 		<!-- <include>editor/editor.js</include> -->
+		<!-- <include>editor/froala.js</include> -->
+		<include>editor/js/froala_editor.js</include>
+		<include>editor/js/plugins.pkgd.js</include>
+		
+		<!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
+		<include>lib/helix.crypto.js</include>
+		
+		<!-- URL parsing. -->
+		<include>lib/purl.js</include>
+		
+		<!-- Hints. -->
+		<include>lib/hints.js</include>
+		
+		<!-- Date arithmetic and manipulation. -->
+		<!-- Culture files should come first. Right now we
+		     can only include 1 culture file. Need to make
+		     that more flexible down the road ... -->
+		<include>datelib/en-US.js</include>
+		<include>datelib/core.js</include>
+		<include>datelib/parser.js</include>
+		
+		<!-- Persistence. -->
+		<include>persistence/helix.websql.js</include>
+		<include>persistence/persistence.js</include>
+		<include>persistence/persistence.migrations.js</include>
+		<include>persistence/persistence.store.sql.js</include>
+		<include>persistence/persistence.store.websql.js</include>
+		<include>persistence/persistence.search.js</include>
+ 		<include>persistence/persistence.helix.js</include>
+		<include>persistence/persistence.helix.helpers.js</include>
+		<include>persistence/persistence.init.js</include>
+		
+		<!-- Pretty dates. -->
+		<include>prettydate/jquery.prettydate.js</include>
+		
+		<!-- Data list. -->
+		<include>datalist/datalist.js</include>
+		
+		<!-- Context menu -->
+		<include>contextMenu/contextMenu.js</include>
+		
+		<!-- Form Layout -->
+		<include>form/formLayout.js</include>
+		
+		<!-- Split View -->
+		<include>splitview/helixSplitView.js</include>
+		
+		<include>lib/helix.utils.js</include>		    
+		<include>lib/helix.ajax.js</include>
+		<include>lib/helix.layout.js</include>
+		
+		<!-- Must go after helix.utils.js and helix.layout.js -->
+		<include>form/helix.formlayout.js</include>
+		
+		<!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
+		<include>lib/hook.js</include>
+		
+		<!-- Tab bar handling of the popup keyboard. -->
+		<include>tabbar/tabbar.js</include>
+		
+		<!-- Within viewport plugin -
+		     https://github.com/patik/within-viewport -->
+		<include>withinViewport/withinViewport.js</include>
+		<include>withinViewport/jquery.withinViewport.js</include>
+		
+		<!-- Audio/video with jPlayer v2.6 -->
+		<!-- <include>jplayer/jquery.jplayer.js</include> -->
+		
+		<!-- Color animation -->
+		<include>animate-colors/jquery.animate-colors.js</include>
+		
+		<!-- Undo. -->
+		<include>undo/undo.js</include>
+		
+	      </includes>
+	      <aggregations>
+		<aggregation>
+		  <inputDir>${resources.dir.compressed}</inputDir>                                
+		  <outputFile>${resources.dir.compressed}/helix-mobile-full.js</outputFile>
+		</aggregation>
+		<aggregation>
+		  <withoutCompress>true</withoutCompress>
+		  <inputDir>${resources.dir.uncompressed}</inputDir>                                
+		  <outputFile>${resources.dir.uncompressed}/helix-mobile-full.js</outputFile>
+		</aggregation>
+	      </aggregations>
+	    </resourcesSet>
+	  </resourcesSets>
+	</configuration>
       </plugin>
     </plugins>
   </build>
