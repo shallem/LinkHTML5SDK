@@ -317,7 +317,7 @@
 		<include>dialog/helix.dialog.js</include>
 		
 		<!-- Depends on colorpicker. -->
- 		<!-- <include>editor/editor.js</include> -->
+ 		<include>editor/editor.js</include>
 		<!-- <include>editor/froala.js</include> -->
 		<include>editor/js/froala_editor.js</include>
 		<include>editor/js/plugins.pkgd.js</include>
