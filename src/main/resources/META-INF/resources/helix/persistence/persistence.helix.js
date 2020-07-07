@@ -1697,10 +1697,7 @@ function initHelixDB() {
             }
             
             /* Flush the parent object, then recurse down. */
-            dbSession.flush(function() {
-                /* Handle all asynchronous fields. */
-                handleAsyncFields(asyncFields);                
-            });
+            handleAsyncFields(asyncFields);
         },
 
         launchIndexing: function() {
