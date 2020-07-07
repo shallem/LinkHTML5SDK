@@ -3,7 +3,7 @@
  * 
  * Direct copy of useful utility functions from the PrimeFaces project.
  */
-PrimeFaces = {
+window.PrimeFaces = {
     escapeClientId : function(id) {
         return "#" + id.replace(/:/g,"\\:");
     }

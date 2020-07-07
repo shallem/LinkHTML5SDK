@@ -24,12 +24,12 @@ var JSONKeyDictionary = {};
 
 function initHelixDB() {
     function recordChangeKey(args) {
-        let onCompleteArgs = args[0];
-        let changeID = args[1]; 
-        let fieldName = args[2];
-        let persistentObj = args[3];
-        let dbSession = args[4];
-        let oncomplete = args[5];
+        var onCompleteArgs = args[0];
+        var changeID = args[1]; 
+        var fieldName = args[2];
+        var persistentObj = args[3];
+        var dbSession = args[4];
+        var oncomplete = args[5];
         
         var cKeyName = fieldName + 'ChangeKey';
         persistentObj[cKeyName] = changeID;
@@ -1542,10 +1542,10 @@ function initHelixDB() {
             var qryColl = persistentObj[fieldName];
             Helix.DB.synchronizeDeltaField(dbSession, allSchemas, nxt, qryColl, fieldSchema, nxt, 
                                     function(args) {
-                                        let changeID = args.pop();
-                                        let _dbSession = args[0];
-                                        let _persistentObj = args[3];
-                                        let _fieldName = args[5];
+                                        var changeID = args.pop();
+                                        var _dbSession = args[0];
+                                        var _persistentObj = args[3];
+                                        var _fieldName = args[5];
                                         
                                         recordChangeKey([args, changeID, _fieldName, _persistentObj, _dbSession, function(_args) {
                                             Helix.DB.synchronizeDeltaFieldArray.apply(window, _args);                                            

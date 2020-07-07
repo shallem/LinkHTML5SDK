@@ -217,7 +217,7 @@
 	  </execution>
 	</executions>
 	<configuration>
-	  <languageIn>ECMASCRIPT6_TYPED</languageIn>
+	  <languageIn>ECMASCRIPT3</languageIn>
 	  <resourcesSets>
 	    <resourcesSet>
 	      <includes>
@@ -373,7 +373,7 @@
 		<include>form/helix.formlayout.js</include>
 		
 		<!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
-		<include>lib/hook.js</include>
+		<!-- <include>lib/hook.js</include> -->
 		
 		<!-- Tab bar handling of the popup keyboard. -->
 		<include>tabbar/tabbar.js</include>

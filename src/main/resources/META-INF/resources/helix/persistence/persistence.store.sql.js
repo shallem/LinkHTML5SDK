@@ -1235,7 +1235,6 @@ if (typeof exports !== 'undefined') {
     exports.config = config;
 }
 else {
-    window = window || {};
     window.persistence = window.persistence || {};
     window.persistence.store = window.persistence.store || {};
     window.persistence.store.sql = {

@@ -1164,9 +1164,7 @@ define("cordova/init", function(require, exports, module) {
         }
         return newNavigator;
     }
-    if (window.navigator) {
-        window.navigator = replaceNavigator(window.navigator);
-    }
+    window.navigator = replaceNavigator(window.navigator);
 
     if (!window.console) {
         window.console = {

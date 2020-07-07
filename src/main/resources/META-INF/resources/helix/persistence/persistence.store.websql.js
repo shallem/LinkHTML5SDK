@@ -1,10 +1,5 @@
 try {
-  if(!window) {
-    window = {};
-    //exports.console = console;
-  }
 } catch(e) {
-  window = {};
   exports.console = console;
 }
 

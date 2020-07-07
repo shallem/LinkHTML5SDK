@@ -57,7 +57,7 @@
     //============
 
     // cleditor - creates a new editor for the passed in textarea element
-    helixDialog = function(parent, options) {
+    window.helixDialog = function(parent, options) {
         this.options = options = $.extend({}, $.helixDialog.defaultOptions, options);        
         this.$mainDiv = $(parent);
         this.name = options.name ? options.name : Helix.Utils.getUniqueID();
