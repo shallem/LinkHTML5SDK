@@ -133,7 +133,7 @@ public class PageRenderer extends Renderer {
         writer.writeAttribute("type", "text/javascript", null);
         
         // Set a global variable with the context root.
-        writer.write("Helix.contextRoot = '" + context.getExternalContext().getRequestContextPath() + "';");
+        writer.write("$(document).on('cordovaReady', function() { Helix.contextRoot = '" + context.getExternalContext().getRequestContextPath() + "'; });");
         
         writer.endElement("script");
         
@@ -166,6 +166,7 @@ public class PageRenderer extends Renderer {
         context.getRenderKit().addRenderer("javax.faces.Output", LoadCommandScriptRenderer.class.getCanonicalName(), new LoadCommandScriptRenderer());
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
+        writer.write("$(document).on('ready', function() {");
         // Find all load commands
         ListIterator<UIComponent> iter = (context.getViewRoot().getComponentResources(context, "loadcommand")).listIterator();
         while (iter.hasNext()) {
@@ -183,6 +184,7 @@ public class PageRenderer extends Renderer {
         }
         writer.write("\n");
         writer.write("$(document).trigger('hxLayoutDone');");
+        writer.write("});");
         writer.endElement("script");
 
         writer.endElement("body");
