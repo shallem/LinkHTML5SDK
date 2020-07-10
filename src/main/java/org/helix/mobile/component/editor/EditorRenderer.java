@@ -125,6 +125,9 @@ public class EditorRenderer extends CoreRenderer {
                 Boolean.parseBoolean(editor.getFullWidth())) {
             writer.write(",isFullWidth: true");
         }
+        if (editor.getEditorReady() != null) {
+            writer.write(",editorReady: " + editor.getEditorReady());
+        }
         writer.write("});");
         writer.write("});");
         

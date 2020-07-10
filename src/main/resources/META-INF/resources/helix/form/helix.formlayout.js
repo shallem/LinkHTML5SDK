@@ -1520,7 +1520,8 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         'tabIndex': formLayout.__tabIndex++,
         'parentElement': $fieldContainer,
         'placeholderText': formElem.placeholderText,
-        'extraButtons': formElem.extraButtons ? formElem.extraButtons : []
+        'extraButtons': formElem.extraButtons ? formElem.extraButtons : [],
+        'editorReady' : formElem.editorReady ? formElem.editorReady : null
     });
     $(editorDiv).editor('update', formElem.value);
 }

@@ -224,9 +224,7 @@
 		<include>jquery.mobile-1.3.1.css</include>
 		<include>colorpicker/spectrum.css</include>
 		<!-- <include>editor/editor.css</include> -->
-		<include>editor/css/froala_editor.css</include>
-		<include>editor/css/froala_style.css</include>
-		<include>editor/css/plugins.pkgd.css</include>
+		<include>editor/css/froala_editor.pkgd.css</include>
 		
 		<include>css/helix.css</include>
 		<include>css/icono.css</include>
@@ -316,11 +314,10 @@
 		<!-- Dialog box component using jQM popups. -->
 		<include>dialog/helix.dialog.js</include>
 		
-		<!-- Depends on colorpicker. -->
- 		<include>editor/editor.js</include>
-		<!-- <include>editor/froala.js</include> -->
-		<include>editor/js/froala_editor.js</include>
-		<include>editor/js/plugins.pkgd.js</include>
+ 		<!--
+		    <include>editor/editor.js</include> -->
+		<include>editor/froala.js</include>
+		<include>editor/js/froala_editor.pkgd.min.js</include>
 		
 		<!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
 		<include>lib/helix.crypto.js</include>

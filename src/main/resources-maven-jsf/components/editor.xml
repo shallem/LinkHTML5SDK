@@ -84,5 +84,11 @@
             <type>java.lang.String</type>
             <description>Set to true if the editor should occupy the full available height.</description>
         </attribute>
+        <attribute>
+            <name>editorReady</name>
+            <required></required>
+            <type>java.lang.String</type>
+            <description>Function to call when the editor is first initialized.</description>
+        </attribute>
     </attributes>
 </component>

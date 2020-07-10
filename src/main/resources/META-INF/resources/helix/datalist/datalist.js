@@ -3152,8 +3152,8 @@ var globalDataListID = -1;
             this._loadInProgress = null;
             if (this._restoreFooter) {
                 this.setFooterContents(this._restoreFooter);
-                this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
             }
+            this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
             this.$footerSection.children().removeClass('hx-loading');
         },
         setFooterContents: function (contents) {
@@ -3161,6 +3161,7 @@ var globalDataListID = -1;
             if (contents) {
                 this.$footerSection.append(contents);
                 this.$footerSection.show();
+                this._restoreFooter = null;
             }
         },
         getFooter: function() {
