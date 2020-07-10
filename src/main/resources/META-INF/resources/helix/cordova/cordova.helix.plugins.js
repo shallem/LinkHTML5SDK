@@ -378,4 +378,12 @@ function cordova_helix_init() {
             }
         });
     }
+    
+    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 17) {
+        $.extend(window.HelixSystem, {
+            sendInOtherApp: function(attachment, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "sendInOtherApp", [ attachment ]);
+            }
+        });
+    }
 }
