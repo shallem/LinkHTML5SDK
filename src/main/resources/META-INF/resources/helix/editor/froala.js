@@ -11,7 +11,8 @@
             defaultFontSize: 11,
             placeholderText: 'Compose a rich text document',
             extraButtons: [],
-            editorReady: null
+            editorReady: null,
+            tabIndex: 0
         },
         pendingActions: [],
         initDone: false,
@@ -28,6 +29,7 @@
                       _self._isDirty = true;
                     }
                 },
+                tabIndex: _self.options.tabIndex,
                 placeholderText: _self.options.placeholderText,
                 fontFamilyDefaultSelection: _self.options.defaultFont,
                 fontFamilySelection: true,
