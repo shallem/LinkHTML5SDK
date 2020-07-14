@@ -330,6 +330,11 @@
             <type>java.lang.String</type>
             <description>Extra buttons to add to the toolbar (editor only).</description>
         </attribute>
-        extraButtons
+        <attribute>
+            <name>editorReady</name>
+            <required></required>
+            <type>java.lang.String</type>
+            <description>Function to call when the editor is first initialized.</description>
+        </attribute>
     </attributes>
 </component>
