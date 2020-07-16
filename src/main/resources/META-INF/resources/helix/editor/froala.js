@@ -11,6 +11,7 @@
             defaultFontSize: 11,
             placeholderText: 'Compose a rich text document',
             extraButtons: [],
+            extraButtonsPhone: null,
             editorReady: null,
             tabIndex: 0
         },
@@ -19,6 +20,10 @@
         _create: function () {            
             this._isDirty = false;
             this._initialVal = '';
+            var _extraButtons = this.options.extraButtons;
+            if (Helix.deviceType === 'phone' && this.options.extraButtonsPhone) {
+                _extraButtons = this.options.extraButtonsPhone;
+            }
             var _self = this;
             var e = this.editor = new FroalaEditor('#' + this.element.attr('id'), {
                 toolbarSticky: false,
@@ -63,8 +68,8 @@
                         'buttonsVisible': 0
                     },
                     'extraButtons': {
-                        'buttons' : _self.options.extraButtons,
-                        'buttonsVisible': _self.options.extraButtons.length,
+                        'buttons' : _extraButtons,
+                        'buttonsVisible': _extraButtons.length,
                         'align': 'right'
                     }
                 },

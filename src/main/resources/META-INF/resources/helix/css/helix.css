@@ -606,6 +606,10 @@ a {
     margin: 0 !important;
 }
 
+.hx-hidden {
+    display: none !important;
+}
+
 /**
  * Page styles
  */

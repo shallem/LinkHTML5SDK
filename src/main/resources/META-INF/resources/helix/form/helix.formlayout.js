@@ -1521,6 +1521,7 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         'parentElement': $fieldContainer,
         'placeholderText': formElem.placeholderText,
         'extraButtons': formElem.extraButtons ? formElem.extraButtons : [],
+        'extraButtonsPhone': formElem.extraButtonsPhone ? formElem.extraButtonsPhone : [],
         'editorReady' : formElem.editorReady ? formElem.editorReady : null
     });
     $(editorDiv).editor('update', formElem.value);

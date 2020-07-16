@@ -284,6 +284,10 @@ public class FormFieldRenderer extends CoreRenderer {
                 !ffield.getExtraButtons().isEmpty()) {
             writer.write(", 'extraButtons' : " + ffield.getExtraButtons());
         }
+        if (ffield.getExtraButtonsPhone() != null &&
+                !ffield.getExtraButtonsPhone().isEmpty()) {
+            writer.write(", 'extraButtonsPhone' : " + ffield.getExtraButtonsPhone());
+        }
         
         writer.write("}");
     }

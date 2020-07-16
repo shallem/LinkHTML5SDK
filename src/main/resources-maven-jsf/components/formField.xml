@@ -331,6 +331,12 @@
             <description>Extra buttons to add to the toolbar (editor only).</description>
         </attribute>
         <attribute>
+            <name>extraButtonsPhone</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Extra buttons for small devices to add to the toolbar (editor only).</description>
+        </attribute>
+        <attribute>
             <name>editorReady</name>
             <required></required>
             <type>java.lang.String</type>
