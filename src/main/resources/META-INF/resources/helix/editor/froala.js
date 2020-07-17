@@ -153,7 +153,7 @@
         disable: function (disabled) {
         },
         getHTML: function () {
-            return '<html><head><style type="text/css">' + FROALA_HTML_STYLES + '</style></head><body>' + this.editor.html.get() + '</body></html>';
+            return '<html><body><style type="text/css">' + FROALA_HTML_STYLES + '</style><div class="fr-view">' + this.editor.html.get() + '</div></body></html>';
         },
         blur: function () {
         },
