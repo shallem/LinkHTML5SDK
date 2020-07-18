@@ -31,6 +31,13 @@ function initHelixDB() {
         var dbSession = args[4];
         var oncomplete = args[5];
         
+        if (!changeID) {
+            if (oncomplete) {
+                oncomplete(onCompleteArgs);
+            }
+            return;
+        }
+        
         var cKeyName = fieldName + 'ChangeKey';
         persistentObj[cKeyName] = changeID;
         dbSession.flush(function() {
