@@ -131,7 +131,9 @@
         },
         reset: function() {
             this.clear();
-            this.editor.hideAll();
+            if (this.editor.popups) {
+                this.editor.popups.hideAll();
+            }
         },
         setDefaultFont: function(font, fontSize) {
             this.options.defaultFont = font;
