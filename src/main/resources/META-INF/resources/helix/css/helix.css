@@ -746,28 +746,6 @@ a {
  * Animations
  */
 
-/*.hx-loading {
-    -webkit-animation: pulsating_border 1s infinite alternate;
-    animation: pulsating_border 1s infinite alternate;
-    border-bottom: 0.25em solid rgba(192, 39, 45, 1) !important; 
-}*/
-
-/*@-webkit-keyframes pulsating_border {
-    0%   { border-bottom-color: rgba(192, 39, 45, 1); }
-    25%  { border-bottom-color: rgba(169, 43, 52, 1); }
-    50% { border-bottom-color: rgba(147, 47, 59, 1); }
-    75% { border-bottom-color: rgba(124, 52, 66, 1); }
-    100% { border-bottom-color: rgba(101, 56, 72, 1); }
-}
-
-@keyframes pulsating_border {
-    0%   { border-bottom-color: rgba(192, 39, 45, 1); }
-    25%  { border-bottom-color: rgba(169, 43, 52, 1); }
-    50% { border-bottom-color: rgba(147, 47, 59, 1); }
-    75% { border-bottom-color: rgba(124, 52, 66, 1); }
-    100% { border-bottom-color: rgba(101, 56, 72, 1); }
-}*/
-
 @-webkit-keyframes pulsating_border {
     from   { border-bottom-color: rgba(192, 39, 45, 1); }
     to  { border-bottom-color: #bbb }
@@ -778,10 +756,11 @@ a {
     to  { border-bottom-color: #bbb }
 }
 
-/* Make the background of overlays a bit transparent. */
+/**
+ * Overlays, titles, text
+ */
 .hx-overlay-full-height.ui-panel {
     background: rgba(243,243,243,0.6);
-    background-image: linear-gradient(rgba(221,221,221,0.6), rgba(204,204,204,0.6));
 }
 
 .wordBreak {

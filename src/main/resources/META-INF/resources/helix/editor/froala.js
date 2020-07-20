@@ -131,6 +131,7 @@
         },
         reset: function() {
             this.clear();
+            this.editor.hideAll();
         },
         setDefaultFont: function(font, fontSize) {
             this.options.defaultFont = font;
@@ -148,6 +149,7 @@
             this.editor.html.set(val);
         },
         focus: function () {
+            this.editor.focus();
         },
         // disable - enables or disables the editor
         disable: function (disabled) {
@@ -156,6 +158,7 @@
             return '<html><body><style type="text/css">' + FROALA_HTML_STYLES + '</style><div class="fr-view">' + this.editor.html.get() + '</div></body></html>';
         },
         blur: function () {
+            this.getContentParent().blur();
         },
         getFrame: function() {
             return this.element;

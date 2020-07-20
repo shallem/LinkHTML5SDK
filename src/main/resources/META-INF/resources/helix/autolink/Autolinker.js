@@ -787,6 +787,9 @@ Autolinker.prototype = {
 			lastIndex = 0;
                 for( var i = 0, len = matches.length; i < len; i++ ) {
 			var match = matches[ i ];
+                        if (match.protocolRelativeMatch === false) {
+                            continue;
+                        }
 
 			newHtml.push( textOrHtml.substring( lastIndex, match.getOffset() ) );
 			newHtml.push( this.createMatchReturnVal( match ) );
