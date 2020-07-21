@@ -151,7 +151,13 @@
             this.editor.html.set(val);
         },
         focus: function () {
-            this.editor.focus();
+            if (!this.initDone) {
+                this.pendingActions.push($.proxy(function() {
+                    this.editor.events.focus();
+                }, this));
+                return;
+            }
+            this.editor.events.focus();
         },
         // disable - enables or disables the editor
         disable: function (disabled) {
@@ -160,6 +166,12 @@
             return '<html><body><style type="text/css">' + FROALA_HTML_STYLES + '</style><div class="fr-view">' + this.editor.html.get() + '</div></body></html>';
         },
         blur: function () {
+            if (!this.initDone) {
+                this.pendingActions.push($.proxy(function() {
+                    this.getContentParent().blur();
+                }, this));
+                return;
+            }
             this.getContentParent().blur();
         },
         getFrame: function() {
@@ -170,6 +182,8 @@
         },
         getContentClone: function() {
             var contentParent = this.getContentParent()[0].cloneNode(true);
+            contentParent.style.minHeight = '';
+            
             var outerHTML = document.implementation.createHTMLDocument();
             var css = document.createElement('style');
             css.type = 'text/css';
@@ -181,9 +195,9 @@
         },
         refreshButtons: function() {
             if (this.initDone !== true) {
-                this.pendingActions.push(function() {
+                this.pendingActions.push($.proxy(function() {
                     this.refreshButtons();
-                });
+                }, this));
                 return;
             }
             this.editor.button.bulkRefresh();
