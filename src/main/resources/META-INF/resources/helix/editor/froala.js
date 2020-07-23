@@ -175,11 +175,11 @@
         focus: function () {
             if (!this.initDone) {
                 this.pendingActions.push($.proxy(function() {
-                    $(this.getFrame()).find('.hx-editor-start').focus();
+                   this.editor.events.focus();
                 }, this));
                 return;
             }
-            $(this.getFrame()).find('.hx-editor-start').focus();
+            this.editor.events.focus();
         },
         // disable - enables or disables the editor
         disable: function (disabled) {
