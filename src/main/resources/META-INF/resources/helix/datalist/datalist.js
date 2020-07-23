@@ -164,6 +164,10 @@ var globalDataListID = -1;
              */
             itemContextMenuFilter: null,
             /**
+             * Called after the global filter menu is opened.
+             */
+            afterFilterOpen: null,
+            /**
              * Action to perform if the user tap-holds (for touch devices) or 
              * double clicks (for non-touch devices) on a list item.
              */
@@ -1538,7 +1542,7 @@ var globalDataListID = -1;
             for (var fldName in filters) {
                 var filterObj = filters[fldName];
                 // Make the filter name a list divider.
-                var nxtLI = $('<li />').addClass('ui-li ui-li-static').appendTo(filtersList);
+                var nxtLI = $('<li />').addClass('ui-li ui-li-static').attr('data-field', fldName).appendTo(filtersList);
                 nxtLI.append($('<label/>').append(filterObj.display).appendTo(nxtLI));
                 _self._makeFilterRadioDOM(nxtLI, filterObj, fldName);
             }
@@ -1562,7 +1566,11 @@ var globalDataListID = -1;
                         return false;
                     });
             
-            _self._globalFilterContainer.popup();
+            _self._globalFilterContainer.popup().on('popupafteropen', $.proxy(function(ev) {
+                if (this.options.afterFilterOpen) {
+                    this.options.afterFilterOpen.call(this, $(ev.target));
+                }
+            }, _self));
         },
         
         _resetPaging: function () {

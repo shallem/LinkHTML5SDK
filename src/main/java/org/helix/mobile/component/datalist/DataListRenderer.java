@@ -213,6 +213,9 @@ public class DataListRenderer extends CoreRenderer {
         if (dlist.getAfterSearchClear() != null) {
             writer.write(",afterSearchClear: " + dlist.getAfterSearchClear());
         }
+        if (dlist.getOnFilterMenuOpen() != null) {
+            writer.write(",afterFilterOpen: " + dlist.getOnFilterMenuOpen());
+        }
 
         // Show sort/filter buttons.
         writer.write(",showSortButton: " + (dlist.isSortButton() ? "true" : "false"));

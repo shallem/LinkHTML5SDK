@@ -32,6 +32,19 @@
                       // Do something here.
                       // this is the editor instance.
                       _self._isDirty = true;
+                    },
+                    'input': function(ev) {
+                        var key = ev.keyCode || ev.which || ev.charCode;
+                        if (key === 8 || (ev.originalEvent && ev.originalEvent.inputType === 'deleteContentBackward')) {
+                            var sel = window.getSelection();
+                            if (sel.isCollapsed &&
+                                    sel.anchorNode.classList &&
+                                    sel.anchorNode.classList.contains('hx-editor-start') &&
+                                    sel.anchorOffset === 0) {
+                                ev.stopImmediatePropagation();
+                                return false;
+                            }
+                        }
                     }
                 },
                 tabIndex: _self.options.tabIndex,
@@ -121,6 +134,13 @@
         isDirty: function () {
             return this._isDirty;
         },
+        runOnReady: function(fn) {
+            if (this.initDone === true) {
+                fn.call(this);
+            } else {
+                this.pendingActions.push(fn);
+            }
+        },
         // clear - clears the contents of the editor
         clear: function () {
             if (!this.editor.html) {
@@ -140,24 +160,26 @@
             this.options.defaultFontSize = fontSize;
         },
         update: function (val) {
+            val = '<p class="hx-editor-start"><br/></p>' + val;
+
             if (!this.editor.html) {
                 this._initialVal = val;
                 return;
             }
             
-            // Strip out closing br tags that cause unnecessary spaces ...
-            val = val.replace(/<\/br>/g, '');
-            
             this.editor.html.set(val);
+            if (this.editor.core.hasFocus()) {
+                this.focus();
+            }
         },
         focus: function () {
             if (!this.initDone) {
                 this.pendingActions.push($.proxy(function() {
-                    this.editor.events.focus();
+                    $(this.getFrame()).find('.hx-editor-start').focus();
                 }, this));
                 return;
             }
-            this.editor.events.focus();
+            $(this.getFrame()).find('.hx-editor-start').focus();
         },
         // disable - enables or disables the editor
         disable: function (disabled) {
