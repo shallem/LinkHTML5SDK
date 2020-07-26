@@ -319,7 +319,7 @@
                             }
                         } while(_start !== containerNode);
                         while (nxtEL && nxtEL.childNodes) {
-                            nxtEL = nxtEL.childNodes[nxtEL.childNodes.length];
+                            nxtEL = nxtEL.childNodes[nxtEL.childNodes.length - 1];
                         }
                         if (nxtEL && nxtEL.nodeType === 3) {
                             offset = nxtEL.length;
