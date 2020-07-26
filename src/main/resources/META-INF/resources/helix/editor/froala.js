@@ -318,7 +318,7 @@
                                 break;
                             }
                         } while(_start !== containerNode);
-                        while (nxtEL && nxtEL.childNodes) {
+                        while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
                             nxtEL = nxtEL.childNodes[nxtEL.childNodes.length - 1];
                         }
                         if (nxtEL && nxtEL.nodeType === 3) {
