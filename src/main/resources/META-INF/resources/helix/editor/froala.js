@@ -33,7 +33,7 @@
                       // this is the editor instance.
                       _self._isDirty = true;
                     },
-                    'input': function(ev) {
+                    'keydown': function(ev) {
                         var key = ev.keyCode || ev.which || ev.charCode;
                         if (key === 8 || (ev.originalEvent && ev.originalEvent.inputType === 'deleteContentBackward')) {
                             var sel = window.getSelection();
@@ -41,6 +41,40 @@
                                     sel.anchorNode.classList &&
                                     sel.anchorNode.classList.contains('hx-editor-start') &&
                                     sel.anchorOffset === 0) {
+                                ev.stopImmediatePropagation();
+                                return false;
+                            }
+                            if (sel.isCollapsed &&
+                                    sel.anchorNode.nodeType === 3 &&
+                                    sel.anchorNode.wholeText &&
+                                    sel.anchorNode.wholeText.length === 1 &&
+                                    sel.anchorNode.wholeText.charCodeAt(1) === 8203) {
+                                sel.anchorNode.remove();
+                            }
+                        } else if (typeof key === 'number') {
+                            var isHandled = false;
+                            switch(key) {
+                                case 39:
+                                    // Right arrow.
+                                    isHandled = true;
+                                    _self._setCaretPosition(1);
+                                    break;
+                                case 37:
+                                    // Left arrow.
+                                    isHandled = true;
+                                    _self._setCaretPosition(-1);
+                                    break;
+                                case 38:
+                                    // Up arrow
+                                    isHandled = true;
+                                    _self._setCaretPosition(-_self._getArrowDownUpOffset());
+                                    break;
+                                case 40:
+                                    _self._setCaretPosition(_self._getArrowDownUpOffset());
+                                    isHandled = true;
+                                    break;
+                            }
+                            if (isHandled === true) {
                                 ev.stopImmediatePropagation();
                                 return false;
                             }
@@ -160,7 +194,7 @@
             this.options.defaultFontSize = fontSize;
         },
         update: function (val) {
-            val = '<p class="hx-editor-start"><br/></p>' + val;
+            val = '<p class="hx-editor-start"></p>' + val;
 
             if (!this.editor.html) {
                 this._initialVal = val;
@@ -223,6 +257,127 @@
                 return;
             }
             this.editor.button.bulkRefresh();
+        },
+        _setCaretAtStartOfElement: function (elem, pos) {
+            var range = document.createRange();
+            var sel = window.getSelection();
+            range.setStart(elem, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        },
+        _setCaretPosition: function (delta) {
+            var containerNode = this.editor.el;
+            var sel = window.getSelection();
+            if (sel) {
+                var newRange = null;
+                var anchorNode = sel.anchorNode;
+                if (anchorNode.nodeType === 3) {
+                    if (delta > 0) {
+                        if (sel.anchorOffset + delta <= anchorNode.length) {
+                            newRange = document.createRange();
+                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
+                        }
+                    } else {
+                        if (sel.anchorOffset + delta >= 0) {
+                            newRange = document.createRange();
+                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
+                        }
+                    }
+                    if (newRange !== null) {
+                        newRange.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+                        return;
+                    }
+                }
+                if (newRange === null) {
+                    var nxtEL = null;
+                    var offset = 0;
+                    if (delta > 0) {
+                        var _start = sel.anchorNode;
+                        do {
+                            nxtEL = _start.nextSibling;
+                            if (nxtEL == null) {
+                                _start = _start.parentNode;
+                            } else if (this._elIsButton(nxtEL)) {
+                                _start = nxtEL; // Skip over nxtEL.
+                            } else {
+                                break;
+                            }
+                        } while(_start !== containerNode);
+                    } else {
+                        var _start = sel.anchorNode;
+                        do {
+                            nxtEL = _start.previousSibling;
+                            if (nxtEL == null) {
+                                _start = _start.parentNode;
+                            } else if (this._elIsButton(nxtEL)) {
+                                _start = nxtEL; // Skip over nxtEL.
+                            } else {
+                                break;
+                            }
+                        } while(_start !== containerNode);
+                        while (nxtEL && nxtEL.childNodes) {
+                            nxtEL = nxtEL.childNodes[nxtEL.childNodes.length];
+                        }
+                        if (nxtEL && nxtEL.nodeType === 3) {
+                            offset = nxtEL.length;
+                        }
+                    }
+                    if (nxtEL !== null) {
+                        newRange = document.createRange();
+                        newRange.setStart(nxtEL, offset);
+                        if (newRange !== null) {
+                            newRange.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(newRange);
+                            return;
+                        }
+                    }
+                }
+            }
+        },
+        _elIsButton: function(el) {
+            if (el && el.classList && el.classList.contains('iconbutton')) {
+                return true;
+            }
+            return false;
+        },
+        _selectElementContents: function (el) {
+            var range = document.createRange();
+
+            if (el.nodeType === 3) {
+                // Text node.
+                range.setStart(el, 1);
+            } else {
+                range.selectNodeContents(el);
+            }
+            range.collapse(true);
+
+            this._setCaretPosition(range);
+        },
+        _getArrowDownUpOffset: function(el) {
+            if (!el) {
+                var sel = window.getSelection();
+                if (sel) {
+                    var a = sel.anchorNode;
+                    if (a) {
+                        el = a.parentElement;
+                    }
+                }
+                if (!el) {
+                    return 0;
+                }
+            }
+            if (!this._canvas) {
+                this._canvas = document.createElement('canvas');
+            }
+            var context = this._canvas.getContext('2d');
+            var curFont = window.getComputedStyle(el, null).getPropertyValue('font');
+            context.font = curFont;
+            var metrics = context.measureText('helo');
+            return this.editor.el.clientWidth / (metrics.width / 4);
         }
     });
 

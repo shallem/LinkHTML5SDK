@@ -430,7 +430,7 @@ function __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniL
     $fieldContainer.append(inputMarkup);
     
     if (formElem.onclick) {
-        $(inputMarkup).on('vclick', function (ev) {
+        $(inputMarkup).on(Helix.clickEvent, function (ev) {
             ev.stopImmediatePropagation();
             formElem.onclick.call(formElem, ev);
             return false;
@@ -544,7 +544,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
 
         inputMarkup.addClass(__getTextStyleClass(formLayout, formElem));
         $fieldContainer.on(Helix.clickEvent, function() {
-            $(inputMarkup).focus();
+            //$(inputMarkup).focus();
         });
     } else {
         __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
