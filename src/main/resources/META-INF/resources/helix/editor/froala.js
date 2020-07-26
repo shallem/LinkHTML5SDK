@@ -46,9 +46,8 @@
                             }
                             if (sel.isCollapsed &&
                                     sel.anchorNode.nodeType === 3 &&
-                                    sel.anchorNode.wholeText &&
-                                    sel.anchorNode.wholeText.length === 1 &&
-                                    sel.anchorNode.wholeText.charCodeAt(1) === 8203) {
+                                    sel.anchorNode.textContent.length === 1 &&
+                                    sel.anchorNode.textContent.charCodeAt(1) === 8203) {
                                 sel.anchorNode.remove();
                             }
                         } else if (typeof key === 'number') {
@@ -300,7 +299,7 @@
                             nxtEL = _start.nextSibling;
                             if (nxtEL == null) {
                                 _start = _start.parentNode;
-                            } else if (this._elIsButton(nxtEL)) {
+                            } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
                                 _start = nxtEL; // Skip over nxtEL.
                             } else {
                                 break;
@@ -312,7 +311,7 @@
                             nxtEL = _start.previousSibling;
                             if (nxtEL == null) {
                                 _start = _start.parentNode;
-                            } else if (this._elIsButton(nxtEL)) {
+                            } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
                                 _start = nxtEL; // Skip over nxtEL.
                             } else {
                                 break;
@@ -343,6 +342,13 @@
                 return true;
             }
             return false;
+        },
+        _elIsEmptyText: function(el) {
+            return el.nodeType === 3 &&
+                    (el.textContent.length == 0 ||
+                        (el.textContent.length === 1 &&
+                            el.textContent.charCodeAt(1) === 8203));
+ 
         },
         _selectElementContents: function (el) {
             var range = document.createRange();
