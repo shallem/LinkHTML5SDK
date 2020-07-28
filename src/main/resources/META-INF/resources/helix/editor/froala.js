@@ -276,11 +276,15 @@
                         if (sel.anchorOffset + delta <= anchorNode.length) {
                             newRange = document.createRange();
                             newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
+                        } else {
+                            delta -= (anchorNode.length - sel.anchorOffset);
                         }
                     } else {
                         if (sel.anchorOffset + delta >= 0) {
                             newRange = document.createRange();
                             newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
+                        } else {
+                            delta += sel.anchorOffset;
                         }
                     }
                     if (newRange !== null) {
@@ -293,35 +297,59 @@
                 if (newRange === null) {
                     var nxtEL = null;
                     var offset = 0;
+                    var _doBreak = false;
+                        
                     if (delta > 0) {
                         var _start = sel.anchorNode;
-                        do {
-                            nxtEL = _start.nextSibling;
-                            if (nxtEL == null) {
-                                _start = _start.parentNode;
-                            } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
-                                _start = nxtEL; // Skip over nxtEL.
-                            } else {
-                                break;
+                        while (delta > 0 && _start && _doBreak !== true) {
+                            do {
+                                nxtEL = _start.nextSibling;
+                                if (nxtEL == null) {
+                                    _start = _start.parentNode;
+                                } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
+                                    _start = nxtEL; // Skip over nxtEL.
+                                } else {
+                                    break;
+                                }
+                            } while(_start !== containerNode);
+                            if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'p') {
+                                // Don't keep iterating.
+                                _doBreak = true;
                             }
-                        } while(_start !== containerNode);
+                            while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
+                                nxtEL = nxtEL.childNodes[0];
+                            }
+                            if (nxtEL && nxtEL.nodeType === 3) {
+                                offset = Math.min(delta, nxtEL.length);
+                                delta -= nxtEL.length;
+                            }
+                            _start = nxtEL;
+                        }
                     } else {
                         var _start = sel.anchorNode;
-                        do {
-                            nxtEL = _start.previousSibling;
-                            if (nxtEL == null) {
-                                _start = _start.parentNode;
-                            } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
-                                _start = nxtEL; // Skip over nxtEL.
-                            } else {
-                                break;
+                        while (delta < 0 && _start && _doBreak !== true) {
+                            do {
+                                nxtEL = _start.previousSibling;
+                                if (nxtEL == null) {
+                                    _start = _start.parentNode;
+                                } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
+                                    _start = nxtEL; // Skip over nxtEL.
+                                } else {
+                                    break;
+                                }
+                            } while(_start !== containerNode);
+                            if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'p') {
+                                // Don't keep iterating.
+                                _doBreak = true;
                             }
-                        } while(_start !== containerNode);
-                        while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
-                            nxtEL = nxtEL.childNodes[nxtEL.childNodes.length - 1];
-                        }
-                        if (nxtEL && nxtEL.nodeType === 3) {
-                            offset = nxtEL.length;
+                            while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
+                                nxtEL = nxtEL.childNodes[nxtEL.childNodes.length - 1];
+                            }
+                            if (nxtEL && nxtEL.nodeType === 3) {
+                                offset = Math.max(0, nxtEL.length + delta);
+                                delta += nxtEL.length;
+                            }
+                            _start = nxtEL;
                         }
                     }
                     if (nxtEL !== null) {
@@ -339,6 +367,9 @@
         },
         _elIsButton: function(el) {
             if (el && el.classList && el.classList.contains('iconbutton')) {
+                return true;
+            }
+            if (el && el.tagName && el.tagName.toLowerCase() === 'a') {
                 return true;
             }
             return false;

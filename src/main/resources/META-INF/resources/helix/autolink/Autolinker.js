@@ -605,8 +605,13 @@ Autolinker.prototype = {
 	 *   given input `textOrHtml`.
 	 */
         decodeText: function(str, decodeOffsets) {
-            return str.replace(/&#(\d+);/g, function(match, dec, offset) {
-                var repl = String.fromCharCode(dec);
+            return str.replace(/&#?(\d+|amp);/g, function(match, dec, offset) {
+                var repl;
+                if (dec === 'amp') {
+                    repl = '&';
+                } else {
+                    repl = String.fromCharCode(dec);
+                }
                 decodeOffsets.push({ offset: offset, length: match.length - repl.length });
                 return repl;
             });
@@ -787,7 +792,8 @@ Autolinker.prototype = {
 			lastIndex = 0;
                 for( var i = 0, len = matches.length; i < len; i++ ) {
 			var match = matches[ i ];
-                        if (match.protocolRelativeMatch === false) {
+                        if (match.protocolRelativeMatch === false &&
+                                match.protocolUrlMatch === false) {
                             continue;
                         }
 
