@@ -233,6 +233,11 @@
     margin: 0px !important;
 }
 
+.ui-mobile .ui-header {
+    background-color: white;
+    border-bottom: 1px solid rgb(67,140,255);
+}
+
 .ui-header .ui-title, .ui-footer .ui-title { 
     min-height: 1.1em; 
     text-align: center; 
@@ -635,8 +640,7 @@ a {
         margin: 0;
     }
     
-    .hx-search-sort .hx-button-bar .iconbutton,
-    .hx-list-selection-buttons .hx-button-bar .iconbutton {
+    .hx-search-sort .hx-button-bar .iconbutton {
         width: 32px;
         margin-left: 0.1em;
     }
@@ -1144,3 +1148,22 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
 .hx-popup-container {
     min-width: 10em;
 }
+
+/* Tab bar styles */
+.ui-footer {
+    background-color: white !important;
+}
+
+.ui-footer .ui-navbar li .ui-btn {
+    border: none;
+}
+
+.ui-footer .ui-navbar li .ui-btn.ui-btn-up-f {
+    background: white;
+}
+
+.ui-footer .ui-navbar li .ui-btn.ui-btn-active {
+    border: none;
+    box-shadow: inset 0 0px 15px -5px rgb(57,140,255);
+}
+

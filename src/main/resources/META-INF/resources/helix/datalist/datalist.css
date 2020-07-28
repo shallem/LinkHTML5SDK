@@ -9,7 +9,7 @@ and open the template in the editor.
 */
 
 .hx-listview {
-   border-top: 1px solid #bbb /*{d-bup-border}; */;
+   border-top: none; /*1px solid #bbb;*/
    min-height: 100%;
 }
 

@@ -9,13 +9,19 @@
 .hx-menu-item {
     border: none;
     border-radius: 0px;
-    box-shadow: 0 3px 3px -3px rgba(0,0,0,0.16), 0 3px 3px -3px rgba(0,0,0,0.23);
+    box-shadow: 0 1px 4px -4px rgba(0,0,0,0.16), 0 1px 4px -4px rgba(0,0,0,0.75);
     margin: 0.25em 0em;
     padding-bottom: 0.25em;
 }
 
 .hx-menu-item .icono-caretRight {
     position: relative;
+    color: rgb(67,140,255)
+}
+
+.hx-menu-item .icono-caretRight:after,
+.hx-menu-item .icono-caretRight:before {
+    height: 1px;
 }
 
 .hx-menu-item-text {
