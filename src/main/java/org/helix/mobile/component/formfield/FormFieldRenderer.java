@@ -161,6 +161,9 @@ public class FormFieldRenderer extends CoreRenderer {
         if (ffield.getEditorReady() != null) {
             writer.write(", 'editorReady' : " + ffield.getEditorReady());
         }
+        if (ffield.getOnSelectionChange() != null) {
+            writer.write(", 'onSelectionChange' : " + ffield.getOnSelectionChange());
+        }
         
         if (ffield.getTitle() != null) {
             writer.write(",'fieldTitle' : '" + ffield.getTitle() + "'");

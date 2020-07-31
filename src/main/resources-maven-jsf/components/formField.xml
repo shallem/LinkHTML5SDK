@@ -342,5 +342,11 @@
             <type>java.lang.String</type>
             <description>Function to call when the editor is first initialized.</description>
         </attribute>
+        <attribute>
+            <name>onSelectionChange</name>
+            <required></required>
+            <type>java.lang.String</type>
+            <description>Function to call when the editor selection changes.</description>
+        </attribute>
     </attributes>
 </component>

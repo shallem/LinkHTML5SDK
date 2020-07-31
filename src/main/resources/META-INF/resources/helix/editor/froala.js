@@ -13,7 +13,8 @@
             extraButtons: [],
             extraButtonsPhone: null,
             editorReady: null,
-            tabIndex: 0
+            tabIndex: 0,
+            onSelectionChange: null
         },
         pendingActions: [],
         initDone: false,
@@ -162,6 +163,30 @@
                 if (_self.options.editorReady) {
                     _self.options.editorReady.call(_self);
                 }
+                
+                document.addEventListener('selectionchange', $.proxy(function(ev) {
+                    var sel = window.getSelection();
+                    if (sel) {
+                        if (sel.isCollapsed) {
+                            // No selection.
+                            this.getContentParent()[0].classList.remove('hx-callout-offset');
+                        } else {
+                            var p = sel.anchorNode.parentElement;
+                            while (p) {
+                                if (p.tagName && p.tagName.toLowerCase() === 'p') {
+                                    break;
+                                }
+                                p = p.parentElement;
+                            }
+                            if (p && p.offsetTop < 50) {
+                                this.getContentParent()[0].classList.add('hx-callout-offset');
+                            }
+                        }
+                    }
+                    if (this.options.onSelectionChange) {
+                        this.options.onSelectionChange.call(this, ev);
+                    }
+                }, _self));
             });
         },
         isDirty: function () {
