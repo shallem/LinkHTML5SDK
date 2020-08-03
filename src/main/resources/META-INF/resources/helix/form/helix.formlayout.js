@@ -1506,8 +1506,8 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     var editorDiv = $('<div />').attr({
         'name': formElem.name,
         'id': editorID,
-        'tabIndex': -1,
-        'class': 'hx-full-height'
+        'tabIndex': -1/*,
+        'class': 'hx-full-height'*/
     }).appendTo($fieldContainer);
     if (formElem.fieldTitle) {
         editorDiv

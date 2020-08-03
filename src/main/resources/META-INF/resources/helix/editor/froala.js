@@ -187,6 +187,19 @@
                         this.options.onSelectionChange.call(this, ev);
                     }
                 }, _self));
+                
+                /* After pasting, try to restore the selection point to where it was before. */
+                $(_self.getFrame()).on('paste', null, _self, function(ev) {
+                    var _self = ev.data;
+                    var sel = window.getSelection();
+                    var newRange = document.createRange();
+                    newRange.setStart(sel.anchorNode, sel.anchorOffset);
+                    newRange.collapse(true);
+                    $(_self.getFrame()).one('input', null, _self, function(_ev) {
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+                    });
+                });
             });
         },
         isDirty: function () {
@@ -217,8 +230,10 @@
             this.options.defaultFont = font;
             this.options.defaultFontSize = fontSize;
         },
-        update: function (val) {
-            val = '<p class="hx-editor-start"></p>' + val;
+        update: function (val, appendP) {
+            if (!val || appendP === true) {
+                val = '<p class="hx-editor-start"></p>';
+            }
 
             if (!this.editor.html) {
                 this._initialVal = val;
@@ -323,6 +338,7 @@
                     var nxtEL = null;
                     var offset = 0;
                     var _doBreak = false;
+                    var _inLI = false;
                         
                     if (delta > 0) {
                         var _start = sel.anchorNode;
@@ -337,16 +353,31 @@
                                     break;
                                 }
                             } while(_start !== containerNode);
-                            if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'p') {
-                                // Don't keep iterating.
-                                _doBreak = true;
+                            if (nxtEL && nxtEL.tagName) {
+                                switch (nxtEL.tagName.toLowerCase()) {
+                                    case 'p':
+                                        // Don't keep iterating.
+                                        _doBreak = true;
+                                        break;
+                                    case 'li':
+                                        _inLI = true;
+                                        break;
+                                }
                             }
                             while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
                                 nxtEL = nxtEL.childNodes[0];
+                                if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'li') {
+                                    _inLI = true;
+                                }
                             }
                             if (nxtEL && nxtEL.nodeType === 3) {
-                                offset = Math.min(delta, nxtEL.length);
-                                delta -= nxtEL.length;
+                                if (_inLI) {
+                                    offset = 0;
+                                    delta = 0;
+                                } else {
+                                    offset = Math.min(delta, nxtEL.length);
+                                    delta -= nxtEL.length;
+                                }
                             }
                             _start = nxtEL;
                         }
@@ -363,16 +394,31 @@
                                     break;
                                 }
                             } while(_start !== containerNode);
-                            if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'p') {
-                                // Don't keep iterating.
-                                _doBreak = true;
+                            if (nxtEL && nxtEL.tagName) {
+                                switch (nxtEL.tagName.toLowerCase()) {
+                                    case 'p':
+                                        // Don't keep iterating.
+                                        _doBreak = true;
+                                        break;
+                                    case 'li':
+                                        _inLI = true;
+                                        break;
+                                }
                             }
                             while (nxtEL && nxtEL.childNodes && nxtEL.childNodes.length > 0) {
                                 nxtEL = nxtEL.childNodes[nxtEL.childNodes.length - 1];
+                                if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'li') {
+                                    _inLI = true;
+                                }
                             }
                             if (nxtEL && nxtEL.nodeType === 3) {
-                                offset = Math.max(0, nxtEL.length + delta);
-                                delta += nxtEL.length;
+                                if (_inLI) {
+                                    offset = nxtEL.length;
+                                    delta = 0;
+                                } else {
+                                    offset = Math.max(0, nxtEL.length + delta);
+                                    delta += nxtEL.length;
+                                }
                             }
                             _start = nxtEL;
                         }
