@@ -39,6 +39,13 @@ function initHelixDB() {
         }
         
         var cKeyName = fieldName + 'ChangeKey';
+        if (!persistentObj.hasOwnProperty(cKeyName)) {
+            if (oncomplete) {
+                oncomplete(onCompleteArgs);
+            }
+            return;
+        }
+        
         persistentObj[cKeyName] = changeID;
         dbSession.flush(function() {
             if (oncomplete) {
