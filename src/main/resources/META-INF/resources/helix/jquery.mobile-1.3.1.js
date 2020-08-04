@@ -8911,7 +8911,9 @@ $.mobile.document.bind( "pagecreate create", function( e ) {
                     /* SAH - for origin positioning, use % positioning transform. */    
                     if (o.positionTo === 'origin') {
                             this._ui.container.addClass('hx-center-to-origin');
-                        } else {
+                        } else if (o.positionTo === 'custom') {
+                        /* Do nothing. */
+                    } else {
 			    this._ui.container.offset( this._placementCoords( this._desiredCoords( o ) ) );
                         }
                     },

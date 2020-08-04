@@ -2508,6 +2508,8 @@ Helix.Layout.createFormDialog = function(options, form) {
     if (options.onclick && !options.onclick()) {
         return null;
     }
+    options.containerClass = 'hx-form-popup-container';
+    options.positionTo = 'custom';
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);

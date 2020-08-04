@@ -356,10 +356,12 @@
                             if (nxtEL && nxtEL.tagName) {
                                 switch (nxtEL.tagName.toLowerCase()) {
                                     case 'p':
+                                    case 'td':
                                         // Don't keep iterating.
                                         _doBreak = true;
                                         break;
                                     case 'li':
+                                    case 'tr':
                                         _inLI = true;
                                         break;
                                 }
@@ -397,10 +399,12 @@
                             if (nxtEL && nxtEL.tagName) {
                                 switch (nxtEL.tagName.toLowerCase()) {
                                     case 'p':
+                                    case 'td':
                                         // Don't keep iterating.
                                         _doBreak = true;
                                         break;
                                     case 'li':
+                                    case 'tr':
                                         _inLI = true;
                                         break;
                                 }
@@ -425,7 +429,11 @@
                     }
                     if (nxtEL !== null) {
                         newRange = document.createRange();
-                        newRange.setStart(nxtEL, offset);
+                        if (nxtEL.nodeType !== 3) {
+                            newRange.setStart(nxtEL, 0);    
+                        } else {
+                            newRange.setStart(nxtEL, offset);
+                        }
                         if (newRange !== null) {
                             newRange.collapse(true);
                             sel.removeAllRanges();
