@@ -2508,8 +2508,10 @@ Helix.Layout.createFormDialog = function(options, form) {
     if (options.onclick && !options.onclick()) {
         return null;
     }
-    options.containerClass = 'hx-form-popup-container';
-    options.positionTo = 'custom';
+    var popupOpts = {
+        containerClass : 'hx-form-popup-container',
+        positionTo : 'origin'
+    };
 
     var popupId = (options.name ? options.name : Helix.Utils.getUniqueID());
     var popup = Helix.Layout._createDialogPopup(popupId);
@@ -2518,7 +2520,7 @@ Helix.Layout.createFormDialog = function(options, form) {
     var closebtn = Helix.Layout._createButton(popupId + '-cancel', '105', 'd', popup, options.dismissText ? options.dismissText : 'Dismiss', options.ondismiss);
     var confirmbtn = Helix.Layout._createButton(popupId + '-confirm', '105', 'b', popup, options.confirmText ? options.confirmText : 'Confirm', options.onconfirm);
 
-    return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn], form);
+    return Helix.Layout._layoutPopup(popup, options, [confirmbtn, closebtn], form, popupOpts);
 };
 
 Helix.Layout.createConfirmDialog = function (options) {

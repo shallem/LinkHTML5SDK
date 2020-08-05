@@ -28,6 +28,7 @@
             var _self = this;
             var e = this.editor = new FroalaEditor('#' + this.element.attr('id'), {
                 toolbarSticky: false,
+                htmlUntouched: true,
                 events: {
                     'contentChanged': function () {
                       // Do something here.
@@ -357,6 +358,7 @@
                                 switch (nxtEL.tagName.toLowerCase()) {
                                     case 'p':
                                     case 'td':
+                                    case 'div':
                                         // Don't keep iterating.
                                         _doBreak = true;
                                         break;
@@ -400,6 +402,7 @@
                                 switch (nxtEL.tagName.toLowerCase()) {
                                     case 'p':
                                     case 'td':
+                                    case 'div':
                                         // Don't keep iterating.
                                         _doBreak = true;
                                         break;
