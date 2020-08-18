@@ -318,7 +318,7 @@
  		<!--
 		    <include>editor/editor.js</include> -->
 		<include>editor/froala.js</include>
-		<include>editor/js/froala_editor.pkgd.min.js</include>
+		<include>editor/js/froala_editor.pkgd.js</include>
 		
 		<!-- Crypto or similar functions. MUST come before mobilehelix-websql.js! -->
 		<include>lib/helix.crypto.js</include>

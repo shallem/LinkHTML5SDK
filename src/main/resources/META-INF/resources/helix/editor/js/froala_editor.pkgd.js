@@ -1,7 +1,7 @@
 /*!
- * froala_editor v3.0.6 (https://www.froala.com/wysiwyg-editor)
+ * froala_editor v3.2.0 (https://www.froala.com/wysiwyg-editor)
  * License https://froala.com/wysiwyg-editor/terms/
- * Copyright 2014-2019 Froala Labs
+ * Copyright 2014-2020 Froala Labs
  */
 
 (function (global, factory) {
@@ -163,7 +163,7 @@
     },
     MODULES: {},
     PLUGINS: {},
-    VERSION: '3.0.6',
+    VERSION: '3.2.0',
     INSTANCES: [],
     OPTS_MAPPING: {},
     SHARED: {},
@@ -945,6 +945,34 @@
         }
       } // Remove completely tags in denied tags.
       else if (node.tagName && node.tagName.match(removeTagsRE)) {
+          // https://github.com/froala-labs/froala-editor-js-2/issues/1787
+          // adding styles from style tag to inline styles
+          if (node.tagName == 'STYLE' && editor.helpers.isMac()) {
+            (function () {
+              var styleString = node.innerHTML.trim();
+              var classValues = [];
+              var rxp = /{([^}]+)}/g;
+              var curMatch; // eslint-disable-next-line no-cond-assign
+
+              while (curMatch = rxp.exec(styleString)) {
+                classValues.push(curMatch[1]);
+              }
+
+              var _loop = function _loop(i) {
+                var className = styleString.substring(0, styleString.indexOf('{')).trim();
+                node.parentNode.querySelectorAll(className).forEach(function (item) {
+                  item.removeAttribute('class');
+                  item.setAttribute('style', classValues[i]);
+                });
+                styleString = styleString.substring(styleString.indexOf('}') + 1);
+              };
+
+              for (var i = 0; styleString.indexOf('{') != -1; i++) {
+                _loop(i);
+              }
+            })();
+          }
+
           node.parentNode.removeChild(node);
         } // Unwrap tags not in allowed tags.
         else if (node.tagName && !node.tagName.match(allowedTagsRE)) {
@@ -1329,10 +1357,15 @@
     };
   };
 
+  //Screen Size constants
+
   FroalaEditor.XS = 0;
   FroalaEditor.SM = 1;
   FroalaEditor.MD = 2;
-  FroalaEditor.LG = 3; // Chars to allow.
+  FroalaEditor.LG = 3;
+  var screenSm = 768;
+  var screenMd = 992;
+  var screenLg = 1200; // Chars to allow.
 
   var x = "a-z\\u0080-\\u009f\\u00a1-\\uffff0-9-_\\."; // Common regex to avoid double chars.
 
@@ -1451,17 +1484,29 @@
 
     function getPX(val) {
       return parseInt(val, 10) || 0;
-    }
+    } //https://github.com/froala-labs/froala-editor-js-2/issues/1878
+    //ScreenSize calculation on the fr-box class
+
 
     function screenSize() {
-      var $test = $(editor.doc.createElement('DIV'));
-      $test.addClass('fr-visibility-helper');
-      $('body').first().append($test);
-
       try {
-        var size = getPX($test.css('margin-left'));
-        $test.remove();
-        return size;
+        var width = $('.fr-box').width();
+
+        if (width < screenSm) {
+          return FroalaEditor.XS;
+        }
+
+        if (width >= screenSm && width < screenMd) {
+          return FroalaEditor.SM;
+        }
+
+        if (width >= screenMd && width < screenLg) {
+          return FroalaEditor.MD;
+        }
+
+        if (width >= screenLg) {
+          return FroalaEditor.LG;
+        }
       } catch (ex) {
         return FroalaEditor.LG;
       }
@@ -1498,7 +1543,7 @@
         return url;
       } else if (local_path.test(url)) {
         return url;
-      } else if (new RegExp("^(".concat(FroalaEditor.LinkProtocols.join('|'), "):\\/\\/"), 'i').test(url)) {
+      } else if (new RegExp("^(".concat(FroalaEditor.LinkProtocols.join('|'), "):"), 'i').test(url)) {
         return url;
       }
 
@@ -1689,7 +1734,7 @@
     }
 
     function _forElement() {
-      _assignEvent(editor.$el, 'click mouseup mousedown touchstart touchend dragenter dragover dragleave dragend drop dragstart', function (e) {
+      _assignEvent(editor.$el, 'click mouseup mousemove mousedown touchstart touchend dragenter dragover dragleave dragend drop dragstart', function (e) {
         trigger(e.type, [e]);
       });
 
@@ -2845,7 +2890,13 @@
       var add_invisible = false;
 
       while (node !== li) {
-        node = node.parentNode;
+        node = node.parentNode; // https://github.com/froala-labs/froala-editor-js-2/issues/1864
+        // For next sibling list item it was adding unnecessary div tag of elder sibling list.
+
+        if (node.classList.contains('fr-img-space-wrap') || node.classList.contains('fr-img-space-wrap2')) {
+          continue;
+        }
+
         var cls = node.tagName === 'A' && editor.cursor.isAtEnd(marker, node) ? 'fr-to-remove' : '';
 
         if (!add_invisible && node !== li && !editor.node.isBlock(node)) {
@@ -3518,9 +3569,11 @@
           $(marker).replaceWith(FroalaEditor.MARKERS);
           editor.selection.restore();
           return false;
-        } else if (p_node.getAttribute('contenteditable') === 'true') {
-          break;
-        }
+        } // https://github.com/froala-labs/froala-editor-js-2/issues/2070
+        // Break the loop if node has no content and it is editable
+        else if (p_node.innerText.length && p_node.getAttribute('contenteditable') === 'true') {
+            break;
+          }
 
         p_node = p_node.parentNode;
       }
@@ -4406,7 +4459,7 @@
     var F = "7D4YH4fkhHB3pqDC3H2E1fkMD1IB1NF1D3QD9wB5rxqlh1A8c2B4ZA3FD2AA6FB5EB3jJG4D2J-7aC-21GB6PC5RE4TC11QD6XC4XE3XH3mlvnqjbaOA2OC2BE6A1fmI-7ujwbc1G5f1F3e1C11mXF4owBG3E1yD1E4F1D2D-8B-8C-7yC-22HD1MF5UE4cWA3D8D6a1B2C3H3a3I3sZA4B3A2akfwEB3xHD5D1F1wIC11pA-16xdxtVI2C9A6YC4a1A2F3B2GA6B4C3lsjyJB1eMA1D-11MF5PE4ja1D3D7byrf1C3e1C7D-16lwqAF3H2A1B-21wNE1MA1OG1HB2A-16tSE5UD4RB3icRA4F-10wtwzBB3E1C3CC2DA8LA2LA1EB1kdH-8uVB7decorg1J2B7B6qjrqGI2J1C6ijehIB1hkemC-13hqkrH4H-7QD6XF5XF3HLNAC3CB2aD2CD2KB10B4ycg1A-8KA4H4B11jVB5TC4yqpB-21pd1E4pedzGB6MD5B3ncB-7MA4LD2JB6PD5uH-8TB9C7YD5XD2E3I3jmiDB3zeimhLD8E2F2JC1H-9ivkPC5lG-10SB1D3H3A-21rc1A3d1E3fsdqwfGA2KA1OrC-22LA6D1B4afUB16SC7AitC-8qYA11fsxcajGA15avjNE2A-9h1hDB16B9tPC1C5F5UC1G3B8d2A5d1D4RnHJ3C3JB5D3ucMG1yzD-17hafjC-8VD3yWC6e1YD2H3ZE2C8C5oBA3H3D2vFA4WzJC4C2i1A-65fNB8afWA1H4A26mvkC-13ZB3E3h1A21BC4eFB2GD2AA5ghqND2A2B2==",
         l = "qD2H-9G3ioD-17qA1tE1B-8qI3A4hA-13C-11E2C1njfldD1E6pg1C-8sC3hfbkcD2G3stC-22gqgB3G2B-7vtoA4nweeD1A31A15B9uC-16A1F5dkykdc1B8dE-11bA3F2D3A9gd1E7F2tlI-8H-7vtxB2A5B2C3B2F2B5A6ldbyC4iqC-22D-17E-13mA3D2dywiB3oxlvfC1H4C2TjqbzlnI3ntB4E3qA2zaqsC6D3pmnkoE3C6D5wvuE3bwifdhB6hch1E4xibD-17dmrC1rG-7pntnF6nB-8F1D2A11C8plrkmF2F3MC-16bocqA2WwA-21ayeA1C4d1isC-22rD-13D6DfjpjtC2E6hB2G2G4A-7D2==",
         a = "MekC-11nB-8tIzpD7pewxvzC6mD-16xerg1==",
-        H = "yD6F5E4G3E1A9D7C3B4F4==";
+        H = "vA1C7A6F6E1D4F4E1C10A6==";
     var G = "sC-7OB2fwhVC4vsG-7ohPA4ZD4D-8f1J3stzB-11bFE2EE1MA2ND1KD1IE4cA-21pSD2D5ve1G3h1A8b1E5ZC3CD2FA16mC5OC5E1hpnG1NA10B1D7hkUD4I-7b2C3C5nXD2E3F3whidEC2EH3GI2mJE2E2bxci1WA10VC7pllSG2F3A7xd1A4ZC3DB2aaeGA2DE4H2E1j1ywD-13FD1A3VE4WA3D8C6wuc1A2hf1B5B7vnrrjA1B9ic1mpbD1oMB1iSB7rWC4RI4G-7upB6jd1A2F3H2EA4FD3kDF4A2moc1anJD1TD4VI4b2C7oeQF4c1E3XC7ZA3C3G3uDB2wGB6D1JC4D1JD4C1hTE6QC5pH4pD3C-22D7c1A3textAA4gdlB2mpozkmhNC1mrxA3yWA5edhg1I2H3B7ozgmvAI3I2B5GD1LD2RSNH1KA1XA5SB4PA3sA9tlmC-9tnf1G3nd1coBH4I2I2JC3C-16LE6A1tnUA3vbwQB1G3f1A20a3A8a1C6pxAB2eniuE1F3kH2lnjB2hB-16XA5PF1G4zwtYA5B-11mzTG2B9pHB3BE2hGH3B3B2cMD5C1F1wzPA8E7VG5H5vD3H-7C8tyvsVF2I1G2A5fE3bg1mgajoyxMA4fhuzSD8aQB2B4g1A20ukb1A4B3F3GG2CujjanIC1ObiB11SD1C5pWC1D4YB8YE5FE-11jXE2F-7jB4CC2G-10uLH4E1C2tA-13yjUH5d1H1A7sWD5E4hmjF-7pykafoGA16hDD4joyD-8OA33B3C2tC7cRE4SA31a1B8d1e2A4F4g1A2A22CC5zwlAC2C1A12==";
 
     var p = function () {
@@ -4447,7 +4500,8 @@
       if (editor.browser.msie) {
         try {
           editor.doc.body.addEventListener('mscontrolselect', function (e) {
-            e.preventDefault();
+            // Add focus to the element when clicked
+            e.srcElement.focus();
             return false;
           });
         } catch (ex) {// ok.
@@ -4910,20 +4964,57 @@
 
       if (collapsed) {
         editor.$el.find('.fr-marker').before(FroalaEditor.INVISIBLE_SPACE).after(FroalaEditor.INVISIBLE_SPACE);
-      } // https://github.com/froala-labs/froala-editor-js-2/issues/1849
-      // Remove zero width spaces when no text is selected
+      }
 
-
-      !editor.selection.text() && $(editor.selection.blocks()[0]).each(function (index, html) {
-        var exp = new RegExp(String.fromCharCode(8203), 'g');
-        var editor = $(html);
-        var txt = editor.html();
-        txt = txt.replace(exp, '');
-        editor.html(txt);
-      });
       editor.html.cleanEmptyTags();
       editor.el.normalize();
-      editor.selection.restore();
+      editor.selection.restore(); // https://github.com/froala-labs/froala-editor-js-2/issues/2168
+
+      var anchorNode = editor.win.getSelection() && editor.win.getSelection().anchorNode;
+
+      if (anchorNode) {
+        var blockParent = editor.node.blockParent(anchorNode);
+        var multiSelection = anchorNode.textContent.replace(/\u200B/g, '').length ? true : false;
+
+        var _editor$win$getSelect = editor.win.getSelection().getRangeAt(0),
+            startOffset = _editor$win$getSelect.startOffset,
+            endOffset = _editor$win$getSelect.endOffset; // Keep only one zero width space and remove all the other zero width spaces if selection consists of only zerowidth spaces.
+
+
+        if (!editor.selection.text().replace(/\u200B/g, '').length) {
+          removeZeroWidth(blockParent, anchorNode);
+        }
+
+        var range = editor.win.getSelection().getRangeAt(0); // Setting the range to the zerowidthspace index
+
+        if (anchorNode.nodeType === Node.TEXT_NODE) {
+          if (!multiSelection || !editor.selection.text().length && startOffset === endOffset) {
+            var newOffset = anchorNode.textContent.search(/\u200B/g) + 1;
+            range.setStart(anchorNode, newOffset);
+            range.setEnd(anchorNode, newOffset);
+          }
+        }
+      }
+    } // Removes zerowidth spaces and keeps only one zero width space for the marker.
+
+
+    function removeZeroWidth(blockParent, compareNode) {
+      if (blockParent && compareNode) {
+        if (blockParent.isSameNode(compareNode)) {
+          // keeping only one zerowidth space if there are multiple
+          blockParent.textContent = blockParent.textContent.replace(/\u200B(?=.*\u200B)/g, '');
+        } else {
+          if (blockParent.nodeType === Node.TEXT_NODE) blockParent.textContent = blockParent.textContent.replace(/\u200B/g, '');
+        }
+
+        if (!blockParent.childNodes.length) {
+          return false;
+        } else if (Array.isArray(blockParent.childNodes)) {
+          blockParent.childNodes.forEach(function (node) {
+            removeZeroWidth(node, compareNode);
+          });
+        }
+      }
     }
     /**
      * Toggle format.
@@ -5267,6 +5358,8 @@
       var n_node = node.nextSibling;
       var txt = node.textContent;
       var parent_node = node.parentNode;
+      var enterTags = ['P', 'DIV', 'BR'];
+      var tagOptsValues = [FroalaEditor.ENTER_P, FroalaEditor.ENTER_DIV, FroalaEditor.ENTER_BR];
 
       if (editor.html.isPreformatted(parent_node)) {
         return;
@@ -5308,7 +5401,7 @@
 
       for (var t = 0; t < txt.length; t++) {
         // Do not use unicodes next to void tags.
-        if (txt.charCodeAt(t) == 32 && (t === 0 || new_text.charCodeAt(t - 1) == 32) && !(p_node && n_node && editor.node.isVoid(p_node) || p_node && n_node && editor.node.isVoid(n_node))) {
+        if (txt.charCodeAt(t) == 32 && (t === 0 || new_text.charCodeAt(t - 1) == 32) && ((editor.opts.enter === FroalaEditor.ENTER_BR || editor.opts.enter === FroalaEditor.ENTER_DIV) && (p_node && p_node.tagName === 'BR' || n_node && n_node.tagName === 'BR') || !(p_node && n_node && editor.node.isVoid(p_node) || p_node && n_node && editor.node.isVoid(n_node)))) {
           new_text += FroalaEditor.UNICODE_NBSP;
         } else {
           new_text += txt[t];
@@ -5320,7 +5413,8 @@
 
 
       if (!n_node || n_node && editor.node.isBlock(n_node) || n_node && n_node.nodeType === Node.ELEMENT_NODE && editor.win.getComputedStyle(n_node) && editor.win.getComputedStyle(n_node).display === 'block') {
-        if (!editor.node.isVoid(p_node)) {
+        // OR(||) condition is for https://github.com/froala-labs/froala-editor-js-2/issues/1949
+        if (!editor.node.isVoid(p_node) || p_node && enterTags.indexOf(p_node.tagName) !== -1 && tagOptsValues.indexOf(editor.opts.enter) !== -1) {
           new_text = new_text.replace(/ $/, FroalaEditor.UNICODE_NBSP);
         }
       } // Previous sibling is not void or block.
@@ -6476,26 +6570,32 @@
           testRange = selRange.cloneRange();
           testRange.selectNodeContents(el);
           testRange.setEnd(selRange.startContainer, selRange.startOffset);
-          atStart = testRange.toString() === '';
+          atStart = selection(testRange);
           testRange.selectNodeContents(el);
           testRange.setStart(selRange.endContainer, selRange.endOffset);
-          atEnd = testRange.toString() === '';
+          atEnd = selection(testRange);
         }
       } else if (editor.doc.selection && editor.doc.selection.type !== 'Control') {
         selRange = editor.doc.selection.createRange();
         testRange = selRange.duplicate();
         testRange.moveToElementText(el);
         testRange.setEndPoint('EndToStart', selRange);
-        atStart = testRange.text === '';
+        atStart = selection(testRange);
         testRange.moveToElementText(el);
         testRange.setEndPoint('StartToEnd', selRange);
-        atEnd = testRange.text === '';
+        atEnd = selection(testRange);
       }
 
       return {
         atStart: atStart,
         atEnd: atEnd
       };
+    } // https://github.com/froala-labs/froala-editor-js-2/issues/1935
+
+
+    function selection(sel) {
+      var result = sel.toString().replace(/[\u200B-\u200D\uFEFF]/g, '');
+      return result === '';
     }
     /**
      * Check if everything is selected inside the editor.
@@ -6513,8 +6613,10 @@
       var i;
 
       for (i = 0; i < els.length; i++) {
-        if (els[i].nextSibling) {
-          els[i].innerHTML = "<span class=\"fr-mk\">".concat(FroalaEditor.INVISIBLE_SPACE, "</span>").concat(els[i].innerHTML);
+        if (els[i].nextSibling || els[i].tagName === 'IMG') {
+          // Invisible space character was getting replaced within the "selection" method.
+          // So replaced it with "&nbsp;" as a solution.
+          els[i].innerHTML = "<span class=\"fr-mk\" style=\"display: none;\">&nbsp;</span>".concat(els[i].innerHTML);
         }
       }
 
@@ -7310,8 +7412,9 @@
       }
 
       var elms;
-      var ok;
-      elms = editor.el.querySelectorAll("*:empty:not(".concat(els.join('):not('), "):not(.fr-marker)"));
+      var ok; //https://github.com/froala-labs/froala-editor-js-2/issues/1938
+
+      elms = editor.el.querySelectorAll("*:empty:not(".concat(els.join('):not('), "):not(.fr-marker):not(template)"));
 
       do {
         ok = false; // Remove those elements that have no attributes.
@@ -7321,9 +7424,10 @@
             elms[i].parentNode.removeChild(elms[i]);
             ok = true;
           }
-        }
+        } //https://github.com/froala-labs/froala-editor-js-2/issues/1938
 
-        elms = editor.el.querySelectorAll("*:empty:not(".concat(els.join('):not('), "):not(.fr-marker)"));
+
+        elms = editor.el.querySelectorAll("*:empty:not(".concat(els.join('):not('), "):not(.fr-marker):not(template)"));
       } while (elms.length && ok);
     }
     /**
@@ -7787,7 +7891,11 @@
 
 
     function set(html) {
-      var clean_html = editor.clean.html((html || '').trim(), [], [], editor.opts.fullPage);
+      var cleaned_html = editor.clean.html((html || '').trim(), [], [], editor.opts.fullPage); // https://github.com/froala-labs/froala-editor-js-2/issues/2810 - issue 3
+      // not using decodeURI since we don't want to decode any html content. This fix is specific to decoding : symbol in th url.
+
+      var re = new RegExp('%3A//', 'g');
+      var clean_html = cleaned_html.replace(re, '://');
 
       if (!editor.opts.fullPage) {
         _setHtml(editor.$el, clean_html);
@@ -7863,7 +7971,9 @@
         editor.edit.off();
       }
 
-      editor.events.trigger('html.set');
+      editor.events.trigger('html.set'); //https://github.com/froala-labs/froala-editor-js-2/issues/1920		
+
+      editor.events.trigger('charCounter.update');
     }
 
     function _specifity(selector) {
@@ -7946,6 +8056,33 @@
       return a[3] - b[3];
     }
     /**
+     * Sync inputs when getting the HTML.
+     */
+
+
+    function syncInputs() {
+      var inputs = editor.el.querySelectorAll('input, textarea');
+
+      for (var i = 0; i < inputs.length; i++) {
+        if (inputs[i].type === 'checkbox' || inputs[i].type === 'radio') {
+          if (inputs[i].checked) {
+            inputs[i].setAttribute('checked', inputs[i].checked);
+          } else {
+            editor.$(inputs[i]).removeAttr('checked');
+          }
+        }
+        /**
+         * if the input type has value attribute then only updating the value atrribute.
+         * Submit and Reset buttons default value is type names
+         */
+
+
+        if (inputs[i].getAttribute('value')) {
+          inputs[i].setAttribute('value', inputs[i].value);
+        }
+      }
+    }
+    /**
      * Get HTML.
      */
 
@@ -7962,13 +8099,8 @@
       var elms_info = {};
       var i;
       var j;
-      var elems_specs = []; // Sync inputs when getting the HTML.
-
-      var inputs = editor.el.querySelectorAll('input, textarea');
-
-      for (i = 0; i < inputs.length; i++) {
-        inputs[i].setAttribute('value', inputs[i].value);
-      }
+      var elems_specs = [];
+      syncInputs();
 
       if (!editor.opts.useClasses && !keep_classes) {
         var ignoreRegEx = new RegExp("^".concat(editor.opts.htmlIgnoreCSSProperties.join('$|^'), "$"), 'gi');
@@ -8434,6 +8566,15 @@
 
 
     function _init() {
+      editor.events.$on(editor.$el, 'mousemove', 'span.fr-word-select', function (e) {
+        var selection = window.getSelection();
+        selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(e.target);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+
       if (editor.$wp) {
         editor.events.on('mouseup', _cleanTags);
         editor.events.on('keydown', _cleanTags);
@@ -8454,6 +8595,7 @@
       blocks: blocks,
       getDoctype: getDoctype,
       set: set,
+      syncInputs: syncInputs,
       get: get,
       getSelected: getSelected,
       insert: insert,
@@ -8465,7 +8607,8 @@
       extractNodeAttrs: extractNodeAttrs,
       extractDoctype: extractDoctype,
       cleanBRs: cleanBRs,
-      _init: _init
+      _init: _init,
+      _setHtml: _setHtml
     };
   };
 
@@ -8655,16 +8798,22 @@
     function _backspace(e) {
       // There is no selection.
       if (editor.selection.isCollapsed()) {
-        editor.cursor.backspace();
+        if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
+          editor.cursor.backspace();
+        }
 
-        if (editor.helpers.isIOS()) {
+        /* SAH: this causes a bad behavior where the cursor jumps forward a line, then runs backspace from the forward position. */
+        if (0 /*editor.helpers.isIOS()*/) {
           var range = editor.selection.ranges(0);
           range.deleteContents();
           range.insertNode(document.createTextNode("\u200B"));
           var sel = editor.selection.get();
           sel.modify('move', 'forward', 'character');
         } else {
-          e.preventDefault();
+          if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
+            e.preventDefault();
+          }
+
           e.stopPropagation();
         }
       } // We have text selected.
@@ -8682,7 +8831,10 @@
 
 
     function _del(e) {
-      e.preventDefault();
+      if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
+        e.preventDefault();
+      }
+
       e.stopPropagation(); // There is no selection or only image selection.
       // https://github.com/froala/wysiwyg-editor/issues/3342
 
@@ -8844,6 +8996,48 @@
       editor.selection.restore();
     }
     /**
+     * https://github.com/froala-labs/froala-editor-js-2/issues/1864
+     * Extra Space after Image in list (ul, ol).
+     */
+
+
+    function ImageCaptionSpace(sel_el, e) {
+      if (sel_el.innerHTML.indexOf('<span') > -1 || sel_el.parentElement.innerHTML.indexOf('<span') > -1 || sel_el.parentElement.parentElement.innerHTML.indexOf('<span') > -1) {
+        if (sel_el.classList.contains('fr-img-space-wrap') || sel_el.parentElement.classList.contains('fr-img-space-wrap') || sel_el.parentElement.parentElement.classList.contains('fr-img-space-wrap')) {
+          if ($(sel_el.parentElement).is('p')) {
+            var strHTML = sel_el.parentElement.innerHTML;
+            strHTML = strHTML.replace(/<br>/g, '');
+
+            if (strHTML.length < 1) {
+              sel_el.parentElement.insertAdjacentHTML('afterbegin', '&nbsp;');
+            } else if (strHTML != '&nbsp;' && strHTML != ' ' && e.key == 'Backspace') {
+              _backspace(e);
+            } else if (strHTML != '&nbsp;' && strHTML != ' ' && e.key == 'Delete') {
+              _del(e);
+            }
+
+            return true;
+          } else if ($(sel_el).is('p')) {
+            var orgStr = sel_el.innerHTML;
+
+            var _strHTML = orgStr.replace(/<br>/g, '');
+
+            if (_strHTML.length < 1) {
+              sel_el.insertAdjacentHTML('afterbegin', '&nbsp;');
+            } else if (_strHTML != '&nbsp;' && _strHTML != ' ' && e.key == 'Backspace') {
+              _backspace(e);
+            } else if (_strHTML != '&nbsp;' && _strHTML != ' ' && e.key == 'Delete') {
+              _del(e);
+            }
+
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+    /**
      * Map keyDown actions.
      */
 
@@ -8891,7 +9085,9 @@
 
 
       if (key_code === FroalaEditor.KEYCODE.ENTER) {
-        if (e.shiftKey) {
+        //code edited https://github.com/froala-labs/froala-editor-js-2/issues/1864
+        // added code for fr-inner class check
+        if (e.shiftKey || sel_el.classList.contains('fr-inner') || sel_el.parentElement.classList.contains('fr-inner')) {
           _shiftEnter(e);
         } else {
           _enter(e);
@@ -8901,6 +9097,13 @@
           _ctlBackspace();
         } // Backspace.
         else if (key_code === FroalaEditor.KEYCODE.BACKSPACE && !ctrlKey(e) && !e.altKey) {
+            // https://github.com/froala-labs/froala-editor-js-2/issues/1864
+            if (ImageCaptionSpace(sel_el, e)) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+
             if (!editor.placeholder.isVisible()) {
               _backspace(e);
             } else {
@@ -8913,6 +9116,13 @@
             }
           } // Delete.
           else if (key_code === FroalaEditor.KEYCODE.DELETE && !ctrlKey(e) && !e.altKey && !e.shiftKey) {
+              // https://github.com/froala-labs/froala-editor-js-2/issues/1864
+              if (ImageCaptionSpace(sel_el, e)) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+              }
+
               if (!editor.placeholder.isVisible()) {
                 _del(e);
               } else {
@@ -9394,7 +9604,17 @@
     var stop_paste = false;
 
     function _handlePaste(e) {
+      // if content is copied in input tag do the normal paste.
+      if (e.target.nodeName === 'INPUT' && e.target.type === 'text') {
+        return true;
+      }
+
       if (editor.edit.isDisabled()) {
+        return false;
+      } // https://github.com/froala-labs/froala-editor-js-2/issues/2067
+
+
+      if (isContetnEditable(e.target)) {
         return false;
       }
 
@@ -9461,6 +9681,14 @@
       return false;
     }
     /**
+     * check for contentEditable.
+     */
+
+
+    function isContetnEditable(el) {
+      return el && el.contentEditable === 'false';
+    }
+    /**
      * Handle dropping content in the editor.
      */
 
@@ -9468,6 +9696,11 @@
     function _dropPaste(e) {
       if (e.originalEvent) {
         e = e.originalEvent;
+      } // https://github.com/froala-labs/froala-editor-js-2/issues/2067
+
+
+      if (isContetnEditable(e.target)) {
+        return false;
       } // Read data from clipboard.
 
 
@@ -10928,6 +11161,9 @@
         if (editor.opts.disableRightClick) {
           editor.events.$on(editor.$el, 'contextmenu', function (e) {
             if (e.button === 2) {
+              // https://github.com/froala-labs/froala-editor-js-2/issues/2150
+              e.preventDefault();
+              e.stopPropagation();
               return false;
             }
           });
@@ -10993,6 +11229,7 @@
 
   FroalaEditor.MODULES.popups = function (editor) {
     var $ = editor.$;
+    var screenHeightofBrowser;
 
     if (!editor.shared.popups) {
       editor.shared.popups = {};
@@ -11013,6 +11250,71 @@
       }
     }
 
+    function setFileListHeight($popup) {
+      $popup.find('.fr-upload-progress').addClass('fr-height-set');
+      $popup.find('.fr-upload-progress').removeClass('fr-height-auto');
+      editor.popups.get('filesManager.insert').removeClass('fr-height-auto');
+      var activeLayerIndex;
+      $popup.find('.fr-files-upload-layer').hasClass('fr-active') ? activeLayerIndex = 1 : '';
+      $popup.find('.fr-files-by-url-layer').hasClass('fr-active') ? activeLayerIndex = 2 : '';
+      $popup.find('.fr-files-embed-layer').hasClass('fr-active') ? activeLayerIndex = 3 : '';
+
+      if ($popup.find('.fr-upload-progress-layer').get(0).clientHeight + 10 < $popup.find('.fr-upload-progress').get(0).clientHeight) {
+        $popup.find('.fr-upload-progress').addClass('fr-height-auto');
+      }
+
+      if ($popup[0].clientHeight > 400) $popup[0].childNodes[4].style.height = "".concat($popup[0].clientHeight - ($popup[0].childNodes[0].clientHeight + $popup[0].childNodes[activeLayerIndex].clientHeight) - 80, "px");
+    }
+
+    var prevHeight = 2000;
+
+    function setPopupDimensions($popup, isDelete) {
+      if (isDelete && $popup.find('.fr-upload-progress-layer').get(0).clientHeight < prevHeight) {
+        $popup.find('.fr-upload-progress').addClass('fr-height-auto');
+        editor.popups.get('filesManager.insert').addClass('fr-height-auto');
+        $popup.find('.fr-upload-progress').removeClass('fr-height-set');
+        prevHeight = 2000;
+      }
+
+      if ($popup.get(0).clientHeight > window.innerHeight / 2) {
+        if (window.innerWidth < 500) {
+          if ($popup.get(0).clientHeight > screenHeightofBrowser * 0.6) {
+            setFileListHeight($popup);
+          }
+        } else {
+          if ($popup.get(0).clientHeight > 400) {
+            setFileListHeight($popup);
+          }
+        }
+
+        prevHeight = $popup.find('.fr-upload-progress-layer').get(0).clientHeight;
+      }
+
+      var width = window.innerWidth;
+
+      switch (true) {
+        case width <= 320:
+          $popup.width(200);
+          break;
+
+        case width <= 420:
+          $popup.width(250);
+          break;
+
+        case width <= 520:
+          $popup.width(300);
+          break;
+
+        case width <= 720:
+          $popup.width(400);
+          break;
+
+        case width > 720:
+          $popup.width(530);
+          break;
+      }
+    }
+
     function refreshContainer(id, $container) {
       if (!$container.isVisible()) {
         $container = editor.$sc;
@@ -11023,16 +11325,16 @@
       }
     }
     /**
-     * Handles focus event on input boxes
-     */
+    * Handles focus event on input boxes
+    */
 
 
     function _inputRefreshEmptyOnFocus() {
       $(this).toggleClass('fr-not-empty', true);
     }
     /**
-     * Handles blur event on input boxes
-     */
+    * Handles blur event on input boxes
+    */
 
 
     function _inputRefreshEmptyOnBlur() {
@@ -11040,8 +11342,8 @@
       $elm.toggleClass('fr-not-empty', $elm.val() !== '');
     }
     /**
-     * Remove placeholder and attach label next to input box for focus and blur transitions
-     */
+    * Remove placeholder and attach label next to input box for focus and blur transitions
+    */
 
 
     function _addLabel($inputElms) {
@@ -11131,7 +11433,7 @@
       if ($container.is(editor.$tb)) {
         editor.$tb.css('zIndex', (editor.opts.zIndex || 1) + 4);
       } else {
-        popups[id].css('zIndex', (editor.opts.zIndex || 1) + 4);
+        popups[id].css('zIndex', (editor.opts.zIndex || 1) + 3);
       } // Toolbar at the bottom and container is toolbar.
 
 
@@ -11222,6 +11524,10 @@
         $popup = id;
       } else {
         $popup = popups[id];
+      }
+
+      if (id === 'filesManager.insert' && editor.filesManager !== undefined && editor.filesManager.isChildWindowOpen()) {
+        return false;
       }
 
       if ($popup && editor.node.hasClass($popup, 'fr-active')) {
@@ -11361,7 +11667,12 @@
       var $popup = $(editor.doc.createElement('DIV'));
 
       if (!html) {
-        $popup.addClass('fr-popup fr-empty');
+        if (id === 'filesManager.insert') {
+          $popup.addClass('fr-popup fr-files-manager fr-empty');
+        } else {
+          $popup.addClass('fr-popup fr-empty');
+        }
+
         $container = $('body').first();
         $container.append($popup);
         $popup.data('container', $container);
@@ -11369,7 +11680,12 @@
         return $popup;
       }
 
-      $popup.addClass("fr-popup".concat(editor.helpers.isMobile() ? ' fr-mobile' : ' fr-desktop').concat(editor.opts.toolbarInline ? ' fr-inline' : ''));
+      if (id === 'filesManager.insert') {
+        $popup.addClass("fr-popup fr-files-manager".concat(editor.helpers.isMobile() ? ' fr-mobile' : ' fr-desktop').concat(editor.opts.toolbarInline ? ' fr-inline' : ''));
+      } else {
+        $popup.addClass("fr-popup".concat(editor.helpers.isMobile() ? ' fr-mobile' : ' fr-desktop').concat(editor.opts.toolbarInline ? ' fr-inline' : ''));
+      }
+
       $popup.html(html);
 
       if (editor.opts.theme) {
@@ -11641,17 +11957,31 @@
 
       if (editor.$wp) {
         editor.events.on('keydown', ev._editorKeydown);
-      } // Hide all popups on blur.
+      } // Remove popup class on focus as pop up will be hidden on focus of editor
 
+
+      editor.events.on('focus', function () {
+        popups[id].removeClass('focused');
+      }); // Hide all popups on blur.
 
       editor.events.on('blur', function () {
         if (areVisible()) {
           editor.markers.remove();
-        } // https://github.com/froala-labs/froala-editor-js-2/issues/858
+        } // https://github.com/froala-labs/froala-editor-js-2/issues/2044
 
 
-        if (!popups[id].find('iframe').length) {
-          hideAll();
+        if (editor.helpers.isMobile()) {
+          if (popups[id].hasClass('focused')) {
+            hideAll();
+            popups[id].removeClass('focused');
+          } else {
+            popups[id].addClass('focused');
+          }
+        } else {
+          // https://github.com/froala-labs/froala-editor-js-2/issues/858
+          if (!popups[id].find('iframe').length) {
+            hideAll();
+          }
         }
       }); // Update the position of the popup.
 
@@ -11720,6 +12050,11 @@
 
 
       editor.events.$on($(editor.o_win), 'resize', ev._windowResize, true);
+
+      if (id === 'filesManager.insert') {
+        popups['filesManager.insert'].css('zIndex', 2147483641);
+      }
+
       return $popup;
     }
     /**
@@ -11747,6 +12082,7 @@
 
 
     function _init() {
+      screenHeightofBrowser = window.innerHeight;
       editor.events.on('shared.destroy', _destroy, true);
       editor.events.on('window.mousedown', _markExit);
       editor.events.on('window.touchmove', _unmarkExit); // Prevent hiding popups while we scroll.
@@ -11779,7 +12115,9 @@
       onRefresh: onRefresh,
       onShow: onShow,
       isVisible: isVisible,
-      areVisible: areVisible
+      setFileListHeight: setFileListHeight,
+      areVisible: areVisible,
+      setPopupDimensions: setPopupDimensions
     };
   };
 
@@ -12644,7 +12982,7 @@
       editor.events.on('mousedown', function (e) {
         _clearPopupButton(editor);
 
-        if (editor.shared.$f_el) {
+        if (editor.shared.$f_el && editor.el.isSameNode(editor.shared.$f_el[0])) {
           editor.accessibility.restoreSelection();
           e.stopPropagation();
           editor.events.disableBlur();
@@ -13542,6 +13880,10 @@
       NAME: 'superscript',
       SVG_KEY: 'superscript'
     },
+    cancel: {
+      NAME: 'cancel',
+      SVG_KEY: 'cancel'
+    },
     color: {
       NAME: 'tint',
       SVG_KEY: 'textColor'
@@ -13564,6 +13906,14 @@
       FA5NAME: 'redo',
       SVG_KEY: 'redo'
     },
+    insert: {
+      NAME: 'insert',
+      SVG_KEY: 'insert'
+    },
+    insertAll: {
+      NAME: 'insertAll',
+      SVG_KEY: 'insertAll'
+    },
     insertHR: {
       NAME: 'minus',
       SVG_KEY: 'horizontalLine'
@@ -13575,6 +13925,10 @@
     selectAll: {
       NAME: 'mouse-pointer',
       SVG_KEY: 'selectAll'
+    },
+    minimize: {
+      NAME: 'minimize',
+      SVG_KEY: 'minimize'
     },
     moreText: {
       NAME: 'ellipsis-v',
@@ -13654,9 +14008,20 @@
       return template;
     }
 
+    function getFileIcon(command) {
+      var info = FroalaEditor.FILEICONS[command];
+
+      if (typeof info !== 'undefined') {
+        return info;
+      }
+
+      return command;
+    }
+
     return {
       create: create,
-      getTemplate: getTemplate
+      getTemplate: getTemplate,
+      getFileIcon: getFileIcon
     };
   };
 
@@ -13668,10 +14033,12 @@
     alignLeft: 'M3,18h6v-2H3V18z M3,11v2h12v-2H3z M3,6v2h18V6H3z',
     alignRight: 'M15,18h6v-2h-6V18z M9,11v2h12v-2H9z M3,6v2h18V6H3z',
     anchors: 'M16,4h-4H8C6.9,4,6,4.9,6,6v4v10l6-2.6l6,2.6V10V6C18,4.9,17.1,4,16,4z M16,17l-4-1.8L8,17v-7V6h4h4v4V17z',
+    autoplay: 'M 7.570312 0.292969 C 7.542969 0.292969 7.515625 0.292969 7.488281 0.296875 C 7.203125 0.324219 6.984375 0.539062 6.980469 0.792969 L 6.925781 3.535156 C 2.796875 3.808594 -0.0078125 6.425781 -0.0859375 10.09375 C -0.121094 11.96875 0.710938 13.6875 2.265625 14.921875 C 3.769531 16.117188 5.839844 16.796875 8.097656 16.828125 C 8.140625 16.828125 12.835938 16.898438 13.035156 16.886719 C 15.171875 16.796875 17.136719 16.128906 18.558594 15.003906 C 20.066406 13.816406 20.882812 12.226562 20.917969 10.40625 C 20.960938 8.410156 20.023438 6.605469 18.289062 5.335938 C 18.214844 5.277344 18.128906 5.230469 18.035156 5.203125 C 17.636719 5.074219 17.222656 5.199219 17 5.476562 L 15.546875 7.308594 C 15.304688 7.609375 15.363281 8.007812 15.664062 8.265625 C 16.351562 8.851562 16.707031 9.625 16.6875 10.5 C 16.652344 12.25 15.070312 13.390625 12.757812 13.535156 C 12.59375 13.539062 8.527344 13.472656 8.164062 13.464844 C 5.703125 13.429688 4.101562 12.191406 4.140625 10.3125 C 4.175781 8.570312 5.132812 7.46875 6.847656 7.199219 L 6.796875 9.738281 C 6.792969 9.992188 7 10.214844 7.285156 10.253906 C 7.3125 10.257812 7.339844 10.257812 7.367188 10.257812 C 7.503906 10.261719 7.632812 10.222656 7.738281 10.148438 L 14.039062 5.785156 C 14.171875 5.691406 14.253906 5.558594 14.253906 5.410156 C 14.257812 5.261719 14.1875 5.125 14.058594 5.027344 L 7.941406 0.414062 C 7.835938 0.335938 7.707031 0.292969 7.570312 0.292969 ',
     back: 'M20 11L7.83 11 11.425 7.405 10.01 5.991 5.416 10.586 5.414 10.584 4 11.998 4.002 12 4 12.002 5.414 13.416 5.416 13.414 10.01 18.009 11.425 16.595 7.83 13 20 13 20 13 20 11 20 11Z',
     backgroundColor: 'M9.91752,12.24082l7.74791-5.39017,1.17942,1.29591-6.094,7.20747L9.91752,12.24082M7.58741,12.652l4.53533,4.98327a.93412.93412,0,0,0,1.39531-.0909L20.96943,8.7314A.90827.90827,0,0,0,20.99075,7.533l-2.513-2.76116a.90827.90827,0,0,0-1.19509-.09132L7.809,11.27135A.93412.93412,0,0,0,7.58741,12.652ZM2.7939,18.52772,8.41126,19.5l1.47913-1.34617-3.02889-3.328Z',
     blockquote: 'M10.31788,5l.93817,1.3226A12.88271,12.88271,0,0,0,8.1653,9.40125a5.54242,5.54242,0,0,0-.998,3.07866v.33733q.36089-.04773.66067-.084a4.75723,4.75723,0,0,1,.56519-.03691,2.87044,2.87044,0,0,1,2.11693.8427,2.8416,2.8416,0,0,1,.8427,2.09274,3.37183,3.37183,0,0,1-.8898,2.453A3.143,3.143,0,0,1,8.10547,19,3.40532,3.40532,0,0,1,5.375,17.7245,4.91156,4.91156,0,0,1,4.30442,14.453,9.3672,9.3672,0,0,1,5.82051,9.32933,14.75716,14.75716,0,0,1,10.31788,5Zm8.39243,0,.9369,1.3226a12.88289,12.88289,0,0,0-3.09075,3.07865,5.54241,5.54241,0,0,0-.998,3.07866v.33733q.33606-.04773.63775-.084a4.91773,4.91773,0,0,1,.58938-.03691,2.8043,2.8043,0,0,1,2.1042.83,2.89952,2.89952,0,0,1,.80578,2.10547,3.42336,3.42336,0,0,1-.86561,2.453A3.06291,3.06291,0,0,1,16.49664,19,3.47924,3.47924,0,0,1,13.742,17.7245,4.846,4.846,0,0,1,12.64721,14.453,9.25867,9.25867,0,0,1,14.17476,9.3898,15.26076,15.26076,0,0,1,18.71031,5Z',
     bold: 'M15.25,11.8h0A3.68,3.68,0,0,0,17,9a3.93,3.93,0,0,0-3.86-4H6.65V19h7a3.74,3.74,0,0,0,3.7-3.78V15.1A3.64,3.64,0,0,0,15.25,11.8ZM8.65,7h4.2a2.09,2.09,0,0,1,2,1.3,2.09,2.09,0,0,1-1.37,2.61,2.23,2.23,0,0,1-.63.09H8.65Zm4.6,10H8.65V13h4.6a2.09,2.09,0,0,1,2,1.3,2.09,2.09,0,0,1-1.37,2.61A2.23,2.23,0,0,1,13.25,17Z',
+    cancel: 'M13.4,12l5.6,5.6L17.6,19L12,13.4L6.4,19L5,17.6l5.6-5.6L5,6.4L6.4,5l5.6,5.6L17.6,5L19,6.4L13.4,12z',
     cellBackground: 'M16.6,12.4L7.6,3.5L6.2,4.9l2.4,2.4l-5.2,5.2c-0.6,0.6-0.6,1.5,0,2.1l5.5,5.5c0.3,0.3,0.7,0.4,1.1,0.4s0.8-0.1,1.1-0.4  l5.5-5.5C17.2,14,17.2,13,16.6,12.4z M5.2,13.5L10,8.7l4.8,4.8H5.2z M19,15c0,0-2,2.2-2,3.5c0,1.1,0.9,2,2,2s2-0.9,2-2  C21,17.2,19,15,19,15z',
     cellBorderColor: 'M22,22H2v2h20V22z',
     cellOptions: 'M20,5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M9.5,6.5h5V9h-5V6.5z M8,17.5H4  c-0.3,0-0.5-0.2-0.5-0.4c0,0,0,0,0,0V17v-2H8V17.5z M8,13.5H3.5v-3H8V13.5z M8,9H3.5V7c0-0.3,0.2-0.5,0.4-0.5c0,0,0,0,0,0H8V9z   M14.5,17.5h-5V15h5V17.5z M20.5,17c0,0.3-0.2,0.5-0.4,0.5c0,0,0,0,0,0H16V15h4.5V17z M20.5,13.5H16v-3h4.5V13.5z M20.5,9H16V6.5h4  c0.3,0,0.5,0.2,0.5,0.4c0,0,0,0,0,0V9z',
@@ -13681,8 +14048,10 @@
     codeView: 'M9.4,16.6,4.8,12,9.4,7.4,8,6,2,12l6,6Zm5.2,0L19.2,12,14.6,7.4,16,6l6,6-6,6Z',
     cogs: 'M18.877 12.907a6.459 6.459 0 0 0 0 -1.814l1.952 -1.526a0.468 0.468 0 0 0 0.111 -0.593l-1.851 -3.2a0.461 0.461 0 0 0 -0.407 -0.231 0.421 0.421 0 0 0 -0.157 0.028l-2.3 0.925a6.755 6.755 0 0 0 -1.563 -0.907l-0.352 -2.452a0.451 0.451 0 0 0 -0.453 -0.388h-3.7a0.451 0.451 0 0 0 -0.454 0.388L9.347 5.588A7.077 7.077 0 0 0 7.783 6.5l-2.3 -0.925a0.508 0.508 0 0 0 -0.166 -0.028 0.457 0.457 0 0 0 -0.4 0.231l-1.851 3.2a0.457 0.457 0 0 0 0.111 0.593l1.952 1.526A7.348 7.348 0 0 0 5.063 12a7.348 7.348 0 0 0 0.064 0.907L3.175 14.433a0.468 0.468 0 0 0 -0.111 0.593l1.851 3.2a0.461 0.461 0 0 0 0.407 0.231 0.421 0.421 0 0 0 0.157 -0.028l2.3 -0.925a6.74 6.74 0 0 0 1.564 0.907L9.7 20.864a0.451 0.451 0 0 0 0.454 0.388h3.7a0.451 0.451 0 0 0 0.453 -0.388l0.352 -2.452a7.093 7.093 0 0 0 1.563 -0.907l2.3 0.925a0.513 0.513 0 0 0 0.167 0.028 0.457 0.457 0 0 0 0.4 -0.231l1.851 -3.2a0.468 0.468 0 0 0 -0.111 -0.593Zm-0.09 2.029l-0.854 1.476 -2.117 -0.852 -0.673 0.508a5.426 5.426 0 0 1 -1.164 0.679l-0.795 0.323 -0.33 2.269h-1.7l-0.32 -2.269 -0.793 -0.322a5.3 5.3 0 0 1 -1.147 -0.662L8.2 15.56l-2.133 0.86 -0.854 -1.475 1.806 -1.411 -0.1 -0.847c-0.028 -0.292 -0.046 -0.5 -0.046 -0.687s0.018 -0.4 0.045 -0.672l0.106 -0.854L5.217 9.064l0.854 -1.475 2.117 0.851 0.673 -0.508a5.426 5.426 0 0 1 1.164 -0.679l0.8 -0.323 0.331 -2.269h1.7l0.321 2.269 0.792 0.322a5.3 5.3 0 0 1 1.148 0.661l0.684 0.526 2.133 -0.859 0.853 1.473 -1.8 1.421 0.1 0.847a5 5 0 0 1 0.046 0.679c0 0.193 -0.018 0.4 -0.045 0.672l-0.106 0.853ZM12 14.544A2.544 2.544 0 1 1 14.546 12 2.552 2.552 0 0 1 12 14.544Z',
     columns: 'M20,5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M8,17.5H4c-0.3,0-0.5-0.2-0.5-0.4  c0,0,0,0,0,0V17v-2H8V17.5z M8,13.5H3.5v-3H8V13.5z M8,9H3.5V7c0-0.3,0.2-0.5,0.4-0.5c0,0,0,0,0,0H8V9z M20.5,17  c0,0.3-0.2,0.5-0.4,0.5c0,0,0,0,0,0H16V15h4.5V17z M20.5,13.5H16v-3h4.5V13.5z M20.5,9H16V6.5h4c0.3,0,0.5,0.2,0.5,0.4c0,0,0,0,0,0  V9z',
-    editLink: 'M17,11.2L12.8,7L5,14.8V19h4.2L17,11.2z M7,16.8v-1.5l5.6-5.6l1.4,1.5l-5.6,5.6H7z M13.5,6.3l0.7-0.7c0.8-0.8,2.1-0.8,2.8,0  c0,0,0,0,0,0L18.4,7c0.8,0.8,0.8,2,0,2.8l-0.7,0.7L13.5,6.3z',
+    edit: 'M17,11.2L12.8,7L5,14.8V19h4.2L17,11.2z M7,16.8v-1.5l5.6-5.6l1.4,1.5l-5.6,5.6H7z M13.5,6.3l0.7-0.7c0.8-0.8,2.1-0.8,2.8,0  c0,0,0,0,0,0L18.4,7c0.8,0.8,0.8,2,0,2.8l-0.7,0.7L13.5,6.3z',
     exitFullscreen: 'M5,16H8v3h2V14H5ZM8,8H5v2h5V5H8Zm6,11h2V16h3V14H14ZM16,8V5H14v5h5V8Z',
+    fileInsert: 'M 8.09375 12.75 L 5.90625 12.75 C 5.542969 12.75 5.25 12.394531 5.25 11.953125 L 5.25 6.375 L 2.851562 6.375 C 2.367188 6.375 2.121094 5.660156 2.464844 5.242188 L 6.625 0.1875 C 6.832031 -0.0585938 7.167969 -0.0585938 7.371094 0.1875 L 11.535156 5.242188 C 11.878906 5.660156 11.632812 6.375 11.148438 6.375 L 8.75 6.375 L 8.75 11.953125 C 8.75 12.394531 8.457031 12.75 8.09375 12.75 Z M 14 12.484375 L 14 16.203125 C 14 16.644531 13.707031 17 13.34375 17 L 0.65625 17 C 0.292969 17 0 16.644531 0 16.203125 L 0 12.484375 C 0 12.042969 0.292969 11.6875 0.65625 11.6875 L 4.375 11.6875 L 4.375 11.953125 C 4.375 12.980469 5.0625 13.8125 5.90625 13.8125 L 8.09375 13.8125 C 8.9375 13.8125 9.625 12.980469 9.625 11.953125 L 9.625 11.6875 L 13.34375 11.6875 C 13.707031 11.6875 14 12.042969 14 12.484375 Z M 10.609375 15.40625 C 10.609375 15.039062 10.363281 14.742188 10.0625 14.742188 C 9.761719 14.742188 9.515625 15.039062 9.515625 15.40625 C 9.515625 15.773438 9.761719 16.070312 10.0625 16.070312 C 10.363281 16.070312 10.609375 15.773438 10.609375 15.40625 Z M 12.359375 15.40625 C 12.359375 15.039062 12.113281 14.742188 11.8125 14.742188 C 11.511719 14.742188 11.265625 15.039062 11.265625 15.40625 C 11.265625 15.773438 11.511719 16.070312 11.8125 16.070312 C 12.113281 16.070312 12.359375 15.773438 12.359375 15.40625 Z M 12.359375 15.40625 ',
+    fileManager: 'M 0 5.625 L 20.996094 5.625 L 21 15.75 C 21 16.371094 20.410156 16.875 19.6875 16.875 L 1.3125 16.875 C 0.585938 16.875 0 16.371094 0 15.75 Z M 0 5.625 M 21 4.5 L 0 4.5 L 0 2.25 C 0 1.628906 0.585938 1.125 1.3125 1.125 L 6.921875 1.125 C 7.480469 1.125 8.015625 1.316406 8.40625 1.652344 L 9.800781 2.847656 C 10.195312 3.183594 10.730469 3.375 11.289062 3.375 L 19.6875 3.375 C 20.414062 3.375 21 3.878906 21 4.5 Z M 21 4.5',
     fontAwesome: 'M18.99018,13.98212V7.52679c-.08038-1.21875-1.33929-.683-1.33929-.683-2.933,1.39282-4.36274.61938-5.85938.15625a6.23272,6.23272,0,0,0-2.79376-.20062l-.00946.004A1.98777,1.98777,0,0,0,7.62189,5.106a.984.984,0,0,0-.17517-.05432c-.02447-.0055-.04882-.01032-.0736-.0149A.9565.9565,0,0,0,7.1908,5H6.82539a.9565.9565,0,0,0-.18232.0368c-.02472.00458-.04907.0094-.07348.01484a.985.985,0,0,0-.17523.05438,1.98585,1.98585,0,0,0-.573,3.49585v9.394A1.004,1.004,0,0,0,6.82539,19H7.1908a1.00406,1.00406,0,0,0,1.00409-1.00409V15.52234c3.64221-1.09827,5.19709.64282,7.09888.57587a5.57291,5.57291,0,0,0,3.25446-1.05805A1.2458,1.2458,0,0,0,18.99018,13.98212Z',
     fontFamily: 'M16,19h2L13,5H11L6,19H8l1.43-4h5.14Zm-5.86-6L12,7.8,13.86,13Z',
     fontSize: 'M20.75,19h1.5l-3-10h-1.5l-3,10h1.5L17,16.5h3Zm-3.3-4,1.05-3.5L19.55,15Zm-5.7,4h2l-5-14h-2l-5,14h2l1.43-4h5.14ZM5.89,13,7.75,7.8,9.61,13Z',
@@ -13698,6 +14067,7 @@
     indent: 'M3,9v6l3-3L3,9z M3,19h18v-2H3V19z M3,7h18V5H3V7z M9,11h12V9H9V11z M9,15h12v-2H9V15z',
     inlineClass: 'M9.9,13.313A1.2,1.2,0,0,1,9.968,13H6.277l1.86-5.2,1.841,5.148A1.291,1.291,0,0,1,11.212,12h.426l-2.5-7h-2l-5,14h2l1.43-4H9.9Zm2.651,6.727a2.884,2.884,0,0,1-.655-2.018v-2.71A1.309,1.309,0,0,1,13.208,14h3.113a3.039,3.039,0,0,1,2,1.092s1.728,1.818,2.964,2.928a1.383,1.383,0,0,1,.318,1.931,1.44,1.44,0,0,1-.19.215l-3.347,3.31a1.309,1.309,0,0,1-1.832.258h0a1.282,1.282,0,0,1-.258-.257l-1.71-1.728Zm2.48-3.96a.773.773,0,1,0,.008,0Z',
     inlineStyle: 'M11.88,15h.7l.7-1.7-3-8.3h-2l-5,14h2l1.4-4Zm-4.4-2,1.9-5.2,1.9,5.2ZM15.4,21.545l3.246,1.949-.909-3.637L20.72,17H16.954l-1.429-3.506L13.837,17H10.071l2.857,2.857-.779,3.637Z',
+    insert: 'M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10',
     insertEmbed: 'M20.73889,15.45929a3.4768,3.4768,0,0,0-5.45965-.28662L9.5661,12.50861a3.49811,3.49811,0,0,0-.00873-1.01331l5.72174-2.66809a3.55783,3.55783,0,1,0-.84527-1.81262L8.70966,9.6839a3.50851,3.50851,0,1,0,.0111,4.63727l5.7132,2.66412a3.49763,3.49763,0,1,0,6.30493-1.526ZM18.00745,5.01056A1.49993,1.49993,0,1,1,16.39551,6.3894,1.49994,1.49994,0,0,1,18.00745,5.01056ZM5.99237,13.49536a1.49989,1.49989,0,1,1,1.61194-1.37878A1.49982,1.49982,0,0,1,5.99237,13.49536Zm11.78211,5.494a1.49993,1.49993,0,1,1,1.61193-1.37885A1.49987,1.49987,0,0,1,17.77448,18.98932Z',
     insertFile: 'M7,3C5.9,3,5,3.9,5,5v14c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V7.6L14.4,3H7z M17,19H7V5h6v4h4V19z',
     insertImage: 'M14.2,11l3.8,5H6l3-3.9l2.1,2.7L14,11H14.2z M8.5,11c0.8,0,1.5-0.7,1.5-1.5S9.3,8,8.5,8S7,8.7,7,9.5C7,10.3,7.7,11,8.5,11z   M22,6v12c0,1.1-0.9,2-2,2H4c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h16C21.1,4,22,4.9,22,6z M20,8.8V6H4v12h16V8.8z',
@@ -13706,11 +14076,13 @@
     insertTable: 'M20,5H4C2.9,5,2,5.9,2,7v2v1.5v3V15v2c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2v-2v-1.5v-3V9V7C22,5.9,21.1,5,20,5z M9.5,13.5v-3  h5v3H9.5z M14.5,15v2.5h-5V15H14.5z M9.5,9V6.5h5V9H9.5z M3.5,7c0-0.3,0.2-0.5,0.5-0.5h4V9H3.5V7z M3.5,10.5H8v3H3.5V10.5z M3.5,17  v-2H8v2.5H4C3.7,17.5,3.5,17.3,3.5,17z M20.5,17c0,0.3-0.2,0.5-0.5,0.5h-4V15h4.5V17z M20.5,13.5H16v-3h4.5V13.5z M16,9V6.5h4  c0.3,0,0.5,0.2,0.5,0.5v2H16z',
     insertVideo: 'M15,8v8H5V8H15m2,2.5V7a1,1,0,0,0-1-1H4A1,1,0,0,0,3,7V17a1,1,0,0,0,1,1H16a1,1,0,0,0,1-1V13.5l2.29,2.29A1,1,0,0,0,21,15.08V8.91a1,1,0,0,0-1.71-.71Z',
     upload: 'M12 6.66667a4.87654 4.87654 0 0 1 4.77525 3.92342l0.29618 1.50268 1.52794 0.10578a2.57021 2.57021 0 0 1 -0.1827 5.13478H6.5a3.49774 3.49774 0 0 1 -0.3844 -6.97454l1.06682 -0.11341L7.678 9.29387A4.86024 4.86024 0 0 1 12 6.66667m0 -2A6.871 6.871 0 0 0 5.90417 8.37 5.49773 5.49773 0 0 0 6.5 19.33333H18.41667a4.57019 4.57019 0 0 0 0.32083 -9.13A6.86567 6.86567 0 0 0 12 4.66667Zm0.99976 7.2469h1.91406L11.99976 9 9.08618 11.91357h1.91358v3H11V16h2V14h-0.00024Z',
+    uploadFiles: 'M12 6.66667a4.87654 4.87654 0 0 1 4.77525 3.92342l0.29618 1.50268 1.52794 0.10578a2.57021 2.57021 0 0 1 -0.1827 5.13478H6.5a3.49774 3.49774 0 0 1 -0.3844 -6.97454l1.06682 -0.11341L7.678 9.29387A4.86024 4.86024 0 0 1 12 6.66667m0 -2A6.871 6.871 0 0 0 5.90417 8.37 5.49773 5.49773 0 0 0 6.5 19.33333H18.41667a4.57019 4.57019 0 0 0 0.32083 -9.13A6.86567 6.86567 0 0 0 12 4.66667Zm0.99976 7.2469h1.91406L11.99976 9 9.08618 11.91357h1.91358v3H11V16h2V14h-0.00024Z',
     italic: 'M11.76,9h2l-2.2,10h-2Zm1.68-4a1,1,0,1,0,1,1,1,1,0,0,0-1-1Z',
     search: 'M15.5 14h-0.79l-0.28 -0.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09 -0.59 4.23 -1.57l0.27 0.28v0.79l5 4.99L20.49 19l-4.99 -5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
     lineHeight: 'M6.25,7h2.5L5.25,3.5,1.75,7h2.5V17H1.75l3.5,3.5L8.75,17H6.25Zm4-2V7h12V5Zm0,14h12V17h-12Zm0-6h12V11h-12Z',
     linkStyles: 'M19,17.9l0.9,3.6l-3.2-1.9l-3.3,1.9l0.8-3.6L11.3,15h3.8l1.7-3.5l1.4,3.5H22L19,17.9z M20,12c0,0.3-0.1,0.7-0.2,1h2.1  c0.1-0.3,0.1-0.6,0.1-1c0-2.8-2.2-5-5-5h-4v2h4C18.7,9,20,10.3,20,12z M14.8,11H8v2h3.3h2.5L14.8,11z M9.9,16.4L8.5,15H7  c-1.7,0-3-1.3-3-3s1.3-3,3-3h4V7H7c-2.8,0-5,2.2-5,5s2.2,5,5,5h3.5L9.9,16.4z',
     mention: 'M12.4,5c-4.1,0-7.5,3.4-7.5,7.5S8.3,20,12.4,20h3.8v-1.5h-3.8c-3.3,0-6-2.7-6-6s2.7-6,6-6s6,2.7,6,6v1.1  c0,0.6-0.5,1.2-1.1,1.2s-1.1-0.6-1.1-1.2v-1.1c0-2.1-1.7-3.8-3.8-3.8s-3.7,1.7-3.7,3.8s1.7,3.8,3.8,3.8c1,0,2-0.4,2.7-1.1  c0.5,0.7,1.3,1.1,2.2,1.1c1.5,0,2.6-1.2,2.6-2.7v-1.1C19.9,8.4,16.6,5,12.4,5z M12.4,14.7c-1.2,0-2.3-1-2.3-2.2s1-2.3,2.3-2.3  s2.3,1,2.3,2.3S13.6,14.7,12.4,14.7z',
+    minimize: 'M5,12h14 M19,11H5v2h14V11z',
     more: 'M13.5,17c0,0.8-0.7,1.5-1.5,1.5s-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5S13.5,16.2,13.5,17z M13.5,12c0,0.8-0.7,1.5-1.5,1.5 s-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5S13.5,11.2,13.5,12z M13.5,7c0,0.8-0.7,1.5-1.5,1.5S10.5,7.8,10.5,7s0.7-1.5,1.5-1.5 S13.5,6.2,13.5,7z',
     openLink: 'M17,17H7V7h3V5H7C6,5,5,6,5,7v10c0,1,1,2,2,2h10c1,0,2-1,2-2v-3h-2V17z M14,5v2h1.6l-5.8,5.8l1.4,1.4L17,8.4V10h2V5H14z',
     orderedList: 'M2.5,16h2v.5h-1v1h1V18h-2v1h3V15h-3Zm1-7h1V5h-2V6h1Zm-1,2H4.3L2.5,13.1V14h3V13H3.7l1.8-2.1V10h-3Zm5-5V8h14V6Zm0,12h14V16H7.5Zm0-5h14V11H7.5Z',
@@ -13723,6 +14095,7 @@
     print: 'M16.1,17c0-0.6,0.4-1,1-1c0.6,0,1,0.4,1,1s-0.4,1-1,1C16.5,18,16.1,17.6,16.1,17z M22,15v4c0,1.1-0.9,2-2,2H4  c-1.1,0-2-0.9-2-2v-4c0-1.1,0.9-2,2-2h1V5c0-1.1,0.9-2,2-2h7.4L19,7.6V13h1C21.1,13,22,13.9,22,15z M7,13h10V9h-4V5H7V13z M20,15H4  v4h16V15z',
     redo: 'M13.6,9.4c1.7,0.3,3.2,0.9,4.6,2L21,8.5v7h-7l2.7-2.7C13,10.1,7.9,11,5.3,14.7c-0.2,0.3-0.4,0.5-0.5,0.8L3,14.6  C5.1,10.8,9.3,8.7,13.6,9.4z',
     removeTable: 'M15,10v8H9v-8H15 M14,4H9.9l-1,1H6v2h12V5h-3L14,4z M17,8H7v10c0,1.1,0.9,2,2,2h6c1.1,0,2-0.9,2-2V8z',
+    insertAll: 'M 9.25 12 L 6.75 12 C 6.335938 12 6 11.664062 6 11.25 L 6 6 L 3.257812 6 C 2.703125 6 2.425781 5.328125 2.820312 4.933594 L 7.570312 0.179688 C 7.804688 -0.0546875 8.191406 -0.0546875 8.425781 0.179688 L 13.179688 4.933594 C 13.574219 5.328125 13.296875 6 12.742188 6 L 10 6 L 10 11.25 C 10 11.664062 9.664062 12 9.25 12 Z M 16 11.75 L 16 15.25 C 16 15.664062 15.664062 16 15.25 16 L 0.75 16 C 0.335938 16 0 15.664062 0 15.25 L 0 11.75 C 0 11.335938 0.335938 11 0.75 11 L 5 11 L 5 11.25 C 5 12.214844 5.785156 13 6.75 13 L 9.25 13 C 10.214844 13 11 12.214844 11 11.25 L 11 11 L 15.25 11 C 15.664062 11 16 11.335938 16 11.75 Z M 12.125 14.5 C 12.125 14.15625 11.84375 13.875 11.5 13.875 C 11.15625 13.875 10.875 14.15625 10.875 14.5 C 10.875 14.84375 11.15625 15.125 11.5 15.125 C 11.84375 15.125 12.125 14.84375 12.125 14.5 Z M 14.125 14.5 C 14.125 14.15625 13.84375 13.875 13.5 13.875 C 13.15625 13.875 12.875 14.15625 12.875 14.5 C 12.875 14.84375 13.15625 15.125 13.5 15.125 C 13.84375 15.125 14.125 14.84375 14.125 14.5 Z M 14.125 14.5 ',
     remove: 'M15,10v8H9v-8H15 M14,4H9.9l-1,1H6v2h12V5h-3L14,4z M17,8H7v10c0,1.1,0.9,2,2,2h6c1.1,0,2-0.9,2-2V8z',
     replaceImage: 'M16,5v3H4v2h12v3l4-4L16,5z M8,19v-3h12v-2H8v-3l-4,4L8,19z',
     row: 'M20,5H4C2.9,5,2,5.9,2,7v2v1.5v3V15v2c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2v-2v-1.5v-3V9V7C22,5.9,21.1,5,20,5z M16,6.5h4  c0.3,0,0.5,0.2,0.5,0.5v2H16V6.5z M9.5,6.5h5V9h-5V6.5z M3.5,7c0-0.3,0.2-0.5,0.5-0.5h4V9H3.5V7z M8,17.5H4c-0.3,0-0.5-0.2-0.5-0.5  v-2H8V17.5z M14.5,17.5h-5V15h5V17.5z M20.5,17c0,0.3-0.2,0.5-0.5,0.5h-4V15h4.5V17z',
@@ -13746,6 +14119,92 @@
     verticalAlignBottom: 'M16,13h-3V3h-2v10H8l4,4L16,13z M3,19v2h18v-2H3z',
     verticalAlignMiddle: 'M3,11v2h18v-2H3z M8,18h3v3h2v-3h3l-4-4L8,18z M16,6h-3V3h-2v3H8l4,4L16,6z',
     verticalAlignTop: 'M8,11h3v10h2V11h3l-4-4L8,11z M21,5V3H3v2H21z'
+  };
+  FroalaEditor.FILEICONS = {
+    docIcon: {
+      extension: '.doc',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 9.617188 46.875 C 13.234375 46.875 16.160156 43.929688 16.160156 40.292969 C 16.160156 36.695312 13.234375 33.75 9.617188 33.75 L 7.402344 33.75 C 6.820312 33.75 6.371094 34.199219 6.371094 34.78125 L 6.371094 45.84375 C 6.371094 46.335938 6.714844 46.757812 7.191406 46.855469 L 7.402344 46.875 Z M 9.617188 44.792969 L 8.453125 44.792969 L 8.453125 35.832031 L 9.617188 35.832031 C 12.089844 35.832031 14.078125 37.835938 14.078125 40.292969 C 14.078125 42.789062 12.089844 44.773438 9.617188 44.792969 Z M 24.816406 46.875 C 26.539062 46.875 28.191406 46.085938 29.296875 44.867188 C 30.460938 43.648438 31.191406 41.980469 31.191406 40.125 C 31.191406 38.269531 30.460938 36.617188 29.296875 35.382812 C 28.191406 34.144531 26.539062 33.375 24.816406 33.375 C 23.015625 33.375 21.367188 34.144531 20.222656 35.382812 C 19.058594 36.617188 18.367188 38.269531 18.367188 40.125 C 18.367188 41.980469 19.058594 43.648438 20.222656 44.867188 C 21.367188 46.085938 23.015625 46.875 24.816406 46.875 Z M 24.816406 44.738281 C 23.617188 44.738281 22.566406 44.230469 21.777344 43.386719 C 20.992188 42.582031 20.503906 41.398438 20.503906 40.125 C 20.503906 38.851562 20.992188 37.667969 21.777344 36.84375 C 22.566406 36 23.617188 35.511719 24.816406 35.511719 C 25.941406 35.511719 26.992188 36 27.777344 36.84375 C 28.546875 37.667969 29.054688 38.851562 29.054688 40.125 C 29.054688 41.398438 28.546875 42.582031 27.777344 43.386719 C 26.992188 44.230469 25.941406 44.738281 24.816406 44.738281 Z M 39.996094 46.875 C 41.648438 46.875 43.148438 46.332031 44.328125 45.414062 C 44.777344 45.054688 44.851562 44.382812 44.515625 43.914062 C 44.140625 43.460938 43.445312 43.386719 43.015625 43.707031 C 42.171875 44.382812 41.160156 44.738281 39.996094 44.738281 C 38.703125 44.738281 37.503906 44.210938 36.621094 43.386719 C 35.777344 42.5625 35.253906 41.398438 35.253906 40.125 C 35.253906 38.851562 35.777344 37.726562 36.621094 36.863281 C 37.503906 36.039062 38.703125 35.511719 39.996094 35.511719 C 41.160156 35.511719 42.191406 35.867188 43.015625 36.542969 C 43.445312 36.882812 44.140625 36.804688 44.515625 36.335938 C 44.851562 35.867188 44.777344 35.210938 44.328125 34.835938 C 43.148438 33.917969 41.648438 33.375 39.996094 33.375 C 36.246094 33.394531 33.132812 36.414062 33.117188 40.125 C 33.132812 43.855469 36.246094 46.875 39.996094 46.875 Z M 39.996094 46.875 \"/>\n      </g>"
+    },
+    gifIcon: {
+      extension: '.gif',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 17.394531 46.875 C 18.988281 46.875 20.46875 46.332031 21.648438 45.414062 C 21.835938 45.28125 21.949219 45.132812 22.003906 44.960938 L 22.003906 44.945312 C 22.023438 44.90625 22.023438 44.886719 22.042969 44.851562 C 22.0625 44.738281 22.097656 44.664062 22.097656 44.53125 L 22.097656 40.386719 C 22.097656 39.789062 21.613281 39.335938 21.011719 39.335938 L 17.28125 39.335938 C 16.699219 39.335938 16.210938 39.789062 16.210938 40.386719 C 16.210938 40.96875 16.699219 41.457031 17.28125 41.457031 L 19.960938 41.457031 L 19.960938 44.023438 C 19.210938 44.457031 18.332031 44.738281 17.394531 44.738281 C 16.042969 44.738281 14.863281 44.230469 14.019531 43.367188 C 13.136719 42.523438 12.613281 41.382812 12.613281 40.144531 C 12.613281 38.867188 13.136719 37.726562 14.019531 36.882812 C 14.863281 36.019531 16.042969 35.511719 17.394531 35.511719 C 18.519531 35.511719 19.550781 35.90625 20.355469 36.523438 C 20.824219 36.898438 21.519531 36.804688 21.875 36.355469 C 22.230469 35.886719 22.15625 35.195312 21.667969 34.835938 C 20.503906 33.917969 18.988281 33.375 17.394531 33.375 C 13.585938 33.375 10.472656 36.375 10.472656 40.144531 C 10.472656 43.894531 13.585938 46.875 17.394531 46.875 Z M 26.945312 46.875 C 27.507812 46.875 27.996094 46.425781 27.996094 45.84375 L 27.996094 34.78125 C 27.996094 34.199219 27.507812 33.75 26.945312 33.75 C 26.363281 33.75 25.914062 34.199219 25.914062 34.78125 L 25.914062 45.84375 C 25.914062 46.425781 26.363281 46.875 26.945312 46.875 Z M 33.066406 46.875 C 33.648438 46.875 34.117188 46.40625 34.117188 45.84375 L 34.117188 41.34375 L 38.488281 41.34375 C 39.050781 41.34375 39.519531 40.875 39.519531 40.292969 C 39.519531 39.75 39.050781 39.261719 38.488281 39.261719 L 34.117188 39.261719 L 34.117188 35.832031 L 39.199219 35.832031 C 39.742188 35.832031 40.230469 35.363281 40.230469 34.78125 C 40.230469 34.21875 39.742188 33.75 39.199219 33.75 L 33.066406 33.75 C 32.488281 33.75 32.035156 34.21875 32.035156 34.78125 L 32.035156 45.84375 C 32.035156 46.40625 32.488281 46.875 33.066406 46.875 Z M 33.066406 46.875 \"/>\n      </g>"
+    },
+    jpegIcon: {
+      extension: '.jpeg',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 9 43.75 C 11.140625 43.75 12.890625 42.015625 12.890625 39.875 L 12.890625 33.671875 C 12.890625 33.1875 12.5 32.8125 12.03125 32.8125 C 11.546875 32.8125 11.15625 33.1875 11.15625 33.671875 L 11.15625 39.875 C 11.15625 41.046875 10.1875 42.015625 9 42.015625 C 8.046875 42.015625 7.234375 41.390625 6.953125 40.53125 C 6.8125 40.078125 6.328125 39.828125 5.859375 39.984375 C 5.421875 40.109375 5.15625 40.59375 5.3125 41.0625 C 5.8125 42.625 7.28125 43.75 9 43.75 Z M 15.640625 43.75 C 16.125 43.75 16.515625 43.359375 16.515625 42.890625 L 16.515625 39.5 L 18.4375 39.5 C 20.296875 39.5 21.796875 38 21.796875 36.171875 C 21.796875 34.3125 20.296875 32.8125 18.4375 32.8125 L 15.640625 32.8125 C 15.171875 32.8125 14.78125 33.1875 14.78125 33.671875 L 14.78125 42.890625 C 14.78125 43.359375 15.171875 43.75 15.640625 43.75 Z M 18.4375 37.765625 L 16.515625 37.765625 L 16.515625 34.546875 L 18.4375 34.546875 C 19.34375 34.546875 20.046875 35.265625 20.0625 36.171875 C 20.046875 37.046875 19.34375 37.765625 18.4375 37.765625 Z M 29.234375 43.75 C 29.6875 43.75 30.09375 43.359375 30.09375 42.890625 C 30.09375 42.40625 29.6875 42.015625 29.234375 42.015625 L 25 42.015625 L 25 39.140625 L 28.640625 39.140625 C 29.109375 39.140625 29.5 38.75 29.5 38.265625 C 29.5 37.8125 29.109375 37.40625 28.640625 37.40625 L 25 37.40625 L 25 34.546875 L 29.234375 34.546875 C 29.6875 34.546875 30.09375 34.15625 30.09375 33.671875 C 30.09375 33.1875 29.6875 32.8125 29.234375 32.8125 L 24.125 32.8125 C 23.640625 32.8125 23.265625 33.1875 23.265625 33.671875 L 23.265625 42.890625 C 23.265625 43.359375 23.640625 43.75 24.125 43.75 C 24.125 43.75 24.140625 43.734375 24.140625 43.734375 C 24.140625 43.734375 24.140625 43.75 24.171875 43.75 Z M 37.1875 43.75 C 38.515625 43.75 39.75 43.296875 40.734375 42.53125 C 40.890625 42.421875 40.984375 42.296875 41.03125 42.15625 L 41.03125 42.140625 C 41.046875 42.109375 41.046875 42.09375 41.0625 42.0625 C 41.078125 41.96875 41.109375 41.90625 41.109375 41.796875 L 41.109375 38.34375 C 41.109375 37.914062 40.8125 37.578125 40.410156 37.492188 L 40.203125 37.46875 L 37.09375 37.46875 C 36.609375 37.46875 36.203125 37.84375 36.203125 38.34375 C 36.203125 38.828125 36.609375 39.234375 37.09375 39.234375 L 39.328125 39.234375 L 39.328125 41.375 C 38.703125 41.734375 37.96875 41.96875 37.1875 41.96875 C 36.0625 41.96875 35.078125 41.546875 34.375 40.828125 C 33.640625 40.125 33.203125 39.171875 33.203125 38.140625 C 33.203125 37.078125 33.640625 36.125 34.375 35.421875 C 35.078125 34.703125 36.0625 34.28125 37.1875 34.28125 C 38.125 34.28125 38.984375 34.609375 39.65625 35.125 C 40.046875 35.4375 40.625 35.359375 40.921875 34.984375 C 41.21875 34.59375 41.15625 34.015625 40.75 33.71875 C 39.78125 32.953125 38.515625 32.5 37.1875 32.5 C 34.015625 32.5 31.421875 35 31.421875 38.140625 C 31.421875 41.265625 34.015625 43.75 37.1875 43.75 Z M 37.1875 43.75 \"/>\n      </g>"
+    },
+    logIcon: {
+      extension: '.log',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 13.542969 46.875 C 14.085938 46.875 14.574219 46.40625 14.574219 45.84375 C 14.574219 45.261719 14.085938 44.792969 13.542969 44.792969 L 8.460938 44.792969 L 8.460938 34.78125 C 8.460938 34.21875 7.992188 33.75 7.410156 33.75 C 6.828125 33.75 6.378906 34.21875 6.378906 34.78125 L 6.378906 45.84375 C 6.378906 46.40625 6.828125 46.875 7.410156 46.875 Z M 21.742188 46.875 C 23.46875 46.875 25.117188 46.085938 26.222656 44.867188 C 27.386719 43.648438 28.117188 41.980469 28.117188 40.125 C 28.117188 38.269531 27.386719 36.617188 26.222656 35.382812 C 25.117188 34.144531 23.46875 33.375 21.742188 33.375 C 19.941406 33.375 18.292969 34.144531 17.148438 35.382812 C 15.984375 36.617188 15.292969 38.269531 15.292969 40.125 C 15.292969 41.980469 15.984375 43.648438 17.148438 44.867188 C 18.292969 46.085938 19.941406 46.875 21.742188 46.875 Z M 21.742188 44.738281 C 20.542969 44.738281 19.492188 44.230469 18.703125 43.386719 C 17.917969 42.582031 17.429688 41.398438 17.429688 40.125 C 17.429688 38.851562 17.917969 37.667969 18.703125 36.84375 C 19.492188 36 20.542969 35.511719 21.742188 35.511719 C 22.867188 35.511719 23.917969 36 24.703125 36.84375 C 25.472656 37.667969 25.980469 38.851562 25.980469 40.125 C 25.980469 41.398438 25.472656 42.582031 24.703125 43.386719 C 23.917969 44.230469 22.867188 44.738281 21.742188 44.738281 Z M 37.300781 46.875 C 38.894531 46.875 40.375 46.332031 41.558594 45.414062 C 41.746094 45.28125 41.855469 45.132812 41.914062 44.960938 L 41.914062 44.945312 L 41.949219 44.851562 C 41.96875 44.738281 42.007812 44.664062 42.007812 44.53125 L 42.007812 40.386719 C 42.007812 39.789062 41.519531 39.335938 40.917969 39.335938 L 37.1875 39.335938 C 36.605469 39.335938 36.121094 39.789062 36.121094 40.386719 C 36.121094 40.96875 36.605469 41.457031 37.1875 41.457031 L 39.871094 41.457031 L 39.871094 44.023438 C 39.121094 44.457031 38.238281 44.738281 37.300781 44.738281 C 35.949219 44.738281 34.769531 44.230469 33.925781 43.367188 C 33.042969 42.523438 32.519531 41.382812 32.519531 40.144531 C 32.519531 38.867188 33.042969 37.726562 33.925781 36.882812 C 34.769531 36.019531 35.949219 35.511719 37.300781 35.511719 C 38.425781 35.511719 39.457031 35.90625 40.261719 36.523438 C 40.730469 36.898438 41.425781 36.804688 41.78125 36.355469 C 42.136719 35.886719 42.0625 35.195312 41.574219 34.835938 C 40.414062 33.917969 38.894531 33.375 37.300781 33.375 C 33.496094 33.375 30.382812 36.375 30.382812 40.144531 C 30.382812 43.894531 33.496094 46.875 37.300781 46.875 Z M 37.300781 46.875 \"/>\n      </g>"
+    },
+    movIcon: {
+      extension: '.mov',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 15.472656 46.875 C 16.035156 46.875 16.523438 46.40625 16.523438 45.84375 L 16.523438 34.78125 C 16.523438 34.289062 16.152344 33.882812 15.679688 33.777344 L 15.472656 33.75 L 15.453125 33.75 C 15.117188 33.75 14.816406 33.898438 14.609375 34.179688 L 10.878906 39.355469 L 7.148438 34.179688 C 6.960938 33.898438 6.625 33.75 6.324219 33.75 L 6.265625 33.75 C 5.703125 33.75 5.234375 34.21875 5.234375 34.78125 L 5.234375 45.84375 C 5.234375 46.40625 5.703125 46.875 6.265625 46.875 C 6.847656 46.875 7.316406 46.40625 7.316406 45.84375 L 7.316406 37.949219 L 10 41.699219 C 10.203125 41.980469 10.523438 42.132812 10.859375 42.132812 L 10.898438 42.132812 C 11.234375 42.132812 11.535156 41.980469 11.742188 41.699219 L 14.441406 37.949219 L 14.441406 45.84375 C 14.441406 46.40625 14.890625 46.875 15.472656 46.875 Z M 25.460938 46.875 C 27.1875 46.875 28.835938 46.085938 29.941406 44.867188 C 31.105469 43.648438 31.835938 41.980469 31.835938 40.125 C 31.835938 38.269531 31.105469 36.617188 29.941406 35.382812 C 28.835938 34.144531 27.1875 33.375 25.460938 33.375 C 23.660156 33.375 22.011719 34.144531 20.867188 35.382812 C 19.703125 36.617188 19.011719 38.269531 19.011719 40.125 C 19.011719 41.980469 19.703125 43.648438 20.867188 44.867188 C 22.011719 46.085938 23.660156 46.875 25.460938 46.875 Z M 25.460938 44.738281 C 24.261719 44.738281 23.210938 44.230469 22.421875 43.386719 C 21.636719 42.582031 21.148438 41.398438 21.148438 40.125 C 21.148438 38.851562 21.636719 37.667969 22.421875 36.84375 C 23.210938 36 24.261719 35.511719 25.460938 35.511719 C 26.585938 35.511719 27.636719 36 28.421875 36.84375 C 29.191406 37.667969 29.699219 38.851562 29.699219 40.125 C 29.699219 41.398438 29.191406 42.582031 28.421875 43.386719 C 27.636719 44.230469 26.585938 44.738281 25.460938 44.738281 Z M 38.683594 46.855469 L 38.71875 46.855469 C 38.777344 46.835938 38.8125 46.820312 38.871094 46.820312 C 38.886719 46.800781 38.886719 46.800781 38.90625 46.800781 C 38.964844 46.78125 39.019531 46.726562 39.058594 46.707031 L 39.09375 46.6875 L 39.207031 46.59375 C 39.226562 46.574219 39.226562 46.574219 39.246094 46.539062 L 39.339844 46.425781 C 39.355469 46.425781 39.355469 46.425781 39.355469 46.40625 C 39.394531 46.367188 39.414062 46.292969 39.433594 46.257812 L 44.0625 35.304688 C 44.269531 34.800781 44.027344 34.179688 43.5 33.976562 C 42.996094 33.75 42.375 33.992188 42.152344 34.519531 L 38.496094 43.199219 L 34.839844 34.519531 C 34.613281 33.992188 34.011719 33.75 33.507812 33.976562 C 32.964844 34.179688 32.71875 34.800781 32.945312 35.304688 L 37.539062 46.257812 C 37.574219 46.292969 37.613281 46.367188 37.632812 46.40625 C 37.632812 46.425781 37.652344 46.425781 37.652344 46.425781 C 37.667969 46.460938 37.707031 46.5 37.746094 46.539062 C 37.746094 46.574219 37.761719 46.574219 37.761719 46.59375 C 37.820312 46.632812 37.855469 46.648438 37.894531 46.6875 L 37.914062 46.6875 C 37.96875 46.726562 38.042969 46.78125 38.082031 46.800781 L 38.101562 46.800781 C 38.101562 46.800781 38.121094 46.800781 38.121094 46.820312 C 38.15625 46.820312 38.230469 46.835938 38.269531 46.855469 L 38.308594 46.855469 L 38.402344 46.871094 L 38.496094 46.875 C 38.550781 46.875 38.605469 46.875 38.683594 46.855469 Z M 38.683594 46.855469 \"/>\n      </g>"
+    },
+    ogvIcon: {
+      extension: '.ogv',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 11.511719 46.875 C 13.238281 46.875 14.886719 46.085938 15.996094 44.867188 C 17.15625 43.648438 17.886719 41.980469 17.886719 40.125 C 17.886719 38.269531 17.15625 36.617188 15.996094 35.382812 C 14.886719 34.144531 13.238281 33.375 11.511719 33.375 C 9.714844 33.375 8.0625 34.144531 6.917969 35.382812 C 5.757812 36.617188 5.0625 38.269531 5.0625 40.125 C 5.0625 41.980469 5.757812 43.648438 6.917969 44.867188 C 8.0625 46.085938 9.714844 46.875 11.511719 46.875 Z M 11.511719 44.738281 C 10.3125 44.738281 9.261719 44.230469 8.476562 43.386719 C 7.6875 42.582031 7.199219 41.398438 7.199219 40.125 C 7.199219 38.851562 7.6875 37.667969 8.476562 36.84375 C 9.261719 36 10.3125 35.511719 11.511719 35.511719 C 12.636719 35.511719 13.6875 36 14.476562 36.84375 C 15.246094 37.667969 15.75 38.851562 15.75 40.125 C 15.75 41.398438 15.246094 42.582031 14.476562 43.386719 C 13.6875 44.230469 12.636719 44.738281 11.511719 44.738281 Z M 27.25 46.875 C 28.84375 46.875 30.324219 46.332031 31.507812 45.414062 C 31.695312 45.28125 31.804688 45.132812 31.863281 44.960938 L 31.863281 44.945312 C 31.882812 44.90625 31.882812 44.886719 31.898438 44.851562 C 31.917969 44.738281 31.957031 44.664062 31.957031 44.53125 L 31.957031 40.386719 C 31.957031 39.789062 31.46875 39.335938 30.867188 39.335938 L 27.136719 39.335938 C 26.554688 39.335938 26.070312 39.789062 26.070312 40.386719 C 26.070312 40.96875 26.554688 41.457031 27.136719 41.457031 L 29.820312 41.457031 L 29.820312 44.023438 C 29.070312 44.457031 28.1875 44.738281 27.25 44.738281 C 25.898438 44.738281 24.71875 44.230469 23.875 43.367188 C 22.992188 42.523438 22.46875 41.382812 22.46875 40.144531 C 22.46875 38.867188 22.992188 37.726562 23.875 36.882812 C 24.71875 36.019531 25.898438 35.511719 27.25 35.511719 C 28.375 35.511719 29.40625 35.90625 30.210938 36.523438 C 30.679688 36.898438 31.375 36.804688 31.730469 36.355469 C 32.085938 35.886719 32.011719 35.195312 31.523438 34.835938 C 30.363281 33.917969 28.84375 33.375 27.25 33.375 C 23.445312 33.375 20.332031 36.375 20.332031 40.144531 C 20.332031 43.894531 23.445312 46.875 27.25 46.875 Z M 40.191406 46.855469 L 40.230469 46.855469 C 40.285156 46.835938 40.324219 46.820312 40.378906 46.820312 C 40.398438 46.800781 40.398438 46.800781 40.417969 46.800781 C 40.472656 46.78125 40.53125 46.726562 40.566406 46.707031 C 40.605469 46.6875 40.605469 46.6875 40.605469 46.6875 L 40.71875 46.59375 C 40.738281 46.574219 40.738281 46.574219 40.753906 46.539062 L 40.847656 46.425781 C 40.867188 46.425781 40.867188 46.425781 40.867188 46.40625 C 40.90625 46.367188 40.925781 46.292969 40.941406 46.257812 L 45.574219 35.304688 C 45.78125 34.800781 45.535156 34.179688 45.011719 33.976562 C 44.503906 33.75 43.886719 33.992188 43.660156 34.519531 L 40.003906 43.199219 L 36.347656 34.519531 C 36.125 33.992188 35.523438 33.75 35.019531 33.976562 C 34.472656 34.179688 34.230469 34.800781 34.457031 35.304688 L 39.050781 46.257812 C 39.085938 46.292969 39.125 46.367188 39.144531 46.40625 C 39.144531 46.425781 39.160156 46.425781 39.160156 46.425781 C 39.179688 46.460938 39.21875 46.5 39.253906 46.539062 C 39.253906 46.574219 39.273438 46.574219 39.273438 46.59375 C 39.332031 46.632812 39.367188 46.648438 39.40625 46.6875 L 39.425781 46.6875 C 39.480469 46.726562 39.554688 46.78125 39.59375 46.800781 L 39.613281 46.800781 C 39.613281 46.800781 39.628906 46.800781 39.628906 46.820312 C 39.667969 46.820312 39.742188 46.835938 39.78125 46.855469 L 39.816406 46.855469 L 39.910156 46.871094 L 40.003906 46.875 C 40.0625 46.875 40.117188 46.875 40.191406 46.855469 Z M 40.191406 46.855469 \"/>\n      </g>"
+    },
+    pngIcon: {
+      extension: '.png',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 7.523438 46.875 C 8.105469 46.875 8.574219 46.40625 8.574219 45.84375 L 8.574219 41.773438 L 10.878906 41.773438 C 13.109375 41.773438 14.910156 39.976562 14.910156 37.78125 C 14.910156 35.550781 13.109375 33.75 10.878906 33.75 L 7.523438 33.75 C 6.960938 33.75 6.492188 34.199219 6.492188 34.78125 L 6.492188 45.84375 C 6.492188 46.40625 6.960938 46.875 7.523438 46.875 Z M 10.878906 39.695312 L 8.574219 39.695312 L 8.574219 35.832031 L 10.878906 35.832031 C 11.964844 35.832031 12.808594 36.695312 12.828125 37.78125 C 12.808594 38.832031 11.964844 39.695312 10.878906 39.695312 Z M 26.75 46.875 C 27.3125 46.875 27.78125 46.40625 27.78125 45.84375 L 27.78125 34.949219 C 27.78125 34.40625 27.3125 33.9375 26.75 33.9375 C 26.1875 33.9375 25.738281 34.40625 25.738281 34.949219 L 25.738281 42.675781 L 19.679688 34.292969 C 19.363281 33.84375 18.722656 33.75 18.253906 34.070312 C 17.972656 34.273438 17.824219 34.613281 17.84375 34.929688 L 17.84375 45.84375 C 17.84375 46.40625 18.292969 46.875 18.875 46.875 C 19.417969 46.875 19.886719 46.40625 19.886719 45.84375 L 19.886719 38.0625 L 25.886719 46.386719 C 25.90625 46.425781 25.941406 46.460938 25.980469 46.5 C 26.167969 46.726562 26.449219 46.875 26.75 46.875 Z M 38.082031 46.875 C 39.675781 46.875 41.15625 46.332031 42.339844 45.414062 C 42.527344 45.28125 42.636719 45.132812 42.695312 44.960938 L 42.695312 44.945312 C 42.714844 44.90625 42.714844 44.886719 42.730469 44.851562 C 42.75 44.738281 42.789062 44.664062 42.789062 44.53125 L 42.789062 40.386719 C 42.789062 39.789062 42.300781 39.335938 41.699219 39.335938 L 37.96875 39.335938 C 37.386719 39.335938 36.902344 39.789062 36.902344 40.386719 C 36.902344 40.96875 37.386719 41.457031 37.96875 41.457031 L 40.652344 41.457031 L 40.652344 44.023438 C 39.902344 44.457031 39.019531 44.738281 38.082031 44.738281 C 36.730469 44.738281 35.550781 44.230469 34.707031 43.367188 C 33.824219 42.523438 33.300781 41.382812 33.300781 40.144531 C 33.300781 38.867188 33.824219 37.726562 34.707031 36.882812 C 35.550781 36.019531 36.730469 35.511719 38.082031 35.511719 C 39.207031 35.511719 40.238281 35.90625 41.042969 36.523438 C 41.511719 36.898438 42.207031 36.804688 42.5625 36.355469 C 42.917969 35.886719 42.84375 35.195312 42.355469 34.835938 C 41.195312 33.917969 39.675781 33.375 38.082031 33.375 C 34.277344 33.375 31.164062 36.375 31.164062 40.144531 C 31.164062 43.894531 34.277344 46.875 38.082031 46.875 Z M 38.082031 46.875 \"/>\n      </g>"
+    },
+    txtIcon: {
+      extension: '.txt',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 12.847656 46.875 C 13.429688 46.875 13.878906 46.425781 13.878906 45.84375 L 13.878906 35.832031 L 16.859375 35.832031 C 17.421875 35.832031 17.890625 35.34375 17.890625 34.78125 C 17.890625 34.199219 17.421875 33.75 16.859375 33.75 L 8.855469 33.75 C 8.273438 33.75 7.824219 34.199219 7.824219 34.78125 C 7.824219 35.34375 8.273438 35.832031 8.855469 35.832031 L 11.816406 35.832031 L 11.816406 45.84375 C 11.816406 46.425781 12.285156 46.875 12.847656 46.875 Z M 29.019531 46.875 C 29.222656 46.875 29.429688 46.800781 29.617188 46.667969 C 30.085938 46.351562 30.160156 45.695312 29.84375 45.242188 L 26.28125 40.367188 L 29.84375 35.53125 C 30.160156 35.0625 30.085938 34.425781 29.617188 34.105469 C 29.148438 33.75 28.53125 33.84375 28.175781 34.332031 L 25.023438 38.644531 L 21.855469 34.332031 C 21.535156 33.84375 20.878906 33.75 20.429688 34.105469 C 19.960938 34.425781 19.867188 35.0625 20.1875 35.53125 L 23.75 40.367188 L 20.1875 45.242188 C 19.867188 45.695312 19.960938 46.351562 20.429688 46.667969 C 20.597656 46.800781 20.804688 46.875 21.03125 46.875 C 21.347656 46.875 21.648438 46.707031 21.855469 46.445312 L 25.023438 42.113281 L 28.175781 46.445312 C 28.378906 46.707031 28.679688 46.875 29.019531 46.875 Z M 37.464844 46.875 C 38.042969 46.875 38.496094 46.425781 38.496094 45.84375 L 38.496094 35.832031 L 41.476562 35.832031 C 42.039062 35.832031 42.507812 35.34375 42.507812 34.78125 C 42.507812 34.199219 42.039062 33.75 41.476562 33.75 L 33.46875 33.75 C 32.886719 33.75 32.4375 34.199219 32.4375 34.78125 C 32.4375 35.34375 32.886719 35.832031 33.46875 35.832031 L 36.433594 35.832031 L 36.433594 45.84375 C 36.433594 46.425781 36.902344 46.875 37.464844 46.875 Z M 37.464844 46.875 \"/>\n      </g>"
+    },
+    webmIcon: {
+      extension: '.webm',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 7.195312 43.734375 L 7.242188 43.734375 C 7.273438 43.71875 7.304688 43.703125 7.367188 43.703125 C 7.367188 43.6875 7.382812 43.6875 7.382812 43.6875 L 7.398438 43.6875 C 7.429688 43.671875 7.476562 43.625 7.523438 43.59375 L 7.554688 43.59375 C 7.585938 43.5625 7.617188 43.53125 7.648438 43.515625 C 7.648438 43.5 7.664062 43.5 7.664062 43.46875 L 7.757812 43.375 C 7.757812 43.375 7.757812 43.359375 7.773438 43.359375 C 7.789062 43.328125 7.820312 43.265625 7.835938 43.21875 L 9.882812 38.375 L 11.929688 43.21875 C 11.945312 43.265625 11.960938 43.328125 11.992188 43.359375 C 11.992188 43.359375 11.992188 43.375 12.023438 43.375 L 12.085938 43.46875 C 12.101562 43.5 12.101562 43.5 12.117188 43.515625 C 12.148438 43.53125 12.179688 43.5625 12.226562 43.59375 L 12.242188 43.59375 C 12.273438 43.625 12.320312 43.671875 12.382812 43.6875 C 12.398438 43.6875 12.398438 43.6875 12.414062 43.703125 C 12.445312 43.703125 12.476562 43.71875 12.523438 43.734375 L 12.570312 43.734375 L 12.640625 43.746094 L 12.710938 43.75 C 12.773438 43.75 12.820312 43.75 12.867188 43.734375 L 12.898438 43.734375 C 12.945312 43.71875 12.992188 43.703125 13.023438 43.703125 C 13.023438 43.6875 13.039062 43.6875 13.039062 43.6875 L 13.054688 43.6875 C 13.117188 43.671875 13.148438 43.625 13.195312 43.59375 L 13.210938 43.59375 C 13.242188 43.5625 13.289062 43.53125 13.320312 43.515625 C 13.320312 43.5 13.335938 43.5 13.335938 43.46875 C 13.367188 43.4375 13.398438 43.40625 13.414062 43.375 C 13.414062 43.375 13.429688 43.359375 13.429688 43.359375 C 13.460938 43.328125 13.492188 43.265625 13.507812 43.21875 L 17.335938 34.109375 C 17.523438 33.6875 17.320312 33.171875 16.898438 33 C 16.445312 32.8125 15.945312 33.015625 15.757812 33.453125 L 12.710938 40.6875 L 10.695312 35.890625 C 10.539062 35.546875 10.210938 35.359375 9.882812 35.359375 C 9.539062 35.359375 9.210938 35.546875 9.070312 35.890625 L 7.054688 40.6875 L 3.992188 33.453125 C 3.820312 33.015625 3.304688 32.8125 2.882812 33 C 2.429688 33.171875 2.242188 33.6875 2.414062 34.109375 L 6.257812 43.21875 C 6.289062 43.265625 6.304688 43.328125 6.335938 43.359375 L 6.335938 43.375 C 6.367188 43.40625 6.382812 43.4375 6.414062 43.46875 C 6.429688 43.5 6.429688 43.5 6.445312 43.515625 C 6.492188 43.53125 6.507812 43.5625 6.554688 43.59375 L 6.570312 43.59375 C 6.601562 43.625 6.664062 43.671875 6.710938 43.6875 C 6.726562 43.6875 6.726562 43.6875 6.742188 43.703125 C 6.773438 43.703125 6.804688 43.71875 6.851562 43.734375 L 6.898438 43.734375 L 6.976562 43.746094 L 7.054688 43.75 C 7.101562 43.75 7.148438 43.75 7.195312 43.734375 Z M 25.179688 43.75 C 25.632812 43.75 26.039062 43.359375 26.039062 42.890625 C 26.039062 42.40625 25.632812 42.015625 25.179688 42.015625 L 20.945312 42.015625 L 20.945312 39.140625 L 24.585938 39.140625 C 25.054688 39.140625 25.445312 38.75 25.445312 38.265625 C 25.445312 37.8125 25.054688 37.40625 24.585938 37.40625 L 20.945312 37.40625 L 20.945312 34.546875 L 25.179688 34.546875 C 25.632812 34.546875 26.039062 34.15625 26.039062 33.671875 C 26.039062 33.1875 25.632812 32.8125 25.179688 32.8125 L 20.070312 32.8125 C 19.585938 32.8125 19.210938 33.1875 19.210938 33.671875 L 19.210938 42.890625 C 19.210938 43.359375 19.585938 43.75 20.070312 43.75 C 20.070312 43.75 20.085938 43.734375 20.085938 43.734375 C 20.085938 43.734375 20.085938 43.75 20.117188 43.75 Z M 31.539062 43.75 C 33.382812 43.75 34.882812 42.25 34.882812 40.390625 C 34.882812 39.203125 34.242188 38.15625 33.304688 37.5625 C 33.679688 37.0625 33.898438 36.453125 33.898438 35.78125 C 33.898438 34.140625 32.570312 32.8125 30.929688 32.8125 L 28.710938 32.8125 C 28.242188 32.8125 27.851562 33.1875 27.851562 33.671875 L 27.851562 42.890625 C 27.851562 43.359375 28.242188 43.75 28.710938 43.75 L 28.757812 43.734375 C 28.757812 43.734375 28.757812 43.75 28.773438 43.75 Z M 30.929688 37.046875 L 29.585938 37.046875 L 29.585938 34.546875 L 30.929688 34.546875 C 31.617188 34.546875 32.164062 35.09375 32.164062 35.78125 C 32.164062 36.46875 31.617188 37.046875 30.929688 37.046875 Z M 31.539062 42.015625 L 29.585938 42.015625 L 29.585938 38.78125 L 31.539062 38.78125 C 32.429688 38.796875 33.148438 39.5 33.148438 40.390625 C 33.148438 41.296875 32.429688 42 31.539062 42.015625 Z M 45.664062 43.75 C 46.132812 43.75 46.539062 43.359375 46.539062 42.890625 L 46.539062 33.671875 C 46.539062 33.269531 46.242188 32.9375 45.859375 32.839844 L 45.664062 32.8125 L 45.648438 32.8125 C 45.367188 32.8125 45.117188 32.9375 44.945312 33.171875 L 41.835938 37.484375 L 38.726562 33.171875 C 38.570312 32.9375 38.289062 32.8125 38.039062 32.8125 L 37.992188 32.8125 C 37.523438 32.8125 37.132812 33.203125 37.132812 33.671875 L 37.132812 42.890625 C 37.132812 43.359375 37.523438 43.75 37.992188 43.75 C 38.476562 43.75 38.867188 43.359375 38.867188 42.890625 L 38.867188 36.3125 L 41.101562 39.4375 C 41.273438 39.671875 41.539062 39.796875 41.820312 39.796875 L 41.851562 39.796875 C 42.132812 39.796875 42.382812 39.671875 42.554688 39.4375 L 44.804688 36.3125 L 44.804688 42.890625 C 44.804688 43.359375 45.179688 43.75 45.664062 43.75 Z M 45.664062 43.75 \"/>\n      </g>"
+    },
+    webpIcon: {
+      extension: '.webp',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 9.234375 43.734375 L 9.28125 43.734375 C 9.3125 43.71875 9.34375 43.703125 9.40625 43.703125 L 9.414062 43.6875 C 9.421875 43.6875 9.421875 43.6875 9.4375 43.6875 C 9.46875 43.671875 9.515625 43.625 9.5625 43.59375 L 9.59375 43.59375 C 9.625 43.5625 9.65625 43.53125 9.6875 43.515625 C 9.6875 43.5 9.703125 43.5 9.703125 43.46875 L 9.796875 43.375 C 9.796875 43.375 9.796875 43.359375 9.8125 43.359375 C 9.828125 43.328125 9.859375 43.265625 9.875 43.21875 L 11.921875 38.375 L 13.96875 43.21875 C 13.984375 43.265625 14 43.328125 14.03125 43.359375 C 14.03125 43.359375 14.03125 43.375 14.0625 43.375 L 14.125 43.46875 C 14.140625 43.5 14.140625 43.5 14.15625 43.515625 L 14.203125 43.546875 L 14.265625 43.59375 C 14.265625 43.59375 14.265625 43.59375 14.28125 43.59375 C 14.3125 43.625 14.359375 43.671875 14.421875 43.6875 C 14.4375 43.6875 14.4375 43.6875 14.453125 43.703125 C 14.484375 43.703125 14.515625 43.71875 14.5625 43.734375 L 14.609375 43.734375 L 14.679688 43.746094 L 14.75 43.75 C 14.8125 43.75 14.859375 43.75 14.90625 43.734375 L 14.9375 43.734375 C 14.984375 43.71875 15.03125 43.703125 15.0625 43.703125 C 15.0625 43.6875 15.078125 43.6875 15.078125 43.6875 L 15.09375 43.6875 C 15.15625 43.671875 15.1875 43.625 15.234375 43.59375 L 15.25 43.59375 C 15.28125 43.5625 15.328125 43.53125 15.359375 43.515625 C 15.359375 43.5 15.375 43.5 15.375 43.46875 C 15.40625 43.4375 15.4375 43.40625 15.453125 43.375 L 15.46875 43.359375 C 15.5 43.328125 15.53125 43.265625 15.546875 43.21875 L 19.375 34.109375 C 19.5625 33.6875 19.359375 33.171875 18.9375 33 C 18.484375 32.8125 17.984375 33.015625 17.796875 33.453125 L 14.75 40.6875 L 12.734375 35.890625 C 12.578125 35.546875 12.25 35.359375 11.921875 35.359375 C 11.578125 35.359375 11.25 35.546875 11.109375 35.890625 L 9.09375 40.6875 L 6.03125 33.453125 C 5.859375 33.015625 5.34375 32.8125 4.921875 33 C 4.46875 33.171875 4.28125 33.6875 4.453125 34.109375 L 8.296875 43.21875 C 8.328125 43.265625 8.34375 43.328125 8.375 43.359375 L 8.375 43.375 C 8.40625 43.40625 8.421875 43.4375 8.453125 43.46875 C 8.46875 43.5 8.46875 43.5 8.484375 43.515625 L 8.539062 43.546875 L 8.59375 43.59375 C 8.59375 43.59375 8.59375 43.59375 8.609375 43.59375 C 8.640625 43.625 8.703125 43.671875 8.75 43.6875 C 8.765625 43.6875 8.765625 43.6875 8.78125 43.703125 C 8.8125 43.703125 8.84375 43.71875 8.890625 43.734375 L 8.9375 43.734375 L 9.015625 43.746094 L 9.09375 43.75 C 9.140625 43.75 9.1875 43.75 9.234375 43.734375 Z M 27.21875 43.75 C 27.671875 43.75 28.078125 43.359375 28.078125 42.890625 C 28.078125 42.40625 27.671875 42.015625 27.21875 42.015625 L 22.984375 42.015625 L 22.984375 39.140625 L 26.625 39.140625 C 27.09375 39.140625 27.484375 38.75 27.484375 38.265625 C 27.484375 37.8125 27.09375 37.40625 26.625 37.40625 L 22.984375 37.40625 L 22.984375 34.546875 L 27.21875 34.546875 C 27.671875 34.546875 28.078125 34.15625 28.078125 33.671875 C 28.078125 33.1875 27.671875 32.8125 27.21875 32.8125 L 22.109375 32.8125 C 21.625 32.8125 21.25 33.1875 21.25 33.671875 L 21.25 42.890625 C 21.25 43.359375 21.625 43.75 22.109375 43.75 L 22.125 43.734375 C 22.125 43.734375 22.125 43.75 22.15625 43.75 Z M 33.578125 43.75 C 35.421875 43.75 36.921875 42.25 36.921875 40.390625 C 36.921875 39.203125 36.28125 38.15625 35.34375 37.5625 C 35.71875 37.0625 35.9375 36.453125 35.9375 35.78125 C 35.9375 34.140625 34.609375 32.8125 32.96875 32.8125 L 30.75 32.8125 C 30.28125 32.8125 29.890625 33.1875 29.890625 33.671875 L 29.890625 42.890625 C 29.890625 43.359375 30.28125 43.75 30.75 43.75 C 30.765625 43.75 30.765625 43.734375 30.796875 43.734375 C 30.796875 43.734375 30.796875 43.75 30.8125 43.75 Z M 32.96875 37.046875 L 31.625 37.046875 L 31.625 34.546875 L 32.96875 34.546875 C 33.65625 34.546875 34.203125 35.09375 34.203125 35.78125 C 34.203125 36.46875 33.65625 37.046875 32.96875 37.046875 Z M 33.578125 42.015625 L 31.625 42.015625 L 31.625 38.78125 L 33.578125 38.78125 C 34.46875 38.796875 35.1875 39.5 35.1875 40.390625 C 35.1875 41.296875 34.46875 42 33.578125 42.015625 Z M 40.03125 43.75 C 40.515625 43.75 40.90625 43.359375 40.90625 42.890625 L 40.90625 39.5 L 42.828125 39.5 C 44.6875 39.5 46.1875 38 46.1875 36.171875 C 46.1875 34.3125 44.6875 32.8125 42.828125 32.8125 L 40.03125 32.8125 C 39.5625 32.8125 39.171875 33.1875 39.171875 33.671875 L 39.171875 42.890625 C 39.171875 43.359375 39.5625 43.75 40.03125 43.75 Z M 42.828125 37.765625 L 40.90625 37.765625 L 40.90625 34.546875 L 42.828125 34.546875 C 43.734375 34.546875 44.4375 35.265625 44.453125 36.171875 C 44.4375 37.046875 43.734375 37.765625 42.828125 37.765625 Z M 42.828125 37.765625 \"/>\n      </g>"
+    },
+    wmvIcon: {
+      extension: '.wmv',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 8.484375 43.734375 L 8.53125 43.734375 C 8.5625 43.71875 8.59375 43.703125 8.65625 43.703125 L 8.664062 43.6875 C 8.671875 43.6875 8.671875 43.6875 8.6875 43.6875 C 8.71875 43.671875 8.765625 43.625 8.8125 43.59375 L 8.84375 43.59375 C 8.875 43.5625 8.90625 43.53125 8.9375 43.515625 C 8.9375 43.5 8.953125 43.5 8.953125 43.46875 L 9.046875 43.375 C 9.046875 43.375 9.046875 43.359375 9.0625 43.359375 C 9.078125 43.328125 9.109375 43.265625 9.125 43.21875 L 11.171875 38.375 L 13.21875 43.21875 C 13.234375 43.265625 13.25 43.328125 13.28125 43.359375 C 13.28125 43.359375 13.28125 43.375 13.3125 43.375 L 13.375 43.46875 C 13.390625 43.5 13.390625 43.5 13.40625 43.515625 L 13.453125 43.546875 L 13.515625 43.59375 C 13.515625 43.59375 13.515625 43.59375 13.53125 43.59375 C 13.5625 43.625 13.609375 43.671875 13.671875 43.6875 C 13.6875 43.6875 13.6875 43.6875 13.703125 43.703125 C 13.734375 43.703125 13.765625 43.71875 13.8125 43.734375 L 13.859375 43.734375 L 13.929688 43.746094 L 14 43.75 C 14.0625 43.75 14.109375 43.75 14.15625 43.734375 L 14.1875 43.734375 C 14.234375 43.71875 14.28125 43.703125 14.3125 43.703125 C 14.3125 43.6875 14.328125 43.6875 14.328125 43.6875 L 14.34375 43.6875 C 14.40625 43.671875 14.4375 43.625 14.484375 43.59375 L 14.5 43.59375 C 14.53125 43.5625 14.578125 43.53125 14.609375 43.515625 C 14.609375 43.5 14.625 43.5 14.625 43.46875 C 14.65625 43.4375 14.6875 43.40625 14.703125 43.375 L 14.71875 43.359375 C 14.75 43.328125 14.78125 43.265625 14.796875 43.21875 L 18.625 34.109375 C 18.8125 33.6875 18.609375 33.171875 18.1875 33 C 17.734375 32.8125 17.234375 33.015625 17.046875 33.453125 L 14 40.6875 L 11.984375 35.890625 C 11.828125 35.546875 11.5 35.359375 11.171875 35.359375 C 10.828125 35.359375 10.5 35.546875 10.359375 35.890625 L 8.34375 40.6875 L 5.28125 33.453125 C 5.109375 33.015625 4.59375 32.8125 4.171875 33 C 3.71875 33.171875 3.53125 33.6875 3.703125 34.109375 L 7.546875 43.21875 C 7.578125 43.265625 7.59375 43.328125 7.625 43.359375 L 7.625 43.375 C 7.65625 43.40625 7.671875 43.4375 7.703125 43.46875 C 7.71875 43.5 7.71875 43.5 7.734375 43.515625 L 7.789062 43.546875 L 7.84375 43.59375 C 7.84375 43.59375 7.84375 43.59375 7.859375 43.59375 C 7.890625 43.625 7.953125 43.671875 8 43.6875 C 8.015625 43.6875 8.015625 43.6875 8.03125 43.703125 C 8.0625 43.703125 8.09375 43.71875 8.140625 43.734375 L 8.1875 43.734375 L 8.265625 43.746094 L 8.34375 43.75 C 8.390625 43.75 8.4375 43.75 8.484375 43.734375 Z M 29.03125 43.75 C 29.5 43.75 29.90625 43.359375 29.90625 42.890625 L 29.90625 33.671875 C 29.90625 33.269531 29.609375 32.9375 29.226562 32.839844 L 29.03125 32.8125 L 29.015625 32.8125 C 28.734375 32.8125 28.484375 32.9375 28.3125 33.171875 L 25.203125 37.484375 L 22.09375 33.171875 C 21.9375 32.9375 21.65625 32.8125 21.40625 32.8125 L 21.359375 32.8125 C 20.890625 32.8125 20.5 33.203125 20.5 33.671875 L 20.5 42.890625 C 20.5 43.359375 20.890625 43.75 21.359375 43.75 C 21.84375 43.75 22.234375 43.359375 22.234375 42.890625 L 22.234375 36.3125 L 24.46875 39.4375 C 24.640625 39.671875 24.90625 39.796875 25.1875 39.796875 L 25.21875 39.796875 C 25.5 39.796875 25.75 39.671875 25.921875 39.4375 L 28.171875 36.3125 L 28.171875 42.890625 C 28.171875 43.359375 28.546875 43.75 29.03125 43.75 Z M 37.015625 43.734375 L 37.0625 43.734375 C 37.09375 43.71875 37.125 43.703125 37.1875 43.703125 L 37.195312 43.6875 C 37.203125 43.6875 37.203125 43.6875 37.21875 43.6875 C 37.25 43.671875 37.296875 43.625 37.34375 43.59375 L 37.375 43.59375 C 37.40625 43.5625 37.4375 43.53125 37.46875 43.515625 C 37.46875 43.5 37.484375 43.5 37.484375 43.46875 L 37.578125 43.375 C 37.578125 43.375 37.578125 43.359375 37.59375 43.359375 C 37.609375 43.328125 37.640625 43.265625 37.65625 43.21875 L 39.703125 38.375 L 41.75 43.21875 C 41.765625 43.265625 41.78125 43.328125 41.8125 43.359375 C 41.8125 43.359375 41.8125 43.375 41.84375 43.375 L 41.90625 43.46875 C 41.921875 43.5 41.921875 43.5 41.9375 43.515625 L 41.984375 43.546875 L 42.046875 43.59375 C 42.046875 43.59375 42.046875 43.59375 42.0625 43.59375 C 42.09375 43.625 42.140625 43.671875 42.203125 43.6875 C 42.21875 43.6875 42.21875 43.6875 42.234375 43.703125 C 42.265625 43.703125 42.296875 43.71875 42.34375 43.734375 L 42.390625 43.734375 L 42.460938 43.746094 L 42.53125 43.75 C 42.59375 43.75 42.640625 43.75 42.6875 43.734375 L 42.71875 43.734375 C 42.765625 43.71875 42.8125 43.703125 42.84375 43.703125 C 42.84375 43.6875 42.859375 43.6875 42.859375 43.6875 L 42.875 43.6875 C 42.9375 43.671875 42.96875 43.625 43.015625 43.59375 L 43.03125 43.59375 C 43.0625 43.5625 43.109375 43.53125 43.140625 43.515625 C 43.140625 43.5 43.15625 43.5 43.15625 43.46875 C 43.1875 43.4375 43.21875 43.40625 43.234375 43.375 L 43.25 43.359375 C 43.28125 43.328125 43.3125 43.265625 43.328125 43.21875 L 47.15625 34.109375 C 47.34375 33.6875 47.140625 33.171875 46.71875 33 C 46.265625 32.8125 45.765625 33.015625 45.578125 33.453125 L 42.53125 40.6875 L 40.515625 35.890625 C 40.359375 35.546875 40.03125 35.359375 39.703125 35.359375 C 39.359375 35.359375 39.03125 35.546875 38.890625 35.890625 L 36.875 40.6875 L 33.8125 33.453125 C 33.640625 33.015625 33.125 32.8125 32.703125 33 C 32.25 33.171875 32.0625 33.6875 32.234375 34.109375 L 36.078125 43.21875 C 36.109375 43.265625 36.125 43.328125 36.15625 43.359375 L 36.15625 43.375 C 36.1875 43.40625 36.203125 43.4375 36.234375 43.46875 C 36.25 43.5 36.25 43.5 36.265625 43.515625 L 36.320312 43.546875 L 36.375 43.59375 C 36.375 43.59375 36.375 43.59375 36.390625 43.59375 C 36.421875 43.625 36.484375 43.671875 36.53125 43.6875 C 36.546875 43.6875 36.546875 43.6875 36.5625 43.703125 C 36.59375 43.703125 36.625 43.71875 36.671875 43.734375 L 36.71875 43.734375 L 36.796875 43.746094 L 36.875 43.75 C 36.921875 43.75 36.96875 43.75 37.015625 43.734375 Z M 37.015625 43.734375 \"/>\n      </g>"
+    },
+    xlsIcon: {
+      extension: '.xls',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 17.21875 46.875 C 17.425781 46.875 17.632812 46.800781 17.820312 46.667969 C 18.289062 46.351562 18.363281 45.695312 18.042969 45.242188 L 14.480469 40.367188 L 18.042969 35.53125 C 18.363281 35.0625 18.289062 34.425781 17.820312 34.105469 C 17.351562 33.75 16.730469 33.84375 16.375 34.332031 L 13.226562 38.644531 L 10.054688 34.332031 C 9.738281 33.84375 9.082031 33.75 8.632812 34.105469 C 8.164062 34.425781 8.070312 35.0625 8.386719 35.53125 L 11.949219 40.367188 L 8.386719 45.242188 C 8.070312 45.695312 8.164062 46.351562 8.632812 46.667969 C 8.800781 46.800781 9.007812 46.875 9.230469 46.875 C 9.550781 46.875 9.851562 46.707031 10.054688 46.445312 L 13.226562 42.113281 L 16.375 46.445312 C 16.582031 46.707031 16.882812 46.875 17.21875 46.875 Z M 29.351562 46.875 C 29.894531 46.875 30.382812 46.40625 30.382812 45.84375 C 30.382812 45.261719 29.894531 44.792969 29.351562 44.792969 L 24.269531 44.792969 L 24.269531 34.78125 C 24.269531 34.21875 23.800781 33.75 23.21875 33.75 C 22.636719 33.75 22.1875 34.21875 22.1875 34.78125 L 22.1875 45.84375 C 22.1875 46.335938 22.53125 46.757812 23.007812 46.855469 L 23.222656 46.875 Z M 37.28125 46.855469 C 38.613281 46.855469 39.832031 46.460938 40.75 45.789062 C 41.6875 45.113281 42.363281 44.082031 42.363281 42.882812 C 42.363281 42.300781 42.195312 41.738281 41.914062 41.289062 C 41.480469 40.59375 40.804688 40.105469 40.039062 39.730469 C 39.289062 39.375 38.40625 39.132812 37.449219 38.945312 L 37.414062 38.945312 C 36.398438 38.757812 35.554688 38.457031 35.070312 38.117188 C 34.824219 37.949219 34.65625 37.78125 34.5625 37.632812 C 34.46875 37.480469 34.429688 37.332031 34.429688 37.105469 C 34.429688 36.710938 34.636719 36.300781 35.144531 35.925781 C 35.648438 35.550781 36.398438 35.289062 37.242188 35.289062 C 38.386719 35.289062 39.304688 35.851562 40.261719 36.488281 C 40.710938 36.789062 41.3125 36.65625 41.59375 36.207031 C 41.894531 35.773438 41.761719 35.175781 41.332031 34.875 C 40.375 34.257812 39.042969 33.375 37.242188 33.375 C 36.023438 33.375 34.882812 33.730469 34 34.367188 C 33.136719 35.007812 32.5 35.980469 32.5 37.105469 C 32.5 37.667969 32.648438 38.195312 32.929688 38.644531 C 33.34375 39.300781 33.960938 39.769531 34.675781 40.105469 C 35.386719 40.445312 36.210938 40.667969 37.09375 40.835938 L 37.132812 40.835938 C 38.238281 41.042969 39.15625 41.363281 39.699219 41.71875 C 39.980469 41.90625 40.148438 42.09375 40.261719 42.28125 C 40.375 42.46875 40.429688 42.636719 40.429688 42.882812 C 40.429688 43.351562 40.1875 43.820312 39.625 44.230469 C 39.0625 44.644531 38.21875 44.925781 37.28125 44.925781 C 35.949219 44.945312 34.523438 44.15625 33.699219 43.480469 C 33.289062 43.144531 32.667969 43.199219 32.332031 43.613281 C 32.011719 44.023438 32.070312 44.644531 32.480469 44.980469 C 33.550781 45.824219 35.257812 46.835938 37.28125 46.855469 Z M 37.28125 46.855469 \"/>\n      </g>"
+    },
+    xlsxIcon: {
+      extension: '.xlsx',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 13.070312 43.75 C 13.242188 43.75 13.414062 43.6875 13.570312 43.578125 C 13.960938 43.3125 14.023438 42.765625 13.757812 42.390625 L 10.789062 38.328125 L 13.757812 34.296875 C 14.023438 33.90625 13.960938 33.375 13.570312 33.109375 C 13.179688 32.8125 12.664062 32.890625 12.367188 33.296875 L 9.742188 36.890625 L 7.101562 33.296875 C 6.835938 32.890625 6.289062 32.8125 5.914062 33.109375 C 5.523438 33.375 5.445312 33.90625 5.710938 34.296875 L 8.679688 38.328125 L 5.710938 42.390625 C 5.445312 42.765625 5.523438 43.3125 5.914062 43.578125 C 6.054688 43.6875 6.226562 43.75 6.414062 43.75 C 6.679688 43.75 6.929688 43.609375 7.101562 43.390625 L 9.742188 39.78125 L 12.367188 43.390625 C 12.539062 43.609375 12.789062 43.75 13.070312 43.75 Z M 23.179688 43.75 C 23.632812 43.75 24.039062 43.359375 24.039062 42.890625 C 24.039062 42.40625 23.632812 42.015625 23.179688 42.015625 L 18.945312 42.015625 L 18.945312 33.671875 C 18.945312 33.203125 18.554688 32.8125 18.070312 32.8125 C 17.585938 32.8125 17.210938 33.203125 17.210938 33.671875 L 17.210938 42.890625 C 17.210938 43.359375 17.585938 43.75 18.070312 43.75 Z M 29.789062 43.734375 C 30.898438 43.734375 31.914062 43.40625 32.679688 42.84375 C 33.460938 42.28125 34.023438 41.421875 34.023438 40.421875 C 34.023438 39.9375 33.882812 39.46875 33.648438 39.09375 C 33.289062 38.515625 32.726562 38.109375 32.085938 37.796875 C 31.460938 37.5 30.726562 37.296875 29.929688 37.140625 L 29.898438 37.140625 C 29.054688 36.984375 28.351562 36.734375 27.945312 36.453125 C 27.742188 36.3125 27.601562 36.171875 27.523438 36.046875 C 27.445312 35.921875 27.414062 35.796875 27.414062 35.609375 C 27.414062 35.28125 27.585938 34.9375 28.007812 34.625 C 28.429688 34.3125 29.054688 34.09375 29.757812 34.09375 C 30.710938 34.09375 31.476562 34.5625 32.273438 35.09375 C 32.648438 35.34375 33.148438 35.234375 33.382812 34.859375 C 33.632812 34.5 33.523438 34 33.164062 33.75 C 32.367188 33.234375 31.257812 32.5 29.757812 32.5 C 28.742188 32.5 27.789062 32.796875 27.054688 33.328125 C 26.335938 33.859375 25.804688 34.671875 25.804688 35.609375 C 25.804688 36.078125 25.929688 36.515625 26.164062 36.890625 C 26.507812 37.4375 27.023438 37.828125 27.617188 38.109375 C 28.210938 38.390625 28.898438 38.578125 29.632812 38.71875 L 29.664062 38.71875 C 30.585938 38.890625 31.351562 39.15625 31.804688 39.453125 C 32.039062 39.609375 32.179688 39.765625 32.273438 39.921875 C 32.367188 40.078125 32.414062 40.21875 32.414062 40.421875 C 32.414062 40.8125 32.210938 41.203125 31.742188 41.546875 C 31.273438 41.890625 30.570312 42.125 29.789062 42.125 C 28.679688 42.140625 27.492188 41.484375 26.804688 40.921875 C 26.460938 40.640625 25.945312 40.6875 25.664062 41.03125 C 25.398438 41.375 25.445312 41.890625 25.789062 42.171875 C 26.679688 42.875 28.101562 43.71875 29.789062 43.734375 Z M 43.179688 43.75 C 43.351562 43.75 43.523438 43.6875 43.679688 43.578125 C 44.070312 43.3125 44.132812 42.765625 43.867188 42.390625 L 40.898438 38.328125 L 43.867188 34.296875 C 44.132812 33.90625 44.070312 33.375 43.679688 33.109375 C 43.289062 32.8125 42.773438 32.890625 42.476562 33.296875 L 39.851562 36.890625 L 37.210938 33.296875 C 36.945312 32.890625 36.398438 32.8125 36.023438 33.109375 C 35.632812 33.375 35.554688 33.90625 35.820312 34.296875 L 38.789062 38.328125 L 35.820312 42.390625 C 35.554688 42.765625 35.632812 43.3125 36.023438 43.578125 C 36.164062 43.6875 36.335938 43.75 36.523438 43.75 C 36.789062 43.75 37.039062 43.609375 37.210938 43.390625 L 39.851562 39.78125 L 42.476562 43.390625 C 42.648438 43.609375 42.898438 43.75 43.179688 43.75 Z M 43.179688 43.75 \"/>\n      </g>"
+    },
+    zipIcon: {
+      extension: '.zip',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 20.175781 46.875 C 20.855469 46.875 21.402344 46.351562 21.402344 45.671875 C 21.402344 44.992188 20.855469 44.445312 20.175781 44.445312 L 13.132812 44.445312 L 21.183594 33.488281 L 21.183594 33.445312 C 21.203125 33.421875 21.226562 33.378906 21.25 33.335938 C 21.269531 33.3125 21.269531 33.289062 21.292969 33.269531 C 21.3125 33.203125 21.3125 33.179688 21.335938 33.136719 C 21.335938 33.09375 21.378906 33.070312 21.378906 33.007812 C 21.378906 32.984375 21.378906 32.960938 21.402344 32.917969 L 21.402344 32.679688 C 21.402344 32.632812 21.402344 32.613281 21.378906 32.546875 C 21.378906 32.503906 21.378906 32.480469 21.335938 32.4375 C 21.335938 32.414062 21.3125 32.371094 21.3125 32.304688 C 21.292969 32.285156 21.269531 32.242188 21.269531 32.21875 C 21.25 32.195312 21.226562 32.152344 21.203125 32.109375 C 21.183594 32.066406 21.160156 32.042969 21.117188 32.023438 C 21.09375 32 21.074219 31.957031 21.050781 31.933594 C 21.03125 31.914062 21.007812 31.867188 20.964844 31.847656 C 20.941406 31.824219 20.941406 31.804688 20.898438 31.78125 L 20.875 31.78125 C 20.832031 31.757812 20.8125 31.738281 20.765625 31.714844 C 20.746094 31.695312 20.722656 31.648438 20.65625 31.648438 L 20.570312 31.605469 L 20.4375 31.585938 C 20.417969 31.585938 20.375 31.5625 20.351562 31.5625 L 10.75 31.5625 C 10.070312 31.5625 9.546875 32.085938 9.546875 32.765625 C 9.546875 33.421875 10.070312 33.992188 10.75 33.992188 L 17.8125 33.992188 L 9.785156 44.972656 L 9.765625 44.972656 C 9.742188 45.015625 9.71875 45.058594 9.699219 45.082031 C 9.699219 45.101562 9.675781 45.148438 9.632812 45.167969 C 9.632812 45.210938 9.609375 45.257812 9.609375 45.277344 C 9.589844 45.320312 9.589844 45.367188 9.566406 45.386719 L 9.566406 45.496094 C 9.546875 45.539062 9.546875 45.585938 9.546875 45.648438 L 9.546875 45.738281 C 9.546875 45.78125 9.566406 45.824219 9.566406 45.890625 C 9.566406 45.933594 9.589844 45.957031 9.589844 45.976562 L 9.632812 46.109375 C 9.632812 46.152344 9.675781 46.175781 9.699219 46.21875 C 9.699219 46.242188 9.71875 46.261719 9.742188 46.328125 C 9.765625 46.351562 9.785156 46.394531 9.808594 46.414062 C 9.828125 46.4375 9.851562 46.460938 9.894531 46.480469 L 9.9375 46.542969 L 9.984375 46.589844 C 10.003906 46.613281 10.027344 46.632812 10.046875 46.632812 L 10.046875 46.65625 C 10.070312 46.679688 10.09375 46.679688 10.136719 46.699219 C 10.179688 46.722656 10.222656 46.742188 10.246094 46.742188 C 10.265625 46.789062 10.289062 46.789062 10.3125 46.808594 C 10.375 46.808594 10.421875 46.832031 10.464844 46.832031 C 10.484375 46.851562 10.507812 46.851562 10.53125 46.851562 L 10.648438 46.871094 Z M 26.214844 46.875 C 26.871094 46.875 27.4375 46.351562 27.4375 45.671875 L 27.4375 32.765625 C 27.4375 32.085938 26.871094 31.5625 26.214844 31.5625 C 25.535156 31.5625 25.011719 32.085938 25.011719 32.765625 L 25.011719 45.671875 C 25.011719 46.351562 25.535156 46.875 26.214844 46.875 Z M 32.734375 46.875 C 33.410156 46.875 33.957031 46.328125 33.957031 45.671875 L 33.957031 40.925781 L 36.648438 40.925781 C 39.25 40.925781 41.351562 38.824219 41.351562 36.265625 C 41.351562 33.664062 39.25 31.5625 36.648438 31.5625 L 32.734375 31.5625 C 32.078125 31.5625 31.53125 32.085938 31.53125 32.765625 L 31.53125 45.671875 C 31.53125 46.328125 32.078125 46.875 32.734375 46.875 Z M 36.648438 38.496094 L 33.957031 38.496094 L 33.957031 33.992188 L 36.648438 33.992188 C 37.917969 33.992188 38.902344 34.996094 38.921875 36.265625 C 38.902344 37.492188 37.917969 38.496094 36.648438 38.496094 Z M 36.648438 38.496094 \"/>\n      </g>"
+    },
+    docxIcon: {
+      extension: '.docx',
+      path: "<g id=\"surface9\" clip-path=\"url(#clip1)\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      </g>\n      </defs>\n      <g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <use xlink:href=\"#surface9\" mask=\"url(#mask0)\"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 7.789062 43.75 C 9.589844 43.75 10.988281 43.269531 11.984375 42.304688 C 12.980469 41.339844 13.476562 39.984375 13.476562 38.234375 C 13.476562 36.496094 12.980469 35.144531 11.984375 34.179688 C 10.988281 33.214844 9.589844 32.734375 7.789062 32.734375 L 4.695312 32.734375 C 4.394531 32.734375 4.15625 32.816406 3.984375 32.984375 C 3.8125 33.152344 3.726562 33.386719 3.726562 33.6875 L 3.726562 42.796875 C 3.726562 43.097656 3.8125 43.332031 3.984375 43.5 C 4.15625 43.667969 4.394531 43.75 4.695312 43.75 Z M 7.664062 42.109375 L 5.742188 42.109375 L 5.742188 34.375 L 7.664062 34.375 C 10.195312 34.375 11.460938 35.660156 11.460938 38.234375 C 11.460938 40.816406 10.195312 42.109375 7.664062 42.109375 Z M 20.414062 43.890625 C 21.476562 43.890625 22.402344 43.660156 23.1875 43.203125 C 23.972656 42.746094 24.582031 42.089844 25.007812 41.234375 C 25.433594 40.378906 25.648438 39.378906 25.648438 38.234375 C 25.648438 37.089844 25.4375 36.089844 25.015625 35.242188 C 24.59375 34.394531 23.988281 33.738281 23.203125 33.28125 C 22.417969 32.824219 21.488281 32.59375 20.414062 32.59375 C 19.339844 32.59375 18.410156 32.824219 17.617188 33.28125 C 16.824219 33.738281 16.21875 34.394531 15.796875 35.242188 C 15.375 36.089844 15.164062 37.089844 15.164062 38.234375 C 15.164062 39.378906 15.378906 40.378906 15.804688 41.234375 C 16.230469 42.089844 16.839844 42.746094 17.625 43.203125 C 18.410156 43.660156 19.339844 43.890625 20.414062 43.890625 Z M 20.414062 42.28125 C 19.394531 42.28125 18.597656 41.933594 18.03125 41.234375 C 17.464844 40.535156 17.179688 39.535156 17.179688 38.234375 C 17.179688 36.933594 17.464844 35.933594 18.03125 35.242188 C 18.597656 34.550781 19.394531 34.203125 20.414062 34.203125 C 21.425781 34.203125 22.214844 34.550781 22.78125 35.242188 C 23.347656 35.933594 23.632812 36.933594 23.632812 38.234375 C 23.632812 39.535156 23.347656 40.535156 22.78125 41.234375 C 22.214844 41.933594 21.425781 42.28125 20.414062 42.28125 Z M 32.601562 43.890625 C 33.289062 43.890625 33.933594 43.789062 34.539062 43.585938 C 35.144531 43.382812 35.679688 43.089844 36.148438 42.703125 C 36.285156 42.597656 36.378906 42.488281 36.429688 42.367188 C 36.480469 42.246094 36.507812 42.109375 36.507812 41.953125 C 36.507812 41.722656 36.445312 41.53125 36.320312 41.375 C 36.195312 41.21875 36.042969 41.140625 35.867188 41.140625 C 35.753906 41.140625 35.644531 41.160156 35.539062 41.203125 C 35.433594 41.246094 35.332031 41.296875 35.226562 41.359375 C 34.746094 41.683594 34.316406 41.910156 33.9375 42.046875 C 33.558594 42.183594 33.144531 42.25 32.695312 42.25 C 31.613281 42.25 30.792969 41.910156 30.234375 41.234375 C 29.675781 40.558594 29.398438 39.558594 29.398438 38.234375 C 29.398438 36.921875 29.675781 35.925781 30.234375 35.25 C 30.792969 34.574219 31.613281 34.234375 32.695312 34.234375 C 33.164062 34.234375 33.589844 34.300781 33.976562 34.429688 C 34.363281 34.558594 34.777344 34.792969 35.226562 35.125 C 35.445312 35.269531 35.660156 35.34375 35.867188 35.34375 C 36.042969 35.34375 36.195312 35.265625 36.320312 35.109375 C 36.445312 34.953125 36.507812 34.761719 36.507812 34.53125 C 36.507812 34.363281 36.480469 34.222656 36.429688 34.109375 C 36.378906 33.996094 36.285156 33.886719 36.148438 33.78125 C 35.679688 33.394531 35.144531 33.101562 34.539062 32.898438 C 33.933594 32.695312 33.289062 32.59375 32.601562 32.59375 C 31.539062 32.59375 30.609375 32.824219 29.8125 33.28125 C 29.015625 33.738281 28.402344 34.394531 27.976562 35.242188 C 27.550781 36.089844 27.335938 37.089844 27.335938 38.234375 C 27.335938 39.378906 27.550781 40.378906 27.976562 41.234375 C 28.402344 42.089844 29.015625 42.746094 29.8125 43.203125 C 30.609375 43.660156 31.539062 43.890625 32.601562 43.890625 Z M 46.132812 43.84375 C 46.382812 43.84375 46.605469 43.75 46.796875 43.5625 C 46.988281 43.375 47.085938 43.15625 47.085938 42.90625 C 47.085938 42.707031 47.003906 42.511719 46.835938 42.3125 L 43.445312 38.15625 L 46.710938 34.171875 C 46.867188 34.003906 46.945312 33.808594 46.945312 33.578125 C 46.945312 33.328125 46.847656 33.113281 46.65625 32.929688 C 46.464844 32.746094 46.242188 32.65625 45.992188 32.65625 C 45.730469 32.65625 45.507812 32.769531 45.320312 33 L 42.273438 36.765625 L 39.226562 33 C 39.027344 32.769531 38.800781 32.65625 38.539062 32.65625 C 38.289062 32.65625 38.070312 32.746094 37.882812 32.929688 C 37.695312 33.113281 37.601562 33.328125 37.601562 33.578125 C 37.601562 33.808594 37.679688 34.003906 37.835938 34.171875 L 41.101562 38.15625 L 37.695312 42.3125 C 37.539062 42.5 37.460938 42.699219 37.460938 42.90625 C 37.460938 43.15625 37.558594 43.371094 37.75 43.554688 C 37.941406 43.738281 38.164062 43.828125 38.414062 43.828125 C 38.675781 43.828125 38.898438 43.71875 39.085938 43.5 L 42.273438 39.5625 L 45.445312 43.5 C 45.644531 43.730469 45.871094 43.84375 46.132812 43.84375 Z M 46.132812 43.84375 \"/>\n      </g>"
+    },
+    jpgIcon: {
+      extension: '.jpg',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <use xlink:href=\"#surface9\" mask=\"url(#mask0)\"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 8.789062 47.007812 L 9.488281 46.960938 C 12.214844 46.757812 13.578125 45.277344 13.578125 42.523438 L 13.578125 32.742188 C 13.578125 32.320312 13.453125 31.980469 13.195312 31.726562 C 12.941406 31.472656 12.59375 31.34375 12.15625 31.34375 C 11.734375 31.34375 11.394531 31.472656 11.140625 31.726562 C 10.886719 31.980469 10.757812 32.320312 10.757812 32.742188 L 10.757812 42.523438 C 10.757812 43.238281 10.605469 43.769531 10.296875 44.117188 C 9.992188 44.46875 9.539062 44.660156 8.941406 44.6875 L 8.242188 44.730469 C 7.847656 44.761719 7.558594 44.867188 7.378906 45.046875 C 7.195312 45.230469 7.105469 45.496094 7.105469 45.847656 C 7.105469 46.664062 7.667969 47.050781 8.789062 47.007812 Z M 18.304688 47.007812 C 18.742188 47.007812 19.089844 46.878906 19.34375 46.625 C 19.597656 46.367188 19.726562 46.023438 19.726562 45.585938 L 19.726562 40.882812 L 23.640625 40.882812 C 25.289062 40.882812 26.574219 40.464844 27.492188 39.632812 C 28.410156 38.804688 28.871094 37.644531 28.871094 36.15625 C 28.871094 34.667969 28.410156 33.511719 27.492188 32.6875 C 26.574219 31.863281 25.289062 31.453125 23.640625 31.453125 L 18.261719 31.453125 C 17.839844 31.453125 17.507812 31.570312 17.265625 31.804688 C 17.023438 32.035156 16.90625 32.363281 16.90625 32.789062 L 16.90625 45.585938 C 16.90625 46.023438 17.03125 46.367188 17.289062 46.625 C 17.542969 46.878906 17.882812 47.007812 18.304688 47.007812 Z M 23.292969 38.714844 L 19.726562 38.714844 L 19.726562 33.640625 L 23.292969 33.640625 C 25.230469 33.640625 26.203125 34.488281 26.203125 36.179688 C 26.203125 37.871094 25.230469 38.714844 23.292969 38.714844 Z M 38.605469 47.070312 C 39.320312 47.070312 40.0625 47.011719 40.835938 46.898438 C 41.609375 46.78125 42.285156 46.621094 42.871094 46.414062 C 43.410156 46.242188 43.765625 46.015625 43.941406 45.738281 C 44.117188 45.460938 44.203125 44.988281 44.203125 44.316406 L 44.203125 39.613281 C 44.203125 39.292969 44.101562 39.03125 43.898438 38.835938 C 43.695312 38.640625 43.425781 38.539062 43.089844 38.539062 L 39.21875 38.539062 C 38.867188 38.539062 38.59375 38.628906 38.398438 38.804688 C 38.199219 38.976562 38.101562 39.226562 38.101562 39.546875 C 38.101562 39.867188 38.199219 40.117188 38.398438 40.289062 C 38.59375 40.464844 38.867188 40.554688 39.21875 40.554688 L 41.6875 40.554688 L 41.6875 44.425781 C 40.699219 44.703125 39.707031 44.839844 38.714844 44.839844 C 35.390625 44.839844 33.726562 42.945312 33.726562 39.152344 C 33.726562 37.300781 34.132812 35.90625 34.941406 34.964844 C 35.75 34.023438 36.949219 33.554688 38.539062 33.554688 C 39.238281 33.554688 39.867188 33.644531 40.421875 33.828125 C 40.972656 34.007812 41.574219 34.324219 42.214844 34.777344 C 42.390625 34.894531 42.542969 34.980469 42.671875 35.03125 C 42.804688 35.082031 42.949219 35.105469 43.109375 35.105469 C 43.359375 35.105469 43.570312 34.996094 43.746094 34.777344 C 43.921875 34.558594 44.007812 34.289062 44.007812 33.96875 C 44.007812 33.75 43.96875 33.558594 43.886719 33.398438 C 43.808594 33.238281 43.679688 33.078125 43.503906 32.917969 C 42.191406 31.808594 40.507812 31.257812 38.453125 31.257812 C 36.90625 31.257812 35.5625 31.574219 34.425781 32.207031 C 33.289062 32.84375 32.410156 33.753906 31.789062 34.941406 C 31.171875 36.128906 30.859375 37.535156 30.859375 39.152344 C 30.859375 40.800781 31.171875 42.21875 31.789062 43.40625 C 32.410156 44.597656 33.304688 45.503906 34.46875 46.132812 C 35.636719 46.757812 37.015625 47.070312 38.605469 47.070312 Z M 38.605469 47.070312 \"/>\n      </g>"
+    },
+    mp3Icon: {
+      extension: '.mp3',
+      path: "<g id=\"surface9\" clip-path=\"url(#clip1)\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 43.828125 43.710938 C 43.605469 44.28125 43.273438 44.804688 42.84375 45.265625 C 42.40625 45.730469 41.867188 46.113281 41.242188 46.398438 C 40.597656 46.699219 39.851562 46.855469 39.027344 46.855469 C 38.328125 46.855469 37.703125 46.757812 37.160156 46.570312 C 36.609375 46.378906 36.160156 46.136719 35.769531 45.839844 C 35.386719 45.550781 35.050781 45.210938 34.796875 44.832031 C 34.570312 44.507812 34.394531 44.195312 34.265625 43.890625 C 34.140625 43.59375 34.054688 43.335938 33.996094 43.101562 C 33.792969 42.261719 34.304688 41.417969 35.140625 41.210938 C 35.980469 41.007812 36.828125 41.519531 37.03125 42.355469 C 37.039062 42.390625 37.066406 42.488281 37.144531 42.671875 C 37.191406 42.777344 37.265625 42.914062 37.371094 43.0625 C 37.4375 43.160156 37.53125 43.257812 37.65625 43.351562 C 37.792969 43.453125 37.972656 43.542969 38.195312 43.625 C 38.332031 43.667969 38.59375 43.730469 39.027344 43.730469 C 39.390625 43.730469 39.695312 43.675781 39.925781 43.566406 C 40.1875 43.445312 40.398438 43.300781 40.558594 43.132812 C 40.71875 42.957031 40.839844 42.773438 40.914062 42.578125 C 40.996094 42.371094 41.03125 42.195312 41.03125 42.023438 C 41.03125 41.789062 41 41.585938 40.921875 41.398438 C 40.871094 41.257812 40.785156 41.148438 40.660156 41.039062 C 40.515625 40.910156 40.296875 40.792969 40.011719 40.699219 C 39.6875 40.59375 39.253906 40.539062 38.738281 40.535156 C 37.882812 40.527344 37.1875 39.832031 37.1875 38.972656 L 37.1875 38.832031 C 37.1875 37.984375 37.859375 37.292969 38.699219 37.265625 C 39.070312 37.257812 39.398438 37.195312 39.679688 37.101562 C 39.921875 37.011719 40.121094 36.902344 40.273438 36.773438 C 40.40625 36.652344 40.507812 36.519531 40.582031 36.359375 C 40.652344 36.210938 40.6875 36.027344 40.6875 35.8125 C 40.6875 35.523438 40.644531 35.289062 40.574219 35.125 C 40.5 34.96875 40.414062 34.847656 40.304688 34.757812 C 40.1875 34.660156 40.042969 34.582031 39.867188 34.53125 C 39.402344 34.386719 38.878906 34.398438 38.480469 34.542969 C 38.289062 34.617188 38.121094 34.714844 37.976562 34.84375 C 37.820312 34.984375 37.695312 35.148438 37.59375 35.339844 C 37.484375 35.550781 37.40625 35.773438 37.367188 36.039062 C 37.230469 36.890625 36.429688 37.472656 35.574219 37.335938 C 34.722656 37.195312 34.140625 36.398438 34.28125 35.542969 C 34.378906 34.9375 34.5625 34.378906 34.835938 33.871094 C 35.109375 33.355469 35.464844 32.898438 35.890625 32.519531 C 36.320312 32.132812 36.824219 31.828125 37.382812 31.617188 C 38.433594 31.226562 39.667969 31.199219 40.78125 31.539062 C 41.351562 31.714844 41.863281 31.992188 42.308594 32.355469 C 42.777344 32.753906 43.148438 33.242188 43.414062 33.824219 C 43.679688 34.402344 43.8125 35.070312 43.8125 35.8125 C 43.8125 36.476562 43.679688 37.097656 43.421875 37.660156 C 43.25 38.046875 43.023438 38.394531 42.746094 38.707031 C 43.242188 39.148438 43.609375 39.671875 43.835938 40.261719 C 44.046875 40.804688 44.15625 41.398438 44.15625 42.023438 C 44.15625 42.578125 44.046875 43.148438 43.828125 43.710938 Z M 31.445312 38.492188 C 31.148438 39.140625 30.734375 39.703125 30.199219 40.164062 C 29.6875 40.605469 29.078125 40.957031 28.390625 41.199219 C 27.71875 41.4375 26.976562 41.5625 26.191406 41.5625 L 25 41.5625 L 25 45 C 25 45.859375 24.296875 46.5625 23.4375 46.5625 C 22.578125 46.5625 21.875 45.859375 21.875 45 L 21.875 32.8125 C 21.875 31.945312 22.578125 31.25 23.4375 31.25 L 26.191406 31.25 C 27.890625 31.25 29.257812 31.667969 30.253906 32.5 C 31.339844 33.398438 31.886719 34.714844 31.886719 36.40625 C 31.886719 37.148438 31.738281 37.851562 31.445312 38.492188 Z M 18.730469 45.210938 C 18.730469 46.070312 18.03125 46.773438 17.167969 46.773438 C 16.300781 46.773438 15.605469 46.070312 15.605469 45.210938 L 15.605469 39.28125 L 14.015625 43.140625 C 14.007812 43.164062 13.996094 43.191406 13.984375 43.214844 C 13.71875 43.777344 13.15625 44.117188 12.566406 44.117188 L 12.53125 44.117188 C 11.9375 44.117188 11.375 43.777344 11.109375 43.214844 L 11.082031 43.160156 L 9.339844 39.101562 L 9.339844 45.210938 C 9.339844 46.070312 8.640625 46.773438 7.777344 46.773438 C 6.910156 46.773438 6.214844 46.070312 6.214844 45.210938 L 6.214844 32.824219 C 6.214844 31.960938 6.910156 31.261719 7.777344 31.261719 L 7.835938 31.261719 C 8.472656 31.261719 9.046875 31.617188 9.335938 32.1875 L 12.527344 39.09375 L 15.59375 32.207031 C 15.894531 31.617188 16.46875 31.261719 17.105469 31.261719 L 17.167969 31.261719 C 18.03125 31.261719 18.730469 31.960938 18.730469 32.824219 Z M 41.382812 28.125 L 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.136719 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.136719 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 41.382812 28.125 \"/>\n      </g>\n      </defs>\n      <g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <use xlink:href=\"#surface9\" mask=\"url(#mask0)\"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 28.257812 34.902344 C 27.835938 34.550781 27.140625 34.375 26.191406 34.375 L 25 34.375 L 25 38.4375 L 26.191406 38.4375 C 26.621094 38.4375 27.007812 38.375 27.34375 38.253906 C 27.667969 38.140625 27.929688 37.992188 28.148438 37.804688 C 28.34375 37.632812 28.492188 37.4375 28.601562 37.195312 C 28.710938 36.964844 28.757812 36.703125 28.757812 36.40625 C 28.757812 35.324219 28.382812 35.003906 28.257812 34.902344 \"/>\n      <path style=\"fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(99.607843%,99.607843%,99.607843%);stroke-opacity:1;stroke-miterlimit:4;\" d=\"M 11.34125 13.57875 C 11.345 13.5925 11.3525 13.62375 11.36375 13.67375 C 11.3775 13.7225 11.3975 13.78125 11.42625 13.85 C 11.45375 13.9175 11.49375 13.9875 11.54625 14.0625 C 11.5975 14.13875 11.66625 14.20875 11.75 14.27125 C 11.83375 14.33625 11.9375 14.38875 12.0575 14.43125 C 12.1775 14.4725 12.32 14.49375 12.4875 14.49375 C 12.67875 14.49375 12.845 14.46125 12.9875 14.39375 C 13.13 14.32875 13.24875 14.245 13.34375 14.1425 C 13.43875 14.0425 13.51125 13.93 13.55875 13.8075 C 13.6075 13.6825 13.63125 13.56375 13.63125 13.4475 C 13.63125 13.31125 13.6075 13.1825 13.5625 13.065 C 13.515 12.9475 13.4425 12.845 13.3425 12.7575 C 13.2425 12.67 13.115 12.6 12.96 12.55 C 12.805 12.49875 12.6175 12.4725 12.4 12.4725 L 12.4 12.42625 C 12.57 12.42 12.72375 12.3925 12.8625 12.34375 C 13.0025 12.29625 13.11875 12.2275 13.21625 12.14375 C 13.31375 12.05875 13.3875 11.96 13.44125 11.845 C 13.4925 11.7275 13.52 11.60125 13.52 11.46 C 13.52 11.29375 13.4925 11.1525 13.43875 11.0325 C 13.38375 10.91375 13.31125 10.81625 13.21875 10.74 C 13.1275 10.66375 13.0225 10.6075 12.90375 10.5725 C 12.78625 10.535 12.66375 10.5175 12.5375 10.5175 C 12.395 10.5175 12.26125 10.54 12.14 10.58625 C 12.0175 10.6325 11.91 10.69625 11.81875 10.77875 C 11.72625 10.8625 11.64875 10.96 11.5875 11.07375 C 11.5275 11.18875 11.48625 11.315 11.4625 11.45375 M 7.5 14.4 L 7.5 10.5 L 8.3825 10.5 C 8.8075 10.5 9.13375 10.595 9.3625 10.78375 C 9.59 10.975 9.7025 11.2625 9.7025 11.65 C 9.7025 11.81625 9.6725 11.97125 9.6075 12.11125 C 9.5425 12.2525 9.4525 12.37375 9.335 12.475 C 9.21875 12.5775 9.0775 12.65625 8.9175 12.71375 C 8.75625 12.77125 8.5775 12.8 8.3825 12.8 L 7.6 12.8 M 2.4875 14.4675 L 2.4875 10.50375 L 2.5075 10.50375 C 2.5225 10.50375 2.53375 10.5125 2.5425 10.52625 L 3.9925 13.58625 C 3.99875 13.5975 4.005 13.6075 4.00875 13.6175 M 4.02125 13.6175 C 4.02625 13.6075 4.03125 13.5975 4.0375 13.58625 L 5.44 10.52625 C 5.4475 10.5125 5.45875 10.50375 5.4725 10.50375 L 5.4925 10.50375 L 5.4925 14.4675 \" transform=\"matrix(3.125,0,0,3.125,0,0)\"/>\n      </g>"
+    },
+    mp4Icon: {
+      extension: '.mp4',
+      path: "<g id=\"surface6\" clip-path=\"url(#clip1)\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 36.898438 40.625 L 40.625 35.480469 L 40.625 40.625 Z M 28.761719 36.40625 C 28.761719 36.703125 28.707031 36.964844 28.605469 37.195312 C 28.496094 37.433594 28.347656 37.632812 28.148438 37.804688 C 27.929688 37.992188 27.667969 38.144531 27.34375 38.257812 C 27.003906 38.375 26.621094 38.4375 26.191406 38.4375 L 25 38.4375 L 25 34.375 L 26.191406 34.375 C 27.140625 34.375 27.835938 34.554688 28.253906 34.902344 C 28.378906 35.007812 28.761719 35.324219 28.761719 36.40625 Z M 44.6875 43.75 L 43.75 43.75 L 43.75 45.3125 C 43.75 46.175781 43.050781 46.875 42.1875 46.875 C 41.324219 46.875 40.625 46.175781 40.625 45.3125 L 40.625 43.75 L 34.066406 43.75 C 33.199219 43.75 32.503906 43.050781 32.503906 42.1875 L 32.503906 41.875 C 32.503906 41.546875 32.605469 41.226562 32.800781 40.957031 L 39.363281 31.898438 C 39.660156 31.492188 40.128906 31.25 40.628906 31.25 L 42.1875 31.25 C 43.050781 31.25 43.75 31.949219 43.75 32.8125 L 43.75 40.625 L 44.6875 40.625 C 45.550781 40.625 46.25 41.324219 46.25 42.1875 C 46.25 43.050781 45.550781 43.75 44.6875 43.75 Z M 31.445312 38.492188 C 31.148438 39.140625 30.730469 39.703125 30.195312 40.167969 C 29.6875 40.605469 29.082031 40.957031 28.390625 41.203125 C 27.71875 41.441406 26.976562 41.5625 26.191406 41.5625 L 25 41.5625 L 25 45 C 25 45.863281 24.300781 46.5625 23.4375 46.5625 C 22.578125 46.5625 21.875 45.863281 21.875 45 L 21.875 32.8125 C 21.875 31.949219 22.578125 31.25 23.4375 31.25 L 26.191406 31.25 C 27.890625 31.25 29.257812 31.671875 30.253906 32.5 C 31.339844 33.398438 31.886719 34.714844 31.886719 36.40625 C 31.886719 37.148438 31.738281 37.851562 31.445312 38.492188 Z M 18.730469 45.210938 C 18.730469 46.070312 18.027344 46.773438 17.167969 46.773438 C 16.300781 46.773438 15.605469 46.070312 15.605469 45.210938 L 15.605469 39.6875 L 14.035156 43.105469 C 14.019531 43.144531 14.003906 43.179688 13.984375 43.214844 C 13.71875 43.78125 13.15625 44.117188 12.566406 44.117188 L 12.53125 44.117188 C 11.941406 44.117188 11.378906 43.78125 11.113281 43.214844 C 11.097656 43.183594 11.078125 43.152344 11.066406 43.125 L 9.339844 39.484375 L 9.339844 45.210938 C 9.339844 46.070312 8.640625 46.773438 7.777344 46.773438 C 6.910156 46.773438 6.214844 46.070312 6.214844 45.210938 L 6.214844 32.824219 C 6.214844 31.960938 6.910156 31.261719 7.777344 31.261719 L 7.835938 31.261719 C 8.472656 31.261719 9.046875 31.617188 9.335938 32.191406 L 9.355469 32.226562 L 12.523438 38.90625 L 15.578125 32.242188 C 15.585938 32.226562 15.597656 32.210938 15.605469 32.191406 C 15.894531 31.617188 16.46875 31.261719 17.105469 31.261719 L 17.164062 31.261719 C 18.027344 31.261719 18.726562 31.960938 18.726562 32.824219 L 18.726562 45.210938 Z M 41.382812 28.125 L 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 41.382812 28.125 \"/>\n      </g>\n      </defs>\n      <g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <use xlink:href=\"#surface6\" mask=\"url(#mask0)\"/>\n      <path style=\"fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(99.607843%,99.607843%,99.607843%);stroke-opacity:1;stroke-miterlimit:4;\" d=\"M 14.3 13.5 L 10.90125 13.5 L 10.90125 13.4 L 13.00125 10.5 L 13.5 10.5 L 13.5 14.5 M 7.5 14.4 L 7.5 10.5 L 8.3825 10.5 C 8.8075 10.5 9.13375 10.595 9.3625 10.78375 C 9.59 10.975 9.7025 11.2625 9.7025 11.65 C 9.7025 11.81625 9.6725 11.97125 9.6075 12.11125 C 9.5425 12.2525 9.4525 12.37375 9.335 12.47625 C 9.21875 12.5775 9.0775 12.65625 8.9175 12.71375 C 8.75625 12.77125 8.5775 12.8 8.3825 12.8 L 7.6 12.8 M 2.4875 14.4675 L 2.4875 10.50375 L 2.5075 10.50375 C 2.5225 10.50375 2.53375 10.5125 2.5425 10.52625 L 3.9925 13.58625 C 3.99875 13.5975 4.005 13.6075 4.00875 13.6175 M 4.02125 13.6175 C 4.02625 13.6075 4.03125 13.5975 4.0375 13.58625 L 5.44 10.52625 C 5.4475 10.5125 5.45875 10.50375 5.4725 10.50375 L 5.4925 10.50375 L 5.4925 14.4675 \" transform=\"matrix(3.125,0,0,3.125,0,0)\"/>\n      </g>"
+    },
+    oggIcon: {
+      extension: '.ogg',
+      path: "<g id=\"surface9\" clip-path=\"url(#clip1)\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.621094 28.125 C 3.859375 28.125 0 31.984375 0 36.742188 L 0 41.378906 C 0 46.140625 3.859375 50 8.621094 50 L 41.378906 50 C 46.140625 50 50 46.140625 50 41.382812 L 50 36.746094 C 50 31.984375 46.140625 28.125 41.382812 28.125 Z M 8.621094 28.125 \"/>\n      </g>\n      </defs>\n      <g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.578125 25 L 39.421875 25 C 41.53125 25 43.527344 25.492188 45.3125 26.367188 L 45.3125 15.367188 C 45.3125 13.90625 44.976562 13.097656 43.984375 12.109375 C 42.996094 11.121094 35.105469 3.226562 34.503906 2.628906 C 33.90625 2.027344 33.070312 1.5625 31.617188 1.5625 L 6.5625 1.5625 C 5.527344 1.5625 4.6875 2.402344 4.6875 3.4375 L 4.6875 26.367188 C 6.476562 25.492188 8.472656 25 10.578125 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.710938 L 42.164062 12.5 L 34.515625 12.5 C 34.464844 12.46875 34.414062 12.425781 34.375 12.390625 Z M 6.25 25.722656 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.25 13.980469 32.496094 15.210938 33.742188 15.539062 C 33.902344 15.59375 34.074219 15.625 34.257812 15.625 L 43.75 15.625 L 43.75 25.722656 C 44.859375 26.105469 45.910156 26.625 46.875 27.269531 L 46.875 15.363281 C 46.875 13.511719 46.375 12.289062 45.089844 11.003906 L 35.609375 1.523438 C 34.582031 0.496094 33.273438 0 31.617188 0 L 6.5625 0 C 4.667969 0 3.125 1.542969 3.125 3.4375 L 3.125 27.269531 C 4.089844 26.625 5.140625 26.105469 6.25 25.722656 Z M 6.25 25.722656 \"/>\n      <use xlink:href=\"#surface9\" mask=\"url(#mask0)\"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 8.976562 47.070312 C 10.464844 47.070312 11.757812 46.75 12.859375 46.109375 C 13.960938 45.46875 14.808594 44.550781 15.40625 43.351562 C 16.003906 42.15625 16.304688 40.757812 16.304688 39.152344 C 16.304688 37.550781 16.007812 36.152344 15.417969 34.964844 C 14.828125 33.777344 13.980469 32.859375 12.882812 32.21875 C 11.78125 31.578125 10.480469 31.257812 8.976562 31.257812 C 7.472656 31.257812 6.167969 31.578125 5.0625 32.21875 C 3.953125 32.859375 3.101562 33.777344 2.511719 34.964844 C 1.921875 36.152344 1.625 37.550781 1.625 39.152344 C 1.625 40.757812 1.925781 42.15625 2.523438 43.351562 C 3.121094 44.550781 3.972656 45.46875 5.070312 46.109375 C 6.171875 46.75 7.472656 47.070312 8.976562 47.070312 Z M 8.976562 44.820312 C 7.546875 44.820312 6.433594 44.332031 5.640625 43.351562 C 4.847656 42.375 4.449219 40.976562 4.449219 39.152344 C 4.449219 37.332031 4.847656 35.933594 5.640625 34.964844 C 6.433594 33.996094 7.546875 33.507812 8.976562 33.507812 C 10.390625 33.507812 11.496094 33.996094 12.289062 34.964844 C 13.085938 35.933594 13.484375 37.332031 13.484375 39.152344 C 13.484375 40.976562 13.085938 42.375 12.289062 43.351562 C 11.496094 44.332031 10.390625 44.820312 8.976562 44.820312 Z M 26.410156 47.070312 C 27.125 47.070312 27.871094 47.011719 28.640625 46.898438 C 29.414062 46.78125 30.09375 46.621094 30.675781 46.414062 C 31.214844 46.242188 31.574219 46.015625 31.75 45.738281 C 31.921875 45.460938 32.011719 44.988281 32.011719 44.316406 L 32.011719 39.613281 C 32.011719 39.292969 31.910156 39.03125 31.703125 38.835938 C 31.5 38.640625 31.230469 38.539062 30.894531 38.539062 L 27.023438 38.539062 C 26.671875 38.539062 26.398438 38.628906 26.203125 38.804688 C 26.007812 38.976562 25.90625 39.226562 25.90625 39.546875 C 25.90625 39.867188 26.007812 40.117188 26.203125 40.289062 C 26.398438 40.464844 26.671875 40.554688 27.023438 40.554688 L 29.496094 40.554688 L 29.496094 44.425781 C 28.503906 44.703125 27.511719 44.839844 26.519531 44.839844 C 23.195312 44.839844 21.53125 42.945312 21.53125 39.152344 C 21.53125 37.300781 21.9375 35.90625 22.746094 34.964844 C 23.554688 34.023438 24.753906 33.554688 26.34375 33.554688 C 27.046875 33.554688 27.671875 33.644531 28.226562 33.828125 C 28.78125 34.007812 29.378906 34.324219 30.019531 34.777344 C 30.195312 34.894531 30.347656 34.980469 30.480469 35.03125 C 30.609375 35.082031 30.757812 35.105469 30.917969 35.105469 C 31.164062 35.105469 31.375 34.996094 31.550781 34.777344 C 31.726562 34.558594 31.8125 34.289062 31.8125 33.96875 C 31.8125 33.75 31.773438 33.558594 31.695312 33.398438 C 31.613281 33.238281 31.484375 33.078125 31.3125 32.917969 C 30 31.808594 28.3125 31.257812 26.257812 31.257812 C 24.710938 31.257812 23.371094 31.574219 22.234375 32.207031 C 21.09375 32.84375 20.214844 33.753906 19.597656 34.941406 C 18.976562 36.128906 18.667969 37.535156 18.667969 39.152344 C 18.667969 40.800781 18.976562 42.21875 19.597656 43.40625 C 20.214844 44.597656 21.109375 45.503906 22.277344 46.132812 C 23.441406 46.757812 24.820312 47.070312 26.410156 47.070312 Z M 42.445312 47.070312 C 43.160156 47.070312 43.902344 47.011719 44.675781 46.898438 C 45.449219 46.78125 46.128906 46.621094 46.710938 46.414062 C 47.25 46.242188 47.609375 46.015625 47.78125 45.738281 C 47.957031 45.460938 48.046875 44.988281 48.046875 44.316406 L 48.046875 39.613281 C 48.046875 39.292969 47.941406 39.03125 47.738281 38.835938 C 47.535156 38.640625 47.265625 38.539062 46.929688 38.539062 L 43.058594 38.539062 C 42.707031 38.539062 42.433594 38.628906 42.238281 38.804688 C 42.039062 38.976562 41.941406 39.226562 41.941406 39.546875 C 41.941406 39.867188 42.039062 40.117188 42.238281 40.289062 C 42.433594 40.464844 42.707031 40.554688 43.058594 40.554688 L 45.53125 40.554688 L 45.53125 44.425781 C 44.539062 44.703125 43.546875 44.839844 42.554688 44.839844 C 39.230469 44.839844 37.566406 42.945312 37.566406 39.152344 C 37.566406 37.300781 37.972656 35.90625 38.78125 34.964844 C 39.589844 34.023438 40.789062 33.554688 42.378906 33.554688 C 43.078125 33.554688 43.707031 33.644531 44.261719 33.828125 C 44.816406 34.007812 45.414062 34.324219 46.054688 34.777344 C 46.230469 34.894531 46.382812 34.980469 46.515625 35.03125 C 46.644531 35.082031 46.792969 35.105469 46.953125 35.105469 C 47.199219 35.105469 47.410156 34.996094 47.585938 34.777344 C 47.761719 34.558594 47.847656 34.289062 47.847656 33.96875 C 47.847656 33.75 47.808594 33.558594 47.726562 33.398438 C 47.648438 33.238281 47.519531 33.078125 47.34375 32.917969 C 46.03125 31.808594 44.347656 31.257812 42.292969 31.257812 C 40.746094 31.257812 39.40625 31.574219 38.265625 32.207031 C 37.128906 32.84375 36.25 33.753906 35.632812 34.941406 C 35.011719 36.128906 34.703125 37.535156 34.703125 39.152344 C 34.703125 40.800781 35.011719 42.21875 35.632812 43.40625 C 36.25 44.597656 37.144531 45.503906 38.3125 46.132812 C 39.476562 46.757812 40.855469 47.070312 42.445312 47.070312 Z M 42.445312 47.070312 \"/>\n      </g>"
+    },
+    pdfIcon: {
+      extension: '.pdf',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(99.607843%,99.607843%,99.607843%);fill-opacity:1;\" d=\"M 10.59375 25 L 39.4375 25 C 41.476562 25.003906 43.484375 25.472656 45.3125 26.375 L 45.3125 15.375 C 45.347656 14.191406 44.867188 13.054688 44 12.25 L 34.625 2.875 C 33.875 2.003906 32.773438 1.523438 31.625 1.5625 L 6.625 1.5625 C 5.589844 1.5625 4.75 2.402344 4.75 3.4375 L 4.75 26.375 C 6.566406 25.480469 8.566406 25.007812 10.59375 25 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 34.375 4.71875 L 42.15625 12.5 L 34.53125 12.5 C 34.480469 12.511719 34.425781 12.511719 34.375 12.5 Z M 6.25 25.71875 L 6.25 3.4375 C 6.25 3.265625 6.390625 3.125 6.5625 3.125 L 31.25 3.125 L 31.25 12.5 C 31.300781 13.980469 32.316406 15.253906 33.75 15.625 C 33.957031 15.675781 34.167969 15.675781 34.375 15.625 L 43.75 15.625 L 43.75 25.71875 C 44.859375 26.09375 45.910156 26.621094 46.875 27.28125 L 46.875 15.375 C 46.964844 13.722656 46.3125 12.117188 45.09375 11 L 35.71875 1.625 C 34.648438 0.523438 33.160156 -0.0664062 31.625 0 L 6.625 0 C 5.703125 -0.015625 4.8125 0.339844 4.152344 0.984375 C 3.496094 1.632812 3.125 2.515625 3.125 3.4375 L 3.125 27.28125 C 4.09375 26.625 5.144531 26.101562 6.25 25.71875 Z M 6.25 25.71875 \"/>\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 8.625 28.125 C 6.335938 28.117188 4.136719 29.023438 2.515625 30.640625 C 0.898438 32.261719 -0.0078125 34.460938 0 36.75 L 0 41.375 C 0 46.136719 3.863281 50 8.625 50 L 41.375 50 C 46.132812 49.984375 49.984375 46.132812 50 41.375 L 50 36.75 C 50 31.988281 46.136719 28.125 41.375 28.125 Z M 8.625 28.125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 14.40625 41.78125 L 12.09375 41.78125 L 12.09375 45.84375 C 12.003906 46.351562 11.5625 46.726562 11.046875 46.726562 C 10.53125 46.726562 10.089844 46.351562 10 45.84375 L 10 34.78125 C 10 34.210938 10.460938 33.75 11.03125 33.75 L 14.40625 33.75 C 15.925781 33.617188 17.390625 34.351562 18.191406 35.648438 C 18.992188 36.945312 18.992188 38.585938 18.191406 39.882812 C 17.390625 41.179688 15.925781 41.914062 14.40625 41.78125 Z M 12.09375 39.6875 L 14.40625 39.6875 C 15.152344 39.78125 15.882812 39.4375 16.289062 38.804688 C 16.691406 38.171875 16.691406 37.359375 16.289062 36.726562 C 15.882812 36.09375 15.152344 35.75 14.40625 35.84375 L 12.09375 35.84375 Z M 12.09375 39.6875 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 20.3125 45.84375 L 20.3125 34.78125 C 20.3125 34.210938 20.773438 33.75 21.34375 33.75 L 23.5625 33.75 C 27.1875 33.75 30.125 36.6875 30.125 40.3125 C 30.125 43.9375 27.1875 46.875 23.5625 46.875 L 21.34375 46.875 C 20.773438 46.875 20.3125 46.414062 20.3125 45.84375 Z M 22.40625 44.78125 L 23.5625 44.78125 C 26.03125 44.78125 28.03125 42.78125 28.03125 40.3125 C 28.03125 37.84375 26.03125 35.84375 23.5625 35.84375 L 22.40625 35.84375 Z M 22.40625 44.78125 \"/>\n      <path style=\" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;\" d=\"M 33.1875 45.84375 L 33.1875 34.78125 C 33.183594 34.476562 33.3125 34.1875 33.542969 33.992188 C 33.769531 33.792969 34.074219 33.703125 34.375 33.75 L 40.625 33.75 C 41.132812 33.839844 41.507812 34.28125 41.507812 34.796875 C 41.507812 35.3125 41.132812 35.753906 40.625 35.84375 L 35.25 35.84375 L 35.25 39.28125 L 39.625 39.28125 C 40.195312 39.28125 40.65625 39.742188 40.65625 40.3125 C 40.65625 40.882812 40.195312 41.34375 39.625 41.34375 L 35.25 41.34375 L 35.25 45.84375 C 35.257812 46.359375 34.882812 46.796875 34.375 46.875 C 34.074219 46.921875 33.769531 46.832031 33.542969 46.632812 C 33.3125 46.4375 33.183594 46.148438 33.1875 45.84375 Z M 33.1875 45.84375 \"/>\n      </g>"
+    },
+    defaultIcon: {
+      extension: '.default',
+      path: "<g id=\"surface1\">\n      <path style=\" stroke:none;fill-rule:evenodd;fill:rgb(0%,0%,0%);fill-opacity:1;\" d=\"M 3.117188 44.777344 C 1.394531 44.777344 0 43.386719 0 41.671875 L 0 3.484375 C 0 1.769531 1.394531 0.378906 3.117188 0.378906 L 25.792969 0.378906 C 27.164062 0.304688 28.5 0.808594 29.480469 1.765625 L 37.980469 10.230469 C 39.144531 11.242188 39.769531 12.730469 39.683594 14.265625 L 39.683594 41.671875 C 39.683594 43.386719 38.289062 44.777344 36.5625 44.777344 Z M 25.511719 3.203125 L 3.117188 3.203125 C 2.960938 3.203125 2.832031 3.328125 2.832031 3.484375 L 2.832031 41.671875 C 2.832031 41.828125 2.960938 41.957031 3.117188 41.957031 L 36.5625 41.957031 C 36.679688 41.949219 36.785156 41.867188 36.820312 41.757812 L 36.820312 14.492188 L 28.34375 14.492188 C 28.160156 14.539062 27.964844 14.539062 27.777344 14.492188 C 26.480469 14.15625 25.554688 13.007812 25.511719 11.671875 Z M 28.34375 4.640625 L 28.34375 11.671875 C 28.390625 11.683594 28.441406 11.683594 28.488281 11.671875 L 35.402344 11.671875 Z M 28.34375 4.640625 \"/>\n      </g>"
+    }
   };
 
   FroalaEditor.MODULES.modals = function (editor) {
@@ -14659,7 +15118,7 @@
       'buttons': ['alignLeft', 'alignCenter', 'formatOLSimple', 'alignRight', 'alignJustify', 'formatOL', 'formatUL', 'paragraphFormat', 'paragraphStyle', 'lineHeight', 'outdent', 'indent', 'quote']
     },
     'moreRich': {
-      'buttons': ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons', 'fontAwesome', 'specialCharacters', 'embedly', 'insertFile', 'insertHR']
+      'buttons': ['insertLink', 'insertFiles', 'insertImage', 'insertVideo', 'insertTable', 'emoticons', 'fontAwesome', 'specialCharacters', 'embedly', 'insertFile', 'insertHR']
     },
     'moreMisc': {
       'buttons': ['undo', 'redo', 'fullscreen', 'print', 'getPDF', 'spellChecker', 'selectAll', 'html', 'help'],
@@ -15728,7 +16187,7 @@
 
         if (i < wrapperProps.length) {
           // https://github.com/froala-labs/froala-editor-js-2/issues/1928
-          if (wrapperProps[i].trim() === $(wrapper)[0].tagName) {
+          if ($(wrapper).length && wrapperProps[i].trim() === $(wrapper)[0].tagName) {
             wrapper = document.createElement(wrapperProps[i].trim());
           }
 
@@ -16606,6 +17065,14 @@
         return $();
       }
     },
+    //https://github.com/froala-labs/froala-editor-js-2/issues/1874
+    nextAllVisible: function nextAllVisible() {
+      return this.next();
+    },
+    //https://github.com/froala-labs/froala-editor-js-2/issues/1874
+    prevAllVisible: function prevAllVisible() {
+      return this.prev();
+    },
     outerHeight: function outerHeight(margin) {
       if (this.length === 0) return undefined;
       var el = this[0];
@@ -17213,7 +17680,7 @@
 
       if (blocks.length) {
         var alignment = editor.helpers.getAlignment($(blocks[0]));
-        $btn.find('> *').first().replaceWith(editor.icon.create('align-' + alignment));
+        $btn.find('> *').first().replaceWith(editor.icon.create("align-".concat(alignment)));
       }
     }
 
@@ -17222,7 +17689,7 @@
 
       if (blocks.length) {
         var alignment = editor.helpers.getAlignment($(blocks[0]));
-        $dropdown.find('a.fr-command[data-param1="' + alignment + '"]').addClass('fr-active').attr('aria-selected', true);
+        $dropdown.find("a.fr-command[data-param1=\"".concat(alignment, "\"]")).addClass('fr-active').attr('aria-selected', true);
       }
     }
 
@@ -17234,7 +17701,7 @@
 
         alignment = alignment.charAt(0).toUpperCase() + alignment.slice(1);
 
-        if ('align' + alignment === $btn.attr('data-cmd')) {
+        if ("align".concat(alignment) === $btn.attr('data-cmd')) {
           $btn.addClass('fr-active');
         }
       }
@@ -17283,7 +17750,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command fr-title" tabIndex="-1" role="option" data-cmd="align" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.icon.create('align-' + val) + '<span class="fr-sr-only">' + this.language.translate(options[val]) + '</span></a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command fr-title\" tabIndex=\"-1\" role=\"option\" data-cmd=\"align\"data-param1=\"\n        ".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.icon.create("align-".concat(val)), "<span class=\"fr-sr-only\">\n        ").concat(this.language.translate(options[val]), "</span></a></li>");
         }
       }
 
@@ -17362,9 +17829,9 @@
      * Get the char number.
      */
 
-    function count() {
+    var count = function count() {
       return (editor.el.textContent || '').replace(/\u200B/g, '').length;
-    }
+    };
     /**
      * Check chars on typing.
      */
@@ -17448,7 +17915,7 @@
       editor.events.on('charCounter.update', _updateCharNumber);
       editor.events.trigger('charCounter.update');
       editor.events.on('destroy', function () {
-        $(editor.o_win).off('resize.char' + editor.id);
+        $(editor.o_win).off("resize.char".concat(editor.id));
         $counter.removeData().remove();
         $counter = null;
       });
@@ -17482,15 +17949,15 @@
 
       var nonASCIIidentifierStartChars = "\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0\u08A2-\u08AC\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097F\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191C\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA697\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA80-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC";
       var nonASCIIidentifierChars = "\u0300-\u036F\u0483-\u0487\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u0620-\u0649\u0672-\u06D3\u06E7-\u06E8\u06FB-\u06FC\u0730-\u074A\u0800-\u0814\u081B-\u0823\u0825-\u0827\u0829-\u082D\u0840-\u0857\u08E4-\u08FE\u0900-\u0903\u093A-\u093C\u093E-\u094F\u0951-\u0957\u0962-\u0963\u0966-\u096F\u0981-\u0983\u09BC\u09BE-\u09C4\u09C7\u09C8\u09D7\u09DF-\u09E0\u0A01-\u0A03\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A66-\u0A71\u0A75\u0A81-\u0A83\u0ABC\u0ABE-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AE2-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B3C\u0B3E-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5F-\u0B60\u0B66-\u0B6F\u0B82\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD7\u0BE6-\u0BEF\u0C01-\u0C03\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C62-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0CBC\u0CBE-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CE2-\u0CE3\u0CE6-\u0CEF\u0D02\u0D03\u0D46-\u0D48\u0D57\u0D62-\u0D63\u0D66-\u0D6F\u0D82\u0D83\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E34-\u0E3A\u0E40-\u0E45\u0E50-\u0E59\u0EB4-\u0EB9\u0EC8-\u0ECD\u0ED0-\u0ED9\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F41-\u0F47\u0F71-\u0F84\u0F86-\u0F87\u0F8D-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1029\u1040-\u1049\u1067-\u106D\u1071-\u1074\u1082-\u108D\u108F-\u109D\u135D-\u135F\u170E-\u1710\u1720-\u1730\u1740-\u1750\u1772\u1773\u1780-\u17B2\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1920-\u192B\u1930-\u193B\u1951-\u196D\u19B0-\u19C0\u19C8-\u19C9\u19D0-\u19D9\u1A00-\u1A15\u1A20-\u1A53\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1B46-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1BB0-\u1BB9\u1BE6-\u1BF3\u1C00-\u1C22\u1C40-\u1C49\u1C5B-\u1C7D\u1CD0-\u1CD2\u1D00-\u1DBE\u1E01-\u1F15\u200C\u200D\u203F\u2040\u2054\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2D81-\u2D96\u2DE0-\u2DFF\u3021-\u3028\u3099\u309A\uA640-\uA66D\uA674-\uA67D\uA69F\uA6F0-\uA6F1\uA7F8-\uA800\uA806\uA80B\uA823-\uA827\uA880-\uA881\uA8B4-\uA8C4\uA8D0-\uA8D9\uA8F3-\uA8F7\uA900-\uA909\uA926-\uA92D\uA930-\uA945\uA980-\uA983\uA9B3-\uA9C0\uAA00-\uAA27\uAA40-\uAA41\uAA4C-\uAA4D\uAA50-\uAA59\uAA7B\uAAE0-\uAAE9\uAAF2-\uAAF3\uABC0-\uABE1\uABEC\uABED\uABF0-\uABF9\uFB20-\uFB28\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFF10-\uFF19\uFF3F";
-      var nonASCIIidentifierStart = new RegExp('[' + nonASCIIidentifierStartChars + ']');
-      var nonASCIIidentifier = new RegExp('[' + nonASCIIidentifierStartChars + nonASCIIidentifierChars + ']'); // Whether a single character denotes a newline.
+      var nonASCIIidentifierStart = new RegExp("[".concat(nonASCIIidentifierStartChars, "]"));
+      var nonASCIIidentifier = new RegExp("[".concat(nonASCIIidentifierStartChars, " ").concat(nonASCIIidentifierChars, "]")); // Whether a single character denotes a newline.
 
       exports.newline = /[\n\r\u2028\u2029]/; // Matches a whole line break (where CRLF is considered a single
       // line break). Used to count lines.
       // in javascript, these two differ
       // in python they are the same, different methods are called on them
 
-      exports.lineBreak = new RegExp('\r\n|' + exports.newline.source);
+      exports.lineBreak = new RegExp("\r\n|".concat(exports.newline.source));
       exports.allLineBreaks = new RegExp(exports.lineBreak.source, 'g'); // Test whether a given character code starts an identifier.
 
       exports.isIdentifierStart = function (code) {
@@ -17695,7 +18162,7 @@
           }
 
           var content = '';
-          var reg_match = new RegExp('</' + name + '\\s*>', 'igm');
+          var reg_match = new RegExp("</".concat(name, "\\s*>"), 'igm');
           reg_match.lastIndex = this.pos;
           var reg_array = reg_match.exec(this.input);
           var end_script = reg_array ? reg_array.index : this.input.length; //absolute end of script
@@ -17711,74 +18178,74 @@
 
         this.record_tag = function (tag) {
           //function to record a tag and its parent in this.tags Object
-          if (this.tags[tag + 'count']) {
+          if (this.tags["".concat(tag, "count")]) {
             //check for the existence of this tag type
-            this.tags[tag + 'count']++;
-            this.tags[tag + this.tags[tag + 'count']] = this.indent_level; //and record the present indent level
+            this.tags["".concat(tag, "count")]++;
+            this.tags[tag + this.tags["".concat(tag, "count")]] = this.indent_level; //and record the present indent level
           } else {
             //otherwise initialize this tag type
-            this.tags[tag + 'count'] = 1;
-            this.tags[tag + this.tags[tag + 'count']] = this.indent_level; //and record the present indent level
+            this.tags["".concat(tag, "count")] = 1;
+            this.tags[tag + this.tags["".concat(tag, "count")]] = this.indent_level; //and record the present indent level
           }
 
-          this.tags[tag + this.tags[tag + 'count'] + 'parent'] = this.tags.parent; //set the parent (i.e. in the case of a div this.tags.div1parent)
+          this.tags[tag + this.tags["".concat(tag, "count")] + 'parent'] = this.tags.parent; //set the parent (i.e. in the case of a div this.tags.div1parent)
 
-          this.tags.parent = tag + this.tags[tag + 'count']; //and make this the current parent (i.e. in the case of a div 'div1')
+          this.tags.parent = tag + this.tags["".concat(tag, "count")]; //and make this the current parent (i.e. in the case of a div 'div1')
         };
 
         this.retrieve_tag = function (tag) {
           //function to retrieve the opening tag to the corresponding closer
-          if (this.tags[tag + 'count']) {
+          if (this.tags["".concat(tag, "count")]) {
             //if the openener is not in the Object we ignore it
             var temp_parent = this.tags.parent; //check to see if it's a closable tag.
 
             while (temp_parent) {
               //till we reach '' (the initial value) 
-              if (tag + this.tags[tag + 'count'] === temp_parent) {
+              if (tag + this.tags["".concat(tag, "count")] === temp_parent) {
                 //if this is it use it
                 break;
               }
 
-              temp_parent = this.tags[temp_parent + 'parent']; //otherwise keep on climbing up the DOM Tree
+              temp_parent = this.tags["".concat(temp_parent, "parent")]; //otherwise keep on climbing up the DOM Tree
             }
 
             if (temp_parent) {
               //if we caught something
-              this.indent_level = this.tags[tag + this.tags[tag + 'count']]; //set the indent_level accordingly
+              this.indent_level = this.tags[tag + this.tags["".concat(tag, "count")]]; //set the indent_level accordingly
 
               this.tags.parent = this.tags[temp_parent + 'parent']; //and set the current parent
             }
 
-            delete this.tags[tag + this.tags[tag + 'count'] + 'parent']; //delete the closed tags parent reference...
+            delete this.tags[tag + this.tags["".concat(tag, "count")] + 'parent']; //delete the closed tags parent reference...
 
-            delete this.tags[tag + this.tags[tag + 'count']]; //...and the tag itself
+            delete this.tags[tag + this.tags["".concat(tag, "count")]]; //...and the tag itself
 
-            if (this.tags[tag + 'count'] === 1) {
-              delete this.tags[tag + 'count'];
+            if (this.tags["".concat(tag, "count")] === 1) {
+              delete this.tags["".concat(tag, "count")];
             } else {
-              this.tags[tag + 'count']--;
+              this.tags["".concat(tag, "count")]--;
             }
           }
         };
 
         this.indent_to_tag = function (tag) {
           // Match the indentation level to the last use of this tag, but don't remove it.
-          if (!this.tags[tag + 'count']) {
+          if (!this.tags["".concat(tag, "count")]) {
             return;
           }
 
           var temp_parent = this.tags.parent;
 
           while (temp_parent) {
-            if (tag + this.tags[tag + 'count'] === temp_parent) {
+            if (tag + this.tags["".concat(tag, "count")] === temp_parent) {
               break;
             }
 
-            temp_parent = this.tags[temp_parent + 'parent'];
+            temp_parent = this.tags["".concat(temp_parent, "parent")];
           }
 
           if (temp_parent) {
-            this.indent_level = this.tags[tag + this.tags[tag + 'count']];
+            this.indent_level = this.tags[tag + this.tags["".concat(tag, "count")]];
           }
         };
 
@@ -17854,7 +18321,7 @@
                 input_char += this.get_unformatted('}}');
 
                 if (content.length && content[content.length - 1] != ' ' && content[content.length - 1] != '<') {
-                  input_char = ' ' + input_char;
+                  input_char = " ".concat(input_char);
                 }
 
                 space = true;
@@ -17938,7 +18405,7 @@
             }
           } else if (this.is_unformatted(tag_check, unformatted)) {
             // do not reformat the "unformatted" tags
-            comment = this.get_unformatted('</' + tag_check + '>', tag_complete); //...delegate to get_unformatted function
+            comment = this.get_unformatted("</".concat(tag_check, ">"), tag_complete); //...delegate to get_unformatted function
 
             content.push(comment);
             tag_end = this.pos - 1;
@@ -18124,7 +18591,7 @@
               return token;
             }
 
-            return [token, 'TK_' + type];
+            return [token, "TK_".concat(type)];
           }
 
           if (this.current_mode === 'CONTENT') {
@@ -18143,7 +18610,7 @@
             if (typeof token != 'string') {
               return token;
             } else {
-              var tag_name_type = 'TK_TAG_' + this.tag_type;
+              var tag_name_type = "TK_TAG_".concat(this.tag_type);
               return [token, tag_name_type];
             }
           }
@@ -18372,7 +18839,8 @@
           case 'TK_SCRIPT':
             if (multi_parser.token_text !== '') {
               multi_parser.print_newline(false, multi_parser.output);
-              var text = multi_parser.token_text;
+              var _multi_parser = multi_parser,
+                  text = _multi_parser.token_text;
 
               var _beautifier = void 0;
 
@@ -19922,7 +20390,8 @@
 
         var javadoc = false;
         var starless = false;
-        var lastIndent = current_token.whitespace_before;
+        var _current_token = current_token,
+            lastIndent = _current_token.whitespace_before;
         var lastIndentLength = lastIndent.length; // block comment starts with a new line
 
         print_newline(false, true);
@@ -19943,7 +20412,7 @@
 
           if (javadoc) {
             // javadoc: reformat and re-indent
-            print_token(' ' + ltrim(lines[j]));
+            print_token(" ".concat(ltrim(lines[j])));
           } else if (starless && lines[j].length > lastIndentLength) {
             // starless: re-indent non-empty content, avoiding trim
             print_token(lines[j].substring(lastIndentLength));
@@ -20451,7 +20920,7 @@
             parser_pos += 1;
             block_comment_pattern.lastIndex = parser_pos;
             var comment_match = block_comment_pattern.exec(input);
-            comment = '/*' + comment_match[0];
+            comment = "/*".concat(comment_match[0]);
             parser_pos += comment_match[0].length;
             var directives = get_directives(comment);
 
@@ -20473,7 +20942,7 @@
 
             var _comment_match = comment_pattern.exec(input);
 
-            comment = '//' + _comment_match[0];
+            comment = "//".concat(_comment_match[0]);
             parser_pos += _comment_match[0].length;
             return [comment, 'TK_COMMENT'];
           }
@@ -20614,7 +21083,7 @@
               parser_pos += 1;
             }
 
-            return [trim(resulting_string) + '\n', 'TK_UNKNOWN'];
+            return ["".concat(trim(resulting_string), "\n"), 'TK_UNKNOWN'];
           } // Spidermonkey-specific sharp variables for circular references
           // https://developer.mozilla.org/En/Sharp_variables_in_JavaScript
           // http://mxr.mozilla.org/mozilla-central/source/js/src/jsscan.cpp around line 1935
@@ -20723,7 +21192,7 @@
               pos += 4;
             } else {
               // some common escape, e.g \n
-              out += '\\' + c;
+              out += "\\".concat(c);
               continue;
             }
 
@@ -20738,15 +21207,15 @@
             if (escaped >= 0x00 && escaped < 0x20) {
               // leave 0x00...0x1f escaped
               if (c === 'x') {
-                out += '\\x' + s_hex;
+                out += "\\x".concat(s_hex);
               } else {
-                out += "\\u" + s_hex;
+                out += "\\u".concat(s_hex);
               }
 
               continue;
             } else if (escaped === 0x22 || escaped === 0x27 || escaped === 0x5c) {
               // single-quote, apostrophe, backslash - escape these
-              out += '\\' + String.fromCharCode(escaped);
+              out += "\\".concat(String.fromCharCode(escaped));
             } else if (c === 'x' && escaped > 0x7e && escaped <= 0xff) {
               // we bail out on \x7f..\xff,
               // leaving whole string escaped,
@@ -20805,9 +21274,9 @@
      * Check if code view is enabled.
      */
 
-    function isActive() {
+    var isActive = function isActive() {
       return editor.$box.hasClass('fr-code-view');
-    }
+    };
 
     function get() {
       if (code_mirror) {
@@ -20886,7 +21355,7 @@
               if (this.value.length === 0) {
                 this.style.height = 'auto';
               } else {
-                this.style.height = this.scrollHeight + 'px';
+                this.style.height = "".concat(this.scrollHeight, "px");
               }
             } else {
               this.removeAttribute('rows');
@@ -21010,7 +21479,11 @@
       if (!val) {
         editor.$box.toggleClass('fr-code-view', false);
 
-        _showText($btn);
+        _showText($btn); // https://github.com/froala-labs/froala-editor-js-2/issues/2036
+        // fire codeView.update event when switching to html view
+
+
+        editor.events.trigger('codeView.update');
       } else {
         editor.popups.hideAll();
 
@@ -21058,7 +21531,7 @@
       $html_area.attr('dir', editor.opts.direction); // Exit code view button for inline toolbar.
 
       if (!editor.$box.hasClass('fr-basic')) {
-        $back_button = $('<a data-cmd="html" title="Code View" class="fr-command fr-btn html-switch' + (editor.helpers.isMobile() ? '' : ' fr-desktop') + '" role="button" tabIndex="-1"><i class="fa fa-code"></i></button>');
+        $back_button = $("<a data-cmd=\"html\" title=\"Code View\" class=\"fr-command fr-btn html-switch".concat(editor.helpers.isMobile() ? '' : ' fr-desktop', "\" role=\"button\" tabIndex=\"-1\"><i class=\"fa fa-code\"></i></button>"));
         editor.$box.append($back_button);
         editor.events.bindClick(editor.$box, 'a.html-switch', function () {
           editor.events.trigger('commands.before', ['html']);
@@ -21257,7 +21730,7 @@
         }
       }
 
-      return colors_html + '</div>';
+      return "".concat(colors_html, "</div>");
     }
     /*
      * Register keyboard events.
@@ -21591,9 +22064,9 @@
       e.originalEvent.dataTransfer.setData('text', 'Froala');
     }
 
-    function _tagOK(tag_under) {
+    var _tagOK = function _tagOK(tag_under) {
       return !(tag_under && (tag_under.tagName === 'HTML' || tag_under.tagName === 'BODY' || editor.node.isElement(tag_under)));
-    }
+    };
 
     function _setHelperSize(top, left, width) {
       if (editor.opts.iframe) {
@@ -21974,13 +22447,13 @@
      */
 
 
-    function _init() {
+    var _init = function _init() {
       if (editor.opts.editInPopup) {
         _initPopup();
 
         _initEvents();
       }
-    }
+    };
 
     return {
       _init: _init,
@@ -25654,7 +26127,7 @@
       var emoticon_html = '';
       selectedCategory.emoticons.forEach(function (emoticon) {
         var compiledCode = emoticon.code.split('-').reduce(function (compiledCode, code) {
-          return compiledCode ? compiledCode + '&zwj;' + '&#x' + code.toLowerCase() + ';' : '&#x' + code.toLowerCase() + ';';
+          return compiledCode ? "".concat(compiledCode, "&zwj;&#x").concat(code.toLowerCase(), ";") : "&#x".concat(code.toLowerCase(), ";");
         }, '');
         var imageMap = {
           image: emoticon.code.toLowerCase(),
@@ -25823,18 +26296,18 @@
      */
 
 
-    function _encodeEntities(html) {
+    var _encodeEntities = function _encodeEntities(html) {
       if (html.length === 0) return '';
       return editor.clean.exec(html, _encode).replace(/\&amp;/g, '&');
-    }
+    };
     /*
      * Initialize.
      */
 
 
-    function _init() {
+    var _init = function _init() {
       if (!editor.opts.htmlSimpleAmpersand) {
-        editor.opts.entities = editor.opts.entities + '&amp;';
+        editor.opts.entities = "".concat(editor.opts.entities, "&amp;");
       } // Do escape.
 
 
@@ -25845,13 +26318,13 @@
 
       for (var i = 0; i < entities_text.length; i++) {
         var chr = entities_text.charAt(i);
-        _map[chr] = entities_array[i] + ';';
-        _reg_exp += '\\' + chr + (i < entities_text.length - 1 ? '|' : '');
+        _map[chr] = "".concat(entities_array[i], ";");
+        _reg_exp += "\\".concat(chr + (i < entities_text.length - 1 ? '|' : ''));
       }
 
-      _reg_exp = new RegExp('(' + _reg_exp + ')', 'g');
+      _reg_exp = new RegExp("(".concat(_reg_exp, ")"), 'g');
       editor.events.on('html.get', _encodeEntities, true);
-    }
+    };
 
     return {
       _init: _init
@@ -25868,6 +26341,7 @@
     fileUploadParam: 'file',
     fileUploadParams: {},
     fileUploadToS3: false,
+    fileUploadToAzure: false,
     fileUploadMethod: 'POST',
     fileMaxSize: 10 * 1024 * 1024,
     fileAllowedTypes: ['*'],
@@ -25959,12 +26433,12 @@
 
       if ($popup) {
         var $layer = $popup.find('.fr-file-progress-bar-layer');
-        $layer.find('h3').text(message + (progress ? ' ' + progress + '%' : ''));
+        $layer.find('h3').text(message + (progress ? " ".concat(progress, "%") : ''));
         $layer.removeClass('fr-error');
 
         if (progress) {
           $layer.find('div').removeClass('fr-indeterminate');
-          $layer.find('div > span').css('width', progress + '%');
+          $layer.find('div > span').css('width', "".concat(progress, "%"));
         } else {
           $layer.find('div').addClass('fr-indeterminate');
         }
@@ -26001,7 +26475,7 @@
       } // Insert the link.
 
 
-      editor.html.insert('<a href="' + link + '" target="_blank" id="fr-inserted-file" class="fr-file">' + text + '</a>'); // Get the file.
+      editor.html.insert("<a href=\"".concat(link, "\" target=\"_blank\" id=\"fr-inserted-file\" class=\"fr-file\">").concat(text, "</a>")); // Get the file.
 
       var $file = editor.$el.find('#fr-inserted-file');
       $file.removeAttr('id');
@@ -26069,16 +26543,27 @@
      */
 
 
-    function _fileUploaded(text) {
+    function _fileUploaded(text, url, key) {
       var status = this.status;
       var response = this.response;
       var responseXML = this.responseXML;
       var responseText = this.responseText;
 
       try {
-        if (editor.opts.fileUploadToS3) {
+        if (editor.opts.fileUploadToS3 || editor.opts.fileUploadToAzure) {
           if (status === 201) {
-            var link = _parseXMLResponse(responseXML);
+            var link;
+
+            if (editor.opts.fileUploadToAzure) {
+              if (editor.events.trigger('file.uploadedToAzure', [this.responseURL, key, response], true) === false) {
+                editor.edit.on();
+                return false;
+              }
+
+              link = url;
+            } else {
+              link = _parseXMLResponse(responseXML);
+            }
 
             if (link) {
               insert(link, text, response || responseXML);
@@ -26181,7 +26666,7 @@
 
         var file = files[0]; // Upload as blob for testing purposes.
 
-        if ((editor.opts.fileUploadURL === null || editor.opts.fileUploadURL === DEFAULT_FILE_UPLOAD_URL) && !editor.opts.fileUploadToS3) {
+        if ((editor.opts.fileUploadURL === null || editor.opts.fileUploadURL === DEFAULT_FILE_UPLOAD_URL) && !editor.opts.fileUploadToS3 && !editor.opts.fileUploadToAzure) {
           _browserUpload(file);
 
           return false;
@@ -26241,14 +26726,76 @@
             if (editor.opts.fileUploadToS3.uploadURL) {
               url = editor.opts.fileUploadToS3.uploadURL;
             } else {
-              url = 'https://' + editor.opts.fileUploadToS3.region + '.amazonaws.com/' + editor.opts.fileUploadToS3.bucket;
+              url = "https://".concat(editor.opts.fileUploadToS3.region, ".amazonaws.com/").concat(editor.opts.fileUploadToS3.bucket);
             }
           }
 
-          var xhr = editor.core.getXHR(url, editor.opts.fileUploadMethod); // Set upload events.
+          var fileURL;
+          var azureKey;
+          var fileUploadMethod = editor.opts.fileUploadMethod;
+
+          if (editor.opts.fileUploadToAzure) {
+            if (editor.opts.fileUploadToAzure.uploadURL) {
+              url = "".concat(editor.opts.fileUploadToAzure.uploadURL, "/").concat(file.name);
+            } else {
+              url = encodeURI("https://".concat(editor.opts.fileUploadToAzure.account, ".blob.core.windows.net/").concat(editor.opts.fileUploadToAzure.container, "/").concat(file.name));
+            }
+
+            fileURL = url;
+
+            if (editor.opts.fileUploadToAzure.SASToken) {
+              url += editor.opts.fileUploadToAzure.SASToken;
+            }
+
+            fileUploadMethod = 'PUT';
+          }
+
+          var xhr = editor.core.getXHR(url, fileUploadMethod);
+
+          if (editor.opts.fileUploadToAzure) {
+            var uploadDate = new Date().toUTCString();
+
+            if (!editor.opts.fileUploadToAzure.SASToken && editor.opts.fileUploadToAzure.accessKey) {
+              var azureAccount = editor.opts.fileUploadToAzure.account;
+              var azureContainer = editor.opts.fileUploadToAzure.container;
+
+              if (editor.opts.fileUploadToAzure.uploadURL) {
+                var urls = editor.opts.fileUploadToAzure.uploadURL.split('/');
+                azureContainer = urls.pop();
+                azureAccount = urls.pop().split('.')[0];
+              }
+
+              var headerResource = "x-ms-blob-type:BlockBlob\nx-ms-date:".concat(uploadDate, "\nx-ms-version:2019-07-07");
+              var urlResource = encodeURI('/' + azureAccount + '/' + azureContainer + '/' + file.name);
+              var stringToSign = fileUploadMethod + '\n\n\n' + file.size + '\n\n' + file.type + '\n\n\n\n\n\n\n' + headerResource + '\n' + urlResource;
+              var signatureBytes = editor.cryptoJSPlugin.cryptoJS.HmacSHA256(stringToSign, editor.cryptoJSPlugin.cryptoJS.enc.Base64.parse(editor.opts.fileUploadToAzure.accessKey));
+              var signature = signatureBytes.toString(editor.cryptoJSPlugin.cryptoJS.enc.Base64);
+              var authHeader = 'SharedKey ' + azureAccount + ':' + signature;
+              azureKey = signature;
+              xhr.setRequestHeader("Authorization", authHeader);
+            }
+
+            xhr.setRequestHeader("x-ms-version", "2019-07-07");
+            xhr.setRequestHeader("x-ms-date", uploadDate);
+            xhr.setRequestHeader("Content-Type", file.type);
+            xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+
+            for (key in editor.opts.fileUploadParams) {
+              if (editor.opts.fileUploadParams.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.fileUploadParams[key]);
+              }
+            }
+
+            for (key in editor.opts.fileUploadToAzure.params) {
+              if (editor.opts.fileUploadToAzure.params.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.fileUploadToAzure.params[key]);
+              }
+            }
+          } // Set upload events.
+
 
           xhr.onload = function () {
-            _fileUploaded.call(xhr, file.name);
+            _fileUploaded.call(xhr, file.name, fileURL, azureKey);
           };
 
           xhr.onerror = _fileUploadError;
@@ -26268,7 +26815,7 @@
           } // Send data.
 
 
-          xhr.send(form_data);
+          xhr.send(editor.opts.fileUploadToAzure ? file : form_data);
         }
       }
     }
@@ -26335,12 +26882,12 @@
         editor.opts.fileInsertButtons.splice(editor.opts.fileInsertButtons.indexOf('fileUpload'), 1);
       }
 
-      file_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.fileInsertButtons) + '</div>'; // File upload layer.
+      file_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.fileInsertButtons), "</div>"); // File upload layer.
 
       var upload_layer = '';
 
       if (editor.opts.fileUpload) {
-        upload_layer = '<div class="fr-file-upload-layer fr-layer fr-active" id="fr-file-upload-layer-' + editor.id + '"><strong>' + editor.language.translate('Drop file') + '</strong><br>(' + editor.language.translate('or click') + ')<div class="fr-form"><input type="file" name="' + editor.opts.fileUploadParam + '" accept="' + (editor.opts.fileAllowedTypes.indexOf('*') >= 0 ? '/' : '') + editor.opts.fileAllowedTypes.join(', ').toLowerCase() + '" tabIndex="-1" aria-labelledby="fr-file-upload-layer-' + editor.id + '" role="button"></div></div>';
+        upload_layer = "<div class=\"fr-file-upload-layer fr-layer fr-active\" id=\"fr-file-upload-layer-".concat(editor.id, "\"><strong>").concat(editor.language.translate('Drop file'), "</strong><br>(").concat(editor.language.translate('or click'), ")<div class=\"fr-form\"><input type=\"file\" name=\"").concat(editor.opts.fileUploadParam, "\" accept=\"").concat(editor.opts.fileAllowedTypes.indexOf('*') >= 0 ? '/' : '').concat(editor.opts.fileAllowedTypes.join(', ').toLowerCase(), "\" tabIndex=\"-1\" aria-labelledby=\"fr-file-upload-layer-").concat(editor.id, "\" role=\"button\"></div></div>");
       } // Progress bar.
 
 
@@ -26543,6 +27090,10564 @@
     }
   });
 
+  Object.assign(FroalaEditor.POPUP_TEMPLATES, {
+    'filesManager.insert': '[_BUTTONS_][_UPLOAD_LAYER_][_BY_URL_LAYER_][_EMBED_LAYER_][_UPLOAD_PROGRESS_LAYER_][_PROGRESS_BAR_]',
+    'image.edit': '[_BUTTONS_]',
+    'image.alt': '[_BUTTONS_][_ALT_LAYER_]',
+    'image.size': '[_BUTTONS_][_SIZE_LAYER_]'
+  });
+  Object.assign(FroalaEditor.DEFAULTS, {
+    filesInsertButtons: ['imageBack', '|', 'filesUpload', 'filesByURL', 'filesEmbed'],
+    filesInsertButtons2: ['deleteAll', 'insertAll', 'cancel', 'minimize'],
+    imageEditButtons: ['imageReplace', 'imageAlign', 'imageCaption', 'imageRemove', 'imageLink', 'linkOpen', 'linkEdit', 'linkRemove', '-', 'imageDisplay', 'imageStyle', 'imageAlt', 'imageSize'],
+    imageAltButtons: ['imageBack', '|'],
+    imageSizeButtons: ['imageBack', '|'],
+    imageUpload: true,
+    filesManagerUploadURL: null,
+    imageCORSProxy: 'https://cors-anywhere.froala.com',
+    imageUploadRemoteUrls: true,
+    filesManagerUploadParam: 'file',
+    filesManagerUploadParams: {},
+    googleOptions: {},
+    filesManagerUploadToS3: false,
+    filesManagerUploadToAzure: false,
+    filesManagerUploadMethod: 'POST',
+    filesManagerMaxSize: 10 * 1024 * 1024,
+    filesManagerAllowedTypes: ['*'],
+    imageResize: true,
+    imageResizeWithPercent: false,
+    imageRoundPercent: false,
+    imageDefaultWidth: 300,
+    imageDefaultAlign: 'center',
+    imageDefaultDisplay: 'block',
+    imageSplitHTML: false,
+    imageStyles: {
+      'fr-rounded': 'Rounded',
+      'fr-bordered': 'Bordered',
+      'fr-shadow': 'Shadow'
+    },
+    imageMove: true,
+    imageMultipleStyles: true,
+    imageTextNear: true,
+    imagePaste: true,
+    imagePasteProcess: false,
+    imageMinWidth: 16,
+    imageOutputSize: false,
+    imageDefaultMargin: 5,
+    imageAddNewLine: false
+  });
+  FroalaEditor.VIDEO_PROVIDERS = [{
+    test_regex: /^.*((youtu.be)|(youtube.com))\/((v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))?\??v?=?([^#\&\?]*).*/,
+    url_regex: /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/)?([0-9a-zA-Z_\-]+)(.+)?/g,
+    url_text: 'https://www.youtube.com/embed/$1?$2',
+    html: '<iframe width="640" height="360" src="{url}&wmode=opaque" frameborder="0" allowfullscreen></iframe>',
+    provider: 'youtube'
+  }, {
+    test_regex: /^.*(?:vimeo.com)\/(?:channels(\/\w+\/)?|groups\/*\/videos\/​\d+\/|video\/|)(\d+)(?:$|\/|\?)/,
+    url_regex: /(?:https?:\/\/)?(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?(\/[a-zA-Z0-9_\-]+)?/i,
+    url_text: 'https://player.vimeo.com/video/$1',
+    html: '<iframe width="640" height="360" src="{url}" frameborder="0" allowfullscreen></iframe>',
+    provider: 'vimeo'
+  }, {
+    test_regex: /^.+(dailymotion.com|dai.ly)\/(video|hub)?\/?([^_]+)[^#]*(#video=([^_&]+))?/,
+    url_regex: /(?:https?:\/\/)?(?:www\.)?(?:dailymotion\.com|dai\.ly)\/(?:video|hub)?\/?(.+)/g,
+    url_text: 'https://www.dailymotion.com/embed/video/$1',
+    html: '<iframe width="640" height="360" src="{url}" frameborder="0" allowfullscreen></iframe>',
+    provider: 'dailymotion'
+  }, {
+    test_regex: /^.+(screen.yahoo.com)\/[^_&]+/,
+    url_regex: '',
+    url_text: '',
+    html: '<iframe width="640" height="360" src="{url}?format=embed" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" allowtransparency="true"></iframe>',
+    provider: 'yahoo'
+  }, {
+    test_regex: /^.+(rutube.ru)\/[^_&]+/,
+    url_regex: /(?:https?:\/\/)?(?:www\.)?(?:rutube\.ru)\/(?:video)?\/?(.+)/g,
+    url_text: 'https://rutube.ru/play/embed/$1',
+    html: '<iframe width="640" height="360" src="{url}" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" allowtransparency="true"></iframe>',
+    provider: 'rutube'
+  }, {
+    test_regex: /^(?:.+)vidyard.com\/(?:watch)?\/?([^.&/]+)\/?(?:[^_.&]+)?/,
+    url_regex: /^(?:.+)vidyard.com\/(?:watch)?\/?([^.&/]+)\/?(?:[^_.&]+)?/g,
+    url_text: 'https://play.vidyard.com/$1',
+    html: '<iframe width="640" height="360" src="{url}" frameborder="0" allowfullscreen></iframe>',
+    provider: 'vidyard'
+  }];
+  FroalaEditor.VIDEO_EMBED_REGEX = /^\W*((<iframe(.|\n)*>(\s|\n)*<\/iframe>)|(<embed(.|\n)*>))\W*$/i;
+  FroalaEditor.IMAGE_EMBED_REGEX = /^\W*((<img(.|\n)*>(\s|\n)*))\W*$/i;
+
+  FroalaEditor.PLUGINS.filesManager = function (editor) {
+    var $ = editor.$;
+    var DEFAULT_FILE_UPLOAD_URL = 'https://i.froala.com/upload';
+    var $current_image;
+    var $current_image_index;
+    var current_index;
+    var $child_window_open = false;
+    var $image_resizer;
+    var $handler;
+    var $overlay;
+    var disableEdit;
+    var mousedown = false;
+    var file_list = new Map();
+    var file_list_values = new Map();
+    var XMLHttpRequests = new Map();
+    var fileUploads = new Map();
+    var checked_files = new Map();
+    var failedUploadFiles = new Map();
+    var completedUploads = 0;
+    var fileKeys = [];
+    var imageEditIndex = -1;
+    var editImageValue;
+    var autoplayCheckbox = [];
+    var fileListIndex = 0;
+    var requiredPlugins = ['file', 'image', 'imageTUI', 'video'];
+    var BAD_LINK = 1;
+    var MISSING_LINK = 2;
+    var ERROR_DURING_UPLOAD = 3;
+    var BAD_RESPONSE = 4;
+    var MAX_SIZE_EXCEEDED = 5;
+    var BAD_FILE_TYPE = 6;
+    var NO_CORS_IE = 7;
+    var CORRUPTED_IMAGE = 8;
+    var ERROR_LINK = 9;
+    var UPLOAD_CANCEL = 10;
+    var unsupported_file_types = ['video/avi', 'video/mpeg', 'video/x-ms-wmv'];
+    var error_messages = {};
+    error_messages[BAD_LINK] = 'File cannot be loaded from the passed link.', error_messages[MISSING_LINK] = 'No link in upload response.', error_messages[ERROR_DURING_UPLOAD] = 'Error during file upload.', error_messages[BAD_RESPONSE] = 'Parsing response failed.', error_messages[MAX_SIZE_EXCEEDED] = 'File is too large.', error_messages[BAD_FILE_TYPE] = 'File type is invalid.', error_messages[NO_CORS_IE] = 'Files can be uploaded only to same domain in IE 8 and IE 9.';
+    error_messages[CORRUPTED_IMAGE] = 'File is corrupted.';
+    error_messages[ERROR_LINK] = 'Error during file loading.';
+    error_messages[UPLOAD_CANCEL] = 'File upload cancelled';
+    /**
+     * Refresh the image insert popup.
+     */
+
+    function _refreshInsertPopup() {
+      var $popup = editor.popups.get('filesManager.insert');
+      var $url_input = $popup.find('.fr-files-by-url-layer input');
+      $url_input.val('');
+      var $embed_area = $popup.find('.fr-files-embed-layer textarea');
+      $embed_area.val('').trigger('change');
+      $url_input.trigger('change');
+    }
+    /**
+     * Show the image upload popup.
+     */
+
+
+    function showInsertPopup(rerender) {
+      if (!editor.hasOwnProperty('imageTUI')) {
+        if (isImage) {
+          disableEdit = 'fr-disabled';
+        }
+      }
+
+      failedUploadFiles.forEach(function (errorMessage, index) {
+        deleteFile(index);
+      });
+      var $popup; // check for required plugins
+
+      if (checkRequiredPlugins()) {
+        $popup = editor.popups.get('filesManager.insert');
+        if (!$popup) $popup = _initInsertPopup();
+      } else {
+        $popup = editor.popups.get('filesManager.insert');
+        if (!$popup) $popup = _initPluginErrorPopup();
+      }
+
+      var $btn = editor.$tb.find('.fr-command[data-cmd="insertFiles"]');
+      hideProgressBar();
+
+      if (rerender || !$popup.hasClass('fr-active')) {
+        if (!rerender) {
+          resetAllFilesCheckbox();
+        }
+
+        editor.popups.refresh('filesManager.insert');
+        editor.popups.setContainer('filesManager.insert', editor.$tb);
+
+        if ($btn.isVisible()) {
+          var _editor$button$getPos = editor.button.getPosition($btn, file_list.size),
+              left = _editor$button$getPos.left,
+              top = _editor$button$getPos.top;
+
+          editor.popups.show('filesManager.insert', left, top, $btn.outerHeight());
+        } else {
+          editor.position.forSelection($popup);
+          editor.popups.show('filesManager.insert');
+        }
+      }
+
+      editor.popups.setPopupDimensions($popup);
+
+      if (checkRequiredPlugins()) {
+        editor.popups.setFileListHeight($popup);
+      }
+
+      if ($popup.find('.fr-upload-progress') && file_list.size == 0) $popup.find('.fr-upload-progress').addClass('fr-none');
+    }
+
+    function checkRequiredPlugins() {
+      var plugins = true;
+      requiredPlugins.forEach(function (plugin) {
+        if (editor.opts.pluginsEnabled.indexOf(plugin) < 0) {
+          plugins = false;
+        }
+      });
+      return plugins;
+    }
+
+    function addPlugins() {
+      requiredPlugins.forEach(function (plugin) {
+        if (editor.opts.pluginsEnabled.indexOf(plugin) < 0) {
+          editor.opts.pluginsEnabled.push(plugin);
+        }
+      });
+    }
+
+    function loadPlugins(module_list) {
+      for (var m_name in module_list) {
+        if (!editor[m_name]) {
+          if (FroalaEditor.PLUGINS[m_name] && editor.opts.pluginsEnabled.indexOf(m_name) < 0) {
+            continue;
+          }
+
+          editor[m_name] = new module_list[m_name](editor);
+
+          if (editor[m_name]._init) {
+            editor[m_name]._init();
+          }
+        }
+      }
+    }
+    /**
+     * Hide image upload popup.
+     */
+
+
+    function _hideInsertPopup() {
+      hideProgressBar();
+    }
+    /**
+     * Reposition resizer.
+     */
+
+
+    function _repositionResizer() {
+      if (!$image_resizer) _initImageResizer();
+      if (!$current_image) return false;
+      var $container = editor.$wp || editor.$sc;
+      $container.append($image_resizer);
+      $image_resizer.data('instance', editor);
+      var wrap_correction_top = $container.scrollTop() - ($container.css('position') != 'static' ? $container.offset().top : 0);
+      var wrap_correction_left = $container.scrollLeft() - ($container.css('position') != 'static' ? $container.offset().left : 0);
+      wrap_correction_left -= editor.helpers.getPX($container.css('border-left-width'));
+      wrap_correction_top -= editor.helpers.getPX($container.css('border-top-width'));
+
+      if (editor.$el.is('img') && editor.$sc.is('body')) {
+        wrap_correction_top = 0;
+        wrap_correction_left = 0;
+      }
+
+      var $el = getEl();
+
+      if (hasCaption()) {
+        $el = $el.find('.fr-img-wrap');
+      }
+
+      var iframePaddingTop = 0;
+      var iframePaddingLeft = 0;
+
+      if (editor.opts.iframe) {
+        iframePaddingTop = editor.helpers.getPX(editor.$wp.find('.fr-iframe').css('padding-top'));
+        iframePaddingLeft = editor.helpers.getPX(editor.$wp.find('.fr-iframe').css('padding-left'));
+      }
+
+      $image_resizer.css('top', (editor.opts.iframe ? $el.offset().top + iframePaddingTop : $el.offset().top + wrap_correction_top) - 1).css('left', (editor.opts.iframe ? $el.offset().left + iframePaddingLeft : $el.offset().left + wrap_correction_left) - 1).css('width', $el.get(0).getBoundingClientRect().width).css('height', $el.get(0).getBoundingClientRect().height).addClass('fr-active');
+    }
+    /**
+     * Create resize handler.
+     */
+
+
+    function _getHandler(pos) {
+      return "<div class=\"fr-handler fr-h".concat(pos, "\"></div>");
+    }
+    /**
+     * Set the image with
+     */
+
+
+    function _setWidth(width) {
+      if (hasCaption()) {
+        $current_image.parents('.fr-img-caption').css('width', width);
+      } else {
+        $current_image.css('width', width);
+      }
+    }
+    /**
+     * Mouse down to start resize.
+     */
+
+
+    function _handlerMousedown(e) {
+      // Check if resizer belongs to current instance.
+      if (!editor.core.sameInstance($image_resizer)) return true;
+      e.preventDefault();
+      e.stopPropagation();
+      if (editor.$el.find('img.fr-error').left) return false;
+      if (!editor.undo.canDo()) editor.undo.saveStep(); // Get offset.
+
+      var start_x = e.pageX || e.originalEvent.touches[0].pageX; // Only on mousedown. This function could be called from keydown on accessibility.
+
+      if (e.type == 'mousedown') {
+        // See if the entire editor is inside iframe to adjust starting offset.
+        var oel = editor.$oel.get(0);
+        var doc = oel.ownerDocument;
+        var win = doc.defaultView || doc.parentWindow;
+        var editor_inside_iframe = false;
+
+        try {
+          editor_inside_iframe = win.location != win.parent.location && !(win.$ && win.$.FE);
+        } catch (ex) {}
+
+        if (editor_inside_iframe && win.frameElement) {
+          start_x += editor.helpers.getPX($(win.frameElement).offset().left) + win.frameElement.clientLeft;
+        }
+      }
+
+      $handler = $(this);
+      $handler.data('start-x', start_x);
+      $handler.data('start-width', $current_image.width());
+      $handler.data('start-height', $current_image.height()); // Set current width.
+
+      var width = $current_image.width(); // Update width value if resizing with percent.
+
+      if (editor.opts.imageResizeWithPercent) {
+        var p_node = $current_image.parentsUntil(editor.$el, editor.html.blockTagsQuery()).get(0) || editor.el;
+        width = (width / $(p_node).outerWidth() * 100).toFixed(2) + '%';
+      } // Set the image width.
+
+
+      _setWidth(width);
+
+      $overlay.show();
+      editor.popups.hideAll();
+
+      _unmarkExit();
+    }
+
+    function insertEmbed(code) {
+      if (typeof code == 'undefined') {
+        var $popup = editor.popups.get('filesManager.insert');
+        code = $popup.find('.fr-files-embed-layer textarea').val() || '';
+      }
+
+      if (code.length === 0 || !(FroalaEditor.VIDEO_EMBED_REGEX.test(code) || FroalaEditor.IMAGE_EMBED_REGEX.test(code))) {
+        _showErrorMessage(editor.language.translate('Something went wrong. Please try again.'));
+
+        if (FroalaEditor.VIDEO_EMBED_REGEX.test(code)) {
+          editor.events.trigger('video.codeError', [code]);
+        }
+      } else {
+        insertEmbeddedFile(code);
+      }
+    }
+    /**
+     * Do resize.
+     */
+
+
+    function _handlerMousemove(e) {
+      // Check if resizer belongs to current instance.
+      if (!editor.core.sameInstance($image_resizer)) return true;
+      var real_image_size;
+
+      if ($handler && $current_image) {
+        e.preventDefault();
+        if (editor.$el.find('img.fr-error').left) return false;
+        var c_x = e.pageX || (e.originalEvent.touches ? e.originalEvent.touches[0].pageX : null);
+        if (!c_x) return false;
+        var s_x = $handler.data('start-x');
+        var diff_x = c_x - s_x;
+        var width = $handler.data('start-width');
+
+        if ($handler.hasClass('fr-hnw') || $handler.hasClass('fr-hsw')) {
+          diff_x = 0 - diff_x;
+        }
+
+        if (editor.opts.imageResizeWithPercent) {
+          var p_node = $current_image.parentsUntil(editor.$el, editor.html.blockTagsQuery()).get(0) || editor.el;
+          width = ((width + diff_x) / $(p_node).outerWidth() * 100).toFixed(2);
+          if (editor.opts.imageRoundPercent) width = Math.round(width); // Set the image width.
+
+          _setWidth("".concat(width, "%")); // Get the real image width after resize.
+
+
+          if (hasCaption()) {
+            real_image_size = (editor.helpers.getPX($current_image.parents('.fr-img-caption').css('width')) / $(p_node).outerWidth() * 100).toFixed(2);
+          } else {
+            real_image_size = (editor.helpers.getPX($current_image.css('width')) / $(p_node).outerWidth() * 100).toFixed(2);
+          } // If the width is not contained within editor use the real image size.
+
+
+          if (real_image_size !== width && !editor.opts.imageRoundPercent) {
+            _setWidth("".concat(real_image_size, "%"));
+          }
+
+          $current_image.css('height', '').removeAttr('height');
+        } else {
+          if (width + diff_x >= editor.opts.imageMinWidth) {
+            // Set width for image parent node as well.
+            _setWidth(width + diff_x); // Get the real image width after resize.
+
+
+            if (hasCaption()) {
+              real_image_size = editor.helpers.getPX($current_image.parents('.fr-img-caption').css('width'));
+            } else {
+              real_image_size = editor.helpers.getPX($current_image.css('width'));
+            }
+          } // If the width is not contained within editor use the real image size.
+
+
+          if (real_image_size !== width + diff_x) {
+            _setWidth(real_image_size);
+          } // https://github.com/froala/wysiwyg-editor/issues/1963.
+
+
+          if (($current_image.attr('style') || '').match(/(^height:)|(; *height:)/) || $current_image.attr('height')) {
+            $current_image.css('height', $handler.data('start-height') * $current_image.width() / $handler.data('start-width'));
+            $current_image.removeAttr('height');
+          }
+        }
+
+        _repositionResizer();
+
+        editor.events.trigger('image.resize', [get()]);
+      }
+    }
+    /**
+     * Stop resize.
+     */
+
+
+    function _handlerMouseup(e) {
+      // Check if resizer belongs to current instance.
+      if (!editor.core.sameInstance($image_resizer)) return true;
+
+      if ($handler && $current_image) {
+        if (e) e.stopPropagation();
+        if (editor.$el.find('img.fr-error').left) return false;
+        $handler = null;
+        $overlay.hide();
+
+        _repositionResizer();
+
+        editor.undo.saveStep();
+        editor.events.trigger('image.resizeEnd', [get()]);
+      } else {
+        //https://github.com/froala-labs/froala-editor-js-2/issues/1916
+        $image_resizer.removeClass('fr-active');
+      }
+    }
+
+    function _disableInsertCheckbox() {
+      failedUploadFiles.forEach(function (errorMessage, index) {
+        var $popup = editor.popups.get('filesManager.insert');
+        $popup.find('.fr-checkbox-file-' + index).get(0).disabled = true;
+
+        if (document.getElementById('fr-file-autoplay-button-' + index)) {
+          document.getElementById('fr-file-autoplay-button-' + index).disabled = true;
+          document.getElementById('fr-file-autoplay-button-' + index).parentElement.classList.add('fr-checkbox-disabled');
+          document.getElementById('fr-file-autoplay-button-' + index).parentElement.classList.remove('fr-files-checkbox');
+        }
+
+        $popup.find('.fr-checkbox-' + index).get(0).classList.remove('fr-files-checkbox');
+        $popup.find('.fr-checkbox-' + index).get(0).classList.add('fr-checkbox-disabled');
+      });
+    }
+
+    function _disableFileIcons() {
+      failedUploadFiles.forEach(function (errorMessage, index) {
+        var $popup = editor.popups.get('filesManager.insert');
+
+        if (document.getElementById("fr-file-edit-button-".concat(index))) {
+          document.getElementById("fr-file-edit-button-".concat(index)).classList.add('fr-disabled');
+          document.getElementById("fr-file-view-button-".concat(index)).classList.add('fr-disabled');
+          document.getElementById("fr-file-insert-button-".concat(index)).classList.add('fr-disabled');
+        }
+      });
+    }
+    /**
+     * Throw an image error.
+     */
+
+
+    function _throwError(code, response, $img, index) {
+      editor.edit.on();
+      if ($current_image) $current_image.addClass('fr-error'); // https://github.com/froala/wysiwyg-editor/issues/3407
+
+      if (error_messages[code]) {
+        if (code == ERROR_DURING_UPLOAD || code == MISSING_LINK || code == BAD_RESPONSE) {
+          updateFileUploadingProgress(100, index, true);
+        }
+
+        failedUploadFiles.set(index, error_messages[code]);
+
+        _disableInsertCheckbox();
+
+        _disableFileIcons();
+
+        _showFileErrorMessage(editor.language.translate(error_messages[code]), index);
+      } else {
+        _showFileErrorMessage(editor.language.translate('Something went wrong. Please try again.'), index);
+      } // Remove image if it exists.
+
+
+      if (!$current_image && $img) remove($img);
+      editor.events.trigger('filesManager.error', [{
+        code: code,
+        message: error_messages[code]
+      }, response, $img]);
+    }
+    /**
+     * Init the image edit popup.
+     */
+
+
+    function _initEditPopup(delayed) {
+      if (delayed) {
+        if (editor.$wp) {
+          editor.events.$on(editor.$wp, 'scroll.image-edit', function () {
+            if ($current_image && editor.popups.isVisible('image.edit')) {
+              editor.events.disableBlur();
+            }
+          });
+        }
+
+        return true;
+      } // Image buttons.
+
+
+      var image_buttons = '';
+
+      if (editor.opts.imageEditButtons.length > 0) {
+        image_buttons += "<div class=\"fr-buttons\"> \n        ".concat(editor.button.buildList(editor.opts.imageEditButtons), "\n        </div>");
+        var template = {
+          buttons: image_buttons
+        };
+        var $popup = editor.popups.create('image.edit', template);
+        return $popup;
+      }
+
+      return false;
+    }
+    /**
+    * Cancel File Insert.
+    */
+
+
+    function cancelFileInsert() {
+      this.file_manager_dialog_open = false;
+      XMLHttpRequests.forEach(function (req, index) {
+        if (req.readyState != 4) {
+          req.abort();
+          deleteFile(index);
+        }
+      });
+      var $popup = editor.popups.get('filesManager.insert');
+      $popup.find('.fr-progress-bar').removeClass('fr-display-block').addClass('fr-none');
+      $popup.find('.fr-command[data-cmd="filesUpload"]').removeClass('fr-disabled');
+      $popup.find('.fr-command[data-cmd="filesByURL"]').removeClass('fr-disabled');
+      $popup.find('.fr-command[data-cmd="filesEmbed"]').removeClass('fr-disabled');
+      completedUploads = 0;
+      XMLHttpRequests = new Map();
+      fileUploads = new Map();
+      resetAllFilesCheckbox();
+      editor.popups.hide('filesManager.insert');
+    }
+    /**
+     * Cancel File Upload.
+     */
+
+
+    function cancelFileUpload(index) {
+      var $popup = editor.popups.get('filesManager.insert');
+      var right = $popup.find('.fr-file-item-right-' + index);
+      right.get(0).innerHTML = getFileActionButtons(index);
+      XMLHttpRequests.get(index).abort();
+      updateProgressBar(index, 100, true);
+      $popup.find('.fr-checkbox-file-' + index).get(0).disabled = true;
+    }
+    /**
+     * Delete File Upload.
+     */
+
+
+    function deleteFileUpload(index) {
+      if (XMLHttpRequests.get(index).readyState != 0) {
+        XMLHttpRequests.get(index).abort();
+        updateProgressBar(index, 100, true);
+        XMLHttpRequests["delete"](index);
+      }
+
+      deleteFile(index);
+    }
+    /** 
+     * 
+     */
+
+
+    function checkInsertAllState() {
+      var $popup = editor.popups.get('filesManager.insert');
+      var $btnInsert = $popup.find('.fr-command[data-cmd="insertAll"]'),
+          $btnDelete = $popup.find('.fr-command[data-cmd="deleteAll"]'),
+          isDisabled = true;
+
+      function addCheck(file, i, map) {
+        if (checked_files.get(i)) {
+          isDisabled = false;
+        }
+      }
+
+      checked_files.forEach(addCheck);
+      isDisabled ? $btnInsert.addClass('fr-disabled') : $btnInsert.removeClass('fr-disabled');
+      isDisabled ? $btnDelete.addClass('fr-disabled') : $btnDelete.removeClass('fr-disabled');
+    }
+    /**
+     * Delete File.
+     */
+
+
+    function deleteFile(index) {
+      if (file_list_values.get(index) && file_list_values.get(index).link) editor.events.trigger('filesManager.removed', [file_list_values.get(index).link]);
+      var $popup = editor.popups.get('filesManager.insert'); // https://github.com/froala-labs/froala-editor-js-2/issues/2848
+
+      if ($popup.find('.fr-file-' + index).get(0) !== undefined) {
+        $popup.find('.fr-file-' + index).get(0).outerHTML = "";
+      }
+
+      file_list_values["delete"](index);
+      file_list["delete"](index);
+      checked_files["delete"](index);
+      checkInsertAllState();
+
+      if (file_list.size == 0) {
+        fileListIndex = 0;
+      }
+
+      failedUploadFiles["delete"](index);
+      editor.popups.setPopupDimensions($popup, true);
+      if (editor.opts.toolbarBottom) showInsertPopup(true);else editor.popups.setPopupDimensions($popup);
+      if ($popup.find('.fr-upload-progress') && file_list.size == 0) $popup.find('.fr-upload-progress').addClass('fr-none');
+    }
+    /**
+     * Minimize popup.
+     */
+
+
+    function minimizePopup(current_index) {
+      this.file_manager_dialog_open = false;
+      editor.popups.hide("filesManager.insert");
+      resetAllFilesCheckbox(current_index);
+    }
+    /**
+       * Reset checkbox of all files.
+       */
+
+
+    function resetAllFilesCheckbox() {
+      var $popup = editor.popups.get('filesManager.insert');
+      var checked = $popup.find('.fr-insert-checkbox');
+
+      for (var i = 0; i < checked.length; i++) {
+        checked.get(i).children['target'].checked = false;
+        $popup.find('.fr-file-' + checked.get(i).id.split('-').pop()).get(0).classList.add('fr-unchecked');
+      }
+
+      if (current_index) {
+        if (document.getElementById("fr-file-autoplay-button-".concat(current_index))) document.getElementById("fr-file-autoplay-button-".concat(current_index)).checked = false;
+        autoplayCheckbox = autoplayCheckbox.filter(function (i) {
+          return i != current_index;
+        });
+      } else {
+        var autoplay = $popup.find('.fr-file-autoplay-button');
+
+        for (var _i = 0; _i < autoplay.length; _i++) {
+          autoplay.get(_i).checked = false;
+        }
+
+        autoplayCheckbox = [];
+      }
+
+      checked_files = new Map();
+      checkInsertAllState();
+    }
+    /**
+     * Show progress bar.
+     */
+
+
+    function showProgressBar(no_message) {
+      var $popup = editor.popups.get('filesManager.insert');
+      if (!$popup) $popup = _initInsertPopup();
+      $popup.find('.fr-layer.fr-active').removeClass('fr-active').addClass('fr-pactive');
+      $popup.find('.fr-files-progress-bar-layer').addClass('fr-active');
+      $popup.find('.fr-buttons').hide();
+
+      if ($current_image) {
+        var $el = getEl();
+        editor.popups.setContainer('filesManager.insert', editor.$sc);
+        var left = $el.offset().left;
+        var top = $el.offset().top + $el.height();
+        editor.popups.show('filesManager.insert', left, top, $el.outerHeight());
+      }
+
+      if (typeof no_message == 'undefined') {
+        _setProgressMessage(editor.language.translate('Uploading'), 0);
+      }
+    }
+    /**
+     * Hide progress bar.
+     */
+
+
+    function hideProgressBar(dismiss) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup) {
+        $popup.find('.fr-layer.fr-pactive').addClass('fr-active').removeClass('fr-pactive');
+        $popup.find('.fr-files-progress-bar-layer').removeClass('fr-active');
+        $popup.find('.fr-buttons').show(); // Dismiss error message.
+
+        if (dismiss || editor.$el.find('img.fr-error').length) {
+          editor.events.focus();
+
+          if (editor.$el.find('img.fr-error').length) {
+            editor.$el.find('img.fr-error').remove();
+            editor.undo.saveStep();
+            editor.undo.run();
+            editor.undo.dropRedo();
+          }
+
+          if (!editor.$wp && $current_image) {
+            var $img = $current_image;
+
+            _exitEdit(true);
+
+            editor.selection.setAfter($img.get(0));
+            editor.selection.restore();
+          }
+
+          editor.popups.hide('filesManager.insert');
+        }
+      }
+    }
+    /**
+     * Set a progress message.
+     */
+
+
+    function _setProgressMessage(message, progress) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup) {
+        var $layer = $popup.find('.fr-files-progress-bar-layer');
+        $layer.find('h3').text(message + (progress ? " ".concat(progress, "%") : ''));
+        $layer.removeClass('fr-error');
+
+        if (progress) {
+          $layer.find('div').removeClass('fr-indeterminate');
+          $layer.find('div > span').css('width', "".concat(progress, "%"));
+        } else {
+          $layer.find('div').addClass('fr-indeterminate');
+        }
+      }
+    }
+    /**
+     * Show error message to the user.
+     */
+
+
+    function _showErrorMessage(message) {
+      showProgressBar();
+      var $popup = editor.popups.get('filesManager.insert');
+      var $layer = $popup.find('.fr-files-progress-bar-layer');
+      $layer.addClass('fr-error');
+      var $message_header = $layer.find('h3');
+      $message_header.text(message);
+      editor.events.disableBlur();
+      $message_header.focus();
+    }
+    /**
+     * Show error message to the  user for file upload.
+     */
+
+
+    function _showFileErrorMessage(message, index) {
+      var $popup = editor.popups.get('filesManager.insert');
+      var $layer = $popup.find('.fr-upload-progress-layer');
+      var $row = $popup.find(".fr-file-".concat(index));
+      $layer.addClass('fr-error');
+      var $message_header = $row.find('h5');
+      $message_header.text(message);
+    }
+    /*
+     * Drag and Drop Functions
+     */
+
+
+    var globalListClass = '',
+        sortableLists,
+        globalX,
+        globalY;
+
+    function enableDragSort(listClass) {
+      globalListClass = listClass;
+      sortableLists = document.getElementsByClassName(listClass);
+      Array.prototype.map.call(sortableLists, function (list) {
+        enableDragItem(list);
+      });
+    }
+
+    function enableDragItem(item) {
+      item.addEventListener("dragover", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        globalX = event.pageX;
+        globalY = event.pageY;
+        var el = document.getElementById('filesList');
+        if (globalY + 20 > el.getBoundingClientRect().bottom) scrollBy(el, 0, 10);
+        if (globalY - 20 < el.getBoundingClientRect().top) scrollBy(el, 0, -10);
+      }, false);
+
+      if (editor.helpers.isMobile()) {
+        var el = item.getElementsByClassName('dot');
+        el[0].addEventListener("touchmove", function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          var sourceElement = event.target;
+
+          while (sourceElement && !sourceElement.classList.contains(globalListClass)) {
+            sourceElement = sourceElement.parentElement;
+          }
+
+          var hoveredItem = document.elementFromPoint(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
+
+          while (hoveredItem && !hoveredItem.classList.contains(globalListClass)) {
+            hoveredItem = hoveredItem.parentElement;
+          }
+
+          var elementsWithHoverClass = document.getElementsByClassName('fr-hovered-over-file');
+          Array.prototype.forEach.call(elementsWithHoverClass, function (element) {
+            element.classList.remove('fr-hovered-over-file');
+          });
+          if (hoveredItem && !sourceElement.classList.contains('fr-unchecked')) hoveredItem.classList.add('fr-hovered-over-file');
+          var el = document.getElementById('filesList');
+
+          if (event.targetTouches[0].clientY + 5 > el.getBoundingClientRect().bottom) {
+            scrollBy(el, 0, 5);
+          }
+
+          if (event.targetTouches[0].clientY - 5 < el.getBoundingClientRect().top) {
+            scrollBy(el, 0, -5);
+          }
+        }, false);
+      }
+
+      item.ondrag = handleDrag;
+      item.ondragend = handleDrop;
+
+      if (editor.helpers.isMobile()) {
+        var _el = item.getElementsByClassName('dot');
+
+        _el[0].addEventListener('touchmove', handleDrag, false);
+
+        _el[0].addEventListener('touchend', handleDrop, false);
+      }
+    }
+
+    var selectedItem, selectedLocX, selectedLocY;
+
+    function scrollBy(el, x, y) {
+      el.scrollLeft += x;
+      el.scrollTop += y;
+    }
+
+    function handleDrag(item) {
+      if (editor.helpers.isMobile()) {
+        selectedLocX = event.touches[0].clientX;
+        selectedLocY = event.touches[0].clientY;
+      }
+
+      selectedItem = item.target;
+
+      while (!selectedItem.classList.contains(globalListClass)) {
+        selectedItem = selectedItem.parentElement;
+      }
+
+      if (!selectedItem.classList.contains(globalListClass) || selectedItem.classList.contains('fr-unchecked')) {
+        selectedItem = undefined;
+        return;
+      }
+
+      if (editor.helpers.isMobile()) selectedItem.classList.add('drag-sort-active');
+      return;
+    }
+
+    function handleDrop(item) {
+      var droppedItem;
+
+      if (selectedItem === undefined) {
+        return;
+      }
+
+      var x, y;
+
+      if (editor.helpers.isMobile()) {
+        x = selectedLocX;
+        y = selectedLocY;
+        droppedItem = event.target;
+
+        while (!droppedItem.classList.contains(globalListClass)) {
+          droppedItem = droppedItem.parentElement;
+        }
+      } else {
+        x = event.clientX;
+        y = event.clientY;
+      } //Condition for Firefox and Safari MAC
+
+
+      if (!editor.helpers.isMobile() && (editor.browser.safari || editor.browser.mozilla)) {
+        x = globalX;
+        y = globalY;
+      }
+
+      var swapItem = document.elementFromPoint(x, y);
+
+      while (swapItem && !swapItem.classList.contains(globalListClass)) {
+        swapItem = swapItem.parentElement;
+      }
+
+      if (swapItem && !swapItem.classList.contains(globalListClass)) {
+        swapItem = undefined;
+      } else if (swapItem && selectedItem !== swapItem) {
+        swapNodes(selectedItem, swapItem);
+      }
+
+      if (editor.helpers.isMobile()) {
+        droppedItem.classList.remove('fr-hovered-over-file');
+        swapItem.classList.remove('fr-hovered-over-file');
+      }
+    }
+
+    function swapNodes(n1, n2) {
+      var p1 = n1.parentNode;
+      var p2 = n2.parentNode;
+      var i1, i2;
+      if (!p1 || !p2 || p1.isEqualNode(n2) || p2.isEqualNode(n1)) return;
+
+      for (var i = 0; i < p1.children.length; i++) {
+        if (p1.children[i].isEqualNode(n1)) {
+          i1 = i;
+        }
+      }
+
+      for (var i = 0; i < p2.children.length; i++) {
+        if (p2.children[i].isEqualNode(n2)) {
+          i2 = i;
+        }
+      }
+
+      if (p1.isEqualNode(p2) && i1 < i2) {
+        i2++;
+      }
+
+      p1.insertBefore(n2, p1.children[i1]);
+      p2.insertBefore(n1, p2.children[i2]);
+    }
+
+    function showFileUploadProgressLayer(i) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if (!$popup.find('.fr-upload-progress-layer').hasClass('fr-active')) {
+        $popup.find('.fr-upload-progress-layer').addClass('fr-active');
+      }
+
+      $popup.find('.fr-upload-progress').removeClass('fr-none');
+      var file = file_list.get(i);
+      var description = getFileDescription(new Date());
+      var checkedClass = checked_files.get(i) ? '' : 'fr-unchecked ';
+      var checkmark = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10" viewBox="0 0 32 32"><path d="M27 4l-15 15-7-7-5 5 12 12 20-20z" fill="#FFF"></path></svg>';
+      var upload_progress_layer = "\n        <div id='fr-file-".concat(i, "' class='fr-file-list-item fr-file-").concat(i, " ").concat(checkedClass, "' draggable = \"").concat(checkedClass ? false : true, "\" >\n        <div class='fr-file-item-left' >\n\n    \n            <div class=\"fr-file-item-insert-checkbox fr-files-checkbox-line\">\n            ").concat(editor.helpers.isMobile() ? "<div id='fr-pick-".concat(i, "}' class='dot'>\n            </div>") : "", "\n            <div id=\"checkbox-key-").concat(i, "\" class=\"fr-files-checkbox fr-insert-checkbox  fr-checkbox-").concat(i, "\">\n            <input name=\"target\" class=\"fr-insert-attr fr-checkbox-file-").concat(i, " fr-file-insert-check\" data-cmd=\"fileInsertCheckbox\"\n             data-checked=\"_blank\" type=\"checkbox\" id=\"fr-link-target-").concat(editor.id, "\" tabIndex=\"0\" />\n            <span>").concat(checkmark, "\n            </span>\n        </div>\n                <label id=\"fr-label-target-").concat(editor.id, "\"></label>\n            </div>\n    \n            <div class='fr-file-item-icon fr-file-item-icon-").concat(i, "' >\n                <img src='https://secure.webtoolhub.com/static/resources/icons/set112/f2afb6f7.png' alt='Image preview' class='thumbnail-padding' height='36px' width='36px' />\n            </div>\n\n            <div class='fr-file-item-description' >\n                <div class='fr-file-name fr-files-manager-tooltip'>\n                   ").concat(text_truncate(file.name, 20), "\n                      <span class=\"").concat(file.name.length > 20 ? 'tooltiptext' : 'fr-none', "\">").concat(file.name, "\n                      </span>\n                 </div>\n                 <div class='fr-file-details'>\n                 <div class='fr-file-date'>").concat(description, "\n                 </div>\n \n                 <div class='fr-file-size'>\n                     ").concat(getFileSize(file.size), "\n                 </div>\n                 </div>\n\n                  <div class='fr-file-error'>\n                    <h5 class='fr-file-error-h5'></h5>\n                 </div>\n             </div>\n    \n        </div>\n\n        <div class='fr-file-item-right fr-file-item-right-").concat(i, "'>") + getFileActionButtons(i) + "</div>\n    </div>";
+      $popup.find('.fr-upload-progress-layer')[0].innerHTML = upload_progress_layer + $popup.find('.fr-upload-progress-layer')[0].innerHTML; // adding checked to already checked files
+
+      function addCheck(file, i, map) {
+        if (checked_files.get(i)) {
+          $popup.find("input.fr-insert-attr.fr-checkbox-file-".concat(i))[0].setAttribute('checked', null);
+        }
+      }
+
+      file_list.forEach(addCheck);
+      autoplayCheckbox.forEach(function (index) {
+        document.getElementById('fr-file-autoplay-button-' + index).checked = true;
+      });
+      getFileThumbnail(i, file);
+      hideProgressBar();
+      if (editor.opts.toolbarBottom) showInsertPopup(true);else editor.popups.setPopupDimensions($popup);
+      enableDragSort('fr-file-list-item');
+    }
+
+    function text_truncate(str, length, ending) {
+      if (length == null) {
+        length = 100;
+      }
+
+      if (ending == null) {
+        ending = '...';
+      }
+
+      if (str.length > length) {
+        return str.substring(0, length - ending.length) + ending;
+      } else {
+        return str;
+      }
+    }
+
+    function getFileThumbnailSrc(type) {
+      switch (type) {
+        case 'application/msword':
+          return editor.icon.getFileIcon('docIcon');
+
+        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          return editor.icon.getFileIcon('docxIcon');
+
+        case 'image/gif':
+          return editor.icon.getFileIcon('gifIcon');
+
+        case 'image/jpeg':
+          return editor.icon.getFileIcon('jpegIcon');
+
+        case 'image/jpeg':
+          return editor.icon.getFileIcon('jpgIcon');
+
+        case 'type/text':
+          return editor.icon.getFileIcon('logIcon');
+
+        case 'video/quicktime':
+          return editor.icon.getFileIcon('movIcon');
+
+        case 'audio/mp3':
+        case 'audio/mpeg':
+          return editor.icon.getFileIcon('mp3Icon');
+
+        case 'video/mp4':
+          return editor.icon.getFileIcon('mp4Icon');
+
+        case 'audio/ogg':
+          return editor.icon.getFileIcon('oggIcon');
+
+        case 'video/ogg':
+          return editor.icon.getFileIcon('ogvIcon');
+
+        case 'application/pdf':
+          return editor.icon.getFileIcon('pdfIcon');
+
+        case 'image/png':
+          return editor.icon.getFileIcon('pngIcon');
+
+        case 'text/plain':
+          return editor.icon.getFileIcon('txtIcon');
+
+        case 'video/webm':
+          return editor.icon.getFileIcon('webmIcon');
+
+        case 'image/webp':
+          return editor.icon.getFileIcon('webpIcon');
+
+        case 'video/x-ms-wmv':
+          return editor.icon.getFileIcon('wmvIcon');
+
+        case 'application/vnd.ms-excel':
+          return editor.icon.getFileIcon('xlsIcon');
+
+        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+          return editor.icon.getFileIcon('xlsxIcon');
+
+        case 'application/x-zip-compressed':
+        case 'application/zip':
+          return editor.icon.getFileIcon('zipIcon');
+
+        default:
+          return editor.icon.getFileIcon('defaultIcon');
+      }
+    }
+
+    function getFileThumbnail(index, file, update) {
+      var $popup = editor.popups.get('filesManager.insert');
+      var thumbnail = $popup.find('.fr-file-item-icon-' + index).get(0);
+
+      if (isImage(_getFileType(file)) && _getFileType(file) != 'image/gif' && _getFileType(file) != 'image/webp') {
+        if (thumbnail.children[0].localName != 'a') {
+          thumbnail.innerHTML = "<a target='_blank' href=''>" + thumbnail.innerHTML + "</a>";
+        }
+
+        var thumbnailLink = $popup.find('.fr-file-item-icon-' + index).get(0).children[0];
+        var thumbnailImage = thumbnailLink.children[0];
+        var reader = new FileReader();
+
+        if (update != null && update) {
+          var oldImage = file_list.get(index);
+          file.name = oldImage.name;
+          file_list.set(index, file);
+        }
+
+        reader.onloadend = function () {
+          $popup.find('.fr-file-item-icon-' + index).get(0).children[0].children[0].src = reader.result;
+          var binary = atob(reader.result.split(',')[1]);
+          var array = [];
+
+          for (var i = 0; i < binary.length; i++) {
+            array.push(binary.charCodeAt(i));
+          }
+
+          $popup.find('.fr-file-item-icon-' + index).get(0).children[0].href = window.URL.createObjectURL(new Blob([new Uint8Array(array)], {
+            type: _getFileType(file)
+          }));
+          $popup.find('.fr-file-item-icon-' + index).get(0).classList.add('file-item-thumbnail-hover');
+        };
+
+        if (file) {
+          reader.readAsDataURL(file);
+        } else {
+          var x = getFileThumbnailSrc(_getFileType(file));
+          thumbnail.innerHTML = "<svg height=\"40px\" width=\"40px\" viewBox=\"0 0 55 5\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n        ".concat(x.path, "\n        </svg>");
+        }
+      } else {
+        var _x = getFileThumbnailSrc(_getFileType(file));
+
+        thumbnail.innerHTML = "<svg height=\"40px\" width=\"40px\" viewBox=\"0 0 55 55\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n      ".concat(_x.path, "\n      </svg>");
+      }
+    }
+
+    function getFileActionButtons(i) {
+      var fileActionButtons = '';
+
+      if (isVideo(_getFileType(file_list.get(i)))) {
+        var disableAutoplay = 'fr-files-checkbox';
+        var disableAutoplayCheckBox = '';
+
+        if (!isFormatSupported(_getFileType(file_list.get(i)))) {
+          disableAutoplay = 'fr-checkbox-disabled';
+          disableAutoplayCheckBox = 'disabled';
+        }
+
+        var checkmark = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10" viewBox="0 0 32 32"><path d="M27 4l-15 15-7-7-5 5 12 12 20-20z" fill="#FFF"></path></svg>';
+        fileActionButtons = "\n      <div class=\"fr-files-checkbox-line align-autoplay\">\n      <div id=\"checkbox-key-".concat(i, "\" class=\"").concat(disableAutoplay, " fr-autoplay-checkbox  fr-checkbox-").concat(i, "\">  \n                   \n      <input type=\"checkbox\" id=\"fr-file-autoplay-button-").concat(i, "\" class=\"fr-file-button-").concat(i, " fr-file-autoplay-button\" data-title=\"Edit\" data-param1=\"").concat(i, "\" role=\"button\" ").concat(disableAutoplayCheckBox, "/>\n\n      <span>").concat(checkmark, " </span>\n      </div>      \n      <label  class='fr-autoplay-checkbox-label'>Autoplay </label>\n      </div>");
+      }
+
+      var pdf = 'application/pdf';
+      var txt = 'text/plain';
+      var doc = 'application/msword';
+      var docx = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      var xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      var xls = 'application/vnd.ms-excel';
+      var log = 'type/text';
+      var disbleView = '';
+
+      if (isAudio(_getFileType(file_list.get(i))) || !isFormatSupported(_getFileType(file_list.get(i)))) {
+        disableEdit = 'fr-disabled';
+      }
+
+      if (isVideo(_getFileType(file_list.get(i)))) {
+        disableEdit = 'fr-disabled';
+      }
+
+      if (isFile(_getFileType(file_list.get(i)))) {
+        disableEdit = 'fr-disabled';
+
+        if (_getFileType(file_list.get(i)) == doc || _getFileType(file_list.get(i)) == docx) {
+          if (editor.opts.googleOptions && !editor.helpers.isMobile()) {
+            if (editor.opts.googleOptions.API_KEY && editor.opts.googleOptions.CLIENT_ID) {
+              disableEdit = '';
+            }
+          }
+        }
+
+        if (_getFileType(file_list.get(i)) == txt || _getFileType(file_list.get(i)) == doc || _getFileType(file_list.get(i)) == pdf || _getFileType(file_list.get(i)) == docx || _getFileType(file_list.get(i)) == xlsx || _getFileType(file_list.get(i)) == xls || _getFileType(file_list.get(i)) == log) {
+          disbleView = '';
+        }
+      }
+
+      if (_getFileType(file_list.get(i)) === 'video/url') {
+        disableEdit = 'fr-disabled';
+      }
+
+      fileActionButtons += "<div class='fr-file-item-action-buttons' >\n                <button type=\"button\" id=\"fr-file-insert-button-".concat(i, "\" class=\" fr-doc-edit-").concat(i, " fr-img-icon fr-btn fr-command fr-submit fr-file-action-icons \n                fr-file-button-").concat(i, " fr-file-insert-button-").concat(i, " fr-file-insert-button\" data-cmd=\"imageInsertByUpload\" data-title=\"Insert\" data-param1=\"").concat(i, "\" tabIndex=\"2\" role=\"button\">\n                <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"-5 0 28 28\" xlmns = \"http://w3.org/200/svg\"><path d = 'M 9.25 12 L 6.75 12 C 6.335938 12 6 11.664062 6 11.25 L 6 6 L 3.257812 6 C 2.703125 6 2.425781 5.328125 2.820312 4.933594 L 7.570312 0.179688 C 7.804688 -0.0546875 8.191406 -0.0546875 8.425781 0.179688 L 13.179688 4.933594 C 13.574219 5.328125 13.296875 6 12.742188 6 L 10 6 L 10 11.25 C 10 11.664062 9.664062 12 9.25 12 Z M 16 11.75 L 16 15.25 C 16 15.664062 15.664062 16 15.25 16 L 0.75 16 C 0.335938 16 0 15.664062 0 15.25 L 0 11.75 C 0 11.335938 0.335938 11 0.75 11 L 5 11 L 5 11.25 C 5 12.214844 5.785156 13 6.75 13 L 9.25 13 C 10.214844 13 11 12.214844 11 11.25 L 11 11 L 15.25 11 C 15.664062 11 16 11.335938 16 11.75 Z M 12.125 14.5 C 12.125 14.15625 11.84375 13.875 11.5 13.875 C 11.15625 13.875 10.875 14.15625 10.875 14.5 C 10.875 14.84375 11.15625 15.125 11.5 15.125 C 11.84375 15.125 12.125 14.84375 12.125 14.5 Z M 14.125 14.5 C 14.125 14.15625 13.84375 13.875 13.5 13.875 C 13.15625 13.875 12.875 14.15625 12.875 14.5 C 12.875 14.84375 13.15625 15.125 13.5 15.125 C 13.84375 15.125 14.125 14.84375 14.125 14.5 Z M 14.125 14.5 '></path></svg>\n                </button>\n\n                <button type=\"button\" id=\"fr-file-edit-button-").concat(i, "\" class=\" fr-doc-edit-").concat(i, " ").concat(disableEdit, " fr-img-icon fr-btn fr-command fr-submit \n                fr-file-action-icons fr-file-edit-button-").concat(i, " fr-file-button-").concat(i, " fr-file-edit-button\" data-cmd=\"editImage\" data-title=\"Edit\" data-param1=\"").concat(i, "\" role=\"button\">\n                <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"0 4 25 25\" xlmns = \"http://w3.org/200/svg\"><path d = 'M17,11.2L12.8,7L5,14.8V19h4.2L17,11.2z M7,16.8v-1.5l5.6-5.6l1.4,1.5l-5.6,5.6H7z M13.5,6.3l0.7-0.7c0.8-0.8,2.1-0.8,2.8,0  c0,0,0,0,0,0L18.4,7c0.8,0.8,0.8,2,0,2.8l-0.7,0.7L13.5,6.3z'></path></svg>\n                </button>\n                \n                <span class=\"fr-file-view-").concat(i, "\"><button type=\"button\" id=\"fr-file-view-button-").concat(i, "\" class=\" fr-doc-edit-").concat(i, " ").concat(disbleView, " fr-img-icon fr-btn fr-command fr-submit fr-file-action-icons \n                fr-file-view-button-").concat(i, " fr-file-view-button\" data-cmd=\"viewImage\" data-title=\"View\" data-param1=\"").concat(i, "\" tabIndex=\"2\" role=\"button\">\n                <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"15 19 21 21\" xlmns = \"http://w3.org/200/svg\"> <path style=\"fill:none;stroke-width:0.9077;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 19.086094 16.541466 C 16.185625 16.541466 14.318281 19.447115 14.318281 19.447115 L 14.318281 19.555288 C 14.318281 19.555288 16.176719 22.475962 19.077187 22.475962 C 21.977656 22.475962 23.847969 19.576322 23.847969 19.576322 L 23.847969 19.465144 C 23.847969 19.465144 21.989531 16.541466 19.086094 16.541466 Z M 19.07125 21.024639 C 18.248906 21.024639 17.583906 20.357572 17.583906 19.53726 C 17.583906 18.716947 18.248906 18.04988 19.07125 18.04988 C 19.890625 18.04988 20.555625 18.716947 20.555625 19.53726 C 20.555625 20.357572 19.890625 21.024639 19.07125 21.024639 Z M 19.07125 21.024639 \" transform=\"matrix(1.315789,0,0,1.3,0,0)\"/></svg></button></span>\n\n                <button type=\"button\" id=\"fr-file-delete-button-").concat(i, "\" class=\" fr-doc-edit-").concat(i, " fr-img-icon fr-btn fr-command fr-submit fr-file-action-icons\n                fr-file-button-").concat(i, " fr-file-delete-button\" data-cmd=\"deleteImage\" data-title=\"Delete\" data-param1=\"").concat(i, "\" role=\"button\">\n                <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"-2 3 30 30\" xlmns = \"http://w3.org/200/svg\"><path d = 'M15,10v8H9v-8H15 M14,4H9.9l-1,1H6v2h12V5h-3L14,4z M17,8H7v10c0,1.1,0.9,2,2,2h6c1.1,0,2-0.9,2-2V8z'></path></svg>\n                </button>\n                 \n            </div>\n            <div id=\"user_area-").concat(i, "\" style=\"display: none;\">\n            \n              <div id=\"file_container\"></div>\n\n              <div style='display:block;text-align: center; margin-left:50%; id='edit-file-loader' class='fr-file-loader'></div>\n\n          </div> \n            ");
+      return fileActionButtons;
+    }
+
+    function updateFileUploadingProgress(percent, index, loaded) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if (!loaded && percent <= 100) {
+        $popup.find('.fr-checkbox-file-' + index).get(0).disabled = true;
+        $popup.find('.fr-checkbox-' + index).get(0).classList.remove('fr-files-checkbox');
+        $popup.find('.fr-checkbox-' + index).get(0).classList.add('fr-checkbox-disabled');
+        var row = $popup.find('.fr-file-progress-circle-' + index);
+        var progressCircle = $popup.find('.fr-file-upload-percent-' + index);
+
+        if (percent > 50) {
+          row.get(0).setAttribute('class', 'fr-file-progress-circle-' + index + ' progress-circle p' + Math.floor(percent) + ' over50');
+          progressCircle.get(0).innerHTML = Math.floor(percent) + '%';
+        } else {
+          row.get(0).setAttribute('class', 'fr-file-progress-circle-' + index + ' progress-circle p' + Math.floor(percent));
+          progressCircle.get(0).innerHTML = Math.floor(percent) + '%';
+        }
+
+        updateProgressBar(index, percent, loaded);
+        return;
+      }
+
+      if (loaded) {
+        $popup.find('.fr-checkbox-file-' + index).get(0).disabled = false;
+        $popup.find('.fr-checkbox-' + index).get(0).classList.remove('fr-checkbox-disabled');
+        $popup.find('.fr-checkbox-' + index).get(0).classList.add('fr-files-checkbox');
+        var right = $popup.find('.fr-file-item-right-' + index);
+        right.get(0).innerHTML = getFileActionButtons(index);
+        updateProgressBar(index, 100, loaded);
+      }
+    }
+
+    function initialFileUploadStatus(index) {
+      if (isNaN(index)) {
+        return;
+      }
+
+      var $popup = editor.popups.get('filesManager.insert');
+      var row = $popup.find('.fr-file-item-right-' + index);
+      row.get(0).innerHTML = "<div class='fr-file-item-action-buttons' >\n    <button type=\"button\" id=\"fr-file-cancel-upload-button-".concat(index, "\" class=\"fr-img-icon fr-btn fr-command fr-submit fr-file-action-icons \n    fr-file-button-").concat(index, " fr-file-cancel-upload-button\" data-cmd=\"cancelUpload\" data-title=\"Cancel\" data-param1=\"").concat(index, "\" role=\"button\">\n    <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"-2 3 30 30\" xlmns = \"http://w3.org/200/svg\"><path d = 'M13.4,12l5.6,5.6L17.6,19L12,13.4L6.4,19L5,17.6l5.6-5.6L5,6.4L6.4,5l5.6,5.6L17.6,5L19,6.4L13.4,12z'></path></svg>\n    </button>\n\n    <button type=\"button\" id=\"fr-upload-delete-button-").concat(index, "\" class=\"fr-img-icon fr-btn fr-command fr-submit fr-file-action-icons \n    fr-file-button-").concat(index, " fr-upload-delete-button\" data-cmd=\"deleteUpload\" data-title=\"Delete\" data-param1=\"").concat(index, "\" role=\"button\">\n    <svg style='margin:0px !important; opacity:0.9' class = \"fr-svg\" focusable=\"false\" width=\"16px\" height=\"16px\" viewBox = \"-2 3 30 30\" xlmns = \"http://w3.org/200/svg\"><path d = 'M15,10v8H9v-8H15 M14,4H9.9l-1,1H6v2h12V5h-3L14,4z M17,8H7v10c0,1.1,0.9,2,2,2h6c1.1,0,2-0.9,2-2V8z'></path></svg>\n    </button>\n\n    <div class='progress-circle p0 fr-file-progress-circle-").concat(index, "'>\n                  <span class='fr-file-upload-percent-").concat(index, " fr-file-upload-percent'>0%</span>\n                  <div class='left-half-clipper'>\n                    <div class='first50-bar'></div>\n                    <div class='value-bar'></div>\n                  </div>\n                </div>\n            </div>");
+      fileUploads.set(index, 0);
+    }
+
+    function updateProgressBar(index, percent, loaded) {
+      var $popup = editor.popups.get('filesManager.insert');
+      $popup.find('.fr-progress-bar').removeClass('fr-none').addClass('fr-display-block');
+      if ($popup.find('.fr-upload-progress').hasClass('fr-height-set')) editor.popups.setFileListHeight($popup);
+      var totalUploadPercent = 0;
+      fileUploads.set(index, percent);
+      fileUploads.forEach(function (value, index) {
+        totalUploadPercent += value;
+      });
+      totalUploadPercent = totalUploadPercent / fileUploads.size;
+
+      if (percent == 100 && loaded) {
+        completedUploads++;
+      }
+
+      $popup.find('.fr-command[data-cmd="filesUpload"]').addClass('fr-disabled');
+      $popup.find('.fr-command[data-cmd="filesByURL"]').addClass('fr-disabled');
+      $popup.find('.fr-command[data-cmd="filesEmbed"]').addClass('fr-disabled');
+      $popup.find('.fr-progress-bar').get(0).style.width = totalUploadPercent + '%';
+
+      if (completedUploads == fileUploads.size) {
+        $popup.find('.fr-progress-bar').removeClass('fr-display-block').addClass('fr-none');
+        fileUploads = new Map();
+        completedUploads = 0;
+        $popup.find('.fr-command[data-cmd="filesUpload"]').removeClass('fr-disabled');
+        $popup.find('.fr-command[data-cmd="filesByURL"]').removeClass('fr-disabled');
+        $popup.find('.fr-command[data-cmd="filesEmbed"]').removeClass('fr-disabled');
+      }
+    }
+    /**
+     * Insert image using URL callback.
+     */
+
+
+    function validURL(str) {
+      var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+      '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+
+      return !!pattern.test(str);
+    }
+
+    function insertByURL() {
+      var $popup = editor.popups.get('filesManager.insert');
+      var $input = $popup.find('.fr-files-by-url-layer input');
+      var urls = $input.val().trim().split(/[ ,]+/);
+      var $urls = [];
+      var j = 0;
+
+      for (var i = 0; i < urls.length; i++) {
+        if (validURL(urls[i])) {
+          $urls[j] = urls[i];
+          j++;
+        }
+      }
+
+      if ($urls.length == 0) {
+        _showErrorMessage(editor.language.translate('Url entered is invalid. Please try again.'));
+
+        return;
+      }
+
+      if ($input.val().trim().length > 0 && $urls.length > 0) {
+        var files = [];
+        var files_index = [];
+        var initial_index = fileListIndex;
+        var validUrls = $urls.length;
+        $urls.forEach(function (url, index) {
+          if (url.trim().length == 0) {
+            --validUrls;
+
+            if (fileListIndex == initial_index + validUrls) {
+              addFilesToList(files, files_index);
+            }
+          } else {
+            hideProgressBar();
+            showProgressBar();
+
+            _setProgressMessage(editor.language.translate('Loading file(s)'));
+
+            var file_url = url.trim(); // check if URL is a video
+
+            var video = getVideoByURL(file_url);
+
+            if (video) {
+              var obj = {
+                link: file_url,
+                name: file_url,
+                type: 'video/url',
+                size: 2,
+                video: video
+              };
+              file_list.set(initial_index + index, obj);
+              showFileUploadProgressLayer(initial_index + index);
+              hideProgressBar();
+              showProgressBar();
+
+              _setProgressMessage(editor.language.translate('Loading file(s)'));
+
+              file_list_values.set(initial_index + index, obj);
+              ++fileListIndex;
+
+              if (fileListIndex == initial_index + validUrls) {
+                addFilesToList(files, files_index);
+              }
+            } else {
+              var xhr = new XMLHttpRequest();
+
+              xhr.onload = function () {
+                if (this.status == 200) {
+                  var file = new Blob([this.response], {
+                    type: this.response.type || ''
+                  });
+                  file.name = getUrlFileName(file_url);
+                  file.link = file_url;
+
+                  if (isImage(this.response.type)) {
+                    file.sanitize = true;
+                    file.existing_image = $current_image;
+                  } else if (isFile(this.response.type)) {
+                    file.text = getUrlFileName(file_url);
+                  }
+
+                  files.push(file);
+                  files_index.push(initial_index + index);
+                  file_list.set(initial_index + index, file);
+                  showFileUploadProgressLayer(initial_index + index);
+
+                  if (unsupported_file_types.indexOf(_getFileType(file)) > -1 || !_getFileType(file)) {
+                    _throwError(BAD_FILE_TYPE, null, null, initial_index + index);
+                  }
+                } else {
+                  var _file = new Blob([this.response], {
+                    type: this.response.type || ' '
+                  });
+
+                  _file.name = getUrlFileName(file_url);
+                  _file.link = file_url;
+                  file_list.set(initial_index + index, _file);
+                  showFileUploadProgressLayer(initial_index + index);
+
+                  _throwError(BAD_LINK, this.response, $current_image, initial_index + index);
+                }
+
+                hideProgressBar();
+                showProgressBar();
+
+                _setProgressMessage(editor.language.translate('Loading file(s)'));
+
+                ++fileListIndex;
+
+                if (fileListIndex == initial_index + validUrls) {
+                  addFilesToList(files, files_index);
+                }
+              }; // If file couldn't be uploaded, insert as it is.
+
+
+              xhr.onerror = function () {
+                var obj = {
+                  link: file_url,
+                  name: getUrlFileName(file_url),
+                  size: 0,
+                  type: ''
+                };
+
+                _throwError(ERROR_LINK, this.response, $current_image, initial_index + index);
+
+                var file_index = fileListIndex;
+                file_list.set(file_index, obj);
+                showFileUploadProgressLayer(file_index);
+                hideProgressBar();
+                showProgressBar();
+
+                _setProgressMessage(editor.language.translate('Loading file(s)'));
+
+                ++fileListIndex;
+
+                if (fileListIndex == initial_index + validUrls) {
+                  addFilesToList(files, files_index);
+                }
+              };
+
+              xhr.open('GET', "".concat(editor.opts.imageCORSProxy, "/").concat(file_url), true);
+              xhr.responseType = 'blob';
+              xhr.send();
+            }
+          }
+        });
+        $input.val('');
+        $input.blur();
+      }
+    }
+
+    function addFilesToList(files, files_index) {
+      hideProgressBar();
+      var $popup = editor.popups.get('filesManager.insert');
+      $popup.find('.fr-upload-progress-layer').addClass('fr-active');
+      files.forEach(function (file, i) {
+        // If image needs to be uploaded
+        if (isImage(_getFileType(file)) && editor.opts.imageUploadRemoteUrls && editor.opts.imageCORSProxy && editor.opts.imageUpload) {
+          upload(file, files, $current_image, files_index[i]);
+        } else {
+          file_list_values.set(files_index[i], file);
+        }
+      });
+    }
+
+    function getVideoByURL(link) {
+      if (typeof link == 'undefined') {
+        return link;
+      }
+
+      var video = null;
+
+      if (!/^http/.test(link)) {
+        link = "https://".concat(link);
+      }
+
+      if (editor.helpers.isURL(link)) {
+        for (var i = 0; i < FroalaEditor.VIDEO_PROVIDERS.length; i++) {
+          var vp = FroalaEditor.VIDEO_PROVIDERS[i]; // Check if video provider is allowed.
+
+          if (vp.test_regex.test(link) && new RegExp(editor.opts.videoAllowedProviders.join('|')).test(vp.provider)) {
+            video = link.replace(vp.url_regex, vp.url_text);
+            video = vp.html.replace(/\{url\}/, video);
+            break;
+          }
+        }
+      }
+
+      return video;
+    }
+
+    function _editImg($img) {
+      _edit.call($img.get(0));
+    }
+
+    function viewImage(index) {
+      if (!isFormatSupported(_getFileType(file_list_values.get(index)))) {
+        var link = file_list_values.get(index).link;
+        var text = file_list_values.get(index).link;
+
+        if (file_list.get(index) && file_list.get(index).name) {
+          text = file_list.get(index).name;
+        } else if (file_list_values.get(index).text) {
+          text = file_list_values.get(index).text;
+        }
+
+        if (link.indexOf('blob:') === 0 && editor.browser.msie && window.navigator && window.navigator.msSaveBlob) {
+          window.navigator.msSaveBlob(file_list.get(index), text);
+        } else {
+          var el = document.createElement('a');
+          el.href = link;
+          el.download = text;
+          el.click();
+        }
+
+        return false;
+      }
+
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup.find('.fr-file-view-image-' + index).length > 0) {
+        $popup.find('.fr-file-view-image-' + index)[0].remove();
+      } else {
+        var viewImages = $popup.find('.fr-file-view');
+
+        for (var i = 0; i < viewImages.length; i++) {
+          viewImages.get(i).remove();
+        }
+
+        var imageView = $popup.find('.fr-file-view-' + index);
+
+        if (isImage(_getFileType(file_list_values.get(index)))) {
+          var image = "<div class=\"fr-file-view-modal\">\n              <div class=\"fr-file-view-modal-content\">\n              <div class=\"fr-file-view-close\">&times;</div> \n                <img src=\"" + file_list_values.get(index).link + "\" class ='fr-file-view-image'/>\n                </div>\n              </div>";
+          imageView[0].innerHTML = image + imageView[0].innerHTML;
+        } else if (isVideo(_getFileType(file_list_values.get(index)))) {
+          var _image;
+
+          if (file_list_values.get(index).hasOwnProperty('video')) {
+            var videoIframe = file_list_values.get(index).video.substring(file_list_values.get(index).video.indexOf('src') + 3);
+            var url = videoIframe.substring(videoIframe.indexOf('"') + 1);
+            url = url.substring(0, url.indexOf('"'));
+            var autoplayURL = url + '&autoplay=1';
+            _image = "<div class=\"fr-file-view-modal\">\n        <div class=\"fr-file-view-modal-content \">\n          <div class=\"fr-file-view-close\">&times;</div> \n          <iframe width=\"640\" height=\"360\" src=\"".concat(autoplayURL, "\" frameborder=\"0\" class = \"fr-file-view-image\"></iframe>\n        </div>\n      </div>");
+          } else {
+            _image = "<div class=\"fr-file-view-modal\">\n          <div class=\"fr-file-view-modal-content \">\n            <div class=\"fr-file-view-close\">&times;</div> \n            <video controls src=\"" + file_list_values.get(index).link + "\"  class ='fr-file-view-image' autoplay></video>\n          </div>\n        </div>";
+          }
+
+          imageView[0].innerHTML = _image + imageView[0].innerHTML;
+        } else if (isAudio(_getFileType(file_list_values.get(index)))) {
+          var _image2 = "<div class=\"fr-file-view-modal\">\n        <div class=\"fr-file-view-modal-content \">\n          <div  class=\"fr-file-view-close\">&times;</div> \n          <audio controls=\"controls\"  class ='fr-file-view-image' autoplay>\n\n          <source src=\"".concat(file_list_values.get(index).link, "\" type=\"").concat(_getFileType(file_list_values.get(index)), "\" />\n\n            Your browser does not support the audio element.\n          </audio>\n        </div>\n      </div>");
+
+          imageView[0].innerHTML = _image2 + imageView[0].innerHTML;
+        } else if (isFile(_getFileType(file_list_values.get(index)))) {
+          var _link = file_list_values.get(index).link;
+          var _text = file_list_values.get(index).text;
+
+          if (_link.endsWith('.pdf') || _link.endsWith('.txt')) {
+            var _image3 = "<div class=\"fr-file-view-modal\">\t\n              <div class=\"fr-file-view-modal-content \" >\t\n              <div class=\"fr-file-view-close\">&times;</div> \t\n              <iframe src=\"".concat(_link, "\" style='background-color: white;' height='50%' width='50%' title=\"").concat(_text, "\" class=\"fr-file fr-file-view-image\"></iframe>\t\n            </div>\t\n            </div>");
+
+            imageView[0].innerHTML = _image3 + imageView[0].innerHTML;
+          } else {
+            if (_link.indexOf('blob:') === 0 && editor.browser.msie && window.navigator && window.navigator.msSaveBlob) {
+              window.navigator.msSaveBlob(file_list.get(index), _text);
+            } else {
+              var _el2 = document.createElement('a');
+
+              _el2.href = _link;
+              _el2.download = _text;
+
+              _el2.click();
+            }
+          }
+        }
+      }
+    }
+
+    function _loadedCallback() {
+      var $img = $(this);
+      $img.removeClass('fr-uploading'); // Select the image.
+
+      if ($img.next().is('br')) {
+        $img.next().remove();
+      }
+
+      if (fileKeys.length == 0 || fileKeys.length > 0 && fileKeys.length == imageEditIndex) {
+        editImageValue = $img;
+      }
+
+      if ($img.get(0).tagName == 'VIDEO' || $img.get(0).tagName == 'AUDIO') {
+        editor.selection.setAfter($img.parent());
+      } else {
+        editor.selection.setAfter($img);
+      }
+
+      editor.undo.saveStep();
+      editor.events.trigger('filesManager.loaded', [$img]);
+      insertFiles(fileKeys);
+    }
+    /**
+    * Keep videos in sync when content changed.
+    */
+
+
+    var videos;
+
+    function _syncVideos() {
+      // Get current videos.
+      var c_videos = Array.prototype.slice.call(editor.el.querySelectorAll('video, .fr-video > *')); // Current videos src.
+
+      var video_srcs = [];
+      var i;
+
+      for (i = 0; i < c_videos.length; i++) {
+        video_srcs.push(c_videos[i].getAttribute('src'));
+        $(c_videos[i]).toggleClass('fr-draggable', editor.opts.videoMove);
+        if (c_videos[i].getAttribute('class') === '') c_videos[i].removeAttribute('class');
+        if (c_videos[i].getAttribute('style') === '') c_videos[i].removeAttribute('style');
+      } // Loop previous videos and check their src.
+
+
+      if (videos) {
+        for (i = 0; i < videos.length; i++) {
+          if (video_srcs.indexOf(videos[i].getAttribute('src')) < 0) {
+            editor.events.trigger('video.removed', [$(videos[i])]);
+          }
+        }
+      } // Current videos are the old ones.
+
+
+      videos = c_videos;
+    }
+
+    var files;
+
+    function _syncFiles() {
+      // Get current files.
+      var c_files = Array.prototype.slice.call(editor.el.querySelectorAll('a.fr-file')); // Current files src.
+
+      var file_srcs = [];
+      var i;
+
+      for (i = 0; i < c_files.length; i++) {
+        file_srcs.push(c_files[i].getAttribute('href'));
+      } // Loop previous files and check their src.
+
+
+      if (files) {
+        for (i = 0; i < files.length; i++) {
+          if (file_srcs.indexOf(files[i].getAttribute('href')) < 0) {
+            editor.events.trigger('file.unlink', [files[i]]);
+          }
+        }
+      } // Current files are the old ones.
+
+
+      files = c_files;
+    }
+    /**
+     * Insert all files into the editor.
+     */
+
+
+    function insertAllFiles() {
+      fileKeys = [];
+      var $popup = editor.popups.get('filesManager.insert');
+
+      function insertMapElements(el, index, map) {
+        if (el.children['target'].checked) {
+          fileKeys.push(parseInt(el.id.split('-').pop()));
+
+          if (isImage(file_list_values.get(parseInt(el.id.split('-').pop())).type) && imageEditIndex == -1) {
+            imageEditIndex = index;
+          }
+        }
+      }
+
+      imageEditIndex = -1;
+      editImageValue = null;
+      $popup.find('.fr-insert-checkbox').toArray().forEach(insertMapElements);
+      insertFiles(fileKeys);
+      checkInsertAllState();
+    }
+    /**
+    * Delete all files.
+    */
+
+
+    function deleteAllFiles() {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      function deleteMapElements(el, index, map) {
+        if (el.children['target'].checked) {
+          var fileIndex = parseInt(el.id.split('-').pop());
+
+          if (XMLHttpRequests.has(fileIndex)) {
+            XMLHttpRequests["delete"](fileIndex);
+          }
+
+          deleteFile(fileIndex);
+        }
+      }
+
+      $popup.find('.fr-insert-checkbox').toArray().forEach(deleteMapElements);
+      checkInsertAllState();
+    }
+
+    function insertFiles(fileKeys) {
+      if (fileKeys != null) {
+        if (fileKeys.length == 0) {
+          if (editImageValue != null) {
+            if (editImageValue.get(0).tagName == 'VIDEO') {
+              editor.video._editVideo(editImageValue.parent());
+            } else if (editImageValue.get(0).tagName == 'IMG') {
+              editor.image.edit(editImageValue);
+            } else {
+              editImageValue.trigger('click');
+            }
+
+            editor.toolbar.disable();
+          }
+
+          return;
+        }
+
+        var index = fileKeys.shift();
+        insert(index, fileKeys);
+      }
+    }
+
+    function isChildWindowOpen() {
+      return $child_window_open;
+    }
+
+    function setChildWindowState(childWindowState) {
+      if (childWindowState !== undefined) {
+        $child_window_open = childWindowState;
+      }
+    } // file edit task starts
+
+
+    var docEditor;
+
+    function loadScripts(array, callback) {
+      var loader = function loader(src, handler) {
+        var script = document.createElement("script");
+        script.src = src;
+
+        script.onload = function () {
+          this.onload = function () {};
+
+          docEditor.handleClientLoad();
+        };
+
+        script.onreadystatechange = function () {
+          if (this.readyState === 'complete') this.onload();
+        };
+
+        var head = document.getElementsByTagName("head")[0];
+        (head || document.body).appendChild(script);
+      };
+
+      (function run() {
+        if (array.length != 0) {
+          loader(array.shift(), run);
+        } else {
+          callback && callback();
+        }
+      })();
+    }
+    /**
+     * Edit Image
+     */
+
+
+    function editImage(index) {
+      var isChildWindowTriggered = false;
+
+      if (isVideo(_getFileType(file_list_values.get(index)))) {
+        editor.trimVideoPlugin.trimVideo(file_list.get(index), index, file_list);
+        isChildWindowTriggered = true;
+      } else if (isImage(_getFileType(file_list_values.get(index)))) {
+        var src = file_list_values.get(index).link;
+        var image = editor.o_doc.createElement('img');
+        image.src = src;
+        $current_image = image;
+        $current_image_index = index;
+        editor.imageTUI.launch(editor, false, index);
+        isChildWindowTriggered = true;
+      } else if (isFile(_getFileType(file_list_values.get(index)))) {
+        var options = {
+          apiKey: editor.opts.googleOptions.API_KEY,
+          // google developer console API Key
+          clientId: editor.opts.googleOptions.CLIENT_ID,
+          // google developer client ID
+          authorizeButton: "authorize_button-".concat(index),
+          // authorize in Google button element ID
+          signoutButton: 'signout_button',
+          // sign out button element ID
+          userArea: "user_area-".concat(index),
+          // authorized user HTML container element ID 
+          fileInput: 'file_input',
+          // file upload input ID
+          fileIndex: index,
+          // created
+          file: file_list.get(index),
+          // created//, type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+          fileContainer: 'file_container',
+          // HTML container ID for file editor 
+          loadingText: 'File is being uploaded...',
+          // text that shown while file is loaded
+          events: {
+            onInvalidFile: function onInvalidFile(text) {
+              console.log(text);
+            },
+            // fired if file is not uploaded or not supported (supported files are .DOC and .DOCX)
+            onError: function onError(error) {
+              console.log(error);
+            } // fired in case of any other errors
+
+          }
+        };
+        docEditor = googleDocEditor(options);
+        loadScripts(["https://apis.google.com/js/api.js"], function () {
+          console.log('All things are loaded');
+        });
+      }
+
+      if (isChildWindowTriggered) {
+        $child_window_open = true;
+      }
+    }
+    /**GoogleDocEdit Code */
+
+
+    function googleDocEditor(options) {
+      // Array of API discovery doc URLs for APIs used by the quickstart
+      var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v2/rest"]; // Authorization scopes required by the API; multiple scopes can be
+      // included, separated by spaces.
+
+      var SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
+      var DEFAULT_FIELDS = 'id,title,mimeType,userPermission,editable,copyable,shared,fileSize';
+      var BOUNDARY = '-------314159265358979323846';
+      var DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
+      var CLOSE_DELIMITER = "\r\n--" + BOUNDARY + "--";
+      var authorizeButton = document.getElementById(options.authorizeButton);
+      var userArea = document.getElementById(options.userArea);
+
+      var responseFileId; //created
+
+      if (!options.events) {
+        options.events = {};
+      }
+
+      options.events.onInvalidFile = options.events.onInvalidFile || function (text) {
+        console.log(text);
+      };
+
+      options.events.onError = options.events.onError || function (text) {
+        console.log(text);
+      };
+      /**
+          *  Initializes the API client library and sets up sign-in state
+          *  listeners.
+          */
+
+
+      function initClient() {
+        gapi.client.init({
+          apiKey: options.apiKey,
+          clientId: options.clientId,
+          discoveryDocs: DISCOVERY_DOCS,
+          scope: SCOPES
+        }).then(function () {
+          // Listen for sign-in state changes.
+          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus); // Handle the initial sign-in state.
+
+          updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+          handleAuthClick();
+        }, function (error) {
+          options.events.onError(error);
+        });
+      }
+      /**
+           *  Called when the signed in status changes, to update the UI
+           *  appropriately. After a sign-in, the API is called.
+           */
+
+
+      function updateSigninStatus(isSignedIn) {
+        if (isSignedIn) {
+          userArea.style.display = 'block';
+        }
+      }
+      /**
+        *  Sign in the user upon button click.
+        */
+
+
+      function handleAuthClick(event) {
+        if (!gapi.auth2.getAuthInstance().isSignedIn.get() || gapi.auth.getToken() !== undefined && gapi.auth.getToken().access_token === undefined) {
+          Promise.resolve(gapi.auth2.getAuthInstance().signIn()).then(function () {
+            handleFileUpload();
+          });
+        } else {
+          handleFileUpload();
+        }
+      }
+      /**
+        *  Sign out the user upon button click.
+        */
+
+
+      function handleSignoutClick(event) {
+        var accessToken = gapi.auth.getToken().access_token;
+        var id = responseFileId;
+        var url = "https://docs.google.com/feeds/download/documents/export/Export?id=" + id + "&format=docx&access_token=" + accessToken;
+        var xhr = new XMLHttpRequest();
+        xhr.open('get', url);
+        xhr.responseType = "arraybuffer";
+
+        xhr.onload = function () {
+          var link = new Blob([new Uint8Array(this.response)], {
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          });
+          var currentFile = file_list.get(options.fileIndex);
+          link.name = currentFile.name;
+          link.lastModified = currentFile.lastModified;
+          link.lastModifiedDate = currentFile.lastModifiedDate;
+          file_list.set(options.fileIndex, link);
+          editor.filesManager.upload(link, file_list_values, $current_image, options.fileIndex);
+          closeEditDocContainer();
+        };
+
+        xhr.send();
+        return;
+      }
+      /**
+        * Handles file uploaded event
+        */
+
+
+      function handleFileUpload(event) {
+        disableOnEdit(options.fileIndex);
+        var file = options.file; //created
+
+        if (!file) {
+          options.events.onInvalidFile("File is not selected");
+          return;
+        }
+
+        saveSingleFile(file, showEditableDoc);
+      }
+      /**
+        * Shows google doc in iframe
+        */
+
+      function showEditableDoc(doc) {
+        responseFileId = doc.id; //created
+
+        var googleDocUrl = 'https://docs.google.com/document/d/' + doc.id + '/edit';
+        var body = editor.o_doc.body;
+        var editDocContainer = editor.o_doc.createElement('div');
+        editDocContainer.setAttribute('id', 'editDocContainer');
+        editDocContainer.style.cssText = 'position: fixed; top: 0;left: 0;padding: 0;width: 100%;height: 100%;background: rgba(255,255,255,1);z-index: 9998;display:block'; // margin-top is given for wordpress-framework
+
+        editDocContainer.innerHTML = '<div style="margin-top:25px; text-align:center"><label>Sign Out : </label><input type="checkbox" id ="markSignOut" role="button"/>  <button id="signout_button"  class="fr-trim-button" >Save </button> <button id="cancel_file_edit" class="fr-trim-button">Cancel</button></div>  <iframe title="Edit your file" frameBorder="0" width="100%" height="700px" src="' + googleDocUrl + '"></iframe>';
+        body.appendChild(editDocContainer);
+        document.getElementById('signout_button').onclick = handleSignoutClick;
+        document.getElementById('cancel_file_edit').onclick = closeEditDocContainer;
+      }
+
+      function closeEditDocContainer() {
+        document.getElementById('markSignOut').checked && gapi.auth2.getAuthInstance().signOut().then(function () {
+          if (gapi.auth.getToken()) {
+            gapi.auth.getToken().access_token = undefined;
+          }
+        });
+        var container = document.getElementById('editDocContainer');
+        container.parentNode.removeChild(container);
+        if (document.getElementById("user_area-".concat(options.fileIndex))) document.getElementById("user_area-".concat(options.fileIndex)).style.display = 'none';
+        enableAfterEdit(options.fileIndex);
+      }
+      /**
+      * Saves file to google drive
+      */
+
+
+      function saveSingleFile(file, callback) {
+        var reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+
+        reader.onload = function (e) {
+          var contentType = 'application/vnd.google-apps.document';
+          var metadata = {
+            'title': file.name,
+            'mimeType': contentType
+          };
+          var binary = '';
+          var bytes = new Uint8Array(reader.result);
+          var len = bytes.byteLength;
+
+          for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+
+          var base64Data = btoa(binary);
+          var multipartRequestBody = DELIMITER + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + DELIMITER + 'Content-Type: ' + 'application/octet-stream' + '\r\n' + 'Content-Transfer-Encoding: base64\r\n' + '\r\n' + base64Data + CLOSE_DELIMITER;
+          var request = gapi.client.request({
+            'path': '/upload/drive/v2/files',
+            'method': 'POST',
+            'params': {
+              'uploadType': 'multipart',
+              'fields': DEFAULT_FIELDS
+            },
+            'headers': {
+              'Content-Type': 'multipart/related; boundary="' + BOUNDARY + '"',
+              'Content-Length': multipartRequestBody.Length
+            },
+            'body': multipartRequestBody
+          });
+
+          if (!callback) {
+            callback = function callback(file) {
+              console.log(file);
+            };
+          }
+
+          request.execute(function (doc, resp) {
+            if (!doc.error) {
+              callback(doc);
+            } else {
+              options.events.onError(doc.error);
+            }
+          });
+        };
+      }
+      var docEditor = {};
+
+      docEditor.handleClientLoad = function () {
+        gapi.load('client:auth2', initClient);
+      };
+
+      return docEditor;
+    }
+
+    function disableOnEdit(index) {
+      var buttons = document.getElementsByClassName("fr-doc-edit-".concat(index));
+
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].setAttribute('disabled', true);
+        buttons[i].classList.add('fr-disabled');
+      }
+    }
+
+    function enableAfterEdit(index) {
+      var buttons = document.getElementsByClassName("fr-doc-edit-".concat(index));
+
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].removeAttribute('disabled');
+        buttons[i].classList.remove('fr-disabled');
+      }
+    }
+
+    function saveImage($img) {
+      var obj = file_list_values.get($current_image_index);
+      obj.link = window.URL.createObjectURL(new Blob($img, {
+        type: 'image/png'
+      }));
+      file_list_values.set($current_image_index, obj);
+    }
+    /*
+    * Get file.type for machines which do not return type by default.
+    */
+
+
+    function _getFileType(file) {
+      var fileTypeMap = [['.doc', 'application/msword'], ['.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'], ['.gif', 'image/gif'], ['.jpeg', 'image/jpeg'], ['.jpg', 'image/jpeg'], ['.txt', 'text/plain'], ['.log', 'type/text'], ['.mov', 'video/quicktime'], ['.mp3', 'audio/mpeg'], ['.mp4', 'video/mp4'], ['.ogg', 'audio/ogg'], ['.ogv', 'video/ogg'], ['.pdf', 'application/pdf'], ['.png', 'image/png'], ['.webm', 'video/webm'], ['.webp', 'image/webp'], ['.wmv', 'video/x-ms-wmv'], ['.xls', 'application/vnd.ms-excel'], ['.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'], ['.zip', 'application/x-zip-compressed']];
+
+      if (file.type == "") {
+        var re = /(?:\.([^.]+))?$/;
+        var ext = re.exec(file.name)[1];
+        var fileType;
+        fileTypeMap.forEach(function (value, index) {
+          if (value[0] == ".".concat(ext)) {
+            fileType = value[1];
+          }
+        });
+        return fileType;
+      }
+
+      return file.type;
+    }
+    /**
+     * Insert image into the editor.
+     */
+
+
+    function insert(index, fileKeys) {
+      if (isFile(_getFileType(file_list_values.get(index))) || !isFormatSupported(_getFileType(file_list_values.get(index)))) {
+        var link = file_list_values.get(index).link;
+        var text = file_list_values.get(index).text;
+
+        if (!text && file_list.get(index) && file_list.get(index).name) {
+          text = file_list.get(index).name;
+        }
+
+        var response = file_list_values.get(index).response;
+        editor.edit.on(); // Focus in the editor.
+
+        editor.events.focus(true);
+        editor.selection.restore();
+
+        if (editor.opts.fileUseSelectedText && editor.selection.text().length) {
+          text = editor.selection.text();
+        }
+
+        if (link.endsWith('.pdf') || link.endsWith('.txt')) {
+          var code = "<iframe src=\"".concat(link, "\" title=\"").concat(text, "\" width=\"\u201D100%\u201D\" height=\"\u201D100%\u201D\" class=\"fr-file\"></iframe>");
+          insertEmbeddedFile(code, true);
+        } else {
+          editor.html.insert("<a href=\"".concat(link, "\" target=\"_blank\" id=\"fr-inserted-file\" class=\"fr-file\">").concat(text, "</a>"));
+        } // Get the file.
+
+
+        var $file = editor.$el.find('#fr-inserted-file');
+        $file.removeAttr('id');
+        editor.undo.saveStep();
+
+        _syncFiles();
+
+        editor.selection.clear();
+        editor.selection.setAfter($file);
+        editor.events.trigger('file.inserted', [$file, response]);
+        insertFiles(fileKeys);
+      }
+
+      if (isImage(_getFileType(file_list_values.get(index))) && isFormatSupported(_getFileType(file_list_values.get(index)))) {
+        var _link2 = file_list_values.get(index).link;
+        var sanitize = file_list_values.get(index).sanitize;
+        var data = file_list_values.get(index).data;
+        var $existing_img = file_list_values.get(index).$existing_img;
+        var _response = file_list_values.get(index).response;
+
+        if ($existing_img && typeof $existing_img === 'string') {
+          $existing_img = editor.$($existing_img);
+        }
+
+        editor.edit.off();
+
+        _setProgressMessage(editor.language.translate('Loading image'));
+
+        if (sanitize) _link2 = editor.helpers.sanitizeURL(_link2);
+        var image = new Image();
+
+        image.onload = function () {
+          var $img;
+          var attr;
+
+          if ($existing_img) {
+            if (!editor.undo.canDo() && !$existing_img.hasClass('fr-uploading')) editor.undo.saveStep();
+            var old_src = $existing_img.data('fr-old-src');
+
+            if ($existing_img.data('fr-image-pasted')) {
+              old_src = null;
+            }
+
+            if (editor.$wp) {
+              // Clone existing image.
+              $img = $existing_img.clone().removeData('fr-old-src').removeClass('fr-uploading').removeAttr('data-fr-image-pasted'); // Remove load event.
+
+              $img.off('load'); // Set new SRC.
+
+              if (old_src) $existing_img.attr('src', old_src); // Replace existing image with its clone.
+
+              $existing_img.replaceWith($img);
+            } else {
+              $img = $existing_img;
+            } // Remove old data.
+
+
+            var atts = $img.get(0).attributes;
+
+            for (var i = 0; i < atts.length; i++) {
+              var att = atts[i];
+
+              if (att.nodeName.indexOf('data-') === 0) {
+                $img.removeAttr(att.nodeName);
+              }
+            } // Set new data.
+
+
+            if (typeof data != 'undefined') {
+              for (attr in data) {
+                if (data.hasOwnProperty(attr)) {
+                  if (attr != 'link') {
+                    $img.attr("data-".concat(attr), data[attr]);
+                  }
+                }
+              }
+            }
+
+            $img.on('load', _loadedCallback);
+            $img.attr('src', _link2);
+            editor.edit.on();
+            editor.undo.saveStep(); // Cursor will not appear if we don't make blur.
+
+            editor.events.disableBlur();
+            editor.$el.blur();
+            editor.events.trigger(old_src ? 'image.replaced' : 'image.inserted', [$img, _response]);
+          } else {
+            $img = _addImage(_link2, data, _loadedCallback);
+            editor.undo.saveStep(); // Cursor will not appear if we don't make blur.
+
+            editor.events.disableBlur();
+            editor.$el.blur();
+            editor.events.trigger('image.inserted', [$img, _response]);
+          }
+        };
+
+        image.onerror = function () {
+          _throwError(BAD_LINK, null, null, index);
+
+          insertFiles(fileKeys);
+        };
+
+        image.src = _link2;
+      }
+
+      if ((isVideo(_getFileType(file_list_values.get(index))) || isAudio(_getFileType(file_list_values.get(index)))) && isFormatSupported(_getFileType(file_list_values.get(index)))) {
+        current_index = index;
+
+        if (_getFileType(file_list_values.get(index)) == 'video/url') {
+          var video_autoplay = false;
+
+          if (document.getElementById('fr-file-autoplay-button-' + index) !== undefined) {
+            video_autoplay = document.getElementById('fr-file-autoplay-button-' + index).checked;
+          }
+
+          if (video_autoplay && file_list_values.get(index) !== undefined && file_list_values.get(index).video.indexOf('iframe') > -1 && file_list_values.get(index).video.indexOf('autoplay=1') < 0) {
+            var url = file_list_values.get(index).video.substring(file_list_values.get(index).video.indexOf('src') + 3);
+            url = url.substring(url.indexOf('"') + 1);
+            url = url.substring(0, url.indexOf('"'));
+            var appendSymbol = '&';
+
+            if (url.indexOf('?') < 0) {
+              appendSymbol = '?';
+            }
+
+            file_list_values.get(index).video = file_list_values.get(index).video.replace(url, url += appendSymbol + 'autoplay=1');
+          } else if (!video_autoplay && file_list_values.get(index).video.indexOf('iframe' > -1)) {
+            if (file_list_values.get(index).video.indexOf('&autoplay=1') > -1) {
+              file_list_values.get(index).video = file_list_values.get(index).video.replace('&autoplay=1', '');
+            }
+
+            if (file_list_values.get(index).video.indexOf('?autoplay=1') > -1) {
+              file_list_values.get(index).video = file_list_values.get(index).video.replace('?autoplay=1', '');
+            }
+          } // Make sure we have focus.
+
+
+          editor.events.focus(true);
+          editor.selection.restore();
+          editor.html.insert("<span contenteditable=\"false\" draggable=\"true\" class=\"fr-jiv fr-video fr-deletable\">".concat(file_list_values.get(index).video, "</span>"), false, editor.opts.videoSplitHTML);
+          editor.popups.hide('filesManager.insert');
+          var $video = editor.$el.find('.fr-jiv');
+          $video.removeClass('fr-jiv');
+          $video.toggleClass('fr-rv', editor.opts.videoResponsive);
+
+          _setVideoStyle($video, editor.opts.videoDefaultDisplay, editor.opts.videoDefaultAlign);
+
+          $video.toggleClass('fr-draggable', editor.opts.videoMove);
+          editor.events.trigger('video.inserted', [$video]);
+
+          _loadedCallback.call($video);
+        } else {
+          var _link3 = file_list_values.get(index).link;
+          var _sanitize = file_list_values.get(index).sanitize;
+          var _data = file_list_values.get(index).data;
+          var $existing_video = file_list_values.get(index).$existing_img;
+          var _response2 = file_list_values.get(index).response;
+          editor.edit.off();
+          if (_sanitize) _link3 = editor.helpers.sanitizeURL(_link3);
+
+          var _add = function _add() {
+            var $video;
+            var attr;
+
+            if ($existing_video) {
+              if (!editor.undo.canDo() && !$existing_video.find('video').hasClass('fr-uploading')) editor.undo.saveStep();
+              var old_src = $existing_video.find('video').data('fr-old-src');
+              var replaced = $existing_video.data('fr-replaced');
+              $existing_video.data('fr-replaced', false);
+
+              if (editor.$wp) {
+                // Clone existing video.
+                $video = $existing_video.clone(true);
+                $video.find('video').removeData('fr-old-src').removeClass('fr-uploading'); // Remove load event.
+
+                $video.find('video').off('canplay'); // Set new SRC.
+
+                if (old_src) $existing_video.find('video').attr('src', old_src); // Replace existing video with its clone.
+
+                $existing_video.replaceWith($video);
+              } else {
+                $video = $existing_video;
+              } // Remove old data.
+
+
+              var atts = $video.find('video').get(0).attributes;
+
+              for (var i = 0; i < atts.length; i++) {
+                var att = atts[i];
+
+                if (att.nodeName.indexOf('data-') === 0) {
+                  $video.find('video').removeAttr(att.nodeName);
+                }
+              } // Set new data.
+
+
+              if (typeof _data != 'undefined') {
+                for (attr in _data) {
+                  if (_data.hasOwnProperty(attr)) {
+                    if (attr != 'link') {
+                      $video.find('video').attr("data-".concat(attr), _data[attr]);
+                    }
+                  }
+                }
+              }
+
+              $video.find('video').on('canplay', _loadedCallback);
+              $video.find('video').attr('src', _link3);
+              editor.edit.on();
+
+              _syncVideos();
+
+              editor.undo.saveStep(); // Cursor will not appear if we don't make blur.
+
+              editor.$el.blur();
+              editor.events.trigger(replaced ? 'video.replaced' : 'video.inserted', [$video, _response2]);
+            } else {
+              $video = _addVideo(_link3, _data, _loadedCallback, _getFileType(file_list_values.get(index)), index);
+
+              _syncVideos();
+
+              editor.undo.saveStep();
+              editor.events.trigger('video.inserted', [$video, _response2]);
+            }
+          };
+
+          _add();
+        }
+      }
+
+      editor.popups.hide('filesManager.insert');
+      checked_files["delete"](index);
+      var $popup = editor.popups.get('filesManager.insert');
+      $popup.find("input.fr-insert-attr.fr-checkbox-file-".concat(index))[0].checked = false;
+      $popup.find(".fr-file-" + index).get(0).classList.add('fr-unchecked');
+      checkInsertAllState();
+
+      if (document.getElementById('fr-file-autoplay-button-' + index)) {
+        document.getElementById('fr-file-autoplay-button-' + index).checked = false;
+      }
+
+      autoplayCheckbox = autoplayCheckbox.filter(function (i) {
+        return i != index;
+      });
+    }
+
+    function _setVideoStyle($video, _display, _align) {
+      if (!editor.opts.htmlUntouched && editor.opts.useClasses) {
+        $video.removeClass('fr-fvl fr-fvr fr-dvb fr-dvi');
+        $video.addClass("fr-fv".concat(_align[0], " fr-dv").concat(_display[0]));
+      } else {
+        if (_display == 'inline') {
+          $video.css({
+            display: 'inline-block'
+          });
+
+          if (_align == 'center') {
+            $video.css({
+              'float': 'none'
+            });
+          } else if (_align == 'left') {
+            $video.css({
+              'float': 'left'
+            });
+          } else {
+            $video.css({
+              'float': 'right'
+            });
+          }
+        } else {
+          $video.css({
+            display: 'block',
+            clear: 'both'
+          });
+
+          if (_align == 'left') {
+            $video.css({
+              textAlign: 'left'
+            });
+          } else if (_align == 'right') {
+            $video.css({
+              textAlign: 'right'
+            });
+          } else {
+            $video.css({
+              textAlign: 'center'
+            });
+          }
+        }
+      }
+    }
+    /* insert Embed 
+    */
+
+
+    function insertEmbeddedFile(embedded_code, file) {
+      var type;
+      var fileSplitHTML;
+
+      if (FroalaEditor.VIDEO_EMBED_REGEX.test(embedded_code)) {
+        type = 'video';
+        fileSplitHTML = editor.opts.videoSplitHTML;
+      } else if (FroalaEditor.IMAGE_EMBED_REGEX.test(embedded_code)) {
+        type = 'image';
+        fileSplitHTML = editor.opts.imageSplitHTML;
+      } // Make sure we have focus.
+
+
+      editor.events.focus(true);
+      editor.selection.restore(); // Flag to tell if the video is replaced.
+
+      var replaced = false; // If current video found we have to replace it.
+
+      if ($current_image) {
+        // Remove the old video.
+        remove(); // Mark that the video is replaced.
+
+        replaced = true;
+      }
+
+      editor.html.insert("<span id=\"fr-inserted-file\" contenteditable=\"true\" draggable=\"true\" class=\"fr-".concat(type, " fr-jiv fr-deletable\">").concat(embedded_code, "</span>"), false, fileSplitHTML); // add the below code for image as well
+
+      editor.popups.hide('filesManager.insert');
+      var $file = editor.$el.find('.fr-jiv');
+      $file.removeClass('fr-jiv');
+
+      if (type == 'video') {
+        $file.toggleClass('fr-rv', editor.opts.videoResponsive);
+
+        _setStyleVideo($file, editor.opts.videoDefaultDisplay, editor.opts.videoDefaultAlign);
+
+        $file.toggleClass('fr-draggable', editor.opts.videoMove);
+        editor.events.trigger(replaced ? 'video.replaced' : 'video.inserted', [$file]);
+      }
+
+      if (type == 'image') {
+        _setStyleImage($file, editor.opts.imageDefaultDisplay, editor.opts.imageDefaultAlign);
+
+        $file.find('img').removeClass('fr-dii');
+        $file.find('img').addClass('fr-dib');
+        $file.toggleClass('fr-draggable', editor.opts.imageMove);
+        editor.events.trigger(replaced ? 'image.replaced' : 'image.inserted', [$file]);
+      }
+
+      if (file) {
+        editImageValue = $file;
+        editor.selection.clear();
+        editor.toolbar.disable();
+
+        editor.video._editVideo(editImageValue);
+      }
+    }
+
+    function _addVideo(link, data, loadCallback, type, index) {
+      // Build video data string.
+      var data_str = '';
+      var attr;
+
+      if (data && typeof data != 'undefined') {
+        for (attr in data) {
+          if (data.hasOwnProperty(attr)) {
+            if (attr != 'link') {
+              data_str += " data-".concat(attr, "=\"").concat(data[attr], "\"");
+            }
+          }
+        }
+      }
+
+      var width = editor.opts.videoDefaultWidth;
+
+      if (width && width != 'auto') {
+        width = "".concat(width, "px");
+      }
+
+      var $video;
+
+      if (isAudio(type)) {
+        // https://github.com/froala-labs/froala-editor-js-2/issues/2810
+        // Create audio object and set the load event.
+        $video = $(document.createElement('span')).attr('contenteditable', 'false').attr('draggable', 'true').attr('class', 'fr-video fr-dv' + editor.opts.videoDefaultDisplay[0] + (editor.opts.videoDefaultAlign != 'center' ? ' fr-fv' + editor.opts.videoDefaultAlign[0] : '')).html('<audio src="' + link + '" ' + data_str + ' controls>' + editor.language.translate('Your browser does not support HTML5 video.') + '</audio>');
+      } else {
+        var autoplay = '';
+        var video_autoplay = document.getElementById('fr-file-autoplay-button-' + index).checked;
+
+        if (video_autoplay) {
+          autoplay = "autoplay";
+        } // Create video object and set the load event.
+
+
+        $video = $(document.createElement('span')).attr('contenteditable', 'false').attr('draggable', 'true').attr('class', 'fr-video fr-dv' + editor.opts.videoDefaultDisplay[0] + (editor.opts.videoDefaultAlign != 'center' ? ' fr-fv' + editor.opts.videoDefaultAlign[0] : '')).html('<video src="' + link + '" ' + data_str + (width ? ' style="width: ' + width + ';" ' : '') + autoplay + '  controls>' + editor.language.translate('Your browser does not support HTML5 video.') + '</video>');
+      }
+
+      $video.toggleClass('fr-draggable', editor.opts.videoMove); // Make sure we have focus.
+      // Call the event.
+
+      editor.edit.on();
+      editor.events.focus(true);
+      editor.selection.restore();
+      editor.undo.saveStep(); // Insert marker and then replace it with the video.
+
+      if (editor.opts.videoSplitHTML) {
+        editor.markers.split();
+      } else {
+        editor.markers.insert();
+      }
+
+      editor.html.wrap();
+      var $marker = editor.$el.find('.fr-marker'); // Do not insert video inside emoticon.
+
+      if (editor.node.isLastSibling($marker) && $marker.parent().hasClass('fr-deletable')) {
+        $marker.insertAfter($marker.parent());
+      }
+
+      $marker.replaceWith($video);
+      var typeVar = '';
+      isAudio(type) ? typeVar = 'audio' : typeVar = 'video';
+
+      if ($video.find(typeVar).get(0).readyState > $video.find(typeVar).get(0).HAVE_FUTURE_DATA || editor.helpers.isIOS()) {
+        loadCallback.call($video.find(typeVar).get(0));
+      } else {
+        $video.find(typeVar).on('canplaythrough load', loadCallback);
+        $video.find(typeVar).on('error', loadCallback);
+      }
+
+      return $video;
+    }
+    /**
+     * Parse image response.
+     */
+
+
+    function _parseResponse(response, index) {
+      try {
+        if (editor.events.trigger('filesManager.uploaded', [response], true) === false) {
+          editor.edit.on();
+          return false;
+        }
+
+        var resp = JSON.parse(response);
+
+        if (resp.link) {
+          return resp;
+        } else {
+          // No link in upload request.
+          _throwError(MISSING_LINK, response, null, index);
+
+          return false;
+        }
+      } catch (ex) {
+        // Bad response.
+        _throwError(BAD_RESPONSE, response, null, index);
+
+        return false;
+      }
+    }
+    /**
+     * Parse image response.
+     */
+
+
+    function _parseXMLResponse(response, index) {
+      try {
+        var link = $(response).find('Location').text();
+        var key = $(response).find('Key').text();
+
+        if (editor.events.trigger('filesManager.uploadedToS3', [link, key, response], true) === false) {
+          editor.edit.on();
+          return false;
+        }
+
+        return link;
+      } catch (ex) {
+        // Bad response.
+        _throwError(BAD_RESPONSE, response, null, index);
+
+        return false;
+      }
+    }
+    /**
+     * Image was uploaded to the server and we have a response.
+     */
+
+
+    function _fileUploaded(text, index, type, url, key) {
+      var status = this.status;
+      var response = this.response;
+      var responseXML = this.responseXML;
+      var responseText = this.responseText;
+
+      try {
+        if (editor.opts.filesManagerUploadToS3 || editor.opts.filesManagerUploadToAzure) {
+          if (status === 201) {
+            var link;
+
+            if (editor.opts.filesManagerUploadToAzure) {
+              if (editor.events.trigger('filesManager.uploadedToAzure', [this.responseURL, key, response], true) === false) {
+                editor.edit.on();
+                return false;
+              }
+
+              link = url;
+            } else {
+              link = _parseXMLResponse(responseXML, index);
+            }
+
+            if (link) {
+              var obj = {
+                link: link,
+                text: text,
+                response: response,
+                type: type
+              };
+              file_list_values.set(index, obj);
+            }
+          } else {
+            _throwError(BAD_RESPONSE, response || responseXML, null, index);
+          }
+        } else {
+          if (status >= 200 && status < 300) {
+            var resp = _parseResponse(responseText, index);
+
+            if (resp) {
+              var _obj = {
+                link: resp.link,
+                text: text,
+                response: response,
+                type: type
+              };
+              file_list_values.set(index, _obj);
+            }
+          } else {
+            _throwError(ERROR_DURING_UPLOAD, response || responseText, null, index);
+          }
+        }
+      } catch (ex) {
+        // Bad response.
+        _throwError(BAD_RESPONSE, response || responseText, null, index);
+      }
+    }
+
+    function _imageUploaded($image_placeholder, index, type, url, key) {
+      var status = this.status;
+      var response = this.response;
+      var responseXML = this.responseXML;
+      var responseText = this.responseText;
+
+      try {
+        if (editor.opts.filesManagerUploadToS3 || editor.opts.filesManagerUploadToAzure) {
+          if (status == 201) {
+            var link;
+
+            if (editor.opts.filesManagerUploadToAzure) {
+              if (editor.events.trigger('filesManager.uploadedToAzure', [this.responseURL, key, response], true) === false) {
+                editor.edit.on();
+                return false;
+              }
+
+              link = url;
+            } else {
+              link = _parseXMLResponse(responseXML, index);
+            }
+
+            if (link) {
+              var obj = {
+                link: link,
+                sanitize: false,
+                data: [],
+                $existing_img: $image_placeholder,
+                response: response || responseXML,
+                type: type
+              };
+              file_list_values.set(index, obj);
+            }
+          } else {
+            _throwError(BAD_RESPONSE, response || responseXML, $image_placeholder, index);
+          }
+        } else {
+          if (status >= 200 && status < 300) {
+            var resp = _parseResponse(responseText, index);
+
+            if (resp) {
+              var _obj2 = {
+                link: resp.link,
+                sanitize: false,
+                data: resp,
+                $existing_img: $image_placeholder,
+                response: response || responseXML,
+                type: type
+              };
+              file_list_values.set(index, _obj2);
+            }
+          } else {
+            _throwError(ERROR_DURING_UPLOAD, response || responseText, $image_placeholder, index);
+          }
+        }
+      } catch (ex) {
+        // Bad response.
+        _throwError(BAD_RESPONSE, response || responseText, $image_placeholder, index);
+      }
+    }
+    /**
+     * Image upload progress.
+     */
+
+
+    function _fileUploadProgress(e, index) {
+      if (e.lengthComputable) {
+        var complete = e.loaded / e.total * 100 | 0;
+        updateFileUploadingProgress(complete, index, false);
+      }
+    }
+
+    function _addImage(link, data, loadCallback) {
+      // Build image data string.
+      var data_str = '';
+      var attr;
+      var $img = $(document.createElement('img')).attr('src', link);
+
+      if (data && typeof data != 'undefined') {
+        for (attr in data) {
+          if (data.hasOwnProperty(attr)) {
+            if (attr != 'link') {
+              data_str += " data-".concat(attr, "=\"").concat(data[attr], "\""); // https://github.com/froala-labs/froala-editor-js-2/issues/2649
+
+              $img.attr("data-".concat(attr), data[attr]);
+            }
+          }
+        }
+      }
+
+      var width = editor.opts.imageDefaultWidth;
+
+      if (width && width != 'auto') {
+        width = editor.opts.imageResizeWithPercent ? '100%' : "".concat(width, "px");
+      } // Create image object and set the load event.
+
+
+      $img.attr('style', width ? "width: ".concat(width, ";") : '');
+
+      _setStyleImage($img, editor.opts.imageDefaultDisplay, editor.opts.imageDefaultAlign);
+
+      $img.on('load', loadCallback); // Image might be corrupted. Continue upload flow.
+
+      $img.on('error', loadCallback); // Make sure we have focus.
+      // Call the event.
+
+      editor.edit.on();
+      editor.events.focus(true);
+      editor.selection.restore();
+      editor.undo.saveStep(); // Insert marker and then replace it with the image.
+
+      if (editor.opts.imageSplitHTML) {
+        editor.markers.split();
+      } else {
+        editor.markers.insert();
+      }
+
+      editor.html.wrap();
+      var $marker = editor.$el.find('.fr-marker');
+
+      if ($marker.length) {
+        // Do not insert image in HR.
+        if ($marker.parent().is('hr')) {
+          $marker.parent().after($marker);
+        } // Do not insert image inside emoticon.
+
+
+        if (editor.node.isLastSibling($marker) && $marker.parent().hasClass('fr-deletable')) {
+          $marker.insertAfter($marker.parent());
+        }
+
+        $marker.replaceWith($img);
+      } else {
+        editor.$el.append($img);
+      }
+
+      return $img;
+    }
+    /**
+     * Image upload aborted.
+     */
+
+
+    function _fileUploadAborted(index, e) {
+      _throwError(UPLOAD_CANCEL, e, $current_image, index);
+    }
+
+    function _browserUpload(index, file, $image_placeholder) {
+      var reader = new FileReader();
+
+      reader.onload = function () {
+        var link = reader.result;
+
+        if (reader.result.indexOf('svg+xml') < 0) {
+          // Convert file to local blob.
+          var binary = atob(reader.result.split(',')[1]);
+          var array = [];
+
+          for (var i = 0; i < binary.length; i++) {
+            array.push(binary.charCodeAt(i));
+          } // Get local image link.
+
+
+          link = window.URL.createObjectURL(new Blob([new Uint8Array(array)], {
+            type: _getFileType(file)
+          }));
+
+          if (isImage(_getFileType(file))) {
+            var obj = {
+              link: link,
+              sanitize: false,
+              data: null,
+              $existing_img: $image_placeholder,
+              response: null,
+              type: _getFileType(file)
+            };
+            file_list_values.set(index, obj);
+          }
+
+          if (isFile(_getFileType(file))) {
+            var _obj3 = {
+              link: link,
+              text: file.name,
+              response: null,
+              type: _getFileType(file)
+            };
+            file_list_values.set(index, _obj3);
+          }
+
+          if (isVideo(_getFileType(file)) || isAudio(_getFileType(file))) {
+            var _obj4 = {
+              link: link,
+              sanitize: false,
+              data: null,
+              $existing_img: $image_placeholder,
+              type: _getFileType(file)
+            };
+            file_list_values.set(index, _obj4);
+          }
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function upload(file, files, $image_placeholder, index) {
+      if (unsupported_file_types.indexOf(_getFileType(file)) > -1 || !_getFileType(file)) {
+        _throwError(BAD_FILE_TYPE, null, null, index);
+
+        return false;
+      } // Check if we should cancel the image upload.
+
+
+      if (editor.events.trigger('filesManager.beforeUpload', [files]) === false) {
+        return false;
+      }
+
+      if ((editor.opts.filesManagerUploadURL === null || editor.opts.filesManagerUploadURL == DEFAULT_FILE_UPLOAD_URL) && !editor.opts.filesManagerUploadToS3 && !editor.opts.filesManagerUploadToAzure) {
+        _browserUpload(index, file);
+
+        return false;
+      }
+
+      if (isImage(_getFileType(file))) {
+        if (!file.name) {
+          file.name = new Date().getTime() + '.' + (_getFileType(file) || 'image/jpeg').replace(/image\//g, '');
+        }
+      }
+
+      if (file.size > editor.opts.filesManagerMaxSize) {
+        _throwError(MAX_SIZE_EXCEEDED, null, null, index);
+
+        return false;
+      }
+
+      if (editor.opts.filesManagerAllowedTypes.indexOf('*') < 0 && editor.opts.filesManagerAllowedTypes.indexOf(_getFileType(file)) < 0) {
+        _throwError(BAD_FILE_TYPE, null, null, index);
+
+        return false;
+      }
+
+      initialFileUploadStatus(index); // Create form Data.
+
+      var form_data;
+
+      if (editor.drag_support.formdata) {
+        form_data = editor.drag_support.formdata ? new FormData() : null;
+      } // Prepare form data for request.
+
+
+      if (form_data) {
+        var key; // Upload to S3.
+
+        if (editor.opts.filesManagerUploadToS3 !== false) {
+          form_data.append('key', editor.opts.filesManagerUploadToS3.keyStart + new Date().getTime() + '-' + (file.name || 'untitled'));
+          form_data.append('success_action_status', '201');
+          form_data.append('X-Requested-With', 'xhr');
+          form_data.append('Content-Type', _getFileType(file));
+
+          for (key in editor.opts.filesManagerUploadToS3.params) {
+            if (editor.opts.filesManagerUploadToS3.params.hasOwnProperty(key)) {
+              form_data.append(key, editor.opts.filesManagerUploadToS3.params[key]);
+            }
+          }
+        } // Add upload params.
+
+
+        for (key in editor.opts.filesManagerUploadParams) {
+          if (editor.opts.filesManagerUploadParams.hasOwnProperty(key)) {
+            form_data.append(key, editor.opts.filesManagerUploadParams[key]);
+          }
+        } // Set the image in the request.
+
+
+        form_data.append(editor.opts.filesManagerUploadParam, file, file.name); // Create XHR request.
+
+        var url = editor.opts.filesManagerUploadURL;
+        var fileURL;
+        var azureKey;
+
+        if (editor.opts.filesManagerUploadToS3) {
+          if (editor.opts.filesManagerUploadToS3.uploadURL) {
+            url = editor.opts.filesManagerUploadToS3.uploadURL;
+          } else {
+            url = "https://".concat(editor.opts.filesManagerUploadToS3.region, ".amazonaws.com/").concat(editor.opts.filesManagerUploadToS3.bucket);
+          }
+        }
+
+        if (editor.opts.filesManagerUploadToAzure) {
+          if (editor.opts.filesManagerUploadToAzure.uploadURL) {
+            url = "".concat(editor.opts.filesManagerUploadToAzure.uploadURL, "/").concat(file.name);
+          } else {
+            url = encodeURI("https://".concat(editor.opts.filesManagerUploadToAzure.account, ".blob.core.windows.net/").concat(editor.opts.filesManagerUploadToAzure.container, "/").concat(file.name));
+          }
+
+          fileURL = url;
+
+          if (editor.opts.filesManagerUploadToAzure.SASToken) {
+            url += editor.opts.filesManagerUploadToAzure.SASToken;
+          }
+
+          editor.opts.filesManagerUploadMethod = 'PUT';
+        }
+
+        var xhr = editor.core.getXHR(url, editor.opts.filesManagerUploadMethod);
+
+        if (editor.opts.filesManagerUploadToAzure) {
+          var uploadDate = new Date().toUTCString();
+
+          if (!editor.opts.filesManagerUploadToAzure.SASToken && editor.opts.filesManagerUploadToAzure.accessKey) {
+            var azureAccount = editor.opts.filesManagerUploadToAzure.account;
+            var azureContainer = editor.opts.filesManagerUploadToAzure.container;
+
+            if (editor.opts.filesManagerUploadToAzure.uploadURL) {
+              var urls = editor.opts.filesManagerUploadToAzure.uploadURL.split('/');
+              azureContainer = urls.pop();
+              azureAccount = urls.pop().split('.')[0];
+            }
+
+            var headerResource = "x-ms-blob-type:BlockBlob\nx-ms-date:".concat(uploadDate, "\nx-ms-version:2019-07-07");
+            var urlResource = encodeURI('/' + azureAccount + '/' + azureContainer + '/' + file.name);
+            var stringToSign = editor.opts.filesManagerUploadMethod + '\n\n\n' + file.size + '\n\n' + _getFileType(file) + '\n\n\n\n\n\n\n' + headerResource + '\n' + urlResource;
+            var signatureBytes = editor.cryptoJSPlugin.cryptoJS.HmacSHA256(stringToSign, editor.cryptoJSPlugin.cryptoJS.enc.Base64.parse(editor.opts.filesManagerUploadToAzure.accessKey));
+            var signature = signatureBytes.toString(editor.cryptoJSPlugin.cryptoJS.enc.Base64);
+            var authHeader = 'SharedKey ' + azureAccount + ':' + signature;
+            azureKey = signature;
+            xhr.setRequestHeader("Authorization", authHeader);
+          }
+
+          xhr.setRequestHeader("x-ms-version", "2019-07-07");
+          xhr.setRequestHeader("x-ms-date", uploadDate);
+          xhr.setRequestHeader("Content-Type", _getFileType(file));
+          xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+
+          for (key in editor.opts.filesManagerUploadParams) {
+            if (editor.opts.filesManagerUploadParams.hasOwnProperty(key)) {
+              xhr.setRequestHeader(key, editor.opts.filesManagerUploadParams[key]);
+            }
+          }
+
+          for (key in editor.opts.filesManagerUploadToAzure.params) {
+            if (editor.opts.filesManagerUploadToAzure.params.hasOwnProperty(key)) {
+              xhr.setRequestHeader(key, editor.opts.filesManagerUploadToAzure.params[key]);
+            }
+          }
+        }
+
+        xhr.onload = function () {
+          if (isFile(_getFileType(file))) {
+            _fileUploaded.call(xhr, file.name, index, _getFileType(file), fileURL, azureKey);
+          } else {
+            _imageUploaded.call(xhr, $current_image, index, _getFileType(file), fileURL, azureKey);
+          }
+
+          if (!failedUploadFiles.has(index)) {
+            updateFileUploadingProgress(100, index, true);
+          }
+        };
+
+        xhr.onerror = function _fileUploadError() {
+          _throwError(BAD_RESPONSE, this.response || this.responseText || this.responseXML, null, index);
+        };
+
+        xhr.upload.onprogress = function (e) {
+          _fileUploadProgress(e, index);
+        };
+
+        xhr.onabort = function (e) {
+          _fileUploadAborted(index, e);
+        };
+
+        xhr.send(editor.opts.filesManagerUploadToAzure ? file : form_data);
+        XMLHttpRequests.set(index, xhr);
+      }
+    }
+    /**
+     * Image drop inside the upload zone.
+     */
+
+
+    function _bindInsertEvents($popup) {
+      //disable keypad launch on click in mobile
+      editor.events.$on($popup, 'click', '.fr-upload-progress-layer', function (e) {
+        if (editor.helpers.isMobile()) {
+          e.stopPropagation();
+          return false;
+        }
+      }, true); //preventing Drag over on file list in filesManager popup
+
+      editor.events.$on($popup, 'dragover dragenter', '.fr-upload-progress-layer', function (e) {
+        e.preventDefault();
+
+        for (var i = 0; i < e.originalEvent.dataTransfer.types.length; i++) {
+          if (e.originalEvent.dataTransfer.types[i] == "Files") {
+            e.originalEvent.dataTransfer.dropEffect = "none";
+          }
+        }
+
+        return false;
+      }, true); //preventing Drag end on file list in filesManager popup
+
+      editor.events.$on($popup, 'dragleave dragend', '.fr-upload-progress-layer', function (e) {
+        e.preventDefault();
+        return false;
+      }, true); // Drag over the dropable area.
+
+      editor.events.$on($popup, 'dragover dragenter', '.fr-files-upload-layer', function (e) {
+        $(this).addClass('fr-drop');
+
+        if (editor.browser.msie || editor.browser.edge) {
+          e.preventDefault();
+        }
+
+        return false;
+      }, true); // Drag end.
+
+      editor.events.$on($popup, 'dragleave dragend', '.fr-files-upload-layer', function (e) {
+        $(this).removeClass('fr-drop');
+
+        if (editor.browser.msie || editor.browser.edge) {
+          e.preventDefault();
+        }
+
+        return false;
+      }, true);
+      editor.events.$on($popup, 'click', '.fr-insert-checkbox', function (e) {
+        if (this.classList.contains('fr-checkbox-disabled')) {
+          this.children['target'].disabled = true;
+          this.children['target'].checked = false;
+          return;
+        }
+
+        var index = parseInt(this.id.split('-').pop());
+        checked_files.set(index, this.children['target'].checked);
+        var $btnInsert = $popup.find('.fr-command[data-cmd="insertAll"]');
+        var $btnDelete = $popup.find('.fr-command[data-cmd="deleteAll"]');
+        var check_inputs = $popup.find('input.fr-file-insert-check[type="checkbox"]');
+        var size = check_inputs.length;
+        var isDisabled = true;
+
+        for (var i = 0; i < size; i++) {
+          if (check_inputs[i].checked == true) {
+            isDisabled = false;
+          }
+        }
+
+        isDisabled ? $btnInsert.addClass('fr-disabled') : $btnInsert.removeClass('fr-disabled');
+        isDisabled ? $btnDelete.addClass('fr-disabled') : $btnDelete.removeClass('fr-disabled');
+
+        if (this.children['target'].checked) {
+          $popup.find(".fr-file-" + this.id.split('-').pop()).get(0).setAttribute('draggable', 'true');
+          $popup.find(".fr-file-" + this.id.split('-').pop()).get(0).classList.remove('fr-unchecked');
+        } else {
+          var id = this.id.split('-').pop();
+          $popup.find(".fr-file-" + this.id.split('-').pop()).get(0).setAttribute('draggable', 'false');
+          $popup.find(".fr-file-" + this.id.split('-').pop()).get(0).classList.add('fr-unchecked');
+        }
+      });
+      editor.events.$on($popup, 'click', '.fr-file-insert-button', function (e) {
+        if (this.classList.contains('fr-disabled')) {
+          return;
+        }
+
+        var index = parseInt(this.id.split('-').pop());
+        insert(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-autoplay-button', function (e) {
+        if (this.parentNode.classList.contains('fr-checkbox-disabled')) {
+          this.disabled = true;
+          this.checked = false;
+          return;
+        }
+
+        var index = parseInt(this.id.split('-').pop());
+        checkAutoplay(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-edit-button', function (e) {
+        var index = parseInt(this.id.split('-').pop());
+        if (!$popup.find(".fr-file-edit-button-".concat(index)).hasClass('fr-disabled')) editImage(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-view-button', function (e) {
+        var index = parseInt(this.id.split('-').pop());
+        if (!$popup.find(".fr-file-view-button-".concat(index)).hasClass('fr-disabled')) viewImage(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-delete-button', function (e) {
+        var index = parseInt(this.id.split('-').pop());
+        deleteFile(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-cancel-upload-button', function (e) {
+        var index = parseInt(this.id.split('-').pop());
+        cancelFileUpload(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-upload-delete-button', function (e) {
+        var index = parseInt(this.id.split('-').pop());
+        deleteFileUpload(index);
+      });
+      editor.events.$on($popup, 'click', '.fr-file-view-close', function (e) {
+        $popup.find('.fr-file-view-modal').get(0).outerHTML = '';
+      });
+      editor.events.$on($popup, 'click', '.fr-plugins-enable', function (e) {
+        addPlugins();
+        loadPlugins(FroalaEditor.PLUGINS);
+        editor.popups.get('filesManager.insert').get(0).outerHTML = '';
+
+        _initInsertPopup();
+
+        showInsertPopup(true);
+      });
+      editor.events.$on($popup, 'click', '.fr-plugins-cancel', function (e) {
+        editor.popups.hide('filesManager.insert');
+      }); // preventing drop on file list in filesManager popup
+
+      editor.events.$on($popup, 'drop', '.fr-upload-progress', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }); // Drop.
+
+      editor.events.$on($popup, 'drop', '.fr-files-upload-layer', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('fr-drop');
+        var dt = e.originalEvent.dataTransfer;
+
+        if (dt && dt.files) {
+          var inst = $popup.data('instance') || editor;
+          inst.events.disableBlur();
+          var indexes = [];
+
+          for (var i = 0; i < dt.files.length; i++) {
+            var j = fileListIndex;
+            file_list.set(j, dt.files[i]);
+            showFileUploadProgressLayer(j);
+            checked_files.set(j, false);
+            indexes.push(j);
+            fileListIndex++;
+          }
+
+          for (var _i2 = 0; _i2 < indexes.length; _i2++) {
+            inst.filesManager.upload(file_list.get(indexes[_i2]), dt.files, $current_image, indexes[_i2]);
+          }
+
+          inst.events.enableBlur();
+        }
+      }, true);
+
+      if (editor.helpers.isIOS()) {
+        editor.events.$on($popup, 'touchstart', '.fr-files-upload-layer input[type="file"]', function () {
+          $(this).trigger('click');
+        }, true);
+      }
+
+      editor.events.$on($popup, 'change', '.fr-files-upload-layer input[type="file"]', function () {
+        if (this.files) {
+          var inst = $popup.data('instance') || editor;
+          inst.events.disableBlur();
+          $popup.find('input:focus').blur();
+          inst.events.enableBlur();
+          var indexes = []; // Make sure we have what to upload.
+
+          if (typeof this.files != 'undefined' && this.files.length > 0) {
+            for (var i = 0; i < this.files.length; i++) {
+              var j = fileListIndex;
+              file_list.set(j, this.files[i]);
+              showFileUploadProgressLayer(j);
+              checked_files.set(j, false);
+              ++fileListIndex;
+              indexes.push(j);
+            }
+
+            for (var _i3 = 0; _i3 < indexes.length; _i3++) {
+              inst.filesManager.upload(file_list.get(indexes[_i3]), this.files, $current_image, indexes[_i3]);
+            }
+          }
+        } // Else IE 9 case.
+        // Chrome fix.
+
+
+        $(this).val('');
+      }, true);
+    }
+
+    function checkAutoplay(index) {
+      var checkbox = document.getElementById('fr-file-autoplay-button-' + index).checked;
+
+      if (checkbox) {
+        autoplayCheckbox.push(index);
+      } else {
+        autoplayCheckbox = autoplayCheckbox.filter(function (i) {
+          return i != index;
+        });
+      }
+    }
+
+    function isImage(type) {
+      return type && type.split('/')[0] === 'image';
+    }
+
+    function isFile(type) {
+      return type && type.split('/')[0] != 'image' && type && type.split('/')[0] != 'video' && type && type.split('/')[0] != 'audio';
+    }
+
+    function isVideo(type) {
+      return type && type.split('/')[0] === 'video';
+    }
+
+    function isAudio(type) {
+      return type && type.split('/')[0] === 'audio';
+    }
+
+    function isFormatSupported(type) {
+      var webp = 'image/webp';
+      var webm = 'video/webm';
+      var ogg = 'audio/ogg';
+      var ogv = 'video/ogg';
+
+      if (type == ogg || type == ogv || type == webp || type == webm) {
+        if (editor.browser.msie || editor.browser.edge || editor.browser.safari) {
+          return false;
+        }
+
+        if (editor.helpers.isMobile()) {
+          if (type == ogg || type == ogv) {
+            return false;
+          }
+
+          if (!editor.helpers.isAndroid() && !editor.browser.chrome) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
+    function _initEvents() {
+      if (editor.helpers.isMobile()) {
+        editor.events.$on($(editor.o_win), 'orientationchange', function () {
+          setTimeout(function () {
+            showInsertPopup(true);
+          }, 100);
+        });
+      } // Mouse down on image. It might start move.
+
+
+      editor.events.$on(editor.$el, editor._mousedown, editor.el.tagName == 'IMG' ? null : 'img:not([contenteditable="false"])', function (e) {
+        if ($(this).parents('contenteditable').not('.fr-element').not('.fr-img-caption').not('body').first().attr('contenteditable') == 'false') return true;
+        if (!editor.helpers.isMobile()) editor.selection.clear();
+        mousedown = true;
+        if (editor.popups.areVisible()) editor.events.disableBlur(); // Prevent the image resizing.
+
+        if (editor.browser.msie) {
+          editor.events.disableBlur();
+          editor.$el.attr('contenteditable', false);
+        }
+
+        if (!editor.draggable && e.type != 'touchstart') e.preventDefault();
+        e.stopPropagation();
+      });
+      editor.events.$on(editor.$el, editor._mousedown, '.fr-img-caption .fr-inner', function (e) {
+        if (!editor.core.hasFocus()) {
+          editor.events.focus();
+        }
+
+        e.stopPropagation();
+      });
+      editor.events.$on(editor.$el, 'paste', '.fr-img-caption .fr-inner', function (e) {
+        editor.toolbar.hide();
+        e.stopPropagation();
+      }); // Mouse up on an image prevent move.
+
+      editor.events.$on(editor.$el, editor._mouseup, editor.el.tagName == 'IMG' ? null : 'img:not([contenteditable="false"])', function (e) {
+        if ($(this).parents('contenteditable').not('.fr-element').not('.fr-img-caption').not('body').first().attr('contenteditable') == 'false') return true;
+
+        if (mousedown) {
+          mousedown = false; // Remove moving class.
+
+          e.stopPropagation();
+
+          if (editor.browser.msie) {
+            editor.$el.attr('contenteditable', true);
+            editor.events.enableBlur();
+          }
+        }
+      }); // Show image popup when it was selected.
+
+      editor.events.on('keyup', function (e) {
+        if (e.shiftKey && editor.selection.text().replace(/\n/g, '') === '' && editor.keys.isArrow(e.which)) {
+          var s_el = editor.selection.element();
+          var e_el = editor.selection.endElement();
+
+          if (s_el && s_el.tagName == 'IMG') {
+            _editImg($(s_el));
+          } else if (e_el && e_el.tagName == 'IMG') {
+            _editImg($(e_el));
+          }
+        }
+      }, true); // https://github.com/froala-labs/froala-editor-js-2/issues/1916
+
+      editor.events.on('window.mousedown', _markExit);
+      editor.events.on('window.touchmove', _unmarkExit);
+      editor.events.on('mouseup window.mouseup', function () {
+        if ($current_image) {
+          _exitEdit();
+
+          return false;
+        }
+
+        _unmarkExit();
+      });
+      editor.events.on('commands.mousedown', function ($btn) {
+        if ($btn.parents('.fr-toolbar').length > 0) {
+          _exitEdit();
+        }
+      });
+      editor.events.on('image.resizeEnd', function () {
+        if (editor.opts.iframe) {
+          editor.size.syncIframe();
+        }
+      });
+      editor.events.on('blur image.hideResizer commands.undo commands.redo element.dropped', function () {
+        mousedown = false;
+
+        _exitEdit(true);
+      });
+      editor.events.on('modals.hide', function () {
+        if ($current_image) {
+          editor.selection.clear();
+        }
+      });
+      editor.events.on('image.resizeEnd', function () {
+        if (editor.win.getSelection) {
+          _editImg($current_image);
+        }
+      }); // Add new line after image is inserted.
+
+      if (editor.opts.imageAddNewLine) {
+        editor.events.on('image.inserted', function ($img) {
+          var lastNode = $img.get(0); // Ignore first BR after image.
+
+          if (lastNode.nextSibling && lastNode.nextSibling.tagName === 'BR') lastNode = lastNode.nextSibling; // Look upper nodes.
+
+          while (lastNode && !editor.node.isElement(lastNode)) {
+            if (!editor.node.isLastSibling(lastNode)) {
+              lastNode = null;
+            } else {
+              lastNode = lastNode.parentNode;
+            }
+          } // If node is element, then image is last element.
+
+
+          if (editor.node.isElement(lastNode)) {
+            // ENTER_BR mode.
+            if (editor.opts.enter === FroalaEditor.ENTER_BR) {
+              $img.after('<br>');
+            } else {
+              var $parent = $(editor.node.blockParent($img.get(0)));
+              $parent.after("<".concat(editor.html.defaultTag(), "><br></").concat(editor.html.defaultTag(), ">"));
+            }
+          }
+        });
+      }
+    }
+    /**
+     * Init the image upload popup.
+     */
+
+
+    function _initInsertPopup(delayed) {
+      if (delayed) {
+        editor.popups.onRefresh('filesManager.insert', _refreshInsertPopup);
+        editor.popups.onHide('filesManager.insert', _hideInsertPopup);
+        return true;
+      }
+
+      var active;
+      var $popup; // Image buttons.
+
+      var image_buttons = ''; // https://github.com/froala/wysiwyg-editor/issues/2987
+
+      if (!editor.opts.imageUpload && editor.opts.filesInsertButtons.indexOf('filesUpload') !== -1) {
+        editor.opts.imageInsertButtons.splice(editor.opts.filesInsertButtons.indexOf('filesUpload'), 1);
+      }
+
+      var buttonList = editor.button.buildList(editor.opts.filesInsertButtons);
+      var buttonList2 = editor.button.buildList(editor.opts.filesInsertButtons2);
+
+      if (buttonList !== '') {
+        image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(buttonList, "<span class=\"fr-align-right\">").concat(buttonList2, "</span></div>");
+      }
+
+      var uploadIndex = editor.opts.filesInsertButtons.indexOf('filesUpload');
+      var urlIndex = editor.opts.filesInsertButtons.indexOf('filesByURL');
+      var embedIndex = editor.opts.filesInsertButtons.indexOf('filesEmbed'); // Image upload layer.
+
+      var upload_layer = '';
+
+      if (uploadIndex >= 0) {
+        active = ' fr-active';
+
+        if (urlIndex >= 0 && uploadIndex > urlIndex) {
+          active = '';
+        }
+
+        upload_layer = "<div class=\"fr-files-upload-layer".concat(active, " fr-layer \" id=\"fr-files-upload-layer-").concat(editor.id, "\"><div style=\"display:flex\"><div class=\"fr-upload-section\"><div class = 'fr-blue-decorator'><div class = 'fr-cloud-icon'><svg class = \"fr-svg\" focusable=\"false\" width=\"26px\" height=\"26px\" viewBox = \"0 0 24 24\" xlmns = \"http://w3.org/200/svg\"><path d = 'M12 6.66667a4.87654 4.87654 0 0 1 4.77525 3.92342l0.29618 1.50268 1.52794 0.10578a2.57021 2.57021 0 0 1 -0.1827 5.13478H6.5a3.49774 3.49774 0 0 1 -0.3844 -6.97454l1.06682 -0.11341L7.678 9.29387A4.86024 4.86024 0 0 1 12 6.66667m0 -2A6.871 6.871 0 0 0 5.90417 8.37 5.49773 5.49773 0 0 0 6.5 19.33333H18.41667a4.57019 4.57019 0 0 0 0.32083 -9.13A6.86567 6.86567 0 0 0 12 4.66667Zm0.99976 7.2469h1.91406L11.99976 9 9.08618 11.91357h1.91358v3H11V16h2V14h-0.00024Z'></path></svg></div>Drag & Drop One or More Files<br><div class=\"decorated\"><span> OR </span></div> Click Browse Files </div> </div><div class=\"fr-form\"><input type=\"file\" accept=\"").concat(editor.opts.filesManagerAllowedTypes.join(',').toLowerCase(), "\" tabIndex=\"-1\" aria - labelledby=\"fr-files-upload-layer-").concat(editor.id, "\"role=\"button\" multiple></div> </div></div>");
+      } // File embed layer.
+
+
+      var embed_layer = '';
+
+      if (embedIndex >= 0) {
+        active = ' fr-active';
+
+        if (embedIndex > uploadIndex && uploadIndex >= 0 || embedIndex > urlIndex && urlIndex >= 0) {
+          active = '';
+        }
+
+        embed_layer = "<div class=\"fr-files-embed-layer fr-layer".concat(active, "\" id=\"fr-files-embed-layer-").concat(editor.id, "\"><div class=\"fr-input-line padding-top-15\"><textarea data-gramm_editor=\"false\" style='height:60px' id=\"fr-files-embed-layer-text").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('Embedded Code'), "\" tabIndex=\"1\" aria-required=\"true\" rows=\"5\"></textarea></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"insertEmbed\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Insert'), "</button></div></div>");
+      } // Image by url layer.
+
+
+      var by_url_layer = '';
+
+      if (urlIndex >= 0) {
+        active = ' fr-active';
+
+        if (uploadIndex >= 0 && urlIndex > uploadIndex) {
+          active = '';
+        }
+
+        by_url_layer = "<div class=\"fr-files-by-url-layer".concat(active, " fr-layer\" id=\"fr-files-by-url-layer-").concat(editor.id, "\"><div class=\"fr-input-line fr-by-url-padding\"><input id=\"fr-files-by-url-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"http://\" tabIndex=\"1\" aria-required=\"true\"></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"filesInsertByURL\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Add'), "</button></div></div>");
+      }
+
+      var upload_progress_layer = '';
+      upload_progress_layer = "<div class = ' fr-margin-16 fr-upload-progress' id=\"fr-upload-progress-layer-".concat(editor.id, "\" ><div  class='fr-progress-bar-style'><div class='fr-progress-bar fr-none'></div></div><div id='filesList' class = 'fr-upload-progress-layer fr-layer'></div></div>"); // Progress bar.
+
+      var progress_bar_layer = '<div class="fr-files-progress-bar-layer fr-layer"><h3 tabIndex="-1" class="fr-message">Uploading</h3><div class="fr-loader"><span class="fr-progress"></span></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-dismiss" data-cmd="filesDismissError" tabIndex="2" role="button">OK</button></div></div>';
+      var template = {
+        buttons: image_buttons,
+        upload_layer: upload_layer,
+        by_url_layer: by_url_layer,
+        embed_layer: embed_layer,
+        upload_progress_layer: upload_progress_layer,
+        progress_bar: progress_bar_layer // Set the template in the popup.
+
+      };
+
+      if (editor.opts.imageInsertButtons.length >= 1) {
+        $popup = editor.popups.create('filesManager.insert', template);
+      }
+
+      if (editor.$wp) {
+        editor.events.$on(editor.$wp, 'scroll', function () {
+          if ($current_image && editor.popups.isVisible('filesManager.insert')) {
+            replace();
+          }
+        });
+      }
+
+      _bindInsertEvents($popup);
+
+      editor.popups.setPopupDimensions($popup);
+      return $popup;
+    }
+
+    function _initPluginErrorPopup() {
+      var file_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.fileInsertButtons), "</div>");
+      var message_layer = "<div style= 'padding:10px'>\n    <div class = 'fr-message'><h3 style ='font-size: 16px; margin: 10px 10px;font-weight: normal;'>".concat(editor.language.translate(getMissingPluginsText() + ' not enabled. Do you want to enable?'), "</h3></div>\n    <div style='text-align:right;'>\n      <button class='fr-trim-button fr-plugins-enable'>").concat(editor.language.translate('Enable'), "</button>               \n      <button class='fr-trim-button fr-plugins-cancel'>").concat(editor.language.translate('Cancel'), "</button>\n    </div>");
+      var template = {
+        buttons: file_buttons,
+        upload_layer: message_layer,
+        by_url_layer: '',
+        embed_layer: '',
+        upload_progress_layer: '',
+        progress_bar: '' // Set the template in the popup.
+
+      };
+      var $popup = editor.popups.create('filesManager.insert', template);
+
+      _bindInsertEvents($popup);
+
+      return $popup;
+    }
+
+    function getMissingPluginsText() {
+      var missingPlugins = '';
+      var plugins = getMissingPlugins();
+      missingPlugins = plugins.join(', ');
+
+      if (plugins.length > 1) {
+        missingPlugins += ' plugin are';
+      } else {
+        missingPlugins += ' plugin is';
+      }
+
+      return missingPlugins;
+    }
+
+    function getMissingPlugins() {
+      var files = [];
+      requiredPlugins.forEach(function (file) {
+        if (editor.opts.pluginsEnabled.indexOf(file) < 0) {
+          files.push(file.charAt(0).toUpperCase() + file.slice(1));
+        }
+      });
+      return files;
+    }
+
+    function getFileDescription(date) {
+      var options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      };
+      var dateFormat;
+
+      try {
+        dateFormat = date.toLocaleDateString(editor.opts.language ? editor.opts.language : undefined, options);
+      } catch (err) {
+        dateFormat = date.toLocaleDateString(undefined, options);
+      }
+
+      return dateFormat + '';
+    }
+
+    function getFileSize(size) {
+      if (size == 0) return '0 Bytes';
+      var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      var i = Math.floor(Math.log(size) / Math.log(1024));
+      return ' | ' + (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + sizes[i];
+    } // Get file name from url
+
+
+    function getUrlFileName(url) {
+      var fileName = url.split('/').pop();
+
+      if (fileName.split('.').length < 2) {
+        var date = new Date();
+        return fileName + '-' + date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
+      }
+
+      return fileName;
+    }
+    /**
+     * Refresh the ALT popup.
+     */
+
+
+    function _refreshAltPopup() {
+      if ($current_image) {
+        var $popup = editor.popups.get('image.alt');
+        $popup.find('input').val($current_image.attr('alt') || '').trigger('change');
+      }
+    }
+    /**
+     * Show the ALT popup.
+     */
+
+
+    function showAltPopup() {
+      var $popup = editor.popups.get('image.alt');
+      if (!$popup) $popup = _initAltPopup();
+      hideProgressBar();
+      editor.popups.refresh('image.alt');
+      editor.popups.setContainer('image.alt', editor.$sc);
+      var $el = getEl();
+
+      if (hasCaption()) {
+        $el = $el.find('.fr-img-wrap');
+      }
+
+      var left = $el.offset().left + $el.outerWidth() / 2;
+      var top = $el.offset().top + $el.outerHeight();
+      editor.popups.show('image.alt', left, top, $el.outerHeight(), true);
+    }
+    /**
+     * Init the image upload popup.
+     */
+
+
+    function _initAltPopup(delayed) {
+      if (delayed) {
+        editor.popups.onRefresh('image.alt', _refreshAltPopup);
+        return true;
+      } // Image buttons.
+
+
+      var image_buttons = '';
+      image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.imageAltButtons), "</div>"); // Image by url layer.
+
+      var alt_layer = '';
+      alt_layer = "<div class=\"fr-image-alt-layer fr-layer fr-active\" id=\"fr-image-alt-layer-".concat(editor.id, "\"><div class=\"fr-input-line\"><input id=\"fr-image-alt-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('Alternative Text'), "\" tabIndex=\"1\"></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"imageSetAlt\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Update'), "</button></div></div>");
+      var template = {
+        buttons: image_buttons,
+        alt_layer: alt_layer // Set the template in the popup.
+
+      };
+      var $popup = editor.popups.create('image.alt', template);
+
+      if (editor.$wp) {
+        editor.events.$on(editor.$wp, 'scroll.image-alt', function () {
+          if ($current_image && editor.popups.isVisible('image.alt')) {
+            showAltPopup();
+          }
+        });
+      }
+
+      return $popup;
+    }
+    /**
+     * Set ALT based on the values from the popup.
+     */
+
+
+    function setAlt(alt) {
+      if ($current_image) {
+        var $popup = editor.popups.get('image.alt');
+        $current_image.attr('alt', alt || $popup.find('input').val() || '');
+        $popup.find('input:focus').blur();
+
+        _editImg($current_image);
+      }
+    }
+    /**
+     * Refresh the size popup.
+     */
+    // Issue 2845
+
+
+    function _refreshSizePopup() {
+      var $popup = editor.popups.get('image.size');
+
+      if ($current_image) {
+        if (hasCaption()) {
+          var $el = $current_image.parent();
+
+          if (!$el.get(0).style.width) {
+            $el = $current_image.parent().parent();
+          }
+
+          $popup.find('input[name="width"]').val($el.get(0).style.width).trigger('change');
+          $popup.find('input[name="height"]').val($el.get(0).style.height).trigger('change');
+        } else {
+          $popup.find('input[name="width"]').val($current_image.get(0).style.width).trigger('change');
+          $popup.find('input[name="height"]').val($current_image.get(0).style.height).trigger('change');
+        }
+      }
+    }
+    /**
+     * Show the size popup.
+     */
+
+
+    function showSizePopup() {
+      var $popup = editor.popups.get('image.size');
+      if (!$popup) $popup = _initSizePopup();
+      hideProgressBar();
+      editor.popups.refresh('image.size');
+      editor.popups.setContainer('image.size', editor.$sc);
+      var $el = getEl();
+
+      if (hasCaption()) {
+        $el = $el.find('.fr-img-wrap');
+      }
+
+      var left = $el.offset().left + $el.outerWidth() / 2;
+      var top = $el.offset().top + $el.outerHeight();
+      editor.popups.show('image.size', left, top, $el.outerHeight(), true);
+    }
+    /**
+     * Init the image upload popup.
+     */
+
+
+    function _initSizePopup(delayed) {
+      if (delayed) {
+        editor.popups.onRefresh('image.size', _refreshSizePopup);
+        return true;
+      } // Image buttons.
+
+
+      var image_buttons = '';
+      image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.imageSizeButtons), "</div>"); // Size layer.
+
+      var size_layer = '';
+      size_layer = "<div class=\"fr-image-size-layer fr-layer fr-active\" id=\"fr-image-size-layer-".concat(editor.id, "\"><div class=\"fr-image-group\"><div class=\"fr-input-line\"><input id=\"fr-image-size-layer-width-'").concat(editor.id, "\" type=\"text\" name=\"width\" placeholder=\"").concat(editor.language.translate('Width'), "\" tabIndex=\"1\"></div><div class=\"fr-input-line\"><input id=\"fr-image-size-layer-height").concat(editor.id, "\" type=\"text\" name=\"height\" placeholder=\"").concat(editor.language.translate('Height'), "\" tabIndex=\"1\"></div></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"imageSetSize\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Update'), "</button></div></div>");
+      var template = {
+        buttons: image_buttons,
+        size_layer: size_layer // Set the template in the popup.
+
+      };
+      var $popup = editor.popups.create('image.size', template);
+
+      if (editor.$wp) {
+        editor.events.$on(editor.$wp, 'scroll.image-size', function () {
+          if ($current_image && editor.popups.isVisible('image.size')) {
+            showSizePopup();
+          }
+        });
+      }
+
+      return $popup;
+    }
+    /**
+     * Set size based on the current image size.
+     */
+
+
+    function setSize(width, height) {
+      if ($current_image) {
+        var $popup = editor.popups.get('image.size');
+        width = width || $popup.find('input[name="width"]').val() || '';
+        height = height || $popup.find('input[name="height"]').val() || '';
+        var regex = /^[\d]+((px)|%)*$/g;
+        $current_image.removeAttr('width').removeAttr('height');
+        if (width.match(regex)) $current_image.css('width', width);else $current_image.css('width', '');
+        if (height.match(regex)) $current_image.css('height', height);else $current_image.css('height', '');
+
+        if (hasCaption()) {
+          $current_image.parents('.fr-img-caption').removeAttr('width').removeAttr('height');
+          if (width.match(regex)) $current_image.parents('.fr-img-caption').css('width', width);else $current_image.parents('.fr-img-caption').css('width', '');
+          if (height.match(regex)) $current_image.parents('.fr-img-caption').css('height', height);else $current_image.parents('.fr-img-caption').css('height', '');
+        }
+
+        if ($popup) $popup.find('input:focus').blur();
+
+        _editImg($current_image);
+      }
+    }
+    /**
+     * Show the image upload layer.
+     */
+
+
+    function showLayer(name) {
+      var $popup = editor.popups.get('filesManager.insert');
+      var left;
+      var top; // Click on the button from the toolbar without image selected.
+
+      if (!$current_image && !editor.opts.toolbarInline) {
+        var $btn = editor.$tb.find('.fr-command[data-cmd="insertFiles"]');
+        left = $btn.offset().left;
+        top = $btn.offset().top + (editor.opts.toolbarBottom ? 10 : $btn.outerHeight() - 10);
+      } // Image is selected.
+      else if ($current_image) {
+          var $el = getEl();
+
+          if (hasCaption()) {
+            $el = $el.find('.fr-img-wrap');
+          } // Set the top to the bottom of the image.
+
+
+          top = $el.offset().top + $el.outerHeight();
+          left = $el.offset().left;
+        } // Image is selected and we are in inline mode.
+
+
+      if (!$current_image && editor.opts.toolbarInline) {
+        // Set top to the popup top.
+        top = $popup.offset().top - editor.helpers.getPX($popup.css('margin-top')); // If the popup is above apply height correction.
+
+        if ($popup.hasClass('fr-above')) {
+          top += $popup.outerHeight();
+        }
+      } // Show the new layer.
+
+
+      $popup.find('.fr-layer').removeClass('fr-active');
+      $popup.find(".fr-".concat(name, "-layer")).addClass('fr-active');
+      $popup.find(".fr-upload-progress-layer").addClass('fr-active');
+      editor.popups.show('filesManager.insert', left, top, $current_image ? $current_image.outerHeight() : 0);
+      editor.accessibility.focusPopup($popup);
+    }
+    /**
+     * Refresh the upload image button.
+     */
+
+
+    function refreshUploadButton($btn) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup && $popup.find('.fr-files-upload-layer').hasClass('fr-active')) {
+        $btn.addClass('fr-active').attr('aria-pressed', true);
+      }
+    }
+    /**
+     * Refresh the insert by url button.
+     */
+
+
+    function refreshByURLButton($btn) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup && $popup.find('.fr-files-by-url-layer').hasClass('fr-active')) {
+        $btn.addClass('fr-active').attr('aria-pressed', true);
+      }
+    }
+
+    function _resizeImage(e, initPageX, direction, step) {
+      e.pageX = initPageX;
+
+      _handlerMousedown.call(this, e);
+
+      e.pageX = e.pageX + direction * Math.floor(Math.pow(1.1, step));
+
+      _handlerMousemove.call(this, e);
+
+      _handlerMouseup.call(this, e);
+
+      return ++step;
+    }
+    /**
+     * Init image resizer.
+     */
+
+
+    function _initImageResizer() {
+      var doc; // No shared image resizer.
+
+      if (!editor.shared.$image_resizer) {
+        // Create shared image resizer.
+        editor.shared.$image_resizer = $(document.createElement('div')).attr('class', 'fr-image-resizer');
+        $image_resizer = editor.shared.$image_resizer; // Bind mousedown event shared.
+
+        editor.events.$on($image_resizer, 'mousedown', function (e) {
+          e.stopPropagation();
+        }, true); // Image resize is enabled.
+
+        if (editor.opts.imageResize) {
+          $image_resizer.append(_getHandler('nw') + _getHandler('ne') + _getHandler('sw') + _getHandler('se')); // Add image resizer overlay and set it.
+
+          editor.shared.$img_overlay = $(document.createElement('div')).attr('class', 'fr-image-overlay');
+          $overlay = editor.shared.$img_overlay;
+          doc = $image_resizer.get(0).ownerDocument;
+          $(doc).find('body').first().append($overlay);
+        }
+      } else {
+        $image_resizer = editor.shared.$image_resizer;
+        $overlay = editor.shared.$img_overlay;
+        editor.events.on('destroy', function () {
+          $('body').first().append($image_resizer.removeClass('fr-active'));
+        }, true);
+      } // Shared destroy.
+
+
+      editor.events.on('shared.destroy', function () {
+        $image_resizer.html('').removeData().remove();
+        $image_resizer = null;
+
+        if (editor.opts.imageResize) {
+          $overlay.remove();
+          $overlay = null;
+        }
+      }, true); // Window resize. Exit from edit.
+
+      if (!editor.helpers.isMobile()) {
+        editor.events.$on($(editor.o_win), 'resize', function () {
+          if ($current_image && !$current_image.hasClass('fr-uploading')) {
+            _exitEdit(true);
+          } else if ($current_image) {
+            _repositionResizer();
+
+            replace();
+            showProgressBar(false);
+          }
+        });
+      } // Image resize is enabled.
+
+
+      if (editor.opts.imageResize) {
+        doc = $image_resizer.get(0).ownerDocument;
+        editor.events.$on($image_resizer, editor._mousedown, '.fr-handler', _handlerMousedown);
+        editor.events.$on($(doc), editor._mousemove, _handlerMousemove);
+        editor.events.$on($(doc.defaultView || doc.parentWindow), editor._mouseup, _handlerMouseup);
+        editor.events.$on($overlay, 'mouseleave', _handlerMouseup); // Accessibility.
+        // Used for keys holing.
+
+        var step = 1;
+        var prevKey = null;
+        var prevTimestamp = 0; // Keydown event.
+
+        editor.events.on('keydown', function (e) {
+          if ($current_image) {
+            var ctrlKey = navigator.userAgent.indexOf('Mac OS X') != -1 ? e.metaKey : e.ctrlKey;
+            var keycode = e.which;
+
+            if (keycode !== prevKey || e.timeStamp - prevTimestamp > 200) {
+              step = 1; // Reset step. Known browser issue: Keyup does not trigger when ctrl is pressed.
+            } // Increase image size.
+
+
+            if ((keycode == FroalaEditor.KEYCODE.EQUALS || editor.browser.mozilla && keycode == FroalaEditor.KEYCODE.FF_EQUALS) && ctrlKey && !e.altKey) {
+              step = _resizeImage.call(this, e, 1, 1, step);
+            } // Decrease image size.
+            else if ((keycode == FroalaEditor.KEYCODE.HYPHEN || editor.browser.mozilla && keycode == FroalaEditor.KEYCODE.FF_HYPHEN) && ctrlKey && !e.altKey) {
+                step = _resizeImage.call(this, e, 2, -1, step);
+              } else if (!editor.keys.ctrlKey(e) && keycode == FroalaEditor.KEYCODE.ENTER) {
+                $current_image.before('<br>');
+
+                _editImg($current_image);
+              } // Save key code.
+
+
+            prevKey = keycode; // Save timestamp.
+
+            prevTimestamp = e.timeStamp;
+          }
+        }, true); // Reset the step on key up event.
+
+        editor.events.on('keyup', function () {
+          step = 1;
+        });
+      }
+    }
+    /**
+     * Remove the current image.
+     */
+
+
+    function remove($img) {
+      $img = $img || getEl();
+
+      if ($img) {
+        if (editor.events.trigger('image.beforeRemove', [$img]) !== false) {
+          editor.popups.hideAll();
+
+          _exitEdit(true);
+
+          if (!editor.undo.canDo()) editor.undo.saveStep();
+
+          if ($img.get(0) == editor.el) {
+            $img.removeAttr('src');
+          } else {
+            if ($img.get(0).parentNode && $img.get(0).parentNode.tagName == 'A') {
+              editor.selection.setBefore($img.get(0).parentNode) || editor.selection.setAfter($img.get(0).parentNode) || $img.parent().after(FroalaEditor.MARKERS);
+              $($img.get(0).parentNode).remove();
+            } else {
+              editor.selection.setBefore($img.get(0)) || editor.selection.setAfter($img.get(0)) || $img.after(FroalaEditor.MARKERS);
+              $img.remove();
+            }
+
+            editor.html.fillEmptyBlocks();
+            editor.selection.restore();
+          }
+
+          editor.undo.saveStep();
+        }
+      }
+    }
+
+    function _editorKeydownHandler(e) {
+      var key_code = e.which;
+
+      if ($current_image && (key_code == FroalaEditor.KEYCODE.BACKSPACE || key_code == FroalaEditor.KEYCODE.DELETE)) {
+        e.preventDefault();
+        e.stopPropagation();
+        remove();
+        return false;
+      } else if ($current_image && key_code == FroalaEditor.KEYCODE.ESC) {
+        var $img = $current_image;
+
+        _exitEdit(true);
+
+        editor.selection.setAfter($img.get(0));
+        editor.selection.restore();
+        e.preventDefault();
+        return false;
+      } // Move cursor if left and right arrows are used.
+      else if ($current_image && (key_code == FroalaEditor.KEYCODE.ARROW_LEFT || key_code == FroalaEditor.KEYCODE.ARROW_RIGHT)) {
+          var img = $current_image.get(0);
+
+          _exitEdit(true);
+
+          if (key_code == FroalaEditor.KEYCODE.ARROW_LEFT) {
+            editor.selection.setBefore(img);
+          } else {
+            editor.selection.setAfter(img);
+          }
+
+          editor.selection.restore();
+          e.preventDefault();
+          return false;
+        } else if ($current_image && key_code === FroalaEditor.KEYCODE.TAB) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          _exitEdit(true);
+
+          return false;
+        } else if ($current_image && key_code != FroalaEditor.KEYCODE.F10 && !editor.keys.isBrowserAction(e)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+    }
+    /**
+     * Do some cleanup on images.
+     */
+
+
+    function _cleanOnGet(el) {
+      // Tag is image.
+      if (el && el.tagName == 'IMG') {
+        // Remove element if it has class fr-uploading or fr-error.
+        if (editor.node.hasClass(el, 'fr-uploading') || editor.node.hasClass(el, 'fr-error')) {
+          el.parentNode.removeChild(el);
+        } // Remove class if it is draggable.
+        else if (editor.node.hasClass(el, 'fr-draggable')) {
+            el.classList.remove('fr-draggable');
+          }
+
+        if (el.parentNode && el.parentNode.parentNode && editor.node.hasClass(el.parentNode.parentNode, 'fr-img-caption')) {
+          var p_node = el.parentNode.parentNode;
+          p_node.removeAttribute('contenteditable');
+          p_node.removeAttribute('draggable');
+          p_node.classList.remove('fr-draggable');
+          var n_node = el.nextSibling;
+
+          if (n_node) {
+            n_node.removeAttribute('contenteditable');
+          }
+        }
+      } // Look for inner nodes that might be in a similar case.
+      else if (el && el.nodeType == Node.ELEMENT_NODE) {
+          var imgs = el.querySelectorAll('img.fr-uploading, img.fr-error, img.fr-draggable');
+
+          for (var i = 0; i < imgs.length; i++) {
+            _cleanOnGet(imgs[i]);
+          }
+        }
+    }
+    /**
+     * Initialization.
+     */
+
+
+    function _init() {
+      _initEvents(); // Init on image.
+
+
+      if (editor.el.tagName == 'IMG') {
+        editor.$el.addClass('fr-view');
+      }
+
+      if (editor.helpers.isMobile()) {
+        editor.events.$on(editor.$el, 'touchstart', editor.el.tagName == 'IMG' ? null : 'img:not([contenteditable="false"])', function () {
+          touchScroll = false;
+        });
+        editor.events.$on(editor.$el, 'touchmove', function () {
+          touchScroll = true;
+        });
+      }
+
+      if (editor.$wp) {
+        editor.events.on('window.keydown keydown', _editorKeydownHandler, true);
+        editor.events.on('keyup', function (e) {
+          if ($current_image && e.which == FroalaEditor.KEYCODE.ENTER) {
+            return false;
+          }
+        }, true); // Prevent typing in image caption DOM structure.
+
+        editor.events.$on(editor.$el, 'keydown', function () {
+          var el = editor.selection.element(); // Parent node of the current element.
+
+          if (el.nodeType === Node.TEXT_NODE || el.tagName == 'BR' && editor.node.isLastSibling(el)) {
+            el = el.parentNode;
+          }
+
+          if (!editor.node.hasClass(el, 'fr-inner')) {
+            if (!editor.node.hasClass(el, 'fr-img-caption')) {
+              el = $(el).parents('.fr-img-caption').get(0);
+            } // Check if we are in image caption.
+
+
+            if (editor.node.hasClass(el, 'fr-img-caption')) {
+              $(el).after(FroalaEditor.INVISIBLE_SPACE + FroalaEditor.MARKERS);
+              editor.selection.restore();
+            }
+          }
+        });
+      } else {
+        editor.events.$on(editor.$win, 'keydown', _editorKeydownHandler);
+      } // ESC from accessibility.
+
+
+      editor.events.on('toolbar.esc', function () {
+        if ($current_image) {
+          if (editor.$wp) {
+            editor.events.disableBlur();
+            editor.events.focus();
+          } else {
+            var $img = $current_image;
+
+            _exitEdit(true);
+
+            editor.selection.setAfter($img.get(0));
+            editor.selection.restore();
+          }
+
+          return false;
+        }
+      }, true); // focusEditor from accessibility.
+
+      editor.events.on('toolbar.focusEditor', function () {
+        if ($current_image) {
+          return false;
+        }
+      }, true); // Copy/cut image.
+
+      editor.events.on('window.cut window.copy', function (e) {
+        // Do copy only if image.edit popups is visible and not focused.
+        if ($current_image && editor.popups.isVisible('image.edit') && !editor.popups.get('image.edit').find(':focus').length) {
+          var $el = getEl();
+
+          if (hasCaption()) {
+            $el.before(FroalaEditor.START_MARKER);
+            $el.after(FroalaEditor.END_MARKER);
+            editor.selection.restore();
+            editor.paste.saveCopiedText($el.get(0).outerHTML, $el.text());
+          } else {
+            editor.paste.saveCopiedText($current_image.get(0).outerHTML, $current_image.attr('alt'));
+          }
+
+          if (e.type == 'copy') {
+            setTimeout(function () {
+              _editImg($current_image);
+            });
+          } else {
+            _exitEdit(true);
+
+            editor.undo.saveStep();
+            setTimeout(function () {
+              editor.undo.saveStep();
+            }, 0);
+          }
+        }
+      }, true); // Fix IE copy not working when selection is collapsed.
+
+      if (editor.browser.msie) {
+        editor.events.on('keydown', function (e) {
+          // Selection is collapsed and we have an image.
+          if (!(editor.selection.isCollapsed() && $current_image)) return true;
+          var key_code = e.which; // Copy.
+
+          if (key_code == FroalaEditor.KEYCODE.C && editor.keys.ctrlKey(e)) {
+            editor.events.trigger('window.copy');
+          } // Cut.
+          else if (key_code == FroalaEditor.KEYCODE.X && editor.keys.ctrlKey(e)) {
+              editor.events.trigger('window.cut');
+            }
+        });
+      } // Do not leave page while uploading.
+
+
+      editor.events.$on($(editor.o_win), 'keydown', function (e) {
+        var key_code = e.which;
+
+        if ($current_image && key_code == FroalaEditor.KEYCODE.BACKSPACE) {
+          e.preventDefault();
+          return false;
+        }
+      }); // Check if image is uploading to abort it.
+
+      editor.events.$on(editor.$win, 'keydown', function (e) {
+        var key_code = e.which;
+
+        if ($current_image && $current_image.hasClass('fr-uploading') && key_code == FroalaEditor.KEYCODE.ESC) {
+          $current_image.trigger('abortUpload');
+        }
+      });
+      editor.events.on('destroy', function () {
+        if ($current_image && $current_image.hasClass('fr-uploading')) {
+          $current_image.trigger('abortUpload');
+        }
+      });
+      editor.events.on('paste.before', _clipboardPaste);
+      editor.events.on('paste.beforeCleanup', _clipboardPasteCleanup);
+      editor.events.on('paste.after', _uploadPastedImages); // Remove any fr-uploading / fr-error images.
+
+      editor.events.on('html.processGet', _cleanOnGet);
+
+      if (editor.opts.imageOutputSize) {
+        var imgs;
+        editor.events.on('html.beforeGet', function () {
+          imgs = editor.el.querySelectorAll('img');
+
+          for (var i = 0; i < imgs.length; i++) {
+            var width = imgs[i].style.width || $(imgs[i]).width();
+            var height = imgs[i].style.height || $(imgs[i]).height();
+            if (width) imgs[i].setAttribute('width', "".concat(width).replace(/px/, ''));
+            if (height) imgs[i].setAttribute('height', "".concat(height).replace(/px/, ''));
+          }
+        });
+      }
+
+      if (editor.opts.iframe) {
+        editor.events.on('image.loaded', editor.size.syncIframe);
+      }
+
+      editor.events.$on($(editor.o_win), 'orientationchange.image', function () {
+        setTimeout(function () {
+          if ($current_image) {
+            _editImg($current_image);
+          }
+        }, 100);
+      });
+
+      _initEditPopup(true);
+
+      _initInsertPopup(true);
+
+      _initSizePopup(true);
+
+      _initAltPopup(true);
+
+      editor.events.on('node.remove', function ($node) {
+        if ($node.get(0).tagName == 'IMG') {
+          remove($node);
+          return false;
+        }
+      });
+      editor.events.on('popups.hide.filesManager.insert', function ($node) {
+        editor.filesManager.minimizePopup(current_index);
+      });
+    }
+
+    function _processPastedImage(img) {
+      if (editor.events.trigger('image.beforePasteUpload', [img]) === false) {
+        return false;
+      } // Show the progress bar.
+
+
+      $current_image = $(img);
+
+      _repositionResizer();
+
+      replace();
+      showProgressBar();
+      $current_image.on('load', function () {
+        var loadEvents = [];
+
+        _repositionResizer(); // https://github.com/froala/wysiwyg-editor/issues/3407
+
+
+        if ($(editor.popups.get('filesManager.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
+          showProgressBar();
+        } // https://github.com/froala-labs/froala-editor-js-2/issues/1866
+
+
+        $(this).data('events').find(function (event) {
+          if (event[0] === 'load') {
+            loadEvents.push(event);
+          }
+        }); // turn off the event if it is registered only once
+
+        loadEvents.length <= 1 && $(this).off('load');
+      });
+      var splitSrc = $(img).attr('src').split(','); // Convert image to blob.
+
+      var binary = atob(splitSrc[1]);
+      var array = [];
+
+      for (var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+      }
+
+      var upload_img = new Blob([new Uint8Array(array)], {
+        type: splitSrc[0].replace(/data\:/g, '').replace(/;base64/g, '')
+      });
+      upload([upload_img], $current_image);
+    }
+
+    function _uploadPastedImages() {
+      if (!editor.opts.imagePaste) {
+        editor.$el.find('img[data-fr-image-pasted]').remove();
+      } else {
+        // Safari won't work https://bugs.webkit.org/show_bug.cgi?id=49141
+        editor.$el.find('img[data-fr-image-pasted]').each(function (index, img) {
+          if (editor.opts.imagePasteProcess) {
+            var width = editor.opts.imageDefaultWidth;
+
+            if (width && width != 'auto') {
+              width = width + (editor.opts.imageResizeWithPercent ? '%' : 'px');
+            }
+
+            $(img).css('width', width).removeClass('fr-dii fr-dib fr-fir fr-fil');
+
+            _setStyleImage($(img), editor.opts.imageDefaultDisplay, editor.opts.imageDefaultAlign);
+          } // Data images.
+
+
+          if (img.src.indexOf('data:') === 0) {
+            _processPastedImage(img);
+          } // New way Safari is pasting images.
+          else if (img.src.indexOf('blob:') === 0 || img.src.indexOf('http') === 0 && editor.opts.imageUploadRemoteUrls && editor.opts.imageCORSProxy) {
+              var _img = new Image();
+
+              _img.crossOrigin = 'Anonymous';
+
+              _img.onload = function () {
+                // Create canvas.
+                var canvas = editor.o_doc.createElement('CANVAS');
+                var context = canvas.getContext('2d'); // Set height.
+
+                canvas.height = this.naturalHeight;
+                canvas.width = this.naturalWidth; // Draw image.
+
+                context.drawImage(this, 0, 0); // pushing the execution at end of the stack
+
+                setTimeout(function () {
+                  _processPastedImage(img);
+                }, 0);
+                var imgExt;
+
+                if (this.naturalWidth > 2000 || this.naturalHeight > 1500) {
+                  imgExt = 'jpeg'; // if images are too large
+                } else {
+                  imgExt = 'png';
+                } // Update image and process it.
+
+
+                img.src = canvas.toDataURL("image/".concat(imgExt));
+              };
+
+              _img.src = (img.src.indexOf('blob:') === 0 ? '' : "".concat(editor.opts.imageCORSProxy, "/")) + img.src;
+            } // Images without http (Safari ones.).
+            else if (img.src.indexOf('http') !== 0 || img.src.indexOf('https://mail.google.com/mail') === 0) {
+                editor.selection.save();
+                $(img).remove();
+                editor.selection.restore();
+              } else {
+                $(img).removeAttr('data-fr-image-pasted');
+              }
+        });
+      }
+    }
+
+    function _clipboardImageLoaded(e) {
+      var result = e.target.result; // Default width.
+
+      var width = editor.opts.imageDefaultWidth;
+
+      if (width && width != 'auto') {
+        width = width + (editor.opts.imageResizeWithPercent ? '%' : 'px');
+      }
+
+      editor.undo.saveStep();
+      editor.html.insert("<img data-fr-image-pasted=\"true\" src=\"".concat(result, "\"").concat(width ? " style=\"width: ".concat(width, ";\"") : '', ">"));
+      var $img = editor.$el.find('img[data-fr-image-pasted="true"]');
+
+      if ($img) {
+        _setStyleImage($img, editor.opts.imageDefaultDisplay, editor.opts.imageDefaultAlign);
+      }
+
+      editor.events.trigger('paste.after');
+    }
+
+    function _processsClipboardPaste(file) {
+      var reader = new FileReader();
+      reader.onload = _clipboardImageLoaded;
+      reader.readAsDataURL(file);
+    }
+
+    function _clipboardPaste(e) {
+      if (e && e.clipboardData && e.clipboardData.items) {
+        var file = null;
+
+        if (!(e.clipboardData.types && [].indexOf.call(e.clipboardData.types, 'text/rtf') != -1 || e.clipboardData.getData('text/rtf'))) {
+          for (var i = 0; i < e.clipboardData.items.length; i++) {
+            file = e.clipboardData.items[i].getAsFile();
+
+            if (file) {
+              break;
+            }
+          }
+        } else {
+          file = e.clipboardData.items[0].getAsFile();
+        }
+
+        if (file) {
+          _processsClipboardPaste(file);
+
+          return false;
+        }
+      }
+    }
+
+    function _clipboardPasteCleanup(clipboard_html) {
+      clipboard_html = clipboard_html.replace(/<img /gi, '<img data-fr-image-pasted="true" ');
+      return clipboard_html;
+    }
+    /**
+     * Start edit.
+     */
+
+
+    var touchScroll;
+
+    function _edit(e) {
+      if ($(this).parents('[contenteditable]').not('.fr-element').not('.fr-img-caption').not('body').first().attr('contenteditable') == 'false') return true;
+
+      if (e && e.type == 'touchend' && touchScroll) {
+        return true;
+      }
+
+      if (e && editor.edit.isDisabled()) {
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+      } // Hide resizer for other instances.
+
+
+      for (var i = 0; i < FroalaEditor.INSTANCES.length; i++) {
+        if (FroalaEditor.INSTANCES[i] != editor) {
+          FroalaEditor.INSTANCES[i].events.trigger('image.hideResizer');
+        }
+      }
+
+      editor.toolbar.disable();
+
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      } // Hide keyboard.
+
+
+      if (editor.helpers.isMobile()) {
+        editor.events.disableBlur();
+        editor.$el.blur();
+        editor.events.enableBlur();
+      }
+
+      if (editor.opts.iframe) {
+        editor.size.syncIframe();
+      } // Store current image.
+
+
+      $current_image = $(this); // Reposition resizer.
+
+      _repositionResizer(); // Issue 2801
+
+
+      if (editor.browser.msie) {
+        if (editor.popups.areVisible()) {
+          editor.events.disableBlur();
+        }
+
+        if (editor.win.getSelection) {
+          editor.win.getSelection().removeAllRanges();
+          editor.win.getSelection().addRange(editor.doc.createRange());
+        }
+      } else {
+        editor.selection.clear();
+      } // Fix for image remaining selected.
+
+
+      if (editor.helpers.isIOS()) {
+        editor.events.disableBlur();
+        editor.$el.blur();
+      } // Refresh buttons.
+
+
+      editor.button.bulkRefresh();
+      editor.events.trigger('video.hideResizer');
+    }
+    /**
+     * Exit edit.
+     */
+
+
+    function _exitEdit(force_exit) {
+      if ($current_image && (_canExit() || force_exit === true)) {
+        editor.toolbar.enable();
+        $image_resizer && $image_resizer.removeClass('fr-active');
+        editor.popups.hide('image.edit');
+        $current_image = null;
+
+        _unmarkExit();
+
+        $handler = null;
+
+        if ($overlay) {
+          $overlay.hide();
+        }
+      }
+    }
+
+    var img_exit_flag = false;
+
+    function _markExit() {
+      img_exit_flag = true;
+    }
+
+    function _unmarkExit() {
+      img_exit_flag = false;
+    }
+
+    function _canExit() {
+      return img_exit_flag;
+    }
+
+    function _setStyleVideo($video, _display, _align) {
+      if (!editor.opts.htmlUntouched && editor.opts.useClasses) {
+        $video.removeClass('fr-fvl fr-fvr fr-dvb fr-dvi');
+        $video.addClass("fr-fv".concat(_align[0], " fr-dv").concat(_display[0]));
+      } else {
+        if (_display == 'inline') {
+          $video.css({
+            display: 'inline-block'
+          });
+
+          if (_align == 'center') {
+            $video.css({
+              'float': 'none'
+            });
+          } else if (_align == 'left') {
+            $video.css({
+              'float': 'left'
+            });
+          } else {
+            $video.css({
+              'float': 'right'
+            });
+          }
+        } else {
+          $video.css({
+            display: 'block',
+            clear: 'both'
+          });
+
+          if (_align == 'left') {
+            $video.css({
+              textAlign: 'left'
+            });
+          } else if (_align == 'right') {
+            $video.css({
+              textAlign: 'right'
+            });
+          } else {
+            $video.css({
+              textAlign: 'center'
+            });
+          }
+        }
+      }
+    }
+    /**
+     * Set style for image.
+     */
+
+
+    function _setStyleImage($img, _display, _align) {
+      if (!editor.opts.htmlUntouched && editor.opts.useClasses) {
+        $img.removeClass('fr-fil fr-fir fr-dib fr-dii');
+
+        if (_align) {
+          $img.addClass("fr-fi".concat(_align[0]));
+        }
+
+        if (_display) {
+          $img.addClass("fr-di".concat(_display[0]));
+        }
+      } else {
+        if (_display == 'inline') {
+          $img.css({
+            display: 'inline-block',
+            verticalAlign: 'bottom',
+            margin: editor.opts.imageDefaultMargin
+          });
+
+          if (_align == 'center') {
+            $img.css({
+              'float': 'none',
+              marginBottom: '',
+              marginTop: '',
+              maxWidth: "calc(100% - ".concat(2 * editor.opts.imageDefaultMargin, "px)"),
+              textAlign: 'center'
+            });
+          } else if (_align == 'left') {
+            $img.css({
+              'float': 'left',
+              marginLeft: 0,
+              maxWidth: "calc(100% - ".concat(editor.opts.imageDefaultMargin, "px)"),
+              textAlign: 'left'
+            });
+          } else {
+            $img.css({
+              'float': 'right',
+              marginRight: 0,
+              maxWidth: "calc(100% - ".concat(editor.opts.imageDefaultMargin, "px)"),
+              textAlign: 'right'
+            });
+          }
+        } else if (_display == 'block') {
+          $img.css({
+            display: 'block',
+            'float': 'none',
+            verticalAlign: 'top',
+            margin: "".concat(editor.opts.imageDefaultMargin, "px auto"),
+            textAlign: 'center'
+          });
+
+          if (_align == 'left') {
+            $img.css({
+              marginLeft: 0,
+              textAlign: 'left'
+            });
+          } else if (_align == 'right') {
+            $img.css({
+              marginRight: 0,
+              textAlign: 'right'
+            });
+          }
+        }
+      }
+    }
+    /**
+     * Get the current image.
+     */
+
+
+    function get() {
+      return $current_image;
+    }
+
+    function getEl() {
+      return hasCaption() ? $current_image.parents('.fr-img-caption').first() : $current_image;
+    }
+    /**
+     * Apply specific style.
+     */
+
+
+    function applyStyle(val, imageStyles, multipleStyles) {
+      if (typeof imageStyles == 'undefined') imageStyles = editor.opts.imageStyles;
+      if (typeof multipleStyles == 'undefined') multipleStyles = editor.opts.imageMultipleStyles;
+      if (!$current_image) return false;
+      var $img = getEl(); // Remove multiple styles.
+
+      if (!multipleStyles) {
+        var styles = Object.keys(imageStyles);
+        styles.splice(styles.indexOf(val), 1);
+        $img.removeClass(styles.join(' '));
+      }
+
+      if (_typeof(imageStyles[val]) == 'object') {
+        $img.removeAttr('style');
+        $img.css(imageStyles[val].style);
+      } else {
+        $img.toggleClass(val);
+      }
+
+      _editImg($current_image);
+    }
+
+    function hasCaption() {
+      if ($current_image) {
+        return $current_image.parents('.fr-img-caption').length > 0;
+      }
+
+      return false;
+    }
+
+    function refreshEmbedButton($btn) {
+      var $popup = editor.popups.get('filesManager.insert');
+
+      if ($popup && $popup.find('.fr-files-embed-layer').hasClass('fr-active')) {
+        $btn.addClass('fr-active').attr('aria-pressed', true);
+      }
+    }
+
+    function toggleCaption() {
+      var $el;
+
+      if ($current_image && !hasCaption()) {
+        $el = $current_image; // Check if there is a link wrapping the image.
+
+        if ($current_image.parent().is('a')) {
+          $el = $current_image.parent();
+        } // code start https://github.com/froala-labs/froala-editor-js-2/issues/1864
+        // check the li placement
+
+
+        var $listParent = $current_image.parents('ul') && $current_image.parents('ul').length > 0 ? $current_image.parents('ul') : $current_image.parents('ol') && $current_image.parents('ol').length > 0 ? $current_image.parents('ol') : [];
+
+        if ($listParent.length > 0) {
+          var totLi = $listParent.find('li').length,
+              $currLi = $current_image.parents('li'),
+              $newLi = document.createElement("li");
+
+          if (totLi - 1 === $currLi.index()) {
+            // if li placement last then add one extra li
+            $listParent.append($newLi);
+            $newLi.innerHTML = '&nbsp;';
+          }
+        }
+
+        var splitAttrs;
+        var oldWidth;
+
+        if ($el.attr('style')) {
+          splitAttrs = $el.attr('style').split(':');
+          oldWidth = splitAttrs.indexOf('width') > -1 ? splitAttrs[splitAttrs.indexOf('width') + 1].replace(';', '') : '';
+        } // Issue 2861
+
+
+        var current_width = editor.opts.imageResizeWithPercent ? (oldWidth.indexOf('px') > -1 ? null : oldWidth) || '100%' : $current_image.width() + 'px'; // https://github.com/froala-labs/froala-editor-js-2/issues/1864
+
+        $el.wrap('<div class="fr-img-space-wrap"><span ' + (!editor.browser.mozilla ? 'contenteditable="false"' : '') + 'class="fr-img-caption ' + $current_image.attr('class') + '" style="' + (!editor.opts.useClasses ? $el.attr('style') : '') + '" draggable="false"></span><p class="fr-img-space-wrap2">&nbsp;</p></div>');
+        $el.wrap('<span class="fr-img-wrap"></span>');
+        $current_image.after("<span class=\"fr-inner\"".concat(!editor.browser.mozilla ? ' contenteditable="true"' : '', ">").concat(FroalaEditor.START_MARKER).concat(editor.language.translate('Image Caption')).concat(FroalaEditor.END_MARKER, "</span>"));
+        $current_image.removeAttr('class').removeAttr('style').removeAttr('width');
+        $current_image.parents('.fr-img-caption').css('width', current_width);
+
+        _exitEdit(true);
+
+        editor.selection.restore();
+      } else {
+        $el = getEl();
+        $current_image.insertAfter($el);
+        $current_image.attr('class', $el.attr('class').replace('fr-img-caption', '')).attr('style', $el.attr('style'));
+        $el.remove();
+
+        _editImg($current_image);
+      }
+    }
+
+    return {
+      _init: _init,
+      showInsertPopup: showInsertPopup,
+      showLayer: showLayer,
+      refreshUploadButton: refreshUploadButton,
+      refreshByURLButton: refreshByURLButton,
+      upload: upload,
+      insertByURL: insertByURL,
+      insertAllFiles: insertAllFiles,
+      deleteAllFiles: deleteAllFiles,
+      get: get,
+      getEl: getEl,
+      insert: insert,
+      showProgressBar: showProgressBar,
+      remove: remove,
+      hideProgressBar: hideProgressBar,
+      applyStyle: applyStyle,
+      showAltPopup: showAltPopup,
+      showSizePopup: showSizePopup,
+      setAlt: setAlt,
+      setSize: setSize,
+      toggleCaption: toggleCaption,
+      refreshEmbedButton: refreshEmbedButton,
+      insertEmbed: insertEmbed,
+      hasCaption: hasCaption,
+      exitEdit: _exitEdit,
+      edit: _editImg,
+      cancelFileInsert: cancelFileInsert,
+      minimizePopup: minimizePopup,
+      editImage: editImage,
+      saveImage: saveImage,
+      _showErrorMessage: _showErrorMessage,
+      _showFileErrorMessage: _showFileErrorMessage,
+      getFileThumbnail: getFileThumbnail,
+      deleteFile: deleteFile,
+      checkAutoplay: checkAutoplay,
+      checkInsertAllState: checkInsertAllState,
+      _disableInsertCheckbox: _disableInsertCheckbox,
+      _getFileType: _getFileType,
+      isChildWindowOpen: isChildWindowOpen,
+      setChildWindowState: setChildWindowState,
+      resetAllFilesCheckbox: resetAllFilesCheckbox
+    };
+  }; // Insert image button.
+
+
+  FroalaEditor.DefineIcon('insertFiles', {
+    NAME: 'image',
+    SVG_KEY: 'fileManager'
+  });
+  FroalaEditor.RegisterShortcut(FroalaEditor.KEYCODE.P, 'insertFiles', null, 'P');
+  FroalaEditor.RegisterCommand('insertFiles', {
+    title: 'Insert Files',
+    undo: false,
+    focus: true,
+    refreshAfterCallback: false,
+    popup: true,
+    callback: function callback() {
+      if (!this.popups.isVisible('filesManager.insert')) {
+        this.filesManager.showInsertPopup();
+      } else {
+        if (this.$el.find('.fr-marker').length) {
+          this.events.disableBlur();
+          this.selection.restore();
+        }
+
+        this.popups.hide('filesManager.insert');
+      }
+    },
+    plugin: 'filesManager'
+  });
+  FroalaEditor.DefineIcon('cloudIcon', {
+    NAME: 'cloudIcon',
+    SVG_KEY: 'uploadFiles'
+  }); // Image upload button inside the insert image popup.
+
+  FroalaEditor.DefineIcon('filesUpload', {
+    NAME: 'uploadFiles',
+    SVG_KEY: 'uploadFiles'
+  });
+  FroalaEditor.RegisterCommand('filesUpload', {
+    title: 'Upload Files',
+    undo: false,
+    focus: false,
+    toggle: true,
+    callback: function callback() {
+      this.filesManager.showLayer('files-upload');
+    },
+    refresh: function refresh($btn) {
+      this.filesManager.refreshUploadButton($btn);
+    }
+  }); // Image by URL button inside the insert image popup.
+
+  FroalaEditor.DefineIcon('filesByURL', {
+    NAME: 'link',
+    SVG_KEY: 'insertLink'
+  });
+  FroalaEditor.RegisterCommand('filesByURL', {
+    title: 'By URL',
+    undo: false,
+    focus: false,
+    toggle: true,
+    callback: function callback() {
+      this.filesManager.showLayer('files-by-url');
+    },
+    refresh: function refresh($btn) {
+      this.filesManager.refreshByURLButton($btn);
+    }
+  }); // image
+  // Video embed button inside the insert video popup.
+
+  FroalaEditor.DefineIcon('filesEmbed', {
+    NAME: 'code',
+    SVG_KEY: 'codeView'
+  });
+  FroalaEditor.RegisterCommand('filesEmbed', {
+    title: 'Embedded Code',
+    undo: false,
+    focus: false,
+    toggle: true,
+    callback: function callback() {
+      this.filesManager.showLayer('files-embed');
+    },
+    refresh: function refresh($btn) {
+      this.filesManager.refreshEmbedButton($btn);
+    }
+  });
+  FroalaEditor.DefineIcon('insertAll', {
+    NAME: 'insertAll',
+    SVG_KEY: 'fileInsert'
+  });
+  FroalaEditor.RegisterCommand('insertAll', {
+    title: 'Insert',
+    undo: false,
+    focus: false,
+    toggle: true,
+    disabled: true,
+    callback: function callback() {
+      this.filesManager.insertAllFiles();
+    }
+  });
+  FroalaEditor.DefineIcon('deleteAll', {
+    NAME: 'remove',
+    SVG_KEY: 'remove'
+  });
+  FroalaEditor.RegisterCommand('deleteAll', {
+    title: 'Delete',
+    undo: false,
+    focus: false,
+    toggle: true,
+    disabled: true,
+    callback: function callback() {
+      this.filesManager.deleteAllFiles();
+    }
+  });
+  FroalaEditor.DefineIcon('cancel', {
+    NAME: 'cancel',
+    SVG_KEY: 'cancel'
+  });
+  FroalaEditor.RegisterCommand('cancel', {
+    title: 'Cancel',
+    undo: false,
+    focus: false,
+    toggle: true,
+    callback: function callback() {
+      this.filesManager.cancelFileInsert();
+    },
+    refresh: function refresh($btn) {}
+  });
+  FroalaEditor.DefineIcon('minimize', {
+    NAME: 'minimize',
+    SVG_KEY: 'minimize'
+  });
+  FroalaEditor.RegisterCommand('minimize', {
+    title: 'Minimize',
+    undo: false,
+    focus: false,
+    toggle: true,
+    callback: function callback() {
+      this.filesManager.minimizePopup("image.insert", true);
+    },
+    refresh: function refresh($btn) {
+      this.filesManager.refreshEmbedButton($btn);
+    }
+  }); // Insert image button inside the insert by URL layer.
+
+  FroalaEditor.RegisterCommand('filesInsertByURL', {
+    title: 'Insert Image',
+    undo: true,
+    refreshAfterCallback: false,
+    callback: function callback() {
+      this.filesManager.insertByURL();
+    },
+    refresh: function refresh($btn) {
+      $btn.text(this.language.translate('Add'));
+    }
+  }); // Insert image button inside the insert by upload layer.
+
+  FroalaEditor.RegisterCommand('imageInsertByUpload', {
+    title: 'Insert',
+    undo: true,
+    refreshAfterCallback: false,
+    callback: function callback(cmd, val) {},
+    refresh: function refresh($btn) {}
+  }); // View image
+
+  FroalaEditor.RegisterCommand('viewImage', {
+    title: 'View Image',
+    undo: true,
+    refreshAfterCallback: false,
+    callback: function callback(cmd, val) {},
+    refresh: function refresh($btn) {}
+  }); // Embed Insert
+
+  FroalaEditor.RegisterCommand('insertEmbed', {
+    undo: true,
+    focus: true,
+    callback: function callback() {
+      this.filesManager.insertEmbed();
+      this.popups.get('filesManager.insert').find('textarea')[0].value = '';
+      this.popups.get('filesManager.insert').find('textarea').removeClass('fr-not-empty');
+    }
+  });
+  FroalaEditor.RegisterCommand('filesDismissError', {
+    title: 'OK',
+    undo: false,
+    callback: function callback() {
+      this.filesManager.hideProgressBar(true);
+    }
+  });
+
+  /**
+   * crypto-js
+   *
+   * LICENSE: The MIT License (MIT), https://github.com/brix/crypto-js/blob/develop/LICENSE
+   *
+   * Copyright (c) 2009-2013 Jeff Mott  
+   * Copyright (c) 2013-2016 Evan Vosberg
+  */
+
+  FroalaEditor.PLUGINS.cryptoJSPlugin = function (editor) {
+    function init() {}
+
+    var CryptoJS = CryptoJS || function (Math, undefined) {
+      var crypto; // Native crypto from window (Browser)
+
+      if (typeof window !== 'undefined' && window.crypto) {
+        crypto = window.crypto;
+      } // Native (experimental IE 11) crypto from window (Browser)
+
+
+      if (!crypto && typeof window !== 'undefined' && window.msCrypto) {
+        crypto = window.msCrypto;
+      } // Native crypto from global (NodeJS)
+
+
+      if (!crypto && typeof global !== 'undefined' && global.crypto) {
+        crypto = global.crypto;
+      } // Native crypto import via require (NodeJS)
+
+
+      if (!crypto && typeof require === 'function') {
+        try {
+          crypto = require('crypto');
+        } catch (err) {}
+      }
+      /*
+       * Cryptographically secure pseudorandom number generator
+       *
+       * As Math.random() is cryptographically not safe to use
+       */
+
+
+      var cryptoSecureRandomInt = function cryptoSecureRandomInt() {
+        if (crypto) {
+          // Use getRandomValues method (Browser)
+          if (typeof crypto.getRandomValues === 'function') {
+            try {
+              return crypto.getRandomValues(new Uint32Array(1))[0];
+            } catch (err) {}
+          } // Use randomBytes method (NodeJS)
+
+
+          if (typeof crypto.randomBytes === 'function') {
+            try {
+              return crypto.randomBytes(4).readInt32LE();
+            } catch (err) {}
+          }
+        }
+
+        throw new Error('Native crypto module could not be used to get secure random number.');
+      };
+      /*
+       * Local polyfill of Object.create
+         */
+
+
+      var create = Object.create || function () {
+        function F() {}
+
+        return function (obj) {
+          var subtype;
+          F.prototype = obj;
+          subtype = new F();
+          F.prototype = null;
+          return subtype;
+        };
+      }();
+      /**
+       * CryptoJS namespace.
+       */
+
+
+      var C = {};
+      /**
+       * Library namespace.
+       */
+
+      var C_lib = C.lib = {};
+      /**
+       * Base object for prototypal inheritance.
+       */
+
+      var Base = C_lib.Base = function () {
+        return {
+          /**
+           * Creates a new object that inherits from this object.
+           *
+           * @param {Object} overrides Properties to copy into the new object.
+           *
+           * @return {Object} The new object.
+           *
+           * @static
+           *
+           * @example
+           *
+           *     var MyType = CryptoJS.lib.Base.extend({
+           *         field: 'value',
+           *
+           *         method: function () {
+           *         }
+           *     });
+           */
+          extend: function extend(overrides) {
+            // Spawn
+            var subtype = create(this); // Augment
+
+            if (overrides) {
+              subtype.mixIn(overrides);
+            } // Create default initializer
+
+
+            if (!subtype.hasOwnProperty('init') || this.init === subtype.init) {
+              subtype.init = function () {
+                subtype.$super.init.apply(this, arguments);
+              };
+            } // Initializer's prototype is the subtype object
+
+
+            subtype.init.prototype = subtype; // Reference supertype
+
+            subtype.$super = this;
+            return subtype;
+          },
+
+          /**
+           * Extends this object and runs the init method.
+           * Arguments to create() will be passed to init().
+           *
+           * @return {Object} The new object.
+           *
+           * @static
+           *
+           * @example
+           *
+           *     var instance = MyType.create();
+           */
+          create: function create() {
+            var instance = this.extend();
+            instance.init.apply(instance, arguments);
+            return instance;
+          },
+
+          /**
+           * Initializes a newly created object.
+           * Override this method to add some logic when your objects are created.
+           *
+           * @example
+           *
+           *     var MyType = CryptoJS.lib.Base.extend({
+           *         init: function () {
+           *             // ...
+           *         }
+           *     });
+           */
+          init: function init() {},
+
+          /**
+           * Copies properties into this object.
+           *
+           * @param {Object} properties The properties to mix in.
+           *
+           * @example
+           *
+           *     MyType.mixIn({
+           *         field: 'value'
+           *     });
+           */
+          mixIn: function mixIn(properties) {
+            for (var propertyName in properties) {
+              if (properties.hasOwnProperty(propertyName)) {
+                this[propertyName] = properties[propertyName];
+              }
+            } // IE won't copy toString using the loop above
+
+
+            if (properties.hasOwnProperty('toString')) {
+              this.toString = properties.toString;
+            }
+          },
+
+          /**
+           * Creates a copy of this object.
+           *
+           * @return {Object} The clone.
+           *
+           * @example
+           *
+           *     var clone = instance.clone();
+           */
+          clone: function clone() {
+            return this.init.prototype.extend(this);
+          }
+        };
+      }();
+      /**
+       * An array of 32-bit words.
+       *
+       * @property {Array} words The array of 32-bit words.
+       * @property {number} sigBytes The number of significant bytes in this word array.
+       */
+
+
+      var WordArray = C_lib.WordArray = Base.extend({
+        /**
+         * Initializes a newly created word array.
+         *
+         * @param {Array} words (Optional) An array of 32-bit words.
+         * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.lib.WordArray.create();
+         *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607]);
+         *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607], 6);
+         */
+        init: function init(words, sigBytes) {
+          words = this.words = words || [];
+
+          if (sigBytes != undefined) {
+            this.sigBytes = sigBytes;
+          } else {
+            this.sigBytes = words.length * 4;
+          }
+        },
+
+        /**
+         * Converts this word array to a string.
+         *
+         * @param {Encoder} encoder (Optional) The encoding strategy to use. Default: CryptoJS.enc.Hex
+         *
+         * @return {string} The stringified word array.
+         *
+         * @example
+         *
+         *     var string = wordArray + '';
+         *     var string = wordArray.toString();
+         *     var string = wordArray.toString(CryptoJS.enc.Utf8);
+         */
+        toString: function toString(encoder) {
+          return (encoder || Hex).stringify(this);
+        },
+
+        /**
+         * Concatenates a word array to this word array.
+         *
+         * @param {WordArray} wordArray The word array to append.
+         *
+         * @return {WordArray} This word array.
+         *
+         * @example
+         *
+         *     wordArray1.concat(wordArray2);
+         */
+        concat: function concat(wordArray) {
+          // Shortcuts
+          var thisWords = this.words;
+          var thatWords = wordArray.words;
+          var thisSigBytes = this.sigBytes;
+          var thatSigBytes = wordArray.sigBytes; // Clamp excess bits
+
+          this.clamp(); // Concat
+
+          if (thisSigBytes % 4) {
+            // Copy one byte at a time
+            for (var i = 0; i < thatSigBytes; i++) {
+              var thatByte = thatWords[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+              thisWords[thisSigBytes + i >>> 2] |= thatByte << 24 - (thisSigBytes + i) % 4 * 8;
+            }
+          } else {
+            // Copy one word at a time
+            for (var i = 0; i < thatSigBytes; i += 4) {
+              thisWords[thisSigBytes + i >>> 2] = thatWords[i >>> 2];
+            }
+          }
+
+          this.sigBytes += thatSigBytes; // Chainable
+
+          return this;
+        },
+
+        /**
+         * Removes insignificant bits.
+         *
+         * @example
+         *
+         *     wordArray.clamp();
+         */
+        clamp: function clamp() {
+          // Shortcuts
+          var words = this.words;
+          var sigBytes = this.sigBytes; // Clamp
+
+          words[sigBytes >>> 2] &= 0xffffffff << 32 - sigBytes % 4 * 8;
+          words.length = Math.ceil(sigBytes / 4);
+        },
+
+        /**
+         * Creates a copy of this word array.
+         *
+         * @return {WordArray} The clone.
+         *
+         * @example
+         *
+         *     var clone = wordArray.clone();
+         */
+        clone: function clone() {
+          var clone = Base.clone.call(this);
+          clone.words = this.words.slice(0);
+          return clone;
+        },
+
+        /**
+         * Creates a word array filled with random bytes.
+         *
+         * @param {number} nBytes The number of random bytes to generate.
+         *
+         * @return {WordArray} The random word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.lib.WordArray.random(16);
+         */
+        random: function random(nBytes) {
+          var words = [];
+
+          for (var i = 0; i < nBytes; i += 4) {
+            words.push(cryptoSecureRandomInt());
+          }
+
+          return new WordArray.init(words, nBytes);
+        }
+      });
+      /**
+       * Encoder namespace.
+       */
+
+      var C_enc = C.enc = {};
+      /**
+       * Hex encoding strategy.
+       */
+
+      var Hex = C_enc.Hex = {
+        /**
+         * Converts a word array to a hex string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The hex string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var hexString = CryptoJS.enc.Hex.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          // Shortcuts
+          var words = wordArray.words;
+          var sigBytes = wordArray.sigBytes; // Convert
+
+          var hexChars = [];
+
+          for (var i = 0; i < sigBytes; i++) {
+            var bite = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+            hexChars.push((bite >>> 4).toString(16));
+            hexChars.push((bite & 0x0f).toString(16));
+          }
+
+          return hexChars.join('');
+        },
+
+        /**
+         * Converts a hex string to a word array.
+         *
+         * @param {string} hexStr The hex string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Hex.parse(hexString);
+         */
+        parse: function parse(hexStr) {
+          // Shortcut
+          var hexStrLength = hexStr.length; // Convert
+
+          var words = [];
+
+          for (var i = 0; i < hexStrLength; i += 2) {
+            words[i >>> 3] |= parseInt(hexStr.substr(i, 2), 16) << 24 - i % 8 * 4;
+          }
+
+          return new WordArray.init(words, hexStrLength / 2);
+        }
+      };
+      /**
+       * Latin1 encoding strategy.
+       */
+
+      var Latin1 = C_enc.Latin1 = {
+        /**
+         * Converts a word array to a Latin1 string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The Latin1 string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var latin1String = CryptoJS.enc.Latin1.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          // Shortcuts
+          var words = wordArray.words;
+          var sigBytes = wordArray.sigBytes; // Convert
+
+          var latin1Chars = [];
+
+          for (var i = 0; i < sigBytes; i++) {
+            var bite = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+            latin1Chars.push(String.fromCharCode(bite));
+          }
+
+          return latin1Chars.join('');
+        },
+
+        /**
+         * Converts a Latin1 string to a word array.
+         *
+         * @param {string} latin1Str The Latin1 string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Latin1.parse(latin1String);
+         */
+        parse: function parse(latin1Str) {
+          // Shortcut
+          var latin1StrLength = latin1Str.length; // Convert
+
+          var words = [];
+
+          for (var i = 0; i < latin1StrLength; i++) {
+            words[i >>> 2] |= (latin1Str.charCodeAt(i) & 0xff) << 24 - i % 4 * 8;
+          }
+
+          return new WordArray.init(words, latin1StrLength);
+        }
+      };
+      /**
+       * UTF-8 encoding strategy.
+       */
+
+      var Utf8 = C_enc.Utf8 = {
+        /**
+         * Converts a word array to a UTF-8 string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The UTF-8 string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var utf8String = CryptoJS.enc.Utf8.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          try {
+            return decodeURIComponent(escape(Latin1.stringify(wordArray)));
+          } catch (e) {
+            throw new Error('Malformed UTF-8 data');
+          }
+        },
+
+        /**
+         * Converts a UTF-8 string to a word array.
+         *
+         * @param {string} utf8Str The UTF-8 string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Utf8.parse(utf8String);
+         */
+        parse: function parse(utf8Str) {
+          return Latin1.parse(unescape(encodeURIComponent(utf8Str)));
+        }
+      };
+      /**
+       * Abstract buffered block algorithm template.
+       *
+       * The property blockSize must be implemented in a concrete subtype.
+       *
+       * @property {number} _minBufferSize The number of blocks that should be kept unprocessed in the buffer. Default: 0
+       */
+
+      var BufferedBlockAlgorithm = C_lib.BufferedBlockAlgorithm = Base.extend({
+        /**
+         * Resets this block algorithm's data buffer to its initial state.
+         *
+         * @example
+         *
+         *     bufferedBlockAlgorithm.reset();
+         */
+        reset: function reset() {
+          // Initial values
+          this._data = new WordArray.init();
+          this._nDataBytes = 0;
+        },
+
+        /**
+         * Adds new data to this block algorithm's buffer.
+         *
+         * @param {WordArray|string} data The data to append. Strings are converted to a WordArray using UTF-8.
+         *
+         * @example
+         *
+         *     bufferedBlockAlgorithm._append('data');
+         *     bufferedBlockAlgorithm._append(wordArray);
+         */
+        _append: function _append(data) {
+          // Convert string to WordArray, else assume WordArray already
+          if (typeof data == 'string') {
+            data = Utf8.parse(data);
+          } // Append
+
+
+          this._data.concat(data);
+
+          this._nDataBytes += data.sigBytes;
+        },
+
+        /**
+         * Processes available data blocks.
+         *
+         * This method invokes _doProcessBlock(offset), which must be implemented by a concrete subtype.
+         *
+         * @param {boolean} doFlush Whether all blocks and partial blocks should be processed.
+         *
+         * @return {WordArray} The processed data.
+         *
+         * @example
+         *
+         *     var processedData = bufferedBlockAlgorithm._process();
+         *     var processedData = bufferedBlockAlgorithm._process(!!'flush');
+         */
+        _process: function _process(doFlush) {
+          var processedWords; // Shortcuts
+
+          var data = this._data;
+          var dataWords = data.words;
+          var dataSigBytes = data.sigBytes;
+          var blockSize = this.blockSize;
+          var blockSizeBytes = blockSize * 4; // Count blocks ready
+
+          var nBlocksReady = dataSigBytes / blockSizeBytes;
+
+          if (doFlush) {
+            // Round up to include partial blocks
+            nBlocksReady = Math.ceil(nBlocksReady);
+          } else {
+            // Round down to include only full blocks,
+            // less the number of blocks that must remain in the buffer
+            nBlocksReady = Math.max((nBlocksReady | 0) - this._minBufferSize, 0);
+          } // Count words ready
+
+
+          var nWordsReady = nBlocksReady * blockSize; // Count bytes ready
+
+          var nBytesReady = Math.min(nWordsReady * 4, dataSigBytes); // Process blocks
+
+          if (nWordsReady) {
+            for (var offset = 0; offset < nWordsReady; offset += blockSize) {
+              // Perform concrete-algorithm logic
+              this._doProcessBlock(dataWords, offset);
+            } // Remove processed words
+
+
+            processedWords = dataWords.splice(0, nWordsReady);
+            data.sigBytes -= nBytesReady;
+          } // Return processed words
+
+
+          return new WordArray.init(processedWords, nBytesReady);
+        },
+
+        /**
+         * Creates a copy of this object.
+         *
+         * @return {Object} The clone.
+         *
+         * @example
+         *
+         *     var clone = bufferedBlockAlgorithm.clone();
+         */
+        clone: function clone() {
+          var clone = Base.clone.call(this);
+          clone._data = this._data.clone();
+          return clone;
+        },
+        _minBufferSize: 0
+      });
+      /**
+       * Abstract hasher template.
+       *
+       * @property {number} blockSize The number of 32-bit words this hasher operates on. Default: 16 (512 bits)
+       */
+
+      var Hasher = C_lib.Hasher = BufferedBlockAlgorithm.extend({
+        /**
+         * Configuration options.
+         */
+        cfg: Base.extend(),
+
+        /**
+         * Initializes a newly created hasher.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for this hash computation.
+         *
+         * @example
+         *
+         *     var hasher = CryptoJS.algo.SHA256.create();
+         */
+        init: function init(cfg) {
+          // Apply config defaults
+          this.cfg = this.cfg.extend(cfg); // Set initial values
+
+          this.reset();
+        },
+
+        /**
+         * Resets this hasher to its initial state.
+         *
+         * @example
+         *
+         *     hasher.reset();
+         */
+        reset: function reset() {
+          // Reset data buffer
+          BufferedBlockAlgorithm.reset.call(this); // Perform concrete-hasher logic
+
+          this._doReset();
+        },
+
+        /**
+         * Updates this hasher with a message.
+         *
+         * @param {WordArray|string} messageUpdate The message to append.
+         *
+         * @return {Hasher} This hasher.
+         *
+         * @example
+         *
+         *     hasher.update('message');
+         *     hasher.update(wordArray);
+         */
+        update: function update(messageUpdate) {
+          // Append
+          this._append(messageUpdate); // Update the hash
+
+
+          this._process(); // Chainable
+
+
+          return this;
+        },
+
+        /**
+         * Finalizes the hash computation.
+         * Note that the finalize operation is effectively a destructive, read-once operation.
+         *
+         * @param {WordArray|string} messageUpdate (Optional) A final message update.
+         *
+         * @return {WordArray} The hash.
+         *
+         * @example
+         *
+         *     var hash = hasher.finalize();
+         *     var hash = hasher.finalize('message');
+         *     var hash = hasher.finalize(wordArray);
+         */
+        finalize: function finalize(messageUpdate) {
+          // Final message update
+          if (messageUpdate) {
+            this._append(messageUpdate);
+          } // Perform concrete-hasher logic
+
+
+          var hash = this._doFinalize();
+
+          return hash;
+        },
+        blockSize: 512 / 32,
+
+        /**
+         * Creates a shortcut function to a hasher's object interface.
+         *
+         * @param {Hasher} hasher The hasher to create a helper for.
+         *
+         * @return {Function} The shortcut function.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var SHA256 = CryptoJS.lib.Hasher._createHelper(CryptoJS.algo.SHA256);
+         */
+        _createHelper: function _createHelper(hasher) {
+          return function (message, cfg) {
+            return new hasher.init(cfg).finalize(message);
+          };
+        },
+
+        /**
+         * Creates a shortcut function to the HMAC's object interface.
+         *
+         * @param {Hasher} hasher The hasher to use in this HMAC helper.
+         *
+         * @return {Function} The shortcut function.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var HmacSHA256 = CryptoJS.lib.Hasher._createHmacHelper(CryptoJS.algo.SHA256);
+         */
+        _createHmacHelper: function _createHmacHelper(hasher) {
+          return function (message, key) {
+            return new C_algo.HMAC.init(hasher, key).finalize(message);
+          };
+        }
+      });
+      /**
+       * Algorithm namespace.
+       */
+
+      var C_algo = C.algo = {};
+      return C;
+    }(Math);
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var C_enc = C.enc;
+      /**
+       * Base64 encoding strategy.
+       */
+
+      var Base64 = C_enc.Base64 = {
+        /**
+         * Converts a word array to a Base64 string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The Base64 string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var base64String = CryptoJS.enc.Base64.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          // Shortcuts
+          var words = wordArray.words;
+          var sigBytes = wordArray.sigBytes;
+          var map = this._map; // Clamp excess bits
+
+          wordArray.clamp(); // Convert
+
+          var base64Chars = [];
+
+          for (var i = 0; i < sigBytes; i += 3) {
+            var byte1 = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+            var byte2 = words[i + 1 >>> 2] >>> 24 - (i + 1) % 4 * 8 & 0xff;
+            var byte3 = words[i + 2 >>> 2] >>> 24 - (i + 2) % 4 * 8 & 0xff;
+            var triplet = byte1 << 16 | byte2 << 8 | byte3;
+
+            for (var j = 0; j < 4 && i + j * 0.75 < sigBytes; j++) {
+              base64Chars.push(map.charAt(triplet >>> 6 * (3 - j) & 0x3f));
+            }
+          } // Add padding
+
+
+          var paddingChar = map.charAt(64);
+
+          if (paddingChar) {
+            while (base64Chars.length % 4) {
+              base64Chars.push(paddingChar);
+            }
+          }
+
+          return base64Chars.join('');
+        },
+
+        /**
+         * Converts a Base64 string to a word array.
+         *
+         * @param {string} base64Str The Base64 string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Base64.parse(base64String);
+         */
+        parse: function parse(base64Str) {
+          // Shortcuts
+          var base64StrLength = base64Str.length;
+          var map = this._map;
+          var reverseMap = this._reverseMap;
+
+          if (!reverseMap) {
+            reverseMap = this._reverseMap = [];
+
+            for (var j = 0; j < map.length; j++) {
+              reverseMap[map.charCodeAt(j)] = j;
+            }
+          } // Ignore padding
+
+
+          var paddingChar = map.charAt(64);
+
+          if (paddingChar) {
+            var paddingIndex = base64Str.indexOf(paddingChar);
+
+            if (paddingIndex !== -1) {
+              base64StrLength = paddingIndex;
+            }
+          } // Convert
+
+
+          return parseLoop(base64Str, base64StrLength, reverseMap);
+        },
+        _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+      };
+
+      function parseLoop(base64Str, base64StrLength, reverseMap) {
+        var words = [];
+        var nBytes = 0;
+
+        for (var i = 0; i < base64StrLength; i++) {
+          if (i % 4) {
+            var bits1 = reverseMap[base64Str.charCodeAt(i - 1)] << i % 4 * 2;
+            var bits2 = reverseMap[base64Str.charCodeAt(i)] >>> 6 - i % 4 * 2;
+            var bitsCombined = bits1 | bits2;
+            words[nBytes >>> 2] |= bitsCombined << 24 - nBytes % 4 * 8;
+            nBytes++;
+          }
+        }
+
+        return WordArray.create(words, nBytes);
+      }
+    })();
+
+    (function (Math) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var Hasher = C_lib.Hasher;
+      var C_algo = C.algo; // Constants table
+
+      var T = []; // Compute constants
+
+      (function () {
+        for (var i = 0; i < 64; i++) {
+          T[i] = Math.abs(Math.sin(i + 1)) * 0x100000000 | 0;
+        }
+      })();
+      /**
+       * MD5 hash algorithm.
+       */
+
+
+      var MD5 = C_algo.MD5 = Hasher.extend({
+        _doReset: function _doReset() {
+          this._hash = new WordArray.init([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]);
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Swap endian
+          for (var i = 0; i < 16; i++) {
+            // Shortcuts
+            var offset_i = offset + i;
+            var M_offset_i = M[offset_i];
+            M[offset_i] = (M_offset_i << 8 | M_offset_i >>> 24) & 0x00ff00ff | (M_offset_i << 24 | M_offset_i >>> 8) & 0xff00ff00;
+          } // Shortcuts
+
+
+          var H = this._hash.words;
+          var M_offset_0 = M[offset + 0];
+          var M_offset_1 = M[offset + 1];
+          var M_offset_2 = M[offset + 2];
+          var M_offset_3 = M[offset + 3];
+          var M_offset_4 = M[offset + 4];
+          var M_offset_5 = M[offset + 5];
+          var M_offset_6 = M[offset + 6];
+          var M_offset_7 = M[offset + 7];
+          var M_offset_8 = M[offset + 8];
+          var M_offset_9 = M[offset + 9];
+          var M_offset_10 = M[offset + 10];
+          var M_offset_11 = M[offset + 11];
+          var M_offset_12 = M[offset + 12];
+          var M_offset_13 = M[offset + 13];
+          var M_offset_14 = M[offset + 14];
+          var M_offset_15 = M[offset + 15]; // Working varialbes
+
+          var a = H[0];
+          var b = H[1];
+          var c = H[2];
+          var d = H[3]; // Computation
+
+          a = FF(a, b, c, d, M_offset_0, 7, T[0]);
+          d = FF(d, a, b, c, M_offset_1, 12, T[1]);
+          c = FF(c, d, a, b, M_offset_2, 17, T[2]);
+          b = FF(b, c, d, a, M_offset_3, 22, T[3]);
+          a = FF(a, b, c, d, M_offset_4, 7, T[4]);
+          d = FF(d, a, b, c, M_offset_5, 12, T[5]);
+          c = FF(c, d, a, b, M_offset_6, 17, T[6]);
+          b = FF(b, c, d, a, M_offset_7, 22, T[7]);
+          a = FF(a, b, c, d, M_offset_8, 7, T[8]);
+          d = FF(d, a, b, c, M_offset_9, 12, T[9]);
+          c = FF(c, d, a, b, M_offset_10, 17, T[10]);
+          b = FF(b, c, d, a, M_offset_11, 22, T[11]);
+          a = FF(a, b, c, d, M_offset_12, 7, T[12]);
+          d = FF(d, a, b, c, M_offset_13, 12, T[13]);
+          c = FF(c, d, a, b, M_offset_14, 17, T[14]);
+          b = FF(b, c, d, a, M_offset_15, 22, T[15]);
+          a = GG(a, b, c, d, M_offset_1, 5, T[16]);
+          d = GG(d, a, b, c, M_offset_6, 9, T[17]);
+          c = GG(c, d, a, b, M_offset_11, 14, T[18]);
+          b = GG(b, c, d, a, M_offset_0, 20, T[19]);
+          a = GG(a, b, c, d, M_offset_5, 5, T[20]);
+          d = GG(d, a, b, c, M_offset_10, 9, T[21]);
+          c = GG(c, d, a, b, M_offset_15, 14, T[22]);
+          b = GG(b, c, d, a, M_offset_4, 20, T[23]);
+          a = GG(a, b, c, d, M_offset_9, 5, T[24]);
+          d = GG(d, a, b, c, M_offset_14, 9, T[25]);
+          c = GG(c, d, a, b, M_offset_3, 14, T[26]);
+          b = GG(b, c, d, a, M_offset_8, 20, T[27]);
+          a = GG(a, b, c, d, M_offset_13, 5, T[28]);
+          d = GG(d, a, b, c, M_offset_2, 9, T[29]);
+          c = GG(c, d, a, b, M_offset_7, 14, T[30]);
+          b = GG(b, c, d, a, M_offset_12, 20, T[31]);
+          a = HH(a, b, c, d, M_offset_5, 4, T[32]);
+          d = HH(d, a, b, c, M_offset_8, 11, T[33]);
+          c = HH(c, d, a, b, M_offset_11, 16, T[34]);
+          b = HH(b, c, d, a, M_offset_14, 23, T[35]);
+          a = HH(a, b, c, d, M_offset_1, 4, T[36]);
+          d = HH(d, a, b, c, M_offset_4, 11, T[37]);
+          c = HH(c, d, a, b, M_offset_7, 16, T[38]);
+          b = HH(b, c, d, a, M_offset_10, 23, T[39]);
+          a = HH(a, b, c, d, M_offset_13, 4, T[40]);
+          d = HH(d, a, b, c, M_offset_0, 11, T[41]);
+          c = HH(c, d, a, b, M_offset_3, 16, T[42]);
+          b = HH(b, c, d, a, M_offset_6, 23, T[43]);
+          a = HH(a, b, c, d, M_offset_9, 4, T[44]);
+          d = HH(d, a, b, c, M_offset_12, 11, T[45]);
+          c = HH(c, d, a, b, M_offset_15, 16, T[46]);
+          b = HH(b, c, d, a, M_offset_2, 23, T[47]);
+          a = II(a, b, c, d, M_offset_0, 6, T[48]);
+          d = II(d, a, b, c, M_offset_7, 10, T[49]);
+          c = II(c, d, a, b, M_offset_14, 15, T[50]);
+          b = II(b, c, d, a, M_offset_5, 21, T[51]);
+          a = II(a, b, c, d, M_offset_12, 6, T[52]);
+          d = II(d, a, b, c, M_offset_3, 10, T[53]);
+          c = II(c, d, a, b, M_offset_10, 15, T[54]);
+          b = II(b, c, d, a, M_offset_1, 21, T[55]);
+          a = II(a, b, c, d, M_offset_8, 6, T[56]);
+          d = II(d, a, b, c, M_offset_15, 10, T[57]);
+          c = II(c, d, a, b, M_offset_6, 15, T[58]);
+          b = II(b, c, d, a, M_offset_13, 21, T[59]);
+          a = II(a, b, c, d, M_offset_4, 6, T[60]);
+          d = II(d, a, b, c, M_offset_11, 10, T[61]);
+          c = II(c, d, a, b, M_offset_2, 15, T[62]);
+          b = II(b, c, d, a, M_offset_9, 21, T[63]); // Intermediate hash value
+
+          H[0] = H[0] + a | 0;
+          H[1] = H[1] + b | 0;
+          H[2] = H[2] + c | 0;
+          H[3] = H[3] + d | 0;
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+          var nBitsTotalH = Math.floor(nBitsTotal / 0x100000000);
+          var nBitsTotalL = nBitsTotal;
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] = (nBitsTotalH << 8 | nBitsTotalH >>> 24) & 0x00ff00ff | (nBitsTotalH << 24 | nBitsTotalH >>> 8) & 0xff00ff00;
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = (nBitsTotalL << 8 | nBitsTotalL >>> 24) & 0x00ff00ff | (nBitsTotalL << 24 | nBitsTotalL >>> 8) & 0xff00ff00;
+          data.sigBytes = (dataWords.length + 1) * 4; // Hash final blocks
+
+          this._process(); // Shortcuts
+
+
+          var hash = this._hash;
+          var H = hash.words; // Swap endian
+
+          for (var i = 0; i < 4; i++) {
+            // Shortcut
+            var H_i = H[i];
+            H[i] = (H_i << 8 | H_i >>> 24) & 0x00ff00ff | (H_i << 24 | H_i >>> 8) & 0xff00ff00;
+          } // Return final computed hash
+
+
+          return hash;
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+          clone._hash = this._hash.clone();
+          return clone;
+        }
+      });
+
+      function FF(a, b, c, d, x, s, t) {
+        var n = a + (b & c | ~b & d) + x + t;
+        return (n << s | n >>> 32 - s) + b;
+      }
+
+      function GG(a, b, c, d, x, s, t) {
+        var n = a + (b & d | c & ~d) + x + t;
+        return (n << s | n >>> 32 - s) + b;
+      }
+
+      function HH(a, b, c, d, x, s, t) {
+        var n = a + (b ^ c ^ d) + x + t;
+        return (n << s | n >>> 32 - s) + b;
+      }
+
+      function II(a, b, c, d, x, s, t) {
+        var n = a + (c ^ (b | ~d)) + x + t;
+        return (n << s | n >>> 32 - s) + b;
+      }
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.MD5('message');
+       *     var hash = CryptoJS.MD5(wordArray);
+       */
+
+
+      C.MD5 = Hasher._createHelper(MD5);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacMD5(message, key);
+       */
+
+      C.HmacMD5 = Hasher._createHmacHelper(MD5);
+    })(Math);
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var Hasher = C_lib.Hasher;
+      var C_algo = C.algo; // Reusable object
+
+      var W = [];
+      /**
+       * SHA-1 hash algorithm.
+       */
+
+      var SHA1 = C_algo.SHA1 = Hasher.extend({
+        _doReset: function _doReset() {
+          this._hash = new WordArray.init([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0]);
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcut
+          var H = this._hash.words; // Working variables
+
+          var a = H[0];
+          var b = H[1];
+          var c = H[2];
+          var d = H[3];
+          var e = H[4]; // Computation
+
+          for (var i = 0; i < 80; i++) {
+            if (i < 16) {
+              W[i] = M[offset + i] | 0;
+            } else {
+              var n = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
+              W[i] = n << 1 | n >>> 31;
+            }
+
+            var t = (a << 5 | a >>> 27) + e + W[i];
+
+            if (i < 20) {
+              t += (b & c | ~b & d) + 0x5a827999;
+            } else if (i < 40) {
+              t += (b ^ c ^ d) + 0x6ed9eba1;
+            } else if (i < 60) {
+              t += (b & c | b & d | c & d) - 0x70e44324;
+            } else
+              /* if (i < 80) */
+              {
+                t += (b ^ c ^ d) - 0x359d3e2a;
+              }
+
+            e = d;
+            d = c;
+            c = b << 30 | b >>> 2;
+            b = a;
+            a = t;
+          } // Intermediate hash value
+
+
+          H[0] = H[0] + a | 0;
+          H[1] = H[1] + b | 0;
+          H[2] = H[2] + c | 0;
+          H[3] = H[3] + d | 0;
+          H[4] = H[4] + e | 0;
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] = nBitsTotal;
+          data.sigBytes = dataWords.length * 4; // Hash final blocks
+
+          this._process(); // Return final computed hash
+
+
+          return this._hash;
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+          clone._hash = this._hash.clone();
+          return clone;
+        }
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA1('message');
+       *     var hash = CryptoJS.SHA1(wordArray);
+       */
+
+      C.SHA1 = Hasher._createHelper(SHA1);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA1(message, key);
+       */
+
+      C.HmacSHA1 = Hasher._createHmacHelper(SHA1);
+    })();
+
+    (function (Math) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var Hasher = C_lib.Hasher;
+      var C_algo = C.algo; // Initialization and round constants tables
+
+      var H = [];
+      var K = []; // Compute constants
+
+      (function () {
+        function isPrime(n) {
+          var sqrtN = Math.sqrt(n);
+
+          for (var factor = 2; factor <= sqrtN; factor++) {
+            if (!(n % factor)) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+
+        function getFractionalBits(n) {
+          return (n - (n | 0)) * 0x100000000 | 0;
+        }
+
+        var n = 2;
+        var nPrime = 0;
+
+        while (nPrime < 64) {
+          if (isPrime(n)) {
+            if (nPrime < 8) {
+              H[nPrime] = getFractionalBits(Math.pow(n, 1 / 2));
+            }
+
+            K[nPrime] = getFractionalBits(Math.pow(n, 1 / 3));
+            nPrime++;
+          }
+
+          n++;
+        }
+      })(); // Reusable object
+
+
+      var W = [];
+      /**
+       * SHA-256 hash algorithm.
+       */
+
+      var SHA256 = C_algo.SHA256 = Hasher.extend({
+        _doReset: function _doReset() {
+          this._hash = new WordArray.init(H.slice(0));
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcut
+          var H = this._hash.words; // Working variables
+
+          var a = H[0];
+          var b = H[1];
+          var c = H[2];
+          var d = H[3];
+          var e = H[4];
+          var f = H[5];
+          var g = H[6];
+          var h = H[7]; // Computation
+
+          for (var i = 0; i < 64; i++) {
+            if (i < 16) {
+              W[i] = M[offset + i] | 0;
+            } else {
+              var gamma0x = W[i - 15];
+              var gamma0 = (gamma0x << 25 | gamma0x >>> 7) ^ (gamma0x << 14 | gamma0x >>> 18) ^ gamma0x >>> 3;
+              var gamma1x = W[i - 2];
+              var gamma1 = (gamma1x << 15 | gamma1x >>> 17) ^ (gamma1x << 13 | gamma1x >>> 19) ^ gamma1x >>> 10;
+              W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16];
+            }
+
+            var ch = e & f ^ ~e & g;
+            var maj = a & b ^ a & c ^ b & c;
+            var sigma0 = (a << 30 | a >>> 2) ^ (a << 19 | a >>> 13) ^ (a << 10 | a >>> 22);
+            var sigma1 = (e << 26 | e >>> 6) ^ (e << 21 | e >>> 11) ^ (e << 7 | e >>> 25);
+            var t1 = h + sigma1 + ch + K[i] + W[i];
+            var t2 = sigma0 + maj;
+            h = g;
+            g = f;
+            f = e;
+            e = d + t1 | 0;
+            d = c;
+            c = b;
+            b = a;
+            a = t1 + t2 | 0;
+          } // Intermediate hash value
+
+
+          H[0] = H[0] + a | 0;
+          H[1] = H[1] + b | 0;
+          H[2] = H[2] + c | 0;
+          H[3] = H[3] + d | 0;
+          H[4] = H[4] + e | 0;
+          H[5] = H[5] + f | 0;
+          H[6] = H[6] + g | 0;
+          H[7] = H[7] + h | 0;
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] = nBitsTotal;
+          data.sigBytes = dataWords.length * 4; // Hash final blocks
+
+          this._process(); // Return final computed hash
+
+
+          return this._hash;
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+          clone._hash = this._hash.clone();
+          return clone;
+        }
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA256('message');
+       *     var hash = CryptoJS.SHA256(wordArray);
+       */
+
+      C.SHA256 = Hasher._createHelper(SHA256);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA256(message, key);
+       */
+
+      C.HmacSHA256 = Hasher._createHmacHelper(SHA256);
+    })(Math);
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var C_enc = C.enc;
+      /**
+       * UTF-16 BE encoding strategy.
+       */
+
+      var Utf16BE = C_enc.Utf16 = C_enc.Utf16BE = {
+        /**
+         * Converts a word array to a UTF-16 BE string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The UTF-16 BE string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var utf16String = CryptoJS.enc.Utf16.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          // Shortcuts
+          var words = wordArray.words;
+          var sigBytes = wordArray.sigBytes; // Convert
+
+          var utf16Chars = [];
+
+          for (var i = 0; i < sigBytes; i += 2) {
+            var codePoint = words[i >>> 2] >>> 16 - i % 4 * 8 & 0xffff;
+            utf16Chars.push(String.fromCharCode(codePoint));
+          }
+
+          return utf16Chars.join('');
+        },
+
+        /**
+         * Converts a UTF-16 BE string to a word array.
+         *
+         * @param {string} utf16Str The UTF-16 BE string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Utf16.parse(utf16String);
+         */
+        parse: function parse(utf16Str) {
+          // Shortcut
+          var utf16StrLength = utf16Str.length; // Convert
+
+          var words = [];
+
+          for (var i = 0; i < utf16StrLength; i++) {
+            words[i >>> 1] |= utf16Str.charCodeAt(i) << 16 - i % 2 * 16;
+          }
+
+          return WordArray.create(words, utf16StrLength * 2);
+        }
+      };
+      /**
+       * UTF-16 LE encoding strategy.
+       */
+
+      C_enc.Utf16LE = {
+        /**
+         * Converts a word array to a UTF-16 LE string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The UTF-16 LE string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var utf16Str = CryptoJS.enc.Utf16LE.stringify(wordArray);
+         */
+        stringify: function stringify(wordArray) {
+          // Shortcuts
+          var words = wordArray.words;
+          var sigBytes = wordArray.sigBytes; // Convert
+
+          var utf16Chars = [];
+
+          for (var i = 0; i < sigBytes; i += 2) {
+            var codePoint = swapEndian(words[i >>> 2] >>> 16 - i % 4 * 8 & 0xffff);
+            utf16Chars.push(String.fromCharCode(codePoint));
+          }
+
+          return utf16Chars.join('');
+        },
+
+        /**
+         * Converts a UTF-16 LE string to a word array.
+         *
+         * @param {string} utf16Str The UTF-16 LE string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Utf16LE.parse(utf16Str);
+         */
+        parse: function parse(utf16Str) {
+          // Shortcut
+          var utf16StrLength = utf16Str.length; // Convert
+
+          var words = [];
+
+          for (var i = 0; i < utf16StrLength; i++) {
+            words[i >>> 1] |= swapEndian(utf16Str.charCodeAt(i) << 16 - i % 2 * 16);
+          }
+
+          return WordArray.create(words, utf16StrLength * 2);
+        }
+      };
+
+      function swapEndian(word) {
+        return word << 8 & 0xff00ff00 | word >>> 8 & 0x00ff00ff;
+      }
+    })();
+
+    (function () {
+      // Check if typed arrays are supported
+      if (typeof ArrayBuffer != 'function') {
+        return;
+      } // Shortcuts
+
+
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray; // Reference original init
+
+      var superInit = WordArray.init; // Augment WordArray.init to handle typed arrays
+
+      var subInit = WordArray.init = function (typedArray) {
+        // Convert buffers to uint8
+        if (typedArray instanceof ArrayBuffer) {
+          typedArray = new Uint8Array(typedArray);
+        } // Convert other array views to uint8
+
+
+        if (typedArray instanceof Int8Array || typeof Uint8ClampedArray !== "undefined" && typedArray instanceof Uint8ClampedArray || typedArray instanceof Int16Array || typedArray instanceof Uint16Array || typedArray instanceof Int32Array || typedArray instanceof Uint32Array || typedArray instanceof Float32Array || typedArray instanceof Float64Array) {
+          typedArray = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+        } // Handle Uint8Array
+
+
+        if (typedArray instanceof Uint8Array) {
+          // Shortcut
+          var typedArrayByteLength = typedArray.byteLength; // Extract bytes
+
+          var words = [];
+
+          for (var i = 0; i < typedArrayByteLength; i++) {
+            words[i >>> 2] |= typedArray[i] << 24 - i % 4 * 8;
+          } // Initialize this word array
+
+
+          superInit.call(this, words, typedArrayByteLength);
+        } else {
+          // Else call normal init
+          superInit.apply(this, arguments);
+        }
+      };
+
+      subInit.prototype = WordArray;
+    })();
+    /** @preserve
+    (c) 2012 by Cédric Mesnil. All rights reserved.
+    
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+    
+        - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+        - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    */
+
+
+    (function (Math) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var Hasher = C_lib.Hasher;
+      var C_algo = C.algo; // Constants table
+
+      var _zl = WordArray.create([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8, 3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12, 1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2, 4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13]);
+
+      var _zr = WordArray.create([5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12, 6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2, 15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13, 8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14, 12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11]);
+
+      var _sl = WordArray.create([11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8, 7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12, 11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5, 11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12, 9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6]);
+
+      var _sr = WordArray.create([8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6, 9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11, 9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5, 15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8, 8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11]);
+
+      var _hl = WordArray.create([0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E]);
+
+      var _hr = WordArray.create([0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000]);
+      /**
+       * RIPEMD160 hash algorithm.
+       */
+
+
+      var RIPEMD160 = C_algo.RIPEMD160 = Hasher.extend({
+        _doReset: function _doReset() {
+          this._hash = WordArray.create([0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]);
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Swap endian
+          for (var i = 0; i < 16; i++) {
+            // Shortcuts
+            var offset_i = offset + i;
+            var M_offset_i = M[offset_i]; // Swap
+
+            M[offset_i] = (M_offset_i << 8 | M_offset_i >>> 24) & 0x00ff00ff | (M_offset_i << 24 | M_offset_i >>> 8) & 0xff00ff00;
+          } // Shortcut
+
+
+          var H = this._hash.words;
+          var hl = _hl.words;
+          var hr = _hr.words;
+          var zl = _zl.words;
+          var zr = _zr.words;
+          var sl = _sl.words;
+          var sr = _sr.words; // Working variables
+
+          var al, bl, cl, dl, el;
+          var ar, br, cr, dr, er;
+          ar = al = H[0];
+          br = bl = H[1];
+          cr = cl = H[2];
+          dr = dl = H[3];
+          er = el = H[4]; // Computation
+
+          var t;
+
+          for (var i = 0; i < 80; i += 1) {
+            t = al + M[offset + zl[i]] | 0;
+
+            if (i < 16) {
+              t += f1(bl, cl, dl) + hl[0];
+            } else if (i < 32) {
+              t += f2(bl, cl, dl) + hl[1];
+            } else if (i < 48) {
+              t += f3(bl, cl, dl) + hl[2];
+            } else if (i < 64) {
+              t += f4(bl, cl, dl) + hl[3];
+            } else {
+              // if (i<80) {
+              t += f5(bl, cl, dl) + hl[4];
+            }
+
+            t = t | 0;
+            t = rotl(t, sl[i]);
+            t = t + el | 0;
+            al = el;
+            el = dl;
+            dl = rotl(cl, 10);
+            cl = bl;
+            bl = t;
+            t = ar + M[offset + zr[i]] | 0;
+
+            if (i < 16) {
+              t += f5(br, cr, dr) + hr[0];
+            } else if (i < 32) {
+              t += f4(br, cr, dr) + hr[1];
+            } else if (i < 48) {
+              t += f3(br, cr, dr) + hr[2];
+            } else if (i < 64) {
+              t += f2(br, cr, dr) + hr[3];
+            } else {
+              // if (i<80) {
+              t += f1(br, cr, dr) + hr[4];
+            }
+
+            t = t | 0;
+            t = rotl(t, sr[i]);
+            t = t + er | 0;
+            ar = er;
+            er = dr;
+            dr = rotl(cr, 10);
+            cr = br;
+            br = t;
+          } // Intermediate hash value
+
+
+          t = H[1] + cl + dr | 0;
+          H[1] = H[2] + dl + er | 0;
+          H[2] = H[3] + el + ar | 0;
+          H[3] = H[4] + al + br | 0;
+          H[4] = H[0] + bl + cr | 0;
+          H[0] = t;
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+          dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = (nBitsTotal << 8 | nBitsTotal >>> 24) & 0x00ff00ff | (nBitsTotal << 24 | nBitsTotal >>> 8) & 0xff00ff00;
+          data.sigBytes = (dataWords.length + 1) * 4; // Hash final blocks
+
+          this._process(); // Shortcuts
+
+
+          var hash = this._hash;
+          var H = hash.words; // Swap endian
+
+          for (var i = 0; i < 5; i++) {
+            // Shortcut
+            var H_i = H[i]; // Swap
+
+            H[i] = (H_i << 8 | H_i >>> 24) & 0x00ff00ff | (H_i << 24 | H_i >>> 8) & 0xff00ff00;
+          } // Return final computed hash
+
+
+          return hash;
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+          clone._hash = this._hash.clone();
+          return clone;
+        }
+      });
+
+      function f1(x, y, z) {
+        return x ^ y ^ z;
+      }
+
+      function f2(x, y, z) {
+        return x & y | ~x & z;
+      }
+
+      function f3(x, y, z) {
+        return (x | ~y) ^ z;
+      }
+
+      function f4(x, y, z) {
+        return x & z | y & ~z;
+      }
+
+      function f5(x, y, z) {
+        return x ^ (y | ~z);
+      }
+
+      function rotl(x, n) {
+        return x << n | x >>> 32 - n;
+      }
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.RIPEMD160('message');
+       *     var hash = CryptoJS.RIPEMD160(wordArray);
+       */
+
+
+      C.RIPEMD160 = Hasher._createHelper(RIPEMD160);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacRIPEMD160(message, key);
+       */
+
+      C.HmacRIPEMD160 = Hasher._createHmacHelper(RIPEMD160);
+    })(Math);
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Base = C_lib.Base;
+      var C_enc = C.enc;
+      var Utf8 = C_enc.Utf8;
+      var C_algo = C.algo;
+      /**
+       * HMAC algorithm.
+       */
+
+      var HMAC = C_algo.HMAC = Base.extend({
+        /**
+         * Initializes a newly created HMAC.
+         *
+         * @param {Hasher} hasher The hash algorithm to use.
+         * @param {WordArray|string} key The secret key.
+         *
+         * @example
+         *
+         *     var hmacHasher = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, key);
+         */
+        init: function init(hasher, key) {
+          // Init hasher
+          hasher = this._hasher = new hasher.init(); // Convert string to WordArray, else assume WordArray already
+
+          if (typeof key == 'string') {
+            key = Utf8.parse(key);
+          } // Shortcuts
+
+
+          var hasherBlockSize = hasher.blockSize;
+          var hasherBlockSizeBytes = hasherBlockSize * 4; // Allow arbitrary length keys
+
+          if (key.sigBytes > hasherBlockSizeBytes) {
+            key = hasher.finalize(key);
+          } // Clamp excess bits
+
+
+          key.clamp(); // Clone key for inner and outer pads
+
+          var oKey = this._oKey = key.clone();
+          var iKey = this._iKey = key.clone(); // Shortcuts
+
+          var oKeyWords = oKey.words;
+          var iKeyWords = iKey.words; // XOR keys with pad constants
+
+          for (var i = 0; i < hasherBlockSize; i++) {
+            oKeyWords[i] ^= 0x5c5c5c5c;
+            iKeyWords[i] ^= 0x36363636;
+          }
+
+          oKey.sigBytes = iKey.sigBytes = hasherBlockSizeBytes; // Set initial values
+
+          this.reset();
+        },
+
+        /**
+         * Resets this HMAC to its initial state.
+         *
+         * @example
+         *
+         *     hmacHasher.reset();
+         */
+        reset: function reset() {
+          // Shortcut
+          var hasher = this._hasher; // Reset
+
+          hasher.reset();
+          hasher.update(this._iKey);
+        },
+
+        /**
+         * Updates this HMAC with a message.
+         *
+         * @param {WordArray|string} messageUpdate The message to append.
+         *
+         * @return {HMAC} This HMAC instance.
+         *
+         * @example
+         *
+         *     hmacHasher.update('message');
+         *     hmacHasher.update(wordArray);
+         */
+        update: function update(messageUpdate) {
+          this._hasher.update(messageUpdate); // Chainable
+
+
+          return this;
+        },
+
+        /**
+         * Finalizes the HMAC computation.
+         * Note that the finalize operation is effectively a destructive, read-once operation.
+         *
+         * @param {WordArray|string} messageUpdate (Optional) A final message update.
+         *
+         * @return {WordArray} The HMAC.
+         *
+         * @example
+         *
+         *     var hmac = hmacHasher.finalize();
+         *     var hmac = hmacHasher.finalize('message');
+         *     var hmac = hmacHasher.finalize(wordArray);
+         */
+        finalize: function finalize(messageUpdate) {
+          // Shortcut
+          var hasher = this._hasher; // Compute HMAC
+
+          var innerHash = hasher.finalize(messageUpdate);
+          hasher.reset();
+          var hmac = hasher.finalize(this._oKey.clone().concat(innerHash));
+          return hmac;
+        }
+      });
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Base = C_lib.Base;
+      var WordArray = C_lib.WordArray;
+      var C_algo = C.algo;
+      var SHA1 = C_algo.SHA1;
+      var HMAC = C_algo.HMAC;
+      /**
+       * Password-Based Key Derivation Function 2 algorithm.
+       */
+
+      var PBKDF2 = C_algo.PBKDF2 = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+         * @property {Hasher} hasher The hasher to use. Default: SHA1
+         * @property {number} iterations The number of iterations to perform. Default: 1
+         */
+        cfg: Base.extend({
+          keySize: 128 / 32,
+          hasher: SHA1,
+          iterations: 1
+        }),
+
+        /**
+         * Initializes a newly created key derivation function.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+         *
+         * @example
+         *
+         *     var kdf = CryptoJS.algo.PBKDF2.create();
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8, iterations: 1000 });
+         */
+        init: function init(cfg) {
+          this.cfg = this.cfg.extend(cfg);
+        },
+
+        /**
+         * Computes the Password-Based Key Derivation Function 2.
+         *
+         * @param {WordArray|string} password The password.
+         * @param {WordArray|string} salt A salt.
+         *
+         * @return {WordArray} The derived key.
+         *
+         * @example
+         *
+         *     var key = kdf.compute(password, salt);
+         */
+        compute: function compute(password, salt) {
+          // Shortcut
+          var cfg = this.cfg; // Init HMAC
+
+          var hmac = HMAC.create(cfg.hasher, password); // Initial values
+
+          var derivedKey = WordArray.create();
+          var blockIndex = WordArray.create([0x00000001]); // Shortcuts
+
+          var derivedKeyWords = derivedKey.words;
+          var blockIndexWords = blockIndex.words;
+          var keySize = cfg.keySize;
+          var iterations = cfg.iterations; // Generate key
+
+          while (derivedKeyWords.length < keySize) {
+            var block = hmac.update(salt).finalize(blockIndex);
+            hmac.reset(); // Shortcuts
+
+            var blockWords = block.words;
+            var blockWordsLength = blockWords.length; // Iterations
+
+            var intermediate = block;
+
+            for (var i = 1; i < iterations; i++) {
+              intermediate = hmac.finalize(intermediate);
+              hmac.reset(); // Shortcut
+
+              var intermediateWords = intermediate.words; // XOR intermediate with block
+
+              for (var j = 0; j < blockWordsLength; j++) {
+                blockWords[j] ^= intermediateWords[j];
+              }
+            }
+
+            derivedKey.concat(block);
+            blockIndexWords[0]++;
+          }
+
+          derivedKey.sigBytes = keySize * 4;
+          return derivedKey;
+        }
+      });
+      /**
+       * Computes the Password-Based Key Derivation Function 2.
+       *
+       * @param {WordArray|string} password The password.
+       * @param {WordArray|string} salt A salt.
+       * @param {Object} cfg (Optional) The configuration options to use for this computation.
+       *
+       * @return {WordArray} The derived key.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var key = CryptoJS.PBKDF2(password, salt);
+       *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8 });
+       *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8, iterations: 1000 });
+       */
+
+      C.PBKDF2 = function (password, salt, cfg) {
+        return PBKDF2.create(cfg).compute(password, salt);
+      };
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Base = C_lib.Base;
+      var WordArray = C_lib.WordArray;
+      var C_algo = C.algo;
+      var MD5 = C_algo.MD5;
+      /**
+       * This key derivation function is meant to conform with EVP_BytesToKey.
+       * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+       */
+
+      var EvpKDF = C_algo.EvpKDF = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+         * @property {Hasher} hasher The hash algorithm to use. Default: MD5
+         * @property {number} iterations The number of iterations to perform. Default: 1
+         */
+        cfg: Base.extend({
+          keySize: 128 / 32,
+          hasher: MD5,
+          iterations: 1
+        }),
+
+        /**
+         * Initializes a newly created key derivation function.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+         *
+         * @example
+         *
+         *     var kdf = CryptoJS.algo.EvpKDF.create();
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+         */
+        init: function init(cfg) {
+          this.cfg = this.cfg.extend(cfg);
+        },
+
+        /**
+         * Derives a key from a password.
+         *
+         * @param {WordArray|string} password The password.
+         * @param {WordArray|string} salt A salt.
+         *
+         * @return {WordArray} The derived key.
+         *
+         * @example
+         *
+         *     var key = kdf.compute(password, salt);
+         */
+        compute: function compute(password, salt) {
+          var block; // Shortcut
+
+          var cfg = this.cfg; // Init hasher
+
+          var hasher = cfg.hasher.create(); // Initial values
+
+          var derivedKey = WordArray.create(); // Shortcuts
+
+          var derivedKeyWords = derivedKey.words;
+          var keySize = cfg.keySize;
+          var iterations = cfg.iterations; // Generate key
+
+          while (derivedKeyWords.length < keySize) {
+            if (block) {
+              hasher.update(block);
+            }
+
+            block = hasher.update(password).finalize(salt);
+            hasher.reset(); // Iterations
+
+            for (var i = 1; i < iterations; i++) {
+              block = hasher.finalize(block);
+              hasher.reset();
+            }
+
+            derivedKey.concat(block);
+          }
+
+          derivedKey.sigBytes = keySize * 4;
+          return derivedKey;
+        }
+      });
+      /**
+       * Derives a key from a password.
+       *
+       * @param {WordArray|string} password The password.
+       * @param {WordArray|string} salt A salt.
+       * @param {Object} cfg (Optional) The configuration options to use for this computation.
+       *
+       * @return {WordArray} The derived key.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var key = CryptoJS.EvpKDF(password, salt);
+       *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+       *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+       */
+
+      C.EvpKDF = function (password, salt, cfg) {
+        return EvpKDF.create(cfg).compute(password, salt);
+      };
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var C_algo = C.algo;
+      var SHA256 = C_algo.SHA256;
+      /**
+       * SHA-224 hash algorithm.
+       */
+
+      var SHA224 = C_algo.SHA224 = SHA256.extend({
+        _doReset: function _doReset() {
+          this._hash = new WordArray.init([0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4]);
+        },
+        _doFinalize: function _doFinalize() {
+          var hash = SHA256._doFinalize.call(this);
+
+          hash.sigBytes -= 4;
+          return hash;
+        }
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA224('message');
+       *     var hash = CryptoJS.SHA224(wordArray);
+       */
+
+      C.SHA224 = SHA256._createHelper(SHA224);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA224(message, key);
+       */
+
+      C.HmacSHA224 = SHA256._createHmacHelper(SHA224);
+    })();
+
+    (function (undefined) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Base = C_lib.Base;
+      var X32WordArray = C_lib.WordArray;
+      /**
+       * x64 namespace.
+       */
+
+      var C_x64 = C.x64 = {};
+      /**
+       * A 64-bit word.
+       */
+
+      var X64Word = C_x64.Word = Base.extend({
+        /**
+         * Initializes a newly created 64-bit word.
+         *
+         * @param {number} high The high 32 bits.
+         * @param {number} low The low 32 bits.
+         *
+         * @example
+         *
+         *     var x64Word = CryptoJS.x64.Word.create(0x00010203, 0x04050607);
+         */
+        init: function init(high, low) {
+          this.high = high;
+          this.low = low;
+        }
+        /**
+         * Bitwise NOTs this word.
+         *
+         * @return {X64Word} A new x64-Word object after negating.
+         *
+         * @example
+         *
+         *     var negated = x64Word.not();
+         */
+        // not: function () {
+        // var high = ~this.high;
+        // var low = ~this.low;
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Bitwise ANDs this word with the passed word.
+         *
+         * @param {X64Word} word The x64-Word to AND with this word.
+         *
+         * @return {X64Word} A new x64-Word object after ANDing.
+         *
+         * @example
+         *
+         *     var anded = x64Word.and(anotherX64Word);
+         */
+        // and: function (word) {
+        // var high = this.high & word.high;
+        // var low = this.low & word.low;
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Bitwise ORs this word with the passed word.
+         *
+         * @param {X64Word} word The x64-Word to OR with this word.
+         *
+         * @return {X64Word} A new x64-Word object after ORing.
+         *
+         * @example
+         *
+         *     var ored = x64Word.or(anotherX64Word);
+         */
+        // or: function (word) {
+        // var high = this.high | word.high;
+        // var low = this.low | word.low;
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Bitwise XORs this word with the passed word.
+         *
+         * @param {X64Word} word The x64-Word to XOR with this word.
+         *
+         * @return {X64Word} A new x64-Word object after XORing.
+         *
+         * @example
+         *
+         *     var xored = x64Word.xor(anotherX64Word);
+         */
+        // xor: function (word) {
+        // var high = this.high ^ word.high;
+        // var low = this.low ^ word.low;
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Shifts this word n bits to the left.
+         *
+         * @param {number} n The number of bits to shift.
+         *
+         * @return {X64Word} A new x64-Word object after shifting.
+         *
+         * @example
+         *
+         *     var shifted = x64Word.shiftL(25);
+         */
+        // shiftL: function (n) {
+        // if (n < 32) {
+        // var high = (this.high << n) | (this.low >>> (32 - n));
+        // var low = this.low << n;
+        // } else {
+        // var high = this.low << (n - 32);
+        // var low = 0;
+        // }
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Shifts this word n bits to the right.
+         *
+         * @param {number} n The number of bits to shift.
+         *
+         * @return {X64Word} A new x64-Word object after shifting.
+         *
+         * @example
+         *
+         *     var shifted = x64Word.shiftR(7);
+         */
+        // shiftR: function (n) {
+        // if (n < 32) {
+        // var low = (this.low >>> n) | (this.high << (32 - n));
+        // var high = this.high >>> n;
+        // } else {
+        // var low = this.high >>> (n - 32);
+        // var high = 0;
+        // }
+        // return X64Word.create(high, low);
+        // },
+
+        /**
+         * Rotates this word n bits to the left.
+         *
+         * @param {number} n The number of bits to rotate.
+         *
+         * @return {X64Word} A new x64-Word object after rotating.
+         *
+         * @example
+         *
+         *     var rotated = x64Word.rotL(25);
+         */
+        // rotL: function (n) {
+        // return this.shiftL(n).or(this.shiftR(64 - n));
+        // },
+
+        /**
+         * Rotates this word n bits to the right.
+         *
+         * @param {number} n The number of bits to rotate.
+         *
+         * @return {X64Word} A new x64-Word object after rotating.
+         *
+         * @example
+         *
+         *     var rotated = x64Word.rotR(7);
+         */
+        // rotR: function (n) {
+        // return this.shiftR(n).or(this.shiftL(64 - n));
+        // },
+
+        /**
+         * Adds this word with the passed word.
+         *
+         * @param {X64Word} word The x64-Word to add with this word.
+         *
+         * @return {X64Word} A new x64-Word object after adding.
+         *
+         * @example
+         *
+         *     var added = x64Word.add(anotherX64Word);
+         */
+        // add: function (word) {
+        // var low = (this.low + word.low) | 0;
+        // var carry = (low >>> 0) < (this.low >>> 0) ? 1 : 0;
+        // var high = (this.high + word.high + carry) | 0;
+        // return X64Word.create(high, low);
+        // }
+
+      });
+      /**
+       * An array of 64-bit words.
+       *
+       * @property {Array} words The array of CryptoJS.x64.Word objects.
+       * @property {number} sigBytes The number of significant bytes in this word array.
+       */
+
+      var X64WordArray = C_x64.WordArray = Base.extend({
+        /**
+         * Initializes a newly created word array.
+         *
+         * @param {Array} words (Optional) An array of CryptoJS.x64.Word objects.
+         * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.x64.WordArray.create();
+         *
+         *     var wordArray = CryptoJS.x64.WordArray.create([
+         *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+         *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+         *     ]);
+         *
+         *     var wordArray = CryptoJS.x64.WordArray.create([
+         *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+         *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+         *     ], 10);
+         */
+        init: function init(words, sigBytes) {
+          words = this.words = words || [];
+
+          if (sigBytes != undefined) {
+            this.sigBytes = sigBytes;
+          } else {
+            this.sigBytes = words.length * 8;
+          }
+        },
+
+        /**
+         * Converts this 64-bit word array to a 32-bit word array.
+         *
+         * @return {CryptoJS.lib.WordArray} This word array's data as a 32-bit word array.
+         *
+         * @example
+         *
+         *     var x32WordArray = x64WordArray.toX32();
+         */
+        toX32: function toX32() {
+          // Shortcuts
+          var x64Words = this.words;
+          var x64WordsLength = x64Words.length; // Convert
+
+          var x32Words = [];
+
+          for (var i = 0; i < x64WordsLength; i++) {
+            var x64Word = x64Words[i];
+            x32Words.push(x64Word.high);
+            x32Words.push(x64Word.low);
+          }
+
+          return X32WordArray.create(x32Words, this.sigBytes);
+        },
+
+        /**
+         * Creates a copy of this word array.
+         *
+         * @return {X64WordArray} The clone.
+         *
+         * @example
+         *
+         *     var clone = x64WordArray.clone();
+         */
+        clone: function clone() {
+          var clone = Base.clone.call(this); // Clone "words" array
+
+          var words = clone.words = this.words.slice(0); // Clone each X64Word object
+
+          var wordsLength = words.length;
+
+          for (var i = 0; i < wordsLength; i++) {
+            words[i] = words[i].clone();
+          }
+
+          return clone;
+        }
+      });
+    })();
+
+    (function (Math) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var Hasher = C_lib.Hasher;
+      var C_x64 = C.x64;
+      var X64Word = C_x64.Word;
+      var C_algo = C.algo; // Constants tables
+
+      var RHO_OFFSETS = [];
+      var PI_INDEXES = [];
+      var ROUND_CONSTANTS = []; // Compute Constants
+
+      (function () {
+        // Compute rho offset constants
+        var x = 1,
+            y = 0;
+
+        for (var t = 0; t < 24; t++) {
+          RHO_OFFSETS[x + 5 * y] = (t + 1) * (t + 2) / 2 % 64;
+          var newX = y % 5;
+          var newY = (2 * x + 3 * y) % 5;
+          x = newX;
+          y = newY;
+        } // Compute pi index constants
+
+
+        for (var x = 0; x < 5; x++) {
+          for (var y = 0; y < 5; y++) {
+            PI_INDEXES[x + 5 * y] = y + (2 * x + 3 * y) % 5 * 5;
+          }
+        } // Compute round constants
+
+
+        var LFSR = 0x01;
+
+        for (var i = 0; i < 24; i++) {
+          var roundConstantMsw = 0;
+          var roundConstantLsw = 0;
+
+          for (var j = 0; j < 7; j++) {
+            if (LFSR & 0x01) {
+              var bitPosition = (1 << j) - 1;
+
+              if (bitPosition < 32) {
+                roundConstantLsw ^= 1 << bitPosition;
+              } else
+                /* if (bitPosition >= 32) */
+                {
+                  roundConstantMsw ^= 1 << bitPosition - 32;
+                }
+            } // Compute next LFSR
+
+
+            if (LFSR & 0x80) {
+              // Primitive polynomial over GF(2): x^8 + x^6 + x^5 + x^4 + 1
+              LFSR = LFSR << 1 ^ 0x71;
+            } else {
+              LFSR <<= 1;
+            }
+          }
+
+          ROUND_CONSTANTS[i] = X64Word.create(roundConstantMsw, roundConstantLsw);
+        }
+      })(); // Reusable objects for temporary values
+
+
+      var T = [];
+
+      (function () {
+        for (var i = 0; i < 25; i++) {
+          T[i] = X64Word.create();
+        }
+      })();
+      /**
+       * SHA-3 hash algorithm.
+       */
+
+
+      var SHA3 = C_algo.SHA3 = Hasher.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} outputLength
+         *   The desired number of bits in the output hash.
+         *   Only values permitted are: 224, 256, 384, 512.
+         *   Default: 512
+         */
+        cfg: Hasher.cfg.extend({
+          outputLength: 512
+        }),
+        _doReset: function _doReset() {
+          var state = this._state = [];
+
+          for (var i = 0; i < 25; i++) {
+            state[i] = new X64Word.init();
+          }
+
+          this.blockSize = (1600 - 2 * this.cfg.outputLength) / 32;
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcuts
+          var state = this._state;
+          var nBlockSizeLanes = this.blockSize / 2; // Absorb
+
+          for (var i = 0; i < nBlockSizeLanes; i++) {
+            // Shortcuts
+            var M2i = M[offset + 2 * i];
+            var M2i1 = M[offset + 2 * i + 1]; // Swap endian
+
+            M2i = (M2i << 8 | M2i >>> 24) & 0x00ff00ff | (M2i << 24 | M2i >>> 8) & 0xff00ff00;
+            M2i1 = (M2i1 << 8 | M2i1 >>> 24) & 0x00ff00ff | (M2i1 << 24 | M2i1 >>> 8) & 0xff00ff00; // Absorb message into state
+
+            var lane = state[i];
+            lane.high ^= M2i1;
+            lane.low ^= M2i;
+          } // Rounds
+
+
+          for (var round = 0; round < 24; round++) {
+            // Theta
+            for (var x = 0; x < 5; x++) {
+              // Mix column lanes
+              var tMsw = 0,
+                  tLsw = 0;
+
+              for (var y = 0; y < 5; y++) {
+                var lane = state[x + 5 * y];
+                tMsw ^= lane.high;
+                tLsw ^= lane.low;
+              } // Temporary values
+
+
+              var Tx = T[x];
+              Tx.high = tMsw;
+              Tx.low = tLsw;
+            }
+
+            for (var x = 0; x < 5; x++) {
+              // Shortcuts
+              var Tx4 = T[(x + 4) % 5];
+              var Tx1 = T[(x + 1) % 5];
+              var Tx1Msw = Tx1.high;
+              var Tx1Lsw = Tx1.low; // Mix surrounding columns
+
+              var tMsw = Tx4.high ^ (Tx1Msw << 1 | Tx1Lsw >>> 31);
+              var tLsw = Tx4.low ^ (Tx1Lsw << 1 | Tx1Msw >>> 31);
+
+              for (var y = 0; y < 5; y++) {
+                var lane = state[x + 5 * y];
+                lane.high ^= tMsw;
+                lane.low ^= tLsw;
+              }
+            } // Rho Pi
+
+
+            for (var laneIndex = 1; laneIndex < 25; laneIndex++) {
+              var tMsw;
+              var tLsw; // Shortcuts
+
+              var lane = state[laneIndex];
+              var laneMsw = lane.high;
+              var laneLsw = lane.low;
+              var rhoOffset = RHO_OFFSETS[laneIndex]; // Rotate lanes
+
+              if (rhoOffset < 32) {
+                tMsw = laneMsw << rhoOffset | laneLsw >>> 32 - rhoOffset;
+                tLsw = laneLsw << rhoOffset | laneMsw >>> 32 - rhoOffset;
+              } else
+                /* if (rhoOffset >= 32) */
+                {
+                  tMsw = laneLsw << rhoOffset - 32 | laneMsw >>> 64 - rhoOffset;
+                  tLsw = laneMsw << rhoOffset - 32 | laneLsw >>> 64 - rhoOffset;
+                } // Transpose lanes
+
+
+              var TPiLane = T[PI_INDEXES[laneIndex]];
+              TPiLane.high = tMsw;
+              TPiLane.low = tLsw;
+            } // Rho pi at x = y = 0
+
+
+            var T0 = T[0];
+            var state0 = state[0];
+            T0.high = state0.high;
+            T0.low = state0.low; // Chi
+
+            for (var x = 0; x < 5; x++) {
+              for (var y = 0; y < 5; y++) {
+                // Shortcuts
+                var laneIndex = x + 5 * y;
+                var lane = state[laneIndex];
+                var TLane = T[laneIndex];
+                var Tx1Lane = T[(x + 1) % 5 + 5 * y];
+                var Tx2Lane = T[(x + 2) % 5 + 5 * y]; // Mix rows
+
+                lane.high = TLane.high ^ ~Tx1Lane.high & Tx2Lane.high;
+                lane.low = TLane.low ^ ~Tx1Lane.low & Tx2Lane.low;
+              }
+            } // Iota
+
+
+            var lane = state[0];
+            var roundConstant = ROUND_CONSTANTS[round];
+            lane.high ^= roundConstant.high;
+            lane.low ^= roundConstant.low;
+          }
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8;
+          var blockSizeBits = this.blockSize * 32; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x1 << 24 - nBitsLeft % 32;
+          dataWords[(Math.ceil((nBitsLeft + 1) / blockSizeBits) * blockSizeBits >>> 5) - 1] |= 0x80;
+          data.sigBytes = dataWords.length * 4; // Hash final blocks
+
+          this._process(); // Shortcuts
+
+
+          var state = this._state;
+          var outputLengthBytes = this.cfg.outputLength / 8;
+          var outputLengthLanes = outputLengthBytes / 8; // Squeeze
+
+          var hashWords = [];
+
+          for (var i = 0; i < outputLengthLanes; i++) {
+            // Shortcuts
+            var lane = state[i];
+            var laneMsw = lane.high;
+            var laneLsw = lane.low; // Swap endian
+
+            laneMsw = (laneMsw << 8 | laneMsw >>> 24) & 0x00ff00ff | (laneMsw << 24 | laneMsw >>> 8) & 0xff00ff00;
+            laneLsw = (laneLsw << 8 | laneLsw >>> 24) & 0x00ff00ff | (laneLsw << 24 | laneLsw >>> 8) & 0xff00ff00; // Squeeze state to retrieve hash
+
+            hashWords.push(laneLsw);
+            hashWords.push(laneMsw);
+          } // Return final computed hash
+
+
+          return new WordArray.init(hashWords, outputLengthBytes);
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+
+          var state = clone._state = this._state.slice(0);
+
+          for (var i = 0; i < 25; i++) {
+            state[i] = state[i].clone();
+          }
+
+          return clone;
+        }
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA3('message');
+       *     var hash = CryptoJS.SHA3(wordArray);
+       */
+
+      C.SHA3 = Hasher._createHelper(SHA3);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA3(message, key);
+       */
+
+      C.HmacSHA3 = Hasher._createHmacHelper(SHA3);
+    })(Math);
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Hasher = C_lib.Hasher;
+      var C_x64 = C.x64;
+      var X64Word = C_x64.Word;
+      var X64WordArray = C_x64.WordArray;
+      var C_algo = C.algo;
+
+      function X64Word_create() {
+        return X64Word.create.apply(X64Word, arguments);
+      } // Constants
+
+
+      var K = [X64Word_create(0x428a2f98, 0xd728ae22), X64Word_create(0x71374491, 0x23ef65cd), X64Word_create(0xb5c0fbcf, 0xec4d3b2f), X64Word_create(0xe9b5dba5, 0x8189dbbc), X64Word_create(0x3956c25b, 0xf348b538), X64Word_create(0x59f111f1, 0xb605d019), X64Word_create(0x923f82a4, 0xaf194f9b), X64Word_create(0xab1c5ed5, 0xda6d8118), X64Word_create(0xd807aa98, 0xa3030242), X64Word_create(0x12835b01, 0x45706fbe), X64Word_create(0x243185be, 0x4ee4b28c), X64Word_create(0x550c7dc3, 0xd5ffb4e2), X64Word_create(0x72be5d74, 0xf27b896f), X64Word_create(0x80deb1fe, 0x3b1696b1), X64Word_create(0x9bdc06a7, 0x25c71235), X64Word_create(0xc19bf174, 0xcf692694), X64Word_create(0xe49b69c1, 0x9ef14ad2), X64Word_create(0xefbe4786, 0x384f25e3), X64Word_create(0x0fc19dc6, 0x8b8cd5b5), X64Word_create(0x240ca1cc, 0x77ac9c65), X64Word_create(0x2de92c6f, 0x592b0275), X64Word_create(0x4a7484aa, 0x6ea6e483), X64Word_create(0x5cb0a9dc, 0xbd41fbd4), X64Word_create(0x76f988da, 0x831153b5), X64Word_create(0x983e5152, 0xee66dfab), X64Word_create(0xa831c66d, 0x2db43210), X64Word_create(0xb00327c8, 0x98fb213f), X64Word_create(0xbf597fc7, 0xbeef0ee4), X64Word_create(0xc6e00bf3, 0x3da88fc2), X64Word_create(0xd5a79147, 0x930aa725), X64Word_create(0x06ca6351, 0xe003826f), X64Word_create(0x14292967, 0x0a0e6e70), X64Word_create(0x27b70a85, 0x46d22ffc), X64Word_create(0x2e1b2138, 0x5c26c926), X64Word_create(0x4d2c6dfc, 0x5ac42aed), X64Word_create(0x53380d13, 0x9d95b3df), X64Word_create(0x650a7354, 0x8baf63de), X64Word_create(0x766a0abb, 0x3c77b2a8), X64Word_create(0x81c2c92e, 0x47edaee6), X64Word_create(0x92722c85, 0x1482353b), X64Word_create(0xa2bfe8a1, 0x4cf10364), X64Word_create(0xa81a664b, 0xbc423001), X64Word_create(0xc24b8b70, 0xd0f89791), X64Word_create(0xc76c51a3, 0x0654be30), X64Word_create(0xd192e819, 0xd6ef5218), X64Word_create(0xd6990624, 0x5565a910), X64Word_create(0xf40e3585, 0x5771202a), X64Word_create(0x106aa070, 0x32bbd1b8), X64Word_create(0x19a4c116, 0xb8d2d0c8), X64Word_create(0x1e376c08, 0x5141ab53), X64Word_create(0x2748774c, 0xdf8eeb99), X64Word_create(0x34b0bcb5, 0xe19b48a8), X64Word_create(0x391c0cb3, 0xc5c95a63), X64Word_create(0x4ed8aa4a, 0xe3418acb), X64Word_create(0x5b9cca4f, 0x7763e373), X64Word_create(0x682e6ff3, 0xd6b2b8a3), X64Word_create(0x748f82ee, 0x5defb2fc), X64Word_create(0x78a5636f, 0x43172f60), X64Word_create(0x84c87814, 0xa1f0ab72), X64Word_create(0x8cc70208, 0x1a6439ec), X64Word_create(0x90befffa, 0x23631e28), X64Word_create(0xa4506ceb, 0xde82bde9), X64Word_create(0xbef9a3f7, 0xb2c67915), X64Word_create(0xc67178f2, 0xe372532b), X64Word_create(0xca273ece, 0xea26619c), X64Word_create(0xd186b8c7, 0x21c0c207), X64Word_create(0xeada7dd6, 0xcde0eb1e), X64Word_create(0xf57d4f7f, 0xee6ed178), X64Word_create(0x06f067aa, 0x72176fba), X64Word_create(0x0a637dc5, 0xa2c898a6), X64Word_create(0x113f9804, 0xbef90dae), X64Word_create(0x1b710b35, 0x131c471b), X64Word_create(0x28db77f5, 0x23047d84), X64Word_create(0x32caab7b, 0x40c72493), X64Word_create(0x3c9ebe0a, 0x15c9bebc), X64Word_create(0x431d67c4, 0x9c100d4c), X64Word_create(0x4cc5d4be, 0xcb3e42b6), X64Word_create(0x597f299c, 0xfc657e2a), X64Word_create(0x5fcb6fab, 0x3ad6faec), X64Word_create(0x6c44198c, 0x4a475817)]; // Reusable objects
+
+      var W = [];
+
+      (function () {
+        for (var i = 0; i < 80; i++) {
+          W[i] = X64Word_create();
+        }
+      })();
+      /**
+       * SHA-512 hash algorithm.
+       */
+
+
+      var SHA512 = C_algo.SHA512 = Hasher.extend({
+        _doReset: function _doReset() {
+          this._hash = new X64WordArray.init([new X64Word.init(0x6a09e667, 0xf3bcc908), new X64Word.init(0xbb67ae85, 0x84caa73b), new X64Word.init(0x3c6ef372, 0xfe94f82b), new X64Word.init(0xa54ff53a, 0x5f1d36f1), new X64Word.init(0x510e527f, 0xade682d1), new X64Word.init(0x9b05688c, 0x2b3e6c1f), new X64Word.init(0x1f83d9ab, 0xfb41bd6b), new X64Word.init(0x5be0cd19, 0x137e2179)]);
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcuts
+          var H = this._hash.words;
+          var H0 = H[0];
+          var H1 = H[1];
+          var H2 = H[2];
+          var H3 = H[3];
+          var H4 = H[4];
+          var H5 = H[5];
+          var H6 = H[6];
+          var H7 = H[7];
+          var H0h = H0.high;
+          var H0l = H0.low;
+          var H1h = H1.high;
+          var H1l = H1.low;
+          var H2h = H2.high;
+          var H2l = H2.low;
+          var H3h = H3.high;
+          var H3l = H3.low;
+          var H4h = H4.high;
+          var H4l = H4.low;
+          var H5h = H5.high;
+          var H5l = H5.low;
+          var H6h = H6.high;
+          var H6l = H6.low;
+          var H7h = H7.high;
+          var H7l = H7.low; // Working variables
+
+          var ah = H0h;
+          var al = H0l;
+          var bh = H1h;
+          var bl = H1l;
+          var ch = H2h;
+          var cl = H2l;
+          var dh = H3h;
+          var dl = H3l;
+          var eh = H4h;
+          var el = H4l;
+          var fh = H5h;
+          var fl = H5l;
+          var gh = H6h;
+          var gl = H6l;
+          var hh = H7h;
+          var hl = H7l; // Rounds
+
+          for (var i = 0; i < 80; i++) {
+            var Wil;
+            var Wih; // Shortcut
+
+            var Wi = W[i]; // Extend message
+
+            if (i < 16) {
+              Wih = Wi.high = M[offset + i * 2] | 0;
+              Wil = Wi.low = M[offset + i * 2 + 1] | 0;
+            } else {
+              // Gamma0
+              var gamma0x = W[i - 15];
+              var gamma0xh = gamma0x.high;
+              var gamma0xl = gamma0x.low;
+              var gamma0h = (gamma0xh >>> 1 | gamma0xl << 31) ^ (gamma0xh >>> 8 | gamma0xl << 24) ^ gamma0xh >>> 7;
+              var gamma0l = (gamma0xl >>> 1 | gamma0xh << 31) ^ (gamma0xl >>> 8 | gamma0xh << 24) ^ (gamma0xl >>> 7 | gamma0xh << 25); // Gamma1
+
+              var gamma1x = W[i - 2];
+              var gamma1xh = gamma1x.high;
+              var gamma1xl = gamma1x.low;
+              var gamma1h = (gamma1xh >>> 19 | gamma1xl << 13) ^ (gamma1xh << 3 | gamma1xl >>> 29) ^ gamma1xh >>> 6;
+              var gamma1l = (gamma1xl >>> 19 | gamma1xh << 13) ^ (gamma1xl << 3 | gamma1xh >>> 29) ^ (gamma1xl >>> 6 | gamma1xh << 26); // W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
+
+              var Wi7 = W[i - 7];
+              var Wi7h = Wi7.high;
+              var Wi7l = Wi7.low;
+              var Wi16 = W[i - 16];
+              var Wi16h = Wi16.high;
+              var Wi16l = Wi16.low;
+              Wil = gamma0l + Wi7l;
+              Wih = gamma0h + Wi7h + (Wil >>> 0 < gamma0l >>> 0 ? 1 : 0);
+              Wil = Wil + gamma1l;
+              Wih = Wih + gamma1h + (Wil >>> 0 < gamma1l >>> 0 ? 1 : 0);
+              Wil = Wil + Wi16l;
+              Wih = Wih + Wi16h + (Wil >>> 0 < Wi16l >>> 0 ? 1 : 0);
+              Wi.high = Wih;
+              Wi.low = Wil;
+            }
+
+            var chh = eh & fh ^ ~eh & gh;
+            var chl = el & fl ^ ~el & gl;
+            var majh = ah & bh ^ ah & ch ^ bh & ch;
+            var majl = al & bl ^ al & cl ^ bl & cl;
+            var sigma0h = (ah >>> 28 | al << 4) ^ (ah << 30 | al >>> 2) ^ (ah << 25 | al >>> 7);
+            var sigma0l = (al >>> 28 | ah << 4) ^ (al << 30 | ah >>> 2) ^ (al << 25 | ah >>> 7);
+            var sigma1h = (eh >>> 14 | el << 18) ^ (eh >>> 18 | el << 14) ^ (eh << 23 | el >>> 9);
+            var sigma1l = (el >>> 14 | eh << 18) ^ (el >>> 18 | eh << 14) ^ (el << 23 | eh >>> 9); // t1 = h + sigma1 + ch + K[i] + W[i]
+
+            var Ki = K[i];
+            var Kih = Ki.high;
+            var Kil = Ki.low;
+            var t1l = hl + sigma1l;
+            var t1h = hh + sigma1h + (t1l >>> 0 < hl >>> 0 ? 1 : 0);
+            var t1l = t1l + chl;
+            var t1h = t1h + chh + (t1l >>> 0 < chl >>> 0 ? 1 : 0);
+            var t1l = t1l + Kil;
+            var t1h = t1h + Kih + (t1l >>> 0 < Kil >>> 0 ? 1 : 0);
+            var t1l = t1l + Wil;
+            var t1h = t1h + Wih + (t1l >>> 0 < Wil >>> 0 ? 1 : 0); // t2 = sigma0 + maj
+
+            var t2l = sigma0l + majl;
+            var t2h = sigma0h + majh + (t2l >>> 0 < sigma0l >>> 0 ? 1 : 0); // Update working variables
+
+            hh = gh;
+            hl = gl;
+            gh = fh;
+            gl = fl;
+            fh = eh;
+            fl = el;
+            el = dl + t1l | 0;
+            eh = dh + t1h + (el >>> 0 < dl >>> 0 ? 1 : 0) | 0;
+            dh = ch;
+            dl = cl;
+            ch = bh;
+            cl = bl;
+            bh = ah;
+            bl = al;
+            al = t1l + t2l | 0;
+            ah = t1h + t2h + (al >>> 0 < t1l >>> 0 ? 1 : 0) | 0;
+          } // Intermediate hash value
+
+
+          H0l = H0.low = H0l + al;
+          H0.high = H0h + ah + (H0l >>> 0 < al >>> 0 ? 1 : 0);
+          H1l = H1.low = H1l + bl;
+          H1.high = H1h + bh + (H1l >>> 0 < bl >>> 0 ? 1 : 0);
+          H2l = H2.low = H2l + cl;
+          H2.high = H2h + ch + (H2l >>> 0 < cl >>> 0 ? 1 : 0);
+          H3l = H3.low = H3l + dl;
+          H3.high = H3h + dh + (H3l >>> 0 < dl >>> 0 ? 1 : 0);
+          H4l = H4.low = H4l + el;
+          H4.high = H4h + eh + (H4l >>> 0 < el >>> 0 ? 1 : 0);
+          H5l = H5.low = H5l + fl;
+          H5.high = H5h + fh + (H5l >>> 0 < fl >>> 0 ? 1 : 0);
+          H6l = H6.low = H6l + gl;
+          H6.high = H6h + gh + (H6l >>> 0 < gl >>> 0 ? 1 : 0);
+          H7l = H7.low = H7l + hl;
+          H7.high = H7h + hh + (H7l >>> 0 < hl >>> 0 ? 1 : 0);
+        },
+        _doFinalize: function _doFinalize() {
+          // Shortcuts
+          var data = this._data;
+          var dataWords = data.words;
+          var nBitsTotal = this._nDataBytes * 8;
+          var nBitsLeft = data.sigBytes * 8; // Add padding
+
+          dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+          dataWords[(nBitsLeft + 128 >>> 10 << 5) + 30] = Math.floor(nBitsTotal / 0x100000000);
+          dataWords[(nBitsLeft + 128 >>> 10 << 5) + 31] = nBitsTotal;
+          data.sigBytes = dataWords.length * 4; // Hash final blocks
+
+          this._process(); // Convert hash to 32-bit word array before returning
+
+
+          var hash = this._hash.toX32(); // Return final computed hash
+
+
+          return hash;
+        },
+        clone: function clone() {
+          var clone = Hasher.clone.call(this);
+          clone._hash = this._hash.clone();
+          return clone;
+        },
+        blockSize: 1024 / 32
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA512('message');
+       *     var hash = CryptoJS.SHA512(wordArray);
+       */
+
+      C.SHA512 = Hasher._createHelper(SHA512);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA512(message, key);
+       */
+
+      C.HmacSHA512 = Hasher._createHmacHelper(SHA512);
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_x64 = C.x64;
+      var X64Word = C_x64.Word;
+      var X64WordArray = C_x64.WordArray;
+      var C_algo = C.algo;
+      var SHA512 = C_algo.SHA512;
+      /**
+       * SHA-384 hash algorithm.
+       */
+
+      var SHA384 = C_algo.SHA384 = SHA512.extend({
+        _doReset: function _doReset() {
+          this._hash = new X64WordArray.init([new X64Word.init(0xcbbb9d5d, 0xc1059ed8), new X64Word.init(0x629a292a, 0x367cd507), new X64Word.init(0x9159015a, 0x3070dd17), new X64Word.init(0x152fecd8, 0xf70e5939), new X64Word.init(0x67332667, 0xffc00b31), new X64Word.init(0x8eb44a87, 0x68581511), new X64Word.init(0xdb0c2e0d, 0x64f98fa7), new X64Word.init(0x47b5481d, 0xbefa4fa4)]);
+        },
+        _doFinalize: function _doFinalize() {
+          var hash = SHA512._doFinalize.call(this);
+
+          hash.sigBytes -= 16;
+          return hash;
+        }
+      });
+      /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.SHA384('message');
+       *     var hash = CryptoJS.SHA384(wordArray);
+       */
+
+      C.SHA384 = SHA512._createHelper(SHA384);
+      /**
+       * Shortcut function to the HMAC's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       * @param {WordArray|string} key The secret key.
+       *
+       * @return {WordArray} The HMAC.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hmac = CryptoJS.HmacSHA384(message, key);
+       */
+
+      C.HmacSHA384 = SHA512._createHmacHelper(SHA384);
+    })();
+    /**
+     * Cipher core components.
+     */
+
+
+    CryptoJS.lib.Cipher || function (undefined) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var Base = C_lib.Base;
+      var WordArray = C_lib.WordArray;
+      var BufferedBlockAlgorithm = C_lib.BufferedBlockAlgorithm;
+      var C_enc = C.enc;
+      var Utf8 = C_enc.Utf8;
+      var Base64 = C_enc.Base64;
+      var C_algo = C.algo;
+      var EvpKDF = C_algo.EvpKDF;
+      /**
+       * Abstract base cipher template.
+       *
+       * @property {number} keySize This cipher's key size. Default: 4 (128 bits)
+       * @property {number} ivSize This cipher's IV size. Default: 4 (128 bits)
+       * @property {number} _ENC_XFORM_MODE A constant representing encryption mode.
+       * @property {number} _DEC_XFORM_MODE A constant representing decryption mode.
+       */
+
+      var Cipher = C_lib.Cipher = BufferedBlockAlgorithm.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {WordArray} iv The IV to use for this operation.
+         */
+        cfg: Base.extend(),
+
+        /**
+         * Creates this cipher in encryption mode.
+         *
+         * @param {WordArray} key The key.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {Cipher} A cipher instance.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var cipher = CryptoJS.algo.AES.createEncryptor(keyWordArray, { iv: ivWordArray });
+         */
+        createEncryptor: function createEncryptor(key, cfg) {
+          return this.create(this._ENC_XFORM_MODE, key, cfg);
+        },
+
+        /**
+         * Creates this cipher in decryption mode.
+         *
+         * @param {WordArray} key The key.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {Cipher} A cipher instance.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var cipher = CryptoJS.algo.AES.createDecryptor(keyWordArray, { iv: ivWordArray });
+         */
+        createDecryptor: function createDecryptor(key, cfg) {
+          return this.create(this._DEC_XFORM_MODE, key, cfg);
+        },
+
+        /**
+         * Initializes a newly created cipher.
+         *
+         * @param {number} xformMode Either the encryption or decryption transormation mode constant.
+         * @param {WordArray} key The key.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @example
+         *
+         *     var cipher = CryptoJS.algo.AES.create(CryptoJS.algo.AES._ENC_XFORM_MODE, keyWordArray, { iv: ivWordArray });
+         */
+        init: function init(xformMode, key, cfg) {
+          // Apply config defaults
+          this.cfg = this.cfg.extend(cfg); // Store transform mode and key
+
+          this._xformMode = xformMode;
+          this._key = key; // Set initial values
+
+          this.reset();
+        },
+
+        /**
+         * Resets this cipher to its initial state.
+         *
+         * @example
+         *
+         *     cipher.reset();
+         */
+        reset: function reset() {
+          // Reset data buffer
+          BufferedBlockAlgorithm.reset.call(this); // Perform concrete-cipher logic
+
+          this._doReset();
+        },
+
+        /**
+         * Adds data to be encrypted or decrypted.
+         *
+         * @param {WordArray|string} dataUpdate The data to encrypt or decrypt.
+         *
+         * @return {WordArray} The data after processing.
+         *
+         * @example
+         *
+         *     var encrypted = cipher.process('data');
+         *     var encrypted = cipher.process(wordArray);
+         */
+        process: function process(dataUpdate) {
+          // Append
+          this._append(dataUpdate); // Process available blocks
+
+
+          return this._process();
+        },
+
+        /**
+         * Finalizes the encryption or decryption process.
+         * Note that the finalize operation is effectively a destructive, read-once operation.
+         *
+         * @param {WordArray|string} dataUpdate The final data to encrypt or decrypt.
+         *
+         * @return {WordArray} The data after final processing.
+         *
+         * @example
+         *
+         *     var encrypted = cipher.finalize();
+         *     var encrypted = cipher.finalize('data');
+         *     var encrypted = cipher.finalize(wordArray);
+         */
+        finalize: function finalize(dataUpdate) {
+          // Final data update
+          if (dataUpdate) {
+            this._append(dataUpdate);
+          } // Perform concrete-cipher logic
+
+
+          var finalProcessedData = this._doFinalize();
+
+          return finalProcessedData;
+        },
+        keySize: 128 / 32,
+        ivSize: 128 / 32,
+        _ENC_XFORM_MODE: 1,
+        _DEC_XFORM_MODE: 2,
+
+        /**
+         * Creates shortcut functions to a cipher's object interface.
+         *
+         * @param {Cipher} cipher The cipher to create a helper for.
+         *
+         * @return {Object} An object with encrypt and decrypt shortcut functions.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var AES = CryptoJS.lib.Cipher._createHelper(CryptoJS.algo.AES);
+         */
+        _createHelper: function () {
+          function selectCipherStrategy(key) {
+            if (typeof key == 'string') {
+              return PasswordBasedCipher;
+            } else {
+              return SerializableCipher;
+            }
+          }
+
+          return function (cipher) {
+            return {
+              encrypt: function encrypt(message, key, cfg) {
+                return selectCipherStrategy(key).encrypt(cipher, message, key, cfg);
+              },
+              decrypt: function decrypt(ciphertext, key, cfg) {
+                return selectCipherStrategy(key).decrypt(cipher, ciphertext, key, cfg);
+              }
+            };
+          };
+        }()
+      });
+      /**
+       * Abstract base stream cipher template.
+       *
+       * @property {number} blockSize The number of 32-bit words this cipher operates on. Default: 1 (32 bits)
+       */
+
+      var StreamCipher = C_lib.StreamCipher = Cipher.extend({
+        _doFinalize: function _doFinalize() {
+          // Process partial blocks
+          var finalProcessedBlocks = this._process(!!'flush');
+
+          return finalProcessedBlocks;
+        },
+        blockSize: 1
+      });
+      /**
+       * Mode namespace.
+       */
+
+      var C_mode = C.mode = {};
+      /**
+       * Abstract base block cipher mode template.
+       */
+
+      var BlockCipherMode = C_lib.BlockCipherMode = Base.extend({
+        /**
+         * Creates this mode for encryption.
+         *
+         * @param {Cipher} cipher A block cipher instance.
+         * @param {Array} iv The IV words.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var mode = CryptoJS.mode.CBC.createEncryptor(cipher, iv.words);
+         */
+        createEncryptor: function createEncryptor(cipher, iv) {
+          return this.Encryptor.create(cipher, iv);
+        },
+
+        /**
+         * Creates this mode for decryption.
+         *
+         * @param {Cipher} cipher A block cipher instance.
+         * @param {Array} iv The IV words.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var mode = CryptoJS.mode.CBC.createDecryptor(cipher, iv.words);
+         */
+        createDecryptor: function createDecryptor(cipher, iv) {
+          return this.Decryptor.create(cipher, iv);
+        },
+
+        /**
+         * Initializes a newly created mode.
+         *
+         * @param {Cipher} cipher A block cipher instance.
+         * @param {Array} iv The IV words.
+         *
+         * @example
+         *
+         *     var mode = CryptoJS.mode.CBC.Encryptor.create(cipher, iv.words);
+         */
+        init: function init(cipher, iv) {
+          this._cipher = cipher;
+          this._iv = iv;
+        }
+      });
+      /**
+       * Cipher Block Chaining mode.
+       */
+
+      var CBC = C_mode.CBC = function () {
+        /**
+         * Abstract base CBC mode.
+         */
+        var CBC = BlockCipherMode.extend();
+        /**
+         * CBC encryptor.
+         */
+
+        CBC.Encryptor = CBC.extend({
+          /**
+           * Processes the data block at offset.
+           *
+           * @param {Array} words The data words to operate on.
+           * @param {number} offset The offset where the block starts.
+           *
+           * @example
+           *
+           *     mode.processBlock(data.words, offset);
+           */
+          processBlock: function processBlock(words, offset) {
+            // Shortcuts
+            var cipher = this._cipher;
+            var blockSize = cipher.blockSize; // XOR and encrypt
+
+            xorBlock.call(this, words, offset, blockSize);
+            cipher.encryptBlock(words, offset); // Remember this block to use with next block
+
+            this._prevBlock = words.slice(offset, offset + blockSize);
+          }
+        });
+        /**
+         * CBC decryptor.
+         */
+
+        CBC.Decryptor = CBC.extend({
+          /**
+           * Processes the data block at offset.
+           *
+           * @param {Array} words The data words to operate on.
+           * @param {number} offset The offset where the block starts.
+           *
+           * @example
+           *
+           *     mode.processBlock(data.words, offset);
+           */
+          processBlock: function processBlock(words, offset) {
+            // Shortcuts
+            var cipher = this._cipher;
+            var blockSize = cipher.blockSize; // Remember this block to use with next block
+
+            var thisBlock = words.slice(offset, offset + blockSize); // Decrypt and XOR
+
+            cipher.decryptBlock(words, offset);
+            xorBlock.call(this, words, offset, blockSize); // This block becomes the previous block
+
+            this._prevBlock = thisBlock;
+          }
+        });
+
+        function xorBlock(words, offset, blockSize) {
+          var block; // Shortcut
+
+          var iv = this._iv; // Choose mixing block
+
+          if (iv) {
+            block = iv; // Remove IV for subsequent blocks
+
+            this._iv = undefined;
+          } else {
+            block = this._prevBlock;
+          } // XOR blocks
+
+
+          for (var i = 0; i < blockSize; i++) {
+            words[offset + i] ^= block[i];
+          }
+        }
+
+        return CBC;
+      }();
+      /**
+       * Padding namespace.
+       */
+
+
+      var C_pad = C.pad = {};
+      /**
+       * PKCS #5/7 padding strategy.
+       */
+
+      var Pkcs7 = C_pad.Pkcs7 = {
+        /**
+         * Pads data using the algorithm defined in PKCS #5/7.
+         *
+         * @param {WordArray} data The data to pad.
+         * @param {number} blockSize The multiple that the data should be padded to.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     CryptoJS.pad.Pkcs7.pad(wordArray, 4);
+         */
+        pad: function pad(data, blockSize) {
+          // Shortcut
+          var blockSizeBytes = blockSize * 4; // Count padding bytes
+
+          var nPaddingBytes = blockSizeBytes - data.sigBytes % blockSizeBytes; // Create padding word
+
+          var paddingWord = nPaddingBytes << 24 | nPaddingBytes << 16 | nPaddingBytes << 8 | nPaddingBytes; // Create padding
+
+          var paddingWords = [];
+
+          for (var i = 0; i < nPaddingBytes; i += 4) {
+            paddingWords.push(paddingWord);
+          }
+
+          var padding = WordArray.create(paddingWords, nPaddingBytes); // Add padding
+
+          data.concat(padding);
+        },
+
+        /**
+         * Unpads data that had been padded using the algorithm defined in PKCS #5/7.
+         *
+         * @param {WordArray} data The data to unpad.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     CryptoJS.pad.Pkcs7.unpad(wordArray);
+         */
+        unpad: function unpad(data) {
+          // Get number of padding bytes from last byte
+          var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff; // Remove padding
+
+          data.sigBytes -= nPaddingBytes;
+        }
+      };
+      /**
+       * Abstract base block cipher template.
+       *
+       * @property {number} blockSize The number of 32-bit words this cipher operates on. Default: 4 (128 bits)
+       */
+
+      var BlockCipher = C_lib.BlockCipher = Cipher.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {Mode} mode The block mode to use. Default: CBC
+         * @property {Padding} padding The padding strategy to use. Default: Pkcs7
+         */
+        cfg: Cipher.cfg.extend({
+          mode: CBC,
+          padding: Pkcs7
+        }),
+        reset: function reset() {
+          var modeCreator; // Reset cipher
+
+          Cipher.reset.call(this); // Shortcuts
+
+          var cfg = this.cfg;
+          var iv = cfg.iv;
+          var mode = cfg.mode; // Reset block mode
+
+          if (this._xformMode == this._ENC_XFORM_MODE) {
+            modeCreator = mode.createEncryptor;
+          } else
+            /* if (this._xformMode == this._DEC_XFORM_MODE) */
+            {
+              modeCreator = mode.createDecryptor; // Keep at least one block in the buffer for unpadding
+
+              this._minBufferSize = 1;
+            }
+
+          if (this._mode && this._mode.__creator == modeCreator) {
+            this._mode.init(this, iv && iv.words);
+          } else {
+            this._mode = modeCreator.call(mode, this, iv && iv.words);
+            this._mode.__creator = modeCreator;
+          }
+        },
+        _doProcessBlock: function _doProcessBlock(words, offset) {
+          this._mode.processBlock(words, offset);
+        },
+        _doFinalize: function _doFinalize() {
+          var finalProcessedBlocks; // Shortcut
+
+          var padding = this.cfg.padding; // Finalize
+
+          if (this._xformMode == this._ENC_XFORM_MODE) {
+            // Pad data
+            padding.pad(this._data, this.blockSize); // Process final blocks
+
+            finalProcessedBlocks = this._process(!!'flush');
+          } else
+            /* if (this._xformMode == this._DEC_XFORM_MODE) */
+            {
+              // Process final blocks
+              finalProcessedBlocks = this._process(!!'flush'); // Unpad data
+
+              padding.unpad(finalProcessedBlocks);
+            }
+
+          return finalProcessedBlocks;
+        },
+        blockSize: 128 / 32
+      });
+      /**
+       * A collection of cipher parameters.
+       *
+       * @property {WordArray} ciphertext The raw ciphertext.
+       * @property {WordArray} key The key to this ciphertext.
+       * @property {WordArray} iv The IV used in the ciphering operation.
+       * @property {WordArray} salt The salt used with a key derivation function.
+       * @property {Cipher} algorithm The cipher algorithm.
+       * @property {Mode} mode The block mode used in the ciphering operation.
+       * @property {Padding} padding The padding scheme used in the ciphering operation.
+       * @property {number} blockSize The block size of the cipher.
+       * @property {Format} formatter The default formatting strategy to convert this cipher params object to a string.
+       */
+
+      var CipherParams = C_lib.CipherParams = Base.extend({
+        /**
+         * Initializes a newly created cipher params object.
+         *
+         * @param {Object} cipherParams An object with any of the possible cipher parameters.
+         *
+         * @example
+         *
+         *     var cipherParams = CryptoJS.lib.CipherParams.create({
+         *         ciphertext: ciphertextWordArray,
+         *         key: keyWordArray,
+         *         iv: ivWordArray,
+         *         salt: saltWordArray,
+         *         algorithm: CryptoJS.algo.AES,
+         *         mode: CryptoJS.mode.CBC,
+         *         padding: CryptoJS.pad.PKCS7,
+         *         blockSize: 4,
+         *         formatter: CryptoJS.format.OpenSSL
+         *     });
+         */
+        init: function init(cipherParams) {
+          this.mixIn(cipherParams);
+        },
+
+        /**
+         * Converts this cipher params object to a string.
+         *
+         * @param {Format} formatter (Optional) The formatting strategy to use.
+         *
+         * @return {string} The stringified cipher params.
+         *
+         * @throws Error If neither the formatter nor the default formatter is set.
+         *
+         * @example
+         *
+         *     var string = cipherParams + '';
+         *     var string = cipherParams.toString();
+         *     var string = cipherParams.toString(CryptoJS.format.OpenSSL);
+         */
+        toString: function toString(formatter) {
+          return (formatter || this.formatter).stringify(this);
+        }
+      });
+      /**
+       * Format namespace.
+       */
+
+      var C_format = C.format = {};
+      /**
+       * OpenSSL formatting strategy.
+       */
+
+      var OpenSSLFormatter = C_format.OpenSSL = {
+        /**
+         * Converts a cipher params object to an OpenSSL-compatible string.
+         *
+         * @param {CipherParams} cipherParams The cipher params object.
+         *
+         * @return {string} The OpenSSL-compatible string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var openSSLString = CryptoJS.format.OpenSSL.stringify(cipherParams);
+         */
+        stringify: function stringify(cipherParams) {
+          var wordArray; // Shortcuts
+
+          var ciphertext = cipherParams.ciphertext;
+          var salt = cipherParams.salt; // Format
+
+          if (salt) {
+            wordArray = WordArray.create([0x53616c74, 0x65645f5f]).concat(salt).concat(ciphertext);
+          } else {
+            wordArray = ciphertext;
+          }
+
+          return wordArray.toString(Base64);
+        },
+
+        /**
+         * Converts an OpenSSL-compatible string to a cipher params object.
+         *
+         * @param {string} openSSLStr The OpenSSL-compatible string.
+         *
+         * @return {CipherParams} The cipher params object.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var cipherParams = CryptoJS.format.OpenSSL.parse(openSSLString);
+         */
+        parse: function parse(openSSLStr) {
+          var salt; // Parse base64
+
+          var ciphertext = Base64.parse(openSSLStr); // Shortcut
+
+          var ciphertextWords = ciphertext.words; // Test for salt
+
+          if (ciphertextWords[0] == 0x53616c74 && ciphertextWords[1] == 0x65645f5f) {
+            // Extract salt
+            salt = WordArray.create(ciphertextWords.slice(2, 4)); // Remove salt from ciphertext
+
+            ciphertextWords.splice(0, 4);
+            ciphertext.sigBytes -= 16;
+          }
+
+          return CipherParams.create({
+            ciphertext: ciphertext,
+            salt: salt
+          });
+        }
+      };
+      /**
+       * A cipher wrapper that returns ciphertext as a serializable cipher params object.
+       */
+
+      var SerializableCipher = C_lib.SerializableCipher = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {Formatter} format The formatting strategy to convert cipher param objects to and from a string. Default: OpenSSL
+         */
+        cfg: Base.extend({
+          format: OpenSSLFormatter
+        }),
+
+        /**
+         * Encrypts a message.
+         *
+         * @param {Cipher} cipher The cipher algorithm to use.
+         * @param {WordArray|string} message The message to encrypt.
+         * @param {WordArray} key The key.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {CipherParams} A cipher params object.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key);
+         *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key, { iv: iv });
+         *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+         */
+        encrypt: function encrypt(cipher, message, key, cfg) {
+          // Apply config defaults
+          cfg = this.cfg.extend(cfg); // Encrypt
+
+          var encryptor = cipher.createEncryptor(key, cfg);
+          var ciphertext = encryptor.finalize(message); // Shortcut
+
+          var cipherCfg = encryptor.cfg; // Create and return serializable cipher params
+
+          return CipherParams.create({
+            ciphertext: ciphertext,
+            key: key,
+            iv: cipherCfg.iv,
+            algorithm: cipher,
+            mode: cipherCfg.mode,
+            padding: cipherCfg.padding,
+            blockSize: cipher.blockSize,
+            formatter: cfg.format
+          });
+        },
+
+        /**
+         * Decrypts serialized ciphertext.
+         *
+         * @param {Cipher} cipher The cipher algorithm to use.
+         * @param {CipherParams|string} ciphertext The ciphertext to decrypt.
+         * @param {WordArray} key The key.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {WordArray} The plaintext.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var plaintext = CryptoJS.lib.SerializableCipher.decrypt(CryptoJS.algo.AES, formattedCiphertext, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+         *     var plaintext = CryptoJS.lib.SerializableCipher.decrypt(CryptoJS.algo.AES, ciphertextParams, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+         */
+        decrypt: function decrypt(cipher, ciphertext, key, cfg) {
+          // Apply config defaults
+          cfg = this.cfg.extend(cfg); // Convert string to CipherParams
+
+          ciphertext = this._parse(ciphertext, cfg.format); // Decrypt
+
+          var plaintext = cipher.createDecryptor(key, cfg).finalize(ciphertext.ciphertext);
+          return plaintext;
+        },
+
+        /**
+         * Converts serialized ciphertext to CipherParams,
+         * else assumed CipherParams already and returns ciphertext unchanged.
+         *
+         * @param {CipherParams|string} ciphertext The ciphertext.
+         * @param {Formatter} format The formatting strategy to use to parse serialized ciphertext.
+         *
+         * @return {CipherParams} The unserialized ciphertext.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var ciphertextParams = CryptoJS.lib.SerializableCipher._parse(ciphertextStringOrParams, format);
+         */
+        _parse: function _parse(ciphertext, format) {
+          if (typeof ciphertext == 'string') {
+            return format.parse(ciphertext, this);
+          } else {
+            return ciphertext;
+          }
+        }
+      });
+      /**
+       * Key derivation function namespace.
+       */
+
+      var C_kdf = C.kdf = {};
+      /**
+       * OpenSSL key derivation function.
+       */
+
+      var OpenSSLKdf = C_kdf.OpenSSL = {
+        /**
+         * Derives a key and IV from a password.
+         *
+         * @param {string} password The password to derive from.
+         * @param {number} keySize The size in words of the key to generate.
+         * @param {number} ivSize The size in words of the IV to generate.
+         * @param {WordArray|string} salt (Optional) A 64-bit salt to use. If omitted, a salt will be generated randomly.
+         *
+         * @return {CipherParams} A cipher params object with the key, IV, and salt.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var derivedParams = CryptoJS.kdf.OpenSSL.execute('Password', 256/32, 128/32);
+         *     var derivedParams = CryptoJS.kdf.OpenSSL.execute('Password', 256/32, 128/32, 'saltsalt');
+         */
+        execute: function execute(password, keySize, ivSize, salt) {
+          // Generate random salt
+          if (!salt) {
+            salt = WordArray.random(64 / 8);
+          } // Derive key and IV
+
+
+          var key = EvpKDF.create({
+            keySize: keySize + ivSize
+          }).compute(password, salt); // Separate key and IV
+
+          var iv = WordArray.create(key.words.slice(keySize), ivSize * 4);
+          key.sigBytes = keySize * 4; // Return params
+
+          return CipherParams.create({
+            key: key,
+            iv: iv,
+            salt: salt
+          });
+        }
+      };
+      /**
+       * A serializable cipher wrapper that derives the key from a password,
+       * and returns ciphertext as a serializable cipher params object.
+       */
+
+      var PasswordBasedCipher = C_lib.PasswordBasedCipher = SerializableCipher.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {KDF} kdf The key derivation function to use to generate a key and IV from a password. Default: OpenSSL
+         */
+        cfg: SerializableCipher.cfg.extend({
+          kdf: OpenSSLKdf
+        }),
+
+        /**
+         * Encrypts a message using a password.
+         *
+         * @param {Cipher} cipher The cipher algorithm to use.
+         * @param {WordArray|string} message The message to encrypt.
+         * @param {string} password The password.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {CipherParams} A cipher params object.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var ciphertextParams = CryptoJS.lib.PasswordBasedCipher.encrypt(CryptoJS.algo.AES, message, 'password');
+         *     var ciphertextParams = CryptoJS.lib.PasswordBasedCipher.encrypt(CryptoJS.algo.AES, message, 'password', { format: CryptoJS.format.OpenSSL });
+         */
+        encrypt: function encrypt(cipher, message, password, cfg) {
+          // Apply config defaults
+          cfg = this.cfg.extend(cfg); // Derive key and other params
+
+          var derivedParams = cfg.kdf.execute(password, cipher.keySize, cipher.ivSize); // Add IV to config
+
+          cfg.iv = derivedParams.iv; // Encrypt
+
+          var ciphertext = SerializableCipher.encrypt.call(this, cipher, message, derivedParams.key, cfg); // Mix in derived params
+
+          ciphertext.mixIn(derivedParams);
+          return ciphertext;
+        },
+
+        /**
+         * Decrypts serialized ciphertext using a password.
+         *
+         * @param {Cipher} cipher The cipher algorithm to use.
+         * @param {CipherParams|string} ciphertext The ciphertext to decrypt.
+         * @param {string} password The password.
+         * @param {Object} cfg (Optional) The configuration options to use for this operation.
+         *
+         * @return {WordArray} The plaintext.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var plaintext = CryptoJS.lib.PasswordBasedCipher.decrypt(CryptoJS.algo.AES, formattedCiphertext, 'password', { format: CryptoJS.format.OpenSSL });
+         *     var plaintext = CryptoJS.lib.PasswordBasedCipher.decrypt(CryptoJS.algo.AES, ciphertextParams, 'password', { format: CryptoJS.format.OpenSSL });
+         */
+        decrypt: function decrypt(cipher, ciphertext, password, cfg) {
+          // Apply config defaults
+          cfg = this.cfg.extend(cfg); // Convert string to CipherParams
+
+          ciphertext = this._parse(ciphertext, cfg.format); // Derive key and other params
+
+          var derivedParams = cfg.kdf.execute(password, cipher.keySize, cipher.ivSize, ciphertext.salt); // Add IV to config
+
+          cfg.iv = derivedParams.iv; // Decrypt
+
+          var plaintext = SerializableCipher.decrypt.call(this, cipher, ciphertext, derivedParams.key, cfg);
+          return plaintext;
+        }
+      });
+    }();
+    /**
+     * Cipher Feedback block mode.
+     */
+
+    CryptoJS.mode.CFB = function () {
+      var CFB = CryptoJS.lib.BlockCipherMode.extend();
+      CFB.Encryptor = CFB.extend({
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+          generateKeystreamAndEncrypt.call(this, words, offset, blockSize, cipher); // Remember this block to use with next block
+
+          this._prevBlock = words.slice(offset, offset + blockSize);
+        }
+      });
+      CFB.Decryptor = CFB.extend({
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize; // Remember this block to use with next block
+
+          var thisBlock = words.slice(offset, offset + blockSize);
+          generateKeystreamAndEncrypt.call(this, words, offset, blockSize, cipher); // This block becomes the previous block
+
+          this._prevBlock = thisBlock;
+        }
+      });
+
+      function generateKeystreamAndEncrypt(words, offset, blockSize, cipher) {
+        var keystream; // Shortcut
+
+        var iv = this._iv; // Generate keystream
+
+        if (iv) {
+          keystream = iv.slice(0); // Remove IV for subsequent blocks
+
+          this._iv = undefined;
+        } else {
+          keystream = this._prevBlock;
+        }
+
+        cipher.encryptBlock(keystream, 0); // Encrypt
+
+        for (var i = 0; i < blockSize; i++) {
+          words[offset + i] ^= keystream[i];
+        }
+      }
+
+      return CFB;
+    }();
+    /**
+     * Electronic Codebook block mode.
+     */
+
+
+    CryptoJS.mode.ECB = function () {
+      var ECB = CryptoJS.lib.BlockCipherMode.extend();
+      ECB.Encryptor = ECB.extend({
+        processBlock: function processBlock(words, offset) {
+          this._cipher.encryptBlock(words, offset);
+        }
+      });
+      ECB.Decryptor = ECB.extend({
+        processBlock: function processBlock(words, offset) {
+          this._cipher.decryptBlock(words, offset);
+        }
+      });
+      return ECB;
+    }();
+    /**
+     * ANSI X.923 padding strategy.
+     */
+
+
+    CryptoJS.pad.AnsiX923 = {
+      pad: function pad(data, blockSize) {
+        // Shortcuts
+        var dataSigBytes = data.sigBytes;
+        var blockSizeBytes = blockSize * 4; // Count padding bytes
+
+        var nPaddingBytes = blockSizeBytes - dataSigBytes % blockSizeBytes; // Compute last byte position
+
+        var lastBytePos = dataSigBytes + nPaddingBytes - 1; // Pad
+
+        data.clamp();
+        data.words[lastBytePos >>> 2] |= nPaddingBytes << 24 - lastBytePos % 4 * 8;
+        data.sigBytes += nPaddingBytes;
+      },
+      unpad: function unpad(data) {
+        // Get number of padding bytes from last byte
+        var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff; // Remove padding
+
+        data.sigBytes -= nPaddingBytes;
+      }
+    };
+    /**
+     * ISO 10126 padding strategy.
+     */
+
+    CryptoJS.pad.Iso10126 = {
+      pad: function pad(data, blockSize) {
+        // Shortcut
+        var blockSizeBytes = blockSize * 4; // Count padding bytes
+
+        var nPaddingBytes = blockSizeBytes - data.sigBytes % blockSizeBytes; // Pad
+
+        data.concat(CryptoJS.lib.WordArray.random(nPaddingBytes - 1)).concat(CryptoJS.lib.WordArray.create([nPaddingBytes << 24], 1));
+      },
+      unpad: function unpad(data) {
+        // Get number of padding bytes from last byte
+        var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff; // Remove padding
+
+        data.sigBytes -= nPaddingBytes;
+      }
+    };
+    /**
+     * ISO/IEC 9797-1 Padding Method 2.
+     */
+
+    CryptoJS.pad.Iso97971 = {
+      pad: function pad(data, blockSize) {
+        // Add 0x80 byte
+        data.concat(CryptoJS.lib.WordArray.create([0x80000000], 1)); // Zero pad the rest
+
+        CryptoJS.pad.ZeroPadding.pad(data, blockSize);
+      },
+      unpad: function unpad(data) {
+        // Remove zero padding
+        CryptoJS.pad.ZeroPadding.unpad(data); // Remove one more byte -- the 0x80 byte
+
+        data.sigBytes--;
+      }
+    };
+    /**
+     * Output Feedback block mode.
+     */
+
+    CryptoJS.mode.OFB = function () {
+      var OFB = CryptoJS.lib.BlockCipherMode.extend();
+      var Encryptor = OFB.Encryptor = OFB.extend({
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+          var iv = this._iv;
+          var keystream = this._keystream; // Generate keystream
+
+          if (iv) {
+            keystream = this._keystream = iv.slice(0); // Remove IV for subsequent blocks
+
+            this._iv = undefined;
+          }
+
+          cipher.encryptBlock(keystream, 0); // Encrypt
+
+          for (var i = 0; i < blockSize; i++) {
+            words[offset + i] ^= keystream[i];
+          }
+        }
+      });
+      OFB.Decryptor = Encryptor;
+      return OFB;
+    }();
+    /**
+     * A noop padding strategy.
+     */
+
+
+    CryptoJS.pad.NoPadding = {
+      pad: function pad() {},
+      unpad: function unpad() {}
+    };
+
+    (function (undefined) {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var CipherParams = C_lib.CipherParams;
+      var C_enc = C.enc;
+      var Hex = C_enc.Hex;
+      var C_format = C.format;
+      var HexFormatter = C_format.Hex = {
+        /**
+         * Converts the ciphertext of a cipher params object to a hexadecimally encoded string.
+         *
+         * @param {CipherParams} cipherParams The cipher params object.
+         *
+         * @return {string} The hexadecimally encoded string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var hexString = CryptoJS.format.Hex.stringify(cipherParams);
+         */
+        stringify: function stringify(cipherParams) {
+          return cipherParams.ciphertext.toString(Hex);
+        },
+
+        /**
+         * Converts a hexadecimally encoded ciphertext string to a cipher params object.
+         *
+         * @param {string} input The hexadecimally encoded string.
+         *
+         * @return {CipherParams} The cipher params object.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var cipherParams = CryptoJS.format.Hex.parse(hexString);
+         */
+        parse: function parse(input) {
+          var ciphertext = Hex.parse(input);
+          return CipherParams.create({
+            ciphertext: ciphertext
+          });
+        }
+      };
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var BlockCipher = C_lib.BlockCipher;
+      var C_algo = C.algo; // Lookup tables
+
+      var SBOX = [];
+      var INV_SBOX = [];
+      var SUB_MIX_0 = [];
+      var SUB_MIX_1 = [];
+      var SUB_MIX_2 = [];
+      var SUB_MIX_3 = [];
+      var INV_SUB_MIX_0 = [];
+      var INV_SUB_MIX_1 = [];
+      var INV_SUB_MIX_2 = [];
+      var INV_SUB_MIX_3 = []; // Compute lookup tables
+
+      (function () {
+        // Compute double table
+        var d = [];
+
+        for (var i = 0; i < 256; i++) {
+          if (i < 128) {
+            d[i] = i << 1;
+          } else {
+            d[i] = i << 1 ^ 0x11b;
+          }
+        } // Walk GF(2^8)
+
+
+        var x = 0;
+        var xi = 0;
+
+        for (var i = 0; i < 256; i++) {
+          // Compute sbox
+          var sx = xi ^ xi << 1 ^ xi << 2 ^ xi << 3 ^ xi << 4;
+          sx = sx >>> 8 ^ sx & 0xff ^ 0x63;
+          SBOX[x] = sx;
+          INV_SBOX[sx] = x; // Compute multiplication
+
+          var x2 = d[x];
+          var x4 = d[x2];
+          var x8 = d[x4]; // Compute sub bytes, mix columns tables
+
+          var t = d[sx] * 0x101 ^ sx * 0x1010100;
+          SUB_MIX_0[x] = t << 24 | t >>> 8;
+          SUB_MIX_1[x] = t << 16 | t >>> 16;
+          SUB_MIX_2[x] = t << 8 | t >>> 24;
+          SUB_MIX_3[x] = t; // Compute inv sub bytes, inv mix columns tables
+
+          var t = x8 * 0x1010101 ^ x4 * 0x10001 ^ x2 * 0x101 ^ x * 0x1010100;
+          INV_SUB_MIX_0[sx] = t << 24 | t >>> 8;
+          INV_SUB_MIX_1[sx] = t << 16 | t >>> 16;
+          INV_SUB_MIX_2[sx] = t << 8 | t >>> 24;
+          INV_SUB_MIX_3[sx] = t; // Compute next counter
+
+          if (!x) {
+            x = xi = 1;
+          } else {
+            x = x2 ^ d[d[d[x8 ^ x2]]];
+            xi ^= d[d[xi]];
+          }
+        }
+      })(); // Precomputed Rcon lookup
+
+
+      var RCON = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+      /**
+       * AES block cipher algorithm.
+       */
+
+      var AES = C_algo.AES = BlockCipher.extend({
+        _doReset: function _doReset() {
+          var t; // Skip reset of nRounds has been set before and key did not change
+
+          if (this._nRounds && this._keyPriorReset === this._key) {
+            return;
+          } // Shortcuts
+
+
+          var key = this._keyPriorReset = this._key;
+          var keyWords = key.words;
+          var keySize = key.sigBytes / 4; // Compute number of rounds
+
+          var nRounds = this._nRounds = keySize + 6; // Compute number of key schedule rows
+
+          var ksRows = (nRounds + 1) * 4; // Compute key schedule
+
+          var keySchedule = this._keySchedule = [];
+
+          for (var ksRow = 0; ksRow < ksRows; ksRow++) {
+            if (ksRow < keySize) {
+              keySchedule[ksRow] = keyWords[ksRow];
+            } else {
+              t = keySchedule[ksRow - 1];
+
+              if (!(ksRow % keySize)) {
+                // Rot word
+                t = t << 8 | t >>> 24; // Sub word
+
+                t = SBOX[t >>> 24] << 24 | SBOX[t >>> 16 & 0xff] << 16 | SBOX[t >>> 8 & 0xff] << 8 | SBOX[t & 0xff]; // Mix Rcon
+
+                t ^= RCON[ksRow / keySize | 0] << 24;
+              } else if (keySize > 6 && ksRow % keySize == 4) {
+                // Sub word
+                t = SBOX[t >>> 24] << 24 | SBOX[t >>> 16 & 0xff] << 16 | SBOX[t >>> 8 & 0xff] << 8 | SBOX[t & 0xff];
+              }
+
+              keySchedule[ksRow] = keySchedule[ksRow - keySize] ^ t;
+            }
+          } // Compute inv key schedule
+
+
+          var invKeySchedule = this._invKeySchedule = [];
+
+          for (var invKsRow = 0; invKsRow < ksRows; invKsRow++) {
+            var ksRow = ksRows - invKsRow;
+
+            if (invKsRow % 4) {
+              var t = keySchedule[ksRow];
+            } else {
+              var t = keySchedule[ksRow - 4];
+            }
+
+            if (invKsRow < 4 || ksRow <= 4) {
+              invKeySchedule[invKsRow] = t;
+            } else {
+              invKeySchedule[invKsRow] = INV_SUB_MIX_0[SBOX[t >>> 24]] ^ INV_SUB_MIX_1[SBOX[t >>> 16 & 0xff]] ^ INV_SUB_MIX_2[SBOX[t >>> 8 & 0xff]] ^ INV_SUB_MIX_3[SBOX[t & 0xff]];
+            }
+          }
+        },
+        encryptBlock: function encryptBlock(M, offset) {
+          this._doCryptBlock(M, offset, this._keySchedule, SUB_MIX_0, SUB_MIX_1, SUB_MIX_2, SUB_MIX_3, SBOX);
+        },
+        decryptBlock: function decryptBlock(M, offset) {
+          // Swap 2nd and 4th rows
+          var t = M[offset + 1];
+          M[offset + 1] = M[offset + 3];
+          M[offset + 3] = t;
+
+          this._doCryptBlock(M, offset, this._invKeySchedule, INV_SUB_MIX_0, INV_SUB_MIX_1, INV_SUB_MIX_2, INV_SUB_MIX_3, INV_SBOX); // Inv swap 2nd and 4th rows
+
+
+          var t = M[offset + 1];
+          M[offset + 1] = M[offset + 3];
+          M[offset + 3] = t;
+        },
+        _doCryptBlock: function _doCryptBlock(M, offset, keySchedule, SUB_MIX_0, SUB_MIX_1, SUB_MIX_2, SUB_MIX_3, SBOX) {
+          // Shortcut
+          var nRounds = this._nRounds; // Get input, add round key
+
+          var s0 = M[offset] ^ keySchedule[0];
+          var s1 = M[offset + 1] ^ keySchedule[1];
+          var s2 = M[offset + 2] ^ keySchedule[2];
+          var s3 = M[offset + 3] ^ keySchedule[3]; // Key schedule row counter
+
+          var ksRow = 4; // Rounds
+
+          for (var round = 1; round < nRounds; round++) {
+            // Shift rows, sub bytes, mix columns, add round key
+            var t0 = SUB_MIX_0[s0 >>> 24] ^ SUB_MIX_1[s1 >>> 16 & 0xff] ^ SUB_MIX_2[s2 >>> 8 & 0xff] ^ SUB_MIX_3[s3 & 0xff] ^ keySchedule[ksRow++];
+            var t1 = SUB_MIX_0[s1 >>> 24] ^ SUB_MIX_1[s2 >>> 16 & 0xff] ^ SUB_MIX_2[s3 >>> 8 & 0xff] ^ SUB_MIX_3[s0 & 0xff] ^ keySchedule[ksRow++];
+            var t2 = SUB_MIX_0[s2 >>> 24] ^ SUB_MIX_1[s3 >>> 16 & 0xff] ^ SUB_MIX_2[s0 >>> 8 & 0xff] ^ SUB_MIX_3[s1 & 0xff] ^ keySchedule[ksRow++];
+            var t3 = SUB_MIX_0[s3 >>> 24] ^ SUB_MIX_1[s0 >>> 16 & 0xff] ^ SUB_MIX_2[s1 >>> 8 & 0xff] ^ SUB_MIX_3[s2 & 0xff] ^ keySchedule[ksRow++]; // Update state
+
+            s0 = t0;
+            s1 = t1;
+            s2 = t2;
+            s3 = t3;
+          } // Shift rows, sub bytes, add round key
+
+
+          var t0 = (SBOX[s0 >>> 24] << 24 | SBOX[s1 >>> 16 & 0xff] << 16 | SBOX[s2 >>> 8 & 0xff] << 8 | SBOX[s3 & 0xff]) ^ keySchedule[ksRow++];
+          var t1 = (SBOX[s1 >>> 24] << 24 | SBOX[s2 >>> 16 & 0xff] << 16 | SBOX[s3 >>> 8 & 0xff] << 8 | SBOX[s0 & 0xff]) ^ keySchedule[ksRow++];
+          var t2 = (SBOX[s2 >>> 24] << 24 | SBOX[s3 >>> 16 & 0xff] << 16 | SBOX[s0 >>> 8 & 0xff] << 8 | SBOX[s1 & 0xff]) ^ keySchedule[ksRow++];
+          var t3 = (SBOX[s3 >>> 24] << 24 | SBOX[s0 >>> 16 & 0xff] << 16 | SBOX[s1 >>> 8 & 0xff] << 8 | SBOX[s2 & 0xff]) ^ keySchedule[ksRow++]; // Set output
+
+          M[offset] = t0;
+          M[offset + 1] = t1;
+          M[offset + 2] = t2;
+          M[offset + 3] = t3;
+        },
+        keySize: 256 / 32
+      });
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.AES.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.AES.decrypt(ciphertext, key, cfg);
+       */
+
+      C.AES = BlockCipher._createHelper(AES);
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var WordArray = C_lib.WordArray;
+      var BlockCipher = C_lib.BlockCipher;
+      var C_algo = C.algo; // Permuted Choice 1 constants
+
+      var PC1 = [57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4]; // Permuted Choice 2 constants
+
+      var PC2 = [14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2, 41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48, 44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32]; // Cumulative bit shift constants
+
+      var BIT_SHIFTS = [1, 2, 4, 6, 8, 10, 12, 14, 15, 17, 19, 21, 23, 25, 27, 28]; // SBOXes and round permutation constants
+
+      var SBOX_P = [{
+        0x0: 0x808200,
+        0x10000000: 0x8000,
+        0x20000000: 0x808002,
+        0x30000000: 0x2,
+        0x40000000: 0x200,
+        0x50000000: 0x808202,
+        0x60000000: 0x800202,
+        0x70000000: 0x800000,
+        0x80000000: 0x202,
+        0x90000000: 0x800200,
+        0xa0000000: 0x8200,
+        0xb0000000: 0x808000,
+        0xc0000000: 0x8002,
+        0xd0000000: 0x800002,
+        0xe0000000: 0x0,
+        0xf0000000: 0x8202,
+        0x8000000: 0x0,
+        0x18000000: 0x808202,
+        0x28000000: 0x8202,
+        0x38000000: 0x8000,
+        0x48000000: 0x808200,
+        0x58000000: 0x200,
+        0x68000000: 0x808002,
+        0x78000000: 0x2,
+        0x88000000: 0x800200,
+        0x98000000: 0x8200,
+        0xa8000000: 0x808000,
+        0xb8000000: 0x800202,
+        0xc8000000: 0x800002,
+        0xd8000000: 0x8002,
+        0xe8000000: 0x202,
+        0xf8000000: 0x800000,
+        0x1: 0x8000,
+        0x10000001: 0x2,
+        0x20000001: 0x808200,
+        0x30000001: 0x800000,
+        0x40000001: 0x808002,
+        0x50000001: 0x8200,
+        0x60000001: 0x200,
+        0x70000001: 0x800202,
+        0x80000001: 0x808202,
+        0x90000001: 0x808000,
+        0xa0000001: 0x800002,
+        0xb0000001: 0x8202,
+        0xc0000001: 0x202,
+        0xd0000001: 0x800200,
+        0xe0000001: 0x8002,
+        0xf0000001: 0x0,
+        0x8000001: 0x808202,
+        0x18000001: 0x808000,
+        0x28000001: 0x800000,
+        0x38000001: 0x200,
+        0x48000001: 0x8000,
+        0x58000001: 0x800002,
+        0x68000001: 0x2,
+        0x78000001: 0x8202,
+        0x88000001: 0x8002,
+        0x98000001: 0x800202,
+        0xa8000001: 0x202,
+        0xb8000001: 0x808200,
+        0xc8000001: 0x800200,
+        0xd8000001: 0x0,
+        0xe8000001: 0x8200,
+        0xf8000001: 0x808002
+      }, {
+        0x0: 0x40084010,
+        0x1000000: 0x4000,
+        0x2000000: 0x80000,
+        0x3000000: 0x40080010,
+        0x4000000: 0x40000010,
+        0x5000000: 0x40084000,
+        0x6000000: 0x40004000,
+        0x7000000: 0x10,
+        0x8000000: 0x84000,
+        0x9000000: 0x40004010,
+        0xa000000: 0x40000000,
+        0xb000000: 0x84010,
+        0xc000000: 0x80010,
+        0xd000000: 0x0,
+        0xe000000: 0x4010,
+        0xf000000: 0x40080000,
+        0x800000: 0x40004000,
+        0x1800000: 0x84010,
+        0x2800000: 0x10,
+        0x3800000: 0x40004010,
+        0x4800000: 0x40084010,
+        0x5800000: 0x40000000,
+        0x6800000: 0x80000,
+        0x7800000: 0x40080010,
+        0x8800000: 0x80010,
+        0x9800000: 0x0,
+        0xa800000: 0x4000,
+        0xb800000: 0x40080000,
+        0xc800000: 0x40000010,
+        0xd800000: 0x84000,
+        0xe800000: 0x40084000,
+        0xf800000: 0x4010,
+        0x10000000: 0x0,
+        0x11000000: 0x40080010,
+        0x12000000: 0x40004010,
+        0x13000000: 0x40084000,
+        0x14000000: 0x40080000,
+        0x15000000: 0x10,
+        0x16000000: 0x84010,
+        0x17000000: 0x4000,
+        0x18000000: 0x4010,
+        0x19000000: 0x80000,
+        0x1a000000: 0x80010,
+        0x1b000000: 0x40000010,
+        0x1c000000: 0x84000,
+        0x1d000000: 0x40004000,
+        0x1e000000: 0x40000000,
+        0x1f000000: 0x40084010,
+        0x10800000: 0x84010,
+        0x11800000: 0x80000,
+        0x12800000: 0x40080000,
+        0x13800000: 0x4000,
+        0x14800000: 0x40004000,
+        0x15800000: 0x40084010,
+        0x16800000: 0x10,
+        0x17800000: 0x40000000,
+        0x18800000: 0x40084000,
+        0x19800000: 0x40000010,
+        0x1a800000: 0x40004010,
+        0x1b800000: 0x80010,
+        0x1c800000: 0x0,
+        0x1d800000: 0x4010,
+        0x1e800000: 0x40080010,
+        0x1f800000: 0x84000
+      }, {
+        0x0: 0x104,
+        0x100000: 0x0,
+        0x200000: 0x4000100,
+        0x300000: 0x10104,
+        0x400000: 0x10004,
+        0x500000: 0x4000004,
+        0x600000: 0x4010104,
+        0x700000: 0x4010000,
+        0x800000: 0x4000000,
+        0x900000: 0x4010100,
+        0xa00000: 0x10100,
+        0xb00000: 0x4010004,
+        0xc00000: 0x4000104,
+        0xd00000: 0x10000,
+        0xe00000: 0x4,
+        0xf00000: 0x100,
+        0x80000: 0x4010100,
+        0x180000: 0x4010004,
+        0x280000: 0x0,
+        0x380000: 0x4000100,
+        0x480000: 0x4000004,
+        0x580000: 0x10000,
+        0x680000: 0x10004,
+        0x780000: 0x104,
+        0x880000: 0x4,
+        0x980000: 0x100,
+        0xa80000: 0x4010000,
+        0xb80000: 0x10104,
+        0xc80000: 0x10100,
+        0xd80000: 0x4000104,
+        0xe80000: 0x4010104,
+        0xf80000: 0x4000000,
+        0x1000000: 0x4010100,
+        0x1100000: 0x10004,
+        0x1200000: 0x10000,
+        0x1300000: 0x4000100,
+        0x1400000: 0x100,
+        0x1500000: 0x4010104,
+        0x1600000: 0x4000004,
+        0x1700000: 0x0,
+        0x1800000: 0x4000104,
+        0x1900000: 0x4000000,
+        0x1a00000: 0x4,
+        0x1b00000: 0x10100,
+        0x1c00000: 0x4010000,
+        0x1d00000: 0x104,
+        0x1e00000: 0x10104,
+        0x1f00000: 0x4010004,
+        0x1080000: 0x4000000,
+        0x1180000: 0x104,
+        0x1280000: 0x4010100,
+        0x1380000: 0x0,
+        0x1480000: 0x10004,
+        0x1580000: 0x4000100,
+        0x1680000: 0x100,
+        0x1780000: 0x4010004,
+        0x1880000: 0x10000,
+        0x1980000: 0x4010104,
+        0x1a80000: 0x10104,
+        0x1b80000: 0x4000004,
+        0x1c80000: 0x4000104,
+        0x1d80000: 0x4010000,
+        0x1e80000: 0x4,
+        0x1f80000: 0x10100
+      }, {
+        0x0: 0x80401000,
+        0x10000: 0x80001040,
+        0x20000: 0x401040,
+        0x30000: 0x80400000,
+        0x40000: 0x0,
+        0x50000: 0x401000,
+        0x60000: 0x80000040,
+        0x70000: 0x400040,
+        0x80000: 0x80000000,
+        0x90000: 0x400000,
+        0xa0000: 0x40,
+        0xb0000: 0x80001000,
+        0xc0000: 0x80400040,
+        0xd0000: 0x1040,
+        0xe0000: 0x1000,
+        0xf0000: 0x80401040,
+        0x8000: 0x80001040,
+        0x18000: 0x40,
+        0x28000: 0x80400040,
+        0x38000: 0x80001000,
+        0x48000: 0x401000,
+        0x58000: 0x80401040,
+        0x68000: 0x0,
+        0x78000: 0x80400000,
+        0x88000: 0x1000,
+        0x98000: 0x80401000,
+        0xa8000: 0x400000,
+        0xb8000: 0x1040,
+        0xc8000: 0x80000000,
+        0xd8000: 0x400040,
+        0xe8000: 0x401040,
+        0xf8000: 0x80000040,
+        0x100000: 0x400040,
+        0x110000: 0x401000,
+        0x120000: 0x80000040,
+        0x130000: 0x0,
+        0x140000: 0x1040,
+        0x150000: 0x80400040,
+        0x160000: 0x80401000,
+        0x170000: 0x80001040,
+        0x180000: 0x80401040,
+        0x190000: 0x80000000,
+        0x1a0000: 0x80400000,
+        0x1b0000: 0x401040,
+        0x1c0000: 0x80001000,
+        0x1d0000: 0x400000,
+        0x1e0000: 0x40,
+        0x1f0000: 0x1000,
+        0x108000: 0x80400000,
+        0x118000: 0x80401040,
+        0x128000: 0x0,
+        0x138000: 0x401000,
+        0x148000: 0x400040,
+        0x158000: 0x80000000,
+        0x168000: 0x80001040,
+        0x178000: 0x40,
+        0x188000: 0x80000040,
+        0x198000: 0x1000,
+        0x1a8000: 0x80001000,
+        0x1b8000: 0x80400040,
+        0x1c8000: 0x1040,
+        0x1d8000: 0x80401000,
+        0x1e8000: 0x400000,
+        0x1f8000: 0x401040
+      }, {
+        0x0: 0x80,
+        0x1000: 0x1040000,
+        0x2000: 0x40000,
+        0x3000: 0x20000000,
+        0x4000: 0x20040080,
+        0x5000: 0x1000080,
+        0x6000: 0x21000080,
+        0x7000: 0x40080,
+        0x8000: 0x1000000,
+        0x9000: 0x20040000,
+        0xa000: 0x20000080,
+        0xb000: 0x21040080,
+        0xc000: 0x21040000,
+        0xd000: 0x0,
+        0xe000: 0x1040080,
+        0xf000: 0x21000000,
+        0x800: 0x1040080,
+        0x1800: 0x21000080,
+        0x2800: 0x80,
+        0x3800: 0x1040000,
+        0x4800: 0x40000,
+        0x5800: 0x20040080,
+        0x6800: 0x21040000,
+        0x7800: 0x20000000,
+        0x8800: 0x20040000,
+        0x9800: 0x0,
+        0xa800: 0x21040080,
+        0xb800: 0x1000080,
+        0xc800: 0x20000080,
+        0xd800: 0x21000000,
+        0xe800: 0x1000000,
+        0xf800: 0x40080,
+        0x10000: 0x40000,
+        0x11000: 0x80,
+        0x12000: 0x20000000,
+        0x13000: 0x21000080,
+        0x14000: 0x1000080,
+        0x15000: 0x21040000,
+        0x16000: 0x20040080,
+        0x17000: 0x1000000,
+        0x18000: 0x21040080,
+        0x19000: 0x21000000,
+        0x1a000: 0x1040000,
+        0x1b000: 0x20040000,
+        0x1c000: 0x40080,
+        0x1d000: 0x20000080,
+        0x1e000: 0x0,
+        0x1f000: 0x1040080,
+        0x10800: 0x21000080,
+        0x11800: 0x1000000,
+        0x12800: 0x1040000,
+        0x13800: 0x20040080,
+        0x14800: 0x20000000,
+        0x15800: 0x1040080,
+        0x16800: 0x80,
+        0x17800: 0x21040000,
+        0x18800: 0x40080,
+        0x19800: 0x21040080,
+        0x1a800: 0x0,
+        0x1b800: 0x21000000,
+        0x1c800: 0x1000080,
+        0x1d800: 0x40000,
+        0x1e800: 0x20040000,
+        0x1f800: 0x20000080
+      }, {
+        0x0: 0x10000008,
+        0x100: 0x2000,
+        0x200: 0x10200000,
+        0x300: 0x10202008,
+        0x400: 0x10002000,
+        0x500: 0x200000,
+        0x600: 0x200008,
+        0x700: 0x10000000,
+        0x800: 0x0,
+        0x900: 0x10002008,
+        0xa00: 0x202000,
+        0xb00: 0x8,
+        0xc00: 0x10200008,
+        0xd00: 0x202008,
+        0xe00: 0x2008,
+        0xf00: 0x10202000,
+        0x80: 0x10200000,
+        0x180: 0x10202008,
+        0x280: 0x8,
+        0x380: 0x200000,
+        0x480: 0x202008,
+        0x580: 0x10000008,
+        0x680: 0x10002000,
+        0x780: 0x2008,
+        0x880: 0x200008,
+        0x980: 0x2000,
+        0xa80: 0x10002008,
+        0xb80: 0x10200008,
+        0xc80: 0x0,
+        0xd80: 0x10202000,
+        0xe80: 0x202000,
+        0xf80: 0x10000000,
+        0x1000: 0x10002000,
+        0x1100: 0x10200008,
+        0x1200: 0x10202008,
+        0x1300: 0x2008,
+        0x1400: 0x200000,
+        0x1500: 0x10000000,
+        0x1600: 0x10000008,
+        0x1700: 0x202000,
+        0x1800: 0x202008,
+        0x1900: 0x0,
+        0x1a00: 0x8,
+        0x1b00: 0x10200000,
+        0x1c00: 0x2000,
+        0x1d00: 0x10002008,
+        0x1e00: 0x10202000,
+        0x1f00: 0x200008,
+        0x1080: 0x8,
+        0x1180: 0x202000,
+        0x1280: 0x200000,
+        0x1380: 0x10000008,
+        0x1480: 0x10002000,
+        0x1580: 0x2008,
+        0x1680: 0x10202008,
+        0x1780: 0x10200000,
+        0x1880: 0x10202000,
+        0x1980: 0x10200008,
+        0x1a80: 0x2000,
+        0x1b80: 0x202008,
+        0x1c80: 0x200008,
+        0x1d80: 0x0,
+        0x1e80: 0x10000000,
+        0x1f80: 0x10002008
+      }, {
+        0x0: 0x100000,
+        0x10: 0x2000401,
+        0x20: 0x400,
+        0x30: 0x100401,
+        0x40: 0x2100401,
+        0x50: 0x0,
+        0x60: 0x1,
+        0x70: 0x2100001,
+        0x80: 0x2000400,
+        0x90: 0x100001,
+        0xa0: 0x2000001,
+        0xb0: 0x2100400,
+        0xc0: 0x2100000,
+        0xd0: 0x401,
+        0xe0: 0x100400,
+        0xf0: 0x2000000,
+        0x8: 0x2100001,
+        0x18: 0x0,
+        0x28: 0x2000401,
+        0x38: 0x2100400,
+        0x48: 0x100000,
+        0x58: 0x2000001,
+        0x68: 0x2000000,
+        0x78: 0x401,
+        0x88: 0x100401,
+        0x98: 0x2000400,
+        0xa8: 0x2100000,
+        0xb8: 0x100001,
+        0xc8: 0x400,
+        0xd8: 0x2100401,
+        0xe8: 0x1,
+        0xf8: 0x100400,
+        0x100: 0x2000000,
+        0x110: 0x100000,
+        0x120: 0x2000401,
+        0x130: 0x2100001,
+        0x140: 0x100001,
+        0x150: 0x2000400,
+        0x160: 0x2100400,
+        0x170: 0x100401,
+        0x180: 0x401,
+        0x190: 0x2100401,
+        0x1a0: 0x100400,
+        0x1b0: 0x1,
+        0x1c0: 0x0,
+        0x1d0: 0x2100000,
+        0x1e0: 0x2000001,
+        0x1f0: 0x400,
+        0x108: 0x100400,
+        0x118: 0x2000401,
+        0x128: 0x2100001,
+        0x138: 0x1,
+        0x148: 0x2000000,
+        0x158: 0x100000,
+        0x168: 0x401,
+        0x178: 0x2100400,
+        0x188: 0x2000001,
+        0x198: 0x2100000,
+        0x1a8: 0x0,
+        0x1b8: 0x2100401,
+        0x1c8: 0x100401,
+        0x1d8: 0x400,
+        0x1e8: 0x2000400,
+        0x1f8: 0x100001
+      }, {
+        0x0: 0x8000820,
+        0x1: 0x20000,
+        0x2: 0x8000000,
+        0x3: 0x20,
+        0x4: 0x20020,
+        0x5: 0x8020820,
+        0x6: 0x8020800,
+        0x7: 0x800,
+        0x8: 0x8020000,
+        0x9: 0x8000800,
+        0xa: 0x20800,
+        0xb: 0x8020020,
+        0xc: 0x820,
+        0xd: 0x0,
+        0xe: 0x8000020,
+        0xf: 0x20820,
+        0x80000000: 0x800,
+        0x80000001: 0x8020820,
+        0x80000002: 0x8000820,
+        0x80000003: 0x8000000,
+        0x80000004: 0x8020000,
+        0x80000005: 0x20800,
+        0x80000006: 0x20820,
+        0x80000007: 0x20,
+        0x80000008: 0x8000020,
+        0x80000009: 0x820,
+        0x8000000a: 0x20020,
+        0x8000000b: 0x8020800,
+        0x8000000c: 0x0,
+        0x8000000d: 0x8020020,
+        0x8000000e: 0x8000800,
+        0x8000000f: 0x20000,
+        0x10: 0x20820,
+        0x11: 0x8020800,
+        0x12: 0x20,
+        0x13: 0x800,
+        0x14: 0x8000800,
+        0x15: 0x8000020,
+        0x16: 0x8020020,
+        0x17: 0x20000,
+        0x18: 0x0,
+        0x19: 0x20020,
+        0x1a: 0x8020000,
+        0x1b: 0x8000820,
+        0x1c: 0x8020820,
+        0x1d: 0x20800,
+        0x1e: 0x820,
+        0x1f: 0x8000000,
+        0x80000010: 0x20000,
+        0x80000011: 0x800,
+        0x80000012: 0x8020020,
+        0x80000013: 0x20820,
+        0x80000014: 0x20,
+        0x80000015: 0x8020000,
+        0x80000016: 0x8000000,
+        0x80000017: 0x8000820,
+        0x80000018: 0x8020820,
+        0x80000019: 0x8000020,
+        0x8000001a: 0x8000800,
+        0x8000001b: 0x0,
+        0x8000001c: 0x20800,
+        0x8000001d: 0x820,
+        0x8000001e: 0x20020,
+        0x8000001f: 0x8020800
+      }]; // Masks that select the SBOX input
+
+      var SBOX_MASK = [0xf8000001, 0x1f800000, 0x01f80000, 0x001f8000, 0x0001f800, 0x00001f80, 0x000001f8, 0x8000001f];
+      /**
+       * DES block cipher algorithm.
+       */
+
+      var DES = C_algo.DES = BlockCipher.extend({
+        _doReset: function _doReset() {
+          // Shortcuts
+          var key = this._key;
+          var keyWords = key.words; // Select 56 bits according to PC1
+
+          var keyBits = [];
+
+          for (var i = 0; i < 56; i++) {
+            var keyBitPos = PC1[i] - 1;
+            keyBits[i] = keyWords[keyBitPos >>> 5] >>> 31 - keyBitPos % 32 & 1;
+          } // Assemble 16 subkeys
+
+
+          var subKeys = this._subKeys = [];
+
+          for (var nSubKey = 0; nSubKey < 16; nSubKey++) {
+            // Create subkey
+            var subKey = subKeys[nSubKey] = []; // Shortcut
+
+            var bitShift = BIT_SHIFTS[nSubKey]; // Select 48 bits according to PC2
+
+            for (var i = 0; i < 24; i++) {
+              // Select from the left 28 key bits
+              subKey[i / 6 | 0] |= keyBits[(PC2[i] - 1 + bitShift) % 28] << 31 - i % 6; // Select from the right 28 key bits
+
+              subKey[4 + (i / 6 | 0)] |= keyBits[28 + (PC2[i + 24] - 1 + bitShift) % 28] << 31 - i % 6;
+            } // Since each subkey is applied to an expanded 32-bit input,
+            // the subkey can be broken into 8 values scaled to 32-bits,
+            // which allows the key to be used without expansion
+
+
+            subKey[0] = subKey[0] << 1 | subKey[0] >>> 31;
+
+            for (var i = 1; i < 7; i++) {
+              subKey[i] = subKey[i] >>> (i - 1) * 4 + 3;
+            }
+
+            subKey[7] = subKey[7] << 5 | subKey[7] >>> 27;
+          } // Compute inverse subkeys
+
+
+          var invSubKeys = this._invSubKeys = [];
+
+          for (var i = 0; i < 16; i++) {
+            invSubKeys[i] = subKeys[15 - i];
+          }
+        },
+        encryptBlock: function encryptBlock(M, offset) {
+          this._doCryptBlock(M, offset, this._subKeys);
+        },
+        decryptBlock: function decryptBlock(M, offset) {
+          this._doCryptBlock(M, offset, this._invSubKeys);
+        },
+        _doCryptBlock: function _doCryptBlock(M, offset, subKeys) {
+          // Get input
+          this._lBlock = M[offset];
+          this._rBlock = M[offset + 1]; // Initial permutation
+
+          exchangeLR.call(this, 4, 0x0f0f0f0f);
+          exchangeLR.call(this, 16, 0x0000ffff);
+          exchangeRL.call(this, 2, 0x33333333);
+          exchangeRL.call(this, 8, 0x00ff00ff);
+          exchangeLR.call(this, 1, 0x55555555); // Rounds
+
+          for (var round = 0; round < 16; round++) {
+            // Shortcuts
+            var subKey = subKeys[round];
+            var lBlock = this._lBlock;
+            var rBlock = this._rBlock; // Feistel function
+
+            var f = 0;
+
+            for (var i = 0; i < 8; i++) {
+              f |= SBOX_P[i][((rBlock ^ subKey[i]) & SBOX_MASK[i]) >>> 0];
+            }
+
+            this._lBlock = rBlock;
+            this._rBlock = lBlock ^ f;
+          } // Undo swap from last round
+
+
+          var t = this._lBlock;
+          this._lBlock = this._rBlock;
+          this._rBlock = t; // Final permutation
+
+          exchangeLR.call(this, 1, 0x55555555);
+          exchangeRL.call(this, 8, 0x00ff00ff);
+          exchangeRL.call(this, 2, 0x33333333);
+          exchangeLR.call(this, 16, 0x0000ffff);
+          exchangeLR.call(this, 4, 0x0f0f0f0f); // Set output
+
+          M[offset] = this._lBlock;
+          M[offset + 1] = this._rBlock;
+        },
+        keySize: 64 / 32,
+        ivSize: 64 / 32,
+        blockSize: 64 / 32
+      }); // Swap bits across the left and right words
+
+      function exchangeLR(offset, mask) {
+        var t = (this._lBlock >>> offset ^ this._rBlock) & mask;
+        this._rBlock ^= t;
+        this._lBlock ^= t << offset;
+      }
+
+      function exchangeRL(offset, mask) {
+        var t = (this._rBlock >>> offset ^ this._lBlock) & mask;
+        this._lBlock ^= t;
+        this._rBlock ^= t << offset;
+      }
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.DES.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.DES.decrypt(ciphertext, key, cfg);
+       */
+
+
+      C.DES = BlockCipher._createHelper(DES);
+      /**
+       * Triple-DES block cipher algorithm.
+       */
+
+      var TripleDES = C_algo.TripleDES = BlockCipher.extend({
+        _doReset: function _doReset() {
+          // Shortcuts
+          var key = this._key;
+          var keyWords = key.words; // Make sure the key length is valid (64, 128 or >= 192 bit)
+
+          if (keyWords.length !== 2 && keyWords.length !== 4 && keyWords.length < 6) {
+            throw new Error('Invalid key length - 3DES requires the key length to be 64, 128, 192 or >192.');
+          } // Extend the key according to the keying options defined in 3DES standard
+
+
+          var key1 = keyWords.slice(0, 2);
+          var key2 = keyWords.length < 4 ? keyWords.slice(0, 2) : keyWords.slice(2, 4);
+          var key3 = keyWords.length < 6 ? keyWords.slice(0, 2) : keyWords.slice(4, 6); // Create DES instances
+
+          this._des1 = DES.createEncryptor(WordArray.create(key1));
+          this._des2 = DES.createEncryptor(WordArray.create(key2));
+          this._des3 = DES.createEncryptor(WordArray.create(key3));
+        },
+        encryptBlock: function encryptBlock(M, offset) {
+          this._des1.encryptBlock(M, offset);
+
+          this._des2.decryptBlock(M, offset);
+
+          this._des3.encryptBlock(M, offset);
+        },
+        decryptBlock: function decryptBlock(M, offset) {
+          this._des3.decryptBlock(M, offset);
+
+          this._des2.encryptBlock(M, offset);
+
+          this._des1.decryptBlock(M, offset);
+        },
+        keySize: 192 / 32,
+        ivSize: 64 / 32,
+        blockSize: 64 / 32
+      });
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.TripleDES.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.TripleDES.decrypt(ciphertext, key, cfg);
+       */
+
+      C.TripleDES = BlockCipher._createHelper(TripleDES);
+    })();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var StreamCipher = C_lib.StreamCipher;
+      var C_algo = C.algo;
+      /**
+       * RC4 stream cipher algorithm.
+       */
+
+      var RC4 = C_algo.RC4 = StreamCipher.extend({
+        _doReset: function _doReset() {
+          // Shortcuts
+          var key = this._key;
+          var keyWords = key.words;
+          var keySigBytes = key.sigBytes; // Init sbox
+
+          var S = this._S = [];
+
+          for (var i = 0; i < 256; i++) {
+            S[i] = i;
+          } // Key setup
+
+
+          for (var i = 0, j = 0; i < 256; i++) {
+            var keyByteIndex = i % keySigBytes;
+            var keyByte = keyWords[keyByteIndex >>> 2] >>> 24 - keyByteIndex % 4 * 8 & 0xff;
+            j = (j + S[i] + keyByte) % 256; // Swap
+
+            var t = S[i];
+            S[i] = S[j];
+            S[j] = t;
+          } // Counters
+
+
+          this._i = this._j = 0;
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          M[offset] ^= generateKeystreamWord.call(this);
+        },
+        keySize: 256 / 32,
+        ivSize: 0
+      });
+
+      function generateKeystreamWord() {
+        // Shortcuts
+        var S = this._S;
+        var i = this._i;
+        var j = this._j; // Generate keystream word
+
+        var keystreamWord = 0;
+
+        for (var n = 0; n < 4; n++) {
+          i = (i + 1) % 256;
+          j = (j + S[i]) % 256; // Swap
+
+          var t = S[i];
+          S[i] = S[j];
+          S[j] = t;
+          keystreamWord |= S[(S[i] + S[j]) % 256] << 24 - n * 8;
+        } // Update counters
+
+
+        this._i = i;
+        this._j = j;
+        return keystreamWord;
+      }
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.RC4.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.RC4.decrypt(ciphertext, key, cfg);
+       */
+
+
+      C.RC4 = StreamCipher._createHelper(RC4);
+      /**
+       * Modified RC4 stream cipher algorithm.
+       */
+
+      var RC4Drop = C_algo.RC4Drop = RC4.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} drop The number of keystream words to drop. Default 192
+         */
+        cfg: RC4.cfg.extend({
+          drop: 192
+        }),
+        _doReset: function _doReset() {
+          RC4._doReset.call(this); // Drop
+
+
+          for (var i = this.cfg.drop; i > 0; i--) {
+            generateKeystreamWord.call(this);
+          }
+        }
+      });
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.RC4Drop.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.RC4Drop.decrypt(ciphertext, key, cfg);
+       */
+
+      C.RC4Drop = StreamCipher._createHelper(RC4Drop);
+    })();
+    /** @preserve
+     * Counter block mode compatible with  Dr Brian Gladman fileenc.c
+     * derived from CryptoJS.mode.CTR
+     * Jan Hruby jhruby.web@gmail.com
+     */
+
+
+    CryptoJS.mode.CTRGladman = function () {
+      var CTRGladman = CryptoJS.lib.BlockCipherMode.extend();
+
+      function incWord(word) {
+        if ((word >> 24 & 0xff) === 0xff) {
+          //overflow
+          var b1 = word >> 16 & 0xff;
+          var b2 = word >> 8 & 0xff;
+          var b3 = word & 0xff;
+
+          if (b1 === 0xff) // overflow b1
+            {
+              b1 = 0;
+
+              if (b2 === 0xff) {
+                b2 = 0;
+
+                if (b3 === 0xff) {
+                  b3 = 0;
+                } else {
+                  ++b3;
+                }
+              } else {
+                ++b2;
+              }
+            } else {
+            ++b1;
+          }
+
+          word = 0;
+          word += b1 << 16;
+          word += b2 << 8;
+          word += b3;
+        } else {
+          word += 0x01 << 24;
+        }
+
+        return word;
+      }
+
+      function incCounter(counter) {
+        if ((counter[0] = incWord(counter[0])) === 0) {
+          // encr_data in fileenc.c from  Dr Brian Gladman's counts only with DWORD j < 8
+          counter[1] = incWord(counter[1]);
+        }
+
+        return counter;
+      }
+
+      var Encryptor = CTRGladman.Encryptor = CTRGladman.extend({
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+          var iv = this._iv;
+          var counter = this._counter; // Generate keystream
+
+          if (iv) {
+            counter = this._counter = iv.slice(0); // Remove IV for subsequent blocks
+
+            this._iv = undefined;
+          }
+
+          incCounter(counter);
+          var keystream = counter.slice(0);
+          cipher.encryptBlock(keystream, 0); // Encrypt
+
+          for (var i = 0; i < blockSize; i++) {
+            words[offset + i] ^= keystream[i];
+          }
+        }
+      });
+      CTRGladman.Decryptor = Encryptor;
+      return CTRGladman;
+    }();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var StreamCipher = C_lib.StreamCipher;
+      var C_algo = C.algo; // Reusable objects
+
+      var S = [];
+      var C_ = [];
+      var G = [];
+      /**
+       * Rabbit stream cipher algorithm
+       */
+
+      var Rabbit = C_algo.Rabbit = StreamCipher.extend({
+        _doReset: function _doReset() {
+          // Shortcuts
+          var K = this._key.words;
+          var iv = this.cfg.iv; // Swap endian
+
+          for (var i = 0; i < 4; i++) {
+            K[i] = (K[i] << 8 | K[i] >>> 24) & 0x00ff00ff | (K[i] << 24 | K[i] >>> 8) & 0xff00ff00;
+          } // Generate initial state values
+
+
+          var X = this._X = [K[0], K[3] << 16 | K[2] >>> 16, K[1], K[0] << 16 | K[3] >>> 16, K[2], K[1] << 16 | K[0] >>> 16, K[3], K[2] << 16 | K[1] >>> 16]; // Generate initial counter values
+
+          var C = this._C = [K[2] << 16 | K[2] >>> 16, K[0] & 0xffff0000 | K[1] & 0x0000ffff, K[3] << 16 | K[3] >>> 16, K[1] & 0xffff0000 | K[2] & 0x0000ffff, K[0] << 16 | K[0] >>> 16, K[2] & 0xffff0000 | K[3] & 0x0000ffff, K[1] << 16 | K[1] >>> 16, K[3] & 0xffff0000 | K[0] & 0x0000ffff]; // Carry bit
+
+          this._b = 0; // Iterate the system four times
+
+          for (var i = 0; i < 4; i++) {
+            nextState.call(this);
+          } // Modify the counters
+
+
+          for (var i = 0; i < 8; i++) {
+            C[i] ^= X[i + 4 & 7];
+          } // IV setup
+
+
+          if (iv) {
+            // Shortcuts
+            var IV = iv.words;
+            var IV_0 = IV[0];
+            var IV_1 = IV[1]; // Generate four subvectors
+
+            var i0 = (IV_0 << 8 | IV_0 >>> 24) & 0x00ff00ff | (IV_0 << 24 | IV_0 >>> 8) & 0xff00ff00;
+            var i2 = (IV_1 << 8 | IV_1 >>> 24) & 0x00ff00ff | (IV_1 << 24 | IV_1 >>> 8) & 0xff00ff00;
+            var i1 = i0 >>> 16 | i2 & 0xffff0000;
+            var i3 = i2 << 16 | i0 & 0x0000ffff; // Modify counter values
+
+            C[0] ^= i0;
+            C[1] ^= i1;
+            C[2] ^= i2;
+            C[3] ^= i3;
+            C[4] ^= i0;
+            C[5] ^= i1;
+            C[6] ^= i2;
+            C[7] ^= i3; // Iterate the system four times
+
+            for (var i = 0; i < 4; i++) {
+              nextState.call(this);
+            }
+          }
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcut
+          var X = this._X; // Iterate the system
+
+          nextState.call(this); // Generate four keystream words
+
+          S[0] = X[0] ^ X[5] >>> 16 ^ X[3] << 16;
+          S[1] = X[2] ^ X[7] >>> 16 ^ X[5] << 16;
+          S[2] = X[4] ^ X[1] >>> 16 ^ X[7] << 16;
+          S[3] = X[6] ^ X[3] >>> 16 ^ X[1] << 16;
+
+          for (var i = 0; i < 4; i++) {
+            // Swap endian
+            S[i] = (S[i] << 8 | S[i] >>> 24) & 0x00ff00ff | (S[i] << 24 | S[i] >>> 8) & 0xff00ff00; // Encrypt
+
+            M[offset + i] ^= S[i];
+          }
+        },
+        blockSize: 128 / 32,
+        ivSize: 64 / 32
+      });
+
+      function nextState() {
+        // Shortcuts
+        var X = this._X;
+        var C = this._C; // Save old counter values
+
+        for (var i = 0; i < 8; i++) {
+          C_[i] = C[i];
+        } // Calculate new counter values
+
+
+        C[0] = C[0] + 0x4d34d34d + this._b | 0;
+        C[1] = C[1] + 0xd34d34d3 + (C[0] >>> 0 < C_[0] >>> 0 ? 1 : 0) | 0;
+        C[2] = C[2] + 0x34d34d34 + (C[1] >>> 0 < C_[1] >>> 0 ? 1 : 0) | 0;
+        C[3] = C[3] + 0x4d34d34d + (C[2] >>> 0 < C_[2] >>> 0 ? 1 : 0) | 0;
+        C[4] = C[4] + 0xd34d34d3 + (C[3] >>> 0 < C_[3] >>> 0 ? 1 : 0) | 0;
+        C[5] = C[5] + 0x34d34d34 + (C[4] >>> 0 < C_[4] >>> 0 ? 1 : 0) | 0;
+        C[6] = C[6] + 0x4d34d34d + (C[5] >>> 0 < C_[5] >>> 0 ? 1 : 0) | 0;
+        C[7] = C[7] + 0xd34d34d3 + (C[6] >>> 0 < C_[6] >>> 0 ? 1 : 0) | 0;
+        this._b = C[7] >>> 0 < C_[7] >>> 0 ? 1 : 0; // Calculate the g-values
+
+        for (var i = 0; i < 8; i++) {
+          var gx = X[i] + C[i]; // Construct high and low argument for squaring
+
+          var ga = gx & 0xffff;
+          var gb = gx >>> 16; // Calculate high and low result of squaring
+
+          var gh = ((ga * ga >>> 17) + ga * gb >>> 15) + gb * gb;
+          var gl = ((gx & 0xffff0000) * gx | 0) + ((gx & 0x0000ffff) * gx | 0); // High XOR low
+
+          G[i] = gh ^ gl;
+        } // Calculate new state values
+
+
+        X[0] = G[0] + (G[7] << 16 | G[7] >>> 16) + (G[6] << 16 | G[6] >>> 16) | 0;
+        X[1] = G[1] + (G[0] << 8 | G[0] >>> 24) + G[7] | 0;
+        X[2] = G[2] + (G[1] << 16 | G[1] >>> 16) + (G[0] << 16 | G[0] >>> 16) | 0;
+        X[3] = G[3] + (G[2] << 8 | G[2] >>> 24) + G[1] | 0;
+        X[4] = G[4] + (G[3] << 16 | G[3] >>> 16) + (G[2] << 16 | G[2] >>> 16) | 0;
+        X[5] = G[5] + (G[4] << 8 | G[4] >>> 24) + G[3] | 0;
+        X[6] = G[6] + (G[5] << 16 | G[5] >>> 16) + (G[4] << 16 | G[4] >>> 16) | 0;
+        X[7] = G[7] + (G[6] << 8 | G[6] >>> 24) + G[5] | 0;
+      }
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.Rabbit.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.Rabbit.decrypt(ciphertext, key, cfg);
+       */
+
+
+      C.Rabbit = StreamCipher._createHelper(Rabbit);
+    })();
+    /**
+     * Counter block mode.
+     */
+
+
+    CryptoJS.mode.CTR = function () {
+      var CTR = CryptoJS.lib.BlockCipherMode.extend();
+      var Encryptor = CTR.Encryptor = CTR.extend({
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+          var iv = this._iv;
+          var counter = this._counter; // Generate keystream
+
+          if (iv) {
+            counter = this._counter = iv.slice(0); // Remove IV for subsequent blocks
+
+            this._iv = undefined;
+          }
+
+          var keystream = counter.slice(0);
+          cipher.encryptBlock(keystream, 0); // Increment counter
+
+          counter[blockSize - 1] = counter[blockSize - 1] + 1 | 0; // Encrypt
+
+          for (var i = 0; i < blockSize; i++) {
+            words[offset + i] ^= keystream[i];
+          }
+        }
+      });
+      CTR.Decryptor = Encryptor;
+      return CTR;
+    }();
+
+    (function () {
+      // Shortcuts
+      var C = CryptoJS;
+      var C_lib = C.lib;
+      var StreamCipher = C_lib.StreamCipher;
+      var C_algo = C.algo; // Reusable objects
+
+      var S = [];
+      var C_ = [];
+      var G = [];
+      /**
+       * Rabbit stream cipher algorithm.
+       *
+       * This is a legacy version that neglected to convert the key to little-endian.
+       * This error doesn't affect the cipher's security,
+       * but it does affect its compatibility with other implementations.
+       */
+
+      var RabbitLegacy = C_algo.RabbitLegacy = StreamCipher.extend({
+        _doReset: function _doReset() {
+          // Shortcuts
+          var K = this._key.words;
+          var iv = this.cfg.iv; // Generate initial state values
+
+          var X = this._X = [K[0], K[3] << 16 | K[2] >>> 16, K[1], K[0] << 16 | K[3] >>> 16, K[2], K[1] << 16 | K[0] >>> 16, K[3], K[2] << 16 | K[1] >>> 16]; // Generate initial counter values
+
+          var C = this._C = [K[2] << 16 | K[2] >>> 16, K[0] & 0xffff0000 | K[1] & 0x0000ffff, K[3] << 16 | K[3] >>> 16, K[1] & 0xffff0000 | K[2] & 0x0000ffff, K[0] << 16 | K[0] >>> 16, K[2] & 0xffff0000 | K[3] & 0x0000ffff, K[1] << 16 | K[1] >>> 16, K[3] & 0xffff0000 | K[0] & 0x0000ffff]; // Carry bit
+
+          this._b = 0; // Iterate the system four times
+
+          for (var i = 0; i < 4; i++) {
+            nextState.call(this);
+          } // Modify the counters
+
+
+          for (var i = 0; i < 8; i++) {
+            C[i] ^= X[i + 4 & 7];
+          } // IV setup
+
+
+          if (iv) {
+            // Shortcuts
+            var IV = iv.words;
+            var IV_0 = IV[0];
+            var IV_1 = IV[1]; // Generate four subvectors
+
+            var i0 = (IV_0 << 8 | IV_0 >>> 24) & 0x00ff00ff | (IV_0 << 24 | IV_0 >>> 8) & 0xff00ff00;
+            var i2 = (IV_1 << 8 | IV_1 >>> 24) & 0x00ff00ff | (IV_1 << 24 | IV_1 >>> 8) & 0xff00ff00;
+            var i1 = i0 >>> 16 | i2 & 0xffff0000;
+            var i3 = i2 << 16 | i0 & 0x0000ffff; // Modify counter values
+
+            C[0] ^= i0;
+            C[1] ^= i1;
+            C[2] ^= i2;
+            C[3] ^= i3;
+            C[4] ^= i0;
+            C[5] ^= i1;
+            C[6] ^= i2;
+            C[7] ^= i3; // Iterate the system four times
+
+            for (var i = 0; i < 4; i++) {
+              nextState.call(this);
+            }
+          }
+        },
+        _doProcessBlock: function _doProcessBlock(M, offset) {
+          // Shortcut
+          var X = this._X; // Iterate the system
+
+          nextState.call(this); // Generate four keystream words
+
+          S[0] = X[0] ^ X[5] >>> 16 ^ X[3] << 16;
+          S[1] = X[2] ^ X[7] >>> 16 ^ X[5] << 16;
+          S[2] = X[4] ^ X[1] >>> 16 ^ X[7] << 16;
+          S[3] = X[6] ^ X[3] >>> 16 ^ X[1] << 16;
+
+          for (var i = 0; i < 4; i++) {
+            // Swap endian
+            S[i] = (S[i] << 8 | S[i] >>> 24) & 0x00ff00ff | (S[i] << 24 | S[i] >>> 8) & 0xff00ff00; // Encrypt
+
+            M[offset + i] ^= S[i];
+          }
+        },
+        blockSize: 128 / 32,
+        ivSize: 64 / 32
+      });
+
+      function nextState() {
+        // Shortcuts
+        var X = this._X;
+        var C = this._C; // Save old counter values
+
+        for (var i = 0; i < 8; i++) {
+          C_[i] = C[i];
+        } // Calculate new counter values
+
+
+        C[0] = C[0] + 0x4d34d34d + this._b | 0;
+        C[1] = C[1] + 0xd34d34d3 + (C[0] >>> 0 < C_[0] >>> 0 ? 1 : 0) | 0;
+        C[2] = C[2] + 0x34d34d34 + (C[1] >>> 0 < C_[1] >>> 0 ? 1 : 0) | 0;
+        C[3] = C[3] + 0x4d34d34d + (C[2] >>> 0 < C_[2] >>> 0 ? 1 : 0) | 0;
+        C[4] = C[4] + 0xd34d34d3 + (C[3] >>> 0 < C_[3] >>> 0 ? 1 : 0) | 0;
+        C[5] = C[5] + 0x34d34d34 + (C[4] >>> 0 < C_[4] >>> 0 ? 1 : 0) | 0;
+        C[6] = C[6] + 0x4d34d34d + (C[5] >>> 0 < C_[5] >>> 0 ? 1 : 0) | 0;
+        C[7] = C[7] + 0xd34d34d3 + (C[6] >>> 0 < C_[6] >>> 0 ? 1 : 0) | 0;
+        this._b = C[7] >>> 0 < C_[7] >>> 0 ? 1 : 0; // Calculate the g-values
+
+        for (var i = 0; i < 8; i++) {
+          var gx = X[i] + C[i]; // Construct high and low argument for squaring
+
+          var ga = gx & 0xffff;
+          var gb = gx >>> 16; // Calculate high and low result of squaring
+
+          var gh = ((ga * ga >>> 17) + ga * gb >>> 15) + gb * gb;
+          var gl = ((gx & 0xffff0000) * gx | 0) + ((gx & 0x0000ffff) * gx | 0); // High XOR low
+
+          G[i] = gh ^ gl;
+        } // Calculate new state values
+
+
+        X[0] = G[0] + (G[7] << 16 | G[7] >>> 16) + (G[6] << 16 | G[6] >>> 16) | 0;
+        X[1] = G[1] + (G[0] << 8 | G[0] >>> 24) + G[7] | 0;
+        X[2] = G[2] + (G[1] << 16 | G[1] >>> 16) + (G[0] << 16 | G[0] >>> 16) | 0;
+        X[3] = G[3] + (G[2] << 8 | G[2] >>> 24) + G[1] | 0;
+        X[4] = G[4] + (G[3] << 16 | G[3] >>> 16) + (G[2] << 16 | G[2] >>> 16) | 0;
+        X[5] = G[5] + (G[4] << 8 | G[4] >>> 24) + G[3] | 0;
+        X[6] = G[6] + (G[5] << 16 | G[5] >>> 16) + (G[4] << 16 | G[4] >>> 16) | 0;
+        X[7] = G[7] + (G[6] << 8 | G[6] >>> 24) + G[5] | 0;
+      }
+      /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.RabbitLegacy.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.RabbitLegacy.decrypt(ciphertext, key, cfg);
+       */
+
+
+      C.RabbitLegacy = StreamCipher._createHelper(RabbitLegacy);
+    })();
+    /**
+     * Zero padding strategy.
+     */
+
+
+    CryptoJS.pad.ZeroPadding = {
+      pad: function pad(data, blockSize) {
+        // Shortcut
+        var blockSizeBytes = blockSize * 4; // Pad
+
+        data.clamp();
+        data.sigBytes += blockSizeBytes - (data.sigBytes % blockSizeBytes || blockSizeBytes);
+      },
+      unpad: function unpad(data) {
+        // Shortcut
+        var dataWords = data.words; // Unpad
+
+        var i = data.sigBytes - 1;
+
+        for (var i = data.sigBytes - 1; i >= 0; i--) {
+          if (dataWords[i >>> 2] >>> 24 - i % 4 * 8 & 0xff) {
+            data.sigBytes = i + 1;
+            break;
+          }
+        }
+      }
+    };
+    return {
+      init: init,
+      cryptoJS: CryptoJS
+    };
+  };
+
   Object.assign(FroalaEditor.DEFAULTS, {
     fontFamily: {
       'Arial,Helvetica,sans-serif': 'Arial',
@@ -26565,7 +37670,7 @@
 
     function refreshOnShow($btn, $dropdown) {
       $dropdown.find('.fr-command.fr-active').removeClass('fr-active').attr('aria-selected', false);
-      $dropdown.find('.fr-command[data-param1="' + _getSelection() + '"]').addClass('fr-active').attr('aria-selected', true);
+      $dropdown.find(".fr-command[data-param1=\"".concat(_getSelection(), "\"]")).addClass('fr-active').attr('aria-selected', true);
     }
 
     function _getArray(val) {
@@ -26655,7 +37760,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="fontFamily" data-param1="' + val + '" style="font-family: ' + val + '" title="' + options[val] + '">' + options[val] + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"fontFamily\" data-param1=\"".concat(val, "\" \n        style=\"font-family: ").concat(val, "\" title=\"").concat(options[val], "\">").concat(options[val], "</a></li>");
         }
       }
 
@@ -26698,11 +37803,11 @@
       var val = $(editor.selection.element()).css('font-size');
 
       if (editor.opts.fontSizeUnit === 'pt') {
-        val = Math.round(parseFloat(val, 10) * 72 / 96) + 'pt';
+        val = "".concat(Math.round(parseFloat(val, 10) * 72 / 96), "pt");
       }
 
       $dropdown.find('.fr-command.fr-active').removeClass('fr-active').attr('aria-selected', false);
-      $dropdown.find('.fr-command[data-param1="' + val + '"]').addClass('fr-active').attr('aria-selected', true);
+      $dropdown.find(".fr-command[data-param1=\"".concat(val, "\"]")).addClass('fr-active').attr('aria-selected', true);
     }
 
     function refresh($btn) {
@@ -26710,7 +37815,7 @@
         var val = editor.helpers.getPX($(editor.selection.element()).css('font-size'));
 
         if (editor.opts.fontSizeUnit === 'pt') {
-          val = Math.round(parseFloat(val, 10) * 72 / 96) + 'pt';
+          val = "".concat(Math.round(parseFloat(val, 10) * 72 / 96), "pt");
         }
 
         $btn.find('> span').text(val);
@@ -26741,7 +37846,7 @@
 
       for (var i = 0; i < options.length; i++) {
         var val = options[i];
-        c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="fontSize" data-param1="' + val + this.opts.fontSizeUnit + '" title="' + val + '">' + val + '</a></li>';
+        c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"fontSize\" data-param1=\"".concat(val).concat(this.opts.fontSizeUnit, "\" title=\"").concat(val, "\">").concat(val, "</a></li>");
       }
 
       c += '</ul>';
@@ -26787,7 +37892,6 @@
      */
 
     function _inputMouseDown(e) {
-      e.preventDefault();
       editor.selection.clear();
       $(this).data('mousedown', true);
     }
@@ -26881,6 +37985,12 @@
 
 
     function showEditPopup(input) {
+      var hideEditPopups = ['checkbox', 'radio'];
+
+      if (hideEditPopups.indexOf(input.type) != -1) {
+        return;
+      }
+
       var $popup = editor.popups.get('forms.edit');
       if (!$popup) $popup = _initEditPopup();
       current_input = input;
@@ -26905,6 +38015,8 @@
 
         if ($input.is('button')) {
           $popup.find('input[type="text"][name="text"]').val($input.text());
+        } else if ($input.is('input[type=button]') || $input.is('input[type=submit]') || $input.is('input[type=reset]')) {
+          $popup.find('input[type="text"][name="text"]').val($input.val());
         } else {
           $popup.find('input[type="text"][name="text"]').val($input.attr('placeholder'));
         }
@@ -27019,15 +38131,23 @@
 
       if (input) {
         var $input = $(input);
-        var val = $popup.find('input[type="text"][name="text"]').val() || '';
+        var inputBtns = ['button', 'submit', 'reset'];
+        var val = $popup.find('input[type="text"][name="text"]').val() || ''; // https://github.com/froala-labs/froala-editor-js-2/issues/1988
+        // update the text content if input is a button
 
-        if (val.length) {
-          if ($input.is('button')) {
+        if ($input.is('button')) {
+          if (val.length) {
             $input.text(val);
           } else {
+            // If tag is button, Update empty text.
+            $input.text("\u200B");
+          }
+        } else if (inputBtns.indexOf(input.type) != -1) {
+          $input.attr('value', val);
+        } // update the place holder if input type is text
+        else {
             $input.attr('placeholder', val);
           }
-        }
 
         editor.popups.hide('forms.update');
         showEditPopup(input);
@@ -27112,7 +38232,8 @@
     }
   });
   FroalaEditor.DefineIcon('inputEdit', {
-    NAME: 'edit'
+    NAME: 'edit',
+    SVG_KEY: 'edit'
   });
   FroalaEditor.RegisterCommand('inputEdit', {
     title: 'Edit Button',
@@ -27153,9 +38274,9 @@
      * Check if fullscreen mode is active.
      */
 
-    function isActive() {
+    var isActive = function isActive() {
       return editor.$box.hasClass('fr-fullscreen');
-    }
+    };
     /**
      * Turn fullscreen on.
      */
@@ -27187,8 +38308,8 @@
 
       height = editor.opts.height;
       max_height = editor.opts.heightMax;
-      z_index = editor.opts.zIndex; // Take second toolbar into consideration when in fullscreen mode
-
+      z_index = editor.opts.z_index;
+      // Take second toolbar into consideration when in fullscreen mode
       editor.opts.height = editor.o_win.innerHeight - (editor.opts.toolbarInline ? 0 : editor.$tb.outerHeight() + (editor.$second_tb ? editor.$second_tb.outerHeight() : 0));
       editor.opts.zIndex = 2147483641;
       editor.opts.heightMax = null;
@@ -27461,7 +38582,7 @@
      * Init Help.
      */
 
-    function _init() {}
+    var _init = function _init() {};
     /*
      * Build html body.
      */
@@ -27477,14 +38598,14 @@
 
         var group = '<table>'; // Set title.
 
-        group += '<thead><tr><th>' + editor.language.translate(set.title) + '</th></tr></thead>';
+        group += "<thead><tr><th>".concat(editor.language.translate(set.title), "</th></tr></thead>");
         group += '<tbody>'; // Build commands table.
 
         for (var j = 0; j < set.commands.length; j++) {
           var command = set.commands[j];
           group += '<tr>';
-          group += '<td>' + editor.language.translate(command.desc) + '</td>';
-          group += '<td>' + command.val.replace('OSkey', editor.helpers.isMac() ? '&#8984;' : 'Ctrl+') + '</td>';
+          group += "<td>".concat(editor.language.translate(command.desc), "</td>");
+          group += "<td>".concat(command.val.replace('OSkey', editor.helpers.isMac() ? '&#8984;' : 'Ctrl+'), "</td>");
           group += '</tr>';
         } // End table.
 
@@ -27505,7 +38626,7 @@
 
     function show() {
       if (!$modal) {
-        var head = '<h4>' + editor.language.translate('Shortcuts') + '</h4>';
+        var head = "<h4>".concat(editor.language.translate('Shortcuts'), "</h4>");
 
         var body = _buildBody();
 
@@ -27527,9 +38648,9 @@
      */
 
 
-    function hide() {
+    var hide = function hide() {
       editor.modals.hide(modal_id);
-    }
+    };
 
     return {
       _init: _init,
@@ -27574,6 +38695,7 @@
     imageUploadParam: 'file',
     imageUploadParams: {},
     imageUploadToS3: false,
+    imageUploadToAzure: false,
     imageUploadMethod: 'POST',
     imageMaxSize: 10 * 1024 * 1024,
     imageAllowedTypes: ['jpeg', 'jpg', 'png', 'gif', 'webp'],
@@ -27708,8 +38830,8 @@
       }
 
       if (!$img.hasClass('fr-dii') && !$img.hasClass('fr-dib')) {
-        $img.addClass('fr-fi' + getAlign($img)[0]);
-        $img.addClass('fr-di' + getDisplay($img)[0]); // Reset inline style.
+        $img.addClass("fr-fi".concat(getAlign($img)[0]));
+        $img.addClass("fr-di".concat(getDisplay($img)[0])); // Reset inline style.
 
         $img.css('margin', '');
         $img.css('float', '');
@@ -27880,7 +39002,7 @@
 
 
     function _getHandler(pos) {
-      return '<div class="fr-handler fr-h' + pos + '"></div>';
+      return "<div class=\"fr-handler fr-h".concat(pos, "\"></div>");
     }
     /**
      * Set the image with
@@ -27973,7 +39095,7 @@
           width = ((width + diff_x) / $(p_node).outerWidth() * 100).toFixed(2);
           if (editor.opts.imageRoundPercent) width = Math.round(width); // Set the image width.
 
-          _setWidth(width + '%'); // Get the real image width after resize.
+          _setWidth("".concat(width, "%")); // Get the real image width after resize.
 
 
           if (hasCaption()) {
@@ -27984,7 +39106,7 @@
 
 
           if (real_image_size !== width && !editor.opts.imageRoundPercent) {
-            _setWidth(real_image_size + '%');
+            _setWidth("".concat(real_image_size, "%"));
           }
 
           $current_image.css('height', '').removeAttr('height');
@@ -28039,6 +39161,9 @@
 
         editor.undo.saveStep();
         editor.events.trigger('image.resizeEnd', [get()]);
+      } else {
+        //https://github.com/froala-labs/froala-editor-js-2/issues/1916
+        $image_resizer.removeClass('fr-active');
       }
     }
     /**
@@ -28051,7 +39176,7 @@
       if ($current_image) $current_image.addClass('fr-error'); // https://github.com/froala/wysiwyg-editor/issues/3407
 
       if (error_messages[code]) {
-        _showErrorMessage(error_messages[code]);
+        _showErrorMessage(editor.language.translate(error_messages[code]));
       } else {
         _showErrorMessage(editor.language.translate('Something went wrong. Please try again.'));
       } // Remove image if it exists.
@@ -28167,12 +39292,12 @@
 
       if ($popup) {
         var $layer = $popup.find('.fr-image-progress-bar-layer');
-        $layer.find('h3').text(message + (progress ? ' ' + progress + '%' : ''));
+        $layer.find('h3').text(message + (progress ? " ".concat(progress, "%") : ''));
         $layer.removeClass('fr-error');
 
         if (progress) {
           $layer.find('div').removeClass('fr-indeterminate');
-          $layer.find('div > span').css('width', progress + '%');
+          $layer.find('div > span').css('width', "".concat(progress, "%"));
         } else {
           $layer.find('div').addClass('fr-indeterminate');
         }
@@ -28227,7 +39352,7 @@
             insert(img_url, true, [], $current_image);
           };
 
-          xhr.open('GET', editor.opts.imageCORSProxy + '/' + img_url, true);
+          xhr.open('GET', "".concat(editor.opts.imageCORSProxy, "/").concat(img_url), true);
           xhr.responseType = 'blob';
           xhr.send();
         } else {
@@ -28262,6 +39387,10 @@
 
 
     function insert(link, sanitize, data, $existing_img, response) {
+      if ($existing_img && typeof $existing_img === 'string') {
+        $existing_img = editor.$($existing_img);
+      }
+
       editor.edit.off();
 
       _setProgressMessage(editor.language.translate('Loading image'));
@@ -28310,7 +39439,7 @@
             for (attr in data) {
               if (data.hasOwnProperty(attr)) {
                 if (attr != 'link') {
-                  $img.attr('data-' + attr, data[attr]);
+                  $img.attr("data-".concat(attr), data[attr]);
                 }
               }
             }
@@ -28404,7 +39533,7 @@
      */
 
 
-    function _imageUploaded($img) {
+    function _imageUploaded($img, url, key) {
       _setProgressMessage(editor.language.translate('Loading image'));
 
       var status = this.status;
@@ -28413,9 +39542,20 @@
       var responseText = this.responseText;
 
       try {
-        if (editor.opts.imageUploadToS3) {
+        if (editor.opts.imageUploadToS3 || editor.opts.imageUploadToAzure) {
           if (status == 201) {
-            var link = _parseXMLResponse(responseXML);
+            var link;
+
+            if (editor.opts.imageUploadToAzure) {
+              if (editor.events.trigger('image.uploadedToAzure', [this.responseURL, key, response], true) === false) {
+                editor.edit.on();
+                return false;
+              }
+
+              link = url;
+            } else {
+              link = _parseXMLResponse(responseXML);
+            }
 
             if (link) {
               insert(link, false, [], $img, response || responseXML);
@@ -28470,8 +39610,9 @@
         for (attr in data) {
           if (data.hasOwnProperty(attr)) {
             if (attr != 'link') {
-              data_str += ' data-' + attr + '="' + data[attr] + '"';
-              $img.attr('data-str' + attr, data[attr]);
+              data_str += " data-".concat(attr, "=\"").concat(data[attr], "\""); // https://github.com/froala-labs/froala-editor-js-2/issues/2649
+
+              $img.attr("data-".concat(attr), data[attr]);
             }
           }
         }
@@ -28480,11 +39621,11 @@
       var width = editor.opts.imageDefaultWidth;
 
       if (width && width != 'auto') {
-        width = editor.opts.imageResizeWithPercent ? '100%' : width + 'px';
+        width = editor.opts.imageResizeWithPercent ? '100%' : "".concat(width, "px");
       } // Create image object and set the load event.
 
 
-      $img.attr('style', width ? 'width: ' + width + ';' : '');
+      $img.attr('style', width ? "width: ".concat(width, ";") : '');
 
       _setStyle($img, editor.opts.imageDefaultDisplay, editor.opts.imageDefaultAlign);
 
@@ -28540,7 +39681,7 @@
      */
 
 
-    function _startUpload(xhr, form_data, image, $image_placeholder) {
+    function _startUpload(xhr, form_data, image, $image_placeholder, url, key) {
       function _sendRequest() {
         var $img = $(this);
         $img.off('load');
@@ -28560,7 +39701,7 @@
         editor.edit.off(); // Set upload events.
 
         xhr.onload = function () {
-          _imageUploaded.call(xhr, $img);
+          _imageUploaded.call(xhr, $img, url, key);
         };
 
         xhr.onerror = _imageUploadError;
@@ -28582,7 +39723,7 @@
           }
         }); // Send data.
 
-        xhr.send(form_data);
+        xhr.send(editor.opts.imageUploadToAzure ? image : form_data);
       }
 
       var reader = new FileReader();
@@ -28609,9 +39750,7 @@
         if (!$image_placeholder) {
           _addImage(link, null, _sendRequest);
         } else {
-          // https://github.com/froala-labs/froala-editor-js-2/issues/1866
-          // Add load event for the image element
-          $image_placeholder.get(0).addEventListener('load', _sendRequest); // Image might be corrupted.
+          $image_placeholder.on('load', _sendRequest); // Image might be corrupted.
 
           $image_placeholder.on('error', function () {
             _sendRequest();
@@ -28669,7 +39808,7 @@
 
         var image = images[0]; // Upload as blob for testing purposes.
 
-        if ((editor.opts.imageUploadURL === null || editor.opts.imageUploadURL == DEFAULT_IMAGE_UPLOAD_URL) && !editor.opts.imageUploadToS3) {
+        if ((editor.opts.imageUploadURL === null || editor.opts.imageUploadURL == DEFAULT_IMAGE_UPLOAD_URL) && !editor.opts.imageUploadToS3 && !editor.opts.imageUploadToAzure) {
           _browserUpload(image, $image_placeholder || $current_image);
 
           return false;
@@ -28729,18 +39868,78 @@
           form_data.append(editor.opts.imageUploadParam, image, image.name); // Create XHR request.
 
           var url = editor.opts.imageUploadURL;
+          var imageURL;
+          var azureKey;
+          var imageUploadMethod = editor.opts.imageUploadMethod;
 
           if (editor.opts.imageUploadToS3) {
             if (editor.opts.imageUploadToS3.uploadURL) {
               url = editor.opts.imageUploadToS3.uploadURL;
             } else {
-              url = 'https://' + editor.opts.imageUploadToS3.region + '.amazonaws.com/' + editor.opts.imageUploadToS3.bucket;
+              url = "https://".concat(editor.opts.imageUploadToS3.region, ".amazonaws.com/").concat(editor.opts.imageUploadToS3.bucket);
             }
           }
 
-          var xhr = editor.core.getXHR(url, editor.opts.imageUploadMethod);
+          if (editor.opts.imageUploadToAzure) {
+            if (editor.opts.imageUploadToAzure.uploadURL) {
+              url = "".concat(editor.opts.imageUploadToAzure.uploadURL, "/").concat(image.name);
+            } else {
+              url = encodeURI("https://".concat(editor.opts.imageUploadToAzure.account, ".blob.core.windows.net/").concat(editor.opts.imageUploadToAzure.container, "/").concat(image.name));
+            }
 
-          _startUpload(xhr, form_data, image, $image_placeholder || $current_image);
+            imageURL = url;
+
+            if (editor.opts.imageUploadToAzure.SASToken) {
+              url += editor.opts.imageUploadToAzure.SASToken;
+            }
+
+            imageUploadMethod = 'PUT';
+          }
+
+          var xhr = editor.core.getXHR(url, imageUploadMethod);
+
+          if (editor.opts.imageUploadToAzure) {
+            var uploadDate = new Date().toUTCString();
+
+            if (!editor.opts.imageUploadToAzure.SASToken && editor.opts.imageUploadToAzure.accessKey) {
+              var azureAccount = editor.opts.imageUploadToAzure.account;
+              var azureContainer = editor.opts.imageUploadToAzure.container;
+
+              if (editor.opts.imageUploadToAzure.uploadURL) {
+                var urls = editor.opts.imageUploadToAzure.uploadURL.split('/');
+                azureContainer = urls.pop();
+                azureAccount = urls.pop().split('.')[0];
+              }
+
+              var headerResource = "x-ms-blob-type:BlockBlob\nx-ms-date:".concat(uploadDate, "\nx-ms-version:2019-07-07");
+              var urlResource = encodeURI('/' + azureAccount + '/' + azureContainer + '/' + image.name);
+              var stringToSign = imageUploadMethod + '\n\n\n' + image.size + '\n\n' + image.type + '\n\n\n\n\n\n\n' + headerResource + '\n' + urlResource;
+              var signatureBytes = editor.cryptoJSPlugin.cryptoJS.HmacSHA256(stringToSign, editor.cryptoJSPlugin.cryptoJS.enc.Base64.parse(editor.opts.imageUploadToAzure.accessKey));
+              var signature = signatureBytes.toString(editor.cryptoJSPlugin.cryptoJS.enc.Base64);
+              var authHeader = 'SharedKey ' + azureAccount + ':' + signature;
+              azureKey = signature;
+              xhr.setRequestHeader("Authorization", authHeader);
+            }
+
+            xhr.setRequestHeader("x-ms-version", "2019-07-07");
+            xhr.setRequestHeader("x-ms-date", uploadDate);
+            xhr.setRequestHeader("Content-Type", image.type);
+            xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+
+            for (key in editor.opts.imageUploadParams) {
+              if (editor.opts.imageUploadParams.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.imageUploadParams[key]);
+              }
+            }
+
+            for (key in editor.opts.imageUploadToAzure.params) {
+              if (editor.opts.imageUploadToAzure.params.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.imageUploadToAzure.params[key]);
+              }
+            }
+          }
+
+          _startUpload(xhr, form_data, image, $image_placeholder || $current_image, imageURL, azureKey);
         }
       }
     }
@@ -28751,13 +39950,23 @@
 
     function _bindInsertEvents($popup) {
       // Drag over the dropable area.
-      editor.events.$on($popup, 'dragover dragenter', '.fr-image-upload-layer', function () {
+      editor.events.$on($popup, 'dragover dragenter', '.fr-image-upload-layer', function (e) {
         $(this).addClass('fr-drop');
+
+        if (editor.browser.msie || editor.browser.edge) {
+          e.preventDefault();
+        }
+
         return false;
       }, true); // Drag end.
 
-      editor.events.$on($popup, 'dragleave dragend', '.fr-image-upload-layer', function () {
+      editor.events.$on($popup, 'dragleave dragend', '.fr-image-upload-layer', function (e) {
         $(this).removeClass('fr-drop');
+
+        if (editor.browser.msie || editor.browser.edge) {
+          e.preventDefault();
+        }
+
         return false;
       }, true); // Drop.
 
@@ -28918,8 +40127,9 @@
       }, true); // Drop inside the editor.
 
       editor.events.on('drop', _drop);
-      editor.events.on('element.beforeDrop', _beforeElementDrop);
-      editor.events.on('mousedown window.mousedown', _markExit);
+      editor.events.on('element.beforeDrop', _beforeElementDrop); //https://github.com/froala-labs/froala-editor-js-2/issues/1916
+
+      editor.events.on('window.mousedown', _markExit);
       editor.events.on('window.touchmove', _unmarkExit);
       editor.events.on('mouseup window.mouseup', function () {
         if ($current_image) {
@@ -28979,7 +40189,7 @@
               $img.after('<br>');
             } else {
               var $parent = $(editor.node.blockParent($img.get(0)));
-              $parent.after('<' + editor.html.defaultTag() + '><br></' + editor.html.defaultTag() + '>');
+              $parent.after("<".concat(editor.html.defaultTag(), "><br></").concat(editor.html.defaultTag(), ">"));
             }
           }
         });
@@ -29009,7 +40219,7 @@
       var buttonList = editor.button.buildList(editor.opts.imageInsertButtons);
 
       if (buttonList !== '') {
-        image_buttons = '<div class="fr-buttons fr-tabs">' + buttonList + '</div>';
+        image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(buttonList, "</div>");
       }
 
       var uploadIndex = editor.opts.imageInsertButtons.indexOf('imageUpload');
@@ -29024,7 +40234,7 @@
           active = '';
         }
 
-        upload_layer = '<div class="fr-image-upload-layer' + active + ' fr-layer" id="fr-image-upload-layer-' + editor.id + '"><strong>' + editor.language.translate('Drop image') + '</strong><br>(' + editor.language.translate('or click') + ')<div class="fr-form"><input type="file" accept="image/' + editor.opts.imageAllowedTypes.join(', image/').toLowerCase() + '" tabIndex="-1" aria-labelledby="fr-image-upload-layer-' + editor.id + '" role="button"></div></div>';
+        upload_layer = "<div class=\"fr-image-upload-layer".concat(active, " fr-layer\" id=\"fr-image-upload-layer-").concat(editor.id, "\"><strong>").concat(editor.language.translate('Drop image'), "</strong><br>(").concat(editor.language.translate('or click'), ")<div class=\"fr-form\"><input type=\"file\" accept=\"image/").concat(editor.opts.imageAllowedTypes.join(', image/').toLowerCase(), "\" tabIndex=\"-1\" aria-labelledby=\"fr-image-upload-layer-").concat(editor.id, "\" role=\"button\"></div></div>");
       } // Image by url layer.
 
 
@@ -29037,7 +40247,7 @@
           active = '';
         }
 
-        by_url_layer = '<div class="fr-image-by-url-layer' + active + ' fr-layer" id="fr-image-by-url-layer-' + editor.id + '"><div class="fr-input-line"><input id="fr-image-by-url-layer-text-' + editor.id + '" type="text" placeholder="http://" tabIndex="1" aria-required="true"></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="imageInsertByURL" tabIndex="2" role="button">' + editor.language.translate('Insert') + '</button></div></div>';
+        by_url_layer = "<div class=\"fr-image-by-url-layer".concat(active, " fr-layer\" id=\"fr-image-by-url-layer-").concat(editor.id, "\"><div class=\"fr-input-line\"><input id=\"fr-image-by-url-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"http://\" tabIndex=\"1\" aria-required=\"true\"></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"imageInsertByURL\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Insert'), "</button></div></div>");
       } // Progress bar.
 
 
@@ -29111,10 +40321,10 @@
 
 
       var image_buttons = '';
-      image_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.imageAltButtons) + '</div>'; // Image by url layer.
+      image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.imageAltButtons), "</div>"); // Image by url layer.
 
       var alt_layer = '';
-      alt_layer = '<div class="fr-image-alt-layer fr-layer fr-active" id="fr-image-alt-layer-' + editor.id + '"><div class="fr-input-line"><input id="fr-image-alt-layer-text-' + editor.id + '" type="text" placeholder="' + editor.language.translate('Alternative Text') + '" tabIndex="1"></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="imageSetAlt" tabIndex="2" role="button">' + editor.language.translate('Update') + '</button></div></div>';
+      alt_layer = "<div class=\"fr-image-alt-layer fr-layer fr-active\" id=\"fr-image-alt-layer-".concat(editor.id, "\"><div class=\"fr-input-line\"><input id=\"fr-image-alt-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('Alternative Text'), "\" tabIndex=\"1\"></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"imageSetAlt\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Update'), "</button></div></div>");
       var template = {
         buttons: image_buttons,
         alt_layer: alt_layer // Set the template in the popup.
@@ -29205,10 +40415,10 @@
 
 
       var image_buttons = '';
-      image_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.imageSizeButtons) + '</div>'; // Size layer.
+      image_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.imageSizeButtons), "</div>"); // Size layer.
 
       var size_layer = '';
-      size_layer = '<div class="fr-image-size-layer fr-layer fr-active" id="fr-image-size-layer-' + editor.id + '"><div class="fr-image-group"><div class="fr-input-line"><input id="fr-image-size-layer-width-' + editor.id + '" type="text" name="width" placeholder="' + editor.language.translate('Width') + '" tabIndex="1"></div><div class="fr-input-line"><input id="fr-image-size-layer-height' + editor.id + '" type="text" name="height" placeholder="' + editor.language.translate('Height') + '" tabIndex="1"></div></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="imageSetSize" tabIndex="2" role="button">' + editor.language.translate('Update') + '</button></div></div>';
+      size_layer = "<div class=\"fr-image-size-layer fr-layer fr-active\" id=\"fr-image-size-layer-".concat(editor.id, "\"><div class=\"fr-image-group\"><div class=\"fr-input-line\"><input id=\"fr-image-size-layer-width-'").concat(editor.id, "\" type=\"text\" name=\"width\" placeholder=\"").concat(editor.language.translate('Width'), "\" tabIndex=\"1\"></div><div class=\"fr-input-line\"><input id=\"fr-image-size-layer-height").concat(editor.id, "\" type=\"text\" name=\"height\" placeholder=\"").concat(editor.language.translate('Height'), "\" tabIndex=\"1\"></div></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"imageSetSize\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Update'), "</button></div></div>");
       var template = {
         buttons: image_buttons,
         size_layer: size_layer // Set the template in the popup.
@@ -29291,7 +40501,7 @@
 
 
       $popup.find('.fr-layer').removeClass('fr-active');
-      $popup.find('.fr-' + name + '-layer').addClass('fr-active');
+      $popup.find(".fr-".concat(name, "-layer")).addClass('fr-active');
       editor.popups.show('image.insert', left, top, $current_image ? $current_image.outerHeight() : 0);
       editor.accessibility.focusPopup($popup);
     }
@@ -29725,8 +40935,8 @@
           for (var i = 0; i < imgs.length; i++) {
             var width = imgs[i].style.width || $(imgs[i]).width();
             var height = imgs[i].style.height || $(imgs[i]).height();
-            if (width) imgs[i].setAttribute('width', ('' + width).replace(/px/, ''));
-            if (height) imgs[i].setAttribute('height', ('' + height).replace(/px/, ''));
+            if (width) imgs[i].setAttribute('width', "".concat(width).replace(/px/, ''));
+            if (height) imgs[i].setAttribute('height', "".concat(height).replace(/px/, ''));
           }
         });
       }
@@ -29780,14 +40990,23 @@
       replace();
       showProgressBar();
       $current_image.on('load', function () {
+        var loadEvents = [];
+
         _repositionResizer(); // https://github.com/froala/wysiwyg-editor/issues/3407
 
 
         if ($(editor.popups.get('image.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
           showProgressBar();
-        }
+        } // https://github.com/froala-labs/froala-editor-js-2/issues/1866
 
-        $(this).off('load');
+
+        $(this).data('events').find(function (event) {
+          if (event[0] === 'load') {
+            loadEvents.push(event);
+          }
+        }); // turn off the event if it is registered only once
+
+        loadEvents.length <= 1 && $(this).off('load');
       });
       var splitSrc = $(img).attr('src').split(','); // Convert image to blob.
 
@@ -29853,10 +41072,10 @@
                 } // Update image and process it.
 
 
-                img.src = canvas.toDataURL('image/' + imgExt);
+                img.src = canvas.toDataURL("image/".concat(imgExt));
               };
 
-              _img.src = (img.src.indexOf('blob:') === 0 ? '' : editor.opts.imageCORSProxy + '/') + img.src;
+              _img.src = (img.src.indexOf('blob:') === 0 ? '' : "".concat(editor.opts.imageCORSProxy, "/")) + img.src;
             } // Images without http (Safari ones.).
             else if (img.src.indexOf('http') !== 0 || img.src.indexOf('https://mail.google.com/mail') === 0) {
                 editor.selection.save();
@@ -29879,7 +41098,7 @@
       }
 
       editor.undo.saveStep();
-      editor.html.insert('<img data-fr-image-pasted="true" src="' + result + '"' + (width ? ' style="width: ' + width + ';"' : '') + '>');
+      editor.html.insert("<img data-fr-image-pasted=\"true\" src=\"".concat(result, "\"").concat(width ? " style=\"width: ".concat(width, ";\"") : '', ">"));
       var $img = editor.$el.find('img[data-fr-image-pasted="true"]');
 
       if ($img) {
@@ -30047,11 +41266,11 @@
         $img.removeClass('fr-fil fr-fir fr-dib fr-dii');
 
         if (_align) {
-          $img.addClass('fr-fi' + _align[0]);
+          $img.addClass("fr-fi".concat(_align[0]));
         }
 
         if (_display) {
-          $img.addClass('fr-di' + _display[0]);
+          $img.addClass("fr-di".concat(_display[0]));
         }
       } else {
         if (_display == 'inline') {
@@ -30066,21 +41285,21 @@
               'float': 'none',
               marginBottom: '',
               marginTop: '',
-              maxWidth: 'calc(100% - ' + 2 * editor.opts.imageDefaultMargin + 'px)',
+              maxWidth: "calc(100% - ".concat(2 * editor.opts.imageDefaultMargin, "px)"),
               textAlign: 'center'
             });
           } else if (_align == 'left') {
             $img.css({
               'float': 'left',
               marginLeft: 0,
-              maxWidth: 'calc(100% - ' + editor.opts.imageDefaultMargin + 'px)',
+              maxWidth: "calc(100% - ".concat(editor.opts.imageDefaultMargin, "px)"),
               textAlign: 'left'
             });
           } else {
             $img.css({
               'float': 'right',
               marginRight: 0,
-              maxWidth: 'calc(100% - ' + editor.opts.imageDefaultMargin + 'px)',
+              maxWidth: "calc(100% - ".concat(editor.opts.imageDefaultMargin, "px)"),
               textAlign: 'right'
             });
           }
@@ -30089,7 +41308,7 @@
             display: 'block',
             'float': 'none',
             verticalAlign: 'top',
-            margin: editor.opts.imageDefaultMargin + 'px auto',
+            margin: "".concat(editor.opts.imageDefaultMargin, "px auto"),
             textAlign: 'center'
           });
 
@@ -30221,7 +41440,7 @@
 
     function refreshAlign($btn) {
       if ($current_image) {
-        $btn.find('> *').first().replaceWith(editor.icon.create('image-align-' + getAlign()));
+        $btn.find('> *').first().replaceWith(editor.icon.create("image-align-".concat(getAlign())));
       }
     }
     /**
@@ -30231,7 +41450,7 @@
 
     function refreshAlignOnShow($btn, $dropdown) {
       if ($current_image) {
-        $dropdown.find('.fr-command[data-param1="' + getAlign() + '"]').addClass('fr-active').attr('aria-selected', true);
+        $dropdown.find(".fr-command[data-param1=\"".concat(getAlign(), "\"]")).addClass('fr-active').attr('aria-selected', true);
       }
     }
     /**
@@ -30268,7 +41487,7 @@
 
     function refreshDisplayOnShow($btn, $dropdown) {
       if ($current_image) {
-        $dropdown.find('.fr-command[data-param1="' + getDisplay() + '"]').addClass('fr-active').attr('aria-selected', true);
+        $dropdown.find(".fr-command[data-param1=\"".concat(getDisplay(), "\"]")).addClass('fr-active').attr('aria-selected', true);
       }
     }
     /**
@@ -30388,6 +41607,22 @@
 
         if ($current_image.parent().is('a')) {
           $el = $current_image.parent();
+        } // code start https://github.com/froala-labs/froala-editor-js-2/issues/1864
+        // check the li placement
+
+
+        var $listParent = $current_image.parents('ul') && $current_image.parents('ul').length > 0 ? $current_image.parents('ul') : $current_image.parents('ol') && $current_image.parents('ol').length > 0 ? $current_image.parents('ol') : [];
+
+        if ($listParent.length > 0) {
+          var totLi = $listParent.find('li').length,
+              $currLi = $current_image.parents('li'),
+              $newLi = document.createElement("li");
+
+          if (totLi - 1 === $currLi.index()) {
+            // if li placement last then add one extra li
+            $listParent.append($newLi);
+            $newLi.innerHTML = '&nbsp;';
+          }
         }
 
         var splitAttrs;
@@ -30399,10 +41634,11 @@
         } // Issue 2861
 
 
-        var current_width = editor.opts.imageResizeWithPercent ? (oldWidth.indexOf('px') > -1 ? null : oldWidth) || '100%' : $current_image.width() + 'px';
-        $el.wrap('<span ' + (!editor.browser.mozilla ? 'contenteditable="false"' : '') + 'class="fr-img-caption ' + $current_image.attr('class') + '" style="' + (!editor.opts.useClasses ? $el.attr('style') : '') + '" draggable="false"></span>');
+        var current_width = editor.opts.imageResizeWithPercent ? (oldWidth.indexOf('px') > -1 ? null : oldWidth) || '100%' : $current_image.width() + 'px'; // https://github.com/froala-labs/froala-editor-js-2/issues/1864
+
+        $el.wrap('<div class="fr-img-space-wrap"><span ' + (!editor.browser.mozilla ? 'contenteditable="false"' : '') + 'class="fr-img-caption ' + $current_image.attr('class') + '" style="' + (!editor.opts.useClasses ? $el.attr('style') : '') + '" draggable="false"></span><p class="fr-img-space-wrap2">&nbsp;</p></div>');
         $el.wrap('<span class="fr-img-wrap"></span>');
-        $current_image.after('<span class="fr-inner"' + (!editor.browser.mozilla ? ' contenteditable="true"' : '') + '>' + FroalaEditor.START_MARKER + editor.language.translate('Image Caption') + FroalaEditor.END_MARKER + '</span>');
+        $current_image.after("<span class=\"fr-inner\"".concat(!editor.browser.mozilla ? ' contenteditable="true"' : '', ">").concat(FroalaEditor.START_MARKER).concat(editor.language.translate('Image Caption')).concat(FroalaEditor.END_MARKER, "</span>"));
         $current_image.removeAttr('class').removeAttr('style').removeAttr('width');
         $current_image.parents('.fr-img-caption').css('width', current_width);
 
@@ -30587,7 +41823,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command fr-title" tabIndex="-1" role="option" data-cmd="imageAlign" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.icon.create('image-align-' + val) + '<span class="fr-sr-only">' + this.language.translate(options[val]) + '</span></a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command fr-title\" tabIndex=\"-1\" role=\"option\" data-cmd=\"imageAlign\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.icon.create("image-align-".concat(val)), "<span class=\"fr-sr-only\">").concat(this.language.translate(options[val]), "</span></a></li>");
         }
       }
 
@@ -30680,7 +41916,7 @@
         if (options.hasOwnProperty(cls)) {
           var val = options[cls];
           if (_typeof(val) == 'object') val = val.title;
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="imageStyle" data-param1="' + cls + '">' + this.language.translate(val) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"imageStyle\" data-param1=\"".concat(cls, "\">").concat(this.language.translate(val), "</a></li>");
         }
       }
 
@@ -30829,9 +42065,9 @@
         var body;
 
         if (editor.opts.imageManagerPreloader) {
-          body = '<img class="fr-preloader" id="fr-preloader" alt="' + editor.language.translate('Loading') + '.." src="' + editor.opts.imageManagerPreloader + '" style="display: none;">';
+          body = "<img class=\"fr-preloader\" id=\"fr-preloader\" alt=\"".concat(editor.language.translate('Loading'), "..\" src=\"").concat(editor.opts.imageManagerPreloader, "\" style=\"display: none;\">");
         } else {
-          body = '<span class="fr-preloader" id="fr-preloader" style="display: none;">' + editor.language.translate('Loading') + '</span>';
+          body = "<span class=\"fr-preloader\" id=\"fr-preloader\" style=\"display: none;\">".concat(editor.language.translate('Loading'), "</span>");
         } // Image list.
 
 
@@ -30908,7 +42144,6 @@
           url: editor.opts.imageManagerLoadURL,
           method: editor.opts.imageManagerLoadMethod,
           data: editor.opts.imageManagerLoadParams,
-          dataType: 'json',
           crossDomain: editor.opts.requestWithCORS,
           withCredentials: editor.opts.requestWithCredentials,
           headers: editor.opts.requestHeaders,
@@ -30941,7 +42176,7 @@
         page = 0;
         image_count = 0;
         loaded_images = 0;
-        images = imgs; // Load files.
+        images = JSON.parse(imgs); // Load files.
 
         _infiniteScroll();
       } // Throw error while parsing the response.
@@ -31020,8 +42255,8 @@
               // Remove trailing spaces.
               tags[i] = tags[i].trim(); // Add tag.
 
-              if ($image_tags.find('a[title="' + tags[i] + '"]').length === 0) {
-                $image_tags.append('<a role="button" title="' + tags[i] + '">' + tags[i] + '</a>');
+              if ($image_tags.find("a[title=\"".concat(tags[i], "\"]")).length === 0) {
+                $image_tags.append("<a role=\"button\" title=\"".concat(tags[i], "\">").concat(tags[i], "</a>"));
               }
             } // Set img tag attribute.
 
@@ -31030,8 +42265,8 @@
           } // Image has only one tag.
           else {
               // Add tag to the tag list.
-              if ($image_tags.find('a[title="' + image.tag.trim() + '"]').length === 0) {
-                $image_tags.append('<a role="button" title="' + image.tag.trim() + '">' + image.tag.trim() + '</a>');
+              if ($image_tags.find("a[title=\"".concat(image.tag.trim(), "\"]")).length === 0) {
+                $image_tags.append("<a role=\"button\" title=\"".concat(image.tag.trim(), "\">").concat(image.tag.trim(), "</a>"));
               } // Set img tag attribute.
 
 
@@ -31048,7 +42283,7 @@
         for (var key in image) {
           if (image.hasOwnProperty(key)) {
             if (key !== 'thumb' && key !== 'url' && key !== 'tag') {
-              $img.attr('data-' + key, image[key]);
+              $img.attr("data-".concat(key), image[key]);
             }
           }
         } // Add image and insert and delete buttons to the image container.
@@ -31143,13 +42378,13 @@
       var get_images = [];
 
       for (var i = loaded_images - 1; i >= from; i--) {
-        var $image = $media_files.find('.fr-image-' + i);
+        var $image = $media_files.find(".fr-image-".concat(i));
 
         if ($image.length) {
           get_images.push($image); // Add images here before deleting them so the on load callback is triggered.
 
           $(document.createElement('div')).attr('id', 'fr-image-hidden-container').append($image);
-          $media_files.find('.fr-image-' + i).remove();
+          $media_files.find(".fr-image-".concat(i)).remove();
         }
       }
 
@@ -31196,13 +42431,21 @@
     }
 
     function _getImageAttrs($img) {
-      var img_attributes = {};
-      var img_data = $img.data();
+      var name,
+          attrs = $img[0].attributes,
+          i = attrs.length,
+          img_attributes = {};
 
-      for (var key in img_data) {
-        if (img_data.hasOwnProperty(key)) {
-          if (key !== 'url' && key !== 'tag') {
-            img_attributes[key] = img_data[key];
+      while (i--) {
+        if (attrs[i]) {
+          name = attrs[i].name;
+
+          if (name.indexOf("data-") === 0) {
+            name = name.slice(5);
+
+            if (name !== 'url' && name !== 'tag') {
+              img_attributes[name] = attrs[i].value;
+            }
           }
         }
       }
@@ -31246,7 +42489,7 @@
 
     function _updateTags() {
       $modal.find('#fr-modal-tags > a').each(function () {
-        if ($modal.find('#fr-image-list [data-tag*="' + $(this).text() + '"]').length === 0) {
+        if ($modal.find("#fr-image-list [data-tag*=\"".concat($(this).text(), "\"]")).length === 0) {
           $(this).removeClass('fr-selected-tag').hide();
         }
       });
@@ -31472,7 +42715,7 @@
 
       $body.on('scroll', _infiniteScroll); // Click on image tags button.
 
-      editor.events.bindClick($modal, 'button#fr-modal-more-' + editor.sid, _toggleTags); // Select an image tag.
+      editor.events.bindClick($modal, "button#fr-modal-more-".concat(editor.sid), _toggleTags); // Select an image tag.
 
       editor.events.bindClick($image_tags, 'a', _selectTag);
     }
@@ -31567,7 +42810,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="inlineClass" data-param1="' + val + '" title="' + options[val] + '">' + options[val] + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"inlineClass\" data-param1=\"".concat(val, "\" title=\"").concat(options[val], "\">").concat(options[val], "</a></li>");
         }
       }
 
@@ -31597,18 +42840,15 @@
 
   FroalaEditor.PLUGINS.inlineStyle = function (editor) {
     function apply(val) {
-      if (editor.selection.text() !== '') {
-        var splits = val.split(';');
+      // https://github.com/froala-labs/froala-editor-js-2/issues/1934
+      var splits = val.split(';');
 
-        for (var i = 0; i < splits.length; i++) {
-          var new_split = splits[i].split(':');
+      for (var i = 0; i < splits.length; i++) {
+        var new_split = splits[i].split(':');
 
-          if (splits[i].length && new_split.length == 2) {
-            editor.format.applyStyle(new_split[0].trim(), new_split[1].trim());
-          }
+        if (splits[i].length && new_split.length == 2) {
+          editor.format.applyStyle(new_split[0].trim(), new_split[1].trim());
         }
-      } else {
-        editor.html.insert('<span style="' + val + '">' + FroalaEditor.INVISIBLE_SPACE + FroalaEditor.MARKERS + '</span>');
       }
     }
 
@@ -31627,7 +42867,7 @@
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
           var inlineStyle = options[val] + (options[val].indexOf('display:block;') === -1 ? ' display:block;' : '');
-          c += '<li role="presentation"><span style="' + inlineStyle + '" role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="inlineStyle" data-param1="' + options[val] + '" title="' + this.language.translate(val) + '">' + this.language.translate(val) + '</a></span></li>';
+          c += "<li role=\"presentation\"><span style=\"".concat(inlineStyle, "\" role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"inlineStyle\" data-param1=\"").concat(options[val], "\" title=\"").concat(this.language.translate(val), "\">").concat(this.language.translate(val), "</a></span></li>");
         }
       }
 
@@ -31975,19 +43215,19 @@
      */
 
 
-    function _mouseDown() {
+    var _mouseDown = function _mouseDown() {
       mouseDownFlag = true;
 
       _hide();
-    }
+    };
     /*
      * Notify that mouse is no longer pressed.
      */
 
 
-    function _mouseUp() {
+    var _mouseUp = function _mouseUp() {
       mouseDownFlag = false;
-    }
+    };
     /*
      * Add new line between the tags.
      */
@@ -32007,18 +43247,18 @@
       if ($tag1 == null) {
         // If the tag is in a TD tag then just add <br> no matter what the default_tag is.
         if (default_tag && $tag2.parent().get(0).tagName != 'TD' && $tag2.parents(default_tag).length === 0) {
-          $tag2.before('<' + default_tag + '>' + FroalaEditor.MARKERS + '<br></' + default_tag + '>');
+          $tag2.before("<".concat(default_tag, ">").concat(FroalaEditor.MARKERS, "<br></").concat(default_tag, ">"));
         } else {
-          $tag2.before(FroalaEditor.MARKERS + '<br>');
+          $tag2.before("".concat(FroalaEditor.MARKERS, "<br>"));
         } // The line break needs to be done either after the last element in the editor or between the 2 tags.
         // Either way the line break is after the first tag.
 
       } else {
         // If the tag is in a TD tag then just add <br> no matter what the default_tag is.
         if (default_tag && $tag1.parent().get(0).tagName != 'TD' && $tag1.parents(default_tag).length === 0) {
-          $tag1.after('<' + default_tag + '>' + FroalaEditor.MARKERS + '<br></' + default_tag + '>');
+          $tag1.after("<".concat(default_tag, ">").concat(FroalaEditor.MARKERS, "<br></").concat(default_tag, ">"));
         } else {
-          $tag1.after(FroalaEditor.MARKERS + '<br>');
+          $tag1.after("".concat(FroalaEditor.MARKERS, "<br>"));
         }
       } // Cursor is now at the beginning of the new line.
 
@@ -32036,7 +43276,7 @@
     function _initLineBreaker() {
       // Append line breaker HTML to editor wrapper.
       if (!editor.shared.$line_breaker) {
-        editor.shared.$line_breaker = $(document.createElement('div')).attr('class', 'fr-line-breaker').html('<a class="fr-floating-btn" role="button" tabIndex="-1" title="' + editor.language.translate('Break') + '"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="17" y="7" width="2" height="8"/><rect x="10" y="13" width="7" height="2"/><path d="M10.000,10.000 L10.000,18.013 L5.000,14.031 L10.000,10.000 Z"/></svg></a>');
+        editor.shared.$line_breaker = $(document.createElement('div')).attr('class', 'fr-line-breaker').html("<a class=\"fr-floating-btn\" role=\"button\" tabIndex=\"-1\" title=\"".concat(editor.language.translate('Break'), "\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"17\" y=\"7\" width=\"2\" height=\"8\"/><rect x=\"10\" y=\"13\" width=\"7\" height=\"2\"/><path d=\"M10.000,10.000 L10.000,18.013 L5.000,14.031 L10.000,10.000 Z\"/></svg></a>"));
       }
 
       $line_breaker = editor.shared.$line_breaker; // Editor shared destroy.
@@ -32138,13 +43378,32 @@
         var $blk = $(blocks[0]);
         $dropdown.find('.fr-command').each(function () {
           var lineH = $(this).data('param1');
-          var active = ($blk.attr('style') || '').indexOf('line-height: ' + lineH + ';') >= 0;
+          var blkStyle = $blk.attr('style');
+          var active = (blkStyle || '').indexOf('line-height: ' + lineH + ';') >= 0; // Check if style contains line-height property, when text is pasted from other sources
+          // If not make `default` text selected
+
+          if (blkStyle) {
+            var lineStyle = blkStyle.substring(blkStyle.indexOf('line-height'));
+            var value = lineStyle.substr(0, lineStyle.indexOf(';')); // get value of line-height
+
+            var lineHeight = value && value.split(':')[1];
+
+            if ((!lineHeight || !lineHeight.length) && $blk.text() === 'Default') {
+              active = true;
+            }
+          } // keep `default` text selected always
+
+
+          if ((!blkStyle || blkStyle.indexOf('line-height') === -1) && lineH === '') {
+            active = true;
+          }
+
           $(this).toggleClass('fr-active', active).attr('aria-selected', active);
         });
       }
     }
 
-    function _init() {}
+    var _init = function _init() {};
 
     return {
       _init: _init,
@@ -32162,7 +43421,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command ' + val + '" tabIndex="-1" role="option" data-cmd="lineHeight" data-param1="' + options[val] + '" title="' + this.language.translate(val) + '">' + this.language.translate(val) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command ".concat(val, "\" tabIndex=\"-1\" role=\"option\" data-cmd=\"lineHeight\" data-param1=\"").concat(options[val], "\" title=\"").concat(this.language.translate(val), "\">").concat(this.language.translate(val), "</a></li>");
         }
       }
 
@@ -32516,25 +43775,25 @@
       var link_buttons = '';
 
       if (editor.opts.linkInsertButtons.length >= 1) {
-        link_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.linkInsertButtons) + '</div>';
+        link_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.linkInsertButtons), "</div>");
       }
 
       var checkmark = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10" viewBox="0 0 32 32"><path d="M27 4l-15 15-7-7-5 5 12 12 20-20z" fill="#FFF"></path></svg>'; // Image by url layer.
 
       var input_layer = '';
       var tab_idx = 0;
-      input_layer = '<div class="fr-link-insert-layer fr-layer fr-active" id="fr-link-insert-layer-' + editor.id + '">';
-      input_layer += '<div class="fr-input-line"><input id="fr-link-insert-layer-url-' + editor.id + '" name="href" type="text" class="fr-link-attr" placeholder="' + editor.language.translate('URL') + '" tabIndex="' + ++tab_idx + '"></div>';
+      input_layer = "<div class=\"fr-link-insert-layer fr-layer fr-active\" id=\"fr-link-insert-layer-".concat(editor.id, "\">");
+      input_layer += "<div class=\"fr-input-line\"><input id=\"fr-link-insert-layer-url-".concat(editor.id, "\" name=\"href\" type=\"text\" class=\"fr-link-attr\" placeholder=\"").concat(editor.language.translate('URL'), "\" tabIndex=\"").concat(++tab_idx, "\"></div>");
 
       if (editor.opts.linkText) {
-        input_layer += '<div class="fr-input-line"><input id="fr-link-insert-layer-text-' + editor.id + '" name="text" type="text" class="fr-link-attr" placeholder="' + editor.language.translate('Text') + '" tabIndex="' + ++tab_idx + '"></div>';
+        input_layer += "<div class=\"fr-input-line\"><input id=\"fr-link-insert-layer-text-".concat(editor.id, "\" name=\"text\" type=\"text\" class=\"fr-link-attr\" placeholder=\"").concat(editor.language.translate('Text'), "\" tabIndex=\"").concat(++tab_idx, "\"></div>");
       } // Add any additional fields.
 
 
       for (var attr in editor.opts.linkAttributes) {
         if (editor.opts.linkAttributes.hasOwnProperty(attr)) {
           var placeholder = editor.opts.linkAttributes[attr];
-          input_layer += '<div class="fr-input-line"><input name="' + attr + '" type="text" class="fr-link-attr" placeholder="' + editor.language.translate(placeholder) + '" tabIndex="' + ++tab_idx + '"></div>';
+          input_layer += "<div class=\"fr-input-line\"><input name=\"".concat(attr, "\" type=\"text\" class=\"fr-link-attr\" placeholder=\"").concat(editor.language.translate(placeholder), "\" tabIndex=\"").concat(++tab_idx, "\"></div>");
         }
       }
 
@@ -32542,7 +43801,7 @@
         input_layer += "<div class=\"fr-checkbox-line\"><span class=\"fr-checkbox\"><input name=\"target\" class=\"fr-link-attr\" data-checked=\"_blank\" type=\"checkbox\" id=\"fr-link-target-".concat(editor.id, "\" tabIndex=\"").concat(++tab_idx, "\"><span>").concat(checkmark, "</span></span><label id=\"fr-label-target-").concat(editor.id, "\">").concat(editor.language.translate('Open in new tab'), "</label></div>");
       }
 
-      input_layer += '<div class="fr-action-buttons"><button class="fr-command fr-submit" role="button" data-cmd="linkInsert" href="#" tabIndex="' + ++tab_idx + '" type="button">' + editor.language.translate('Insert') + '</button></div></div>';
+      input_layer += "<div class=\"fr-action-buttons\"><button class=\"fr-command fr-submit\" role=\"button\" data-cmd=\"linkInsert\" href=\"#\" tabIndex=\"".concat(++tab_idx, "\" type=\"button\">").concat(editor.language.translate('Insert'), "</button></div></div>");
       var template = {
         buttons: link_buttons,
         input_layer: input_layer // Set the template in the popup.
@@ -32751,7 +44010,7 @@
 
       if (editor.opts.linkConvertEmailAddress) {
         if (editor.helpers.isEmail(href) && !/^mailto:.*/i.test(href)) {
-          href = 'mailto:' + href;
+          href = "mailto:".concat(href);
         }
       } // Check if is local path.
 
@@ -32824,9 +44083,16 @@
         if (!$current_image) {
           $link.prepend(FroalaEditor.START_MARKER).append(FroalaEditor.END_MARKER);
         } // Set attributes.
+        // https://github.com/froala-labs/froala-editor-js-2/issues/2023
 
 
-        $link.attr(attrs);
+        for (var prop in attrs) {
+          if (!attrs[prop]) {
+            $link.removeAttr(prop);
+          } else {
+            $link.attr(prop, attrs[prop]);
+          }
+        }
 
         if (!$current_image) {
           editor.selection.restore();
@@ -32839,12 +44105,12 @@
 
           if (editor.selection.isCollapsed()) {
             text = text.length === 0 ? original_href : text;
-            editor.html.insert('<a href="' + href + '">' + FroalaEditor.START_MARKER + text.replace(/&/g, '&amp;').replace(/</, '&lt;', '>', '&gt;') + FroalaEditor.END_MARKER + '</a>');
+            editor.html.insert("<a href=\"".concat(href, "\">").concat(FroalaEditor.START_MARKER).concat(text.replace(/&/g, '&amp;').replace(/</, '&lt;', '>', '&gt;')).concat(FroalaEditor.END_MARKER, "</a>"));
             editor.selection.restore();
           } else {
             if (text.length > 0 && text != editor.selection.text().replace(/\n/g, '')) {
               editor.selection.remove();
-              editor.html.insert('<a href="' + href + '">' + FroalaEditor.START_MARKER + text.replace(/&/g, '&amp;') + FroalaEditor.END_MARKER + '</a>');
+              editor.html.insert("<a href=\"".concat(href, "\">").concat(FroalaEditor.START_MARKER).concat(text.replace(/&/g, '&amp;')).concat(FroalaEditor.END_MARKER, "</a>"));
               editor.selection.restore();
             } else {
               _split(); // Add link.
@@ -32857,7 +44123,7 @@
           }
         } else {
           // Just wrap current image with a link.
-          $current_image.wrap('<a href="' + href + '"></a>');
+          $current_image.wrap("<a href=\"".concat(href, "\"></a>"));
 
           if (editor.image.hasCaption()) {
             $current_image.parent().append($current_image.parents('.fr-img-caption').find('.fr-inner'));
@@ -33058,7 +44324,17 @@
         if (link.href.indexOf('mailto:') !== -1) {
           this.o_win.open(link.href).close();
         } else {
-          this.o_win.open(link.href, '_blank', 'noopener');
+          // Setting the context of the opening link to _self for opening it within window
+          if (!link.target) {
+            link.target = '_self';
+          }
+
+          if (this.browser.msie || this.browser.edge) {
+            // noopener is not supported in IE and EDGE
+            this.o_win.open(link.href, link.target);
+          } else {
+            this.o_win.open(link.href, link.target, 'noopener');
+          }
         }
 
         this.popups.hide('link.edit');
@@ -33068,7 +44344,7 @@
   });
   FroalaEditor.DefineIcon('linkEdit', {
     NAME: 'edit',
-    SVG_KEY: 'editLink'
+    SVG_KEY: 'edit'
   });
   FroalaEditor.RegisterCommand('linkEdit', {
     title: 'Edit Link',
@@ -33151,7 +44427,7 @@
       var options = this.opts.linkList;
 
       for (var i = 0; i < options.length; i++) {
-        c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="linkList" data-param1="' + i + '">' + (options[i].displayText || options[i].text) + '</a></li>';
+        c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"linkList\" data-param1=\"".concat(i, "\">").concat(options[i].displayText || options[i].text, "</a></li>");
       }
 
       c += '</ul>';
@@ -33230,7 +44506,7 @@
 
       for (var cls in options) {
         if (options.hasOwnProperty(cls)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="linkStyle" data-param1="' + cls + '">' + this.language.translate(options[cls]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"linkStyle\" data-param1=\"".concat(cls, "\">").concat(this.language.translate(options[cls]), "</a></li>");
         }
       }
 
@@ -33273,11 +44549,11 @@
     var $ = editor.$;
 
     function _openFlag(tag_name) {
-      return '<span class="fr-open-' + tag_name.toLowerCase() + '"></span>';
+      return "<span class=\"fr-open-".concat(tag_name.toLowerCase(), "\"></span>");
     }
 
     function _closeFlag(tag_name) {
-      return '<span class="fr-close-' + tag_name.toLowerCase() + '"></span>';
+      return "<span class=\"fr-close-".concat(tag_name.toLowerCase(), "\"></span>");
     }
     /**
      * Replace list type.
@@ -33297,7 +44573,7 @@
 
       for (var _i = lists.length - 1; _i >= 0; _i--) {
         var $l = $(lists[_i]);
-        $l.replaceWith('<' + tag_name.toLowerCase() + ' ' + editor.node.attributes($l.get(0)) + '>' + $l.html() + '</' + tag_name.toLowerCase() + '>');
+        $l.replaceWith("<".concat(tag_name.toLowerCase(), " ").concat(editor.node.attributes($l.get(0)), ">").concat($l.html(), "</").concat(tag_name.toLowerCase(), ">"));
       }
     }
     /**
@@ -33325,24 +44601,25 @@
           var margin_left = editor.helpers.getPX($(blocks[i]).css(prop)) || 0;
           blocks[i].style.marginLeft = null; // Start indentation relative to the first element.
 
-          if (start_margin === null) start_margin = margin_left; // Update open tag.
+          if (start_margin === null) start_margin = margin_left; //https://github.com/froala-labs/froala-editor-js-2/issues/2435
+          // Update open tag.
 
-          var open_tag = start_margin > 0 ? '<' + tag_name + ' style="' + prop + ': ' + start_margin + 'px "' + '>' : '<' + tag_name + '>';
-          var end_tag = '</' + tag_name + '>'; // Subsctract starting.
+          var open_tag = start_margin > 0 ? "<".concat(tag_name, " style=\"").concat(prop, ": ").concat(start_margin, "px \">") : "<".concat(tag_name, ">");
+          var end_tag = "</".concat(tag_name, ">"); // Subsctract starting.
 
           margin_left = margin_left - start_margin; // Keep wrapping.
 
           while (margin_left / editor.opts.indentMargin > 0) {
-            open_tag += '<' + tag_name + '>';
+            open_tag += "</".concat(tag_name, ">");
             end_tag += end_tag;
             margin_left = margin_left - editor.opts.indentMargin;
           } // Default tag.
 
 
           if (default_tag && blocks[i].tagName.toLowerCase() == default_tag) {
-            $(blocks[i]).replaceWith(open_tag + '<li' + editor.node.attributes(blocks[i]) + '>' + $(blocks[i]).html() + '</li>' + end_tag);
+            $(blocks[i]).replaceWith("".concat(open_tag, "<li").concat(editor.node.attributes(blocks[i]), ">").concat($(blocks[i]).html(), "</li>").concat(end_tag));
           } else {
-            $(blocks[i]).wrap(open_tag + '<li></li>' + end_tag);
+            $(blocks[i]).wrap("".concat(open_tag, "<li></li>").concat(end_tag));
           }
         }
       }
@@ -33383,13 +44660,13 @@
           var li_attrs = ''; // https://github.com/froala/wysiwyg-editor/issues/1765 .
 
           if (li_class) {
-            li_attrs += ' class="' + li_class + '"';
+            li_attrs += " class=\"".concat(li_class, "\"");
           }
 
           var prop = editor.opts.direction == 'rtl' || $li.css('direction') == 'rtl' ? 'margin-right' : 'margin-left';
 
-          if (editor.helpers.getPX($(parent_node).css(prop)) && ($(parent_node).attr('style') || '').indexOf(prop + ':') >= 0) {
-            li_attrs += ' style="' + prop + ':' + editor.helpers.getPX($(parent_node).css(prop)) + 'px;"';
+          if (editor.helpers.getPX($(parent_node).css(prop)) && ($(parent_node).attr('style') || '').indexOf("".concat(prop, ":")) >= 0) {
+            li_attrs += " style=\"".concat(prop, ":").concat(editor.helpers.getPX($(parent_node).css(prop)), "px;\"");
           } // When we have a default tag.
 
 
@@ -33464,7 +44741,8 @@
 
     function format(tag_name, list_type) {
       var i;
-      var blocks; // Wrap.
+      var blocks;
+      editor.html.syncInputs(); // Wrap.
 
       editor.selection.save();
       editor.html.wrap(true, true, true, true);
@@ -33582,7 +44860,7 @@
             if (prev_nl) {
               $(prev_nl).append($(blocks[i]));
             } else {
-              var $new_nl = $('<' + blocks[i].parentNode.tagName + '>');
+              var $new_nl = $("<".concat(blocks[i].parentNode.tagName, ">"));
               $(prev_li).append($new_nl);
               $new_nl.append($(blocks[i]));
             }
@@ -33837,8 +45115,12 @@
 
 
     function _style($blk, val) {
-      if (!val) val = 'div class="fr-temp-div"' + (editor.node.isEmpty($blk.get(0), true) ? ' data-empty="true"' : '');
-      $blk.replaceWith($('<' + val + ' ' + editor.node.attributes($blk.get(0)) + '>').html($blk.html()).removeAttr('data-empty'));
+      if (!val) val = 'div class="fr-temp-div"' + (editor.node.isEmpty($blk.get(0), true) ? ' data-empty="true"' : ''); //1708 Paragraph Format
+
+      if (val == "H1" || val == "H2" || val == "H3" || val == "H4" || val == "H5") {
+        var $checkstyle = editor.node.attributes($blk.get(0));
+        if ($checkstyle.includes("font-size:")) $blk.replaceWith($('<' + val + ' ' + editor.node.attributes($blk.get(0)).replace(/font-size:[0-9]+px;?/, "") + '>').html($blk.html()).removeAttr('data-empty'));else $blk.replaceWith($('<' + val + ' ' + editor.node.attributes($blk.get(0)) + '>').html($blk.html()).removeAttr('data-empty'));
+      } else $blk.replaceWith($('<' + val + ' ' + editor.node.attributes($blk.get(0)) + '>').html($blk.html()).removeAttr('data-empty'));
     }
     /**
      * Apply style.
@@ -34047,7 +45329,7 @@
       }
     }
 
-    function _init() {}
+    var _init = function _init() {};
 
     return {
       _init: _init,
@@ -34065,7 +45347,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command ' + val + '" tabIndex="-1" role="option" data-cmd="paragraphStyle" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(options[val]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command ".concat(val, "\" tabIndex=\"-1\" role=\"option\" data-cmd=\"paragraphStyle\" data-param1=\"").concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(options[val]), "</a></li>");
         }
       }
 
@@ -34094,7 +45376,7 @@
   FroalaEditor.PLUGINS.print = function (editor) {
     function _prepare(callback) {
       // Get editor content for printing.
-      var contents = editor.$el.html(); // Get or create the iframe for printing.
+      var contents = editor.html.get(); // Get or create the iframe for printing.
 
       var print_iframe = null;
 
@@ -34131,7 +45413,8 @@
 
       print_iframe.addEventListener('load', listener); // Build printing document.
 
-      var frame_doc = print_iframe.contentWindow;
+      var _print_iframe = print_iframe,
+          frame_doc = _print_iframe.contentWindow;
       frame_doc.document.open();
       frame_doc.document.write('<!DOCTYPE html><html ' + (editor.opts.documentReady ? 'style="margin: 0; padding: 0;"' : '') + '><head><title>' + document.title + '</title>'); // Add styles.
 
@@ -34250,7 +45533,7 @@
       var $ = editor.$;
 
       if (!editor.shared.$qi_image_input) {
-        editor.shared.$qi_image_input = $(document.createElement('input')).attr('accept', 'image/' + editor.opts.imageAllowedTypes.join(', image/').toLowerCase()).attr('name', 'quickInsertImage' + this.id).attr('style', 'display: none;').attr('type', 'file');
+        editor.shared.$qi_image_input = $(document.createElement('input')).attr('accept', 'image/' + editor.opts.imageAllowedTypes.join(', image/').toLowerCase()).attr('name', "quickInsertImage".concat(this.id)).attr('style', 'display: none;').attr('type', 'file');
         $('body').first().append(editor.shared.$qi_image_input);
         editor.events.$on(editor.shared.$qi_image_input, 'change', function () {
           var inst = $(this).data('inst');
@@ -34489,7 +45772,7 @@
 
             if (info) {
               if (!info.requiredPlugin || FroalaEditor.PLUGINS[info.requiredPlugin] && editor.opts.pluginsEnabled.indexOf(info.requiredPlugin) >= 0) {
-                btns_html += '<a class="fr-btn fr-floating-btn" role="button" title="' + editor.language.translate(info.title) + '" tabIndex="-1" data-cmd="' + btns[i] + '" style="transition-delay: ' + 0.025 * idx++ + 's;">' + editor.icon.create(info.icon) + '</a>';
+                btns_html += "<a class=\"fr-btn fr-floating-btn\" role=\"button\" title=\"".concat(editor.language.translate(info.title), "\" tabIndex=\"-1\" data-cmd=\"").concat(btns[i], "\" style=\"transition-delay: ").concat(0.025 * idx++, "s;\">").concat(editor.icon.create(info.icon), "</a>");
               }
             }
           }
@@ -34554,11 +45837,11 @@
     function _initquickInsert() {
       if (!editor.shared.$quick_insert) {
         // Append quick insert HTML to editor wrapper.
-        editor.shared.$quick_insert = $(document.createElement('div')).attr('class', 'fr-quick-insert').html('<a class="fr-floating-btn" role="button" tabIndex="-1" title="' + editor.language.translate('Quick Insert') + '">' + editor.icon.create('quickInsert') + '</a>'); //'<div class="fr-quick-insert"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + editor.language.translate('Quick Insert') + '">' + editor.icon.create('quickInsert') + '</a></div>')
+        editor.shared.$quick_insert = $(document.createElement('div')).attr('class', 'fr-quick-insert').html("<a class=\"fr-floating-btn\" role=\"button\" tabIndex=\"-1\" title=\"".concat(editor.language.translate('Quick Insert'), "\">").concat(editor.icon.create('quickInsert'), "</a>")); //'<div class="fr-quick-insert"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + editor.language.translate('Quick Insert') + '">' + editor.icon.create('quickInsert') + '</a></div>')
       }
 
-      $quick_insert = editor.shared.$quick_insert; // Quick Insert tooltip.
-
+      $quick_insert = editor.shared.$quick_insert;
+      // Quick Insert tooltip.
       editor.tooltip.bind(editor.$box, '.fr-quick-insert > a.fr-floating-btn'); // Editor destroy.
 
       editor.events.on('destroy', function () {
@@ -34747,8 +46030,8 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          var shortcut = this.shortcuts.get('quote.' + val);
-          c += '<li role="presentation"><a class="fr-command fr-active ' + val + '" tabIndex="-1" role="option" data-cmd="quote" data-param1="' + val + '" title="' + options[val] + '">' + this.language.translate(options[val]) + (shortcut ? '<span class="fr-shortcut">' + shortcut + '</span>' : '') + '</a></li>';
+          var shortcut = this.shortcuts.get("quote.".concat(val));
+          c += "<li role=\"presentation\"><a class=\"fr-command fr-active ".concat(val, "\" tabIndex=\"-1\" role=\"option\" data-cmd=\"quote\" data-param1=\"").concat(val, "\" title=\"").concat(options[val], "\">").concat(this.language.translate(options[val])).concat(shortcut ? "<span class=\"fr-shortcut\">".concat(shortcut, "</span>") : '', "</a></li>");
         }
       }
 
@@ -34844,7 +46127,8 @@
     }
 
     function _mightSave() {
-      clearTimeout(_timeout);
+      clearTimeout(_timeout); // Added 0 seconds as to get the timeoutid so that for if there is another request the previous pending request will get cleared out. 
+
       _timeout = setTimeout(function () {
         var html = editor.html.get();
 
@@ -34853,7 +46137,7 @@
           _force = false;
           save(html);
         }
-      }, editor.opts.saveInterval);
+      }, 0);
     }
     /**
      * Reset the saving interval.
@@ -34879,9 +46163,21 @@
 
 
     function _init() {
+      if (editor.opts.letteringClass) {
+        var selectionClass = editor.opts.letteringClass;
+        var length = editor.$el.find(".".concat(selectionClass)).length;
+
+        for (var i = 0; i < length; i++) {
+          editor.$el.find(".".concat(selectionClass))[i].innerHTML = editor.$el.find(".".concat(selectionClass))[i].innerText.replace(/([\w'-]+|[?.",])/g, "<span class = 'fr-word-select'>$1</span>");
+        }
+      }
+
       if (editor.opts.saveInterval) {
         _last_html = editor.html.get();
-        editor.events.on('contentChanged', _mightSave);
+        editor.events.on('contentChanged', function () {
+          // Added timeinterval which user has entered else default will be 10000ms. 
+          setTimeout(_mightSave, editor.opts.saveInterval);
+        });
         editor.events.on('keydown destroy', function () {
           clearTimeout(_timeout);
         });
@@ -36811,7 +48107,7 @@
       var table_buttons = '';
 
       if (editor.opts.tableInsertButtons.length > 0) {
-        table_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.tableInsertButtons) + '</div>';
+        table_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.tableInsertButtons), "</div>");
       }
 
       var template = {
@@ -36848,13 +48144,13 @@
 
       var $select_size = $table_cell.parent(); // Update size in title.
 
-      $select_size.siblings('.fr-table-size-info').html(row + ' &times; ' + col); // Remove hover and fr-active-item class from all cells.
+      $select_size.siblings('.fr-table-size-info').html("".concat(row, " &times; ").concat(col)); // Remove hover and fr-active-item class from all cells.
 
       $select_size.find('> span').removeClass('hover fr-active-item'); // Add hover class only to the correct cells.
 
       for (var i = 1; i <= editor.opts.tableInsertMaxSize; i++) {
         for (var j = 0; j <= editor.opts.tableInsertMaxSize; j++) {
-          var $cell = $select_size.find('> span[data-row="' + i + '"][data-col="' + j + '"]');
+          var $cell = $select_size.find("> span[data-row=\"".concat(i, "\"][data-col=\"").concat(j, "\"]"));
 
           if (i <= row && j <= col) {
             $cell.addClass('hover');
@@ -36892,7 +48188,7 @@
             cls += ' hover';
           }
 
-          rows_columns += '<span class="fr-command ' + cls + '" tabIndex="-1" data-cmd="tableInsert" data-row="' + i + '" data-col="' + j + '" data-param1="' + i + '" data-param2="' + j + '" style="display: ' + display + ';" role="button"><span></span><span class="fr-sr-only">' + i + ' &times; ' + j + '&nbsp;&nbsp;&nbsp;</span></span>';
+          rows_columns += "<span class=\"fr-command ".concat(cls, "\" tabIndex=\"-1\" data-cmd=\"tableInsert\" data-row=\"").concat(i, "\" data-col=\"").concat(j, "\" data-param1=\"").concat(i, "\" data-param2=\"").concat(j, "\" style=\"display: ").concat(display, ";\" role=\"button\"><span></span><span class=\"fr-sr-only\">").concat(i, " &times; ").concat(j, "&nbsp;&nbsp;&nbsp;</span></span>");
         }
 
         rows_columns += '<div class="new-line"></div>';
@@ -37012,14 +48308,14 @@
       var table_buttons = '';
 
       if (editor.opts.tableColorsButtons.length > 0) {
-        table_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.tableColorsButtons) + '</div>';
+        table_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.tableColorsButtons), "</div>");
       } // Custom HEX.
 
 
       var custom_color = '';
 
       if (editor.opts.colorsHEXInput) {
-        custom_color = '<div class="fr-color-hex-layer fr-table-colors-hex-layer fr-active fr-layer" id="fr-table-colors-hex-layer-' + editor.id + '"><div class="fr-input-line"><input maxlength="7" id="fr-table-colors-hex-layer-text-' + editor.id + '" type="text" placeholder="' + editor.language.translate('HEX Color') + '" tabIndex="1" aria-required="true"></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="tableCellBackgroundCustomColor" tabIndex="2" role="button">' + editor.language.translate('OK') + '</button></div></div>';
+        custom_color = "<div class=\"fr-color-hex-layer fr-table-colors-hex-layer fr-active fr-layer\" id=\"fr-table-colors-hex-layer-".concat(editor.id, "\"><div class=\"fr-input-line\"><input maxlength=\"7\" id=\"fr-table-colors-hex-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('HEX Color'), "\" tabIndex=\"1\" aria-required=\"true\"></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"tableCellBackgroundCustomColor\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('OK'), "</button></div></div>");
       }
 
       var template = {
@@ -37053,9 +48349,9 @@
         }
 
         if (editor.opts.tableColors[i] != 'REMOVE') {
-          colors_html += '<span class="fr-command" style="background: ' + editor.opts.tableColors[i] + ';" tabIndex="-1" role="button" data-cmd="tableCellBackgroundColor" data-param1="' + editor.opts.tableColors[i] + '"><span class="fr-sr-only">' + editor.language.translate('Color') + ' ' + editor.opts.tableColors[i] + '&nbsp;&nbsp;&nbsp;</span></span>';
+          colors_html += "<span class=\"fr-command\" style=\"background: ".concat(editor.opts.tableColors[i], ";\" tabIndex=\"-1\" role=\"button\" data-cmd=\"tableCellBackgroundColor\" data-param1=\"").concat(editor.opts.tableColors[i], "\"><span class=\"fr-sr-only\">").concat(editor.language.translate('Color'), " ").concat(editor.opts.tableColors[i], "&nbsp;&nbsp;&nbsp;</span></span>");
         } else {
-          colors_html += '<span class="fr-command" data-cmd="tableCellBackgroundColor" tabIndex="-1" role="button" data-param1="REMOVE" title="' + editor.language.translate('Clear Formatting') + '">' + editor.icon.create('tableColorRemove') + '<span class="fr-sr-only">' + editor.language.translate('Clear Formatting') + '</span></span>';
+          colors_html += "<span class=\"fr-command\" data-cmd=\"tableCellBackgroundColor\" tabIndex=\"-1\" role=\"button\" data-param1=\"REMOVE\" title=\"".concat(editor.language.translate('Clear Formatting'), "\">").concat(editor.icon.create('tableColorRemove'), "<span class=\"fr-sr-only\">").concat(editor.language.translate('Clear Formatting'), "</span></span>");
         }
       }
 
@@ -37157,7 +48453,7 @@
 
       $popup.find('.fr-selected-color').removeClass('fr-selected-color fr-active-item'); // Find the selected color.
 
-      $popup.find('span[data-param1="' + color + '"]').addClass('fr-selected-color fr-active-item');
+      $popup.find("span[data-param1=\"".concat(color, "\"]")).addClass('fr-selected-color fr-active-item');
       $input.val(color).trigger('change');
     }
     /*
@@ -37558,9 +48854,9 @@
             var td; // Might be a td or a th.
 
             if ($row.find('th').length > 0) {
-              td = '<th style="width: ' + new_width.toFixed(4) + '%;"><br></th>';
+              td = "<th style=\"width: ".concat(new_width.toFixed(4), "%;\"><br></th>");
             } else {
-              td = '<td style="width: ' + new_width.toFixed(4) + '%;"><br></td>';
+              td = "<td style=\"width: ".concat(new_width.toFixed(4), "%;\"><br></td>");
             } // Insert exactly at the beginning.
 
 
@@ -37950,7 +49246,7 @@
           $cell = $(cells[i]); // If cell is empty, don't add only <br> tags.
 
           if ($cell.html() != '<br>' && $cell.html() !== '') {
-            content += '<br>' + $cell.html();
+            content += "<br>".concat($cell.html());
           } // Remove cell.
 
 
@@ -38122,8 +49418,8 @@
 
 
           width = width / parent_width * 100 / 2;
-          $selected_cell.css('width', width.toFixed(4) + '%');
-          $new_td.css('width', width.toFixed(4) + '%');
+          $selected_cell.css('width', "".concat(width.toFixed(4), "%"));
+          $new_td.css('width', "".concat(width.toFixed(4), "%"));
         } // Add a new td after the current one.
 
 
@@ -38538,11 +49834,12 @@
 
       if (e.target.tagName == 'TD' || e.target.tagName == 'TH') {
         cell = e.target;
-      } else if ($target.closest('td', $target.closest('tr')[0]).length > 0) {
-        cell = $target.closest('td', $target.closest('tr')[0]).get(0);
-      } else if ($target.closest('th', $target.closest('thead')[0]).length > 0) {
-        cell = $target.closest('th', $target.closest('thead')[0]).get(0);
-      } // Cell should reside inside editor.
+      } //https://github.com/froala-labs/froala-editor-js-2/issues/1779
+      else if ($target.closest('th', $target.closest('thead')[0]).length > 0) {
+          cell = $target.closest('th', $target.closest('thead')[0]).get(0);
+        } else if ($target.closest('td', $target.closest('tr')[0]).length > 0) {
+          cell = $target.closest('td', $target.closest('tr')[0]).get(0);
+        } // Cell should reside inside editor.
 
 
       if (editor.$el.html.toString().search(cell) === -1) return null;
@@ -38593,9 +49890,9 @@
             mouseDownCellFlag = true;
             var tag_name = cell.tagName.toLowerCase(); // Select multiple cells using Shift key
 
-            if (e.shiftKey && editor.$el.find(tag_name + '.fr-selected-cell').length > 0) {
+            if (e.shiftKey && editor.$el.find("".concat(tag_name, ".fr-selected-cell")).length > 0) {
               // Cells must be in the same table.
-              if ($(editor.$el.find(tag_name + '.fr-selected-cell').closest('table')).is($(cell).closest('table'))) {
+              if ($(editor.$el.find("".concat(tag_name, ".fr-selected-cell")).closest('table')).is($(cell).closest('table'))) {
                 // Select cells between.
                 selectCells(mouseDownCell, cell); // Do nothing if cells are not in the same table.
               } else {
@@ -38633,7 +49930,9 @@
     function _mouseUp(e) {
       // Mouse down started in a popup and ends in the editor.
       // https://github.com/froala/wysiwyg-editor/issues/3190
-      if (editor.popups.areVisible()) {
+      // Toolbar freezes with checkboxes inside table
+      // https://github.com/froala-labs/froala-editor-js-2/issues/1859
+      if (!editor.edit.isDisabled() && editor.popups.areVisible()) {
         return true;
       } // User clicked somewhere else in the editor (except the toolbar).
       // We need this because mouse down is not triggered outside the editor.
@@ -38706,6 +50005,9 @@
 
 
     function _mouseEnter(e) {
+      // https://github.com/froala-labs/froala-editor-js-2/issues/1859
+      editor.events.$on($('input'), 'click', _inputOnClick);
+
       if (mouseDownCellFlag === true && editor.opts.tableEditButtons.length > 0) {
         var $cell = $(e.currentTarget); // Cells should be in the same table.
 
@@ -39379,15 +50681,15 @@
 
             if (editor.opts.direction == 'rtl' && second === 0 || editor.opts.direction != 'rtl' && second !== 0) {
               width = (table_width + release_position - initial_positon) / table_width * table_percentage;
-              $table.css('margin-right', 'calc(100% - ' + Math.round(width).toFixed(4) + '% - ' + Math.round(left_margin).toFixed(4) + '%)');
+              $table.css('margin-right', "calc(100% - ".concat(Math.round(width).toFixed(4), "% - ").concat(Math.round(left_margin).toFixed(4), "%)"));
             } // Left border RTL or LTR.
             else if (editor.opts.direction == 'rtl' && second !== 0 || editor.opts.direction != 'rtl' && second === 0) {
                 width = (table_width - release_position + initial_positon) / table_width * table_percentage;
-                $table.css('margin-left', 'calc(100% - ' + Math.round(width).toFixed(4) + '% - ' + Math.round(right_margin).toFixed(4) + '%)');
+                $table.css('margin-left', "calc(100% - ".concat(Math.round(width).toFixed(4), "% - ").concat(Math.round(right_margin).toFixed(4), "%)"));
               } // Update table width.
 
 
-            $table.css('width', Math.round(width).toFixed(4) + '%');
+            $table.css('width', "".concat(Math.round(width).toFixed(4), "%"));
           }
 
         editor.selection.restore();
@@ -39577,7 +50879,7 @@
     function _initInsertHelper() {
       // Append insert helper HTML to editor wrapper.
       if (!editor.shared.$ti_helper) {
-        editor.shared.$ti_helper = $(document.createElement('div')).attr('class', 'fr-insert-helper').html('<a class="fr-floating-btn" role="button" tabIndex="-1" title="' + editor.language.translate('Insert') + '"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M22,16.75 L16.75,16.75 L16.75,22 L15.25,22.000 L15.25,16.75 L10,16.75 L10,15.25 L15.25,15.25 L15.25,10 L16.75,10 L16.75,15.25 L22,15.25 L22,16.75 Z"/></svg></a>'); // Click on insert helper.
+        editor.shared.$ti_helper = $(document.createElement('div')).attr('class', 'fr-insert-helper').html("<a class=\"fr-floating-btn\" role=\"button\" tabIndex=\"-1\" title=\"".concat(editor.language.translate('Insert'), "\"><svg viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M22,16.75 L16.75,16.75 L16.75,22 L15.25,22.000 L15.25,16.75 L10,16.75 L10,15.25 L15.25,15.25 L15.25,10 L16.75,10 L16.75,15.25 L22,15.25 L22,16.75 Z\"/></svg></a>")); // Click on insert helper.
 
         editor.events.bindClick(editor.shared.$ti_helper, 'a', function () {
           var $td = $insert_helper.data('selected-cell');
@@ -39775,6 +51077,15 @@
                 }
               }
       }
+    }
+    /*
+    *  Clicking inside an input element
+       https://github.com/froala-labs/froala-editor-js-2/issues/1859
+    */
+
+
+    function _inputOnClick(e) {
+      mouseDownCellFlag = false;
     }
     /*
      * Init table.
@@ -40115,7 +51426,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="tableColumns" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(options[val]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableColumns\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(options[val]), "</a></li>");
         }
       }
 
@@ -40151,7 +51462,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="tableCells" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(options[val]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableCells\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(options[val]), "</a></li>");
         }
       }
 
@@ -40209,7 +51520,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="tableStyle" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(options[val]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableStyle\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(options[val]), "</a></li>");
         }
       }
 
@@ -40297,7 +51608,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="tableCellVerticalAlign" data-param1="' + val.toLowerCase() + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(val) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableCellVerticalAlign\" data-param1=\"".concat(val.toLowerCase(), "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(val), "</a></li>");
         }
       }
 
@@ -40348,7 +51659,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command fr-title" tabIndex="-1" role="option" data-cmd="tableCellHorizontalAlign" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.icon.create('align-' + val) + '<span class="fr-sr-only">' + this.language.translate(options[val]) + '</span></a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command fr-title\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableCellHorizontalAlign\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.icon.create("align-".concat(val)), "<span class=\"fr-sr-only\">").concat(this.language.translate(options[val]), "</span></a></li>");
         }
       }
 
@@ -40363,7 +51674,7 @@
       var $ = this.$;
 
       if (selected_cells.length) {
-        $btn.find('> *').first().replaceWith(this.icon.create('align-' + this.helpers.getAlignment($(selected_cells[0]))));
+        $btn.find('> *').first().replaceWith(this.icon.create("align-".concat(this.helpers.getAlignment($(selected_cells[0])))));
       }
     },
     refreshOnShow: function refreshOnShow($btn, $dropdown) {
@@ -40385,7 +51696,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="tableCellStyle" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.language.translate(options[val]) + '</a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command\" tabIndex=\"-1\" role=\"option\" data-cmd=\"tableCellStyle\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.language.translate(options[val]), "</a></li>");
         }
       }
 
@@ -40420,7 +51731,7 @@
     SVG_KEY: 'remove'
   });
 
-  FroalaEditor.URLRegEx = "(^| |\\u00A0)(" + FroalaEditor.LinkRegEx + '|' + '([a-z0-9+-_.]{1,}@[a-z0-9+-_.]{1,}\\.[a-z0-9+\-_]{1,})' + ')$';
+  FroalaEditor.URLRegEx = "(^| |\\u00A0)(".concat(FroalaEditor.LinkRegEx, "|([a-z0-9+-_.]{1,}@[a-z0-9+-_.]{1,}\\.[a-z0-9+-_]{1,}))$");
 
   FroalaEditor.PLUGINS.url = function (editor) {
     var $ = editor.$;
@@ -40441,22 +51752,22 @@
 
       if (editor.opts.linkConvertEmailAddress) {
         if (editor.helpers.isEmail(link) && !/^mailto:.*/i.test(link)) {
-          link = 'mailto:' + link;
+          link = "mailto:".concat(link);
         }
       } else if (editor.helpers.isEmail(link)) {
         return p1 + p2;
       }
 
       if (!/^((http|https|ftp|ftps|mailto|tel|sms|notes|data)\:)/i.test(link)) {
-        link = '//' + link;
+        link = "//".concat(link);
       }
 
-      return (p1 ? p1 : '') + '<a' + (editor.opts.linkAlwaysBlank ? ' target="_blank"' : '') + (rel ? ' rel="' + rel + '"' : '') + ' data-fr-linked="true" href="' + link + '">' + p2.replace(/&amp;/g, '&').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</a>' + dots;
+      return (p1 ? p1 : '') + "<a".concat(editor.opts.linkAlwaysBlank ? ' target="_blank"' : '').concat(rel ? " rel=\"".concat(rel, "\"") : '', " data-fr-linked=\"true\" href=\"").concat(link, "\">").concat(p2.replace(/&amp;/g, '&').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'), "</a>").concat(dots);
     }
 
-    function _getRegEx() {
+    var _getRegEx = function _getRegEx() {
       return new RegExp(FroalaEditor.URLRegEx, 'gi');
-    }
+    };
     /*
      * Convert link paterns from html into hyperlinks.
      */
@@ -40551,7 +51862,7 @@
             }
           }
 
-          return '<a' + (editor.opts.linkAlwaysBlank ? ' target="_blank"' : '') + (rel_attr ? ' rel="' + rel_attr + '"' : '') + ' href="' + html + '" >' + html + '</a>';
+          return "<a".concat(editor.opts.linkAlwaysBlank ? ' target="_blank"' : '').concat(rel_attr ? " rel=\"".concat(rel_attr, "\"") : '', " href=\"").concat(html, "\" >").concat(html, "</a>");
         }
       });
     }
@@ -40567,12 +51878,12 @@
     'video.size': '[_BUTTONS_][_SIZE_LAYER_]'
   });
   Object.assign(FroalaEditor.DEFAULTS, {
-    videoAllowedTypes: ['mp4', 'webm', 'ogg'],
+    videoAllowedTypes: ['mp4', 'webm', 'ogg', 'mp3', 'mpeg', 'url'],
     videoAllowedProviders: ['.*'],
     videoDefaultAlign: 'center',
     videoDefaultDisplay: 'block',
     videoDefaultWidth: 600,
-    videoEditButtons: ['videoReplace', 'videoRemove', 'videoDisplay', 'videoAlign', 'videoSize'],
+    videoEditButtons: ['videoReplace', 'videoRemove', 'videoDisplay', 'videoAlign', 'videoSize', 'autoplay'],
     videoInsertButtons: ['videoBack', '|', 'videoByURL', 'videoEmbed', 'videoUpload'],
     videoMaxSize: 50 * 1024 * 1024,
     videoMove: true,
@@ -40586,6 +51897,7 @@
     videoUploadParam: 'file',
     videoUploadParams: {},
     videoUploadToS3: false,
+    videoUploadToAzure: false,
     videoUploadURL: null
   });
   FroalaEditor.VIDEO_PROVIDERS = [{
@@ -40695,9 +52007,22 @@
       if ($popup) {
         editor.popups.setContainer('video.edit', editor.$sc);
         editor.popups.refresh('video.edit');
-        var $video_obj = $current_video.find('iframe, embed, video');
+        var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
         var left = $video_obj.offset().left + $video_obj.outerWidth() / 2;
         var top = $video_obj.offset().top + $video_obj.outerHeight();
+        var iframeURL = $video_obj.get(0).src ? $video_obj.get(0).src : null;
+        iframeURL = iframeURL.split('.');
+        iframeURL = iframeURL[iframeURL.length - 1];
+        var isFile = iframeURL.includes('pdf') || iframeURL.includes('txt') ? true : false;
+
+        if ($video_obj.hasClass('fr-file') || isFile || $current_video.find("audio").get(0)) {
+          if (document.getElementById("autoplay-".concat(editor.id))) document.getElementById("autoplay-".concat(editor.id)).style.display = 'none';
+          if (document.getElementById("videoReplace-".concat(editor.id))) document.getElementById("videoReplace-".concat(editor.id)).style.display = 'none';
+        } else {
+          document.getElementById("autoplay-".concat(editor.id)).style.display = '';
+          document.getElementById("videoReplace-".concat(editor.id)).style.display = '';
+        }
+
         editor.popups.show('video.edit', left, top, $video_obj.outerHeight(), true);
       }
     }
@@ -40736,7 +52061,8 @@
           active = '';
         }
 
-        by_url_layer = '<div class="fr-video-by-url-layer fr-layer' + active + '" id="fr-video-by-url-layer-' + editor.id + '"><div class="fr-input-line"><input id="fr-video-by-url-layer-text-' + editor.id + '" type="text" placeholder="' + editor.language.translate('Paste in a video URL') + '" tabIndex="1" aria-required="true"></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="videoInsertByURL" tabIndex="2" role="button">' + editor.language.translate('Insert') + '</button></div></div>';
+        var checkmark = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10" height="10" viewBox="0 0 32 32"><path d="M27 4l-15 15-7-7-5 5 12 12 20-20z" fill="#FFF"></path></svg>';
+        by_url_layer = "<div class=\"fr-video-by-url-layer fr-layer".concat(active, "\" id=\"fr-video-by-url-layer-").concat(editor.id, "\"><div class=\"fr-input-line\"><input id=\"fr-video-by-url-layer-text-").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('Paste in a video URL'), "\" tabIndex=\"1\" aria-required=\"true\"></div><div class=\"fr-action-buttons\"><span style='float:left'><div class=\"fr-checkbox-line fr-autoplay-margin\"><span class=\"fr-checkbox\"> <input id='videoPluginAutoplay' data-checked=\"_blank\" type=\"checkbox\"> <span>").concat(checkmark, "</span></span> <label id=\"fr-label-target-").concat(editor.id, "\">Autoplay</label></div> </span><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"videoInsertByURL\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Insert'), "</button></div></div>");
       } // Video embed layer.
 
 
@@ -40749,7 +52075,7 @@
           active = '';
         }
 
-        embed_layer = '<div class="fr-video-embed-layer fr-layer' + active + '" id="fr-video-embed-layer-' + editor.id + '"><div class="fr-input-line"><textarea id="fr-video-embed-layer-text' + editor.id + '" type="text" placeholder="' + editor.language.translate('Embedded Code') + '" tabIndex="1" aria-required="true" rows="5"></textarea></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="videoInsertEmbed" tabIndex="2" role="button">' + editor.language.translate('Insert') + '</button></div></div>';
+        embed_layer = "<div class=\"fr-video-embed-layer fr-layer".concat(active, "\" id=\"fr-video-embed-layer-").concat(editor.id, "\"><div class=\"fr-input-line\"><textarea id=\"fr-video-embed-layer-text").concat(editor.id, "\" type=\"text\" placeholder=\"").concat(editor.language.translate('Embedded Code'), "\" tabIndex=\"1\" aria-required=\"true\" rows=\"5\"></textarea></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"videoInsertEmbed\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Insert'), "</button></div></div>");
       } // Video upload layer.
 
 
@@ -40762,11 +52088,11 @@
           active = '';
         }
 
-        upload_layer = '<div class="fr-video-upload-layer fr-layer' + active + '" id="fr-video-upload-layer-' + editor.id + '"><strong>' + editor.language.translate('Drop video') + '</strong><br>(' + editor.language.translate('or click') + ')<div class="fr-form"><input type="file" accept="video/' + editor.opts.videoAllowedTypes.join(', video/').toLowerCase() + '" tabIndex="-1" aria-labelledby="fr-video-upload-layer-' + editor.id + '" role="button"></div></div>';
+        upload_layer = "<div class=\"fr-video-upload-layer fr-layer".concat(active, "\" id=\"fr-video-upload-layer-").concat(editor.id, "\"><strong>").concat(editor.language.translate('Drop video'), "</strong><br>(").concat(editor.language.translate('or click'), ")<div class=\"fr-form\"><input type=\"file\" accept=\"video/").concat(editor.opts.videoAllowedTypes.join(', video/').toLowerCase(), "\" tabIndex=\"-1\" aria-labelledby=\"fr-video-upload-layer-").concat(editor.id, "\" role=\"button\"></div></div>");
       } // Progress bar.
 
 
-      var progress_bar_layer = '<div class="fr-video-progress-bar-layer fr-layer"><h3 tabIndex="-1" class="fr-message">Uploading</h3><div class="fr-loader"><span class="fr-progress"></span></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-dismiss" data-cmd="videoDismissError" tabIndex="2" role="button">OK</button></div></div>';
+      var progress_bar_layer = "<div class=\"fr-video-progress-bar-layer fr-layer\"><h3 tabIndex=\"-1\" class=\"fr-message\">Uploading</h3><div class=\"fr-loader\"><span class=\"fr-progress\"></span></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-dismiss\" data-cmd=\"videoDismissError\" tabIndex=\"2\" role=\"button\">OK</button></div></div>";
       var template = {
         buttons: video_buttons,
         by_url_layer: by_url_layer,
@@ -40808,7 +52134,7 @@
 
 
       $popup.find('.fr-layer').removeClass('fr-active');
-      $popup.find('.fr-' + name + '-layer').addClass('fr-active');
+      $popup.find(".fr-".concat(name, "-layer")).addClass('fr-active');
       editor.popups.show('video.insert', left, top, 0);
       editor.accessibility.focusPopup($popup);
     }
@@ -40867,7 +52193,7 @@
         replaced = true;
       }
 
-      editor.html.insert('<span contenteditable="false" draggable="true" class="fr-jiv fr-video fr-deletable">' + embedded_code + '</span>', false, editor.opts.videoSplitHTML);
+      editor.html.insert("<span contenteditable=\"false\" draggable=\"true\" class=\"fr-jiv fr-video fr-deletable\">".concat(embedded_code, "</span>"), false, editor.opts.videoSplitHTML);
       editor.popups.hide('video.insert');
       var $video = editor.$el.find('.fr-jiv');
       $video.removeClass('fr-jiv');
@@ -40944,7 +52270,7 @@
             for (attr in data) {
               if (data.hasOwnProperty(attr)) {
                 if (attr != 'link') {
-                  $video.find('video').attr('data-' + attr, data[attr]);
+                  $video.find('video').attr("data-".concat(attr), data[attr]);
                 }
               }
             }
@@ -40987,7 +52313,7 @@
       $popup.find('.fr-buttons').hide();
 
       if ($current_video) {
-        var $current_video_obj = $current_video.find('video');
+        var $current_video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
         editor.popups.setContainer('video.insert', editor.$sc);
         var left = $current_video_obj.offset().left;
         var top = $current_video_obj.offset().top + $current_video_obj.height();
@@ -41044,12 +52370,12 @@
 
       if ($popup) {
         var $layer = $popup.find('.fr-video-progress-bar-layer');
-        $layer.find('h3').text(message + (progress ? ' ' + progress + '%' : ''));
+        $layer.find('h3').text(message + (progress ? " ".concat(progress, "%") : ''));
         $layer.removeClass('fr-error');
 
         if (progress) {
           $layer.find('div').removeClass('fr-indeterminate');
-          $layer.find('div > span').css('width', progress + '%');
+          $layer.find('div > span').css('width', "".concat(progress, "%"));
         } else {
           $layer.find('div').addClass('fr-indeterminate');
         }
@@ -41076,6 +52402,8 @@
 
 
     function insertByURL(link) {
+      var autoPlayFlag = document.getElementById('videoPluginAutoplay') ? document.getElementById('videoPluginAutoplay').checked : false;
+
       if (typeof link == 'undefined') {
         var $popup = editor.popups.get('video.insert');
         link = ($popup.find('.fr-video-by-url-layer input[type="text"]').val() || '').trim();
@@ -41084,12 +52412,27 @@
       var video = null;
 
       if (!/^http/.test(link)) {
-        link = 'https://' + link;
+        link = "https://".concat(link);
       }
 
       if (editor.helpers.isURL(link)) {
         for (var i = 0; i < FroalaEditor.VIDEO_PROVIDERS.length; i++) {
-          var vp = FroalaEditor.VIDEO_PROVIDERS[i]; // Check if video provider is allowed.
+          var vp = FroalaEditor.VIDEO_PROVIDERS[i];
+          var addAutoplay = "autoplay=1";
+
+          if (vp.html.includes('autoplay=1') && document.getElementById('videoPluginAutoplay').checked) {
+            vp.html = vp.html;
+            document.getElementById('videoPluginAutoplay').checked = false;
+          } else if (autoPlayFlag) {
+            var indexofAutoplay = vp.html.indexOf('{url}') + 5;
+            vp.html = [vp.html.slice(0, indexofAutoplay), addAutoplay, vp.html.slice(indexofAutoplay)].join('');
+            autoPlayFlag = false;
+            document.getElementById('videoPluginAutoplay').checked = false;
+          } else {
+            vp = FroalaEditor.VIDEO_PROVIDERS[i];
+            vp.html = vp.html.replace(addAutoplay, '');
+          } // Check if video provider is allowed.
+
 
           if (vp.test_regex.test(link) && new RegExp(editor.opts.videoAllowedProviders.join('|')).test(vp.provider)) {
             video = link.replace(vp.url_regex, vp.url_text);
@@ -41187,7 +52530,7 @@
      */
 
 
-    function _videoUploaded($video) {
+    function _videoUploaded($video, url, key) {
       _setProgressMessage('Loading video');
 
       var status = this.status;
@@ -41196,9 +52539,20 @@
       var responseText = this.responseText;
 
       try {
-        if (editor.opts.videoUploadToS3) {
+        if (editor.opts.videoUploadToS3 || editor.opts.videoUploadToAzure) {
           if (status == 201) {
-            var link = _parseXMLResponse(responseXML);
+            var link;
+
+            if (editor.opts.videoUploadToAzure) {
+              if (editor.events.trigger('video.uploadedToAzure', [this.responseURL, key, response], true) === false) {
+                editor.edit.on();
+                return false;
+              }
+
+              link = url;
+            } else {
+              link = _parseXMLResponse(responseXML);
+            }
 
             if (link) {
               insertHtmlVideo(link, false, [], $video, response || responseXML);
@@ -41261,7 +52615,7 @@
         for (attr in data) {
           if (data.hasOwnProperty(attr)) {
             if (attr != 'link') {
-              data_str += ' data-' + attr + '="' + data[attr] + '"';
+              data_str += " data-".concat(attr, "=\"").concat(data[attr], "\"");
             }
           }
         }
@@ -41270,7 +52624,7 @@
       var width = editor.opts.videoDefaultWidth;
 
       if (width && width != 'auto') {
-        width = width + 'px';
+        width = "".concat(width, "px");
       } // Create video object and set the load event.
 
 
@@ -41376,7 +52730,7 @@
         $handler.data('start-y', c_y);
         var diff_x = c_x - s_x;
         var diff_y = c_y - s_y;
-        var $video_obj = $current_video.find('iframe, embed, video');
+        var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
         var width = $video_obj.width();
         var height = $video_obj.height();
 
@@ -41423,7 +52777,7 @@
 
 
     function _getHandler(pos) {
-      return '<div class="fr-handler fr-h' + pos + '"></div>';
+      return "<div class=\"fr-handler fr-h".concat(pos, "\"></div>");
     }
 
     function _resizeVideo(e, initPageX, direction, step) {
@@ -41575,7 +52929,7 @@
       if (!$video_resizer) _initResizer();
       (editor.$wp || editor.$sc).append($video_resizer);
       $video_resizer.data('instance', editor);
-      var $video_obj = $current_video.find('iframe, embed, video');
+      var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
       var iframePaddingLeft = 0;
       var iframePaddingTop = 0;
 
@@ -41756,7 +53110,7 @@
 
         var video = videos[0]; // Upload as blob for testing purposes.
 
-        if ((editor.opts.videoUploadURL === null || editor.opts.videoUploadURL == DEFAULT_VIDEO_UPLOAD_URL) && !editor.opts.videoUploadToS3) {
+        if ((editor.opts.videoUploadURL === null || editor.opts.videoUploadURL == DEFAULT_VIDEO_UPLOAD_URL) && !editor.opts.videoUploadToS3 && !editor.opts.videoUploadToAzure) {
           _browserUpload(video);
 
           return false;
@@ -41816,14 +53170,76 @@
             if (editor.opts.videoUploadToS3.uploadURL) {
               url = editor.opts.videoUploadToS3.uploadURL;
             } else {
-              url = 'https://' + editor.opts.videoUploadToS3.region + '.amazonaws.com/' + editor.opts.videoUploadToS3.bucket;
+              url = "https://".concat(editor.opts.videoUploadToS3.region, ".amazonaws.com/").concat(editor.opts.videoUploadToS3.bucket);
             }
           }
 
-          var xhr = editor.core.getXHR(url, editor.opts.videoUploadMethod); // Set upload events.
+          var videoURL;
+          var azureKey;
+          var videoUploadMethod = editor.opts.videoUploadMethod;
+
+          if (editor.opts.videoUploadToAzure) {
+            if (editor.opts.videoUploadToAzure.uploadURL) {
+              url = "".concat(editor.opts.videoUploadToAzure.uploadURL, "/").concat(video.name);
+            } else {
+              url = encodeURI("https://".concat(editor.opts.videoUploadToAzure.account, ".blob.core.windows.net/").concat(editor.opts.videoUploadToAzure.container, "/").concat(video.name));
+            }
+
+            videoURL = url;
+
+            if (editor.opts.videoUploadToAzure.SASToken) {
+              url += editor.opts.videoUploadToAzure.SASToken;
+            }
+
+            videoUploadMethod = 'PUT';
+          }
+
+          var xhr = editor.core.getXHR(url, videoUploadMethod);
+
+          if (editor.opts.videoUploadToAzure) {
+            var uploadDate = new Date().toUTCString();
+
+            if (!editor.opts.videoUploadToAzure.SASToken && editor.opts.videoUploadToAzure.accessKey) {
+              var azureAccount = editor.opts.videoUploadToAzure.account;
+              var azureContainer = editor.opts.videoUploadToAzure.container;
+
+              if (editor.opts.videoUploadToAzure.uploadURL) {
+                var urls = editor.opts.videoUploadToAzure.uploadURL.split('/');
+                azureContainer = urls.pop();
+                azureAccount = urls.pop().split('.')[0];
+              }
+
+              var headerResource = "x-ms-blob-type:BlockBlob\nx-ms-date:".concat(uploadDate, "\nx-ms-version:2019-07-07");
+              var urlResource = encodeURI('/' + azureAccount + '/' + azureContainer + '/' + video.name);
+              var stringToSign = videoUploadMethod + '\n\n\n' + video.size + '\n\n' + video.type + '\n\n\n\n\n\n\n' + headerResource + '\n' + urlResource;
+              var signatureBytes = editor.cryptoJSPlugin.cryptoJS.HmacSHA256(stringToSign, editor.cryptoJSPlugin.cryptoJS.enc.Base64.parse(editor.opts.videoUploadToAzure.accessKey));
+              var signature = signatureBytes.toString(editor.cryptoJSPlugin.cryptoJS.enc.Base64);
+              var authHeader = 'SharedKey ' + azureAccount + ':' + signature;
+              azureKey = signature;
+              xhr.setRequestHeader("Authorization", authHeader);
+            }
+
+            xhr.setRequestHeader("x-ms-version", "2019-07-07");
+            xhr.setRequestHeader("x-ms-date", uploadDate);
+            xhr.setRequestHeader("Content-Type", video.type);
+            xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+
+            for (key in editor.opts.videoUploadParams) {
+              if (editor.opts.videoUploadParams.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.videoUploadParams[key]);
+              }
+            }
+
+            for (key in editor.opts.videoUploadToAzure.params) {
+              if (editor.opts.videoUploadToAzure.params.hasOwnProperty(key)) {
+                xhr.setRequestHeader(key, editor.opts.videoUploadToAzure.params[key]);
+              }
+            }
+          } // Set upload events.
+
 
           xhr.onload = function () {
-            _videoUploaded.call(xhr, $current_video);
+            _videoUploaded.call(xhr, $current_video, videoURL, azureKey);
           };
 
           xhr.onerror = _videoUploadError;
@@ -41844,7 +53260,7 @@
           } // Send data.
 
 
-          xhr.send(form_data);
+          xhr.send(editor.opts.videoUploadToAzure ? video : form_data);
         }
       }
     }
@@ -41984,7 +53400,7 @@
     function _refreshSizePopup() {
       if ($current_video) {
         var $popup = editor.popups.get('video.size');
-        var $video_obj = $current_video.find('iframe, embed, video');
+        var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
         $popup.find('input[name="width"]').val($video_obj.get(0).style.width || $video_obj.attr('width')).trigger('change');
         $popup.find('input[name="height"]').val($video_obj.get(0).style.height || $video_obj.attr('height')).trigger('change');
       }
@@ -42000,7 +53416,7 @@
       hideProgressBar();
       editor.popups.refresh('video.size');
       editor.popups.setContainer('video.size', editor.$sc);
-      var $video_obj = $current_video.find('iframe, embed, video');
+      var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
       var left = $video_obj.offset().left + $video_obj.outerWidth() / 2;
       var top = $video_obj.offset().top + $video_obj.height();
       editor.popups.show('video.size', left, top, $video_obj.height(), true);
@@ -42018,10 +53434,10 @@
 
 
       var video_buttons = '';
-      video_buttons = '<div class="fr-buttons fr-tabs">' + editor.button.buildList(editor.opts.videoSizeButtons) + '</div>'; // Size layer.
+      video_buttons = "<div class=\"fr-buttons fr-tabs\">".concat(editor.button.buildList(editor.opts.videoSizeButtons), "</div>"); // Size layer.
 
       var size_layer = '';
-      size_layer = '<div class="fr-video-size-layer fr-layer fr-active" id="fr-video-size-layer-' + editor.id + '"><div class="fr-video-group"><div class="fr-input-line"><input id="fr-video-size-layer-width-' + editor.id + '" type="text" name="width" placeholder="' + editor.language.translate('Width') + '" tabIndex="1"></div><div class="fr-input-line"><input id="fr-video-size-layer-height-' + editor.id + '" type="text" name="height" placeholder="' + editor.language.translate('Height') + '" tabIndex="1"></div></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="videoSetSize" tabIndex="2" role="button">' + editor.language.translate('Update') + '</button></div></div>';
+      size_layer = "<div class=\"fr-video-size-layer fr-layer fr-active\" id=\"fr-video-size-layer-".concat(editor.id, "\"><div class=\"fr-video-group\"><div class=\"fr-input-line\"><input id=\"fr-video-size-layer-width-").concat(editor.id, "\" type=\"text\" name=\"width\" placeholder=\"").concat(editor.language.translate('Width'), "\" tabIndex=\"1\"></div><div class=\"fr-input-line\"><input id=\"fr-video-size-layer-height-").concat(editor.id, "\" type=\"text\" name=\"height\" placeholder=\"").concat(editor.language.translate('Height'), "\" tabIndex=\"1\"></div></div><div class=\"fr-action-buttons\"><button type=\"button\" class=\"fr-command fr-submit\" data-cmd=\"videoSetSize\" tabIndex=\"2\" role=\"button\">").concat(editor.language.translate('Update'), "</button></div></div>");
       var template = {
         buttons: video_buttons,
         size_layer: size_layer // Set the template in the popup.
@@ -42115,7 +53531,7 @@
 
     function refreshAlign($btn) {
       if (!$current_video) return false;
-      $btn.find('>*').first().replaceWith(editor.icon.create('video-align-' + getAlign()));
+      $btn.find('>*').first().replaceWith(editor.icon.create("video-align-".concat(getAlign())));
     }
     /**
      * Refresh the align option from the dropdown.
@@ -42124,7 +53540,7 @@
 
     function refreshAlignOnShow($btn, $dropdown) {
       if ($current_video) {
-        $dropdown.find('.fr-command[data-param1="' + getAlign() + '"]').addClass('fr-active').attr('aria-selected', true);
+        $dropdown.find(".fr-command[data-param1=\"".concat(getAlign(), "\"]")).addClass('fr-active').attr('aria-selected', true);
       }
     }
     /**
@@ -42184,7 +53600,7 @@
 
     function refreshDisplayOnShow($btn, $dropdown) {
       if ($current_video) {
-        $dropdown.find('.fr-command[data-param1="' + getDisplay() + '"]').addClass('fr-active').attr('aria-selected', true);
+        $dropdown.find(".fr-command[data-param1=\"".concat(getDisplay(), "\"]")).addClass('fr-active').attr('aria-selected', true);
       }
     }
     /**
@@ -42238,7 +53654,7 @@
     function _setStyle($video, _display, _align) {
       if (!editor.opts.htmlUntouched && editor.opts.useClasses) {
         $video.removeClass('fr-fvl fr-fvr fr-dvb fr-dvi');
-        $video.addClass('fr-fv' + _align[0] + ' fr-dv' + _display[0]);
+        $video.addClass("fr-fv".concat(_align[0], " fr-dv").concat(_display[0]));
       } else {
         if (_display == 'inline') {
           $video.css({
@@ -42287,8 +53703,8 @@
 
     function _convertStyleToClasses($video) {
       if (!$video.hasClass('fr-dvi') && !$video.hasClass('fr-dvb')) {
-        $video.addClass('fr-fv' + getAlign($video)[0]);
-        $video.addClass('fr-dv' + getDisplay($video)[0]);
+        $video.addClass("fr-fv".concat(getAlign($video)[0]));
+        $video.addClass("fr-dv".concat(getDisplay($video)[0]));
       }
     }
     /**
@@ -42383,13 +53799,19 @@
         e.stopPropagation(); // initialize drag and drop on blocks for traditional browsers
 
         if (editor.browser.msie || editor.browser.edge) {
-          e.target.dragDrop();
+          // https://github.com/froala/wysiwyg-editor/issues/3608
+          if (!e.target.innerText) {
+            e.target.dragDrop();
 
-          _edit.call(this, e);
+            _edit.call(this, e);
+          }
         }
       });
       editor.events.$on(editor.$el, 'click touchend', 'span.fr-video', function (e) {
-        if ($(this).parents('[contenteditable]').not('.fr-element').not('.fr-img-caption').not('body').first().attr('contenteditable') == 'false') return true;
+        // https://github.com/froala/wysiwyg-editor/issues/3608
+        // When contenteditable attribute is not allowed, user will be able press enter,
+        // which will copy fr-video class within p tag causes #3608
+        if (e.target.innerText.length || $(this).parents('[contenteditable]').not('.fr-element').not('.fr-img-caption').not('body').first().attr('contenteditable') == 'false') return true;
 
         _edit.call(this, e);
       });
@@ -42444,6 +53866,42 @@
 
       _initSizePopup(true);
     }
+
+    function toggleAutoplayStyle(color) {
+      document.getElementById("autoplay-".concat(editor.id)).style.cssText = "background:".concat(color);
+    }
+    /**
+     * Autoplay video after insert
+     */
+
+
+    function setAutoplay() {
+      var $video_obj;
+
+      if ($current_video.find('iframe, embed, audio').get(0)) {
+        $video_obj = $current_video.find('iframe, embed, audio');
+
+        if ($video_obj.get(0).src.includes('autoplay=1')) {
+          toggleAutoplayStyle('#FFFFFF');
+          $video_obj.get(0).src = $video_obj.get(0).src.replace('&autoplay=1', '');
+        } else {
+          toggleAutoplayStyle('#D6D6D6');
+          $video_obj.get(0).src = $video_obj.get(0).src + '&autoplay=1';
+        }
+      } else {
+        var addAutoplay = "autoplay";
+        $video_obj = $current_video.find('iframe, embed, video');
+
+        if ($video_obj.get(0).outerHTML.includes('autoplay')) {
+          toggleAutoplayStyle('#FFFFFF');
+          $video_obj.get(0).outerHTML = $video_obj.get(0).outerHTML.replace('autoplay', '');
+        } else {
+          toggleAutoplayStyle('#D6D6D6');
+          var indexofAutoplay = $video_obj.get(0).outerHTML.indexOf('class') - 1;
+          $video_obj.get(0).outerHTML = [$video_obj.get(0).outerHTML.slice(0, indexofAutoplay), addAutoplay, $video_obj.get(0).outerHTML.slice(indexofAutoplay)].join('');
+        }
+      }
+    }
     /**
      * Place selection around current video.
      */
@@ -42483,7 +53941,7 @@
     function setSize(width, height) {
       if ($current_video) {
         var $popup = editor.popups.get('video.size');
-        var $video_obj = $current_video.find('iframe, embed, video');
+        var $video_obj = $current_video.find("iframe, embed, ".concat($current_video.find('iframe, embed, audio').get(0) ? 'audio' : 'video'));
         $video_obj.css('width', width || $popup.find('input[name="width"]').val());
         $video_obj.css('height', height || $popup.find('input[name="height"]').val());
         if ($video_obj.get(0).style.width) $video_obj.removeAttr('width');
@@ -42522,7 +53980,9 @@
       back: back,
       setSize: setSize,
       get: get,
-      showProgressBar: showProgressBar
+      showProgressBar: showProgressBar,
+      _editVideo: _editVideo,
+      setAutoplay: setAutoplay
     };
   }; // Register the font size command.
 
@@ -42676,7 +54136,7 @@
 
       for (var val in options) {
         if (options.hasOwnProperty(val)) {
-          c += '<li role="presentation"><a class="fr-command fr-title" tabIndex="-1" role="option" data-cmd="videoAlign" data-param1="' + val + '" title="' + this.language.translate(options[val]) + '">' + this.icon.create('video-align-' + val) + '<span class="fr-sr-only">' + this.language.translate(options[val]) + '</span></a></li>';
+          c += "<li role=\"presentation\"><a class=\"fr-command fr-title\" tabIndex=\"-1\" role=\"option\" data-cmd=\"videoAlign\" data-param1=\"".concat(val, "\" title=\"").concat(this.language.translate(options[val]), "\">").concat(this.icon.create("video-align-".concat(val)), "<span class=\"fr-sr-only\">").concat(this.language.translate(options[val]), "</span></a></li>");
         }
       }
 
@@ -42718,6 +54178,19 @@
     title: 'Remove',
     callback: function callback() {
       this.video.remove();
+    }
+  });
+  FroalaEditor.DefineIcon('autoplay', {
+    NAME: 'autoplay',
+    SVG_KEY: 'autoplay'
+  });
+  FroalaEditor.RegisterCommand('autoplay', {
+    undo: false,
+    focus: false,
+    popup: true,
+    title: 'Autoplay',
+    callback: function callback() {
+      this.video.setAutoplay();
     }
   }); // Video size.
 
@@ -43044,6 +54517,9 @@
 
         if (node.nodeType === Node.ELEMENT_NODE) {
           // Skip the first child which is an mso-list:Ignore node.
+          // 1854 For handling extra characters 
+          if (node.getAttribute('style') === 'mso-list:\nIgnore') node.setAttribute("style", "mso-list:Ignore");
+
           if (node.getAttribute('style') === 'mso-list:Ignore') {
             node.parentNode.removeChild(node);
           }
@@ -43067,33 +54543,51 @@
      */
 
 
-    function _buildList(node, head_style_hash, level) {
+    function _buildList(node, head_style_hash, level, prev_margin) {
       // Check ol/ul.
       var order_regex = /[0-9a-zA-Z]./gi;
       var is_ordered = false;
-      var next_order;
       var prev_order;
       var previous_element_sibling;
-      var list_type_node = node.querySelector('span[style="mso-list:Ignore"]');
+      var browser = navigator.userAgent.toLowerCase();
+
+      if (browser.indexOf('safari') != -1) {
+        if (browser.indexOf('chrome') > -1) {
+          browser = 1; // Chrome
+        } else {
+          browser = 'safari'; // Safari
+        }
+      }
+
+      if (node.innerHTML.includes('mso-list:\nIgnore')) {
+        node.innerHTML = node.innerHTML.replace(/mso-list:\nIgnore/gi, 'mso-list:Ignore');
+      }
+
+      var list_type_node = node.querySelector('span[style="mso-list:Ignore"]'); //this is added to check the browser is safari as we are not getting html same as chrome
+
+      if (list_type_node == null && browser == 'safari') {
+        list_type_node = node.querySelector('span[lang="PT-BR"]');
+      }
+
       var contents;
       var listObj;
       var list_tag;
-      var listStyle; // Checking the list is ordered or unordered
+      var listStyle;
+      var startIndexUpperAlpha = 64;
+      var startIndexLowerAlpha = 96; // Checking the list is ordered or unordered
 
       if (list_type_node) {
         is_ordered = is_ordered || order_regex.test(list_type_node.textContent);
-      } // Get the list type
+      }
+
+      var listType;
+      if (list_type_node !== null) listType = list_type_node.textContent.trim().split('.')[0]; // Get the list type
       // const list_tag = is_ordered ? 'ol' : 'ul'
 
-
       if (is_ordered == true) {
-        var listType = list_type_node.textContent.trim().split('.')[0];
+        listType = list_type_node.textContent.trim().split('.')[0];
 
-        if (listType == 'a') {
-          listStyle = 'lower-alpha;';
-        } else if (listType == 'A') {
-          listStyle = 'upper-alpha;';
-        } else if (listType == '1') {
+        if (listType == '1') {
           listStyle = 'decimal;';
         } else if (listType == 'i') {
           listStyle = 'lower-roman;';
@@ -43101,16 +54595,82 @@
           listStyle = 'upper-roman;';
         } else if (listType == 'o') {
           listStyle = 'circle;';
-        }
+        } //https://github.com/froala-labs/froala-editor-js-2/issues/1887
+        // to check the bullet lists
+        else if (!listType.match(/^v$/)) {
+            if (listType.match(/^[a-z]$/) || listType.match(/^[a-z]\)$/)) {
+              listStyle = 'lower-alpha;';
+            } else if (listType.match(/^[A-Z]$/) || listType.match(/^[A-Z]\)$/)) {
+              listStyle = 'upper-alpha;';
+            }
+          }
 
         listStyle = 'list-style-type: ' + listStyle;
         list_tag = 'ol';
       } else {
+        if (list_type_node != null) listType = list_type_node.textContent.trim().split('.')[0];
+
+        if (listType == '§') {
+          listStyle = 'square;';
+        } else if (listType == "·") {
+          listStyle = 'disc;';
+        }
+
+        listStyle = 'list-style-type: ' + listStyle;
         list_tag = 'ul';
       } // creating new list
 
 
-      var s = listStyle ? '<' + list_tag + ' style = "' + listStyle + '">' : '<' + list_tag + '>';
+      var classType = ''; // https://github.com/froala-labs/froala-editor-js-2/issues/1860
+
+      if (list_type_node != undefined && list_type_node.textContent != undefined && !isNaN(parseInt(list_type_node.textContent.trim().split('.')[1], 10))) {
+        classType = ' class="decimal_type" ';
+      }
+
+      var s; // https://github.com/froala-labs/froala-editor-js-2/issues/1887
+
+      var next_level = _getListLevel(node);
+
+      var margin = node.style.marginLeft;
+      var size;
+
+      if (margin.includes('in')) {
+        size = 'in';
+        margin = parseFloat(margin) - 0.5;
+      } else if (margin.includes('pt')) {
+        size = 'px';
+        margin = parseFloat(margin) - 10;
+      }
+
+      if (next_level == 1) {
+        s = listStyle ? '<' + list_tag + ' style = "' + listStyle + '; margin-left:' + margin + size + ';">' : '<' + list_tag + ' style="margin-left:' + margin + size + ';"' + '>'; // https://github.com/froala-labs/froala-editor-js-2/issues/1887
+
+        if (listStyle == 'list-style-type: upper-alpha;') {
+          var index = listType.charCodeAt(0) - startIndexUpperAlpha;
+          s = listStyle ? '<' + list_tag + classType + ' start="' + index + '"' + ' style = "' + listStyle + ' margin-left:' + margin + size + ';">' : '<' + list_tag + '>';
+        } else if (listStyle == 'list-style-type: lower-alpha;') {
+          var _index = listType.charCodeAt(0) - startIndexLowerAlpha;
+
+          s = listStyle ? '<' + list_tag + classType + ' start="' + _index + '"' + ' style = "' + listStyle + 'margin-left:' + margin + size + ';">' : '<' + list_tag + '>';
+        } else {
+          s = listStyle ? '<' + list_tag + classType + ' style = "' + listStyle + ';margin-left:' + margin + size + ';">' : '<' + list_tag + ' style="margin-left:' + margin + size + ';"' + '>';
+        }
+      } else {
+        // https://github.com/froala-labs/froala-editor-js-2/issues/1887
+        if (listStyle == 'list-style-type: upper-alpha;') {
+          var _index2 = listType.charCodeAt(0) - startIndexUpperAlpha;
+
+          s = listStyle ? '<' + list_tag + classType + ' style = "' + listStyle + ' start="' + _index2 + '">' : '<' + list_tag + '>';
+        } else if (listStyle == 'list-style-type: lower-alpha;') {
+          var _index3 = listType.charCodeAt(0) - startIndexLowerAlpha;
+
+          s = listStyle ? '<' + list_tag + classType + ' style = "' + listStyle + ' start="' + _index3 + '">' : '<' + list_tag + '>';
+        } else {
+          s = listStyle ? '<' + list_tag + classType + ' style = "' + listStyle + '">' : '<' + list_tag + '>';
+        }
+      }
+
+      var tagClosedFlag = false;
 
       while (node) {
         // Stop at first sibling that is not a list.
@@ -43125,19 +54685,19 @@
         } // getting level of next node
 
 
-        var next_level = _getListLevel(node); // Set the level if it's the first level or use the same
+        var _next_level = _getListLevel(node); // Set the level if it's the first level or use the same
 
 
-        level = level || next_level; // Create new list if next node level is greater than current one
+        level = level || _next_level; // Create new list if next node level is greater than current one
 
-        if (next_level > level) {
-          listObj = _buildList(node, head_style_hash, next_level);
+        if (_next_level > level) {
+          listObj = _buildList(node, head_style_hash, _next_level, node.style.marginLeft);
           s += listObj.el.outerHTML; // Getting the subsequent node after creating new list
 
           node = listObj.currentNode; // Need to start over to check if next node might be on same level
 
           continue;
-        } else if (next_level < level) {
+        } else if (_next_level < level) {
           // Lower level found. Current list is done.
           break;
         } else {
@@ -43145,7 +54705,6 @@
           // Checking the order of next element.
           if (node.firstElementChild && node.firstElementChild.firstElementChild && node.firstElementChild.firstElementChild.firstChild) {
             order_regex.lastIndex = 0;
-            next_order = order_regex.test(node.firstElementChild.firstElementChild.firstChild.data || node.firstElementChild.firstElementChild.firstChild.firstChild && node.firstElementChild.firstElementChild.firstChild.firstChild.data || '');
           } // Checking the order of current element.
 
 
@@ -43154,13 +54713,37 @@
             prev_order = order_regex.test(previous_element_sibling.firstElementChild.firstElementChild.firstChild.data || previous_element_sibling.firstElementChild.firstElementChild.firstChild.firstChild && previous_element_sibling.firstElementChild.firstElementChild.firstChild.firstChild.data || '');
           } // If levels are same,we are comparing the order of the next element.
           // If the order is same it will append the element in existing list else will create a new list.
+          // https://github.com/froala-labs/froala-editor-js-2/issues/1861
+          // Added condition for ul and ol lists to differentiate the behavior of the list with different type of lists.
 
 
-          if (prev_order === undefined || prev_order === next_order) {
-            contents = _getListContent(node, head_style_hash);
+          var isMarginEqual = false;
+
+          if (!prev_margin && !node.style.marginLeft || prev_margin && node.style.marginLeft && prev_margin === node.style.marginLeft) {
+            isMarginEqual = true;
+          }
+
+          prev_margin = node.style.marginLeft;
+
+          if (isMarginEqual || prev_order === undefined) {
+            contents = _getListContent(node, head_style_hash); // https://github.com/froala-labs/froala-editor-js-2/issues/1860
+
+            if (node.nextSibling.innerText != undefined && node.nextSibling.innerText != undefined && !s.includes('class="decimal_type"')) {
+              if (!isNaN(parseInt(node.nextSibling.innerText.trim().split('.')[1], 10))) {
+                s = s.substring(3, 0) + ' class="decimal_type"' + s.substring(3, s.length);
+              }
+            }
+
             s += '<li>' + contents + '</li>';
           } else {
-            listObj = _buildList(node, head_style_hash, next_level);
+            // https://github.com/froala-labs/froala-editor-js-2/issues/1861
+            if (_next_level == 1) {
+              s += '</' + list_tag + '>';
+              tagClosedFlag = true;
+              previous_element_sibling = null;
+            }
+
+            listObj = _buildList(node, head_style_hash, _next_level, node.style.marginLeft);
             s += listObj.el.outerHTML;
             node = listObj.currentNode;
           }
@@ -43171,6 +54754,17 @@
 
         if (tmp) {
           previous_element_sibling = tmp.previousElementSibling;
+        } // https://github.com/froala-labs/froala-editor-js-2/issues/1854
+
+
+        if (node && !_isList(node)) {
+          // Skip bookmarks.
+          if (node.outerHTML && node.outerHTML.indexOf('mso-bookmark') > 0 && (node.textContent || '').length == 0) {
+            node = node.nextElementSibling;
+            continue;
+          }
+
+          break;
         } // Remove the used node
 
 
@@ -43178,13 +54772,14 @@
 
         node = tmp;
       } // Finish list
+      // https://github.com/froala-labs/froala-editor-js-2/issues/1861
 
 
-      s += '</' + list_tag + '>'; // Convert string to node element.
+      if (!tagClosedFlag) s += '</' + list_tag + '>'; // Convert string to node element.
 
       var div = document.createElement('div');
       div.innerHTML = s;
-      var element = div.firstElementChild; // Returning list element and current node
+      var element = div; // Returning list element and current node
 
       return {
         el: element,
@@ -43199,7 +54794,8 @@
 
       if (parentStyles) {
         allowedStyles.forEach(function (style) {
-          var foundVal = parentStyles.match(new RegExp(style + ':.*;'));
+          //https://github.com/froala-labs/froala-editor-js-2/issues/1852
+          var foundVal = parentStyles.match(new RegExp(style + ':.*(;|)'));
 
           if (foundVal) {
             styles += foundVal[0] + ';';
@@ -44066,6 +55662,15 @@
                     nextNode = null;
                   }
                 }
+              } //https://github.com/froala-labs/froala-editor-js-2/issues/1859
+
+
+              if (node.data.indexOf('[if supportFields]') > -1) {
+                if (node.data.indexOf('FORMCHECKBOX') > -1) {
+                  var checkbox = document.createElement('input');
+                  checkbox.type = "checkbox";
+                  node.parentNode.insertBefore(checkbox, node.nextSibling);
+                }
               }
 
               _removeNode(node);
@@ -44081,8 +55686,9 @@
         // Element node.
         if (node.nodeType === Node.ELEMENT_NODE) {
           var tag_name = node.tagName; // Empty. Skip br tag.
+          // https://github.com/froala-labs/froala-editor-js-2/issues/1859
 
-          if (!node.innerHTML && ['BR', 'IMG'].indexOf(tag_name) === -1) {
+          if (!node.innerHTML && ['BR', 'IMG', 'INPUT'].indexOf(tag_name) === -1) {
             var parent = node.parentNode; // Remove recursively.
 
             while (parent) {
@@ -44135,7 +55741,8 @@
 
     return {
       _init: _init,
-      clean: clean
+      clean: clean,
+      _wordClean: _wordClean
     };
   };
 

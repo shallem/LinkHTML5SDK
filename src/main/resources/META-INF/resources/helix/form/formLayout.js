@@ -363,7 +363,7 @@
              */
             this.$footerSection = $('<footer/>').appendTo(this.$section).hide();
                         
-            $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div.hx-editor', this, function(ev) {
+            $(this.element).on('change.' + this.options.namespace, 'input,textarea,select,fieldset,div[contenteditable="true"]', this, function(ev) {
                 ev.data.markDirty();
             });
         },

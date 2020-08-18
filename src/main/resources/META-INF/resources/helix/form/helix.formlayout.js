@@ -2558,6 +2558,9 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
         'data-theme': 'd',
         'class': 'ui-corner-bottom ui-content hx-dialog-content'
     });
+    if (options.subTitle) {
+        content.append($('<div/>').css('text-align', 'center').addClass('textCategoryMedium').append(options.subTitle));
+    }
     for (var i = 0; i < actions.length; ++i) {
         var nxt = actions[i];
         if (nxt.condition && nxt.condition(opaque) === false) {
