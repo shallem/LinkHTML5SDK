@@ -479,7 +479,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class': formElem.computedStyleClass,
             'tabindex': formLayout.__tabIndex++
         }).appendTo($fieldContainer);
-        if (formElem.inputDisabled === true) {
+        if (formElem.inputDisabled === true || formElem.disableInput === true) {
             inputMarkup[0].disabled = true;
         }
         if (formElem.noInput === true) {
@@ -782,7 +782,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
                     .css('width', '90%')
                     //.css('position', 'absolute')
-                    .css('max-height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
+                    .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
                     .css('overflow-y', 'scroll')
                     .css('display', 'none')
                     .css('background-color', '#f9f9f9')
@@ -1418,18 +1418,23 @@ function __appendIFrame(mode, formLayout, formElem, $fieldContainer, useMiniLayo
     }
 
     if (!mode) {
-        if (formElem.isScroller) {
-            $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
-        }
         if (formElem.height) {
             $fieldContainer.height(formElem.height);
         }
         if (formElem.selectable === true) {
             formElem.$frame = $('<div/>')
                     .attr('data-role', 'container')
-                    .addClass('hx-scroller-nozoom hx-full-width hx-full-height hx-form-html-container')
+                    .addClass('hx-full-width hx-form-html-container')
                     .appendTo($fieldContainer);
+            if (formElem.isScroller) {
+                formElem.$frame.addClass('hx-scroller-nozoom hx-full-height');
+                $fieldContainer.css('overflow-y', 'scroll').css('-webkit-overflow-scrolling', 'touch');
+            }
         } else {
+            if (formElem.isScroller) {
+                $fieldContainer.addClass('hx-scroller-nozoom hx-full-height');
+            }
+            
             var newFrameMarkup = __makeIFrameMarkup(formElem);
             formElem.$frame = $(newFrameMarkup).appendTo($fieldContainer).hide();
             __refreshIFrame(formElem);
