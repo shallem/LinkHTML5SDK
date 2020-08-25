@@ -95,7 +95,7 @@
     /**
      * Call this function to show the dialog.
      */
-    function show(dialog,formElems,callbackThis,callbackArgs) {
+    function show(dialog,formElems,callbackThis,callbackArgs,oncomplete) {
         if (!this.isReady) {
             this.refresh(true);
             this.isReady = true;
@@ -109,9 +109,6 @@
                 return false;
             });
         }
-        $(dialog.$mainDiv).popup( "open", { 
-            positionTo : dialog.options.positionTo
-        });
         
         if (callbackThis) {
             this._callbackThis = callbackThis;
@@ -119,6 +116,14 @@
         if (callbackArgs) {
             this._callbackArgs = callbackArgs;
         }
+        if (oncomplete) {
+            $(dialog.$mainDiv).one('popupafteropen', null, [oncomplete, this, formElems], function(ev) {
+                ev.data[0].call(ev.data[1], ev.data[2]);
+            });
+        }
+        $(dialog.$mainDiv).popup( "open", { 
+            positionTo : dialog.options.positionTo
+        });
     }
     
     function getForm(dialog) {

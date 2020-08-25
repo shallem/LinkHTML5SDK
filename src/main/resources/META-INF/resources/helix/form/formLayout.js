@@ -205,20 +205,17 @@
         },
     
         __computeOneHidden: function(formElem, valuesMap) {
-            var fldName = this._stripNamespace(formElem.name);
             var oldHidden = formElem.hidden;
-            if (valuesMap && fldName in valuesMap) {
-                formElem.value = valuesMap[fldName];
-            }
+            var fldName = this._stripNamespace(formElem.name);
             if (formElem.condition) {
-                if (valuesMap && formElem.condition in valuesMap) {
+                if ($.isFunction(formElem.condition)) {
+                    formElem.hidden = !(formElem.condition.call(this, (valuesMap ? valuesMap : null), fldName));
+                } else if (valuesMap && formElem.condition.toLowerCase() in valuesMap) {
                     if (valuesMap[formElem.condition]) {
                         formElem.hidden = false;
                     } else {
                         formElem.hidden = true;
                     }
-                } else if ($.isFunction(formElem.condition)) {
-                    formElem.hidden = !(formElem.condition.call(this, (valuesMap ? valuesMap : null), fldName));
                 } else  {
                     var fn = window[formElem.condition];
                     if(typeof fn === 'function') {
@@ -269,9 +266,7 @@
         },
         
         refreshHidden: function(valuesMap) {
-            if (!valuesMap) {
-                valuesMap = this.getValues();
-            }
+            valuesMap = this._normalizeValuesMap(valuesMap);
             this._computeHidden(valuesMap, true);
         },
     
@@ -281,7 +276,7 @@
             for (idx = 0; idx < this.options.items.length; ++idx) {
                 formElem = this.options.items[idx];
                 var fldName = this._stripNamespace(formElem.name);
-                if (fldName === name) {
+                if (fldName.toLowerCase() === name.toLowerCase()) {
                     for (var prop in updatedProperties) {
                         formElem[prop] = updatedProperties[prop];
                     }
@@ -338,6 +333,7 @@
          * @param valuesMap Map form field names to values.
          */
         refresh: function(valuesMap) {
+            valuesMap = this._normalizeValuesMap(valuesMap);
             $(this.element).off('change.' + this.options.namespace);
             this._isDirty = false;
             this._computeHidden(valuesMap);
@@ -353,6 +349,7 @@
                 this.$section.addClass('hx-flex-vertical');
             }
             
+            this.options.formLayout = this;
             Helix.Utils.layoutForm(this.$section, this.options, this.page, this.layoutMini);
             this.rendered = true;
             for (var z = 0; z < this.options.items.length; ++z) {
@@ -736,28 +733,33 @@
             }
         },
         
-        __copyOneValue: function(item, valuesMap) {
-            var fieldID = item.name;
+        __getValueFromMap: function(item, valuesMap) {
+            var newValue = undefined;
+            var fieldID = item.name.trim();
             var strippedFieldID = this._stripNamespace(fieldID);
+            if (fieldID.toLowerCase() in valuesMap) {
+                newValue = valuesMap[fieldID.toLowerCase()];
+            } else if (strippedFieldID.toLowerCase() in valuesMap) {
+                newValue = valuesMap[strippedFieldID.toLowerCase()];
+            } else if ('default' in valuesMap) {
+                newValue = valuesMap['default'];
+            }
+            if (newValue === undefined) {
+                newValue = item.defaultValue;
+            }
+            return newValue;
+        },
+        
+        __copyOneValue: function(item, valuesMap) {
             if (!item.readOnly) {
-                if ((fieldID in valuesMap) ||
-                        (strippedFieldID in valuesMap) ||
-                        ('default' in valuesMap)) {
-                    var newValue;
-                    if (fieldID in valuesMap) {
-                        newValue = valuesMap[fieldID];
-                    } else if (strippedFieldID in valuesMap) {
-                        newValue = valuesMap[strippedFieldID];
-                    } else {
-                        newValue = valuesMap['default'];
-                    }
-                    
-                    if (newValue === undefined) {
-                        newValue = item.defaultValue;
-                    }
-                    
+                var newValue = this.__getValueFromMap(item, valuesMap);
+                if (newValue !== undefined) {
                     var fldType = item.type;
                     if (fldType !== 'buttonGroup') {
+                        if (item.value === newValue) {
+                            // No change
+                            return false;
+                        }
                         item.value = newValue;
                     } else {
                         item.buttons = newValue;
@@ -777,27 +779,39 @@
                 (item.type === 'controlset') ||
                 modeChanged;
 
+            var valueChanged = false;
+            if (!item.readOnly) {
+                valueChanged = this.__copyOneValue(item, valuesMap);
+            }
             var hiddenChanged = this.__computeOneHidden(item, valuesMap);
-            if (visibilityChanged || hiddenChanged) {
+            
+            // Update the rendered form ...
+            if (visibilityChanged || valueChanged || hiddenChanged) {
                 this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
                 return true;
             }
-            
-            if (!item.readOnly) {
-                var valueChanged = this.__copyOneValue(item, valuesMap);
-                if (valueChanged) {
-                    this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
-                    return true;
-                }
-            }
-            
+                       
             return false;
         },
         
-        refreshValue: function(valuesMap, fieldName, modeChanged) {
-            if (!valuesMap) {
-                valuesMap = this.getValues();
+        _normalizeValuesMap: function(valuesMapIn) {
+            var valuesMap = {};
+            if (!valuesMapIn) {
+                valuesMapIn = this.getValues();
             }
+            for (var k in valuesMapIn) {
+                try {
+                    valuesMap[k.trim().toLowerCase()] = valuesMapIn[k];
+                    valuesMap[k] = valuesMapIn[k];
+                } catch(e) {
+                    
+                }
+            }
+            return valuesMap;
+        },
+        
+        refreshValue: function(valuesMap, fieldName, modeChanged) {
+            valuesMap = this._normalizeValuesMap(valuesMap);
             
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
@@ -829,10 +843,7 @@
         },
         
         refreshValues: function(valuesMap, modeChanged) {
-            if (!valuesMap) {
-                valuesMap = this.getValues();
-            }
-            
+            valuesMap = this._normalizeValuesMap(valuesMap);
             var mode = (this.options.currentMode === 'edit' ? 1 : 0);
             for (var idx = 0; idx < this.options.items.length; ++idx) {
                 var nxtItem = this.options.items[idx];
@@ -896,7 +907,7 @@
                 var fieldID = item.name;
                 var strippedFieldID = this._stripNamespace(fieldID);
 
-                if (name === strippedFieldID) {
+                if (name.toLowerCase() === strippedFieldID.toLowerCase()) {
                     break;
                 }
                 if (item.type === 'subPanel' ||
@@ -905,7 +916,7 @@
                     for (var j = 0; j < item.items.length; ++j) {
                         subItem = item.items[j];
                         var _subID = this._stripNamespace(subItem.name);
-                        if (name === _subID) {
+                        if (name.toLowerCase() === _subID.toLowerCase()) {
                             break;
                         }
                         subItem = null;
@@ -926,6 +937,7 @@
             if (value !== null && value !== undefined) {
                 valuesObj[name] = value;
             }
+            valuesObj = this._normalizeValuesMap(valuesObj);
             this.__refreshOneValue(mode, item, valuesObj);
         },
         

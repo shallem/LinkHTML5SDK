@@ -1074,6 +1074,8 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         if (subElem.hidden || subElem.disabled) {
             continue;
         }
+        subElem.parentForm = formLayout;
+        subElem.formLayout = formLayout.formLayout;
         subElem.name = formElem.name;
         subElem.type = 'radio';
         var inputMarkup = __appendCheckBox(mode, formLayout, subElem, wrapperMarkup, useMiniLayout, subElem.value === formElem.defaultValue);
@@ -1333,6 +1335,26 @@ function __refreshHTMLFrame(formElem, mode) {
             if (Helix.Utils.isString(formElem.value)) {
                 formElem.$frame.append(formElem.value);
             } else {
+                if (formElem.value.head && formElem.value.head.childNodes.length > 0) {
+                    var styleStr = '';
+                    for (var i = 0; i < formElem.value.head.childNodes.length; ++i) {
+                        var nxt = formElem.value.head.childNodes[i];
+                        if (nxt && nxt.tagName && nxt.tagName.toUpperCase() === 'STYLE') {
+                            styleStr = styleStr + nxt.innerHTML;
+                        }
+                    }
+                    if (styleStr) {
+                        var newStyleNode = document.createElement('style');
+                        newStyleNode.type = 'text/css';
+                        
+                        if (newStyleNode.styleSheet) {
+                            newStyleNode.styleSheet.cssText = styleStr;
+                        } else {
+                            newStyleNode.innerHTML = styleStr;
+                        }
+                        formElem.$frame[0].appendChild(newStyleNode);
+                    }
+                }
                 formElem.$frame.append($(formElem.value.body.childNodes));
             }
             formElem.$frame.find('style').each(function() {
@@ -1357,7 +1379,7 @@ function __refreshHTMLFrame(formElem, mode) {
                             } else {
                                 newSelector = '.hx-form-html-container';
                             }
-                            newText = newSelector + ' ' + _nxt.style.cssText;
+                            newText = newSelector + ' {' + _nxt.style.cssText + "}";
                         }
                     }
                     _t.innerHTML = newText;
