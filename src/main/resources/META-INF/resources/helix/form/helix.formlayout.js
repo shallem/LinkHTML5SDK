@@ -1379,7 +1379,7 @@ function __refreshHTMLFrame(formElem, mode) {
                             } else {
                                 newSelector = '.hx-form-html-container';
                             }
-                            newText = newSelector + ' {' + _nxt.style.cssText + "}";
+                            newText = newText + newSelector + ' {' + _nxt.style.cssText + '}';
                         }
                     }
                     _t.innerHTML = newText;

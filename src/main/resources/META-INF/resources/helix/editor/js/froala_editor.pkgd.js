@@ -30372,13 +30372,13 @@
     }
 
     function _initEvents() {
-      if (editor.helpers.isMobile()) {
+      /*if (editor.helpers.isMobile()) {
         editor.events.$on($(editor.o_win), 'orientationchange', function () {
           setTimeout(function () {
             showInsertPopup(true);
           }, 100);
         });
-      } // Mouse down on image. It might start move.
+      }*/ // Mouse down on image. It might start move.
 
 
       editor.events.$on(editor.$el, editor._mousedown, editor.el.tagName == 'IMG' ? null : 'img:not([contenteditable="false"])', function (e) {

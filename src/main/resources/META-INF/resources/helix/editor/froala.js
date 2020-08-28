@@ -312,6 +312,9 @@
             if (sel) {
                 var newRange = null;
                 var anchorNode = sel.anchorNode;
+                if (!anchorNode) {
+                    return;
+                }
                 if (anchorNode.nodeType === 3) {
                     if (delta > 0) {
                         if (sel.anchorOffset + delta <= anchorNode.length) {
