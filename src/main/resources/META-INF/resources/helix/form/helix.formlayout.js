@@ -399,37 +399,23 @@ function __refreshTextArea(mode, formElem) {
 }
 
 function __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
-    if (mode === 1) {
-        // No title by default in edit mode.
-        if (formElem.titleStyleClass) {
-            $fieldContainer.append($('<span />').attr({
-                'class': formElem.titleStyleClass + ' ui-input-text'
-            }).append(formElem.fieldTitle));
-        } else if (formLayout.titleStyleClass) {
-            $fieldContainer.append($('<span />').attr({
-                'class': formLayout.titleStyleClass + ' ui-input-text'
-            }).append(formElem.fieldTitle));
-        } else {
-            $fieldContainer.append(formElem.fieldTitle);
-        }
-    }
-    
     var toAppend, inputMarkup;
     if (formElem.fieldTitle && (typeof formElem.fieldTitle === "string")) {
-        toAppend = "&nbsp;" + formElem.value;
-        inputMarkup = $('<span />').attr('data-name', formElem.name);
+        toAppend = formElem.fieldTitle;
+        inputMarkup = $('<span />').addClass(formElem.computedStyleClass).attr('data-name', formElem.name);
     } else {
         toAppend = formElem.value;
-        inputMarkup = $('<p />').attr('data-name', formElem.name);
+        inputMarkup = $('<p />').addClass(formElem.computedStyleClass).attr('data-name', formElem.name);
     }
     if (formElem.type === 'rawTextarea') {
         inputMarkup[0].innerHTML = formElem.value;
     } else {
-        inputMarkup.append(formElem.value);
+        inputMarkup.append(toAppend);
     }
     $fieldContainer.append(inputMarkup);
     
     if (formElem.onclick) {
+        inputMarkup.addClass('hx-link-label');
         $(inputMarkup).on(Helix.clickEvent, function (ev) {
             ev.stopImmediatePropagation();
             formElem.onclick.call(formElem, ev);

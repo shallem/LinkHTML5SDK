@@ -28,7 +28,7 @@
             var _self = this;
             var e = this.editor = new FroalaEditor('#' + this.element.attr('id'), {
                 toolbarSticky: false,
-                htmlUntouched: true,
+                htmlUntouched: false,
                 events: {
                     'contentChanged': function () {
                       // Do something here.
@@ -114,6 +114,10 @@
                     'moreRich': {
                         'buttons': ['insertLink', 'insertTable', 'fontAwesome', 'specialCharacters', 'insertHR'], // 'insertImage', 'insertVideo', 'embedly', 'insertFile', 'emoticons', 
                         'buttonsVisible': 0
+                    },
+                    'moreMisc': {
+                      'buttons': ['undo' ], // 'fullscreen', 'print', 'getPDF', 'html', 'help', 'spellChecker', 'selectAll'
+                      'buttonsVisible': 1
                     },
                     'extraButtons': {
                         'buttons' : _extraButtons,
@@ -285,7 +289,9 @@
             css.type = 'text/css';
             css.innerHTML = FROALA_HTML_STYLES;
             
-            outerHTML.body.appendChild(contentParent);
+            for (var i = 0; i < contentParent.children.length; ++i) {
+                outerHTML.body.appendChild(contentParent.children[i]);
+            }
             outerHTML.getElementsByTagName('head')[0].appendChild(css);
             return outerHTML;
         },

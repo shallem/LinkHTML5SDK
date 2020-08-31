@@ -6200,7 +6200,8 @@
           }
         }
 
-        if (editor.browser.safari && new_ranges.length) {
+        // SAH: Added isIOS check b/c otherwise the selection is cleared out when you try to change the font.
+        if ((editor.browser.safari && !editor.helpers.isIOS()) && new_ranges.length) {
           editor.selection.clear();
 
           for (i = 0; i < new_ranges.length; i++) {
@@ -8750,10 +8751,11 @@
       } // Not iOS.
       else {
           // Do not prevent default on IOS.
-          if (!editor.helpers.isIOS()) {
+          // SAH: following these guidlines causes weird behavior on iPhones.
+          //if (!editor.helpers.isIOS()) {
             e.preventDefault();
             e.stopPropagation();
-          }
+          //}
 
           if (!editor.selection.isCollapsed()) {
             editor.selection.remove();
@@ -9259,7 +9261,8 @@
 
 
       if (e && editor.helpers.isIOS() && e.which === FroalaEditor.KEYCODE.ENTER) {
-        editor.doc.execCommand('undo');
+        // SAH: this has the bad effect of deleting what you just typed in the final item of a list ...
+            //editor.doc.execCommand('undo');
       }
 
       if (!editor.selection.isCollapsed()) {
