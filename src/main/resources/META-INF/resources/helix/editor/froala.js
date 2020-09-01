@@ -289,8 +289,8 @@
             css.type = 'text/css';
             css.innerHTML = FROALA_HTML_STYLES;
             
-            for (var i = 0; i < contentParent.children.length; ++i) {
-                outerHTML.body.appendChild(contentParent.children[i]);
+            while (contentParent.hasChildNodes()) {
+                outerHTML.body.appendChild(contentParent.removeChild(contentParent.firstChild));
             }
             outerHTML.getElementsByTagName('head')[0].appendChild(css);
             return outerHTML;
