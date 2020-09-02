@@ -4267,28 +4267,31 @@
 
       if (_atEnd(marker)) {
         // Enter in list.
-        if (_inLi(marker) && !shift && !quote) {
-          editor.cursorLists._endEnter(marker);
-        } else {
-          _endEnter(marker, shift, quote);
+        // SAH: leaving this in causes the next list item to flash, then disappear.
+        if (!editor.helpers.isIOS()) {
+            if (_inLi(marker) && !shift && !quote) {
+                editor.cursorLists._endEnter(marker);
+            } else {
+            _endEnter(marker, shift, quote);
+          }
         }
       } // At start.
-      else if (_atStart(marker)) {
-          // Enter in list.
-          if (_inLi(marker) && !shift && !quote) {
-            editor.cursorLists._startEnter(marker);
-          } else {
-            _startEnter(marker, shift, quote);
-          }
-        } // At middle.
-        else {
+        else if (_atStart(marker)) {
             // Enter in list.
             if (_inLi(marker) && !shift && !quote) {
-              editor.cursorLists._middleEnter(marker);
+              editor.cursorLists._startEnter(marker);
             } else {
-              _middleEnter(marker, shift, quote);
+              _startEnter(marker, shift, quote);
             }
-          }
+          } // At middle.
+          else {
+              // Enter in list.
+              if (_inLi(marker) && !shift && !quote) {
+                editor.cursorLists._middleEnter(marker);
+              } else {
+                _middleEnter(marker, shift, quote);
+              }
+            }
 
       _cleanNodesToRemove();
 
@@ -8750,15 +8753,16 @@
         e.stopPropagation();
       } // Not iOS.
       else {
-          // Do not prevent default on IOS.
-          // SAH: following these guidlines causes weird behavior on iPhones.
-          //if (!editor.helpers.isIOS()) {
-            e.preventDefault();
-            e.stopPropagation();
-          //}
-
+          // SAH: do this first.
           if (!editor.selection.isCollapsed()) {
             editor.selection.remove();
+          }
+          
+          // Do not prevent default on IOS.
+          // SAH: prevent default on iOS, otherwise we get in trouble with autocorrect.
+          if (!editor.helpers.isIOS()) {
+            e.preventDefault();  
+            e.stopPropagation();
           }
 
           editor.cursor.enter();

@@ -7,3 +7,52 @@
 .fr-view.hx-callout-offset {
     padding-top: 2.5em !important;
 }
+
+.fr-view p { 
+    margin: unset; 
+}
+
+/* Signature styles. */
+.ql-font-arial {
+    font-family: 'Arial', sans-serif;
+}
+
+.ql-font-arialblack {
+    font-family: 'Arial Black', sans-serif;
+}
+
+.ql-font-calibri {
+    font-family: 'Calibri', sans-serif;
+}
+
+.ql-font-cambria {
+    font-family: 'Cambria', sans-serif;
+}
+
+.ql-font-courier {
+    font-family: 'Courier New', sans-serif;
+}
+
+.ql-font-georgia {
+    font-family: 'Georgia', sans-serif;
+}
+
+.ql-font-impact {
+    font-family: 'Impact', sans-serif;
+}
+
+.ql-font-tahoma {
+    font-family: 'Tahoma', sans-serif;
+}
+
+.ql-font-times {
+    font-family: 'Times New Roman', sans-serif;      
+}
+
+.ql-font-trebuchet {
+    font-family: 'Trebuchet MS', sans-serif;
+}
+
+.ql-font-verdana {
+    font-family: 'Verdana', sans-serif;      
+}
