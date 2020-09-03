@@ -3974,7 +3974,10 @@
 
         if (!default_tag || !editor.node.isElement(marker.parentNode)) {
           if (marker.previousSibling && !$(marker.previousSibling).is('br') && !marker.nextSibling) {
-            $(marker).replaceWith("<br>".concat(FroalaEditor.MARKERS, "<br>"));
+            // SAH: this causes odd behavior on a phone with bulleted/numbered lists. Disable on iOS
+            if (!editor.helpers.isIOS()) {
+                $(marker).replaceWith("<br>".concat(FroalaEditor.MARKERS, "<br>"));
+            }
           } else {
             $(marker).replaceWith("<br>".concat(FroalaEditor.MARKERS));
           }
@@ -4268,12 +4271,12 @@
       if (_atEnd(marker)) {
         // Enter in list.
         // SAH: leaving this in causes the next list item to flash, then disappear.
-        if (!editor.helpers.isIOS()) {
-            if (_inLi(marker) && !shift && !quote) {
+        if (_inLi(marker) && !shift && !quote) {
+            if (!editor.helpers.isIOS()) {
                 editor.cursorLists._endEnter(marker);
-            } else {
+            }
+        } else {
             _endEnter(marker, shift, quote);
-          }
         }
       } // At start.
         else if (_atStart(marker)) {
@@ -4287,7 +4290,10 @@
           else {
               // Enter in list.
               if (_inLi(marker) && !shift && !quote) {
-                editor.cursorLists._middleEnter(marker);
+                  // SAH
+                if (!editor.helpers.isIOS()) {
+                    editor.cursorLists._middleEnter(marker);
+                }
               } else {
                 _middleEnter(marker, shift, quote);
               }
@@ -5650,6 +5656,9 @@
         return null;
       }
 
+      // SAH: defensive - look at the code below. This line - mk = editor.$el.find('span.fr-marker').get(0); - assumes that
+      // the fr-marker we just inserted is THE ONLY one in the HTML. But what if it is not? Then this won't work!
+      remove();
       try {
         var range = editor.selection.ranges(0);
         var container = range.commonAncestorContainer; // Check if selection is inside editor.
@@ -8804,18 +8813,21 @@
     function _backspace(e) {
       // There is no selection.
       if (editor.selection.isCollapsed()) {
-        if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
-          editor.cursor.backspace();
-        }
+        // SAH: Old position of #1
+            
 
         /* SAH: this causes a bad behavior where the cursor jumps forward a line, then runs backspace from the forward position. */
-        if (0 /*editor.helpers.isIOS()*/) {
-          var range = editor.selection.ranges(0);
+        if (editor.helpers.isIOS()) {
+          /*var range = editor.selection.ranges(0);
           range.deleteContents();
           range.insertNode(document.createTextNode("\u200B"));
           var sel = editor.selection.get();
-          sel.modify('move', 'forward', 'character');
+          sel.modify('move', 'forward', 'character');*/
         } else {
+            // SAH: #1 - only do this on non-iOS
+            if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
+            editor.cursor.backspace();
+            }
           if (['INPUT', 'BUTTON', 'TEXTAREA'].indexOf(e.target && e.target.tagName) < 0) {
             e.preventDefault();
           }
@@ -9093,7 +9105,9 @@
       if (key_code === FroalaEditor.KEYCODE.ENTER) {
         //code edited https://github.com/froala-labs/froala-editor-js-2/issues/1864
         // added code for fr-inner class check
-        if (e.shiftKey || sel_el.classList.contains('fr-inner') || sel_el.parentElement.classList.contains('fr-inner')) {
+        // SAH: added !editor.selection.isCollapsed(). Otherwise tapping enter twice in an LI does nothing. And how is the shift key
+        // relevant if there is no selection?
+        if ((e.shiftKey && !editor.selection.isCollapsed()) || sel_el.classList.contains('fr-inner') || sel_el.parentElement.classList.contains('fr-inner')) {
           _shiftEnter(e);
         } else {
           _enter(e);

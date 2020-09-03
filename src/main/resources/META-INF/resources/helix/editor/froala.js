@@ -28,7 +28,7 @@
             var _self = this;
             var e = this.editor = new FroalaEditor('#' + this.element.attr('id'), {
                 toolbarSticky: false,
-                htmlUntouched: false,
+                htmlUntouched: true,
                 events: {
                     'contentChanged': function () {
                       // Do something here.
