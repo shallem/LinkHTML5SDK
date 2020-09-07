@@ -2816,6 +2816,11 @@
           $(li).remove();
         } // There is no next_li item so transform the current list item to an empty line.
         else {
+            // SAH: this just transforms the last LI into an empty line, then adds another one when iOS handles the
+            // event.
+            if (editor.helpers.isIOS()) {
+                return;
+            }
             ul = _firstParentList(li);
             var new_str = "".concat(FroalaEditor.MARKERS, "<br>");
             var ndx = marker.parentNode;
@@ -4231,6 +4236,15 @@
      * Do enter.
      */
 
+     function _firstParentLI(node) {
+      var p_node = node;
+
+      while (p_node.tagName !== 'LI') {
+        p_node = p_node.parentNode;
+      }
+
+      return p_node;
+    }
 
     function enter(shift) {
       // Add a marker in HTML.
@@ -4274,9 +4288,20 @@
         if (_inLi(marker) && !shift && !quote) {
             if (!editor.helpers.isIOS()) {
                 editor.cursorLists._endEnter(marker);
+            } else {
+                // SAH: If the selection point is in a node (e.g., a div)s, move it out.
+                var li = _firstParentLI(marker);
+                var range = document.createRange();
+                range.selectNodeContents(li);
+                range.collapse(false);
+                var selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
             }
         } else {
-            _endEnter(marker, shift, quote);
+            if (!editor.helpers.isIOS()) {
+                _endEnter(marker, shift, quote);
+            }
         }
       } // At start.
         else if (_atStart(marker)) {
@@ -4284,7 +4309,10 @@
             if (_inLi(marker) && !shift && !quote) {
               editor.cursorLists._startEnter(marker);
             } else {
-              _startEnter(marker, shift, quote);
+                // SAH: without this, some taps of enter get doubled up into two newlines.
+                if (!editor.helpers.isIOS()) {
+                    _startEnter(marker, shift, quote);
+                }
             }
           } // At middle.
           else {
@@ -9150,7 +9178,7 @@
                   _empty();
                 }
 
-                e.preventDefault();
+                e.preventDefault();i
                 e.stopPropagation();
               }
             } // Space.
@@ -16207,10 +16235,10 @@
 
 
         if (i < wrapperProps.length) {
+          // SAH: removed if ($(wrapper).length && wrapperProps[i].trim() === $(wrapper)[0].tagName) {
+          // b/c at this point wrapper is a string and $(wrapper) throws a JS exception ...
           // https://github.com/froala-labs/froala-editor-js-2/issues/1928
-          if ($(wrapper).length && wrapperProps[i].trim() === $(wrapper)[0].tagName) {
-            wrapper = document.createElement(wrapperProps[i].trim());
-          }
+          wrapper = document.createElement(wrapperProps[i].trim());
 
           i++;
         } // Make sure it is re-initialized
@@ -16223,7 +16251,10 @@
           for (; i < wrapperProps.length; i++) {
             wrapperProps[i] = wrapperProps[i].trim();
             var attr = wrapperProps[i].split('=');
-            $wrapper.attr(attr[0], attr[1].replace('"', ''));
+            // SAH: added defensive if
+            if (attr.length === 2) {
+                $wrapper.attr(attr[0], attr[1].replace('"', ''));
+            }
           }
         }
       }
@@ -44811,6 +44842,10 @@
 
 
           $(blocks[i].parentNode).css('list-style-type', list_type === 'default' ? '' : list_type);
+          // SAH: add an attribute so we can match default vs. non-default
+          if (list_type) {
+              $(blocks[i].parentNode).addClass('hx-' + list_type);
+          }
 
           if (($(blocks[i].parentNode).attr('style') || '').length === 0) {
             $(blocks[i].parentNode).removeAttr('style');
@@ -44967,7 +45002,9 @@
           if (blks.length > 1 || blks.length && (editor.selection.info(blks[0]).atStart || editor.node.isEmpty(blks[0]))) {
             e.preventDefault();
             e.stopPropagation();
-            if (!e.shiftKey) _indent(blks);else _outdent(blks);
+            // SAH: added check for iOS w/ctrlKey down. On an iPad with a keyboard, we cannot capture shift-tab. Ctrl-tab
+            // is the only way to out-dent.
+            if (!e.shiftKey && (!editor.helpers.isIOS() || (!e.ctrlKey && !e.altKey))) _indent(blks);else _outdent(blks);
             return false;
           }
         }

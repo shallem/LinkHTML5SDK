@@ -12,6 +12,22 @@
     margin: unset; 
 }
 
+.fr-view ol.hx-upper-alpha ol li {
+    list-style: decimal;
+}
+.fr-view ol ol li {
+    list-style: upper-alpha;
+}
+.fr-view ol ol ol li {
+    list-style: lower-alpha !important;
+}
+.fr-view ol ol ol ol li {
+    list-style: lower-roman !important;
+}
+.fr-view ol ol ol ol ol li {
+    list-style: disc !important;
+}
+
 /* Signature styles. */
 .ql-font-arial {
     font-family: 'Arial', sans-serif;
