@@ -1536,7 +1536,8 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         'extraButtons': formElem.extraButtons ? formElem.extraButtons : [],
         'extraButtonsPhone': formElem.extraButtonsPhone ? formElem.extraButtonsPhone : [],
         'editorReady' : formElem.editorReady ? formElem.editorReady : null,
-        'onSelectionChange' : formElem.onSelectionChange ? formElem.onSelectionChange : null
+        'onSelectionChange' : formElem.onSelectionChange ? formElem.onSelectionChange : null,
+        'isScroller' : formElem.isScroller === true ? true : false
     });
     $(editorDiv).editor('update', formElem.value);
 }

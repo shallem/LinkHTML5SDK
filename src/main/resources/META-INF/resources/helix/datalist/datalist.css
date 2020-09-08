@@ -10,7 +10,7 @@ and open the template in the editor.
 
 .hx-listview {
    border-top: none; /*1px solid #bbb;*/
-   min-height: 100%;
+   min-height: 101%;
 }
 
 .hx-listview li.ui-li-divider {

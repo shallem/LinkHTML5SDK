@@ -9,7 +9,7 @@
 }
 
 .fr-view p { 
-    margin: unset; 
+    margin: auto; 
 }
 
 .fr-view ol.hx-upper-alpha ol li {
@@ -19,13 +19,13 @@
     list-style: upper-alpha;
 }
 .fr-view ol ol ol li {
-    list-style: lower-alpha !important;
+    list-style: lower-alpha;
 }
 .fr-view ol ol ol ol li {
-    list-style: lower-roman !important;
+    list-style: lower-roman;
 }
 .fr-view ol ol ol ol ol li {
-    list-style: disc !important;
+    list-style: disc;
 }
 
 /* Signature styles. */
