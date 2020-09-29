@@ -150,12 +150,23 @@ function __refreshDate(mode, formElem) {
     var displayDate = __computeDateString(mode, formElem);
     if (mode) {
         var thisField = $(formElem.DOM).find('[name="' + formElem.name + '"]');
-        var newDateStr = displayDate ? displayDate.toString('yyyy-MM-ddTHH:mm:ss') : '';
-        if (formElem.type === 'date' ||
-                formElem.type === 'exactdate') {
-            newDateStr = newDateStr.substring(0, 10);
+        var timeField = $(formElem.DOM).find('[name="' + formElem.name + '_time"]');
+        var newDate = displayDate ? displayDate : '';
+        if (newDate) {
+            if (thisField.length) {
+                $(thisField).pickadate('picker').set('select', newDate);
+            }
+            if (timeField.length) {
+                $(timeField).pickatime('picker').set('select', newDate);
+            }
+        } else {
+            if (thisField.length) {
+                $(thisField).pickadate('set', 'clear');
+            }
+            if (timeField.length) {
+                $(timeField).pickatime('set', 'clear');
+            }
         }
-        $(thisField).val(newDateStr);
     } else {
         var dateDisplayStr, timeDisplayStr;
         if (displayDate) {
@@ -190,6 +201,7 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
         return;
     }
     var dateInput;
+    var timeInput;
     if (mode) {
         var defaultValue = Date.now();
         if (formElem.value) {
@@ -207,44 +219,87 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 })
                         .append(formElem.fieldTitle)
                         );
-        var inputType;
-        var valueString;
-        var stepStr = formElem.dateStep ? formElem.dateStep : '300';
-        if (formElem.type === 'datetime') {
-            // Date and time
-            inputType = 'datetime-local';
-        } else if (formElem.type === 'date' ||
-                formElem.type === 'exactdate') {
-            inputType = 'date';
-        } else {
-            // Just date
-            inputType = 'time';
-        }
-        valueString = new Date(defaultValue).toISOString();
+        var valueDate = new Date(defaultValue);
         var inputWrapper = $('<div/>').addClass('hx-input-date textCategorySmall').appendTo(dateDiv);
         var inputID = Helix.Utils.getUniqueID();
         dateInput = $('<input />').attr({
             'name': formElem.name,
             'id': inputID,
-            'type': inputType,
-            'step': stepStr,
+            'type': 'text',
             'tabIndex': formLayout.__tabIndex++
-        }).appendTo(inputWrapper);
+        });
+        if (formElem.type === 'datetime') {
+            // Date and time
+            var dateWrapper = $('<div/>').addClass('hx-display-inline').css('width', '55%');
+            dateWrapper.appendTo(inputWrapper);
+            dateInput.appendTo(dateWrapper);
+            dateInput.attr('placeholder', formElem.placeholder ? formElem.placeholder : 'Select date');
+            
+            timeInput = $('<input />').attr({
+               'name': formElem.name + '_time',
+               'type': 'text',
+               'tabIndex': formLayout.__tabIndex++,
+               'placeholder': formElem.timePlaceholder ? formElem.timePlaceholder : 'Select time'
+            });
+            var timeWrapper = $('<div/>').addClass('hx-display-inline').css('width', '35%');
+            timeWrapper.appendTo(inputWrapper);
+            timeInput.appendTo(timeWrapper);
+            timeInput.attr('placeholder', formElem.timePlaceholder ? formElem.timePlaceholder : 'Select time');
+            
+            var picker = $(dateInput).pickadate({
+                selectYears: true,
+                selectMonths: true
+            });
+            $(picker).pickadate('picker').set('select', valueDate);
+            var timePicker = $(timeInput).pickatime({
+                interval: 15,
+                editable: true
+            });
+            $(timePicker).pickatime('picker').set('select', valueDate);
+        } else if (formElem.type === 'date' ||
+                formElem.type === 'exactdate') {
+            dateInput.appendTo(inputWrapper);
+            var picker = $(dateInput).pickadate({
+                selectYears: true,
+                selectMonths: true
+            });
+            $(picker).pickadate('picker').set('select', valueDate);
+        } else {
+            // Just time
+            dateInput.appendTo(inputWrapper);
+            var picker = $(dateInput).pickatime({
+                interval: 15,
+                editable: true
+            });
+            $(picker).pickatime('picker').set('select', valueDate);
+        }
+        
         if (formElem.onfocus) {
             dateInput.focus(formElem.onfocus);
+            if (timeInput) {
+                timeInput.focus(formElem.onfocus);
+            }
         }
         if (formElem.onchange) {
             dateInput.change(formElem.onchange);
+            if (timeInput) {
+                timeInput.change(formElem.onchange);
+            }
         }
         if (formElem.onblur) {
             dateInput.blur(function () {
                 formElem.onblur.apply(this);
             });
+            if (timeInput) {
+                timeInput.blur(function () {
+                    formElem.onblur.apply(this);
+                });
+            }
         }
-        $fieldContainer.on(Helix.clickEvent, dateInput, function(ev) {
+        /*$fieldContainer.on(Helix.clickEvent, dateInput, function(ev) {
             $(ev.data).focus();
             return Helix.stopEvent(ev);
-        });
+        });*/
         $fieldContainer.append(dateDiv);
     } else {
         var displayDate = __computeDateString(mode, formElem);

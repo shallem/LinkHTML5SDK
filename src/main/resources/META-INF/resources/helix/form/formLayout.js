@@ -492,7 +492,8 @@
                             value: selected.val()
                     });
                 } else if (fieldType === "date" ||
-                           fieldType === "datetime") {
+                           fieldType === "datetime" ||
+                           fieldType === 'exactdate') {
                     var timeVal = _self._getDateTimeValue(nxtItem.DOM, this, nxtItem.name);
                     if (timeVal) {
                         toSerialize.push({
@@ -942,7 +943,29 @@
         },
         
         _getDateTimeValue: function(parentDOM, fld, searchName) {
-            var isoStr = $(fld).val();
+            var thisField = $(parentDOM).find('[name="' + searchName + '"]');
+            var timeField = $(parentDOM).find('[name="' + searchName + '_time"]');
+        
+            var dateObj = new Date();
+            if (thisField.length) {
+                dateObj = $(thisField).pickadate('get', 'select');
+                if (dateObj) {
+                    dateObj = dateObj.obj;
+                } else {
+                    dateObj = new Date();
+                }
+            }
+            if (timeField.length) {
+                var timeObj = $(timeField).pickatime('get', 'select');
+                if (timeObj) {
+                    dateObj.setHours(timeObj.hour);
+                    dateObj.setMinutes(timeObj.mins);
+                }
+            }
+            
+            return dateObj;
+            
+            /*var isoStr = $(fld).val();
             if (!isoStr) {
                 return null;
             }
@@ -950,7 +973,7 @@
             var d = new Date(isoStr);
             // Re-adjust back to local TZ.
             //d.addMinutes(d.getTimezoneOffset());
-            return d;
+            return d;*/
         },
         
         getValue: function(name) {

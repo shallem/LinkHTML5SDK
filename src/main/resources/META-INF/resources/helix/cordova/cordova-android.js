@@ -1,3 +1,24 @@
+function cdv_one(dom, event, successCB, errorCB) {
+    function handler(e) {
+	var cbArgs = e.detail;
+	if (cbArgs.detail) {
+	    cbArgs = cbArgs.detail;
+	}	
+	if (cbArgs.code === 0) {
+	    if (successCB) {
+		var v = (cbArgs.val ? $.parseJSON(cbArgs.val) : null);
+		successCB.call(this, v);
+	    }
+	} else {
+	    if (errorCB) {
+		errorCB.call(this, cbArgs.msg);
+	    }
+	}
+        this.removeEventListener(event, handler);
+    }
+    dom.addEventListener(event, handler); 
+}    
+
 function cordova_android_init() {
     window.cordova = {
         exec: function(success, failure, objName, methodName, args) {
@@ -22,7 +43,10 @@ function cordova_android_init() {
                     if (success) {
                         success(res.val ? $.parseJSON(res.val) : null);
                     }
-                } else {
+                } else if (res.code === 9999) {
+		    // Async
+		    cdv_one(document, res.val, success, failure);
+		} else {
                     if (failure) {
                         failure(res.msg);
                     }

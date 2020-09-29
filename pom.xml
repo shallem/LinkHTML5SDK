@@ -252,6 +252,11 @@
 		
 		<!-- Context menu styles -->
 		<include>contextMenu/contextMenu.css</include>
+
+		<!-- Date picker -->
+		<include>datetime/css/default.css</include>
+		<include>datetime/css/default.date.css</include>
+		<include>datetime/css/default.time.css</include>
 		
 	      </includes>
 	      <aggregations>
@@ -389,6 +394,12 @@
 		
 		<!-- Undo. -->
 		<include>undo/undo.js</include>
+
+		<!-- Date picker -->
+		<include>datetime/js/picker.js</include>
+		<include>datetime/js/picker.date.js</include>
+		<include>datetime/js/picker.time.js</include>
+		<include>datetime/js/legacy.js</include>
 		
 	      </includes>
 	      <aggregations>
