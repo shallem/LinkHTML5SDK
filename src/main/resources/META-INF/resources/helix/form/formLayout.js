@@ -373,14 +373,16 @@
                         if (selStart < ev.target.textLength - 1) {
                             ev.target.setSelectionRange(selStart + 1, selStart + 1);
                         }
-                        break;
+                        ev.stopImmediatePropagation();
+                        return false;
                     case 37:
                         // Left arrow.
                         selStart = ev.target.selectionStart;
                         if (selStart > 0) {
                             ev.target.setSelectionRange(selStart - 1, selStart - 1);
                         }
-                        break;
+                        ev.stopImmediatePropagation();
+                        return false;
                 }
             });
         },
