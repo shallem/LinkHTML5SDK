@@ -256,6 +256,13 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 editable: true
             });
             $(timePicker).pickatime('picker').set('select', valueDate);
+            timeInput.on('blur', null, timeInput, function(ev) {
+                var timeVal = Date.parse($(ev.data).val());
+                if (timeVal) {
+                    $(timePicker).pickatime('picker').set('select', timeVal);
+                }
+                return false;
+            });
         } else if (formElem.type === 'date' ||
                 formElem.type === 'exactdate') {
             dateInput.appendTo(inputWrapper);
@@ -272,6 +279,13 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 editable: true
             });
             $(picker).pickatime('picker').set('select', valueDate);
+            dateInput.on('blur', null, timeInput, function(ev) {
+                var timeVal = Date.parse($(ev.data).val());
+                if (timeVal) {
+                    $(timePicker).pickatime('picker').set('select', timeVal);
+                }
+                return false;
+            });
         }
         
         if (formElem.onfocus) {

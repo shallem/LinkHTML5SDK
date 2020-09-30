@@ -257,6 +257,7 @@
 		<include>datetime/css/default.css</include>
 		<include>datetime/css/default.date.css</include>
 		<include>datetime/css/default.time.css</include>
+		<include>datetime/css/helixOverrides.css</include>
 		
 	      </includes>
 	      <aggregations>

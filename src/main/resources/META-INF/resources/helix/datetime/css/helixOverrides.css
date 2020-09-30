@@ -1,0 +1,21 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Sep 30, 2020, 3:25:16 PM
+    Author     : sethhallem
+*/
+
+.picker--time .picker__frame {
+    overflow-y: hidden;
+    bottom: 22em;
+}
+
+.picker--time .picker__box {
+    height: 20em;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch;
+    margin: 0em;
+}
