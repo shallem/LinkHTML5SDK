@@ -365,14 +365,21 @@
             });
             $(this.element).off('keydown.' + this.options.namespace).on('keydown.' + this.options.namespace, 'input,textarea', this, function(ev) {
                 var key = ev.keyCode || ev.which || ev.charCode;
+                var selStart;
                 switch(key) {
                     case 39:
                         // Right arrow.
-                        ev.data._setCaretPosition(1);
+                        selStart = ev.target.selectionStart;
+                        if (selStart < ev.target.textLength - 1) {
+                            ev.target.setSelectionRange(selStart + 1, selStart + 1);
+                        }
                         break;
                     case 37:
                         // Left arrow.
-                        ev.data._setCaretPosition(-1);
+                        selStart = ev.target.selectionStart;
+                        if (selStart > 0) {
+                            ev.target.setSelectionRange(selStart - 1, selStart - 1);
+                        }
                         break;
                 }
             });
@@ -1328,36 +1335,6 @@
         
         getItems: function() {
             return this.options.items;
-        },
-        
-        _setCaretPosition: function (delta) {
-            var sel = window.getSelection();
-            if (sel) {
-                var newRange = null;
-                var anchorNode = sel.anchorNode;
-                if (!anchorNode) {
-                    return;
-                }
-                if (anchorNode.nodeType === 3) {
-                    if (delta > 0) {
-                        if (sel.anchorOffset + delta <= anchorNode.length) {
-                            newRange = document.createRange();
-                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
-                        }
-                    } else {
-                        if (sel.anchorOffset + delta >= 0) {
-                            newRange = document.createRange();
-                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
-                        }
-                    }
-                    if (newRange !== null) {
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        return;
-                    }
-                }
-            }
         }
     });
 }( jQuery ));
