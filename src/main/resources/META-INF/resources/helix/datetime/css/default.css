@@ -34,9 +34,11 @@
  */
 .picker__holder {
   width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  height: 100%;
 }
+/*  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; */
+
 
 /*!
  * Default mobile-first, responsive styling for pickadate.js
@@ -51,7 +53,6 @@
 .picker__holder,
 .picker__frame {
   top: 0;
-  bottom: 0;
   left: 0;
   right: 0;
   -ms-transform: translateY(100%);

@@ -129,7 +129,7 @@
     max-width: calc(100% - 45px);
 }
 
-.hx-select::after,.hx-input-date::after {
+.hx-select::after {
   content: "\25bc";
   width: 30px;
   float: right;

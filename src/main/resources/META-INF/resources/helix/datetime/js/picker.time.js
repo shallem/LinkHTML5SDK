@@ -116,20 +116,27 @@ function TimePicker( picker, settings ) {
                 },
                 animations = function( $el, state ) {
                     vendors( 'transform' ).map(function( prop ) {
-                        $el.css( prop, state )
-                    })
+                        $el.css( prop, state );
+                    });
                     vendors( 'transition' ).map(function( prop ) {
-                        $el.css( prop, state )
-                    })
+                        $el.css( prop, state );
+                    });
                 }
             if ( $viewset.length ) {
-                animations( $pickerHolder, 'none' )
-                $pickerHolder[ 0 ].scrollTop = ~~$viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 )
-                animations( $pickerHolder, '' )
+                animations( $pickerHolder, 'none' );
+                $pickerHolder.find('.picker__box')[0].scrollTop = ~~$viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 );
+                animations( $pickerHolder, '' );
             }
         }, 1 ).
         on( 'open', function() {
-            picker.$root.find( 'button' ).attr( 'disabled', false )
+            picker.$root.find( 'button' ).attr( 'disabled', false );
+            setTimeout(function() {
+                var $pickerHolder = picker.$root.children(),
+                    $viewset = $pickerHolder.find( '.' + settings.klass.viewset );
+                if ( $viewset.length ) {
+                        $pickerHolder.find('.picker__box')[0].scrollTop = ~~$viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 );
+                    }
+                }, 50);
         }, 1 ).
         on( 'close', function() {
             picker.$root.find( 'button' ).attr( 'disabled', true )

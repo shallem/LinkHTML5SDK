@@ -10,7 +10,7 @@ and open the template in the editor.
 
 .picker--time .picker__frame {
     overflow-y: hidden;
-    bottom: 22em;
+    top: 12em;
 }
 
 .picker--time .picker__box {

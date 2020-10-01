@@ -252,17 +252,9 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             });
             $(picker).pickadate('picker').set('select', valueDate);
             var timePicker = $(timeInput).pickatime({
-                interval: 15,
-                editable: true
+                interval: 15
             });
             $(timePicker).pickatime('picker').set('select', valueDate);
-            timeInput.on('blur', null, timeInput, function(ev) {
-                var timeVal = Date.parse($(ev.data).val());
-                if (timeVal) {
-                    $(timePicker).pickatime('picker').set('select', timeVal);
-                }
-                return false;
-            });
         } else if (formElem.type === 'date' ||
                 formElem.type === 'exactdate') {
             dateInput.appendTo(inputWrapper);
@@ -275,17 +267,9 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             // Just time
             dateInput.appendTo(inputWrapper);
             var picker = $(dateInput).pickatime({
-                interval: 15,
-                editable: true
+                interval: 15
             });
             $(picker).pickatime('picker').set('select', valueDate);
-            dateInput.on('blur', null, timeInput, function(ev) {
-                var timeVal = Date.parse($(ev.data).val());
-                if (timeVal) {
-                    $(timePicker).pickatime('picker').set('select', timeVal);
-                }
-                return false;
-            });
         }
         
         if (formElem.onfocus) {
