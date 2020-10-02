@@ -1,7 +1,7 @@
 .hx-form-container {
     box-shadow: 0 3px 3px -3px rgba(0,0,0,0.16), 0 3px 3px -3px rgba(0,0,0,0.23);
     border-radius: 0px;
-    padding: 0.25em 0em;
+    padding: 0.5em 0em;
     margin: 0em;
     overflow: hidden; /* Without this, the computed height of the form container does not account for the margins of each element within. */
     outline-style: none;
