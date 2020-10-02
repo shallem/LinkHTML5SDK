@@ -634,15 +634,14 @@ a {
  */
 @media all and (max-width: 500px) {
     .iconbutton {
-        width: 40px;
+        width: 50px;
         height: 40px;    
         padding: 0;
         margin: 0;
     }
     
     .hx-search-sort .hx-button-bar .iconbutton {
-        width: 32px;
-        margin-left: 0.1em;
+        width: 45px;
     }
     
     .hx-btn-inner {

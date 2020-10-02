@@ -3152,6 +3152,11 @@ var globalDataListID = -1;
                 this._loadInProgress.cancel();
                 this._loadInProgress = null;
             }
+            if (this._restoreFooter) {
+                this.setFooterContents(this._restoreFooter);
+            }
+            this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
+            this.$footerSection.children().removeClass('hx-loading');
         },
         startLoadingAsync: function(txt) {
             this.$footerSection.children().addClass('hx-loading');
