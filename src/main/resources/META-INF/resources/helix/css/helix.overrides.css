@@ -83,11 +83,11 @@
 
 /* Make the active button class only apply on none-iconbuttons */
 .hx-btn-active:not(.iconbutton):not(.hx-tab) {
-    border: 1px solid 		#2373a5 /*{global-active-border}*/;
-    background: 			#3373a5 /*{global-active-background-color}*/;
+    border: 1px solid 		#438CFF /*{global-active-border}*/;
+    background: 			#438CFF /*{global-active-background-color}*/;
     font-weight: bold;
     color: 					#fff /*{global-active-color}*/;
-    text-shadow: 0 /*{global-active-shadow-x}*/ 1px /*{global-active-shadow-y}*/ 0 /*{global-active-shadow-radius}*/ #3373a5 /*{global-active-shadow-color}*/;
+    text-shadow: 0 /*{global-active-shadow-x}*/ 1px /*{global-active-shadow-y}*/ 0 /*{global-active-shadow-radius}*/ #438CFF /*{global-active-shadow-color}*/;
     text-decoration: none;
     font-family: Helvetica, Arial, sans-serif /*{global-font-family}*/;
 }

@@ -13,6 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
+
+/* 
+Colors
+
+Blue for highlighting/linked elements: 438CFF or rgb(67,140,255)
+
+*/
+
 .hx-split-master {
     padding-top: 2px;
 }
@@ -233,6 +241,14 @@
     margin: 0px !important;
 }
 
+.hx-blue {
+    color: rgb(67,140,255);
+}
+
+.hx-bg-blue {
+    background-color: rgb(67,140,255);
+}
+
 .ui-mobile .ui-header {
     background-color: white;
     border-bottom: 1px solid rgb(67,140,255);
@@ -365,7 +381,7 @@ a {
 
 /* Highlight the current sort. */
 .hx-current-sort a.ui-link-inherit {
-    color: blue !important;
+    color: #438CFF !important;
 }
 
 .hx-no-hscroll {
@@ -819,7 +835,7 @@ a.hx-noicon-button:not(.hx-btn-inlabel) div.ui-btn-inner {
 }
 
 .hx-noicon-button div.ui-btn-text {
-   color: darkblue;
+   color: #438CFF;
 }
 
 .hx-noicon-button div.ui-btn-text.hx-btn-text-white {
@@ -1168,6 +1184,10 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
 
 .ui-footer .ui-navbar li .ui-btn.ui-btn-active {
     border: none;
-    box-shadow: inset 0 0px 15px -5px rgb(57,140,255);
+    box-shadow: inset 0 0px 15px -5px rgb(67,140,255);
 }
 
+/* Basic coloring. */
+a,a span {
+    color: rgb(67,140,255);
+}
