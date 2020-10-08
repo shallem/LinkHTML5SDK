@@ -1556,12 +1556,12 @@ function initHelixDB() {
             var qryColl = persistentObj[fieldName];
             Helix.DB.synchronizeDeltaField(dbSession, allSchemas, nxt, qryColl, fieldSchema, nxt, 
                                     function(args) {
-                                        var changeID = args.pop();
+                                        var changeID = args[9];
                                         var _dbSession = args[0];
                                         var _persistentObj = args[3];
                                         var _fieldName = args[5];
                                         
-                                        recordChangeKey([args, changeID, _fieldName, _persistentObj, _dbSession, function(_args) {
+                                        recordChangeKey([args.slice(0, 9), changeID, _fieldName, _persistentObj, _dbSession, function(_args) {
                                             Helix.DB.synchronizeDeltaFieldArray.apply(window, _args);                                            
                                         }]); 
                                     }, [dbSession, allSchemas, deltaArr, persistentObj, fieldSchema, fieldName, 
