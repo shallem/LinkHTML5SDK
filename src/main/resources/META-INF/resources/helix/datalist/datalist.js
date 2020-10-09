@@ -490,6 +490,9 @@ var globalDataListID = -1;
             this.isLoaded = false;
             this.selected = null;
             this._fingerOn = false;
+            this._lastTouchStart = null;
+            this.hasOverflowScroll = Helix.Utils.hasOverflowScrolling();
+            this.pullRefreshTimer = null;
 
             // Default sort.
             this.setDefaultSort();
@@ -1066,14 +1069,28 @@ var globalDataListID = -1;
                  * is required to make scrolling work properly on iOS.
                  */
                 if (_options.scroll) {
-                    _self.$listWrapper.on('touchstart', function () {
+                    _self.$listWrapper.on('touchstart', function (e) {
                         _self._fingerOn = true;
+                        _self._lastTouchStart =  e.originalEvent.touches[0];
                     });
 
-                    _self.$listWrapper.on('touchend', function () {
+                    _self.$listWrapper.on('touchend', function (e) {
                         _self._fingerOn = false;
+                        if (_self.pullRefreshTimer) {
+                            clearTimeout(_self.pullRefreshTimer);
+                            _self.pullRefreshTimer = null;
+                        }
+                        _self.pullRefreshTimer = setTimeout(function() {
+                            if (_self.hasOverflowScroll === false &&
+                                _self.options.pullToRefresh &&
+                                _self.$listWrapper[0].scrollTop === 0) {
+                                // See if we scrolled down far enough to refresh.
+                                if ((e.originalEvent.changedTouches[0].clientY - _self._lastTouchStart.clientY) > 20) {
+                                    _self.options.pullToRefresh.call(_self);
+                                }
+                            }
+                        }, 60);
                     });
-
                     _self._installScrollHandler();
                 }
 
