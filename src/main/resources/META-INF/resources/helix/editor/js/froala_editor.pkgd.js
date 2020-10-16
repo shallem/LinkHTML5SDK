@@ -9856,7 +9856,8 @@
       var st; // Prevent iOS scroll.
 
       if (editor.helpers.isIOS() && editor.$sc) {
-        st = editor.$sc.scrollTop();
+          // SAH
+        //st = editor.$sc.scrollTop();
       } // Focus on the pasted div.
 
 
@@ -9867,7 +9868,8 @@
       $paste_div.focus(); // Prevent iOS scroll.
 
       if (editor.helpers.isIOS() && editor.$sc) {
-        editor.$sc.scrollTop(st);
+          // SAH
+        //editor.$sc.scrollTop(st);
       } // Process paste soon.
 
 
@@ -10006,6 +10008,14 @@
      */
 
 
+    // SAH
+    function _htmlDecode(input){
+        var e = document.createElement('textarea');
+        e.innerHTML = input;
+        // handle case of empty input
+        return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+    }
+
     function _processPaste() {
       if (editor.opts.iframe) {
         editor.$el.attr('contenteditable', 'true');
@@ -10024,6 +10034,8 @@
 
       if (!clipboard_html) {
         clipboard_html = $paste_div.get(0).innerHTML;
+        // SAH
+        clipboard_html = _htmlDecode(clipboard_html);
         editor.selection.restore();
         editor.events.enableBlur();
       }
