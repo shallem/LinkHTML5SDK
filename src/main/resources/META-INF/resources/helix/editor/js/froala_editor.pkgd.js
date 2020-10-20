@@ -31437,15 +31437,20 @@
 
       _repositionResizer();
 
-      replace();
-      showProgressBar();
+      // SAH
+      if (!editor.helpers.isMobile()) {
+        replace();
+        showProgressBar();
+      }
       $current_image.on('load', function () {
         var loadEvents = [];
 
         _repositionResizer(); // https://github.com/froala/wysiwyg-editor/issues/3407
 
 
-        if ($(editor.popups.get('filesManager.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
+        // SAH
+        if (editor.popups.get('filesManager.insert') &&
+                $(editor.popups.get('filesManager.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
           showProgressBar();
         } // https://github.com/froala-labs/froala-editor-js-2/issues/1866
 
@@ -31470,7 +31475,9 @@
       var upload_img = new Blob([new Uint8Array(array)], {
         type: splitSrc[0].replace(/data\:/g, '').replace(/;base64/g, '')
       });
-      upload([upload_img], $current_image);
+      // SAH
+      //upload([upload_img], $current_image);
+      upload(upload_img, $current_image);
     }
 
     function _uploadPastedImages() {
@@ -41051,15 +41058,20 @@
 
       _showEditPopup();
 
-      replace();
-      showProgressBar();
+      // SAH
+      if (!editor.helpers.isMobile()) {
+          replace();
+          showProgressBar();
+      }
       $current_image.on('load', function () {
         var loadEvents = [];
 
         _repositionResizer(); // https://github.com/froala/wysiwyg-editor/issues/3407
 
 
-        if ($(editor.popups.get('image.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
+        // SAH
+        if (editor.popups.get('filesManager.insert') &&
+                $(editor.popups.get('image.insert').get(0)).find('div.fr-active.fr-error').length < 1) {
           showProgressBar();
         } // https://github.com/froala-labs/froala-editor-js-2/issues/1866
 
@@ -41084,7 +41096,9 @@
       var upload_img = new Blob([new Uint8Array(array)], {
         type: splitSrc[0].replace(/data\:/g, '').replace(/;base64/g, '')
       });
-      upload([upload_img], $current_image);
+      // SAH
+      //upload([upload_img], $current_image);
+      upload(upload_img, $current_image);
     }
 
     function _uploadPastedImages() {
