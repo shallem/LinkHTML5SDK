@@ -310,7 +310,7 @@ MobileHelixDatabase.prototype.transaction = function(process, errorCallback, suc
             }, "MobileHelixStorage", "commitTX", [ tx.db ]);
         }, 
         function(errMsg) {
-            if (ntries == 0) {
+            if (ntries === 0) {
                 // Wait 1 second and retry; it is possible the DB is just not open yet.
                 setTimeout(function() {
                     __createTx();
