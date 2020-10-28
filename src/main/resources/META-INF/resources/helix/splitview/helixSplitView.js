@@ -112,9 +112,10 @@
             this.__restoreMarkup = null;
             this.__current = null;
             this.__pushCt = 0;
+            this.__refreshActions = [];
             this.refresh();
             var _self = this;
-            $( document ).on( "orientationchange", function( event ) {
+            $( window ).resize(function( event ) {
                 _self.refresh();
                 // In case we were viewing the right pane of the split when we
                 // rotated back to a split view with 2 panes.
@@ -182,6 +183,16 @@
             if (this.options.onRefresh) {
                 this.options.onRefresh((this.__current) ? "full" : "split");
             }
+            if (this.__refreshActions && this.__refreshActions.length > 0) {
+                for (var i = 0; i < this.__refreshActions.length; ++i) {
+                    this.__refreshActions[i].call(this);
+                }
+                this.__refreshActions = [];
+            }
+        },
+        
+        onRefresh: function(fn) {
+            this.__refreshActions.push(fn);
         },
         
         __showLeft: function() {
