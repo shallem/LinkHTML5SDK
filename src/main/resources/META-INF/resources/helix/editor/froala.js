@@ -14,7 +14,8 @@
             extraButtonsPhone: null,
             editorReady: null,
             tabIndex: 0,
-            onSelectionChange: null
+            onSelectionChange: null,
+            onContentChange: null
         },
         pendingActions: [],
         initDone: false,
@@ -34,6 +35,9 @@
                       // Do something here.
                       // this is the editor instance.
                       _self._isDirty = true;
+                      if (_self.options.onContentChange) {
+                          _self.options.onContentChange.call(_self);
+                      }
                     },
                     'keydown': function(ev) {
                         var key = ev.keyCode || ev.which || ev.charCode;

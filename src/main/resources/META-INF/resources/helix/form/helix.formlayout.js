@@ -1590,6 +1590,15 @@ function __appendEditor(mode, formLayout, formElem, $fieldContainer, useMiniLayo
         'extraButtonsPhone': formElem.extraButtonsPhone ? formElem.extraButtonsPhone : [],
         'editorReady' : formElem.editorReady ? formElem.editorReady : null,
         'onSelectionChange' : formElem.onSelectionChange ? formElem.onSelectionChange : null,
+        'onContentChange' : $.proxy(function() { 
+            var fl = this;
+            if (fl.formLayout) {
+                fl = fl.formLayout;
+            }
+            if (fl.markDirty) {
+                fl.markDirty(); 
+            }
+        }, formLayout),
         'isScroller' : formElem.isScroller === true ? true : false
     });
     $(editorDiv).editor('update', formElem.value);
