@@ -20,6 +20,7 @@ function cdv_one(dom, event, successCB, errorCB) {
 }    
 
 function cordova_android_init() {
+    window.platformAndroid = true;
     window.cordova = {
         exec: function(success, failure, objName, methodName, args) {
             objName = "Native" + objName;
