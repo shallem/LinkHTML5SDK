@@ -41,7 +41,15 @@ function cordova_android_init() {
                 var res = $.parseJSON(resStr);
                 if (res.code === 0) {
                     if (success) {
-                        success(res.val ? $.parseJSON(res.val) : null);
+                        var arg = null;
+                        if (res.val) {
+                            try {
+                                arg = $.parseJSON(res.val);
+                            } catch(e) {
+                                arg = res.val;
+                            }
+                        }
+                        success(arg);
                     }
                 } else if (res.code === 9999) {
 		    // Async
