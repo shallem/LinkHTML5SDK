@@ -14,8 +14,6 @@ and open the template in the editor.
 }
 
 .picker--time .picker__box {
-    height: 20em;
-    overflow-y: scroll !important;
-    -webkit-overflow-scrolling: touch;
+    height: 100%;
     margin: 0em;
 }

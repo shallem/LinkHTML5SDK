@@ -226,7 +226,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
             'name': formElem.name,
             'id': inputID,
             'type': 'text',
-            'tabIndex': formLayout.__tabIndex++
+            'tabIndex': formLayout.__tabIndex++,
+            'class': 'textCategorySmall'
         });
         if (formElem.type === 'datetime') {
             // Date and time
@@ -239,7 +240,8 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                'name': formElem.name + '_time',
                'type': 'text',
                'tabIndex': formLayout.__tabIndex++,
-               'placeholder': formElem.timePlaceholder ? formElem.timePlaceholder : 'Select time'
+               'placeholder': formElem.timePlaceholder ? formElem.timePlaceholder : 'Select time',
+                'class': 'textCategorySmall'
             });
             var timeWrapper = $('<div/>').addClass('hx-display-inline').css('width', '35%');
             timeWrapper.appendTo(inputWrapper);
@@ -250,11 +252,19 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 selectYears: true,
                 selectMonths: true
             });
+            $(picker).pickadate('picker').on({
+                open: formElem.onfocus ? formElem.onfocus : function() {},
+                close: formElem.onblur ? formElem.onblur : function() {}
+            });
             $(picker).pickadate('picker').set('select', valueDate);
             var timePicker = $(timeInput).pickatime({
                 interval: 15
             });
             $(timePicker).pickatime('picker').set('select', valueDate);
+            $(timePicker).pickatime('picker').on({
+                open: formElem.onfocus ? formElem.onfocus : function() {},
+                close: formElem.onblur ? formElem.onblur : function() {}
+            });
         } else if (formElem.type === 'date' ||
                 formElem.type === 'exactdate') {
             dateInput.appendTo(inputWrapper);
@@ -263,6 +273,10 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 selectMonths: true
             });
             $(picker).pickadate('picker').set('select', valueDate);
+            $(picker).pickadate('picker').on({
+                open: formElem.onfocus ? formElem.onfocus : function() {},
+                close: formElem.onblur ? formElem.onblur : function() {}
+            });
         } else {
             // Just time
             dateInput.appendTo(inputWrapper);
@@ -270,28 +284,16 @@ function __appendDate(mode, formLayout, formElem, $fieldContainer, useMiniLayout
                 interval: 15
             });
             $(picker).pickatime('picker').set('select', valueDate);
+            $(picker).pickatime('picker').on({
+                open: formElem.onfocus ? formElem.onfocus : function() {},
+                close: formElem.onblur ? formElem.onblur : function() {}
+            });
         }
         
-        if (formElem.onfocus) {
-            dateInput.focus(formElem.onfocus);
-            if (timeInput) {
-                timeInput.focus(formElem.onfocus);
-            }
-        }
         if (formElem.onchange) {
             dateInput.change(formElem.onchange);
             if (timeInput) {
                 timeInput.change(formElem.onchange);
-            }
-        }
-        if (formElem.onblur) {
-            dateInput.blur(function () {
-                formElem.onblur.apply(this);
-            });
-            if (timeInput) {
-                timeInput.blur(function () {
-                    formElem.onblur.apply(this);
-                });
             }
         }
         /*$fieldContainer.on(Helix.clickEvent, dateInput, function(ev) {

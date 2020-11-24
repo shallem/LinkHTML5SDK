@@ -133,13 +133,15 @@ function TimePicker( picker, settings ) {
             setTimeout(function() {
                 var $pickerHolder = picker.$root.children(),
                     $viewset = $pickerHolder.find( '.' + settings.klass.viewset );
+                $pickerHolder.find('.picker__box').addClass('hx-scroller-nozoom');
                 if ( $viewset.length ) {
-                        $pickerHolder.find('.picker__box')[0].scrollTop = ~~$viewset.position().top - ( $viewset[ 0 ].clientHeight * 2 );
+                        $pickerHolder.find('.picker__box')[0].scrollTop = ~~$viewset[0].offsetTop - ( $viewset[ 0 ].clientHeight * 2 );
                     }
                 }, 50);
         }, 1 ).
         on( 'close', function() {
             picker.$root.find( 'button' ).attr( 'disabled', true )
+            picker.$root.find('.picker__box').removeClass('hx-scroller-nozoom');
         }, 1 )
 
 } //TimePicker

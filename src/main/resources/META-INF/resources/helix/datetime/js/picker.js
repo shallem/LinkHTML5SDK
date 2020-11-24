@@ -263,7 +263,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     focusPickerOnceOpened()
 
                     // Bind the document events.
-                    $document.on( 'click.' + STATE.id + ' focusin.' + STATE.id, function( event ) {
+                    $document.on( 'vclick.' + STATE.id + ' focusin.' + STATE.id, function( event ) {
 
                         var target = getRealEventTarget( event, ELEMENT )
 
@@ -280,7 +280,9 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
                             // If the target was the holder that covers the screen,
                             // keep the element focused to maintain tabindex.
-                            P.close( target === P.$holder[0] )
+                            P.close( target === P.$holder[0] );
+                            event.stopImmediatePropagation();
+                            event.stopPropagation();
                         }
 
                     }).on( 'keydown.' + STATE.id, function( event ) {
@@ -699,7 +701,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
 
                 // When something within the holder is clicked, stop it
                 // from bubbling to the doc.
-                'mousedown click': function( event ) {
+                'vclick' : function( event ) { /*SAH: mousedown click*/
 
                     var target = getRealEventTarget( event, ELEMENT )
 
@@ -726,7 +728,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
             }).
 
             // If there’s a click on an actionable element, carry out the actions.
-            on( 'click', '[data-pick], [data-nav], [data-clear], [data-close]', function() {
+            on( Helix.clickEvent, '[data-pick], [data-nav], [data-clear], [data-close]', function(ev) { /* SAH 'click' */
 
                 var $target = $( this ),
                     targetData = $target.data(),
@@ -752,6 +754,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     P.set( 'select', targetData.pick )
                     if ( SETTINGS.closeOnSelect ) {
                         P.close( true )
+                        ev.stopImmediatePropagation();
                     }
                 }
 
@@ -760,11 +763,13 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     P.clear()
                     if ( SETTINGS.closeOnClear ) {
                         P.close( true )
+                        ev.stopImmediatePropagation();
                     }
                 }
 
                 else if ( targetData.close ) {
                     P.close( true )
+                    ev.stopImmediatePropagation();
                 }
 
             }) //P.$holder
