@@ -405,7 +405,7 @@
                         while (delta > 0 && _start && _doBreak !== true) {
                             do {
                                 nxtEL = _start.nextSibling;
-                                if (nxtEL == null) {
+                                if (nxtEL === null) {
                                     _start = _start.parentNode;
                                 } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
                                     _start = nxtEL; // Skip over nxtEL.
@@ -455,7 +455,7 @@
                         while (delta < 0 && _start && _doBreak !== true) {
                             do {
                                 nxtEL = _start.previousSibling;
-                                if (nxtEL == null) {
+                                if (nxtEL === null) {
                                     _start = _start.parentNode;
                                 } else if (this._elIsButton(nxtEL) || this._elIsEmptyText(nxtEL)) {
                                     _start = nxtEL; // Skip over nxtEL.
@@ -518,6 +518,12 @@
                 }
             }
         },
+        _getLastChild: function(node) {
+            if (!node.childNodes || node.childNodes.length === 0) {
+                return node;
+            }
+            return this._getLastChild(node.childNodes[node.childNodes.length - 1]);
+        },
         _elIsButton: function(el) {
             if (el && el.classList && el.classList.contains('iconbutton')) {
                 return true;
@@ -528,11 +534,20 @@
             return false;
         },
         _elIsEmptyText: function(el) {
-            return el.nodeType === 3 &&
-                    (el.textContent.length == 0 ||
+            if  (el.nodeType === 3 &&
+                    (el.textContent.length === 0 ||
                         (el.textContent.length === 1 &&
-                            el.textContent.charCodeAt(1) === 8203));
+                            el.textContent.charCodeAt(1) === 8203))) {
+                return true;
+            }
+            if (el.tagName.toLowerCase() === 'p' ||
+                    el.tagName.toLowerCase() === 'span') {
+                if (!el.childNodes || el.childNodes.length === 0) {
+                    return true;
+                }
+            }
  
+            return false;
         },
         _selectElementContents: function (el) {
             var range = document.createRange();
