@@ -62,20 +62,20 @@
                                 case 39:
                                     // Right arrow.
                                     isHandled = true;
-                                    _self._setCaretPosition(1);
+                                    _self._setCaretPosition(1, ev.shiftKey);
                                     break;
                                 case 37:
                                     // Left arrow.
                                     isHandled = true;
-                                    _self._setCaretPosition(-1);
+                                    _self._setCaretPosition(-1, ev.shiftKey);
                                     break;
                                 case 38:
                                     // Up arrow
                                     isHandled = true;
-                                    _self._setCaretPosition(-_self._getArrowDownUpOffset());
+                                    _self._setCaretPosition(-_self._getArrowDownUpOffset(), ev.shiftKey);
                                     break;
                                 case 40:
-                                    _self._setCaretPosition(_self._getArrowDownUpOffset());
+                                    _self._setCaretPosition(_self._getArrowDownUpOffset(), ev.shiftKey);
                                     isHandled = true;
                                     break;
                             }
@@ -361,8 +361,9 @@
             sel.removeAllRanges();
             sel.addRange(range);
         },
-        _setCaretPosition: function (delta) {
+        _setCaretPosition: function (delta, shiftKey) {
             var containerNode = this.editor.el;
+            var isUp = (delta < 0) ? true : false;
             var sel = window.getSelection();
             if (sel) {
                 var newRange = null;
@@ -372,11 +373,11 @@
                 }
                 if (anchorNode.nodeType === 3) {
                     if (delta > 0) {
-                        if (sel.anchorOffset + delta <= anchorNode.length) {
+                        if (sel.focusOffset + delta <= anchorNode.length) {
                             newRange = document.createRange();
-                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
+                            newRange.setStart(sel.anchorNode, sel.focusOffset + delta);
                         } else {
-                            delta -= (anchorNode.length - sel.anchorOffset);
+                            delta -= (anchorNode.length - sel.focusOffset);
                         }
                     } else {
                         if (sel.anchorOffset + delta >= 0) {
@@ -387,7 +388,17 @@
                         }
                     }
                     if (newRange !== null) {
-                        newRange.collapse(true);
+                        if (shiftKey === true) {
+                            var curRange = sel.getRangeAt(0);
+                            if (isUp === true) {
+                                newRange.setEnd(curRange.endContainer, curRange.endOffset);
+                            } else {
+                                newRange.setEnd(newRange.startContainer, newRange.startOffset);
+                                newRange.setStart(curRange.startContainer, curRange.startOffset);
+                            }
+                        } else {
+                            newRange.collapse(true);
+                        }
                         sel.removeAllRanges();
                         sel.addRange(newRange);
                         return;
@@ -509,7 +520,17 @@
                             newRange.setStart(nxtEL, offset);
                         }
                         if (newRange !== null) {
-                            newRange.collapse(true);
+                            if (shiftKey === true) {
+                                var curRange = sel.getRangeAt(0);
+                                if (isUp === true) {
+                                    newRange.setEnd(curRange.endContainer, curRange.endOffset);
+                                } else {
+                                    newRange.setEnd(newRange.startContainer, newRange.startOffset);
+                                    newRange.setStart(curRange.startContainer, curRange.startOffset);
+                                }
+                            } else {
+                                newRange.collapse(true);
+                            }
                             sel.removeAllRanges();
                             sel.addRange(newRange);
                             return;
