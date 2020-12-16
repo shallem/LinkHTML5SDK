@@ -651,8 +651,11 @@ function __refreshSelectMenu(formLayout, formElem, useMiniLayout) {
     if (formElem.selectWidth) {
         $($fieldContainer).attr('width', formElem.selectWidth);
     }
-    $fieldContainer.on(Helix.clickEvent, inputMarkup, function(ev) {
-        $(ev.data).focus();
+    var customSelect = new CustomSelect({
+        elem: inputMarkup[0]
+    });
+    $fieldContainer.on(Helix.clickEvent, customSelect, function(ev) {
+        ev.data.open();
         return false;
     });
     

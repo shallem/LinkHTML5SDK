@@ -258,6 +258,9 @@
 		<include>datetime/css/default.date.css</include>
 		<include>datetime/css/default.time.css</include>
 		<include>datetime/css/helixOverrides.css</include>
+
+		<!-- Select menus -->
+		<include>select/vanilla-js-dropdown.css</include>
 		
 	      </includes>
 	      <aggregations>
@@ -376,9 +379,6 @@
 		<!-- Must go after helix.utils.js and helix.layout.js -->
 		<include>form/helix.formlayout.js</include>
 		
-		<!-- Pull to refresh. Heavily modified hook.js from usehook.com  -->
-		<!-- <include>lib/hook.js</include> -->
-		
 		<!-- Tab bar handling of the popup keyboard. -->
 		<include>tabbar/tabbar.js</include>
 		
@@ -386,9 +386,6 @@
 		     https://github.com/patik/within-viewport -->
 		<include>withinViewport/withinViewport.js</include>
 		<include>withinViewport/jquery.withinViewport.js</include>
-		
-		<!-- Audio/video with jPlayer v2.6 -->
-		<!-- <include>jplayer/jquery.jplayer.js</include> -->
 		
 		<!-- Color animation -->
 		<include>animate-colors/jquery.animate-colors.js</include>
@@ -401,6 +398,9 @@
 		<include>datetime/js/picker.date.js</include>
 		<include>datetime/js/picker.time.js</include>
 		<include>datetime/js/legacy.js</include>
+
+		<!-- Select meu. -->
+		<include>select/vanilla-js-dropdown.js</include>
 		
 	      </includes>
 	      <aggregations>

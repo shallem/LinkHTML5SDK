@@ -56,6 +56,7 @@ Helix.postInit = function(fn, thisArg, args) {
 
 Helix.stopEvent = function(ev) {
     ev.stopImmediatePropagation();
+    ev.stopPropagation();
     return false;
 };
 

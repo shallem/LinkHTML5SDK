@@ -113,7 +113,11 @@
     background-color: transparent;
 }
 
-.hx-select select,.hx-input-date input {
+.hx-select select {
+    width: 100%;
+}
+
+.hx-input-date input {
     float: left;
     display: block;
     color: black;
@@ -128,7 +132,7 @@
     margin-right: 0em;
     max-width: calc(100% - 45px);
 }
-
+/*
 .hx-select::after {
   content: "\25bc";
   width: 30px;
@@ -137,7 +141,7 @@
   font-size: 14px;
   color: black;
   pointer-events: none;
-}
+}*/
 
 /* Make sure the date selector/dropdown is at least as tall as the little arrow next to it. */
 .hx-form-container .hx-input-date,
@@ -145,9 +149,9 @@
     min-height: 14px;
 }
 
-.hx-select select option {
+/*.hx-select select option {
   padding: 30px;
-}
+}*/
 
 /* Form restyling. */
 .hx-mini-fieldcontain {
