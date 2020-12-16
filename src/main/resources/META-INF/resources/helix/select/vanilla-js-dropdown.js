@@ -38,7 +38,11 @@ var CustomSelect = function (options) {
     var button = document.createElement('button');
 
     button.className = titleClass;
-    button.textContent = selectOptions[0].textContent;
+    if (selectOptions.length > 0) {
+        button.textContent = selectOptions[0].textContent;
+    } else {
+        button.textContent = '';
+    }
 
     // creating the UL
     var ul = document.createElement('ul');
@@ -178,7 +182,7 @@ var CustomSelect = function (options) {
  * Closes the current select on any click outside of it. ONLY DO THIS ONCE!!
  *
  */
-document.addEventListener(Helix.hasTouch ? 'touchend' : 'click', function (e) {
+document.addEventListener(Helix.clickEvent, function (e) {
     var toClose = document.querySelectorAll('.js-Dropdown.is-open, .js-Dropdown > .is-open');
     if (!toClose || toClose.length === 0) {
         return;
