@@ -30,6 +30,13 @@
   top: 45%;
   width: 0;
 }
+.js-Dropdown.is-open .js-Dropdown-listwrapper {
+    z-index: 999;
+    height: 20em;
+}
+.js-Dropdown.is-open .js-Dropdown-listwrapper.js-Dropdown-float {
+    height: auto;
+}
 .js-Dropdown-list {
   background: #ffffff;
   border-left: 1px solid #a5a5a5;
@@ -41,7 +48,6 @@
   margin: 0;
   opacity: 0;
   padding: 0;
-  position: absolute;
   transition: 0.2s linear;
   z-index: 999;
 }
@@ -51,6 +57,9 @@
   opacity: 1;
   width: 95%;
   box-shadow: 10px 10px #e0e0e0;
+}
+.js-Dropdown-float .js-Dropdown-list.is-open {
+    position: absolute;
 }
 .js-Dropdown-list li {
   border-bottom: 1px solid #a5a5a5;

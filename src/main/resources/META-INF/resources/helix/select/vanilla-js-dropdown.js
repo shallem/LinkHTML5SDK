@@ -45,8 +45,15 @@ var CustomSelect = function (options) {
     }
 
     // creating the UL
+    var ulWrap = document.createElement('div');
+    ulWrap.className = 'js-Dropdown-listwrapper';
+    ulWrap.classList.add('hx-scroller-nozoom');
+    if (options.floatMode === true) {
+        ulWrap.classList.add('js-Dropdown-float');
+    }
     var ul = document.createElement('ul');
     ul.className = listClass;
+    ulWrap.appendChild(ul);
 
     // dealing with optgroups
     if (selectOpgroups.length) {
@@ -64,7 +71,7 @@ var CustomSelect = function (options) {
 
     // appending the button and the list
     selectContainer.appendChild(button);
-    selectContainer.appendChild(ul);
+    selectContainer.appendChild(ulWrap);
 
     //selectContainer.addEventListener(Helix.hasTouch ? 'touchend' : 'click', onClick);
     // Stop JQM pseudo events from bubbling to what is under the drop-down list.
@@ -72,7 +79,7 @@ var CustomSelect = function (options) {
     //    return Helix.stopEvent(ev);
     //});
     // Prevent clicks on a list item from bubbling to the DOM underneath the li.
-    $(selectContainer).find('li').on(Helix.clickEvent, function(ev) {
+    $(selectContainer).on(Helix.clickEvent, function(ev) {
         return onClick(ev);
     });
 
@@ -182,13 +189,13 @@ var CustomSelect = function (options) {
  * Closes the current select on any click outside of it. ONLY DO THIS ONCE!!
  *
  */
-document.addEventListener(Helix.clickEvent, function (e) {
-    var toClose = document.querySelectorAll('.js-Dropdown.is-open, .js-Dropdown > .is-open');
+$(document).on(Helix.clickEvent, function (e) {
+    var toClose = document.querySelectorAll('.js-Dropdown.is-open, .js-Dropdown .is-open');
     if (!toClose || toClose.length === 0) {
         return;
     }
     for (var i = 0; i < toClose.length; ++i) {
         toClose[i].classList.remove('is-open');
     }
-    return Helix.stopEvent(e);
+    return;
 });
