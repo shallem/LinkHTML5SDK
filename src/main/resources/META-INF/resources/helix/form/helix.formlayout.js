@@ -824,8 +824,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
-                    .css('width', '90%')
-                    //.css('position', 'absolute')
+                    .css('width', '100%')
                     .css('height', (formElem.autocompleteHeight ? formElem.autocompleteHeight : '200px'))
                     .css('overflow-y', 'scroll')
                     .css('display', 'none')
@@ -877,7 +876,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     formElem.autocompleteSelect.call(_self, LIs[0], formElem, null);
                                     formElem.__noblur = false;
                                 } else {
-                                    $("<li/>").append("Dismiss").css('color', 'red').on('vclick', $.proxy(function () {
+                                    $("<li/>").append("Dismiss").addClass('textCategorySmall').css('color', 'red').on('vclick', $.proxy(function () {
                                         this.dismissAutoComplete();
                                         return false;
                                     }, formElem)).appendTo(autoCompleteList);
@@ -886,7 +885,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                         var nxtLI = $("<li/>");
                                         var nxtItem = formElem.autocompleteProjection(LIs[i], nxtLI);
-                                        nxtLI.addClass('wordBreak').append(nxtItem).on('vclick', function () {
+                                        nxtLI.addClass('textCategorySmall wordBreak').append(nxtItem).on('vclick', function () {
                                             var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem, $(this));
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
@@ -1688,6 +1687,27 @@ function __appendHorizontalScroll(mode, formLayout, formElem, $fieldContainer, u
     }
 }
 
+function __refreshVerticalScroll(formElem) {
+    var hscroll = $(formElem.DOM).find('div[data-name="' + formElem.name + '"]');
+    $(hscroll).empty();
+    if (formElem.value) {
+        $(hscroll).append(formElem.value);
+    }
+}
+
+function __appendVerticalScroll(mode, formLayout, formElem, $fieldContainer, useMiniLayout) {
+    var hscroll = $('<div />').attr({
+        'class': 'hx-scroller-nozoom hx-full-width ' + formElem.computedStyleClass,
+        'data-name': formElem.name
+    }).appendTo($fieldContainer);
+    if (formElem.computedStyle) {
+        hscroll.attr('style', formElem.computedStyle);
+    }
+    if (formElem.value) {
+        hscroll.append(formElem.value);
+    }
+}
+
 function __appendHorizontalBlockPanel(mode, formLayout, formElem, $fieldContainer, useMiniLayout, page) {
     var subPanelObj = formElem;
 
@@ -2101,6 +2121,8 @@ Helix.Utils.refreshFormElement = function(formLayout, formElem, parentDiv, page,
         }
     } else if (formElem.type === 'horizontalScroll') {
         renderFn = __appendHorizontalScroll;
+    } else if (formElem.type === 'verticalScroll') {
+        renderFn = __appendVerticalScroll;
     } else if (formElem.type === 'subPanel') {
         // Subpanels should be attached directly to the parent div, not to a surrounding
         // container. Otherwise the full screen styling won't work with subpanels because
