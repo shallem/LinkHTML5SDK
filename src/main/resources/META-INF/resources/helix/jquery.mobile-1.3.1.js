@@ -3308,7 +3308,8 @@ if ( eventCaptureSupported ) {
 					stop = $.event.special.swipe.stop( event );
 
 					// prevent scrolling
-					if ( Math.abs( start.coords[ 0 ] - stop.coords[ 0 ] ) > $.event.special.swipe.scrollSupressionThreshold ) {
+					if (event.cancelable &&
+                                                Math.abs( start.coords[ 0 ] - stop.coords[ 0 ] ) > $.event.special.swipe.scrollSupressionThreshold ) {
 						event.preventDefault();
 					}
 				}
