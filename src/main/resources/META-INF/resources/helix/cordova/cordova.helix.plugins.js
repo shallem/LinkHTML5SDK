@@ -33,7 +33,7 @@ function cordova_helix_init() {
         }
     };
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 3) {
         window.OfflinePost.clearPost = function(offlineID, success, fail) {
             return cordova.exec(success, fail, "OfflinePost", "clearPost", [ offlineID ]);
@@ -119,7 +119,7 @@ function cordova_helix_init() {
         }
     };
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 1) {        
         $.extend(window.HelixSystem, {
             updateOnlineOffline: function(success) {
@@ -128,7 +128,7 @@ function cordova_helix_init() {
         });
     }    
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 3) {
         $.extend(window.HelixSystem, {
             exitApp : function() {
@@ -142,7 +142,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 4) {
         $.extend(window.HelixSystem, {
             updateSyncState: function(op, state, success, failure) {
@@ -157,7 +157,7 @@ function cordova_helix_init() {
         });
     }
 
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 5) {
         $.extend(window.HelixSystem, {
             getAppsForCapabilities: function(capabilityArray, success, failure) {
@@ -185,7 +185,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
             window.CordovaRevision >= 5) {
         window.HelixFiles = {
             downloadFile: function(url, docID, docName, docDigest, options, success, failure) {
@@ -254,7 +254,7 @@ function cordova_helix_init() {
         };
     }
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 8) {
         $.extend(window.HelixSystem, {
             clearRefreshData: function(op, success, failure) {
@@ -266,7 +266,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
         window.CordovaRevision >= 9) {
         $.extend(window.HelixFiles, {
             markSynced: function(docID, success, failure) {
@@ -275,7 +275,7 @@ function cordova_helix_init() {
         });
     }    
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 11) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 11) {
         window.HelixCallerID = {
             queue: function(phone, name, success, failure) {
                 if (!success) {
@@ -298,7 +298,7 @@ function cordova_helix_init() {
         };
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 12) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 12) {
         window.HelixBulkContacts = {
             queueAdd: function(contactOpts, success, failure) {
                 if (!success) {
@@ -339,7 +339,7 @@ function cordova_helix_init() {
         };
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 13) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 13) {
         $.extend(window.HelixSystem, {
             playSound: function(soundName, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "playSound", [ soundName ]);
@@ -347,7 +347,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 15) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 15) {
         $.extend(window.HelixFiles, {
             makeCloudDoc: function(url, docID, docName, docDigest, options, success, failure) {
                 if (!options) {
@@ -364,7 +364,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 15) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 15) {
         $.extend(window.HelixSystem, {
             logout: function(success, failure) {
                 if (!success) {
@@ -379,7 +379,7 @@ function cordova_helix_init() {
         });
     }
     
-    if (window.CordovaVersion >= 3 && window.CordovaRevision >= 17) {
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 17) {
         $.extend(window.HelixSystem, {
             sendInOtherApp: function(attachment, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "sendInOtherApp", [ attachment ]);

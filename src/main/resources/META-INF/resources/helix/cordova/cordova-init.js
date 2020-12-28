@@ -17,13 +17,22 @@
     var userAgent = (__hxUserAgent !== undefined && __hxUserAgent)  ? __hxUserAgent : navigator.userAgent;
     window.CordovaANDROID = userAgent.match(/\[LINK_ANDROID ([^.]*)\.([^\]]*)\]/);
     window.CordovaIOS34 = userAgent.match(/\[CORDOVA-3\.4\.([^\]]*)\]/);
+    window.CordovaIOS40 = userAgent.match(/\[CORDOVA-4\.0\.([^\]]*)\]/);
+    window.WKWebView = false;
+    if (window.CordovaIOS40) {
+        window.CordovaIOS34 = true;
+        window.WKWebView = true;
+    }
     
     window.CordovaVersion = 2;
     window.CordovaRevision = 0;
     if (window.CordovaANDROID ||
-        window.CordovaIOS34 ) {
+        window.CordovaIOS34) {
         window.CordovaInstalled = true;
-        if (window.CordovaIOS34) {
+        if (window.CordovaIOS40) {
+            window.CordovaVersion = 4;
+            window.CordovaRevision = parseInt(window.CordovaIOS40[1]);
+        } else if (window.CordovaIOS34) {
             window.CordovaVersion = 3;
             window.CordovaRevision = parseInt(window.CordovaIOS34[1]);
         } else {

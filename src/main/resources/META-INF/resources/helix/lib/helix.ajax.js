@@ -227,7 +227,7 @@ function _updateOfflinePostStatus() {
                     });              
                 }
             });
-        } else if (window.CordovaRevision >= 13) {
+        } else if (window.CordovaVersion > 3 || window.CordovaRevision >= 13) {
             if (window.OfflinePost.listPosts) {
                 window.OfflinePost.listPosts(function(postsList) {
                     for (var i = 0; i < postsList.length; ++i) {

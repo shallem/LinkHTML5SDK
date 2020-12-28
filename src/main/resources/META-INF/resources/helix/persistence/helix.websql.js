@@ -34,7 +34,7 @@ MobileHelixDatabase.createUUID = function() {
  * @constructor
  */
 var MobileHelixDatabase_Rows = function(data) {
-    if (window.CordovaVersion >= 3 &&
+    if (window.CordovaVersion > 3 ||
             window.CordovaRevision >= 5) {
         this.resultSet = [];    // results array
         // Data is returned as an array of arrays for compactness' sake. The first array is the 
