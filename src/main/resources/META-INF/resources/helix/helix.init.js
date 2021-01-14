@@ -96,8 +96,11 @@ Helix.ready = false;
 })(jQuery);
 
 $(document).on('ready', function() {
-    window.onerror = function (desc,page,line,chr) { 
+    window.onerror = function (desc,page,line,chr,err) { 
         var msg = 'Captured javascript error "' + desc + '" on page "' + page + '" line "' + line + '"';
+        if (err && err.stack) {
+            msg = msg + ' stack: ' + err.stack;
+        }
         console.log('[ERROR] ' + msg);
         if (Helix.showErrors) {
             Helix.Utils.statusMessage('Javascript Error', msg, 'severe');
