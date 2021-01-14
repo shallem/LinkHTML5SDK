@@ -114,16 +114,11 @@
   background: #fff;
   display: table-cell;
   vertical-align: middle;
-}
-@media (min-height: 26.5em) {
-  .picker__box {
-    font-size: 1.25em;
-  }
+  font-size: 1.25em;
 }
 @media (min-height: 33.875em) {
   .picker__box {
     display: block;
-    font-size: 1.33em;
     border: 1px solid #777;
     border-top-color: #898989;
     border-bottom-width: 0;
@@ -133,7 +128,6 @@
 }
 @media (min-height: 40.125em) {
   .picker__box {
-    font-size: 1.5em;
     border-bottom-width: 1px;
     border-radius: 5px;
   }
@@ -160,7 +154,7 @@
 }
 @media (min-height: 33.875em) {
   .picker--opened .picker__frame {
-    top: auto;
+    top: 10%;
     bottom: 0;
   }
 }
