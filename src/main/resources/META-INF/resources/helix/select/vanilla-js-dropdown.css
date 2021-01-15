@@ -58,7 +58,7 @@
   width: 95%;
   box-shadow: 10px 10px #e0e0e0;
 }
-.js-Dropdown-float .js-Dropdown-list.is-open {
+.js-Dropdown.is-open .js-Dropdown-float.js-Dropdown-listwrapper {
     position: absolute;
 }
 .js-Dropdown-list li {
