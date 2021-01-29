@@ -394,7 +394,7 @@ var globalDataListID = -1;
              * paginates as the user scrolls.
              */
             itemsPerPage: 50,
-            
+
             /*
              * Override the next tap and call this function instead.
              */
@@ -471,7 +471,7 @@ var globalDataListID = -1;
             }
 
             this.refreshDividerOptions();
-            
+
             this.$parent.listview({
                 dividerTheme: 'd',
                 headerTheme: 'd'
@@ -504,7 +504,7 @@ var globalDataListID = -1;
             // Queued refershes - tracks refresh calls that occur during another refresh.
             this._queuedRefreshes = [];
             this.refreshInProgress = false;
-            
+
             $(document).on('active', null, this, function (ev) {
                 // Make sure a paused/interrupted refresh (due to the app going to sleep) does not leave
                 // the datalist stuck.
@@ -518,7 +518,7 @@ var globalDataListID = -1;
                 });
             }
         },
-        refreshDividerOptions: function() {
+        refreshDividerOptions: function () {
             var _self = this;
             var ad = this.options.autodividers;
             if (!ad) {
@@ -532,10 +532,10 @@ var globalDataListID = -1;
             }
             this.hasAutodividers = ad;
         },
-        refreshDividers: function() {
-            
+        refreshDividers: function () {
+
         },
-        _makeDivider: function(dividerText) {
+        _makeDivider: function (dividerText) {
             var divider = document.createElement('li');
             divider.appendChild(document.createTextNode(dividerText));
             divider.setAttribute('data-' + $.mobile.ns + 'role', 'list-divider');
@@ -543,7 +543,7 @@ var globalDataListID = -1;
             divider.classList.add('ui-li-divider', 'ui-bar-d', 'hx-no-webkit-select');
             return divider;
         },
-        _addDivider: function(nxtRow, lastRow, li, direction) {
+        _addDivider: function (nxtRow, lastRow, li, direction) {
             if (!this.hasAutodividers) {
                 return li;
             }
@@ -581,7 +581,7 @@ var globalDataListID = -1;
             var prevSib = li.previousSibling;
             if (callback && row && $(curRowParent).attr('data-deleted') !== 'true') {
                 var dividerText = callback.call(this, curRowParent, this.displayList, this._currentSort, row);
-                if (dividerText) { 
+                if (dividerText) {
                     if (this.lastDividerText !== dividerText) {
                         if (prevSib && $(prevSib).is('[data-role="list-divider"]')) {
                             var prevSibText = $(prevSib).attr('data-text');
@@ -677,9 +677,9 @@ var globalDataListID = -1;
             }
             if (this._preloadWindowStart === 0 && direction < 0) {
                 // Trying to preload a prior page when the preload window is at the bottom of the data set.
-                 this._preloadPromise = new Promise(function (resolve, reject) {
-                     resolve();
-                 });
+                this._preloadPromise = new Promise(function (resolve, reject) {
+                    resolve();
+                });
                 return;
             }
 
@@ -696,7 +696,7 @@ var globalDataListID = -1;
             } else {
                 // We are setting up the initial preload window. Start preloading from 2 pages prior to where we start rendering.
                 // Then go from there.
-                skip = this._preloadWindowStart = 
+                skip = this._preloadWindowStart =
                         this._renderWindowStart - Math.max(0, this._renderWindowStart - (this._itemsPerPage * 2));
             }
             displayCollection = displayCollection.limit(nElems);
@@ -731,27 +731,27 @@ var globalDataListID = -1;
          * 
          * @param direction - should be 1 for scrolling down, -1 for scrolling up.
          */
-        _forceRerender: function() {
+        _forceRerender: function () {
             /*
-            this.$listWrapper[0].style.display = 'none';
-            var _ignore = this.$listWrapper[0].offsetHeight;
-            this.$listWrapper[0].style.display = 'block';
-            return _ignore; // Without this our JS compressor optimizes _ignore away
-            */
+             this.$listWrapper[0].style.display = 'none';
+             var _ignore = this.$listWrapper[0].offsetHeight;
+             this.$listWrapper[0].style.display = 'block';
+             return _ignore; // Without this our JS compressor optimizes _ignore away
+             */
         },
- 
-        _updateScrollTop: function(newScrollTop) {
+
+        _updateScrollTop: function (newScrollTop) {
             var node = this.$listWrapper[0];
             node.style['-webkit-overflow-scrolling'] = 'auto';
             node.scrollTop = newScrollTop;
             node.style['-webkit-overflow-scrolling'] = 'touch';
         },
-        
-        _addToListStart: function(nItems) {
+
+        _addToListStart: function (nItems) {
             var LIs = $(this.$parent).find('li').not('[data-role="empty-message"]');
             var lastLI = LIs[0];
             var fullheight = 0;
-            var i = LIs.length - 1; 
+            var i = LIs.length - 1;
             var origLastID = '';
             for (var k = 0; k < LIs.length; ++k) {
                 if (LIs[k].hasAttribute('data-id')) {
@@ -770,7 +770,7 @@ var globalDataListID = -1;
                 var lastObj = $(lastLI).data('data');
                 var obj = this._prefetchedData[--this._renderWindowStart];
                 lastLI = this._addDivider(obj, lastObj, lastLI, -1);
-                    
+
                 if (this.rerenderElem(obj, obj.id, $(toMove)) === true) {
                     // Render this item.
                     --i;
@@ -785,14 +785,14 @@ var globalDataListID = -1;
             }
             if (fullheight > 0) {
                 this._addDivider(null, this._prefetchedData[this._renderWindowStart], lastLI, -1);
-                setTimeout(function(dl) {
+                setTimeout(function (dl) {
                     var scrollToZero = false;
                     var origLast = dl.$listWrapper.find('[data-id="' + origLastID + '"]:visible');
                     if (origLast.length === 0) {
                         scrollToZero = true;
                     }
                     // Be careful - make sure that we never scroll to 0, which will trigger another refresh immediately
-                    dl._updateScrollTop((scrollToZero === true) ? 1 : 
+                    dl._updateScrollTop((scrollToZero === true) ? 1 :
                             Math.max(origLast[0].offsetTop - dl.$listWrapper[0].offsetTop, 2) - 1);
                     dl.$section.nextAll('.hx-datalist-spinner').remove();
                     dl._restoreScrollEvent();
@@ -802,8 +802,8 @@ var globalDataListID = -1;
                 this._restoreScrollEvent();
             }
         },
-        
-        _addToListEnd: function(nItems) {
+
+        _addToListEnd: function (nItems) {
             var LIs = $(this.$parent).find('li').not('[data-role="empty-message"]');
             var lastLI;
             var lastLIPos;
@@ -816,7 +816,7 @@ var globalDataListID = -1;
                     break;
                 }
             }
-            
+
             var scrollToZero = false;
             var fullheight = 0;
             var i = 0, j = 0;
@@ -838,16 +838,17 @@ var globalDataListID = -1;
                     ++j; // Move to the next LI
                     continue;
                 }
-                
+
                 var lastObj = $(lastLI).data('data');
                 var obj = this._prefetchedData[this._renderWindowStart + this._itemsPerPage];
                 ++this._renderWindowStart;
                 lastLI = this._addDivider(obj, lastObj, lastLI, 1);
-                
+
                 if (this.rerenderElem(obj, obj.id, $(toMove)) === true) {
                     // We have moved this LI and re-rendered the data.
                     $(toMove).data('data', obj);
-                    ++i; ++j;
+                    ++i;
+                    ++j;
                     if (isFresh === false) {
                         lastLI = $(toMove).detach().insertAfter($(lastLI));
                         $(lastLI).attr('data-deleted', null);
@@ -859,15 +860,15 @@ var globalDataListID = -1;
                 }
             }
             if (fullheight > 0) {
-                setTimeout(function(dl) {
+                setTimeout(function (dl) {
                     var origLast = dl.$listWrapper.find('[data-id="' + origLastID + '"]:visible');
                     if (origLast.length === 0) {
                         scrollToZero = true;
                     }
                     // Make sure that we never scroll to the very end of the list or beyond, which will trigger another refresh instantly
-                    dl._updateScrollTop((scrollToZero === true) ? 1 : 
-                            Math.min(origLast[0].offsetTop - dl.$listWrapper[0].offsetTop, 
-                                     dl.$listWrapper[0].scrollHeight - dl.$listWrapper[0].clientHeight) - 1);
+                    dl._updateScrollTop((scrollToZero === true) ? 1 :
+                            Math.min(origLast[0].offsetTop - dl.$listWrapper[0].offsetTop,
+                                    dl.$listWrapper[0].scrollHeight - dl.$listWrapper[0].clientHeight) - 1);
                     dl.$section.nextAll('.hx-datalist-spinner').remove();
                     dl._restoreScrollEvent();
                 }, 500, this);
@@ -876,7 +877,7 @@ var globalDataListID = -1;
                 this._restoreScrollEvent();
             }
         },
-        
+
         _setScrollTimer: function (scrollAction) {
             this._cancelAllScrolls = true;
             scrollAction();
@@ -885,7 +886,7 @@ var globalDataListID = -1;
                 _self._cancelAllScrolls = false;
             }, 500);
         },
- 
+
         scrollHandler: function (ev) {
             var _self = this;
             if (_self._cancelAllScrolls) {
@@ -902,23 +903,23 @@ var globalDataListID = -1;
             var itemHeight = listHeight / _self._itemsPerPage;
             var scrollDelta = scrollPos - _self._lastScrollPos;
             _self._lastScrollPos = scrollPos;
-            
+
             if (lastScroll === Number.MIN_VALUE) {
                 return;
             }
 
-	    if (lastScroll >= -10 && scrollPos < -10) {
-                if (!_self.refreshInProgress && 
-                        _self._renderWindowStart === 0 && 
+            if (lastScroll >= -10 && scrollPos < -10) {
+                if (!_self.refreshInProgress &&
+                        _self._renderWindowStart === 0 &&
                         !_self.getCurrentSearchText() &&
                         _self.options.pullToRefresh) {
-                    $(document).off('scrollzero').one('scrollzero', function() {
+                    $(document).off('scrollzero').one('scrollzero', function () {
                         _self.options.pullToRefresh.call(this);
                         _self._clearGlobalFilterMenu();
                     });
                     return;
                 }
-	    }
+            }
             if (scrollPos === 0) {
                 $(document).trigger('scrollzero');
             }
@@ -937,7 +938,7 @@ var globalDataListID = -1;
                     if (_self._renderWindowStart < _self._itemsPerPage) {
                         _self._preloadPage(-1);
                         if (_self._preloadPromise) {
-                            _self._preloadPromise.then(function() {
+                            _self._preloadPromise.then(function () {
                                 _self._addToListStart(nItems);
                             });
                         } else {
@@ -952,7 +953,7 @@ var globalDataListID = -1;
                     if (_self._renderWindowStart >= (_self._preloadNElems - _self._itemsPerPage)) {
                         _self._preloadPage(1);
                         if (_self._preloadPromise) {
-                            _self._preloadPromise.then(function() {
+                            _self._preloadPromise.then(function () {
                                 _self._addToListEnd(nItems);
                             });
                         } else {
@@ -1071,7 +1072,7 @@ var globalDataListID = -1;
                 if (_options.scroll) {
                     _self.$listWrapper.on('touchstart', function (e) {
                         _self._fingerOn = true;
-                        _self._lastTouchStart =  e.originalEvent.touches[0];
+                        _self._lastTouchStart = e.originalEvent.touches[0];
                     });
 
                     _self.$listWrapper.on('touchend', function (e) {
@@ -1080,10 +1081,10 @@ var globalDataListID = -1;
                             clearTimeout(_self.pullRefreshTimer);
                             _self.pullRefreshTimer = null;
                         }
-                        _self.pullRefreshTimer = setTimeout(function() {
+                        _self.pullRefreshTimer = setTimeout(function () {
                             if (_self.hasOverflowScroll === false &&
-                                _self.options.pullToRefresh &&
-                                _self.$listWrapper[0].scrollTop === 0) {
+                                    _self.options.pullToRefresh &&
+                                    _self.$listWrapper[0].scrollTop === 0) {
                                 // See if we scrolled down far enough to refresh.
                                 if ((e.originalEvent.changedTouches[0].clientY - _self._lastTouchStart.clientY) > 20) {
                                     _self.options.pullToRefresh.call(_self);
@@ -1100,15 +1101,15 @@ var globalDataListID = -1;
                 _self.isDirty = false;
             }, extraItems, _self.originalList, undefined, _options);
         },
-        
-        _installScrollHandler: function() {
+
+        _installScrollHandler: function () {
             var __scrollHandler = $.proxy(function (ev) {
                 this.scrollHandler(ev);
             }, this);
             this.$listWrapper.off('scroll').scroll(__scrollHandler);
             this._cancelAllScrolls = false;
         },
-        
+
         _restoreScrollEvent: function () {
             this._cancelAllScrolls = false;
         },
@@ -1224,18 +1225,18 @@ var globalDataListID = -1;
                 var nxtSort = sorts[sortFld];
                 if (nxtSort.display !== "[none]") {
                     var sortItem = $('<li />').addClass('hx-menu-item hx-search-item hx-flex-horizontal')
-                    .append(
-                        $('<div />').attr({
-                            'data-field': sortFld,
-                            'data-direction': nxtSort.direction,
-                            'data-case': nxtSort.usecase,
-                            'data-secondary': nxtSort.secondary,
-                            'data-secondary-order': nxtSort.secondaryDirection,
-                            'class': 'hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text'
+                            .append(
+                                    $('<div />').attr({
+                                'data-field': sortFld,
+                                'data-direction': nxtSort.direction,
+                                'data-case': nxtSort.usecase,
+                                'data-secondary': nxtSort.secondary,
+                                'data-secondary-order': nxtSort.secondaryDirection,
+                                'class': 'hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text'
                             })
-                            .append(nxtSort.display))
-                    .append($('<div/>').addClass('icono-caretRight'))      
-                    .appendTo(sortsList);
+                                    .append(nxtSort.display))
+                            .append($('<div/>').addClass('icono-caretRight'))
+                            .appendTo(sortsList);
 
                     /* Highlight the current sort. */
                     if (sortFld === _self._currentSort) {
@@ -1309,7 +1310,7 @@ var globalDataListID = -1;
                                 newSortCase = (updatedSorts.sortCase ? updatedSorts.sortCase : newSortCase);
                             }
                         }
-                        
+
                         // Change the li for this sort field so that we can see it is the current sort field.
                         $(sortsList).find('li').removeClass('hx-current-sort');
                         $(evt.target).closest('li').addClass('hx-current-sort');
@@ -1438,9 +1439,9 @@ var globalDataListID = -1;
                 this.$filter.find('.hx-icon').removeClass('ui-icon-hx-filter-black-filled').addClass('ui-icon-hx-filter-black');
             }
         },
-        _clearGlobalFilterMenuItem: function(fField) {
+        _clearGlobalFilterMenuItem: function (fField) {
             this._globalFilterContainer.find('input[data-field="' + fField + '"]').prop('checked', false).checkboxradio('refresh');
-            this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');            
+            this._globalFilterContainer.find('input[data-field="' + fField + '"][data-value="__hx_clear"]').prop('checked', true).checkboxradio('refresh');
         },
         _clearGlobalFilterMenu: function () {
             for (var fField in this._filterMap) {
@@ -1567,9 +1568,9 @@ var globalDataListID = -1;
             /* Always have a "Clear" button to reset all global filters. */
             $('<li />').addClass('hx-menu-item hx-clear-filters hx-flex-horizontal')
                     .append(
-                        $('<div />').addClass('hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text')
+                            $('<div />').addClass('hx-btn-inline hx-flex-fill textCategoryMedium hx-menu-item-text')
                             .append('Clear filters'))
-                    .append($('<div/>').addClass('icono-caretRight'))      
+                    .append($('<div/>').addClass('icono-caretRight'))
                     .appendTo(filtersList)
                     .on(_self.tapEvent, function (evt) {
                         evt.stopImmediatePropagation();
@@ -1582,14 +1583,14 @@ var globalDataListID = -1;
                         $(_self._globalFilterContainer).popup("close");
                         return false;
                     });
-            
-            _self._globalFilterContainer.popup().on('popupafteropen', $.proxy(function(ev) {
+
+            _self._globalFilterContainer.popup().on('popupafteropen', $.proxy(function (ev) {
                 if (this.options.afterFilterOpen) {
                     this.options.afterFilterOpen.call(this, $(ev.target));
                 }
             }, _self));
         },
-        
+
         _resetPaging: function () {
             this._lastScrollPos = 0;
             this._renderWindowStart = 0;
@@ -1611,7 +1612,7 @@ var globalDataListID = -1;
                 _self._queuedRefreshes.push([oncomplete, extraItems, itemList, renderWindowStart, _options]);
                 return;
             }
-            
+
             _self.refreshInProgress = true;
             if (!extraItems) {
                 extraItems = _self.extraItems;
@@ -1647,21 +1648,21 @@ var globalDataListID = -1;
             var _restoreScroll = undefined;
             if (_options.noPagingReset !== true) {
                 _self._resetPaging();
-                this.$listWrapper.scrollTop(0);            
+                this.$listWrapper.scrollTop(0);
             } else {
                 _restoreScroll = this.$listWrapper[0].scrollTop;
             }
-            
+
             /* Must happen after we call _resetPaging */
             if (renderWindowStart !== undefined) {
                 _self.setRenderWindowStart(renderWindowStart);
             }
-            
+
             /* Make sure selections are stable. */
             var selectedID = _self.$listWrapper.find('li.ui-btn-active').attr('data-id');
             var multiSelectElems = _self.getAllMultiSelectElements();
             var multiSelectIDs = [];
-            $(multiSelectElems).each(function(index, elem) {
+            $(multiSelectElems).each(function (index, elem) {
                 multiSelectIDs.push($(elem).attr('data-id'));
                 $(elem).removeClass('hx-selected');
             });
@@ -1682,12 +1683,12 @@ var globalDataListID = -1;
                 } else {
                     _self.clearSelected();
                 }
-                multiSelectIDs.forEach(function(element) {
+                multiSelectIDs.forEach(function (element) {
                     if (element) {
                         _self.$listWrapper.find('li[data-id="' + element + '"]').addClass('hx-selected');
                     }
                 });
-                
+
                 finalCompletion.call(_self);
                 //_self.$parent.listview("refresh");
                 _self.refreshInProgress = false;
@@ -1893,7 +1894,7 @@ var globalDataListID = -1;
             if (!_self.options.indexedSearch) {
                 return;
             }
-            
+
             _self.__searchReadyTimeout = setTimeout(function () {
                 if (searchText) {
                     _self.options.indexedSearch.call(_self, searchText, function (displayCollection, oncomplete, optionsOverrides) {
@@ -1923,7 +1924,7 @@ var globalDataListID = -1;
                 this._doSearch(null, true);
             }
         },
-        runSearch: function(opaque) {
+        runSearch: function (opaque) {
             this._doSearch(opaque);
         },
         _doSearch: function (opaque, noDelay) {
@@ -1965,7 +1966,7 @@ var globalDataListID = -1;
                 }
             }
         },
-        resetAllFilters: function() {
+        resetAllFilters: function () {
             this._clearGlobalFilterMenu();
             this._filterMap = {};
             this.unfilteredList = this.originalList;
@@ -2077,28 +2078,29 @@ var globalDataListID = -1;
                 }
                 $('<div/>').addClass('hx-button-bar')
                         .append($('<div/>').addClass('iconbutton hx-btn-inner')
-                            .append($('<div/>').addClass('hx-icon ui-icon-search-indicator')))
-                            .appendTo($searchDiv);
+                                .append($('<div/>').addClass('hx-icon ui-icon-search-indicator')))
+                        .appendTo($searchDiv);
                 this.$searchBox = $('<input/>').attr({
                     'type': 'text',
                     'name': 'search',
                     'class': 'textCategorySmall',
                     'id': sboxID,
+                    'placeholder': 'Search',
                     'value': options.indexedSearchText
                 }).appendTo($searchDiv);
                 this.$searchClear = $('<div/>').addClass('hx-button-bar')
                         .append($('<div/>').addClass('iconbutton hx-btn-inner')
-                            .append($('<div/>').addClass('hx-icon icono-cross')))
-                            .appendTo($searchDiv)
-                            .on(Helix.clickEvent, function(ev) {
-                                ev.stopImmediatePropagation();
-                                _self.$searchBox.val('');
-                                _self.$searchClear.hide();
-                                _self.resetListContents();
-                                _self.$searchBox.focus();
-                                return false;
-                            })
-                                    .hide();
+                                .append($('<div/>').addClass('hx-icon icono-cross')))
+                        .appendTo($searchDiv)
+                        .on(Helix.clickEvent, function (ev) {
+                            ev.stopImmediatePropagation();
+                            _self.$searchBox.val('');
+                            _self.$searchClear.hide();
+                            _self.resetListContents();
+                            _self.$searchBox.focus();
+                            return false;
+                        })
+                        .hide();
 
                 if (options.defaultSearchText) {
                     this.__searchText = options.defaultSearchText;
@@ -2268,7 +2270,7 @@ var globalDataListID = -1;
                         $(li).attr('data-overflow', '1'); // Mark this as overflow
                         $(li).attr('data-group', rowIndex);
                         $(li).data('group', curRow);
-                        $(li)[0].addEventListener('touchend', function(ev) {
+                        $(li)[0].addEventListener('touchend', function (ev) {
                             if (_self._touchEndIsTap(ev)) {
                                 _self.options.groupOverflowFn.call(_self, curRow);
                             }
@@ -2338,7 +2340,7 @@ var globalDataListID = -1;
 
                 if (groupMembers) {
                     // Remove empty group messages.
-                    $(dividerLI).nextUntil('li[data-role="list-divider"]','[data-role="empty-group"]').remove();
+                    $(dividerLI).nextUntil('li[data-role="list-divider"]', '[data-role="empty-group"]').remove();
                     // groupLIs are all LIs from dividerLI to the next divider (except empty messages)
                     groupLIs = $(dividerLI).nextUntil('li[data-role="list-divider"]');
                     if ($.isArray(groupMembers)) {
@@ -2354,34 +2356,34 @@ var globalDataListID = -1;
                         }
                     } else {
                         groupMembers.forEach(
-                            /* Element callback. */
-                            function (groupRow) {
-                                groupIndex = __renderGroupRow(groupRow, groupIndex, dividerLI);
-                            },
-                            /* On start. */
-                            function (ct) {
-                                if (ct === 0) {
-                                    __renderEmptyGroup(dividerLI);
-                                } else {
+                                /* Element callback. */
+                                        function (groupRow) {
+                                            groupIndex = __renderGroupRow(groupRow, groupIndex, dividerLI);
+                                        },
+                                        /* On start. */
+                                                function (ct) {
+                                                    if (ct === 0) {
+                                                        __renderEmptyGroup(dividerLI);
+                                                    } else {
 
-                                }
-                            },
-                            /* On done. */
-                            function () {
-                                __finishGroup(groupIndex);
-                            }
-                        );
-                    }
-                    return true;
-                } else if (groupMembers === null) {
-                    __renderEmptyGroup(dividerLI);
-                    oncomplete();
-                    return true;
-                } else {
-                    oncomplete();
-                    return false;
-                }
-            } else {
+                                                    }
+                                                },
+                                                /* On done. */
+                                                        function () {
+                                                            __finishGroup(groupIndex);
+                                                        }
+                                                );
+                                            }
+                                    return true;
+                                } else if (groupMembers === null) {
+                            __renderEmptyGroup(dividerLI);
+                            oncomplete();
+                            return true;
+                        } else {
+                            oncomplete();
+                            return false;
+                        }
+                    } else {
                 // Not grouped
                 if (_self._renderRowMarkup(LIs, curRow, _self.displayList.length)) {
                     _self.displayList.push(curRow);
@@ -2414,7 +2416,7 @@ var globalDataListID = -1;
                 this.messageTapOverride = null;
                 return;
             }
-            
+
             if (this.options.multiSelect && event.clientX < 35 && $(target).is('.hx-multi-select-item')) {
                 $(target).toggleClass("hx-selected");
 
@@ -2443,7 +2445,7 @@ var globalDataListID = -1;
                             $(target).is('[data-role="splitlink"]')) {
                         if (this.options.splitAction) {
                             if (!this.options.splitAction.call(this, this.selected, this.selectedGroup, this.strings)) {
-                                this._runContextAction(target);                                
+                                this._runContextAction(target);
                             }
                         } else {
                             this._runContextAction(target);
@@ -2456,9 +2458,9 @@ var globalDataListID = -1;
 
             return false;
         },
-        _retargetEvent: function(event, callback) {
+        _retargetEvent: function (event, callback) {
             var touch = event.changedTouches ? event.changedTouches[0] : event;
-            setTimeout(function(touch, _self) {
+            setTimeout(function (touch, _self) {
                 var target = document.elementFromPoint(touch.clientX, touch.clientY);
                 //var target = event.target;
                 target = $(target).closest('li.hx-li,div[data-role="splitlink"],a[data-role="splitlink"],li[data-overflow="1"]');
@@ -2466,10 +2468,10 @@ var globalDataListID = -1;
                     return;
                 }
 
-                callback.call(_self, touch, target);                
+                callback.call(_self, touch, target);
             }, 50, touch, this);
         },
-        
+
         _handleTap: function (event) {
             event.preventDefault();
 
@@ -2533,7 +2535,7 @@ var globalDataListID = -1;
                 });
             }
         },
-        _touchEndIsTap: function(ev) {
+        _touchEndIsTap: function (ev) {
             var _now = new Date().getTime();
             var _tDiff = _now - this._tapInstant;
             var _yDiff = this.$listWrapper.scrollTop() - this._lastScrollTop;
@@ -2550,24 +2552,24 @@ var globalDataListID = -1;
             if ($(ev.target).is('[data-capture="tap"]')) {
                 return false;
             }
-            
+
             return true;
         },
-        
-        _handleSwipeLeft: function(event, target) {
+
+        _handleSwipeLeft: function (event, target) {
             event.stopImmediatePropagation();
 
             this.setSelected(target);
             this.options.swipeLeftAction.call(this, this.selected, event);
         },
-        
-        _handleSwipeRight: function(event, target) {
+
+        _handleSwipeRight: function (event, target) {
             event.stopImmediatePropagation();
 
             this.setSelected(target);
             this.options.swipeRightAction.call(this, this.selected, event);
         },
-        
+
         _installTouchActionHandlers: function () {
             var _self = this;
 
@@ -2578,7 +2580,7 @@ var globalDataListID = -1;
                     _self._lastScrollTop = _self.$listWrapper.scrollTop();
                     _self._lastTapX = ev.changedTouches[0].clientX;
                     _self._lastTapY = ev.changedTouches[0].clientY;
-                }, false);                    
+                }, false);
                 this.$listWrapper.on('tap vclick', function (event) {
                     // Stop propagation, otherwise the issues with Safari's touchstart targeting mean that we end up making >1
                     // list item highlighted active. We handle all of the active highlighting in the datalist class.
@@ -2635,7 +2637,7 @@ var globalDataListID = -1;
                         curRowParent.insertAfter(groupStart);
                     }
                     LIs.push(curRowParent);
-                    $(curRowParent).off('touchend').on('touchend', null, _self, function(ev) {
+                    $(curRowParent).off('touchend').on('touchend', null, _self, function (ev) {
                         if (ev.data._touchEndIsTap(ev.originalEvent)) {
                             ev.data._handleTap(ev.originalEvent);
                         }
@@ -2681,7 +2683,7 @@ var globalDataListID = -1;
                     } else {
                         attachFn(curRowParent);
                     }
-                    $(curRowParent).off('touchend').on('touchend', null, _self, function(ev) {
+                    $(curRowParent).off('touchend').on('touchend', null, _self, function (ev) {
                         if (ev.data._touchEndIsTap(ev.originalEvent)) {
                             ev.data._handleTap(ev.originalEvent);
                         }
@@ -2697,7 +2699,7 @@ var globalDataListID = -1;
             _self._insertDivider(curRowParent, row);
             return true;
         },
-        rerenderElem: function(obj, id, li) {
+        rerenderElem: function (obj, id, li) {
             if (!li) {
                 li = this.$parent.find('[data-id="' + id + '"]');
             }
@@ -2709,22 +2711,22 @@ var globalDataListID = -1;
             if (this.options.grouped) {
                 renderer = this.options.groupRenderer(this.selectedGroup);
             }
-            
+
             var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
             if (renderer.call(rendererContext, li, this, obj, this.selectedIndex, this.options.strings)) {
                 li[0].style.display = '';
-                $(li).off('touchend').on('touchend', null, this, function(ev) {
+                $(li).off('touchend').on('touchend', null, this, function (ev) {
                     if (ev.data._touchEndIsTap(ev.originalEvent)) {
                         ev.data._handleTap(ev.originalEvent);
                     }
-                });                
+                });
                 return true;
             } else {
                 li[0].style.display = 'none';
                 return false;
             }
         },
-        rerenderLI: function(LI, obj) {
+        rerenderLI: function (LI, obj) {
             var renderer = this.options.rowRenderer;
             if (this.options.grouped) {
                 renderer = this.options.groupRenderer(this.selectedGroup);
@@ -2757,8 +2759,8 @@ var globalDataListID = -1;
             if (this.options.grouped) {
                 this.selectedGroup = $(enclosingLI).data('group');
             } else {
-		this.selectedGroup = null;
-	    }
+                this.selectedGroup = null;
+            }
             if (this.selectedGroup) {
                 var isOverflow = $(enclosingLI).attr('data-overflow');
                 if (Number(isOverflow) === 1) {
@@ -2778,7 +2780,7 @@ var globalDataListID = -1;
 
             return true;
         },
-        updateSelectedAfterRefresh: function(dataID) {
+        updateSelectedAfterRefresh: function (dataID) {
             var selected = this.$listWrapper.find('li[data-id="' + dataID + '"]');
             this.setSelected(selected);
         },
@@ -2901,7 +2903,7 @@ var globalDataListID = -1;
             if (!parentElement) {
                 return; // Happens, so adding a defensive check. Not sure why it happens ...
             }
-            
+
             this._findRowComponents(parentElement[0], components);
 
             // Hide the parent to avoid contant recomputation of the DOM.
@@ -3164,7 +3166,7 @@ var globalDataListID = -1;
             this._loadInProgress = loadCanceller;
             this.setFooterContents(loader);
         },
-        cancelLoads: function() {
+        cancelLoads: function () {
             if (this._loadInProgress) {
                 this._loadInProgress.cancel();
                 this._loadInProgress = null;
@@ -3175,7 +3177,7 @@ var globalDataListID = -1;
             this.$footerSection.find('.hx-datalist-loading,.hx-datalist-loading-parent').remove();
             this.$footerSection.children().removeClass('hx-loading');
         },
-        startLoadingAsync: function(txt) {
+        startLoadingAsync: function (txt) {
             this.$footerSection.children().addClass('hx-loading');
         },
         stopLoading: function () {
@@ -3194,7 +3196,7 @@ var globalDataListID = -1;
                 this._restoreFooter = null;
             }
         },
-        getFooter: function() {
+        getFooter: function () {
             return this.$footerSection;
         },
         hideFooter: function () {
@@ -3248,10 +3250,10 @@ var globalDataListID = -1;
                 this.$searchBox.blur();
             }
         },
-        hideSearch: function() {
+        hideSearch: function () {
             this.$searchBox.closest('.ui-input-search').hide();
         },
-        showSearch: function() {
+        showSearch: function () {
             this.$searchBox.closest('.ui-input-search').show();
         },
         hideList: function () {
@@ -3378,43 +3380,43 @@ var globalDataListID = -1;
         },
         markDeleted: function (elems) {
             //$(elems).hide(400, 'linear');
-            $(elems).each(function() {
+            $(elems).each(function () {
                 $(this).attr('data-deleted', 'true');
                 $(this).addClass('hx-deleted');
             });
-            
-            setTimeout(function(_self) {
+
+            setTimeout(function (_self) {
                 _self.$listWrapper.find('.hx-deleted').addClass('hx-hide-deleted');
             }, 2000, this);
         },
         confirmDeleted: function (elems, callback) {
             var allObjs = [];
-            $.each(elems, function() {
+            $.each(elems, function () {
                 var obj = $(this).data('data');
                 allObjs.push(obj);
                 $(this).remove();
             });
             if (callback) {
                 var _self = this;
-                callback(allObjs, function() {
-                    _self._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });
+                callback(allObjs, function () {
+                    _self._refreshData(function () {}, undefined, undefined, undefined, {noPagingReset: true});
                 });
             } else {
-                this._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });            
+                this._refreshData(function () {}, undefined, undefined, undefined, {noPagingReset: true});
             }
         },
         clearDeleted: function (elems) {
-            $(elems).each(function() {
+            $(elems).each(function () {
                 $(this).attr('data-deleted', '');
                 $(this).removeClass('hx-deleted');
                 $(this).removeClass('hx-hide-deleted');
             });
             this.refreshListView();
         },
-        equals: function(other) {
+        equals: function (other) {
             return this.dataListID === other.dataListID;
         },
-        setTapOverride: function(fn) {
+        setTapOverride: function (fn) {
             this.messageTapOverride = fn;
         }
     });
