@@ -3248,7 +3248,7 @@ if ( eventCaptureSupported ) {
 
 		horizontalDistanceThreshold: 30,  // Swipe horizontal displacement must be more than this.
 
-		verticalDistanceThreshold: 75,  // Swipe vertical displacement must be less than this.
+		verticalDistanceThreshold: 50,  // Swipe vertical displacement must be less than this.
 
 		start: function( event ) {
 			var data = event.originalEvent.touches ?

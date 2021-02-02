@@ -960,10 +960,16 @@
 
               var _loop = function _loop(i) {
                 var className = styleString.substring(0, styleString.indexOf('{')).trim();
-                node.parentNode.querySelectorAll(className).forEach(function (item) {
-                  item.removeAttribute('class');
-                  item.setAttribute('style', classValues[i]);
-                });
+		  // SAH: make sure that invalid class names - e.g., @font-face - that often appear in Microsoft-generated style blocks
+		  // do not cause an unhandled exception.
+		  try {
+                      node.parentNode.querySelectorAll(className).forEach(function (item) {
+			  item.removeAttribute('class');
+			  item.setAttribute('style', classValues[i]);
+                      });
+		  } catch(e) {
+
+		  }
                 styleString = styleString.substring(styleString.indexOf('}') + 1);
               };
 

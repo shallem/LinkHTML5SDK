@@ -37,7 +37,7 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
   persistence.db.conn = null;
 
   // window object does not exist on Qt Declarative UI (http://doc.trolltech.org/4.7-snapshot/declarativeui.html)
-  if (window && window.openDatabase) {
+  if (window && window.hxopenDatabase) {
     persistence.db.implementation = "html5";
   }else {
     alert("This browser does not support web SQL. We currently do not support any other HTML5 offline storage standards.");
@@ -48,7 +48,7 @@ persistence.store.websql.config = function(persistence, dbname, description, siz
 
   persistence.db.html5.connect = function (dbname, description, size, callback) {
     var that = {};
-    var conn = openDatabase(dbname, '1.0', description, size, callback);
+    var conn = hxopenDatabase(dbname, '1.0', description, size, callback);
 
     that.transaction = function (fn) {
       return conn.transaction(function (sqlt) {
