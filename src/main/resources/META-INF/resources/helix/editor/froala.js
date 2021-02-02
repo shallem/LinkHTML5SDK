@@ -81,6 +81,7 @@
                             }
                             if (isHandled === true) {
                                 ev.stopImmediatePropagation();
+                                ev.preventDefault();
                                 return false;
                             }
                         }
@@ -373,11 +374,11 @@
                 }
                 if (anchorNode.nodeType === 3) {
                     if (delta > 0) {
-                        if (sel.focusOffset + delta <= anchorNode.length) {
+                        if (sel.anchorOffset + delta <= anchorNode.length) {
                             newRange = document.createRange();
-                            newRange.setStart(sel.anchorNode, sel.focusOffset + delta);
+                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
                         } else {
-                            delta -= (anchorNode.length - sel.focusOffset);
+                            delta -= (anchorNode.length - sel.anchorOffset);
                         }
                     } else {
                         if (sel.anchorOffset + delta >= 0) {
@@ -387,24 +388,26 @@
                             delta += sel.anchorOffset;
                         }
                     }
-                    if (newRange !== null) {
-                        if (shiftKey === true) {
-                            var curRange = sel.getRangeAt(0);
-                            if (isUp === true) {
-                                newRange.setEnd(curRange.endContainer, curRange.endOffset);
-                            } else {
-                                newRange.setEnd(newRange.startContainer, newRange.startOffset);
-                                newRange.setStart(curRange.startContainer, curRange.startOffset);
-                            }
-                        } else {
-                            newRange.collapse(true);
-                        }
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        return;
-                    }
+                } else if (delta < 0 && anchorNode.nodeType === 1 && sel.anchorOffset + delta >= 1) {
+                    newRange = document.createRange();
+                            newRange.setStart(sel.anchorNode, sel.anchorOffset + delta);
                 }
-                if (newRange === null) {
+                if (newRange !== null) {
+                    if (shiftKey === true) {
+                        var curRange = sel.getRangeAt(0);
+                        if (isUp === true) {
+                            newRange.setEnd(curRange.endContainer, curRange.endOffset);
+                        } else {
+                            newRange.setEnd(newRange.startContainer, newRange.startOffset);
+                            newRange.setStart(curRange.startContainer, curRange.startOffset);
+                        }
+                    } else {
+                        newRange.collapse(true);
+                    }
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                    return;
+                } else {
                     var nxtEL = null;
                     var offset = 0;
                     var _doBreak = false;
@@ -517,7 +520,7 @@
                         if (nxtEL.nodeType !== 3) {
                             newRange.setStart(nxtEL, 0);    
                         } else {
-                            newRange.setStart(nxtEL, offset);
+                            newRange.setStart(nxtEL, offset + 1);
                         }
                         if (newRange !== null) {
                             if (shiftKey === true) {
@@ -555,14 +558,17 @@
             return false;
         },
         _elIsEmptyText: function(el) {
-            if  (el.nodeType === 3 &&
-                    (el.textContent.length === 0 ||
-                        (el.textContent.length === 1 &&
-                            el.textContent.charCodeAt(1) === 8203))) {
-                return true;
+            if  (el.nodeType === 3) {
+                if (el.textContent.length === 0 ||
+                    (el.textContent.length === 1 &&
+                        el.textContent.charCodeAt(1) === 8203)) {
+                    return true;
+                }
+                return false;
             }
-            if (el.tagName.toLowerCase() === 'p' ||
-                    el.tagName.toLowerCase() === 'span') {
+            if (el.tagName &&
+                    (el.tagName.toLowerCase() === 'p' ||
+                        el.tagName.toLowerCase() === 'span')) {
                 if (!el.childNodes || el.childNodes.length === 0) {
                     return true;
                 }

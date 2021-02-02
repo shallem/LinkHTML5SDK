@@ -348,7 +348,7 @@ MobileHelixDatabase.install = function() {
      * @param size              Database size in bytes
      * @return                  Database object
      */
-    window.openDatabase = function(name, version, display_name, size, callback) {
+    window.hxopenDatabase = function(name, version, display_name, size, callback) {
         var db = new MobileHelixDatabase();
         db.name = name;
 
