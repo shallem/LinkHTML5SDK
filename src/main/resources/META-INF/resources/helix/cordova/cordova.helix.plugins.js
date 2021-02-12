@@ -386,4 +386,12 @@ function cordova_helix_init() {
             }
         });
     }
+
+    if (window.CordovaVersion > 3 || window.CordovaRevision >= 18) {
+        $.extend(window.HelixSystem, {
+            setRestoreState: function(restoreState, cloneState, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "setRestoreState", [ restoreState, cloneState ]);
+            }
+        });
+    }
 }

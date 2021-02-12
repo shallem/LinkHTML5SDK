@@ -157,7 +157,8 @@
                 tableResizerOffset: 10,
                 tableResizingLimit: 50,
                 heightMin: 200,
-                key: '4NC5fE4G5A3A3D3B3B-16UJHAEFZMUJOYGYQEa2d2ZJd1RAeF3C8B5A4E3C3A2G3A15A12=='
+                key: '4NC5fE4G5A3A3D3B3B-16UJHAEFZMUJOYGYQEa2d2ZJd1RAeF3C8B5A4E3C3A2G3A15A12==',
+                htmlAllowedEmptyTags: ['textarea', 'a', 'iframe', 'object', 'video', 'style', 'script', '.fa', '.fr-emoticon', '.fr-inner', 'path', 'line', 'hr', '.hx-editor-start']
             }, function() {
                 _self.initDone = true;
                 e.html.set(_self._initialVal);
@@ -455,7 +456,7 @@
                                     offset = 0;
                                     delta = 0;
                                 } else {
-                                    offset = Math.min(delta, nxtEL.length);
+                                    offset = Math.min(delta, nxtEL.length - 1);
                                     delta -= nxtEL.length;
                                 }
                                 if (_sawBR === true) {
@@ -502,10 +503,10 @@
                             }
                             if (nxtEL && nxtEL.nodeType === 3) {
                                 if (_inLI) {
-                                    offset = nxtEL.length;
+                                    offset = nxtEL.length - 1;
                                     delta = 0;
                                 } else {
-                                    offset = Math.max(0, nxtEL.length + delta);
+                                    offset = Math.max(0, (nxtEL.length - 1) + delta);
                                     delta += nxtEL.length;
                                 }
                                 if (_sawBR === true) {

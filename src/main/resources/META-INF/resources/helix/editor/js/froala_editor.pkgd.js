@@ -3628,7 +3628,7 @@
 
       _cleanEmptyBlockquotes();
 
-      editor.html.fillEmptyBlocks(true);
+	editor.html.fillEmptyBlocks(true, 'backspace');
 
       if (!editor.opts.htmlUntouched) {
         editor.html.cleanEmptyTags();
@@ -3915,7 +3915,7 @@
 
       _cleanEmptyBlockquotes();
 
-      editor.html.fillEmptyBlocks(true);
+	editor.html.fillEmptyBlocks(true, 'delete');
 
       if (!editor.opts.htmlUntouched) {
         editor.html.cleanEmptyTags();
@@ -4335,7 +4335,7 @@
 
       _cleanNodesToRemove();
 
-      editor.html.fillEmptyBlocks(true);
+	editor.html.fillEmptyBlocks(true, 'enter');
 
       if (!editor.opts.htmlUntouched) {
         editor.html.cleanEmptyTags();
@@ -7667,21 +7667,23 @@
      */
 
 
-    function fillEmptyBlocks(around_markers) {
+      function fillEmptyBlocks(around_markers, source) {
       var blocks = emptyBlocks(around_markers);
 
       if (editor.node.isEmpty(editor.el) && editor.opts.enter === FroalaEditor.ENTER_BR) {
         blocks.push(editor.el);
       }
 
+	var emptyQry = "".concat(editor.opts.htmlAllowedEmptyTags.join(':not(.fr-marker),'), ":not(.fr-marker)");
       for (var i = 0; i < blocks.length; i++) {
         var block = blocks[i];
 
-        if (block.getAttribute('contenteditable') !== 'false' && !block.querySelector("".concat(editor.opts.htmlAllowedEmptyTags.join(':not(.fr-marker),'), ":not(.fr-marker)")) && !editor.node.isVoid(block)) {
-          if (block.tagName !== 'TABLE' && block.tagName !== 'TBODY' && block.tagName !== 'TR' && block.tagName !== 'UL' && block.tagName !== 'OL') {
-            block.appendChild(editor.doc.createElement('br'));
+	  // SAH: Factored out emptyQry variable. Added !block.matches condition. SAH. Added source param and check for 'enter'.
+          if (block.getAttribute('contenteditable') !== 'false' && (source === 'enter' || (!block.matches(emptyQry) && !block.querySelector(emptyQry))) && !editor.node.isVoid(block)) {
+              if (block.tagName !== 'TABLE' && block.tagName !== 'TBODY' && block.tagName !== 'TR' && block.tagName !== 'UL' && block.tagName !== 'OL') {
+		  block.appendChild(editor.doc.createElement('br'));
+              }
           }
-        }
       } // Fix for https://github.com/froala/wysiwyg-editor/issues/1166#issuecomment-204549406.
 
 

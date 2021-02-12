@@ -476,15 +476,15 @@ $(document).on('orientationchange', function(ev) {
             }, $(this)), true);
         }
     });
+    Helix.deviceType = Helix.setDeviceType();
 });
 
 Helix.calculateScreenWidth = function() {
     return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 };
 
-Helix.screenWidth = Helix.calculateScreenWidth();
-
-Helix.deviceType = (function() {
+Helix.setDeviceType = function() {
+    Helix.screenWidth = Helix.calculateScreenWidth();
     var w = Helix.screenWidth;
     if (w <= 500) {
         return "phone";
@@ -493,7 +493,8 @@ Helix.deviceType = (function() {
     } else {
         return "tablet";
     }
-})();
+};
+Helix.deviceType = Helix.setDeviceType();
 
 Helix.hasTouch = (function() {
     return !!('ontouchstart' in window) // works on most browsers 
