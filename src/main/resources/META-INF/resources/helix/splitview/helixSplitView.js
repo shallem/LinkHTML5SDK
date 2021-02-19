@@ -115,11 +115,11 @@
             this.__refreshActions = [];
             this.refresh();
             var _self = this;
-            $( window ).resize(function( event ) {
-                _self.refresh();
+            $(document).on('orientationchange', null, _self, function(ev) {
+                ev.data.refresh();
                 // In case we were viewing the right pane of the split when we
                 // rotated back to a split view with 2 panes.
-                _self._restoreLeftHeaderButton();
+                ev.data._restoreLeftHeaderButton();
             });
         },
         
