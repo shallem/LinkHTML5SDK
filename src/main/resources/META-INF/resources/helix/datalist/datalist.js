@@ -485,6 +485,7 @@ var globalDataListID = -1;
             this.prevPage = [];
             this.nextPage = [];
             this.displayLIs = [];
+            this._prefetchedData = [];
 
             // Other globals.
             this.isLoaded = false;
