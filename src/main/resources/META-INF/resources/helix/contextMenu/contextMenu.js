@@ -137,6 +137,7 @@
             if (status === true) {
                 // show item
                 $(target).closest('li').show();
+                this._enableItem(selected, target, true, undefined);
             } else {
                 // hide item
                 $(target).closest('li').hide();
@@ -146,21 +147,9 @@
             selected.enabled = status;
             return true;
         },
-        // status = true or false
-        enableItem: function (itemIndex, status, overrideLabel) {
-            if (itemIndex >= this.options.items.length) {
-                return false;
-            }
-
-            var selected = this.options.items[itemIndex];
-            var items = this.optionsList.find('[data-index="' + itemIndex + '"]');
-
-            if (items.length === 0) {
-                return false;
-            }
-            var target = items[0];
-
+        _enableItem: function (selected, target, status, overrideLabel) {
             if (selected.type === 'radio') {
+                var items = $(target).find('input');
                 for (var i = 0; i < items.length; ++i) {
                     var _input = items[i];
                     var nxt = status[i];
@@ -182,10 +171,10 @@
                 this._refreshControlGroups = true;
             } else if (selected.type === 'checkbox') {
                 if (status === true) {
-                    target.disabled = false;
+                    $(target)[0].disabled = false;
                     $(target).closest('li').removeClass('ui-disabled');
                 } else {
-                    target.disabled = true;
+                    $(target)[0].disabled = true;
                     $(target).closest('li').addClass('ui-disabled');
                 }
             } else if (selected.type === 'text' ||
@@ -193,10 +182,10 @@
                 var isEnabled = $.isArray(status) ? status[0] : status;
                 var nxtVal = $.isArray(status) ? status[1] : '';
                 if (isEnabled === true) {
-                    target.disabled = false;
+                    $(target)[0].disabled = false;
                     $(target).closest('li').removeClass('ui-disabled');
                 } else {
-                    target.disabled = true;
+                    $(target)[0].disabled = true;
                     $(target).closest('li').addClass('ui-disabled');
                 }
                 $(target).val(nxtVal);
@@ -219,6 +208,21 @@
             this.updateOverrideLabel(selected, target, overrideLabel);
             selected.enabled = status;
             return true;
+        },
+        // status = true or false
+        enableItem: function (itemIndex, status, overrideLabel) {
+            if (itemIndex >= this.options.items.length) {
+                return false;
+            }
+
+            var selected = this.options.items[itemIndex];
+            var items = this.optionsList.find('[data-index="' + itemIndex + '"]');
+
+            if (items.length === 0) {
+                return false;
+            }
+            var target = items[0];
+            return this._enableItem(selected, target, status, overrideLabel);
         },
         refresh: function () {
             var _self = this;

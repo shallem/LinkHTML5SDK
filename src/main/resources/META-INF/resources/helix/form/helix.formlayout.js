@@ -581,12 +581,15 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
                 formElem.onclick.call(formElem, ev);
                 return false;
             });
+        } else {
+            $fieldContainer.on(Helix.clickEvent, function() {
+                ev.stopImmediatePropagation();
+                $(inputMarkup).focus();
+                return false;
+            });
         }
 
         inputMarkup.addClass(__getTextStyleClass(formLayout, formElem));
-        $fieldContainer.on(Helix.clickEvent, function() {
-            //$(inputMarkup).focus();
-        });
     } else {
         __appendTextLabel(mode, formLayout, formElem, $fieldContainer, useMiniLayout);
     }
