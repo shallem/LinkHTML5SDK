@@ -51915,7 +51915,9 @@
 
         if (_getRegEx().test(_lastPart(text))) {
           $(node.previousSibling).replaceWith(_convertToLink(text));
-          node.parentNode.removeChild(node);
+          if (node.parentNode) { // SAH added check b/c of JS error on WKWebView
+            node.parentNode.removeChild(node);
+          }
         }
       }
     }

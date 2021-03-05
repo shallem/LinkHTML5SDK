@@ -582,7 +582,7 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
                 return false;
             });
         } else {
-            $fieldContainer.on(Helix.clickEvent, function() {
+            $fieldContainer.on(Helix.clickEvent, function(ev) {
                 ev.stopImmediatePropagation();
                 $(inputMarkup).focus();
                 return false;
