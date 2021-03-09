@@ -392,12 +392,12 @@ function cordova_helix_init() {
             setRestoreState: function(restoreState, cloneState, success, failure) {
                 return cordova.exec(success, failure, "HelixSystem", "setRestoreState", [ restoreState, cloneState ]);
             },
-            notifyParent2: function(eventName, eventArg, success, failure) {
+            notifyParent2: function(eventName, eventArg, doBroadcast, success, failure) {
                 if (eventArg === undefined) {
                     eventArg = null;
                 }
 
-                return cordova.exec(success, failure, "HelixSystem", "notifyParent", [ eventName, eventArg ])
+                return cordova.exec(success, failure, "HelixSystem", "notifyParent", [ eventName, eventArg, doBroadcast ])
             }
 
         });
