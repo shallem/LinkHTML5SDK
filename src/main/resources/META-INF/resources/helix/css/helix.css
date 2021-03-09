@@ -1050,6 +1050,11 @@ div.hx-dialog-content .hx-noicon-button .ui-btn-inner .ui-btn-text {
     padding: 0.5em;
 }
 
+/* The text inside of the action. */
+.hx-action-border div.hx-flex-fill {
+    padding-right: 0.2em;
+}
+
 .hx-form-popup {
     width: 100%;
 }
