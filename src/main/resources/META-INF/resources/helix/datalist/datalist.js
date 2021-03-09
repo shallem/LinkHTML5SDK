@@ -1855,8 +1855,6 @@ var globalDataListID = -1;
                 }
                 __processDone(displayCollection.length);
             } else {
-                _self.displayList = [];
-                _self.displayLIs = [];
                 /* Apply skip and limit. */
                 if (_self._renderWindowStart > 0) {
                     displayCollection = displayCollection.skip(_self._renderWindowStart);
@@ -1870,6 +1868,8 @@ var globalDataListID = -1;
                     },
                     /* Called on start. */
                     startFn: function (count) {
+                        _self.displayList = [];
+                        _self.displayLIs = [];
                         __processStart(count);
                         __addPreExtras();
                     },
