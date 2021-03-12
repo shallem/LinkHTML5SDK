@@ -339,6 +339,14 @@ Helix.Layout = {
         }));
     },
     
+    makeListHeaderButtonText: function(buttonText) {
+        return $('<div/>').attr({
+            'class': 'iconbutton hx-no-webkit-select hx-icon-sort-filter hx-btn-inner hx-link-color'
+        }).append($('<div/>').attr({
+            'class': 'hx-icon'
+        }).append(buttonText));
+    },
+    
     makeTextButton: function(buttonText, textClass, buttonClass, buttonID) {
         return $('<a/>').attr({
             'id': buttonID ? buttonID : Helix.Utils.getUniqueID(),

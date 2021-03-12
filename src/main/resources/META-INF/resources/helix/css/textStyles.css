@@ -181,3 +181,7 @@ textarea.ui-input-text.textCategoryXSmall,
 .textBold {
     font-weight: bold;
 }
+
+.hx-link-color {
+    color: #3498DB;
+}

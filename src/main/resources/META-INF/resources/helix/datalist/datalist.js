@@ -2425,6 +2425,7 @@ var globalDataListID = -1;
                 if (selectedElems.length === 0) {
                     this.$clearSelectionDiv.addClass('hx-toggled');
                     this.$clearSelectionDiv.removeClass('hx-toggled-one');
+                    this.$clearSelectionDiv.removeClass('hx-toggled-two');
                     this.$clearSelectionDiv.removeClass('hx-toggled-many');
                     this.$searchSortDiv.removeClass('hx-toggled');
                 } else {
@@ -2433,8 +2434,14 @@ var globalDataListID = -1;
                     if (selectedElems.length === 1) {
                         this.$clearSelectionDiv.addClass('hx-toggled-one');
                         this.$clearSelectionDiv.removeClass('hx-toggled-many');
+                        this.$clearSelectionDiv.removeClass('hx-toggled-two');
+                    } else if (selectedElems.length === 2) {
+                        this.$clearSelectionDiv.removeClass('hx-toggled-one');
+                        this.$clearSelectionDiv.addClass('hx-toggled-two');
+                        this.$clearSelectionDiv.removeClass('hx-toggled-many');
                     } else {
                         this.$clearSelectionDiv.removeClass('hx-toggled-one');
+                        this.$clearSelectionDiv.removeClass('hx-toggled-two');
                         this.$clearSelectionDiv.addClass('hx-toggled-many');
                     }
                 }
