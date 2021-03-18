@@ -1401,7 +1401,9 @@ function __refreshHTMLFrame(formElem, mode) {
                         formElem.$frame[0].appendChild(newStyleNode);
                     }
                 }
-                formElem.$frame.append($(formElem.value.body.childNodes));
+                if (formElem.value.body) {
+                    formElem.$frame.append($(formElem.value.body.childNodes));
+                }
             }
             formElem.$frame.find('style').each(function() {
                 var _t = $(this)[0];

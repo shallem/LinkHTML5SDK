@@ -222,6 +222,11 @@
                 return false;
             }
             var target = items[0];
+            if (selected.type === 'radio') {
+                // We want the enclosing li surrounding ALL of the radio options, not the input
+                // itself.
+                target = target.closest('li');
+            }
             return this._enableItem(selected, target, status, overrideLabel);
         },
         refresh: function () {
