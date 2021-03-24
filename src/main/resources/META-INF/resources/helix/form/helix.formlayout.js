@@ -715,6 +715,20 @@ function __refreshTextBox(mode, formElem) {
     }
 }
 
+function __getLabelFromAutocomplete(res) {
+    if ($.isArray(res)) {
+        return res[1];
+    }
+    return res;
+}
+
+function __getValueFromAutocomplete(res) {
+    if ($.isArray(res)) {
+        return res[0];
+    }
+    return res;
+}
+
 function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLayout, isPassword) {
     if (!formElem.value) {
         formElem.value = "";
@@ -871,11 +885,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                             autoCompleteList.empty();
                             if (LIs && LIs.length) {
                                 if (LIs.length === 1 && 
-                                        Helix.Utils.isString(LIs[0]) &&
-                                        LIs[0].toLowerCase().indexOf(queryText.toLowerCase()) >= 0) {
+                                        Helix.Utils.isString(__getValueFromAutocomplete(LIs[0])) &&
+                                        __getValueFromAutocomplete(LIs[0]).toLowerCase().indexOf(queryText.toLowerCase()) >= 0) {
                                     // This is a special case where the user typed the full text. Do not present a list with one
                                     // item that is exactly the same as the input text.
-                                    $(_self).val(LIs[0]);
+                                    $(_self).val(__getLabelFromAutocomplete(LIs[0]));
                                     formElem.autocompleteSelect.call(_self, LIs[0], formElem, null);
                                     formElem.__noblur = false;
                                 } else {
@@ -887,9 +901,11 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
                                     var i;
                                     for (i = 0; i < Math.min(20, LIs.length); ++i) {
                                         var nxtLI = $("<li/>");
-                                        var nxtItem = formElem.autocompleteProjection(LIs[i], nxtLI);
+                                        var nxtItem = formElem.autocompleteProjection(__getLabelFromAutocomplete(LIs[i]), nxtLI);
+                                        nxtLI.data('data', [nxtItem, __getValueFromAutocomplete(LIs[i])]);
                                         nxtLI.addClass('textCategorySmall wordBreak').append(nxtItem).on('vclick', function () {
-                                            var ret = formElem.autocompleteSelect.call(_self, $(this).text(), formElem, $(this));
+                                            var nxtVal = formElem.autocompleteProjection($(this).data('data')[1]);
+                                            var ret = formElem.autocompleteSelect.call(_self, nxtVal, formElem, $(this));
                                             autoCompleteList.empty();
                                             autoCompleteList.hide();
                                             if (ret === true) {

@@ -2725,7 +2725,8 @@ var globalDataListID = -1;
                     if (ev.data._touchEndIsTap(ev.originalEvent)) {
                         ev.data._handleTap(ev.originalEvent);
                     }
-                });                
+                });
+                $(li).data('data', obj);
                 return true;
             } else {
                 li[0].style.display = 'none';
@@ -2740,6 +2741,7 @@ var globalDataListID = -1;
 
             var rendererContext = this.options.rowRendererContext ? this.options.rowRendererContext : this;
             if (renderer.call(rendererContext, LI, this, obj, this.selectedIndex, this.options.strings)) {
+                LI.data('data', obj);
                 LI.show();
                 return true;
             } else {

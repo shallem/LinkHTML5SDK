@@ -523,6 +523,11 @@
                             value: timeVal.getTime()
                         });
                     }
+                } else if ($(this).data('data')) {
+                    toSerialize.push({
+                        name : strippedFieldID,
+                        value: $(this).data('data')
+                    });
                 } else {
                     toSerialize.push({
                         name : strippedFieldID,
