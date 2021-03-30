@@ -3426,6 +3426,9 @@ var globalDataListID = -1;
         },
         setTapOverride: function(fn) {
             this.messageTapOverride = fn;
+        },
+        clearTapOverride: function() {
+            this.messageTapOverride = null;
         }
     });
 })(jQuery);
