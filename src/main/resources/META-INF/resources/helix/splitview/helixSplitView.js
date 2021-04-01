@@ -71,7 +71,10 @@
              * styles: hx-split-both, hx-split-left, hx-split-right depending on the state of the split view. The
              * contents of that selector should be buttons that are turned on/off using CSS based on these styles.
              */
-            buttonBarSelector: null
+            buttonBarSelector: null,
+            
+            /** Only go into split screen in landscape mode */
+            landscapeOnly : true
         },
 
         _create: function() {
@@ -137,6 +140,12 @@
                 this.__restoreMarkup = null;
             }
         },
+        
+        viewIsLandscape: function() {
+            var _w = $(window).width();
+            var _h = $(window).height();
+            return (_w > _h) ? true : false;
+        },
     
         /**
          * Render the form using the form layout code. valuesMap is an optional
@@ -146,7 +155,8 @@
          */
         refresh: function() {            
             var curWidth = $(window).width();
-            if (curWidth > this.options.splitThreshold) {
+            if (curWidth > this.options.splitThreshold &&
+                    (this.options.landscapeOnly === false || this.viewIsLandscape())) {
                 // Show left AND right on large screens
                 var leftWidth = Math.floor((this.options.leftWidth / 100) * curWidth);
                 var rightWidth = Math.floor((this.options.rightWidth / 100) * curWidth) - this.options.splitPadding;
@@ -266,6 +276,12 @@
             Helix.Layout.refresh();
         },
         
+        forceRight: function() {
+            // Force right
+            this.__current = 'right';
+            this.__showRight();
+            Helix.Layout.refresh();
+        },
         showRight: function() {
             if (!this.__current) {
                 return;
