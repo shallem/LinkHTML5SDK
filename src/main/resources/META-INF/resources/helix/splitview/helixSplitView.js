@@ -222,6 +222,7 @@
         __showRight: function() {
             $(this.__right).removeClass('hx-split-right-area');
             $(this.__right).addClass('hx-split-full');
+            $(this.__right).css('width', '');
             $(this.__right).show();
             $(this.__left).hide();
                     
