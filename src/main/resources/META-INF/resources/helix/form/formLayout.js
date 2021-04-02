@@ -385,9 +385,9 @@
                         return false;
                 }
             });
-            setTimeout(function() {
-                $(document).trigger(this.options.namespace + 'Refresh');
-            }, 10);
+            setTimeout(function(_self) {
+                $(document).trigger(_self.options.namespace + 'Refresh');
+            }, 10, this);
         },
         
         markDirty: function() {
