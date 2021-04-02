@@ -385,6 +385,9 @@
                         return false;
                 }
             });
+            setTimeout(function() {
+                $(document).trigger(this.options.namespace + 'Refresh');
+            }, 10);
         },
         
         markDirty: function() {
@@ -731,7 +734,7 @@
                     }
                     for (var idx = 0; idx < item.items.length; ++idx) {
                         var subpItem = item.items[idx];
-                        this.__refreshOneValue(mode, subpItem, valuesMap);
+                        this.__refreshOneValue(mode, subpItem, valuesMap, rerenderItem);
                     }
                 } else if (fldType === 'controlset') {
                     // Controlset
@@ -815,7 +818,7 @@
             
             // Update the rendered form ...
             if (visibilityChanged || valueChanged || hiddenChanged) {
-                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap);
+                this.__updateValue(mode, this._stripNamespace(item.name), item, valuesMap, modeChanged);
                 return true;
             }
                        

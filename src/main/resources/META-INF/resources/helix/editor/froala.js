@@ -363,6 +363,16 @@
             sel.removeAllRanges();
             sel.addRange(range);
         },
+        _didSwitchLines: function(origSel, tgtNode) {
+            if (tgtNode && tgtNode.offsetTop === undefined) {
+                tgtNode = tgtNode.parentElement;
+            }
+            if (tgtNode && origSel &&
+                    tgtNode.offsetTop !== origSel.offsetTop) {
+                return true;
+            }
+            return false;
+        },
         _setCaretPosition: function (delta, shiftKey) {
             var containerNode = this.editor.el;
             var isUp = (delta < 0) ? true : false;
@@ -451,6 +461,10 @@
                                     _inLI = true;
                                 }
                             }
+                            if (this._didSwitchLines(sel.anchorNode, nxtEL)) {
+                                --delta;
+                            }
+                        
                             if (nxtEL && nxtEL.nodeType === 3) {
                                 if (_inLI) {
                                     offset = 0;
@@ -500,6 +514,9 @@
                                 if (nxtEL && nxtEL.tagName && nxtEL.tagName.toLowerCase() === 'li') {
                                     _inLI = true;
                                 }
+                            }
+                            if (this._didSwitchLines(sel.anchorNode, nxtEL)) {
+                                ++delta;
                             }
                             if (nxtEL && nxtEL.nodeType === 3) {
                                 if (_inLI) {
