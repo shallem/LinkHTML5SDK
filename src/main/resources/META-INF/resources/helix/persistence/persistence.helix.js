@@ -704,10 +704,6 @@ function initHelixDB() {
                 var indexField = textIndexFields[i];
                 schema.textIndex(indexField);
             }
-            // We read this from the DB - no need to attempt to re-generate the text index tables.
-            if (schema.textIndex) {
-                schema.textIndex['__hx_generated'] = true;
-            }
         
             /* Recurse over any dependent tables for which we don't have schema. */
             var field;

@@ -8,52 +8,41 @@
  * go to primefaces.org/license.html.
  */
 
-/* ie6 */
-* html .ui-hx-undo {
-	position:absolute; 
-}
-* html .ui-hx-undo-item {
-	padding-bottom:0;
-}
-* html .ui-hx-undo-icon-close {
-	top:7px;
-	right:7px;
-}
-
 .ui-hx-undo {
-	position:fixed;
-	bottom:30px;
-	left:0px;
-	width:100%;
-        background-color: #ffa930;
+    position:fixed;
+    bottom:5px;
+    left:0%;
+    width:100%;
+    background-color: #585858;
 }
 .ui-hx-undo-item-container {
-	position:relative;
-	margin:0 0 10px 0;
-	opacity:0.65;
-	filter:alpha(opacity=65);
-        color: white;
+    position:relative;
+    margin:0 0 10px 0;
 }
 .ui-hx-undo-item {
-	display:block;
-	padding:10px 15px;
-        width: 200px;
-}
-
-.ui-hx-undo-title {
-	font-weight:normal;
-	padding:0 0 7px 0;
-	display:block;
+    display:block;
+    padding:10px 15px;  
 }
 
 .ui-hx-undo-message {
-    padding:0 0 5px 10px;
-    width:160px;
+    padding-left: 1em;
+    padding-right: 1em;
     display: inline-block;
+    vertical-align: top;
+    color: white;
+}
+.hx-undo-button {
+    float: right;
+    text-align: center;
+    border-color: white !important;
+    color: white;
+    width: 64px;
+    height: 40px;
+    margin-bottom: 0.5em;
 }
 
-.ui-hx-undo .ui-icon-back {
-    top: 50%;
-    margin-top: -9px;
-    padding-left: 20px;
+.hx-undo-button-text {
+    height: 100%;
+    text-align: center;
+    padding-top: 10px;
 }

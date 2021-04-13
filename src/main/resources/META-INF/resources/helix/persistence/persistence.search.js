@@ -475,7 +475,7 @@ persistence.search.config = function(persistence, dialect, options) {
         var queries = [];
         for(var entityName in entityMeta) {
             var meta = entityMeta[entityName];
-            if(!meta.textIndexSchemaCreated && meta.textIndex && !(meta.textIndex['__hx_generated'])) {
+            if(!meta.textIndexSchemaCreated && meta.textIndex) {
                 queries.push([dialect.createTable(entityName + '_Index', [['entityId', 'INTEGER'], ['prop', 'INTEGER'], ['word', 'VARCHAR(100)'], ['occurrences', 'INT']]), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['prop', 'word']), null]);
                 queries.push([dialect.createIndex(entityName + '_Index', ['word']), null]);

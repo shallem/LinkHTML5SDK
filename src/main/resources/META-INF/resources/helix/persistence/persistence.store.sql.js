@@ -197,21 +197,21 @@ function config(persistence, dialect) {
                         if (meta.hasOne.hasOwnProperty(rel)) {
                             otherMeta = meta.hasOne[rel].type.meta;
                             colDefs.push([rel, tm.idType]);
-                            if (!persistence.generatedTables[meta.name]) {
+                            //if (!persistence.generatedTables[meta.name]) {
                                 queries.push([dialect.createIndex(meta.name, [rel]), null]);
-                            }
+                            //}
                         }
                     }
-                    if (!persistence.generatedTables[meta.name]) {
+                    //if (!persistence.generatedTables[meta.name]) {
                         for (var i = 0; i < meta.indexes.length; i++) {
                             queries.push([dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]), null]);
                         }
-                    }
+                    //}
                 }
                 for (var rel in meta.hasMany) {
                     if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
                         tableName = meta.hasMany[rel].tableName;
-                        if (!persistence.generatedTables[tableName]) {
+                        //if (!persistence.generatedTables[tableName]) {
                             var otherMeta = meta.hasMany[rel].type.meta;
                             var inv = meta.hasMany[rel].inverseProperty;
                             // following test ensures that mixin mtm tables get created with the mixin itself
@@ -230,10 +230,10 @@ function config(persistence, dialect) {
                                 columns.push([p2 + "_class", tm.classNameType])
                             queries.push([dialect.createTable(tableName, columns), null]);
                             persistence.generatedTables[tableName] = true;
-                        }
+                        //}
                     }
                 }
-                if (!meta.isMixin && !persistence.generatedTables[meta.name]) {
+                if (!meta.isMixin /*&& !persistence.generatedTables[meta.name]*/) {
                     colDefs.push(["id", tm.idType, "PRIMARY KEY"]);
                     persistence.generatedTables[meta.name] = true;
                     queries.push([dialect.createTable(meta.name, colDefs), null]);
@@ -473,6 +473,9 @@ function config(persistence, dialect) {
             o = new ent(session, undefined, true);
         }
         o.id = tm.dbValToEntityVal(row[prefix + 'id'], tm.idType);
+        if ('__groupCount' in row) {
+            o.__groupCount = row['__groupCount'];
+        }
         o._new = false;
         for ( var p in row) {
             if (row.hasOwnProperty(p)) {
@@ -814,13 +817,14 @@ function config(persistence, dialect) {
             if (this._group.having) {
                 _having = ' WHERE ' + this._group.having.sql(meta, 'groupSelectorTable', args);
             }
-            entityName = '(SELECT ' + this._group.by + ',' + this._group.selectorType + '(' + this._group.selector + ') AS groupSelector' +
+            entityName = '(SELECT ' + this._group.by + ',' + this._group.selectorType + '(' + this._group.selector + ') AS groupSelector, COUNT(id) AS __groupCount' +
                         ' FROM `' + entityName + '` AS groupSelectorTable' + _having + ' GROUP BY ' + this._group.by + ')';
             this._additionalJoinSqls = [' INNER JOIN `' + originalEntityName + '` AS `' + mainAlias + 
                         '` ON `' + mainAlias + '`.`' + this._group.by + '` = groupedTable.`' + this._group.by + '` AND `'
                                  + mainAlias + '`.`' + this._group.selector + '` = groupSelector'];
             joinSql = this._additionalJoinSqls.join(' ');
             mainAlias = 'groupedTable';
+            selectFields.push('__groupCount');
         } else {
             entityName = '`' + entityName + '`';
         

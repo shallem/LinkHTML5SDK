@@ -81,34 +81,39 @@
                 undoAction = this.options.undoAction;
             }
             
-            var markup = '<div class="ui-hx-undo-item-container ui-state-highlight ui-corner-all ui-helper-hidden ui-shadow">';
+            var markup = '<div class="ui-hx-undo-item-container ui-corner-all ui-helper-hidden hx-full-width">';
             markup += '<div class="ui-hx-undo-item">';
-            markup += '<span class="ui-icon ui-icon-back" />';
-            markup += '<div class="ui-hx-undo-message">';
-            markup += '<span class="ui-hx-undo-title"></span>';
-            markup += '</div><div style="clear: both;"></div></div></div>';
+            markup += '<div class="ui-icon ui-icon-close-white hx-display-inline" />';
+            markup += '<div class="ui-hx-undo-message"/>';
+            markup += '<div class="hx-undo-button hx-btn-border iconbutton hx-no-webkit-select"><div class="hx-undo-button-text">Undo</div></div>'
+            markup += '</div></div></div>';
 
             var message = $(markup);
-            var msgEL = message.find('span.ui-hx-undo-title');
+            var btn = message.find('.iconbutton');
+            var msgEL = message.find('div.ui-hx-undo-message');
             msgEL.html(msg);
 
-            message.appendTo(this.element).fadeIn();
-            this.bindEvents(message, doAction, undoAction, lifetime, args);
+            message.appendTo(this.element);
+            this.bindEvents(message, btn, doAction, undoAction, lifetime, args);
         },
     
-        bindEvents: function(message, doAction, undoAction, lifetime, args) {
+        bindEvents: function(message, btn, doAction, undoAction, lifetime, args) {
             var _self = this;
             this._timeout = this.setRemovalTimeout(doAction, lifetime, args);
 
             //remove message on click of close icon
             var _bindTo = Helix.hasTouch ? 'touchstart' : Helix.clickEvent;
-            message.on(_bindTo, [this._timeout, args], function(ev) {
-                message.off(_bindTo);
+            btn.one(_bindTo, [this._timeout, args], function(ev) {
                 _self.removeAll();
                 undoAction.apply(_self, ev.data[1]);
                 clearTimeout(ev.data[0]);
                 _self._timeout = 0;
 
+                ev.stopImmediatePropagation();
+                return false;
+            });
+            message.one(_bindTo, function(ev) {
+                _self.removeAll();
                 ev.stopImmediatePropagation();
                 return false;
             });

@@ -1972,7 +1972,7 @@ var globalDataListID = -1;
             this.unfilteredList = this.originalList;
         },
         // Restore the original list contents, without any searching, sorting, or filtering.
-        resetListContents: function () {
+        resetListContents: function (oncomplete) {
             var _self = this;
             var _doRefresh = true;
             if (_self.options.onSearchClear) {
@@ -1986,6 +1986,9 @@ var globalDataListID = -1;
                     _self.scrollToStart();
                     if (_self.options.afterSearchClear) {
                         _self.options.afterSearchClear.call(_self);
+                    }
+                    if (oncomplete) {
+                        oncomplete();
                     }
                 }, _self.extraItems, _self.originalList);
             }
@@ -3395,7 +3398,7 @@ var globalDataListID = -1;
             
             setTimeout(function(_self) {
                 _self.$listWrapper.find('.hx-deleted').addClass('hx-hide-deleted');
-            }, 2000, this);
+            }, 750, this);
         },
         confirmDeleted: function (elems, callback) {
             var allObjs = [];
