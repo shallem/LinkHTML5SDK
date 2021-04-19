@@ -965,6 +965,15 @@ var globalDataListID = -1;
                 }
             }
         },
+        
+        stopScrolling: function() {
+            this.$listWrapper.removeClass('hx-scroller-nozoom').addClass('hx-no-vscroll');
+        },
+        
+        startScrolling: function() {
+            this.$listWrapper.removeClass('hx-no-vscroll').addClass('hx-scroller-nozoom');
+        },
+        
         /**
          * sortFilterOptions can either be a Mobile Helix enhanced PersistenceJS
          * schema (with the __hx_* fields) or a map with 3 fields - sorts, thisFilters,

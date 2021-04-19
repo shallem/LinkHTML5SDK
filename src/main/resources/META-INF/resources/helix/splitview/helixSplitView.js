@@ -155,6 +155,7 @@
          */
         refresh: function() {            
             var curWidth = $(window).width();
+            var lastSplit = this.__current;
             if (curWidth > this.options.splitThreshold &&
                     (this.options.landscapeOnly === false || this.viewIsLandscape())) {
                 // Show left AND right on large screens
@@ -191,7 +192,7 @@
                 }
             }
             if (this.options.onRefresh) {
-                this.options.onRefresh((this.__current) ? "full" : "split");
+                this.options.onRefresh((this.__current) ? "full" : "split", lastSplit ? 'full' : 'split');
             }
             if (this.__refreshActions && this.__refreshActions.length > 0) {
                 for (var i = 0; i < this.__refreshActions.length; ++i) {
