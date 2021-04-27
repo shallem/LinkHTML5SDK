@@ -16,7 +16,7 @@
   height: 3em;
   padding: 0.5em;
   text-align: left;
-  width: 98%;
+  width: 100%;
 }
 .js-Dropdown:not(.is-open) .js-Dropdown-title:after {
   border-color: #a5a5a5 transparent transparent transparent;

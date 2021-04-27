@@ -2631,6 +2631,7 @@ var globalDataListID = -1;
 
             if (groupIndex < LIs.length) {
                 curRowParent = $(LIs[groupIndex]);
+                curRowParent.removeClass('hx-deleted hx-hide-deleted').attr('data-deleted', '');
             }
 
             if (!curRowParent) {
@@ -2678,6 +2679,7 @@ var globalDataListID = -1;
 
             if (rowIndex < LIs.length) {
                 curRowParent = $(LIs[rowIndex]);
+                curRowParent.removeClass('hx-deleted hx-hide-deleted').attr('data-deleted', '');
             }
 
             if (!curRowParent) {
@@ -3393,7 +3395,7 @@ var globalDataListID = -1;
             if (this.itemList) {
                 this._sortAndRenderData(this.itemList, function (finalCompletion) {
                     if (finalCompletion) {
-                        finalCompletion();
+                        finalCompletion.call(this);
                     }
                 }, this.options.emptyMessage, oncomplete, this.extraItems, _self.options);
             }
@@ -3410,28 +3412,28 @@ var globalDataListID = -1;
             }, 750, this);
         },
         confirmDeleted: function (elems, callback) {
-            var allObjs = [];
             $.each(elems, function() {
-                var obj = $(this).data('data');
-                allObjs.push(obj);
-                $(this).remove();
+                if ($(this).attr('data-deleted') === 'true') {
+                    $(this).remove();
+                }
             });
             if (callback) {
                 var _self = this;
-                callback(allObjs, function() {
-                    _self._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });
+                callback([], function(oncomplete) {
+                    if (!oncomplete) {
+                        oncomplete = function() {};
+                    }
+                    _self._refreshData(oncomplete, undefined, undefined, undefined, { noPagingReset: true });
                 });
             } else {
                 this._refreshData(function() {}, undefined, undefined, undefined, { noPagingReset: true });            
             }
         },
-        clearDeleted: function (elems) {
+        clearDeleted: function (elems, oncomplete) {
             $(elems).each(function() {
-                $(this).attr('data-deleted', '');
-                $(this).removeClass('hx-deleted');
-                $(this).removeClass('hx-hide-deleted');
+                $(this).removeClass('hx-deleted hx-hide-deleted').attr('data-deleted', '');
             });
-            this.refreshListView();
+            this.renderListView(oncomplete);
         },
         equals: function(other) {
             return this.dataListID === other.dataListID;

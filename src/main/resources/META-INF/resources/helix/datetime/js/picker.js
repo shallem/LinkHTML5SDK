@@ -728,7 +728,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
             }).
 
             // If there’s a click on an actionable element, carry out the actions.
-            on( Helix.clickEvent, '[data-pick], [data-nav], [data-clear], [data-close]', function(ev) { /* SAH 'click' */
+            on( Helix.clickEvent + '.' + STATE.id, '[data-pick], [data-nav], [data-clear], [data-close]', function(ev) { /* SAH 'click' */
 
                 var $target = $( this ),
                     targetData = $target.data(),
@@ -771,6 +771,7 @@ function PickerConstructor( ELEMENT, NAME, COMPONENT, OPTIONS ) {
                     P.close( true )
                     ev.stopImmediatePropagation();
                 }
+                return false;
 
             }) //P.$holder
 

@@ -838,6 +838,7 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             if (formElem.autocompleteTimeout === undefined) {
                 formElem.autocompleteTimeout = 1.5;
             }
+            $(inputMarkup)[0].autocomplete = 'off';
             // To get this to hover, we must make it a 'positioned' element. position: relative does
             // nothing on the iPad. position: absolute yields proper hovering.
             var autoCompleteList = $('<ul/>').css('z-index', 10000)
@@ -2728,7 +2729,7 @@ Helix.Layout.createActionsDialog = function (options, actions, opaque) {
 
     $(popup).on('popupafterclose', null,  options, function (ev) {
         if (ev.data.oncomplete) {
-            ev.data.oncomplete();
+            ev.data.oncomplete.call(this);
         }
         if (ev.data.noRemoveOnClose !== true) {
             $(this).remove();

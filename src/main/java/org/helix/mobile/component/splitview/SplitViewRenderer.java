@@ -42,6 +42,9 @@ public class SplitViewRenderer extends CoreRenderer {
         if (sview.getOnRefresh() != null) {
             writer.write(",onRefresh: " + sview.getOnRefresh());
         }
+        if (sview.getExitSplitMode() != null) {
+            writer.write(",exitSplitMode: '" + sview.getExitSplitMode() + "'");
+        }
         if (sview.getOnPopRight() != null) {
             writer.write(",onPopRight: " + sview.getOnPopRight());
         }

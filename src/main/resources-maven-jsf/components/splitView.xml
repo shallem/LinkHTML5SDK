@@ -68,6 +68,13 @@
             <description>Name of a function to call when the split view right pane is passed. Passed a single argument which is the div being popped.</description>
         </attribute>
         <attribute>
+            <name>exitSplitMode</name>
+            <required>false</required>
+            <defaultValue>left</defaultValue>
+            <type>java.lang.String</type>
+            <description>When a screen resize exits split mode, show left or right view?</description>
+        </attribute>
+        <attribute>
             <name>buttonBarSelector</name>
             <required>false</required>
             <type>java.lang.String</type>

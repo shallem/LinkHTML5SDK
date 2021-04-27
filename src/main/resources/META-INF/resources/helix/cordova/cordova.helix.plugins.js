@@ -398,6 +398,9 @@ function cordova_helix_init() {
                 }
 
                 return cordova.exec(success, failure, "HelixSystem", "notifyParent", [ eventName, eventArg, doBroadcast ])
+            },
+            signalCloseToChildren: function(localIDs, success, failure) {
+                return cordova.exec(success, failure, "HelixSystem", "signalCloseToChildren", [ localIDs ]);
             }
 
         });

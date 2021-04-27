@@ -42,6 +42,11 @@
             splitThreshold: 800,
             
             /**
+             * Specify which side of the split to show when a screen resize exits split mode.
+             */
+            exitSplitMode: 'left',
+            
+            /**
              * Callback to invoke after each refresh. This allows the app using this component
              * to change the UI based on whether the split view is full screen or side-by-side.
              * The callback is passed a single string as an argument - either 'split' or 'full', 
@@ -180,7 +185,7 @@
                 }
             } else {
                 if (!this.__current) {
-                    this.__current = "left";
+                    this.__current = this.options.exitSplitMode;
                 }
                 
                 $(this.__left).css('width', '');
