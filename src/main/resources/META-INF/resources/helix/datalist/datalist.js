@@ -3405,6 +3405,7 @@ var globalDataListID = -1;
             $(elems).each(function() {
                 $(this).attr('data-deleted', 'true');
                 $(this).addClass('hx-deleted');
+                $(this).css('display', '');
             });
             
             setTimeout(function(_self) {

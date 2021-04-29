@@ -161,6 +161,7 @@
         refresh: function(defaultMode) {            
             var curWidth = $(window).width();
             var lastSplit = this.__current;
+            
             if (curWidth > this.options.splitThreshold &&
                     (this.options.landscapeOnly === false || this.viewIsLandscape())) {
                 // Show left AND right on large screens
