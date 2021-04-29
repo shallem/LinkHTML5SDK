@@ -72,6 +72,10 @@ public class FormFieldRenderer extends CoreRenderer {
             writer.write("'styleClass' : '" + ffield.getStyleClass() + "',");
         }
         
+        if (ffield.getTextStyleClass() != null) {
+            writer.write("'textStyleClass' : '" + ffield.getTextStyleClass() + "',");
+        }
+        
         if (ffield.getValueText() != null) {
             writer.write("'defaultValue' : '" + ffield.getValueText() + "'");
         } else {

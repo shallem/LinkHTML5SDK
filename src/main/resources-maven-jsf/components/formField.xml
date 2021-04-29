@@ -97,6 +97,12 @@
             <description>Optional style class for the field contents.</description>
         </attribute>
         <attribute>
+            <name>textStyleClass</name>
+            <required>false</required>
+            <type>java.lang.String</type>
+            <description>Optional style class for text (when relevant).</description>
+        </attribute>
+        <attribute>
             <name>styleClassMap</name>
             <required>false</required>
             <type>java.lang.String</type>

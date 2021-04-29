@@ -121,10 +121,10 @@
             this.__current = null;
             this.__pushCt = 0;
             this.__refreshActions = [];
-            this.refresh();
+            this.refresh('left');
             var _self = this;
             $(document).on('orientationchange', null, _self, function(ev) {
-                ev.data.refresh();
+                ev.data.refresh(ev.data.options.exitSplitMode);
                 // In case we were viewing the right pane of the split when we
                 // rotated back to a split view with 2 panes.
                 ev.data._restoreLeftHeaderButton();
@@ -158,7 +158,7 @@
          * 
          * @param valuesMap Map form field names to values.
          */
-        refresh: function() {            
+        refresh: function(defaultMode) {            
             var curWidth = $(window).width();
             var lastSplit = this.__current;
             if (curWidth > this.options.splitThreshold &&
@@ -185,7 +185,7 @@
                 }
             } else {
                 if (!this.__current) {
-                    this.__current = this.options.exitSplitMode;
+                    this.__current = defaultMode ? defaultMode : 'left';
                 }
                 
                 $(this.__left).css('width', '');
@@ -197,7 +197,7 @@
                 }
             }
             if (this.options.onRefresh) {
-                this.options.onRefresh((this.__current) ? "full" : "split", lastSplit ? 'full' : 'split');
+                this.options.onRefresh(this.__current ? this.__current : "split", lastSplit ? lastSplit : 'split');
             }
             if (this.__refreshActions && this.__refreshActions.length > 0) {
                 for (var i = 0; i < this.__refreshActions.length; ++i) {

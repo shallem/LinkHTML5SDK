@@ -602,7 +602,8 @@ function __getTitleStyleClass(formLayout, formElem) {
 }
 
 function __getTextStyleClass(formLayout, formElem) {
-    var _css = (formElem.textStyleClass ? formElem.textStyleClass : '');
+    var _css = 
+            (formElem.textStyleClass ? formElem.textStyleClass : '');
     if (!_css) {
         _css = (formLayout.textStyleClass ? formLayout.textStyleClass : '');
     }
@@ -1006,11 +1007,13 @@ function __appendCheckBox(mode, formLayout, formElem, $fieldContainer, useMiniLa
         'data-corners': 'false'
     });
     var lbl = $('<label />').attr('for', inputID).attr('data-corners', 'false').append(formElem.fieldTitle).appendTo($fieldContainer);
-    if (formLayout.titleStyleClass) {
-        lbl.addClass(formLayout.titleStyleClass);
+    if (formElem.styleClass) {
+        lbl.addClass(formElem.styleClass);
     } else if (formLayout.textStyleClass || formElem.textStyleClass) {
         lbl.addClass(__getTextStyleClass(formLayout, formElem));
-    }
+    } else if (formLayout.titleStyleClass) {
+        lbl.addClass(formLayout.titleStyleClass);
+    } 
     
     if (formElem.type === 'radio') {
         $(inputMarkup).appendTo($fieldContainer);
@@ -1168,6 +1171,7 @@ function __appendRadioButtons(mode, formLayout, formElem, $fieldContainer, useMi
         if (i === formElem.controls.length - 1) {
             inputMarkup.prev('label').addClass('ui-last-child');
         }
+        inputMarkup.closest('.ui-radio').find('.ui-btn-text').addClass(__getTextStyleClass(formLayout, subElem));
     }
     $fieldContainer.find('.ui-btn-text').addClass(__getTextStyleClass(formLayout, formElem));
 }
