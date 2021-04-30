@@ -294,10 +294,15 @@ Helix.Layout = {
         }
         
         var renderers = $(page).data('hxrender');
+        var newRenderers = [];
         if (renderers) {
             for (var i = 0; i < renderers.length; ++i) {
-                renderers[i].call(this);
+                if (renderers[i].call(this) === false) {
+                    continue;
+                }
+                newRenderers.push(renderers[i]);
             }
+            $(page).data('hxrender', newRenderers);
         }
     },
     
@@ -404,6 +409,7 @@ $(document).on('pagecreate', function(ev) {
         if (targetID === formOpts.pageID) {
             Helix.Layout.renderer($(ev.target), formOpts.markupID, $.proxy(function() {
                 window[this.formName] =$(PrimeFaces.escapeClientId(this.markupID)).helixFormLayout(this).data('helix-helixFormLayout');
+                return false;
             }, formOpts));
         }
     }
