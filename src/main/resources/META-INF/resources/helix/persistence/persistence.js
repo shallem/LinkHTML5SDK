@@ -1470,6 +1470,9 @@ function initPersistence(persistence) {
         };
 
         AndFilter.prototype.toUniqueString = function() {
+            if (!this.right) {
+                return this.left.toUniqueString();
+            }
             return this.left.toUniqueString() + " AND " + this.right.toUniqueString();
         };
 
@@ -1508,6 +1511,9 @@ function initPersistence(persistence) {
         };
 
         OrFilter.prototype.toUniqueString = function() {
+            if (!this.right) {
+                return this.left.toUniqueString();
+            }
             return this.left.toUniqueString() + " OR " + this.right.toUniqueString();
         };
 
