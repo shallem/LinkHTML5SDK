@@ -26,6 +26,13 @@
             <description>Title text for the dialog box.</description>
         </attribute>
         <attribute>
+            <name>dismissible</name>
+            <required>false</required>
+            <type>java.lang.Boolean</type>
+            <defaultValue>true</defaultValue>
+            <description>Is this dialog dismissible or no?</description>
+        </attribute>
+        <attribute>
             <name>bodyContent</name>
             <required>false</required>
             <type>java.lang.String</type>

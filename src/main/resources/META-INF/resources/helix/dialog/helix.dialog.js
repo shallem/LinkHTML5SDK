@@ -26,6 +26,7 @@
             positionTo: 'origin',
             noOpen: true,
             noRemoveOnClose: true,
+            dismissible: true,
             oncomplete: null /* called whenever the user dismisses the dialog, even if done by tapping outside the dialog. */
         }
     };
@@ -146,7 +147,8 @@
             this.$mainDiv.popup({
                 theme: 'd',
                 overlayTheme: 'd',
-                corners: true
+                corners: true,
+                dismissible: this.options.dismissible
             });
             this.$mainDiv.width('300px');
         }
@@ -175,7 +177,9 @@
         var confirmbtn = Helix.Layout._createButton(this.name + '-confirm', '90', 'b', this.$mainDiv, this.options.confirmText ? this.options.confirmText : 'Confirm', onconfirm);
         
         this.options.titleStyleClass = 'ui-header';
-        var popup = Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form);
+        var popup = Helix.Layout._layoutPopup(this.$mainDiv, this.options, [ confirmbtn, closebtn ], this.form, {
+            dismissible: this.options.dismissible
+        });
         if (this.form) {
             $(this.form).on('submit', function(ev) {
                 ev.stopImmediatePropagation();

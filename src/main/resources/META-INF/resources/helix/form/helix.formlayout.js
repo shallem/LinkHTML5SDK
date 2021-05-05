@@ -765,6 +765,13 @@ function __appendTextBox(mode, formLayout, formElem, $fieldContainer, useMiniLay
             'autocapitalize': capitalization,
             'class': __getTextStyleClass(formLayout, formElem)
         }).appendTo($fieldContainer);
+        if (formElem.clearButton === true) {
+            $('<div/>').append('Clear').addClass('hx-form-text-clear textCategoryXSmall').appendTo($fieldContainer).on(Helix.clickEvent, null, formElem.inputMarkup, function(ev) {
+                ev.stopImmediatePropagation();
+                ev.data.val('');
+                return false;
+            });
+        }
         var containerClass = formLayout.computedFieldStyleClass + ' ' + formElem.computedFieldStyleClass + ' ' + formElem.computedStyleClass;
         if (containerClass.trim()) {
             $fieldContainer.addClass(containerClass.trim());

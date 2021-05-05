@@ -69,6 +69,8 @@ public class DialogRenderer extends Renderer {
         if (dialog.getOncomplete() != null) {
             writer.write(", oncomplete: " + dialog.getOncomplete());
         }
+        writer.write(", dismissible: " + (dialog.isDismissible() ? "true" : "false"));
+        
         writer.write("});\n");
         PageRenderer.renderDialog(context, dialog, writer.toString());
     }
