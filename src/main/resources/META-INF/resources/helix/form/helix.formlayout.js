@@ -520,6 +520,14 @@ function __appendTextArea(mode, formLayout, formElem, $fieldContainer, useMiniLa
             'class': formElem.computedStyleClass,
             'tabindex': formLayout.__tabIndex++
         }).appendTo($fieldContainer);
+        if (formElem.clearButton === true) {
+            $('<div/>').append('Clear').addClass('hx-form-text-clear textCategoryXSmall').appendTo($fieldContainer).on(Helix.clickEvent, null, 
+                inputMarkup, function(ev) {
+                ev.stopImmediatePropagation();
+                ev.data.val('');
+                return false;
+            });
+        }
         if (formElem.inputDisabled === true || formElem.disableInput === true) {
             inputMarkup[0].disabled = true;
         }
