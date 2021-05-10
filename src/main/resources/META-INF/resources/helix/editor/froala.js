@@ -162,6 +162,7 @@
             }, function() {
                 _self.initDone = true;
                 e.html.set(_self._initialVal);
+                
                 _self.element.find('.fr-toolbar').addClass('hx-form-border-none');
                 _self.element.find('.second-toolbar').addClass('hx-form-hidden');
                 _self.element.find('.fr-view').css('font-family', _self.options.defaultFont)
@@ -241,6 +242,8 @@
             if (this.editor.popups) {
                 this.editor.popups.hideAll();
             }
+            // Clear out the undo stack.
+            this.resetUndo();
         },
         setDefaultFont: function(font, fontSize) {
             this.options.defaultFont = font;
@@ -628,6 +631,11 @@
             context.font = curFont;
             var metrics = context.measureText('helo');
             return this.editor.el.clientWidth / (metrics.width / 4);
+        },
+        resetUndo: function() {
+            if (this.editor && this.editor.undo) {
+                this.editor.undo.reset();
+            }
         }
     });
 
