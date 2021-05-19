@@ -1397,8 +1397,12 @@ function initHelixDB() {
             var updateDone = function(args) {
                 ++args.nUpdatesDone;
                 if (args.nUpdatesDone >= args.nToUpdate) {
-                    /* Nothing more to update - handle field updates. */
-                    updateFieldFn(args);
+                    /* Nothing more to update - handle field updates. FLUSH in case something we are 
+                     * updating was added or updated in this delta object. 
+                     */
+                    dbSession.flush(function() {
+                        updateFieldFn(args);
+                    });
                 }
             };
             
@@ -1638,6 +1642,18 @@ function initHelixDB() {
                         
             /* Called when an asynchronous relationship field is done sync'ing. */
             var syncDone = function() {
+                while (scalarFields.length > 0) {
+                    field = scalarFields.pop();
+                    /* Use the setter to make sure the object is marked as dirty appropriately. */
+                    var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
+                    if (prop) {
+                        var setter = prop.set;
+                        if (!overrides.syncFields(setter, obj, field, persistentObj)) {
+                            setter.call(persistentObj, obj[field]);
+                        }
+                    }
+                }
+                
                 if (overrides.addHook) {
                     if (persistentObj._new !== false) {
                         overrides.addHook(persistentObj);
@@ -1693,18 +1709,6 @@ function initHelixDB() {
                     }      
                 }
             };
-            
-            while (scalarFields.length > 0) {
-                field = scalarFields.pop();
-                /* Use the setter to make sure the object is marked as dirty appropriately. */
-                var prop = Object.getOwnPropertyDescriptor(persistentObj, field);
-                if (prop) {
-                    var setter = prop.set;
-                    if (!overrides.syncFields(setter, obj, field, persistentObj)) {
-                        setter.call(persistentObj, obj[field]);
-                    }
-                }
-            }
             
             /* Flush the parent object, then recurse down. */
             handleAsyncFields(asyncFields);
