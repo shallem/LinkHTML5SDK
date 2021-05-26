@@ -1632,7 +1632,8 @@ function initHelixDB() {
             }
             
             if (!persistentObj) {
-                persistentObj = new objSchema();
+                persistentObj = new objSchema(dbSession);
+                persistentObj[this.getKeyField(objSchema)] = obj[this.getKeyField(objSchema)];
                 dbSession.add(persistentObj);
             }
             objSchema.__indexingDirty = true;
