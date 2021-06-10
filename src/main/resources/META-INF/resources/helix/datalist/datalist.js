@@ -2108,7 +2108,7 @@ var globalDataListID = -1;
                                 _self.$searchBox.val('');
                                 _self.$searchClear.hide();
                                 _self.resetListContents();
-                                _self.$searchBox.focus();
+                                _self.$searchBox.blur();
                                 return false;
                             })
                                     .hide();
