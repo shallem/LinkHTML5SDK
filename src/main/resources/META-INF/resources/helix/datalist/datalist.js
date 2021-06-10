@@ -2111,7 +2111,7 @@ var globalDataListID = -1;
                                 _self.$searchBox.blur();
                                 return false;
                             })
-                                    .hide();
+                            .hide();
 
                 if (options.defaultSearchText) {
                     this.__searchText = options.defaultSearchText;
@@ -2133,6 +2133,7 @@ var globalDataListID = -1;
                         if (_self.$sortDiv) {
                             _self.$sortDiv.hide(100);
                         }
+                        _self.$searchClear.show();
                     });
                     this.$searchBox.on('blur', function () {
                         // If we had previously searched and we then blur the search box
@@ -2144,6 +2145,7 @@ var globalDataListID = -1;
                         if (_self.$sortDiv) {
                             _self.$sortDiv.show();
                         }
+                        _self.$searchClear.hide();
                         return false;
                     });
                 } else {
@@ -2151,11 +2153,13 @@ var globalDataListID = -1;
                         if (_self.$sortDiv) {
                             _self.$sortDiv.hide(100);
                         }
+                        _self.$searchClear.show();
                     });
                     this.$searchBox.on('blur', function () {
                         if (_self.$sortDiv) {
                             _self.$sortDiv.show();
                         }
+                        _self.$searchClear.hide();
                     });
                 }
             };
