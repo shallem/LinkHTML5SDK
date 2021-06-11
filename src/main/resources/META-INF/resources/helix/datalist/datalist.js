@@ -3416,12 +3416,20 @@ var globalDataListID = -1;
                 _self.$listWrapper.find('.hx-deleted').addClass('hx-hide-deleted');
             }, 750, this);
         },
-        confirmDeleted: function (elems, callback) {
+        elementForID: function(dataID) {
+            return this.$listWrapper.find('li[data-id="' + dataID + '"]');
+        },
+        confirmDeleted: function (elems, callback, deletedIDs) {
             $.each(elems, function() {
                 if ($(this).attr('data-deleted') === 'true') {
                     $(this).remove();
                 }
             });
+            if (deletedIDs) {
+                deletedIDs.forEach(function(dataID) {
+                    _self.$listWrapper.find('li[data-id="' + dataID + '"]');
+                });
+            }
             if (callback) {
                 var _self = this;
                 callback([], function(oncomplete) {
