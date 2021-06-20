@@ -316,7 +316,7 @@
             
                 Helix.Layout.refresh();
             } else {
-                /* Do nothing. We are already on the right. */
+                /* Do nothing. We are already on the left. */
             }
         },
         
