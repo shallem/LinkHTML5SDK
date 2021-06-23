@@ -754,6 +754,7 @@ var globalDataListID = -1;
             var i = LIs.length - 1; 
             var origLastID = '';
             if (this._renderWindowStart === 0) {
+                this.$section.nextAll('.hx-datalist-spinner').remove();
                 this._restoreScrollEvent();
                 return;
             }
@@ -817,6 +818,7 @@ var globalDataListID = -1;
             var lastLIPos;
             var origLastID;
             if ((this._renderWindowStart + this._itemsPerPage) >= this._prefetchedData.length) {
+                this.$section.nextAll('.hx-datalist-spinner').remove();
                 this._restoreScrollEvent();
                 return;
             }
