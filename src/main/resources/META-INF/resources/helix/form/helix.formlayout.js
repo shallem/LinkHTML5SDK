@@ -1413,6 +1413,7 @@ function __refreshHTMLFrame(formElem, mode) {
         if (formElem.selectable !== true) {
             __refreshIFrame(formElem);
         } else {
+            formElem.$frame.parent().scrollTop(0);
             formElem.$frame.empty();
             if (Helix.Utils.isString(formElem.value)) {
                 formElem.$frame.append(formElem.value);

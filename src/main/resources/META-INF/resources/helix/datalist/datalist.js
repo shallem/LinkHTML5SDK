@@ -3459,8 +3459,13 @@ var globalDataListID = -1;
         equals: function(other) {
             return this.dataListID === other.dataListID;
         },
-        setTapOverride: function(fn) {
-            this.messageTapOverride = fn;
+        setTapOverride: function(fn, ctxt, args) {
+            this.messageTapOverride = $.proxy([fn, ctxt, args, this], function() {
+                var f = this[0];
+                var c = this[1] ? this[1] : this[3];
+                var a = this[2] ? this[2] : [];
+                f.apply(c, a);
+            });
         },
         clearTapOverride: function() {
             this.messageTapOverride = null;
