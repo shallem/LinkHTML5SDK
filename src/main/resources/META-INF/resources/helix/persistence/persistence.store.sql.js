@@ -174,7 +174,7 @@ function config(persistence, dialect) {
         callback = args.callback;
         emulate = args.emulate;
 
-        var queries = [], meta, colDefs, otherMeta, tableName;
+        var queries = [], meta, colDefs, otherMeta, tableName, indexes = [];
 
         var tm = persistence.typeMapper;
         var entityMeta = persistence.getEntityMeta();
@@ -198,13 +198,13 @@ function config(persistence, dialect) {
                             otherMeta = meta.hasOne[rel].type.meta;
                             colDefs.push([rel, tm.idType]);
                             //if (!persistence.generatedTables[meta.name]) {
-                                queries.push([dialect.createIndex(meta.name, [rel]), null]);
+                                indexes.push(dialect.createIndex(meta.name, [rel]));
                             //}
                         }
                     }
                     //if (!persistence.generatedTables[meta.name]) {
                         for (var i = 0; i < meta.indexes.length; i++) {
-                            queries.push([dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]), null]);
+                            indexes.push(dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]));
                         }
                     //}
                 }
@@ -221,14 +221,14 @@ function config(persistence, dialect) {
                                 continue;
                             var p1 = meta.name + "_" + rel;
                             var p2 = otherMeta.name + "_" + inv;
-                            queries.push([dialect.createIndex(tableName, [p1]), null]);
-                            queries.push([dialect.createIndex(tableName, [p2]), null]);
+                            indexes.push(dialect.createIndex(tableName, [p1]));
+                            indexes.push(dialect.createIndex(tableName, [p2]));
                             var columns = [[p1, tm.idType], [p2, tm.idType]];
                             if (meta.isMixin)
                                 columns.push([p1 + "_class", tm.classNameType])
                             if (otherMeta.isMixin)
                                 columns.push([p2 + "_class", tm.classNameType])
-                            queries.push([dialect.createTable(tableName, columns), null]);
+                            queries.push(dialect.createTable(tableName, columns));
                             persistence.generatedTables[tableName] = true;
                         //}
                     }
@@ -236,7 +236,7 @@ function config(persistence, dialect) {
                 if (!meta.isMixin /*&& !persistence.generatedTables[meta.name]*/) {
                     colDefs.push(["id", tm.idType, "PRIMARY KEY"]);
                     persistence.generatedTables[meta.name] = true;
-                    queries.push([dialect.createTable(meta.name, colDefs), null]);
+                    queries.push(dialect.createTable(meta.name, colDefs));
                 }
             }
         }
@@ -244,33 +244,35 @@ function config(persistence, dialect) {
         for(var i = 0; i < fns.length; i++) {
             var moreQueries = fns[i](tx);
             if (moreQueries) {
-                queries = queries.concat(moreQueries);
+                for (var j = 0; j < moreQueries.length; ++j) {
+                    var nxt = moreQueries[j];
+                    queries.push(nxt[0]);
+                }
             }
         }
         fns = persistence.nextSchemaSyncHooks;
         for(i = 0; i < fns.length; i++) {
             moreQueries = fns[i](tx);
             if (moreQueries) {
-                queries = queries.concat(moreQueries);
+                for (var j = 0; j < moreQueries.length; ++j) {
+                    var nxt = moreQueries[j];
+                    queries.push(nxt[0]);
+                }
             }
         }
         // Only run on 1 sync.
         persistence.nextSchemaSyncHooks = [];
+        var errors = [];
         if(emulate) {
             // Done
             callback(tx);
         } else {
             if (queries.length === 0) {
                 callback();
-            } else if (tx) {
-                executeQueriesSeq(tx, queries, function(_, err) {
-                    callback(tx, err);
-                });
             } else {
-                this.transaction(function(tx) {
-                    executeQueriesSeq(tx, queries, function(_, err) {
-                        callback(tx, err);
-                    });
+                executeQueries([[queries.join(';'), null], [indexes.join(';'), null]], errors).then(function(errs) {
+                    var err = errs.join('; ');
+                    callback(null, err);
                 });
             }
         }

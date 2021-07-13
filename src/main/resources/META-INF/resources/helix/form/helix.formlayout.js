@@ -1330,7 +1330,7 @@ function __makeButtonMarkup(formElem, useMiniLayout, $parent) {
     $buttonLink.appendTo($parent);
     if (formElem.onclick) {
         $buttonLink.on('vclick', function (ev) {
-            return formElem.onclick.call(this, ev);
+            return formElem.onclick.call(this, ev, formElem);
         });
     }
     return $buttonLink;

@@ -3428,6 +3428,7 @@ var globalDataListID = -1;
             return this.$listWrapper.find('li[data-id="' + dataID + '"]');
         },
         confirmDeleted: function (elems, callback, deletedIDs) {
+            var _self = this;
             $.each(elems, function() {
                 if ($(this).attr('data-deleted') === 'true') {
                     $(this).remove();
@@ -3439,7 +3440,6 @@ var globalDataListID = -1;
                 });
             }
             if (callback) {
-                var _self = this;
                 callback([], function(oncomplete) {
                     if (!oncomplete) {
                         oncomplete = function() {};
@@ -3460,12 +3460,12 @@ var globalDataListID = -1;
             return this.dataListID === other.dataListID;
         },
         setTapOverride: function(fn, ctxt, args) {
-            this.messageTapOverride = $.proxy([fn, ctxt, args, this], function() {
+            this.messageTapOverride = $.proxy(function() {
                 var f = this[0];
                 var c = this[1] ? this[1] : this[3];
                 var a = this[2] ? this[2] : [];
                 f.apply(c, a);
-            });
+            }, [fn, ctxt, args, this]);
         },
         clearTapOverride: function() {
             this.messageTapOverride = null;

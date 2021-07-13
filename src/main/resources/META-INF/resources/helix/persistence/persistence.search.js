@@ -488,7 +488,6 @@ persistence.search.config = function(persistence, dialect, options) {
                 meta.textIndexSchemaCreated = true;
             }
         }
-        queries.reverse();
         return queries;
     });
   
