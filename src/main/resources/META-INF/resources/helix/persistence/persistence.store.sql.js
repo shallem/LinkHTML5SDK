@@ -197,46 +197,62 @@ function config(persistence, dialect) {
                         if (meta.hasOne.hasOwnProperty(rel)) {
                             otherMeta = meta.hasOne[rel].type.meta;
                             colDefs.push([rel, tm.idType]);
-                            //if (!persistence.generatedTables[meta.name]) {
+                            if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
                                 indexes.push(dialect.createIndex(meta.name, [rel]));
-                            //}
+                            } else {
+                                queries.push([dialect.createIndex(meta.name, [rel]), null]);
+                            }
                         }
                     }
-                    //if (!persistence.generatedTables[meta.name]) {
-                        for (var i = 0; i < meta.indexes.length; i++) {
+
+                    for (var i = 0; i < meta.indexes.length; i++) {
+                        if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
                             indexes.push(dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]));
+                        } else {
+                            queries.push([dialect.createIndex(meta.name, meta.indexes[i].columns, meta.indexes[i]), null]);
                         }
-                    //}
+                    }
                 }
                 for (var rel in meta.hasMany) {
                     if (meta.hasMany.hasOwnProperty(rel) && meta.hasMany[rel].manyToMany) {
                         tableName = meta.hasMany[rel].tableName;
-                        //if (!persistence.generatedTables[tableName]) {
-                            var otherMeta = meta.hasMany[rel].type.meta;
-                            var inv = meta.hasMany[rel].inverseProperty;
-                            // following test ensures that mixin mtm tables get created with the mixin itself
-                            // it seems superfluous because mixin will be processed before entitites that use it
-                            // but better be safe than sorry.
-                            if (otherMeta.hasMany[inv].type.meta != meta)
-                                continue;
-                            var p1 = meta.name + "_" + rel;
-                            var p2 = otherMeta.name + "_" + inv;
+                        var otherMeta = meta.hasMany[rel].type.meta;
+                        var inv = meta.hasMany[rel].inverseProperty;
+                        // following test ensures that mixin mtm tables get created with the mixin itself
+                        // it seems superfluous because mixin will be processed before entitites that use it
+                        // but better be safe than sorry.
+                        if (otherMeta.hasMany[inv].type.meta != meta)
+                            continue;
+                        var p1 = meta.name + "_" + rel;
+                        var p2 = otherMeta.name + "_" + inv;
+                        if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
                             indexes.push(dialect.createIndex(tableName, [p1]));
                             indexes.push(dialect.createIndex(tableName, [p2]));
-                            var columns = [[p1, tm.idType], [p2, tm.idType]];
-                            if (meta.isMixin)
-                                columns.push([p1 + "_class", tm.classNameType])
-                            if (otherMeta.isMixin)
-                                columns.push([p2 + "_class", tm.classNameType])
+                        } else {
+                            queries.push([dialect.createIndex(tableName, [p1]), null]);
+                            queries.push([dialect.createIndex(tableName, [p2]), null]);
+                        }
+                        var columns = [[p1, tm.idType], [p2, tm.idType]];
+                        if (meta.isMixin)
+                            columns.push([p1 + "_class", tm.classNameType])
+                        if (otherMeta.isMixin)
+                            columns.push([p2 + "_class", tm.classNameType])
+                        if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
                             queries.push(dialect.createTable(tableName, columns));
-                            persistence.generatedTables[tableName] = true;
-                        //}
+                        } else {
+                            queries.push([dialect.createTable(tableName, columns), null]);
+                        }
+                        persistence.generatedTables[tableName] = true;
                     }
                 }
                 if (!meta.isMixin /*&& !persistence.generatedTables[meta.name]*/) {
                     colDefs.push(["id", tm.idType, "PRIMARY KEY"]);
                     persistence.generatedTables[meta.name] = true;
-                    queries.push(dialect.createTable(meta.name, colDefs));
+                    if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
+                        queries.push(dialect.createTable(meta.name, colDefs));
+                    } else {
+                        queries.push([dialect.createTable(meta.name, colDefs), null]);
+                    }
                 }
             }
         }
@@ -244,9 +260,13 @@ function config(persistence, dialect) {
         for(var i = 0; i < fns.length; i++) {
             var moreQueries = fns[i](tx);
             if (moreQueries) {
-                for (var j = 0; j < moreQueries.length; ++j) {
-                    var nxt = moreQueries[j];
-                    queries.push(nxt[0]);
+                if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
+                    for (var j = 0; j < moreQueries.length; ++j) {
+                        var nxt = moreQueries[j];
+                        queries.push(nxt[0]);
+                    }
+                } else {
+                    queries = queries.concat(moreQueries);
                 }
             }
         }
@@ -254,9 +274,13 @@ function config(persistence, dialect) {
         for(i = 0; i < fns.length; i++) {
             moreQueries = fns[i](tx);
             if (moreQueries) {
-                for (var j = 0; j < moreQueries.length; ++j) {
-                    var nxt = moreQueries[j];
-                    queries.push(nxt[0]);
+                if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
+                    for (var j = 0; j < moreQueries.length; ++j) {
+                        var nxt = moreQueries[j];
+                        queries.push(nxt[0]);
+                    }
+                } else {
+                    queries = queries.concat(moreQueries);
                 }
             }
         }
@@ -270,10 +294,24 @@ function config(persistence, dialect) {
             if (queries.length === 0) {
                 callback();
             } else {
-                executeQueries([[queries.join(';'), null], [indexes.join(';'), null]], errors).then(function(errs) {
-                    var err = errs.join('; ');
-                    callback(null, err);
-                });
+                if (window.CordovaVersion >= 4 && window.CordovaRevision > 0) {
+                    executeQueries([[queries.join(';'), null], [indexes.join(';'), null]], errors).then(function(errs) {
+                        var err = errs.join('; ');
+                        callback(null, err);
+                    });
+                } else {
+                    if (tx) {
+                        executeQueriesSeq(tx, queries, function(_, err) {
+                            callback(tx, err);
+                        });
+                    } else {
+                        this.transaction(function(tx) {
+                            executeQueriesSeq(tx, queries, function(_, err) {
+                                callback(tx, err);
+                            });
+                        });
+                    }
+                }
             }
         }
     };
