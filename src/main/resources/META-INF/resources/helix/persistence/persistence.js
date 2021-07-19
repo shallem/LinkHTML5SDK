@@ -2026,8 +2026,11 @@ function initPersistence(persistence) {
      *   number of results as an argument).
      * @param opaque An optional parameter to supply to all callbacks.
      */
-        QueryCollection.prototype.newEach = function (callbacks, opaque) {
+        QueryCollection.prototype.newEach = function (callbacks, opaque, _session) {
             var _self = this;
+            if (_session) {
+                this._session = _session;
+            }
             this.list(function(results,error) {
                 if (!results) {
                     return;
@@ -2051,7 +2054,10 @@ function initPersistence(persistence) {
         /**
      * Restrict the set of fields selected to *exclude* those provided.
      */
-        QueryCollection.prototype.exclude = function(fieldList) {
+        QueryCollection.prototype.exclude = function(fieldList, session) {
+            if (session) {
+                this._session = session;
+            }
             var c = this.clone();
             c._excludes = {};
             for (var i = 0; i < fieldList.length; ++i) {
@@ -2063,7 +2069,10 @@ function initPersistence(persistence) {
         /**
      * Restrict the set of fields selected to *include* those provided.
      */
-        QueryCollection.prototype.include = function(fieldList) {
+        QueryCollection.prototype.include = function(fieldList, session) {
+            if (session) {
+                this._session = session;
+            }
             var c = this.clone();
             c._includes = {};
             for (var i = 0; i < fieldList.length; ++i) {
@@ -2084,7 +2093,10 @@ function initPersistence(persistence) {
         /**
          * Do not flush to the DB before listing this query collection.
          */
-        QueryCollection.prototype.noFlush = function() {
+        QueryCollection.prototype.noFlush = function(session) {
+            if (session) {
+                this._session = session;
+            }
             var c = this.clone();
             c._noFlush = true;
             return c;
